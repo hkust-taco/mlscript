@@ -65,7 +65,7 @@ sealed trait ResolvableImpl:
     case S(td: ClassLikeDef) => S(td)
     case _ => N
   
-  def withIArgs(iargsLs: Ls[Term.Tup]): Term = 
+  def withIArgs(iargsLs: Ls[Term.Tup]): this.type = 
     if !(this.iargsLs.isEmpty || this.iargsLs.get == iargsLs) then
       lastWords:
         s"the implicit arguments for term ${t.showDbg} " +
@@ -90,7 +90,7 @@ enum Term extends Statement:
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -256,12 +256,18 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
     case Summon(ty) => ty :: Nil
   
+  // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
+  private def treeOrSubterms(t: Tree): Ls[Located] = t match
+    case Tree.DummyApp | Tree.DummyTup => subTerms
+    case _ => t :: Nil
+  
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
-    case t: Ref => t.tree :: Nil
-    case t: Tup => t.tree :: Nil
+    case t: Ref => treeOrSubterms(t.tree)
+    case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
-    case t: App => t.tree :: Nil
+    case t: App => treeOrSubterms(t.tree)
+    case IfLike(kw, desug) => desug :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil

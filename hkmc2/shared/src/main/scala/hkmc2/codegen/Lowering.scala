@@ -220,7 +220,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       args(fs)(args => k(Value.Arr(args)))
     case ref @ st.Ref(sym) =>
       sym match
-      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms =>
+      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
         raise:
           ErrorReport(
             msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> t.toLoc ::
@@ -466,29 +466,36 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )
             pat match
               case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(cls: ClassSymbol, _trm, _args0, _refined)
-                  // Do not elaborate `_trm` when the `cls` is virtual.
-                  if Elaborator.ctx.builtins.virtualClasses contains cls =>
-                // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
-                // not exist at runtime. If we do lowering on `trm`, backends
-                // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
-                // In this case the second parameter of `Case.Cls` will not be used.
-                // So we make it `Predef.unreachable` here.
-                mkMatch(Case.Cls(cls, unreachableFn) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(cls, trm, args0, _refined) =>
-                subTerm_nonTail(trm): st =>
-                  val args = args0.getOrElse(Nil)
-                  val clsParams = cls match
-                    case cls: ClassSymbol => cls.tree.clsParams
-                    case _: ModuleSymbol => Nil
-                  assert(args0.isEmpty || clsParams.length === args.length)
+              case Pattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
+                /** Make a continuation that creates the match. */
+                def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
+                  val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
+                  // Normalization should reject cases where the user provides
+                  // more sub-patterns than there are actual class parameters.
+                  assert(argsOpt.isEmpty || args.length <= clsParams.length)
                   def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
-                      Case.Cls(cls, st) -> go(tail, topLevel = false)
+                      Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
                     case (param, arg) :: args =>
                       val (cse, blk) = mkArgs(args)
                       (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
-                  mkMatch(mkArgs(clsParams.iterator.zip(args).collect { case (s1, S(s2)) => (s1, s2) }.toList))
+                  mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+                ctor.symbol.flatMap(_.asClsOrMod) match
+                  case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>
+                    // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
+                    // not exist at runtime. If we do lowering on `trm`, backends
+                    // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
+                    // In this case the second parameter of `Case.Cls` will not be used.
+                    // So we do not elaborate `ctor` when the `cls` is virtual
+                    // and use it `Predef.unreachable` here.
+                    k(cls, Nil)(unreachableFn)
+                  case S(cls: ClassSymbol) => subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
+                  case S(mod: ModuleSymbol) => subTerm_nonTail(ctor)(k(mod, Nil))
+                  case N =>
+                    // Normalization have already checked the constructor
+                    // resolves to a class or module. Branches with unresolved
+                    // constructors should have been removed.
+                    lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
               case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
               case Pattern.Record(entries) =>
                 val objectSym = ctx.builtins.Object
@@ -513,11 +520,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           Throw(Instantiate(Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
             Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
       
-      if k.isInstanceOf[TailOp] && isIf then go(iftrm.normalized, topLevel = true)
+      val normalize = ucs.Normalization()
+      val normalized = tl.scoped("ucs:normalize"):
+        normalize(iftrm.desugared)
+      tl.scoped("ucs:normalized"):
+        tl.log(s"Normalized:\n${Split.display(normalized)}")
+
+      if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
       else
         val body = if isWhile
-          then Label(lbl, go(iftrm.normalized, topLevel = true), End())
-          else go(iftrm.normalized, topLevel = true)
+          then Label(lbl, go(normalized, topLevel = true), End())
+          else go(normalized, topLevel = true)
         Begin(
           body,
           if usesResTmp then k(Value.Ref(l))

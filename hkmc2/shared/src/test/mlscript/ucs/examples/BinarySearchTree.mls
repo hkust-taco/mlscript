@@ -1,36 +1,19 @@
+:js
 
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Stack.mls"
 
-fun (&&): (Bool, Bool) -> Bool
-fun (===): (Any, Any) -> Bool
-fun (++): (Str, Str) -> Str
-fun toString: Any -> Str
+open Option { Some, None }
+open Stack
 
-fun (|>) pipe(x, f) = f(x)
-fun (~~>) toBe(x, y) = if x === y then ()
+fun (~~>) toBe(x, y) = if x === y then () else throw Error(String(x) + " is not " + String(y))
 fun (<?) min(x, y) = if x < y then x else y
 fun (>?) max(x, y) = if x > y then x else y
 fun abs(x) = if x < 0 then -x else x
 
+fun (??) getOrElse = Option.getOrElse
 
-abstract class Option[T]: (Some[T] | None)
-data class Some[T](val value: T) extends Option[T]
-object None extends Option[Nothing]
-
-fun (??) getOrElse(o, v) = if o is
-  Some(v') then v'
-  None then v
-
-let anyToString = toString
-
-abstract class List[out T]: (Cons[T] | Nil)
-data class Cons[out T](val head: T, val tail: List[T]) extends List[T]
-object Nil extends List[Nothing]
-
-fun (::) cons(head, tail) = Cons(head, tail)
-
-1 :: 2 :: 3 :: 4 :: Nil
-
-abstract class Tree[out A]: (Empty | Node[A])
+abstract class Tree[out A]
 data class Node[out A](value: A, left: Tree[A], right: Tree[A]) extends Tree[A]
 object Empty extends Tree
 
@@ -38,13 +21,14 @@ fun single(v) = Node(v, Empty, Empty)
 
 fun show[A](t: Tree[A]): Str = if t is
   Node(v, l, r) then
-    "(" ++ show(l) ++ " " ++ toString(v) ++ " " ++ show(r) ++ ")"
+    "(" + show(l) + " " + String(v) + " " + show(r) + ")"
   Empty then "•"
 
 show(Empty)
 show(Node(0, Empty, Empty))
 show(Node(1, Node(0, Empty, Empty), Empty))
 show(Node(1, Node(0, Empty, Empty), Node(2, Empty, Empty)))
+//│ = "((• 0 •) 1 (• 2 •))"
 
 fun insert(t, v) = if t is
   Node(v', l, r) and
@@ -61,10 +45,34 @@ fun insert'(t, v) = if t is
   Empty then Node(v, Empty, Empty)
 
 insert(Empty, 0) |> show
+//│ = "(• 0 •)"
+
+insert'(Empty, 0) |> show
+//│ = "(• 0 •)"
+
 insert(Node(0, Empty, Empty), 0) |> show
+//│ = "(• 0 •)"
+
+insert'(Node(0, Empty, Empty), 0) |> show
+//│ = "(• 0 •)"
+
 insert(Node(1, Empty, Empty), 0) |> show
+//│ = "((• 0 •) 1 •)"
+
+insert'(Node(1, Empty, Empty), 0) |> show
+//│ = "((• 0 •) 1 •)"
+
 insert(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
+//│ = "((• 0 •) 1 •)"
+
+insert'(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
+//│ = "((• 0 •) 1 •)"
+
 insert(Node(1, Node(0, Empty, Empty), Empty), 2) |> show
+//│ = "((• 0 •) 1 (• 2 •))"
+
+insert'(Node(1, Node(0, Empty, Empty), Empty), 2) |> show
+//│ = "((• 0 •) 1 (• 2 •))"
 
 fun fromList(l) =
   fun fromList'(t, xs) =
@@ -74,10 +82,19 @@ fun fromList(l) =
   fromList'(Empty, l)
 
 fromList(1 :: 2 :: 3 :: 4 :: Nil) |> show
+//│ = "(• 1 (• 2 (• 3 (• 4 •))))"
+
 fromList(2 :: 1 :: 4 :: 3 :: Nil) |> show
+//│ = "((• 1 •) 2 ((• 3 •) 4 •))"
+
 fromList(4 :: 3 :: 2 :: 1 :: Nil) |> show
+//│ = "((((• 1 •) 2 •) 3 •) 4 •)"
+
 let example1 = fromList(1 :: 3 :: 2 :: 4 :: Nil)
+//│ example1 = Node(1, Empty, Node(3, Node(2, Empty, Empty), Node(4, Empty, Empty)))
+
 example1 |> show
+//│ = "(• 1 ((• 2 •) 3 (• 4 •)))"
 
 fun contains(t, v) = if t is
   Node(v', l, r) and
@@ -97,8 +114,13 @@ fun minValue(t) = if t is
   Node(_, l, _) then minValue(l)
 
 minValue(Empty) ?? "not found"
+//│ = "not found"
+
 minValue(Node(0, Empty, Empty)) ?? "not found"
+//│ = 0
+
 minValue(example1) ?? "not found"
+//│ = 1
 
 fun maxValue(t) = if t is
   Empty then None
@@ -106,35 +128,71 @@ fun maxValue(t) = if t is
   Node(_, _, r) then maxValue(r)
 
 maxValue(Empty) ?? "not found"
+//│ = "not found"
+
 maxValue(Node(0, Empty, Empty)) ?? "not found"
+//│ = 0
+
 maxValue(example1) ?? "not found"
+//│ = 4
 
 fun lowerBound(t, v) = if t is
   Node(v', l, r) and
     v < v' then lowerBound(l, v)
     v > v' then Some(lowerBound(r, v) ?? v')
-    _ then Some(v')
+    else Some(v')
   Empty then None
 
 lowerBound(Empty, 0) ?? "not found"
+//│ = "not found"
+
 lowerBound(Node(0, Empty, Empty), 0) ?? "not found"
+//│ = 0
+
 lowerBound(Node(1, Empty, Empty), 0) ?? "not found"
+//│ = "not found"
+
 lowerBound(Node(-1, Empty, Empty), 0) ?? "not found"
+//│ = -1
 
 lowerBound(example1, 0) ?? "not found"
+//│ = "not found"
+
 lowerBound(example1, 1) ?? "not found"
+//│ = 1
+
 lowerBound(example1, 2) ?? "not found"
+//│ = 2
+
 lowerBound(example1, 3) ?? "not found"
+//│ = 3
+
 lowerBound(example1, 4) ?? "not found"
+//│ = 4
+
 lowerBound(example1, 5) ?? "not found"
+//│ = 4
 
 let example2 = fromList(1 :: 5 :: 42 :: 10 :: 23 :: 59 :: 81 :: Nil)
+//│ example2 = Node(1, Empty, Node(5, Empty, Node(42, Node(10, Empty, Node(23, Empty, Empty)), Node(59, Empty, Node(81, Empty, Empty)))))
+
 lowerBound(example2, 0) ?? "not found"
+//│ = "not found"
+
 lowerBound(example2, 25) ?? "not found"
+//│ = 23
+
 lowerBound(example2, 99) ?? "not found"
+//│ = 81
+
 lowerBound(example2, 7) ?? "not found"
+//│ = 5
+
 lowerBound(example2, 32) ?? "not found"
+//│ = 23
+
 lowerBound(example2, 41) ?? "not found"
+//│ = 23
 
 fun upperBound(t, v) = if t is
   Node(v', l, r) and
@@ -144,11 +202,22 @@ fun upperBound(t, v) = if t is
   Empty then None
 
 upperBound(example2, 0) ?? "not found"
+//│ = 1
+
 upperBound(example2, 25) ?? "not found"
+//│ = 42
+
 upperBound(example2, 99) ?? "not found"
+//│ = "not found"
+
 upperBound(example2, 7) ?? "not found"
+//│ = 10
+
 upperBound(example2, 32) ?? "not found"
+//│ = 42
+
 upperBound(example2, 41) ?? "not found"
+//│ = 42
 
 fun remove(t, v) =
   if t is
@@ -161,42 +230,74 @@ fun remove(t, v) =
     Empty then Empty
 
 remove(Empty, 0) |> show
+//│ = "•"
+
 remove(Node(0, Empty, Empty), 0) |> show
+//│ = "•"
+
 remove(Node(1, Empty, Empty), 0) |> show
+//│ = "(• 1 •)"
+
 remove(Node(1, Node(0, Empty, Empty), Empty), 0) |> show
+//│ = "(• 1 •)"
+
 remove(Node(1, Empty, Node(2, Empty, Empty)), 2) |> show
+//│ = "(• 1 •)"
+
 remove(Node(1, Node(0, Empty, Empty), Node(2, Empty, Empty)), 1) |> show
+//│ = "((• 0 •) 2 •)"
 
 example1 |> show
-remove(example1, 0) |> show
-remove(example1, 1) |> show
-remove(example1, 2) |> show
-remove(example1, 3) |> show
-remove(example1, 4) |> show
+//│ = "(• 1 ((• 2 •) 3 (• 4 •)))"
 
-data class Pair[A, B](val first: A, val second: B)
+remove(example1, 0) |> show
+//│ = "(• 1 ((• 2 •) 3 (• 4 •)))"
+
+remove(example1, 1) |> show
+//│ = "(• 2 (• 3 (• 4 •)))"
+
+remove(example1, 2) |> show
+//│ = "(• 1 (• 3 (• 4 •)))"
+
+remove(example1, 3) |> show
+//│ = "(• 1 ((• 2 •) 4 •))"
+
+remove(example1, 4) |> show
+//│ = "(• 1 ((• 2 •) 3 •))"
 
 fun extractMin(t) =
   if t is
-    Node(v, Empty, r) then Pair(Some(v), r)
+    Node(v, Empty, r) then [Some(v), r]
     Node(v, l, r) and
-      extractMin(l) is Pair(m, l') then
-        Pair(m, Node(v, l', r))
-    Empty then Pair(None, Empty)
+      extractMin(l) is [m, l'] then
+        [m, Node(v, l', r)]
+    Empty then [None, Empty]
 
-extractMin(example1).first ?? "not found"
-extractMin(example1).second |> show
+extractMin(example1).0 ?? "not found"
+//│ = 1
+
+extractMin(example1).1 |> show
+//│ = "((• 2 •) 3 (• 4 •))"
 
 fun merge(l, r) =
   if extractMin(r) is
-    Pair(None, _) then l
-    Pair(Some(m), r') then Node(m, l, r')
+    [None, _] then l
+    [Some(m), r'] then Node(m, l, r')
 
 merge(Empty, Empty) |> show
+//│ = "•"
+
 merge(Empty, Node(0, Empty, Empty)) |> show
+//│ = "(• 0 •)"
+
 merge(Node(0, Empty, Empty), Empty) |> show
+//│ = "(• 0 •)"
+
 merge(Node(0, Empty, Empty), Node(1, Empty, Empty)) |> show
+//│ = "((• 0 •) 1 •)"
+
 merge(Node(0, Empty, Empty), Node(2, Node(1, Empty, Empty), Empty)) |> show
+//│ = "((• 0 •) 1 (• 2 •))"
 
 fun removeGte(t, v) =
   if t is
@@ -207,20 +308,46 @@ fun removeGte(t, v) =
     Empty then Empty
 
 removeGte(Empty, 0) |> show
+//│ = "•"
+
 removeGte(example1, 0) |> show
+//│ = "•"
+
 removeGte(example1, 1) |> show
+//│ = "•"
+
 removeGte(example1, 2) |> show
+//│ = "(• 1 •)"
+
 removeGte(example1, 3) |> show
+//│ = "(• 1 (• 2 •))"
+
 removeGte(example1, 4) |> show
+//│ = "(• 1 ((• 2 •) 3 •))"
+
 removeGte(example1, 5) |> show
+//│ = "(• 1 ((• 2 •) 3 (• 4 •)))"
 
 example2 |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 (• 81 •)))))"
+
 removeGte(example2, 10) |> show
+//│ = "(• 1 (• 5 •))"
+
 removeGte(example2, 22) |> show
+//│ = "(• 1 (• 5 (• 10 •)))"
+
 removeGte(example2, 23) |> show
+//│ = "(• 1 (• 5 (• 10 •)))"
+
 removeGte(example2, 24) |> show
+//│ = "(• 1 (• 5 (• 10 (• 23 •))))"
+
 removeGte(example2, 70) |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 •))))"
+
 removeGte(example2, 99) |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 (• 81 •)))))"
 
 fun removeLt(t, v) =
   if t is
@@ -230,12 +357,25 @@ fun removeLt(t, v) =
     Empty then Empty
 
 example2 |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 (• 81 •)))))"
+
 removeLt(example2, 10) |> show
+//│ = "((• 10 (• 23 •)) 42 (• 59 (• 81 •)))"
+
 removeLt(example2, 22) |> show
+//│ = "((• 23 •) 42 (• 59 (• 81 •)))"
+
 removeLt(example2, 23) |> show
+//│ = "((• 23 •) 42 (• 59 (• 81 •)))"
+
 removeLt(example2, 24) |> show
+//│ = "(• 42 (• 59 (• 81 •)))"
+
 removeLt(example2, 70) |> show
+//│ = "(• 81 •)"
+
 removeLt(example2, 99) |> show
+//│ = "•"
 
 // Remove elements from `begin` until `end`.
 fun removeRange(t, begin, end) =
@@ -247,12 +387,31 @@ fun removeRange(t, begin, end) =
     Empty then Empty
 
 example2 |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 (• 81 •)))))"
+
+removeRange(example2, -10000, 10000) |> show
+//│ = "•"
+
 removeRange(example2, 1, 82) |> show
+//│ = "•"
+
 removeRange(example2, 1, 50) |> show
+//│ = "(• 59 (• 81 •))"
+
 removeRange(example2, 50, 81) |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 81 •))))"
+
 removeRange(example2, 20, 60) |> show
+//│ = "(• 1 (• 5 ((• 10 •) 81 •)))"
+
 removeRange(example2, 20, 24) |> show
+//│ = "(• 1 (• 5 ((• 10 •) 42 (• 59 (• 81 •)))))"
+
 removeRange(example2, 59, 60) |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 81 •))))"
+
+removeRange(example2, 59, 59) |> show
+//│ = "(• 1 (• 5 ((• 10 (• 23 •)) 42 (• 59 (• 81 •)))))"
 
 fun size(t) =
   if t is
@@ -270,9 +429,16 @@ fun inverse(t) =
     Empty then Empty
 
 inverse(Empty) |> show
+//│ = "•"
+
 inverse(Node(0, Empty, Empty)) |> show
+//│ = "(• 0 •)"
+
 inverse(example1) |> show
+//│ = "(((• 4 •) 3 (• 2 •)) 1 •)"
+
 inverse(example2) |> show
+//│ = "(((((• 81 •) 59 •) 42 ((• 23 •) 10 •)) 5 •) 1 •)"
 
 fun height(t) =
   if t is
@@ -288,8 +454,7 @@ fun isBalanced(t) =
   if t is
     Empty then true
     Node(_, l, r) and height(l) is hl and height(r) is hr then
-      // The precedence of `<=` seems to be broken.
-      (abs(hl - hr) <= 1) && isBalanced(l) && isBalanced(r)
+      abs(hl - hr) <= 1 && isBalanced(l) && isBalanced(r)
 
 isBalanced(Empty) ~~> true
 isBalanced(Node(0, Empty, Empty)) ~~> true

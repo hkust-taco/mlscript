@@ -1,4 +1,4 @@
-
+:js
 
 data class Some[T](value: T)
 

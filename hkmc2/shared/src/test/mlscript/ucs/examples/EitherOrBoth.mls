@@ -1,3 +1,5 @@
+:js
+
 import "../../../mlscript-compile/Str.mls"
 import "../../../mlscript-compile/Option.mls"
 
@@ -19,10 +21,10 @@ fun getLeft[A, B](eob: EitherOrBoth[A, B]): Option[A] =
     Right(_) then None
     Both(left, _) then Some(left)
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.16: 	fun getLeft[A, B](eob: EitherOrBoth[A, B]): Option[A] =
+//│ ║  l.18: 	fun getLeft[A, B](eob: EitherOrBoth[A, B]): Option[A] =
 //│ ╙──      	                                            ^^^^^^^^
 //│ ╔══[ERROR] Unexpected moduleful type application.
-//│ ║  l.16: 	fun getLeft[A, B](eob: EitherOrBoth[A, B]): Option[A] =
+//│ ║  l.18: 	fun getLeft[A, B](eob: EitherOrBoth[A, B]): Option[A] =
 //│ ║        	                                            ^^^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
@@ -34,10 +36,10 @@ fun getRight[A, B](eob: EitherOrBoth[A, B]): Option[B] =
     Right(right) then Some(right)
     Both(_, right) then Some(right)
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.31: 	fun getRight[A, B](eob: EitherOrBoth[A, B]): Option[B] =
+//│ ║  l.33: 	fun getRight[A, B](eob: EitherOrBoth[A, B]): Option[B] =
 //│ ╙──      	                                             ^^^^^^^^
 //│ ╔══[ERROR] Unexpected moduleful type application.
-//│ ║  l.31: 	fun getRight[A, B](eob: EitherOrBoth[A, B]): Option[B] =
+//│ ║  l.33: 	fun getRight[A, B](eob: EitherOrBoth[A, B]): Option[B] =
 //│ ║        	                                             ^^^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
@@ -49,10 +51,10 @@ fun getBoth[A, B](eob: EitherOrBoth[A, B]): Option[[A, B]] =
     Right(_) then None
     Both(left, right) then Some([left, right])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.46: 	fun getBoth[A, B](eob: EitherOrBoth[A, B]): Option[[A, B]] =
+//│ ║  l.48: 	fun getBoth[A, B](eob: EitherOrBoth[A, B]): Option[[A, B]] =
 //│ ╙──      	                                            ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unexpected moduleful type application.
-//│ ║  l.46: 	fun getBoth[A, B](eob: EitherOrBoth[A, B]): Option[[A, B]] =
+//│ ║  l.48: 	fun getBoth[A, B](eob: EitherOrBoth[A, B]): Option[[A, B]] =
 //│ ║        	                                            ^^^^^^^^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 

@@ -41,19 +41,19 @@ Baz[in Int out Int]
 
 t.Bar#x
 //│ Parsed:
-//│ 	App(Ident(#),Tup(List(Sel(Ident(t),Ident(Bar)), Ident(x))))
+//│ 	OpApp(Sel(Ident(t),Ident(Bar)),Ident(#),List(Ident(x)))
 
 foo.Bar#baz(42)
 //│ Parsed:
-//│ 	App(App(Ident(#),Tup(List(Sel(Ident(foo),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+//│ 	App(OpApp(Sel(Ident(foo),Ident(Bar)),Ident(#),List(Ident(baz))),Tup(List(IntLit(42))))
 
 foo(42).Bar#baz(42)
 //│ Parsed:
-//│ 	App(App(Ident(#),Tup(List(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+//│ 	App(OpApp(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)),Ident(#),List(Ident(baz))),Tup(List(IntLit(42))))
 
 let x = 42 in x + 0
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(42)),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
+//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(42)),Some(OpApp(Ident(x),Ident(+),List(IntLit(0)))))
 
 fun id(x) = x
 //│ Parsed:
@@ -61,7 +61,7 @@ fun id(x) = x
 
 x => x + 1
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',OpApp(Ident(x),Ident(+),List(IntLit(1))))
 
 true and true
 //│ Parsed:
@@ -122,11 +122,11 @@ fun id: [A] -> A -> A
 
 x => if x == 0 then 1 else x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfLike(keyword 'if',None,Block(List(InfixApp(App(Ident(==),Tup(List(Ident(x), IntLit(0)))),keyword 'then',IntLit(1)), Modified(keyword 'else',None,Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(Ident(x),Ident(==),List(IntLit(0))),keyword 'then',IntLit(1)), Modified(keyword 'else',None,Ident(x))))))
 
 if 1 < 2 then 1 else 0
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)), Modified(keyword 'else',None,IntLit(0)))))
+//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(IntLit(1),Ident(<),List(IntLit(2))),keyword 'then',IntLit(1)), Modified(keyword 'else',None,IntLit(0)))))
 
 if false then 0 else 42
 //│ Parsed:
@@ -148,7 +148,7 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ Parsed:
-//│ 	TermDef(Fun,Ident(fact),Some(Case(None,Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))))
+//│ 	TermDef(Fun,Ident(fact),Some(Case(None,Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',OpApp(Ident(n),Ident(*),List(App(Ident(fact),Tup(List(OpApp(Ident(n),Ident(-),List(IntLit(1))))))))))))))
 
 
 `42
@@ -192,7 +192,7 @@ g`(`1, `2)
 
 x `=> if 0 == 0 then x else `0
 //│ Parsed:
-//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfLike(keyword 'if',None,Block(List(InfixApp(App(Ident(==),Tup(List(IntLit(0), IntLit(0)))),keyword 'then',Ident(x)), Modified(keyword 'else',None,Quoted(IntLit(0)))))))))
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(IntLit(0),Ident(==),List(IntLit(0))),keyword 'then',Ident(x)), Modified(keyword 'else',None,Quoted(IntLit(0)))))))))
 
 region x in 42
 //│ Parsed:
@@ -208,11 +208,11 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(LetLike(keyword 'let',Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(keyword 'let',Ident(t),Some(App(Ident(:=),Tup(List(Ident(r), IntLit(0))))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
+//│ 	Region(Ident(x),Block(List(LetLike(keyword 'let',Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(keyword 'let',Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
 
 !r + 1
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(App(Ident(!),Tup(List(Ident(r)))), IntLit(1))))
+//│ 	OpApp(App(Ident(!),Tup(List(Ident(r)))),Ident(+),List(IntLit(1)))
 
 Int ->{Any} Int
 //│ Parsed:
@@ -224,7 +224,7 @@ Int ->{Any} Int
 
 A | B
 //│ Parsed:
-//│ 	App(Ident(|),Tup(List(Ident(A), Ident(B))))
+//│ 	OpApp(Ident(A),Ident(|),List(Ident(B)))
 
 [A extends Int] -> A -> A
 //│ Parsed:

@@ -54,24 +54,29 @@ case 0 then true
 1 |> (2 |> case x then case y then [x, y]) |> case [a, b] then [b, a]
 //│ = [1, 2]
 
-:todo
+:todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Tup(List()),keyword 'then',IntLit(0)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ║  l.58: 	case [x] then x, [] then 0
+//│ ╙──      	                 ^^^^^^^^^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.58: 	case [x] then x, [] then 0
+//│ ╙──      	      ^^^^^^^^^
 
 :sjs
 case
   0 then true
   _ then false
 //│ JS (unsanitized):
-//│ let lambda10;
-//│ lambda10 = (undefined, function (caseScrut) {
+//│ let lambda11;
+//│ lambda11 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) {
 //│     return true
 //│   } else {
 //│     return false
 //│   }
 //│ });
-//│ lambda10
+//│ lambda11
 //│ = [function]
 
 data class Some(value)
@@ -82,8 +87,8 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, tmp5, lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
+//│ let isDefined, tmp6, lambda12;
+//│ lambda12 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
@@ -92,7 +97,7 @@ val isDefined = case
 //│     throw new globalThis.Error("match error");
 //│   }
 //│ });
-//│ tmp5 = lambda11;
-//│ isDefined = tmp5;
+//│ tmp6 = lambda12;
+//│ isDefined = tmp6;
 //│ isDefined = [function]
 

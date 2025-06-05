@@ -104,6 +104,9 @@ declare module debug with
   fun printStack
   fun getLocals
 
+declare module annotations with
+  object compile
+
 
 // HTML DOM API definitions.
 // Move them to a separate Prelude file when there are enough of them.

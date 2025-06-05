@@ -1,0 +1,435 @@
+:js
+
+
+// * Operator continuations on a new line include the whole previous expression as LHS operand
+
+:p
+2
++
+2
+//│ ┊2┊↵┊+┊↵┊2┊
+//│ Parsed:
+//│ 	OpApp(IntLit(2),Ident(+),List(IntLit(2)))
+//│ = 4
+
+2
++
+2
+*
+2
+//│ = 8
+
+2
++ 2
+* 2
+//│ = 8
+
+// * Notice the difference
+2
++ 2
+  * 2
+//│ = 6
+
+// * Generally, operators on the *same indentation level* are sequenced – applied in order
+2
+  + 2
+  * 2
+//│ = 8
+
+// * Somehow this also parses...
+2
+  +
+2
+  *
+2
+//│ = 6
+
+
+2 + 2
+. print()
+//│ > 4
+
+2 + 2
+  . print()
+//│ > 2
+//│ = "2()"
+
+
+let xs = [1, 2, 3]
+let ys = [4, 5, 6]
+fun len(xs) = xs.length
+//│ xs = [1, 2, 3]
+//│ ys = [4, 5, 6]
+
+xs |> len
++
+xs |> len
+|> print
+//│ > 6
+
+
+
+:pt
+let r = 10 in r
+-1
+//│ Parsed tree:
+//│ LetLike:
+//│   kw = keyword 'let'
+//│   lhs = Ident of "r"
+//│   rhs = S of IntLit of 10
+//│   body = S of Ident of "r"
+//│ App:
+//│   lhs = Ident of "-"
+//│   rhs = Tup of Ls of 
+//│     IntLit of 1
+//│ = -1
+
+let r = 10 in id(r)
+-1
+//│ = -1
+
+let r = 10
+-1
+//│ = -1
+//│ r = 10
+
+let r = id(id)(10)
+-1
+//│ = -1
+//│ r = 10
+
+:pt
+let r = id(10)
+!r
+//│ Parsed tree:
+//│ LetLike:
+//│   kw = keyword 'let'
+//│   lhs = Ident of "r"
+//│   rhs = S of App:
+//│     lhs = Ident of "id"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 10
+//│   body = N
+//│ App:
+//│   lhs = Ident of "!"
+//│   rhs = Tup of Ls of 
+//│     Ident of "r"
+//│ r = 10
+
+
+
+// fun solution(bd, c, n) =
+//   if true then
+//     let a = 1
+//     a
+//   else ???
+
+
+if 0
+  === 1 then 2
+  else 3
+//│ = 3
+
+
+let x
+= 1
+//│ x = 1
+
+let x = 1
+//│ x = 1
+
+let x
+= 1
+//│ x = 1
+
+
+2
+  + 1
+* 2
+//│ = 6
+
+2
+  |> (a: _)
+  .a
+//│ = 2
+
+:re
+2
+  |> (a: _)
+    .a
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
+
+:pe
+2
+  |> (a: _)
+.a
+//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ║  l.165: 	.a
+//│ ╙──       	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ║  l.165: 	.a
+//│ ╙──       	^^
+
+
+// :dp
+2
+    * 1
+  + 2
+//│ = 4
+
+// :dp
+2
+    * 1
+      + 2
+//│ = 4
+
+2
+    * 1
+      + 2
+      + 2
+//│ = 6
+
+2
+    * 1
+      + 2
+    + 2
+//│ = 6
+
+// :dp
+2 {+ 1} * 2
+//│ = 4
+
+{2
+  + 1} * 2
+//│ = 6
+
+{2 { + 1 }} * 2
+//│ = 6
+
+2 { * 1 { + 2 } }
+//│ = 4
+
+// :dp
+2
+    + 1
+      * 2
+//│ = 4
+
+2
+    + 1
+      * 2
+      * 2
+//│ = 6
+
+2
+    + 1
+      * 2
+    * 2
+//│ = 8
+
+
+2
+    + 1
+      |> print
+//│ > 3
+
+2
+    + 1
+    + 1
+      |> print
+//│ > 4
+
+2
+    + 1 |> print
+//│ > 3
+
+2
+    + 1
+    + 1 |> print
+//│ > 4
+
+2
+    + 1
+  |> print
+//│ > 3
+
+let incr = _ + 1
+//│ incr = [function incr]
+
+// :dp
+2
+    + 1
+    + 1
+  |> print
+//│ > 4
+
+2
+    + 1
+    + 1
+  |> incr
+  |> print
+//│ > 5
+
+2
+    + 1
+    + 1
+  |> incr
+    |> print
+//│ > 5
+
+2
+      + 1
+      + 1
+    |> incr
+  |> print
+//│ > 5
+
+// Uh...
+2
+      + 1
+      !> print
+      + 1
+    |> incr
+      !> print
+  |> print
+//│ > 3
+//│ > 5
+//│ > 5
+
+
+{1} + {1}
+//│ = 2
+
+{111} + {222} + {333}
+//│ = 666
+
+
+2
+* 3
+//│ = 6
+
+:pe
+:w
+2, * 3
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.313: 	2, * 3
+//│ ╙──       	     ^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.313: 	2, * 3
+//│ ╙──       	^
+//│ = [function]
+
+2,* 3
+//│ = 6
+
+2 ,* 3
+//│ = 6
+
+2 + 2
+* 3
+//│ = 12
+
+2 + 2 ,* 3
+//│ = 12
+
+2 + 2 ,* 2 + 2
+//│ = 10
+
+2 + 2 ,*, 2 + 2
+//│ = 16
+
+module Arr with
+  val len = _.length
+
+let
+  xs = [1, 2]
+  ys = [3, 4, 5]
+//│ xs = [1, 2]
+//│ ys = [3, 4, 5]
+
+xs |> Arr.len
++
+ys |> Arr.len
+//│ = 5
+
+xs |> Arr.len,+
+ys |> Arr.len
+//│ = 5
+
+xs |> Arr.len
++, ys |> Arr.len
+//│ = 5
+
+xs |> Arr.len ,+, ys |> Arr.len
+//│ = 5
+
+:pe
+xs |> Arr.len
+,+
+ys |> Arr.len
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.368: 	,+
+//│ ║         	  ^
+//│ ║  l.369: 	ys |> Arr.len
+//│ ╙──       	
+
+xs |> Arr.len
+,+ 1
+//│ = 1
+
+:pe
+xs |> Arr.len
++,
+ys |> Arr.len
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.382: 	+,
+//│ ║         	  ^
+//│ ║  l.383: 	ys |> Arr.len
+//│ ╙──       	
+
+xs |> Arr.len
++, ys |> Arr.len
+//│ = 5
+
+// :pe
+xs |> Arr.len is 2 ,+, ys |> Arr.len
+//│ = 4
+
+xs |> Arr.len is 2 ,+, ys |> Arr.len is 3
+//│ = 2
+
+// :pe
+xs |> Arr.len is 2 ,+
+ys |> Arr.len
+//│ = 4
+
+
+
+
+class Foo(x)
+
+:re
+new Foo(1) is Foo
+//│ ═══[RUNTIME ERROR] TypeError: tmp83 is not a constructor
+
+:fixme // ?
+new Foo(1) ,is Foo
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
+//│ ║  l.416: 	new Foo(1) ,is Foo
+//│ ╙──       	            ^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.416: 	new Foo(1) ,is Foo
+//│ ╙──       	               ^^^
+
+:fixme // ?
+new Foo(1)
+is Foo
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
+//│ ║  l.426: 	is Foo
+//│ ╙──       	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.426: 	is Foo
+//│ ╙──       	   ^^^
+
+
+

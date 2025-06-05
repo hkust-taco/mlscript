@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 object A
 object B
 

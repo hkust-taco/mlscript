@@ -73,7 +73,7 @@ object Keyword:
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
-  val `of` = Keyword("of", N, N)
+  val `of` = Keyword("of", N, N) // * Note that `of` is parsed specially, so its precedence is not listed here
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
   val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
@@ -138,9 +138,14 @@ object Keyword:
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type | `else`.type | `is`.type | `:`.type | `->`.type |
-    `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type
-
+  type Infix =
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
+    `and`.type | `or`.type | `then`.type | `else`.type
+  
+  type InfixSplittable =
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
+    `of`.type
+  
   type Ellipsis = `...`.type | `..`.type
   
   type letLike = `let`.type | `set`.type

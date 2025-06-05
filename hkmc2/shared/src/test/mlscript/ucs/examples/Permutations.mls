@@ -1,84 +1,133 @@
+:js
 import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Str.mls"
 
 open Stack
-open Str
 
-type List[A] = Nil | Cons[A]
+fun showList(xs) = "[" + xs Iter.fromStack() Iter.joined(", ") + "]"
 
-fun (|>) pipe(x, f) = f(x)
-
-fun (:::) appendAll[A](xs: List[A], ys: List[A]): List[A] =
-  if xs is
-    Nil then ys
-    Cons(x, xs') then x :: (xs' ::: ys)
-fun (:+) append[A](xs, x): List[A] = xs ::: (x :: Nil)
-fun reverse(xs) =
-  fun aux(acc, xs) =
-    if xs is
-      Nil then acc
-      Cons(x, xs') then aux(x :: acc, xs')
-  aux(Nil, xs)
-fun join(sep) =
-  fun aux(acc, xs) =
-    if xs is
-      Nil then acc
-      Cons(x, xs') then aux(acc ~ sep ~ Str.from(x), xs')
-  (xs) =>
-    if xs is
-      Cons(x, xs') then aux(Str.from(x), xs')
-      Nil then ""
-fun showList(xs) = "[" ~ join(", ")(xs) ~ "]"
 fun foldLeft(f)(z) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(f(acc, x), xs')
   (xs) => aux(z, xs)
-fun map(f, xs) =
-  if xs is
-    Nil then Nil
-    Cons(x, xs') then f(x) :: map(f, xs')
-fun showListList(xs) = "[" ~ join(", ")(map(showList, xs)) ~ "]"
 
-fun insertAllPositions(z) =
-  fun aux(prev, acc, xs) =
-    if xs is
-      Nil then ((prev :+ z) :: acc) |> reverse
-      Cons(head, tail) then
-        let nu = ((prev :+ z) ::: xs)
-        aux(prev :+ head, nu :: acc, tail)
-  xs => aux(Nil, Nil, xs)
+fun showLists(xs) = print of
+  "[\n" + xs Iter.fromStack() Iter.mapping(showList) Iter.mapping(s => "  " + s) Iter.joined(",\n") + "\n]"
 
-insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
+fun (~>..) insertAllPositions(z, xs) =
+  fun go(prev, lists, next) =
+    if next is
+      Nil then ((prev :+ z) :: lists) |> reverse
+      head :: tail then
+        let nu = ((prev :+ z) ::: next)
+        go(prev :+ head, nu :: lists, tail)
+  go(Nil, Nil, xs)
+
+0 ~>.. (1 :: 2 :: 3 :: Nil) |> showLists
+//│ > [
+//│ >   [0, 1, 2, 3],
+//│ >   [1, 0, 2, 3],
+//│ >   [1, 2, 0, 3],
+//│ >   [1, 2, 3, 0]
+//│ > ]
 
 fun permutations(xs) =
   if xs is
     Nil then Nil
-    Cons(x, Nil) then (x :: Nil) :: Nil
-    Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
+    x :: Nil then (x :: Nil) :: Nil
+    x :: xs' then permutations(xs')
+      Iter.fromStack()
+      Iter.folded of Nil, (acc, ys) => acc ::: (x ~>.. ys)
 
-permutations(Nil) |> showListList
-permutations(1 :: Nil) |> showListList
-permutations(1 :: 2 :: Nil) |> showListList
-permutations(1 :: 2 :: 3 :: Nil) |> showListList
+permutations(Nil) |> showLists
+//│ > [
+//│ > 
+//│ > ]
 
-fun filterNot(f, xs) =
-  if xs is
-    Nil then Nil
-    Cons(x, xs') then
-      if f(x) then filterNot(f, xs')
-      else x :: filterNot(f, xs')
+permutations(1 :: Nil) |> showLists
+//│ > [
+//│ >   [1]
+//│ > ]
 
-fun permutations'(xs) =
-  if xs is
-    Nil then Nil
-    Cons(x, Nil) then (x :: Nil) :: Nil
-    else
-      let f(acc, x) = acc ::: map((ys) => x :: ys, permutations'(filterNot((y) => x == y, xs)))
-      foldLeft(f)(Nil)(xs)
+permutations(1 :: 2 :: Nil) |> showLists
+//│ > [
+//│ >   [1, 2],
+//│ >   [2, 1]
+//│ > ]
 
-permutations'(Nil) |> showListList
-permutations'(1 :: Nil) |> showListList
-permutations'(1 :: 2 :: Nil) |> showListList
-permutations'(1 :: 2 :: 3 :: Nil) |> showListList
+permutations(1 :: 2 :: 3 :: Nil) |> showLists
+//│ > [
+//│ >   [1, 2, 3],
+//│ >   [2, 1, 3],
+//│ >   [2, 3, 1],
+//│ >   [1, 3, 2],
+//│ >   [3, 1, 2],
+//│ >   [3, 2, 1]
+//│ > ]
+
+fun permutations'(xs) = if xs is
+  Nil then Nil
+  Cons(x, Nil) then (x :: Nil) :: Nil
+  else xs
+    Iter.fromStack()
+    Iter.folded of Nil, (acc, x) => acc ::: permutations'(xs filter of (y) => x != y)
+      Iter.fromStack()
+      Iter.mapping((ys) => x :: ys)
+      Iter.toStack()
+
+permutations'(Nil) |> showLists
+//│ > [
+//│ > 
+//│ > ]
+
+permutations'(1 :: Nil) |> showLists
+//│ > [
+//│ >   [1]
+//│ > ]
+
+permutations'(1 :: 2 :: Nil) |> showLists
+//│ > [
+//│ >   [1, 2],
+//│ >   [2, 1]
+//│ > ]
+
+permutations'(1 :: 2 :: 3 :: Nil) |> showLists
+//│ > [
+//│ >   [1, 2, 3],
+//│ >   [1, 3, 2],
+//│ >   [2, 1, 3],
+//│ >   [2, 3, 1],
+//│ >   [3, 1, 2],
+//│ >   [3, 2, 1]
+//│ > ]
+
+permutations'(1 :: 2 :: 3 :: 4 :: Nil) |> showLists
+//│ > [
+//│ >   [1, 2, 3, 4],
+//│ >   [1, 2, 4, 3],
+//│ >   [1, 3, 2, 4],
+//│ >   [1, 3, 4, 2],
+//│ >   [1, 4, 2, 3],
+//│ >   [1, 4, 3, 2],
+//│ >   [2, 1, 3, 4],
+//│ >   [2, 1, 4, 3],
+//│ >   [2, 3, 1, 4],
+//│ >   [2, 3, 4, 1],
+//│ >   [2, 4, 1, 3],
+//│ >   [2, 4, 3, 1],
+//│ >   [3, 1, 2, 4],
+//│ >   [3, 1, 4, 2],
+//│ >   [3, 2, 1, 4],
+//│ >   [3, 2, 4, 1],
+//│ >   [3, 4, 1, 2],
+//│ >   [3, 4, 2, 1],
+//│ >   [4, 1, 2, 3],
+//│ >   [4, 1, 3, 2],
+//│ >   [4, 2, 1, 3],
+//│ >   [4, 2, 3, 1],
+//│ >   [4, 3, 1, 2],
+//│ >   [4, 3, 2, 1]
+//│ > ]

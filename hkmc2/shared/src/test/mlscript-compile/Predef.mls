@@ -1,8 +1,15 @@
 
-import "./Runtime.mls"
-import "./Rendering.mls"
+// * Importing the mjs for now to avoid reparsing/re-elaborating these files Runtime all the time
+// * TODO: proper caching of parsed/elaborated files
+import "./Runtime.mjs"
+import "./Rendering.mjs"
+// import "./Runtime.mls"
+// import "./Rendering.mls"
+
+
 
 module Predef with ...
+
 
 fun id(x) = x
 
@@ -26,6 +33,7 @@ fun (<<) compose(f, g)(x) = f(g(x))
 
 // x . foo(a, b, c) == foo(x, a, b, c)
 fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
+fun (\) passTo2(receiver, f)(...args) = f(receiver, ...args)
 
 // Same as above but with low precedence
 fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)

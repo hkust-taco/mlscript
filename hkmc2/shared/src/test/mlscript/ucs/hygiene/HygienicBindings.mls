@@ -1,20 +1,14 @@
+:js
 
+import "../../../mlscript-compile/Option.mls"
 
-fun error = ()
+open Option { Some, None }
 
-fun (~~>) expect(a, b) = if a == b then () else error
-
-type Option[out T] = None | Some[T]
-object None
-data class Some[out T](val value: T)
+fun (~~>) expect(a, b) = if a == b then () else throw Error("unexpected result")
 
 type Either[A, B] = Left[A] | Right[B]
 data class Left[A](val leftValue: A)
 data class Right[B](val rightValue: B)
-
-type List[out A] = Nil | Cons[A]
-object Nil
-data class Cons[out A](head: A, tail: List[A])
 
 fun justTrue(_) = true
 fun justFalse(_) = false
@@ -35,20 +29,40 @@ fun h0'(a) =
     a is Some(x) and x is Right(z) then z
     a is None then 0
 
-// However, if the class parameter is bound to different variables in different
-// branches, the bindings cannot be merged and the type will miss the latter
-// branch. See the desugared version below.
+:ucs normalized
+// If a class parameter is bound to different variables in different
+// branches, the bindings with the same name in different branches should not
+// interfere with each other, and normalization should be able to factorize.
 fun h1(a) =
   if
     a is Some(x) and x is Left(y) then y
     a is Some(y) and y is Right(z) then z
     a is None then 0
+//│ Normalized:
+//│ >  if
+//│ >    a is Option.Some.class(param0) and
+//│ >      let x = $param0#1
+//│ >      x is Left.class(param0) and
+//│ >        let y = $param0#0
+//│ >        else y#666
+//│ >      let y = $param0#0
+//│ >      y is Right.class(param0) and
+//│ >        let z = $param0#0
+//│ >        else z#666
+//│ >    a is Option.None.class then 0
 
-// FIXME
-h1(Some(Left(0)))
+h1(Some(Left(42)))
+//│ = 42
 
-// FIXME: It is also impossible to merge bindings of different variables if one
-// of them is bound via a let binding.
+h1(Some(Right(8)))
+//│ = 8
+
+h1(None)
+//│ = 0
+
+:ucs normalized
+// But it is difficult to merge bindings of different variables if one
+// of them is bound via a let binding. Maybe this can be left for future work.
 fun h2(a) =
   if
     a is Some(x) and x is x' and x' is Left(y) then y
@@ -56,8 +70,21 @@ fun h2(a) =
       let y' = y
       y' is Right(z) then z
     a is None then 0
+//│ Normalized:
+//│ >  if
+//│ >    a is Option.Some.class(param0) and
+//│ >      let x = $param0#1
+//│ >      let x' = x#0
+//│ >      x' is Left.class(param0) and
+//│ >        let y = $param0#0
+//│ >        else y#666
+//│ >      let y = $param0#0
+//│ >      let y' = y#666
+//│ >      y' is Right.class(param0) and
+//│ >        let z = $param0#0
+//│ >        else z#666
+//│ >    a is Option.None.class then 0
 
-// :ducs:postprocess.result
 // :w
 fun h3(x, y, f, p) =
   if x is
@@ -67,7 +94,9 @@ fun h3(x, y, f, p) =
 
 
 h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
+
 h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
+
 h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
 
 
@@ -79,10 +108,21 @@ fun h4(x, y, p) =
     None then y
     _ then "default"
 
-h4("should be me", "not me", _ => true)
-h4(None, "not me", _ => true)
-h4(None, "should be me", _ => false)
-h4("anything", "not me", _ => false)
+:expect "should be me"
+h4("should be me", "not me", justTrue)
+//│ = "should be me"
+
+:expect None
+h4(None, "not me", justTrue)
+//│ = None
+
+:expect "should be me"
+h4(None, "should be me", justFalse)
+//│ = "should be me"
+
+:expect "default"
+h4("anything", "not me", justFalse)
+//│ = "default"
 
 // :ducs:postprocess.result
 fun h5(x, y, p) =
@@ -92,8 +132,13 @@ fun h5(x, y, p) =
     _ then y
 
 h5(Some(1), 2, justTrue) ~~> 1
+
 h5(Some(1), 2, justFalse) ~~> 2
+
 h5(None, 0, justTrue) ~~> 0
+
 h5(None, 0, justFalse) ~~> 0
+
 h5("foo", 42, justTrue) ~~> 42
+
 h5("foo", 42, justFalse) ~~> 42

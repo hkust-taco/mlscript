@@ -49,7 +49,7 @@ concat of
 :pe
 :ge
 ~ of "a", "b"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'of' keyword instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
 //│ ║  l.51: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead

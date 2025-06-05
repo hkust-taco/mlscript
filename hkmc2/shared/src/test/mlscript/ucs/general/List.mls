@@ -1,17 +1,25 @@
+:js
 
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Option.mls"
 
-abstract class List[out T]
-data class Cons[out T](head: T, tail: List[T]) extends List[T]
-object Nil extends List[Nothing]
-
-abstract class Option[out T]
-data class Some[out T](value: T) extends Option[T]
-object None extends Option[Nothing]
+open Stack
+open Option { Some, None }
 
 
 fun length(xs) = if xs is
   Nil then 0
   Cons(_, xs) then 1 + length(xs)
+
+length of Nil
+//│ = 0
+
+length of 1 :: 2 :: Nil
+//│ = 2
+
+:re
+length of ()
+//│ ═══[RUNTIME ERROR] Error: match error
 
 
 fun map(f, xs) = if xs is
@@ -25,6 +33,15 @@ fun findFirst(f, xs) =
     Cons(x, _) and f(x) then Some(x)
     Cons(_, xs) then findFirst(f, xs)
 
+findFirst of _ > 2, Nil
+//│ = None
+
+findFirst of _ > 2, 1 :: 2 :: 3 :: 4 :: Nil
+//│ = Some(3)
+
+findFirst of _ > 2, 1 :: 2 :: 4 :: 3 :: Nil
+//│ = Some(4)
+
 
 fun findFirst(f, xs) =
   if xs is
@@ -32,6 +49,15 @@ fun findFirst(f, xs) =
     Cons(x, _) and
       f(x) then Some(x)
     Cons(_, xs) then findFirst(f, xs)
+
+findFirst of _ > 2, Nil
+//│ = None
+
+findFirst of _ > 2, 1 :: 2 :: 3 :: 4 :: Nil
+//│ = Some(3)
+
+findFirst of _ > 2, 1 :: 2 :: 4 :: 3 :: Nil
+//│ = Some(4)
 
 
 fun findFirst(f, xs) =
@@ -42,4 +68,12 @@ fun findFirst(f, xs) =
         f(x) then Some(x)
       Cons(_, xs) then findFirst(f, xs)
 
+findFirst of _ > 2, Nil
+//│ = None
+
+findFirst of _ > 2, 1 :: 2 :: 3 :: 4 :: Nil
+//│ = Some(3)
+
+findFirst of _ > 2, 1 :: 2 :: 4 :: 3 :: Nil
+//│ = Some(4)
 

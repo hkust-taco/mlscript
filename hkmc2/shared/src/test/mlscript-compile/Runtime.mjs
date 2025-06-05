@@ -269,8 +269,8 @@ let Runtime1;
         tmp7 = "at least ";
       }
       tmp8 = tmp6 + tmp7;
-      tmp9 = expected + " argument";
-      tmp10 = tmp8 + tmp9;
+      tmp9 = tmp8 + expected;
+      tmp10 = tmp9 + " argument";
       scrut2 = expected === 1;
       if (scrut2 === true) {
         tmp11 = "";
@@ -278,8 +278,8 @@ let Runtime1;
         tmp11 = "s";
       }
       tmp12 = tmp10 + tmp11;
-      tmp13 = " but got " + got;
-      tmp14 = tmp12 + tmp13;
+      tmp13 = tmp12 + " but got ";
+      tmp14 = tmp13 + got;
       throw globalThis.Error(tmp14);
     } else {
       return runtime.Unit

@@ -103,13 +103,13 @@ add(2)
 inc(2) * 2
   inc()
 //│ Parsed tree:
-//│ App:
-//│   lhs = Ident of "*"
-//│   rhs = Tup of Ls of 
-//│     App:
-//│       lhs = Ident of "inc"
-//│       rhs = Tup of Ls of 
-//│         IntLit of 2
+//│ OpApp:
+//│   lhs = App:
+//│     lhs = Ident of "inc"
+//│     rhs = Tup of Ls of 
+//│       IntLit of 2
+//│   op = Ident of "*"
+//│   rhss = Ls of 
 //│     Jux:
 //│       lhs = IntLit of 2
 //│       rhs = Block of Ls of 
@@ -121,37 +121,55 @@ inc(2) * 2
 // :pt
 // :elt
 // :sjs
+:todo // ? do we really want to support this
 42
   inc() * 1
     add(2)
-//│ = 129
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ║  l.126: 	  inc() * 1
+//│ ║         	  ^^^^^^^^^
+//│ ║  l.127: 	    add(2)
+//│ ╙──       	^^^^
+//│ = 42
 
 :e
 42
   inc()
     add(2)
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (juxtaposition).
-//│ ║  l.131: 	  inc()
+//│ ║  l.137: 	  inc()
 //│ ║         	  ^^^^^
-//│ ║  l.132: 	    add(2)
+//│ ║  l.138: 	    add(2)
 //│ ╙──       	^^^^
 //│ = 42
 
 
 // :dp
+:todo // ? do we really want to support this
 42
   inc() + 1
-//│ = 44
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ║  l.150: 	  inc() + 1
+//│ ╙──       	  ^^^^^^^^^
+//│ = 42
 
+:todo // ? do we really want to support this
 42
   add(2) + 1
   inc()
-//│ = 46
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ║  l.158: 	  add(2) + 1
+//│ ╙──       	  ^^^^^^^^^^
+//│ = 43
 
+:todo // ? do we really want to support this
 42
   add(2)
   inc() + 1
-//│ = 46
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ║  l.168: 	  inc() + 1
+//│ ╙──       	  ^^^^^^^^^
+//│ = 44
 
 2 * 2
   inc()
@@ -184,7 +202,7 @@ inc(2) * 2
   inc())
 inc()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.185: 	inc()
+//│ ║  l.203: 	inc()
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
@@ -195,7 +213,7 @@ inc()
 )
 inc()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.196: 	inc()
+//│ ║  l.214: 	inc()
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'inc' expected 1 argument but got 0
 
@@ -212,7 +230,7 @@ inc()
 :e
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.213: 	42 console.log
+//│ ║  l.231: 	42 console.log
 //│ ╙──       	   ^^^^^^^
 //│ = 42
 

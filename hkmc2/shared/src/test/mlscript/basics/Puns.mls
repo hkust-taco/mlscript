@@ -37,7 +37,7 @@ if r is
 :e
 if r is
   a: x then x
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (infix operator).
 //│ ║  l.39: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 

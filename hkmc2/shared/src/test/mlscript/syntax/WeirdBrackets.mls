@@ -10,18 +10,17 @@
 
 :e
 \{ Int }
-//│ ╔══[ERROR] Name not found: \
-//│ ║  l.12: 	\{ Int }
-//│ ╙──      	^
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.12: 	\{ Int }
 //│ ╙──      	   ^^^
+//│ = [function passTo2]
 
 :e
 \(0)
-//│ ╔══[ERROR] Name not found: \
-//│ ║  l.21: 	\(0)
-//│ ╙──      	^
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.19: 	\(0)
+//│ ╙──      	 ^^^
+//│ = [function]
 
 fun (\) huh(x) = x
 
@@ -36,23 +35,23 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.38: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
+//│ ║  l.37: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.44: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ╔══[ERROR] Unrecognized pattern split (juxtaposition).
+//│ ║  l.43: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.50: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.49: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.50: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.49: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
 
 
