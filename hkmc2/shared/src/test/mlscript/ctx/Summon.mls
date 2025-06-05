@@ -1,8 +1,8 @@
 :js
 
 
-use Int = 42
-use Str = "42"
+using Int = 42
+using Str = "42"
 
 :expect 42
 use[Int]
@@ -27,11 +27,11 @@ x
 
 
 :todo
-use Int -> Int = id
+using Int -> Int = id
 use[Int -> Int](123)
 //│ ╔══[ERROR] Expected a type symbol, got function type
-//│ ║  l.30: 	use Int -> Int = id
-//│ ╙──      	    ^^^^^^^^^^
+//│ ║  l.30: 	using Int -> Int = id
+//│ ╙──      	      ^^^^^^^^^^
 //│ ╔══[ERROR] Expected a type symbol, got function type
 //│ ║  l.31: 	use[Int -> Int](123)
 //│ ╙──      	    ^^^^^^^^^^
@@ -39,13 +39,13 @@ use[Int -> Int](123)
 
 :expect -42
 fun f(using Int) = use[Int]
-use Int = -42
+using Int = -42
 f
 //│ = -42
 
 :expect "42"
 fun f(using Int) = use[Str]
-use Str = "-42"
+using Str = "-42"
 f
 //│ = "42"
 
@@ -62,34 +62,26 @@ data class Some[T](value: T)
 
 :expect 42
 fun f[T](using Some[T]) = use[Some[T]].value
-use Some[Int] = Some(42)
+using Some[Int] = Some(42)
 f
 //│ = 42
 
+:pe
 :e
 use{[Some[Int]].value}
-//│ = 42
-//│ FAILURE: Unexpected lack of type error
+//│ ╔══[PARSE ERROR] Unexpected square bracket section here
+//│ ║  l.71: 	use{[Some[Int]].value}
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ═══[ERROR] Unexpected keyword 'use' in this position.
 
 :e
 use([Some[Int]].value)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: Bra(Round,Sel(Tup(List(App(Ident(Some),TyTup(List(Ident(Int)))))),Ident(value))) (of class hkmc2.syntax.Tree$Bra)
-//│ 	at: hkmc2.semantics.Elaborator.go$3(Elaborator.scala:673)
-//│ 	at: hkmc2.semantics.Elaborator.term$$anonfun$3(Elaborator.scala:674)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.term(Elaborator.scala:731)
-//│ 	at: hkmc2.semantics.Elaborator.go$5(Elaborator.scala:943)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd$$anonfun$3(Elaborator.scala:1190)
-//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:116)
-//│ 	at: hkmc2.semantics.Elaborator.blockOrRcd(Elaborator.scala:1190)
-//│ 	at: hkmc2.semantics.Elaborator.block(Elaborator.scala:757)
-//│ 	at: hkmc2.semantics.Elaborator.topLevel(Elaborator.scala:1282)
+//│ ═══[ERROR] Unexpected keyword 'use' in this position.
 
 
 :expect 42
 fun f[T](using T) = use[T]
-use Int = 42
+using Int = 42
 f[Int]
 //│ = 42
 
@@ -97,10 +89,10 @@ f[Int]
 :re
 f
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
-//│ ║  l.98: 	f
+//│ ║  l.90: 	f
 //│ ║        	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.91: 	fun f[T](using T) = use[T]
+//│ ║  l.83: 	fun f[T](using T) = use[T]
 //│ ║        	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0

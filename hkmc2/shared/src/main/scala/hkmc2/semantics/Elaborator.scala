@@ -417,6 +417,13 @@ extends Importer:
         case N =>
           raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
           Term.Error
+    // A use[T] construct: analogous to Scala's summon[T].
+    case TyApp(Keywrd(Keyword.`use`), targs) => 
+      if targs.length != 1 then
+        raise(ErrorReport(msg"Illegal use[T] construct. Only one type is allowed." -> tree.toLoc :: Nil))
+        Term.Error
+      val ty = term(targs.head)
+      Term.Summon(ty)(tree, N)
     case TyApp(lhs, targs) =>
       Term.TyApp(subterm(lhs, inTyAppPrefix = true), targs.map {
         case Modified(Keyword.`in`, inLoc, arg) => Term.WildcardTy(S(subterm(arg)), N)
@@ -657,27 +664,6 @@ extends Importer:
       Term.Error
     case Error() =>
       Term.Error
-    // A use[T] construct: analogous to Scala's summon[T].
-    case TermDef(Ins, Tree.Tup(tyArgs), N) => 
-      if tyArgs.length != 1 then
-        raise(ErrorReport(msg"Illegal use[T] construct. Only one type is allowed." -> tree.toLoc :: Nil))
-        Term.Error
-      val ty = term(tyArgs.head)
-      Term.Summon(ty)(tree, N)
-    // A funny parsing problem: 
-    //  - use[T].foo is parsed as (use ([T].foo) )
-    //  - use[T](...) is parsed as (use ([T]()) )
-    case TermDef(Ins, head, N) =>
-      // We try to pull out the [T] part from the tree.
-      def go(t: Tree): Tree = t match
-        case App(lhs, rhs) => App(go(lhs), rhs)
-        case InfixApp(lhs, kw, rhs) => InfixApp(go(lhs), kw, rhs)
-        case Sel(lhs, rhs) => Sel(go(lhs), rhs)
-        case SynthSel(lhs, rhs) => SynthSel(go(lhs), rhs)
-        case Jux(lhs, rhs) => Jux(go(lhs), rhs)
-        case tyArgs: Tup =>
-          TermDef(Ins, tyArgs, N)
-      term(go(head))
     case TermDef(k, nme, rhs) =>
       raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
       Term.Error
@@ -958,13 +944,6 @@ extends Importer:
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
           go(sts, Nil, Term.Error :: acc)
-      // A use[T] construct: analogous to Scala's summon[T].
-      case (tree @ TermDef(Ins, _, N)) :: sts =>
-        val res = annotations.foldLeft(term(tree)):
-          case (acc, ann) => Term.Annotated(ann, acc)
-        sts match
-        case Nil => (mkBlk(acc, S(res), hasResult), ctx)
-        case _ => go(sts, Nil, res :: acc)
       case (td @ TermDef(k, nme, rhs)) :: sts =>
         log(s"Processing term definition $nme")
         td.symbName match
@@ -1268,7 +1247,7 @@ extends Importer:
           param(hd, flags.ctx, inDataClass)(using ctx) match
           case S((isSpd, p)) =>
             val isCtx = hd match
-              case Modified(Keyword.`using`, _, _) => true
+              case TermDef(k = Ins, rhs = N) => true
               case _ => false
             val newCtx = ctx + (p.sym.name -> p.sym)
             val newFlags = if isCtx then flags.copy(ctx = true) else flags

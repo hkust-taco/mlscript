@@ -245,7 +245,7 @@ enum Tree extends AutoLocated:
     case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
     case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
     case TermDef(ImmutVal, inner, _) => inner.asParam(inUsing)
-    case Modified(Keyword.`using`, _, inner) => inner match
+    case TermDef(Ins, inner, N) => inner match
       // Param of form (using name: Type). Parse it as usual.
       case inner: InfixApp => inner.asParam(inUsing)
       // Param of form (using Type). Synthesize an identifier for it.

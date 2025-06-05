@@ -31,7 +31,7 @@ Foo()
 
 fun foo(using Int) = 1
 
-use Int = 1
+using Int = 1
 
 :re
 foo()

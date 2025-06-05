@@ -20,18 +20,18 @@ M.f
 //│ ╙── Missing instance: Expected: Int; Available: ()
 
 :e
-use 42 = 42
+using 42 = 42
 //│ ╔══[ERROR] Expected a type symbol, got integer literal
-//│ ║  l.23: 	use 42 = 42
-//│ ╙──      	    ^^
+//│ ║  l.23: 	using 42 = 42
+//│ ╙──      	      ^^
 
 val someInt = 42
 
 :e
-use someInt = 42
+using someInt = 42
 //│ ╔══[ERROR] Expected a type, got reference
-//│ ║  l.31: 	use someInt = 42
-//│ ╙──      	    ^^^^^^^
+//│ ║  l.31: 	using someInt = 42
+//│ ╙──      	      ^^^^^^^
 
 module M with
   fun bar[A, B](a: A, b: B) = a + b
@@ -48,7 +48,7 @@ M.bar[Int](1, 2)
 //│ ║  l.46: 	M.bar[Int](1, 2)
 //│ ╙──      	^^^^^^^^^
 
-use Int = 42
+using Int = 42
 
 module M with
   fun foo()(using a: Int)

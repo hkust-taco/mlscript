@@ -57,7 +57,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
   LineLookupTable(ns)
 
 fun lex(str: Str, options) =
-  use LineLookupTable = makeLineLookupTable(str)
+  using LineLookupTable = makeLineLookupTable(str)
   
   fun char(idx: Int) = if idx < str.length
     then (Some of str.charAt of idx) else None

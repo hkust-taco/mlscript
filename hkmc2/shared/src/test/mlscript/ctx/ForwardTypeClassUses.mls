@@ -1,7 +1,7 @@
 :js
 
 
-use Str = "ok"
+using Str = "ok"
 
 fun bar = M.foo()
 module M with
@@ -58,7 +58,7 @@ test
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
-use Int = 42
+using Int = 42
 
 fun test = Example.foo().mtd()
 module M with

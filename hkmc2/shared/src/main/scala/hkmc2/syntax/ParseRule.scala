@@ -305,7 +305,7 @@ class ParseRules(using State):
         ) { case (body, _) => Tree.Constructor(body) },
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(ImmutVal)),
-    Kw(`use`)(termDefBody(Ins)),
+    Kw(`using`)(termDefBody(Ins)),
     typeAliasLike(`type`, Als),
     typeAliasLike(`pattern`, Pat),
     Kw(`class`)(typeDeclBody(Cls)),
@@ -333,8 +333,8 @@ class ParseRules(using State):
     modified(`return`),
     modified(`throw`),
     modified(`import`), // TODO improve – only allow strings
+    singleKw(`use`)(Keywrd(`use`)),
     // modified(`type`),
-    modified(`using`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),

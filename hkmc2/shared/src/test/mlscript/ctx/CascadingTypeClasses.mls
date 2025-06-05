@@ -8,7 +8,7 @@ class Baz
 
 fun foo[A](using Foo[A], A) = 42
 
-use Foo[Baz] = new Foo
+using Foo[Baz] = new Foo
 
 
 // FIXME: error message refers to `A`
@@ -38,7 +38,7 @@ foo
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
-use Baz = new Baz
+using Baz = new Baz
 
 :todo
 foo
@@ -80,7 +80,7 @@ foo
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 
-use Foo[Bar[Baz]] = new Foo
+using Foo[Bar[Baz]] = new Foo
 
 :e
 :re
@@ -94,7 +94,7 @@ foo
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Baz] = new Bar
+using Bar[Baz] = new Bar
 
 :e
 :re
@@ -108,7 +108,7 @@ foo
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Int] = new Bar
+using Bar[Int] = new Bar
 
 :e
 :re
@@ -122,7 +122,7 @@ foo
 //│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Baz] = new Bar
+using Bar[Baz] = new Bar
 
 :todo
 foo
