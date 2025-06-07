@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import utils.TraceLogger
 
 import syntax.Tree
-import syntax.{Fun, Ins, Mod, ImmutVal}
+import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
 import syntax.Keyword.{`if`}
 import semantics.Term
 import semantics.Elaborator.State
@@ -13,11 +13,7 @@ import Resolver.ICtx.Type
 
 import Message.MessageContext
 import scala.annotation.tailrec
-import hkmc2.syntax.MutVal
-import hkmc2.semantics.ClassDef.Parameterized
-import hkmc2.semantics.ClassDef.Plain
-import hkmc2.syntax.Tree.Ident
-import java.sql.Ref
+import hkmc2.semantics.Resolver.ICtx.Instance
 
 object Resolver:
   
@@ -52,7 +48,7 @@ object Resolver:
     tEnv: Map[VarSymbol, Type]
   ):
     
-    def +(typ: Type.Concrete, sym: Symbol): ICtx =
+    def +(typ: Type.Specified, sym: Symbol): ICtx =
       val newLs = (typ -> ICtx.Instance(sym)) :: iEnv.getOrElse(typ.toSym, Nil)
       val newEnv = iEnv + (typ.toSym -> newLs)
       copy(iEnv = newEnv)
@@ -60,12 +56,27 @@ object Resolver:
     def withTypeArg(param: VarSymbol, arg: Type): ICtx =
       copy(tEnv = tEnv + (param -> arg))
         
-    def get(query: Type.Concrete): Opt[ICtx.Instance] =
-      iEnv.getOrElse(query.toSym, Nil)
-        .find: (typ, _) => 
-          compare(query, typ)
-        .map: (_, instance) => 
-          instance
+    def get(query: Type.Specified): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
+      def resolveTpe(tpe: Type.Specified): Opt[Type.Sym] = tpe.toSym match
+        case tpe @ Type.Sym(sym: VarSymbol) => tEnv.get(sym) match
+          // Specified type variable. Resolve it recursively.
+          case S(tpe: Type.Specified) => resolveTpe(tpe)
+          // Unspecified type variable. Reject it.
+          case S(Type.Unspecified) => N
+          // Unbound type variable. Just use it.
+          case N => S(tpe)
+        case tpe => S(tpe)
+      resolveTpe(query) match
+        case S(tpe) => iEnv.getOrElse(tpe, Nil)
+          .find: (typ, _) => 
+            compare(query, typ)
+          .map: (_, instance) => 
+            instance
+          .toRight:
+            msg"Missing instance: Expected: ${describeType(query)}; Available: ${showEnv}" -> N :: Nil
+        case N => L:
+          msg"Illegal query for an unspecified type variable ${query.show}." -> N :: Nil
+        
     
     private def compare(a: Type, b: Type): Boolean = (a, b) match
       case (Type.Unspecified, _) => true
@@ -85,6 +96,12 @@ object Resolver:
       iEnv.values
         .flatMap(_.map((typ, instance) => s"${typ.show}"))
         .mkString("(", ", ", ")")
+    
+    def describeType(tpe: Type): Str = tpe match
+      case Type.Sym(sym: VarSymbol) =>
+        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (${tpe.show})"
+      case _ => 
+        s"${tpe.show}"
     
   object ICtx:
     
@@ -110,8 +127,8 @@ object Resolver:
         case Unspecified => "‹unspecified›"
     
     object Type:
-      type Concrete = Sym | App
-      extension (t: Concrete)
+      type Specified = Sym | App
+      extension (t: Specified)
         def toSym: Sym = t match
           case sym: Sym => sym
           case App(sym, _) => sym
@@ -424,6 +441,26 @@ class Resolver(tl: TraceLogger)
       case Term.Ref(_) =>
         resolveSymbol(t)
         (t.termDefn, ictx)
+          
+      case use @ Term.Summon(ty) =>
+        traverse(ty, expect = NonModule(N))
+        resolveType(ty) match
+          case S(tpe: Type.Specified) =>
+            ictx.get(tpe) match
+              case R(i) =>
+                log(s"Resolved type ${tpe} with instance ${i}")
+                use.sym = S(i.sym)
+              case L(msgs) =>
+                use.sym = S(ErrorSymbol("Missing Instance", use.tree))
+                raise(ErrorReport(
+                  msg"Cannot query instance for use-expression of type ${ictx.describeType(tpe)}" -> t.toLoc ::
+                  msgs
+                ))
+          case N =>
+            use.sym = S(ErrorSymbol("Missing Type", use.tree))
+            // There is an error during resolving the type signature.
+            // The error should have been reported.
+        (t.termDefn, ictx)
     
     log(s"Resolving resolvable with defn = ${defn}")
     
@@ -651,9 +688,9 @@ class Resolver(tl: TraceLogger)
     log(s"Resolving implicit argument, expecting a ${p.sign}")
     p.sign match
       case S(sign) => resolveType(sign) match
-        case S(tpe: Type.Concrete) =>
+        case S(tpe: Type.Specified) =>
           ictx.get(tpe) match
-            case S(i) =>
+            case R(i) =>
               log(s"Resolved ${p.sign} with instance ${i}")
               val ref = i.sym.ref()
               traverse(ref,
@@ -663,11 +700,10 @@ class Resolver(tl: TraceLogger)
                   else NonModule(S(msg"Module argument passed to a non-module parameter.")),
               )
               Fld(p.flags, ref, N)
-            case N =>
+            case L(msgs) =>
               raise(ErrorReport(
-                msg"Missing instance for contextual parameter of type `${tpe.show}` in this call" -> lhs.toLoc ::
-                msg"Required by contextual parameter declaration: " -> p.toLoc ::
-                msg"Expected: ${tpe.show}; Available: ${ictx.showEnv}" -> N :: Nil))
+                msg"Cannot query instance of type ${ictx.describeType(tpe)} for call: " -> lhs.toLoc ::
+                msg"Required by contextual parameter declaration: " -> p.toLoc :: msgs))
               Fld(FldFlags.empty, Term.Error, N)
         case N =>
           // There is an error during resolving the type signature.
@@ -690,7 +726,7 @@ class Resolver(tl: TraceLogger)
           else NonModule(S(msg"Non-module parameter must have a non-module type.")),
       )
   
-  def resolveType(t: Term): Opt[ICtx.Type.Concrete] = t match
+  def resolveType(t: Term): Opt[ICtx.Type.Specified] = t match
       // If the term is a type application, e.g., T[A, ...], resolve the
       // type constructor and arguments respectively.
       case Term.TyApp(con, args) => 

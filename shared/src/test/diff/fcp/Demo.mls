@@ -130,12 +130,12 @@ match found with
 //│ res: ("!!!" | "???", Bool,)
 
 
-use fnd = match fnd with
+using fnd = match fnd with
   | None -> ("???", false)
   | Some(r) -> (r id "!!!", r id true)
 //│ use: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
 
-use found
+using found
 //│ res: ("!!!" | "???", Bool,)
 
 

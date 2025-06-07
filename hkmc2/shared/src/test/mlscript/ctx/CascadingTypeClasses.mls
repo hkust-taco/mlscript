@@ -8,7 +8,7 @@ class Baz
 
 fun foo[A](using Foo[A], A) = 42
 
-use Foo[Baz] = new Foo
+using Foo[Baz] = new Foo
 
 
 // FIXME: error message refers to `A`
@@ -16,39 +16,39 @@ use Foo[Baz] = new Foo
 :e
 :re
 foo[Baz]
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type Baz (A) for call: 
 //│ ║  l.18: 	foo[Baz]
 //│ ║        	^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ ╙── Missing instance: Expected: Baz (A); Available: (Foo[Baz])
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 :e
 :re
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.30: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: (Foo[Baz])
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
-use Baz = new Baz
+using Baz = new Baz
 
 :todo
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.44: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 
@@ -56,13 +56,13 @@ fun foo[A](using Foo[A])(using A) = 42
 
 :todo
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.58: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.55: 	fun foo[A](using Foo[A])(using A) = 42
 //│ ║        	                               ^
-//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
@@ -70,69 +70,69 @@ fun foo[A](using A)(using Foo[A]) = 42
 
 :todo
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.72: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: (Foo[Baz], Baz)
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 
-use Foo[Bar[Baz]] = new Foo
+using Foo[Bar[Baz]] = new Foo
 
 :e
 :re
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.87: 	foo
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz)
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Baz] = new Bar
+using Bar[Baz] = new Bar
 
 :e
 :re
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.101: 	foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz])
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Int] = new Bar
+using Bar[Int] = new Bar
 
 :e
 :re
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.115: 	foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Int], Bar[Baz])
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
-use Bar[Baz] = new Bar
+using Bar[Baz] = new Bar
 
 :todo
 foo
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (A) for call: 
 //│ ║  l.128: 	foo
 //│ ║         	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.69: 	fun foo[A](using A)(using Foo[A]) = 42
 //│ ║        	                 ^
-//│ ╙── Expected: A; Available: (Foo[Bar[Baz]], Foo[Baz], Baz, Bar[Baz], Bar[Int], Bar[Baz])
+//│ ╙── Illegal query for an unspecified type variable A.
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 1 argument but got 0
 
 

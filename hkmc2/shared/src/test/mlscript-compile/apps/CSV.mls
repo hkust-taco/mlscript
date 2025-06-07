@@ -50,7 +50,7 @@ fun toArrays(strData) =
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
       let strMatchedValue =
-        if arrMatches.2
+        if arrMatches.2 !== undefined
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
           arrMatches.2.replace of

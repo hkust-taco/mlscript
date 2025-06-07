@@ -11,27 +11,33 @@ module M with
 
 :e
 M.f
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.13: 	M.f
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.10: 	  fun f(using Int)
 //│ ║        	              ^^^
-//│ ╙── Expected: Int; Available: ()
+//│ ╙── Missing instance: Expected: Int; Available: ()
 
 :e
-use 42 = 42
+using 42 = 42
 //│ ╔══[ERROR] Expected a type symbol, got integer literal
-//│ ║  l.23: 	use 42 = 42
-//│ ╙──      	    ^^
+//│ ║  l.23: 	using 42 = 42
+//│ ╙──      	      ^^
 
 val someInt = 42
 
 :e
-use someInt = 42
+using someInt = 42
 //│ ╔══[ERROR] Expected a type, got reference
-//│ ║  l.31: 	use someInt = 42
-//│ ╙──      	    ^^^^^^^
+//│ ║  l.31: 	using someInt = 42
+//│ ╙──      	      ^^^^^^^
+
+:e
+using someInt: Int = 42
+//│ ╔══[ERROR] Expected a type symbol, got block
+//│ ║  l.37: 	using someInt: Int = 42
+//│ ╙──      	      ^^^^^^^^^^^^
 
 module M with
   fun bar[A, B](a: A, b: B) = a + b
@@ -39,16 +45,16 @@ module M with
 :e
 M.bar[](1, 2)
 //│ ╔══[ERROR] Expected 2 type arguments, got 0
-//│ ║  l.40: 	M.bar[](1, 2)
+//│ ║  l.46: 	M.bar[](1, 2)
 //│ ╙──      	^^^^^
 
 :e
 M.bar[Int](1, 2)
 //│ ╔══[ERROR] Expected 2 type arguments, got 1
-//│ ║  l.46: 	M.bar[Int](1, 2)
+//│ ║  l.52: 	M.bar[Int](1, 2)
 //│ ╙──      	^^^^^^^^^
 
-use Int = 42
+using Int = 42
 
 module M with
   fun foo()(using a: Int)
@@ -57,3 +63,19 @@ module M with
 :todo
 :e
 M.foo()
+
+:e
+fun f[T](using t: T) = t
+f
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
+//│ ║  l.69: 	f
+//│ ║        	^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.68: 	fun f[T](using t: T) = t
+//│ ║        	               ^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
+
+:fixme // graceful error
+:e
+fun f(using t: Int = 42) = t
+//│ /!!!\ Uncaught error: scala.MatchError: TermDef(Ins,InfixApp(Ident(t),keyword ':',Ident(Int)),Some(IntLit(42))) (of class hkmc2.syntax.Tree$TermDef)

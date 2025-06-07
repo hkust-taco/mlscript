@@ -43,6 +43,7 @@ sealed trait ResolvableImpl:
     case t: Term.TyApp => t.copy()(t.sym).noIArgs
     case t: Term.Sel => t.copy()(t.sym).noIArgs
     case t: Term.SynthSel => t.copy()(t.sym).noIArgs
+    case t: Term.Summon => t.copy()(t.tree, t.sym).noIArgs
   
   def instantiate(using State): Term = iargsLs match
     case N => lastWords(s"missing implicit arguments for term ${t}")
@@ -114,6 +115,7 @@ enum Term extends Statement:
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
+  case Summon(ty: Term)(val tree: Tree, var sym: Opt[Symbol]) extends Term with ResolvableImpl
   
   /**
    * The prelinminary symbol for the term that is resolved during
@@ -138,6 +140,7 @@ enum Term extends Statement:
     case sel: SelProj => sel.sym
     case app: App => app.sym
     case tyApp: TyApp => tyApp.sym
+    case summon: Summon => summon.sym
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -251,6 +254,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
+    case Summon(ty) => ty :: Nil
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Ls[Located] = t match
@@ -347,6 +351,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case TypeDef(sym, tparams, rhs, _, _) =>
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
+    case Summon(ty) => s"use[${ty.showDbg}]"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 

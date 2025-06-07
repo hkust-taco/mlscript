@@ -180,7 +180,7 @@ module Test with
 let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
-  use Debugger = h
+  using Debugger = h
   Runtime.try(() => Test.main())
 //│ res = EffectHandle()
 

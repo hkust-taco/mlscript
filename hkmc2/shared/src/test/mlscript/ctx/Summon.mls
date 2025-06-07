@@ -1,0 +1,100 @@
+:js
+
+
+using Int = 42
+using Str = "42"
+
+:expect 42
+use[Int]
+//│ = 42
+
+:expect "42"
+use[Str]
+//│ = "42"
+
+:e
+use[Num]
+//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
+//│ ║  l.16: 	use[Num]
+//│ ║        	    ^^^
+//│ ╙── Missing instance: Expected: Num; Available: (Int, Str)
+
+:expect 42
+let x = use[Int]
+x
+//│ = 42
+//│ x = 42
+
+
+:todo
+using Int -> Int = id
+use[Int -> Int](123)
+//│ ╔══[ERROR] Expected a type symbol, got function type
+//│ ║  l.30: 	using Int -> Int = id
+//│ ╙──      	      ^^^^^^^^^^
+//│ ╔══[ERROR] Expected a type symbol, got function type
+//│ ║  l.31: 	use[Int -> Int](123)
+//│ ╙──      	    ^^^^^^^^^^
+
+
+:expect -42
+fun f(using Int) = use[Int]
+using Int = -42
+f
+//│ = -42
+
+:expect "42"
+fun f(using Int) = use[Str]
+using Str = "-42"
+f
+//│ = "42"
+
+:e
+fun f(using Int) = use[Num]
+//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
+//│ ║  l.53: 	fun f(using Int) = use[Num]
+//│ ║        	                       ^^^
+//│ ╙── Missing instance: Expected: Num; Available: (Int, Int, Int, Str, Str)
+
+
+data class Some[T](value: T)
+
+
+:expect 42
+fun f[T](using Some[T]) = use[Some[T]].value
+using Some[Int] = Some(42)
+f
+//│ = 42
+
+:pe
+:e
+use{[Some[Int]].value}
+//│ ╔══[PARSE ERROR] Unexpected square bracket section here
+//│ ║  l.71: 	use{[Some[Int]].value}
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ═══[ERROR] Unexpected keyword 'use' in this position.
+
+:e
+use([Some[Int]].value)
+//│ ═══[ERROR] Unexpected keyword 'use' in this position.
+
+
+:expect 42
+fun f[T](using T) = use[T]
+using Int = 42
+f[Int]
+//│ = 42
+
+:e
+:re
+f
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
+//│ ║  l.90: 	f
+//│ ║        	^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.83: 	fun f[T](using T) = use[T]
+//│ ║        	               ^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+
+

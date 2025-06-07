@@ -386,4 +386,27 @@ if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
+// [SERIOUS]
+
+module M with
+  val name = "Student"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static toString() { return "M"; } }'
+
+// ——— ——— ———
+
+val outFilePath = "out/test.md"
+//│ outFilePath = "out/test.md"
+
+// FIXME: should wrap in `safeCall`
+:sjs
+fun w(txt) =
+  fs.writeFileSync(outFilePath, txt)
+  // ()
+//│ JS (unsanitized):
+//│ let w; w = function w(txt) { return globalThis.fs.writeFileSync(outFilePath, txt) };
+
+w("whoops")
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+// ——— ——— ———
 
