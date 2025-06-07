@@ -19,7 +19,11 @@ if MatchFailure("oops") is MatchFailure(x) then x
 
 data class MatchResult(x, y, z)
 
+:e
 MatchResult(0)
+//│ ╔══[ERROR] Expected 3 arguments, got 1
+//│ ║  l.23: 	MatchResult(0)
+//│ ╙──      	           ^^^
 //│ = MatchResult(0, undefined, undefined)
 
 pattern Cross = "X"

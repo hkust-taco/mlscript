@@ -166,7 +166,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(cls.body)
         cls.ext match
         case N =>
-          Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, Nil, N,
+          Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, cls.auxParams, N,
                 mtds,
                 privateFlds,
                 publicFlds,
@@ -182,7 +182,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
             Define(
               ClsLikeDefn(
-                cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, Nil, S(clsp),
+                cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, cls.auxParams, S(clsp),
                 mtds, privateFlds, publicFlds, pctor, ctor
               ),
               blockImpl(stats, res)(k)

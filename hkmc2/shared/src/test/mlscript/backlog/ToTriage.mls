@@ -352,8 +352,11 @@ mkStr of ... // hello
 
 data class Foo(x, y)
 
-// TODO missing sanity check
+:e
 Foo(1)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.356: 	Foo(1)
+//│ ╙──       	   ^^^
 //│ = Foo(1, undefined)
 
 // ——— ——— ———
@@ -366,22 +369,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.367: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.370: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.367: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.370: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.379: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.382: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.385: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

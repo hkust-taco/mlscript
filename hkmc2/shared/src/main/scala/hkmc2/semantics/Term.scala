@@ -472,6 +472,7 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   val bsym: BlockMemberSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]
+  val auxParams: Ls[ParamList]
   val ext: Opt[New]
   val body: ObjBody
   val annotations: Ls[Annot]
@@ -486,6 +487,7 @@ case class ModuleDef(
   bsym: BlockMemberSymbol,
   tparams: Ls[TyParam], 
   paramsOpt: Opt[ParamList], 
+  auxParams: Ls[ParamList], 
   ext: Opt[New],
   kind: ClsLikeKind,
   body: ObjBody,
@@ -498,6 +500,7 @@ case class PatternDef(
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
     paramsOpt: Opt[ParamList],
+    auxParams: Ls[ParamList],
     body: ObjBody,
     annotations: Ls[Annot],
 ) extends ClassLikeDef:
@@ -511,6 +514,7 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val sym: ClassSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]
+  val auxParams: Ls[ParamList]
   val body: ObjBody
   val companion: Opt[CompanionValue]
   val annotations: Ls[Annot]
@@ -527,16 +531,16 @@ object ClassDef:
       sym: InnerSymbol,
       bsym: BlockMemberSymbol,
       tparams: Ls[TyParam],
-      paramsOpt: Opt[ParamList],
+      params: Ls[ParamList],
       ext: Opt[New],
       body: ObjBody,
       annotations: Ls[Annot],
   ): ClassDef =
-    paramsOpt match
-      case S(params) => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
+    params match
+      case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, params, ext, body, N, annotations)
-      case N => Plain(owner, kind, sym.asInstanceOf// TODO: improve
+        , tparams, ps, pss, ext, body, N, annotations)
+      case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
         , tparams, ext, body, N, annotations)
   
@@ -550,6 +554,7 @@ object ClassDef:
       bsym: BlockMemberSymbol,
       tparams: Ls[TyParam],
       params: ParamList,
+      auxParams: Ls[ParamList],
       ext: Opt[New],
       body: ObjBody,
       companion: Opt[ModuleDef],
@@ -567,6 +572,7 @@ object ClassDef:
       annotations: Ls[Annot]
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
+    val auxParams: List[ParamList] = Nil
   
 end ClassDef
 

@@ -138,6 +138,40 @@ object Resolver:
     val empty = ICtx(N, Map.empty, Map.empty)
     
   def ictx(using ICtx) = summon[ICtx]
+  
+  case class CallableDefinition(
+    sym: BlockMemberSymbol,
+    params: Ls[ParamList],
+    tparams: Opt[Ls[Param]],
+    sign: Opt[Term],
+    flags: TermDefFlags,
+    modulefulness: Modulefulness,
+    defn: TermDefinition | ClassLikeDef
+  )
+  
+  extension (resolvable: Resolvable)
+    def callableDefn: Opt[CallableDefinition] = resolvable.defn.flatMap:
+      case td: TermDefinition => S:
+        CallableDefinition(
+          td.sym,
+          td.params,
+          td.tparams,
+          td.sign,
+          td.flags,
+          td.modulefulness,
+          td,
+        )
+      case td: ClassLikeDef => S:
+        CallableDefinition(
+          td.bsym, 
+          td.paramsOpt.toList ::: td.auxParams, 
+          S(td.tparams.map(tp => Param(FldFlags.empty, tp.sym, N, Modulefulness.none))), 
+          N, // TODO: handle class-like definitions with signatures
+          TermDefFlags.empty, // TODO: handle class-like definitions with flags
+          Modulefulness.none, // TODO: handle modulefulness for class-like definitions
+          td,
+        )
+      case defn => N
 
 /**
   * Resolver for the module system.
@@ -219,6 +253,8 @@ class Resolver(tl: TraceLogger)
   import tl.*
   import Resolver.ICtx
   import Resolver.ictx
+  import Resolver.CallableDefinition
+  import Resolver.callableDefn
   
   enum Expect:
     case Module(reason: Opt[Message])
@@ -321,20 +357,20 @@ class Resolver(tl: TraceLogger)
 
   def resolveDefn(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
-    def resolveCtxParams(pss: Ls[ParamList]): ICtx = pss
-      .filter(_.flags.ctx)
-      .foldLeft(ictx): (ictx, ps) => 
-        ps.params.foldLeft(ictx): (ictx, p) => 
-          p.sign match
-            case S(sign) => resolveType(sign) match
-              case N => ictx
-              case S(tpe) => ictx + (tpe, p.sym)
-            case N =>
-              // The type signature should be present because of the syntax of contextual parameter.
-              lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
-    
     def traverseTermDef(tdf: TermDefinition) = tdf match
     case TermDefinition(_, _, _, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
+      def withCtxParams(pss: Ls[ParamList]): ICtx = pss
+        .filter(_.flags.ctx)
+        .foldLeft(ictx): (ictx, ps) => 
+          ps.params.foldLeft(ictx): (ictx, p) => 
+            p.sign match
+              case S(sign) => resolveType(sign) match
+                case N => ictx
+                case S(tpe) => ictx + (tpe, p.sym)
+              case N =>
+                // The type signature should be present because of the syntax of contextual parameter.
+                lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
+      
       if isMethod && modulefulness.isModuleful then
         raise(ErrorReport(msg"${tdf.k.desc.capitalize} returning modules should not be a class member." -> defn.toLoc :: Nil))
       
@@ -350,8 +386,37 @@ class Resolver(tl: TraceLogger)
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' but not returning a module."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to return a module."))
-      )(using resolveCtxParams(pss)))
+      )(using withCtxParams(pss)))
       annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+    
+    def traverseClassLikeDef(cld: ClassLikeDef) =
+      def withCtxParams: ICtx = cld.paramsOpt
+        .filter(_.flags.ctx)
+        .foldLeft(ictx): (ictx, ps) => 
+          ps.params.foldLeft(ictx): (ictx, p) => 
+            p.sign match
+              case S(sign) => resolveType(sign) match
+                case N => ictx
+                case S(tpe) =>
+                  // The symbol should be the duplicated one from
+                  // elaborator in order for the lowering stage to
+                  // correctly lower the program.
+                  val syms = cld.body.blk.stats.collect:
+                    case DefineVar(lsym, Term.Ref(rsym)) if rsym == p.sym =>
+                      lsym
+                    case TermDefinition(k = ImmutVal, sym = lsym, body = S(Term.Ref(rsym))) if rsym == p.sym =>
+                      lsym
+                  if syms.size > 1 then lastWords("more than one duplicated symbols found")
+                  ictx + (tpe, syms.head)
+              case N =>
+                // The type signature should be present because of the syntax of contextual parameter.
+                lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
+      
+      cld.paramsOpt.foreach(_.allParams.foreach(resolveParam(_)))
+      cld.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      cld.ext.foreach(traverse(_, expect = NonModule(N)))
+
+      traverseBlock(cld.body.blk)(using withCtxParams)
     
     defn match
     
@@ -378,12 +443,8 @@ class Resolver(tl: TraceLogger)
     // Traverse through other subterms with original context.
     case defn: ClassLikeDef =>
       log(s"Resolving ${defn.kind.desc} definition $defn")
-      
-      defn.paramsOpt.foreach(_.allParams.foreach(resolveParam(_)))
-      defn.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
-      defn.ext.foreach(traverse(_, expect = NonModule(N)))
-
-      traverseBlock(defn.body.blk)(using resolveCtxParams(defn.paramsOpt.toList))
+      traverseClassLikeDef(defn)
+      ictx
     
     // Case: other definition forms. Just traverse through the sub-terms.
     case t =>
@@ -406,8 +467,8 @@ class Resolver(tl: TraceLogger)
     * prefix of an TyApp which the implicit arguments shouldn't be
     * resolved on it, but on the TyApp instead.
     */
-  def resolve(t: Resolvable, inTyPrefix: Bool = false)(using ICtx): (Opt[TermDefinition], ICtx) =
-  trace[(Opt[TermDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t}"):
+  def resolve(t: Resolvable, inTyPrefix: Bool = false)(using ICtx): (Opt[CallableDefinition], ICtx) =
+  trace[(Opt[CallableDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t}"):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = t match
       // Note: the arguments of the App are traversed later because the
@@ -418,29 +479,32 @@ class Resolver(tl: TraceLogger)
         result
       case Term.App(lhs, _) =>
         traverse(lhs, expect = Any)
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
       
       case Term.TyApp(lhs: Resolvable, targs) =>
         resolve(lhs, inTyPrefix = true)
         targs.foreach(traverse(_, expect = Any))
         resolveSymbol(t)
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
       case Term.TyApp(lhs, targs) =>
         traverse(lhs, expect = Any)
         targs.foreach(traverse(_, expect = Any))
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
       
       case AnySel(pre: Resolvable, id) =>
         resolve(pre)
         resolveSymbol(t)
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
       case AnySel(pre, id) =>
         traverse(pre, expect = Any)
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
       
+      case Term.Ref(_: BlockMemberSymbol) =>
+        resolveSymbol(t)
+        (t.callableDefn, ictx)
       case Term.Ref(_) =>
         resolveSymbol(t)
-        (t.termDefn, ictx)
+        (N, ictx)
           
       case use @ Term.Summon(ty) =>
         traverse(ty, expect = NonModule(N))
@@ -460,7 +524,7 @@ class Resolver(tl: TraceLogger)
             use.sym = S(ErrorSymbol("Missing Type", use.tree))
             // There is an error during resolving the type signature.
             // The error should have been reported.
-        (t.termDefn, ictx)
+        (t.callableDefn, ictx)
     
     log(s"Resolving resolvable with defn = ${defn}")
     
@@ -474,7 +538,10 @@ class Resolver(tl: TraceLogger)
           case _ => N
         val newICtx = (tparams, targs) match
           case (S(tparams), S(targs)) =>
-            if tparams.length != targs.length then
+            // Don't check the number of type arguments for class-like
+            // definitions because they are already checked in the
+            // VarianceTraverser.
+            if tparams.length != targs.length && !defn.defn.isInstanceOf[ClassLikeDef] then
               raise(ErrorReport(msg"Expected ${tparams.length.toString()} type arguments, " +
                 msg"got ${targs.length.toString()}" -> t.toLoc :: Nil))
             (tparams zip targs).foldLeft(ictx):
@@ -506,9 +573,9 @@ class Resolver(tl: TraceLogger)
       // definitions. The type parameters and result type are kept
       // as-is. In the future we may take them into consideration as
       // well.
-      val newDefn: Opt[TermDefinition] = t match
+      val newDefn: Opt[CallableDefinition] = t match
       case Term.App(lhs, as) => defn match
-        case S(defn @ TermDefinition(params = ps :: pss)) =>
+        case S(defn @ CallableDefinition(params = ps :: pss)) =>
           val (argCountUB, argCountLB) = as match
           // Tup: regular arguments
           case tup: Term.Tup => (
@@ -526,7 +593,12 @@ class Resolver(tl: TraceLogger)
           // Other: spread arguments
           case _ => (false, 0)
           
+          log(s"${defn.sym}, ${state.matchResultClsSymbol.defn}, ${state.matchFailureClsSymbol.defn}")
           (ps.paramCountUB, argCountUB) match
+            // Don't check the internal classes MatchResult and MatchFailure
+            case _ if state.matchResultClsSymbol.defn.exists(cdef => defn.sym == cdef.bsym) => ()
+            case _ if state.matchFailureClsSymbol.defn.exists(cdef => defn.sym == cdef.bsym) => ()
+            
             case (true, true) => if ps.paramCountLB != argCountLB then
               raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
                 msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
@@ -737,6 +809,11 @@ class Resolver(tl: TraceLogger)
             // Either the type constructor or the arguments is not
             // resolved. The error should have been reported.
             N
+      
+      // Complex types are not supported.
+      // TODO: Handle complex types.
+      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup) => N
+        
       // Otherwise, resolve the term directly.
       case _ => t.symbol match
         // A VarSymbol is probably a type parameter.

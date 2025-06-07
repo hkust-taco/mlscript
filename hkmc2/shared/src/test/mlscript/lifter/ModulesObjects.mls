@@ -203,7 +203,7 @@ module M with
     class B() with
       fun get = x
       fun newA_B(y) = A(y)
-    fun newA = A()
+    fun newA = A(42)
     fun newB = B()
   0 is A
 M.A(2).newB.newA_B(3).newB.get
@@ -253,7 +253,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│         this.x = x;
 //│       }
 //│       get newA() {
-//│         return runtime.safeCall(M18.A());
+//│         return runtime.safeCall(M18.A(42));
 //│       } 
 //│       get newB() {
 //│         return B$(this);

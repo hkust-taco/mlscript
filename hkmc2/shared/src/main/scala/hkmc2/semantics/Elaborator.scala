@@ -216,8 +216,8 @@ object Elaborator:
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(value = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
-      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
-        Nil, ps, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil),
+        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs
     val matchFailureClsSymbol =
       val id = new Ident("MatchFailure")
@@ -225,8 +225,8 @@ object Elaborator:
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(value = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
-      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
-        Nil, ps, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+      cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil),
+        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
@@ -365,7 +365,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil),
-        Nil, N, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), List()))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), List()))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -1038,24 +1038,14 @@ extends Importer:
         val isDataClass = annotations.exists:
           case Annot.Modifier(Keyword.`data`) => true
           case _ => false
-        val ps =
-          td.paramLists.match
-            case Nil => N
-            case ps :: Nil => S(ps)
-            case ps :: _ =>
-              raise:
-                ErrorReport:
-                  msg"Multiple parameter lists are not supported for this definition." ->
-                    td.toLoc :: Nil
-              S(ps)
-          .map: ps =>
-            val (res, newCtx2) =
-              given Ctx = newCtx
-              params(ps, isDataClass)
-            newCtx = newCtx2
-            res
+        val pss = td.paramLists.map: ps =>
+          val (res, newCtx2) =
+            given Ctx = newCtx
+            params(ps, isDataClass)
+          newCtx = newCtx2
+          res
         def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
-          val fields: Opt[List[TermDefinition | LetDecl | DefineVar]] = ps.map: ps =>
+          val fields: Ls[Statement] = pss.flatMap: ps =>
             ps.params.flatMap: p =>
               // For class-like types, "desugar" the parameters into additional class fields.
               val owner = td.symbol match
@@ -1087,22 +1077,29 @@ extends Importer:
               
           val ctxWithFields = ctx
             .withMembers(
-              fields.fold(Nil)(_.collect:
-                case f: TermDefinition => f.sym.nme -> f.sym // class fields
-              ),
+              fields.foldRight(Nil):
+                case (f: TermDefinition, acc) =>
+                  // class fields
+                  f.sym.nme -> f.sym :: acc
+                case (_, acc) =>
+                  acc
+              ,
               ctx.outer.inner
-            ) ++ fields.fold(Nil)(_.collect:
-              case d: LetDecl => d.sym.nme -> d.sym // class params
-            )
+            ) ++ fields.foldRight(Nil):
+              case (f: LetDecl, acc) =>
+                // params
+                f.sym.nme -> f.sym :: acc
+              case (_, acc) =>
+                acc
           val (blk, c) = fn(using ctxWithFields)
-          val blkWithFields = fields.fold[Term.Blk](blk)(fs => blk.copy(stats = fs ::: blk.stats))
+          val blkWithFields: Blk = blk.copy(stats = fields ::: blk.stats)
           (blkWithFields, c)
         val defn = k match
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
           // newCtx.nest(S(alsSym)).givenIn:
           newCtx.nestLocal.givenIn:
-            assert(ps.isEmpty)
+            assert(pss.isEmpty)
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
@@ -1113,7 +1110,12 @@ extends Importer:
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
           val owner = ctx.outer.inner
           newCtx.nestInner(patSym).givenIn:
+            if pss.length > 1 then raise:
+                ErrorReport:
+                  msg"Multiple parameter lists are not supported for this definition." ->
+                    td.toLoc :: Nil
             assert(body.isEmpty)
+            val ps = pss.headOption
             td.rhs match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               case S(tree) =>
@@ -1138,7 +1140,7 @@ extends Importer:
               patSym.patternParams,
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
               td.rhs.getOrElse(die))
-            val pd = PatternDef(owner, patSym, sym, tps, ps,
+            val pd = PatternDef(owner, patSym, sym, tps, ps, Nil,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -1154,7 +1156,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
-              ModuleDef(owner, clsSym, sym, tps, ps, newOf(td), k, ObjBody(bod), annotations)
+              ModuleDef(owner, clsSym, sym, tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), annotations)
             clsSym.defn = S(cd)
             cd
         case Cls =>
@@ -1169,7 +1171,7 @@ extends Importer:
                 // case S(t) => block(t :: Nil)
                 case S(t) => ???
                 case N => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
-              ClassDef(owner, Cls, clsSym, sym, tps, ps, newOf(td), ObjBody(bod), annotations)
+              ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), annotations)
             clsSym.defn = S(cd)
             cd
         sym.defn = S(defn)
@@ -1228,7 +1230,7 @@ extends Importer:
       go(inner, inUsing, flags.copy(pat = true), mm)
     case TermDef(ImmutVal, inner, _) =>
       go(inner, inUsing, flags.copy(value = true), mm)
-    case Modified(Keyword.`using`, _, inner) =>
+    case TermDef(Ins, inner, N) =>
       go(inner, inUsing, flags, mm)
     case _ =>
       t.asParam(inUsing).map: (isSpd, p, t) =>

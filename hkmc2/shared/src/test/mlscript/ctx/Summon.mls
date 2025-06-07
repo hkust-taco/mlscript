@@ -29,12 +29,6 @@ x
 :todo
 using Int -> Int = id
 use[Int -> Int](123)
-//│ ╔══[ERROR] Expected a type symbol, got function type
-//│ ║  l.30: 	using Int -> Int = id
-//│ ╙──      	      ^^^^^^^^^^
-//│ ╔══[ERROR] Expected a type symbol, got function type
-//│ ║  l.31: 	use[Int -> Int](123)
-//│ ╙──      	    ^^^^^^^^^^
 
 
 :expect -42
@@ -52,7 +46,7 @@ f
 :e
 fun f(using Int) = use[Num]
 //│ ╔══[ERROR] Cannot query instance for use-expression of type Num
-//│ ║  l.53: 	fun f(using Int) = use[Num]
+//│ ║  l.47: 	fun f(using Int) = use[Num]
 //│ ║        	                       ^^^
 //│ ╙── Missing instance: Expected: Num; Available: (Int, Int, Int, Str, Str)
 
@@ -70,7 +64,7 @@ f
 :e
 use{[Some[Int]].value}
 //│ ╔══[PARSE ERROR] Unexpected square bracket section here
-//│ ║  l.71: 	use{[Some[Int]].value}
+//│ ║  l.65: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ═══[ERROR] Unexpected keyword 'use' in this position.
 
@@ -89,10 +83,10 @@ f[Int]
 :re
 f
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
-//│ ║  l.90: 	f
+//│ ║  l.84: 	f
 //│ ║        	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.83: 	fun f[T](using T) = use[T]
+//│ ║  l.77: 	fun f[T](using T) = use[T]
 //│ ║        	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
