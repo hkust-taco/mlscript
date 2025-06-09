@@ -16,38 +16,37 @@ Foo(1, 2)(3)
 new Foo(1, 2)
 //│ = [function]
 
-:fixme
 new Foo(1, 2)(3)
-//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+//│ = Foo(1, 2)
 
 
 :todo
 data class Foo with
   constructor(x, y)
 //│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
-//│ ║  l.26: 	  constructor(x, y)
+//│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.26: 	  constructor(x, y)
+//│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.26: 	  constructor(x, y)
+//│ ║  l.25: 	  constructor(x, y)
 //│ ╙──      	                 ^
 
 :todo
 data class Foo with
   constructor(x, y)(z)
 //│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
-//│ ║  l.39: 	  constructor(x, y)(z)
+//│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	             ^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.39: 	  constructor(x, y)(z)
+//│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	              ^
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.39: 	  constructor(x, y)(z)
+//│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	                 ^
 //│ ╔══[ERROR] Name not found: z
-//│ ║  l.39: 	  constructor(x, y)(z)
+//│ ║  l.38: 	  constructor(x, y)(z)
 //│ ╙──      	                    ^
 
 

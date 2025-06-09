@@ -594,8 +594,14 @@ extends Importer:
             // TODO make context with var symbols for class parameters
             ObjBody(block(rft, hasResult = false)._1)
       body match
-      case S(App(c, Tup(params))) =>
-        Term.New(cls(subterm(c), inAppPrefix = true), params.map(subterm(_)), bodo).withLocOf(tree)
+      case S(Apps(c, argss)) =>
+        Term.New(
+          cls(subterm(c), inAppPrefix = true), 
+          argss.map: 
+            case Tup(args) =>
+              args.map(subterm(_)),
+          bodo
+        ).withLocOf(tree)
       case S(c) => // * We'll catch bad `new` targets during type checking
         Term.New(cls(subterm(c), inAppPrefix = false), Nil, bodo).withLocOf(tree)
       case N =>

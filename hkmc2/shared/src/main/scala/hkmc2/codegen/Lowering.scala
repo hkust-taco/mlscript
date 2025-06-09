@@ -177,8 +177,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case S(ext) =>
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
+            if ext.argss.length > 1 then 
+              raise:
+                ErrorReport(
+                  msg"Inheriting class with multiple parameter lists is not supported" -> ext.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation
+                )
             val pctor = // TODO dedup with New case
-              plainArgs(ext.args): args =>
+              plainArgs(ext.argss.headOr(Nil)): args =>
                 Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
             Define(
               ClsLikeDefn(
@@ -551,17 +557,34 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           k(DynSelect(p, f, ai))
       
       
-    case New(cls, as, N) =>
+    case New(cls, ass, N) =>
       subTerm(cls): sr =>
-        subTerms(as): asr =>
+        val head = ass.headOr(Nil)
+        val tail = ass.tailOr(Nil)
+        tail match
+        case Nil => subTerms(head): asr =>
           k(Instantiate(sr, asr))
+        case tail => subTerms(head): asr =>
+          val z = tail.foldLeft[Path => Block](k): (acc, args) => 
+            inner =>
+              plainArgs(args): args =>
+                val ts = TempSymbol(N)
+                Assign(ts, Call(inner, args)(true, true), acc(Value.Ref(ts)))
+          val ts = TempSymbol(N)
+          Assign(ts, Instantiate(sr, asr), z(Value.Ref(ts)))
       
-    case New(cls, as, S((isym, rft))) =>
+    case New(cls, ass, S((isym, rft))) =>
       subTerm(cls): clsp =>
         val sym = new BlockMemberSymbol(isym.name, Nil)
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
+        if ass.length > 1 then 
+          raise:
+            ErrorReport(
+              msg"Inheriting class with multiple parameter lists is not supported" -> cls.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            )
         val pctor =
-          plainArgs(as): args =>
+          plainArgs(ass.headOr(Nil)): args =>
             Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)

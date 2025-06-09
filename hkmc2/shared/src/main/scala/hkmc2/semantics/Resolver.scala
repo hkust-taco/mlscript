@@ -344,9 +344,9 @@ class Resolver(tl: TraceLogger)
             case Split.End =>
           split(t.desugared)
         
-        case Term.New(cls, args, rft) =>
+        case Term.New(cls, argss, rft) =>
           traverse(cls, expect = Any)
-          args.foreach(traverse(_, expect = NonModule(N)))
+          argss.foreach(_.foreach(traverse(_, expect = NonModule(N))))
           rft.foreach((sym, bdy) => traverseBlock(bdy.blk))
         
         case t: Resolvable =>
