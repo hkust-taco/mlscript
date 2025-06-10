@@ -50,9 +50,8 @@ data class Foo with
 //│ ╙──      	                    ^
 
 
-class Foo(x, y)(using z: Int)
-
-// * it to be understood as
+// class Foo(using z: Int)
+// * is to be understood as
 class Foo0
 fun Foo(using z: Int) = new Foo0 !> res =>
   set res.z = z
@@ -63,7 +62,7 @@ Foo
 //│ = Foo0
 
 // class Foo(x, y)(using z)
-// * it to be understood as
+// * is to be understood as
 class Foo0
 fun Foo(x, y)(using z: Int) = new Foo0 !> res =>
   set

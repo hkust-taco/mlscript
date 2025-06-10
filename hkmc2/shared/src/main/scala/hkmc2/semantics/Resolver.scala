@@ -251,10 +251,7 @@ object Resolver:
 class Resolver(tl: TraceLogger)
 (using raise: Raise, state: State):
   import tl.*
-  import Resolver.ICtx
-  import Resolver.ictx
-  import Resolver.CallableDefinition
-  import Resolver.callableDefn
+  import Resolver.*
   
   enum Expect:
     case Module(reason: Opt[Message])

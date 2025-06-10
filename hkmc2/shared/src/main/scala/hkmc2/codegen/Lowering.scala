@@ -180,7 +180,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             if ext.argss.length > 1 then 
               raise:
                 ErrorReport(
-                  msg"Inheriting class with multiple parameter lists is not supported" -> ext.toLoc :: Nil,
+                  msg"Extending a class with multiple parameter lists is not supported" -> ext.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation
                 )
             val pctor = // TODO dedup with New case
