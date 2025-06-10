@@ -96,7 +96,7 @@ data class Barr(x: Int)(y: Int) with
 :todo
 data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
   fun g = z
-//│ ╔══[COMPILATION ERROR] Inheriting class with multiple parameter lists is not supported
+//│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
 //│ ║  l.97: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^
 
