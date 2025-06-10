@@ -6,13 +6,12 @@ package ups
 import mlscript.utils.AnyOps
 import mlscript.utils.shorthands.*
 
-import syntax.Tree
-import Tree.Ident
-import Term.Lit
+import syntax.Tree, Tree.Ident
+import Message.MessageContext
 
 
 enum Pattern:
-  import Pattern.{Wildcard, Never}
+  import Pattern.{Wildcard, Never, Head}
 
   case Lit(lit: Term.Lit)
 
@@ -64,30 +63,29 @@ enum Pattern:
     */
   case Synonym(sym: PatternSymbol, params: Opt[Ls[Pattern]])
 
-  /** A simplified fold for ``Pattern``.
+  /** A simplified reduce for ``Pattern``.
     * It is designed to be used when we want to
     * compute a single value, starting from the leaves.
     * It silently goes through ``Not``, ``Extract``, ``Rename`` and ``Synonym``.
     * The function must provide all the other base cases, and how
     * a list is merged (for ``And`` and ``Or`` nodes)
     */
-  def fold[A](f: (Lit | ClassLike | Record | Tuple | List[A]) => A): A = this match
+  def reduce[A](f: (Lit | ClassLike | Record | Tuple | List[A]) => A): A = this match
     case p: (Lit | ClassLike | Record | Tuple) => f(p)
-    case And(patterns) => f(patterns.map(_.fold(f)))
-    case Or(patterns) => f(patterns.map(_.fold(f)))
-    case Not(pattern) => pattern.fold(f)
-    case Rename(pattern, _) => pattern.fold(f)
-    case Extract(pattern, _) => pattern.fold(f)
-    case Synonym(_, params) => ??? // TODO call on the body 
+    case And(patterns) => f(patterns.map(_.reduce(f)))
+    case Or(patterns) => f(patterns.map(_.reduce(f)))
+    case Not(pattern) => pattern.reduce(f)
+    case Rename(pattern, _) => pattern.reduce(f)
+    case Extract(pattern, _) => pattern.reduce(f)
+    case Synonym(_, params) => ??? // TODO call on the body
 
-    def heads: Set[Term.Lit | ClassSymbol] = this.fold:
+  def heads: Set[Head] = this.reduce:
     case Lit(lit) => Set(lit)
     case ClassLike(sym, _) => Set(sym)
     case _: (Record | Tuple) => Set()
-    case ls: List[Set[Term.Lit | ClassSymbol]] => ls.toSet.flatten
+    case ls: List[Set[Head]] => ls.toSet.flatten
 
-
-  def fields: Set[Ident | Int] = this.fold:
+  def fields: Set[Ident | Int] = this.reduce:
     case _: (Lit | ClassLike) => Set()
     case Record(entries) => entries.keys.toSet[Ident | Int]
     case Tuple(entries, strict) =>
@@ -97,26 +95,24 @@ enum Pattern:
       if strict then subfields + n else subfields
     case ls: List[Set[Ident | Int]] => ls.toSet.flatten
 
-  def collectSubPatterns(id: Ident): Set[Pattern] = this.fold:
-    case Lit(_) => Set()
-      // TODO: raise a warning
-    case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
-      case None => Set()
-      case Some(arguments) =>
-        arguments.find((id1, _) => id === id).map((_, p) => p) match
-          case None => Set()
-          case Some(value) => Set(value)
-    case Record(entries) => entries.get(id).toSet
-    case Tuple(entries, strict) => Set()
-    case ls: List[Set[Pattern]] => ls.toSet.flatten
+  def collectSubPatterns(field: Ident | Int): Set[Pattern] = field match
+    case id: Ident => this.reduce:
+      case Lit(_) => Set()
+        // TODO: raise a warning
+      case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
+        case None => Set()
+        case Some(arguments) =>
+          arguments.find((id1, _) => id === id).map((_, p) => p).toSet
+      case Record(entries) => entries.get(id).toSet
+      case Tuple(entries, strict) => Set()
+      case ls: List[Set[Pattern]] => ls.toSet.flatten
+    case n : Int => this.reduce:
+      case _: (Lit | ClassLike) => /* TODO : riase a warning */ Set()
+      case Record(_) => Set()
+      case Tuple(entries, strict) => entries.lift(n).toSet
+      case ls: List[Set[Pattern]] => ls.toSet.flatten
 
-  def collectSubPatterns(n: Int): Set[Pattern] = this.fold:
-    case _: (Lit | ClassLike) => /* TODO : riase a warning */ Set()
-    case Record(_) => Set()
-    case Tuple(entries, strict) => entries.lift(n).toSet
-    case ls: List[Set[Pattern]] => ls.toSet.flatten
-
-  // old versions without fold
+  // old versions without reduce
 
   // def heads: Set[Term.Lit | ClassSymbol] = this match
   //   case _: (Record | Tuple) => Set()
@@ -201,37 +197,92 @@ enum Pattern:
     case Extract(pattern, term) => Extract(pattern.simplify, term)
     case Synonym(sym, params) => ???
 
-  def specialize(lit: Term.Lit): Pattern = this match
+  def map(f: (Lit | ClassLike | Record | Tuple | Synonym) => Pattern): Pattern = this match
+    case p :(Lit | ClassLike | Record | Tuple | Synonym) => f(p)
+    case And(patterns) => And(patterns.map(_.map(f)))
+    case Or(patterns) => Or(patterns.map(_.map(f)))
+    case Not(pattern) => Not(pattern.map(f))
+    case Rename(pattern, name) => Rename(pattern.map(f), name)
+    case Extract(pattern, term) => Extract(pattern.map(f), term)
+
+  def specialize(lit: Term.Lit): Pattern = this.map:
     case Lit(lit1) =>
-      if lit1 === lit then Wildcard else Never 
+      if lit1 === lit then Wildcard else Never
     case ClassLike(_, _) => Never
     case Record(_) => Never
       // TODO : are we sure that a literal can't have fields?
     case Tuple(Nil, false) => ???
     case Tuple(_, _) => Never
-    case And(patterns) => And(patterns.map(_.specialize(lit)))
-    case Or(patterns) => Or(patterns.map(_.specialize(lit)))
-    case Not(pattern) => Not(pattern.specialize(lit))
-    case Rename(pattern, name) => Rename(pattern.specialize(lit), name)
-    case Extract(pattern, term) => Extract(pattern.specialize(lit), term)
-    case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(lit))))
-  
-  def specialize(cons: ClassSymbol): Pattern = this match
+    case Synonym(sym, params) => ???
+
+  def specialize(cons: ClassSymbol): Pattern = this.map:
     case Lit(_) => Never
     case ClassLike(sym, arguments) =>
       if sym === cons then Wildcard else Never
     case Record(_) => this
     case Tuple(Nil, false) => ???
     case Tuple(_, _) => Never
-    case And(patterns) => And(patterns.map(_.specialize(cons)))
-    case Or(patterns) => Or(patterns.map(_.specialize(cons)))
-    case Not(pattern) => Not(pattern.specialize(cons))
-    case Rename(pattern, name) => Rename(pattern.specialize(cons), name)
-    case Extract(pattern, term) => Extract(pattern.specialize(cons), term)
-    case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(cons))))
+    case Synonym(sym, params) => ???
+
+  def specialize(head: Option[Head]): Pattern = head match
+    case Some(h: Term.Lit) => this.specialize(h)
+    case Some(h: ClassSymbol) => this.specialize(h)
+    case None => this.map:
+      case _: (Lit | ClassLike) => Never
+      case _: (Record | Tuple) => this
+      case Synonym(sym, params) => ???
+
+  def expand(alreadyExpanded: Set[PatternSymbol] = Set())(using Raise): Pattern = this.map:
+    case _: (Lit | ClassLike | Record | Tuple) => this
+    case Synonym(sym, params) if sym in alreadyExpanded =>
+      raise(ErrorReport(msg"expanding ${sym.nme} leads to an infinite loop." -> sym.toLoc :: Nil))
+      this
+    case Synonym(sym, params) => params match
+      case None => sym.defn match
+        case None =>
+          raise(ErrorReport(msg"No definition found for pattern synonym ${sym.nme}" -> sym.toLoc :: Nil))
+          this
+        case Some(defn) => ???
+          // TODO : transform the body into what we want
+      case Some(_) =>
+        raise(ErrorReport(msg"Higher order patterns are not supported yet." -> sym.toLoc :: Nil))
+        this
+
+  // old version without map
+
+  // def specialize(lit: Term.Lit): Pattern = this match
+  //   case Lit(lit1) =>
+  //     if lit1 === lit then Wildcard else Never
+  //   case ClassLike(_, _) => Never
+  //   case Record(_) => Never
+  //     // TODO : are we sure that a literal can't have fields?
+  //   case Tuple(Nil, false) => ???
+  //   case Tuple(_, _) => Never
+  //   case And(patterns) => And(patterns.map(_.specialize(lit)))
+  //   case Or(patterns) => Or(patterns.map(_.specialize(lit)))
+  //   case Not(pattern) => Not(pattern.specialize(lit))
+  //   case Rename(pattern, name) => Rename(pattern.specialize(lit), name)
+  //   case Extract(pattern, term) => Extract(pattern.specialize(lit), term)
+  //   case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(lit))))
+
+  // def specialize(cons: ClassSymbol): Pattern = this match
+  //   case Lit(_) => Never
+  //   case ClassLike(sym, arguments) =>
+  //     if sym === cons then Wildcard else Never
+  //   case Record(_) => this
+  //   case Tuple(Nil, false) => ???
+  //   case Tuple(_, _) => Never
+  //   case And(patterns) => And(patterns.map(_.specialize(cons)))
+  //   case Or(patterns) => Or(patterns.map(_.specialize(cons)))
+  //   case Not(pattern) => Not(pattern.specialize(cons))
+  //   case Rename(pattern, name) => Rename(pattern.specialize(cons), name)
+  //   case Extract(pattern, term) => Extract(pattern.specialize(cons), term)
+  //   case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(cons))))
 
 object Pattern:
 
   val Wildcard = Or(Nil)
 
   val Never = And(Nil)
+
+  type Head = Term.Lit | ClassSymbol
