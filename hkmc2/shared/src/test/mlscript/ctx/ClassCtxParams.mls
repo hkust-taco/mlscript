@@ -76,3 +76,17 @@ Foo.bar
 //│ = 99
 
 
+class Foo(using Int)(using Str) with
+  fun f = use[Int]
+  fun g = use[Str]
+
+:e
+Foo
+//│ ╔══[ERROR] Cannot query instance of type Str for call: 
+//│ ║  l.84: 	Foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.79: 	class Foo(using Int)(using Str) with
+//│ ║        	                           ^^^
+//│ ╙── Missing instance: Expected: Str; Available: (Int, Int)
+//│ = Foo()

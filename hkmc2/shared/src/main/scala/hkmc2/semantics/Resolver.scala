@@ -354,9 +354,17 @@ class Resolver(tl: TraceLogger)
 
   def resolveDefn(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
-    def traverseTermDef(tdf: TermDefinition) = tdf match
-    case TermDefinition(_, _, _, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
-      def withCtxParams(pss: Ls[ParamList]): ICtx = pss
+    def traverseTermDef(tdf: TermDefinition) =
+      val TermDefinition(_, _, _, 
+        pss, tps, sign, body, 
+        _, TermDefFlags(isMethod), modulefulness, annotations
+      ) = tdf
+      /** 
+       * Add the contextual parameters in pss to the ICtx so that they
+       * can later be referred (be resolved to) in the body of the term
+       * definition.
+       */
+      def withCtxParams(using ICtx): ICtx = pss
         .filter(_.flags.ctx)
         .foldLeft(ictx): (ictx, ps) => 
           ps.params.foldLeft(ictx): (ictx, p) => 
@@ -383,11 +391,16 @@ class Resolver(tl: TraceLogger)
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' but not returning a module."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to return a module."))
-      )(using withCtxParams(pss)))
+      )(using withCtxParams))
       annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
     
     def traverseClassLikeDef(cld: ClassLikeDef) =
-      def withCtxParams: ICtx = cld.paramsOpt
+      /**
+       * Add the contextual parameters in the class-like definition to
+       * the ICtx so that they can later be referred (be resolved to) in
+       * the body of the class-like definition.
+       */
+      def withCtxParams(using ICtx): ICtx = (cld.paramsOpt.toList ::: cld.auxParams)
         .filter(_.flags.ctx)
         .foldLeft(ictx): (ictx, ps) => 
           ps.params.foldLeft(ictx): (ictx, p) => 
@@ -396,12 +409,18 @@ class Resolver(tl: TraceLogger)
                 case N => ictx
                 case S(tpe) =>
                   // The symbol should be the duplicated one from
-                  // elaborator in order for the lowering stage to
-                  // correctly lower the program.
+                  // elaborator. This is because (the symbol of) the
+                  // class parameters are only accessible in the
+                  // constructor of the class-like definition in the
+                  // lowering stage. So, in the elaborator we duplicate
+                  // the class parametes into a private/public fields
+                  // (depending on if the parameter is modified by `val`
+                  // or not). We have to use the field symbols instead
+                  // of the parameter symbols here.
                   val syms = cld.body.blk.stats.collect:
-                    case DefineVar(lsym, Term.Ref(rsym)) if rsym == p.sym =>
+                    case DefineVar(lsym, Term.Ref(rsym)) if rsym is p.sym =>
                       lsym
-                    case TermDefinition(k = ImmutVal, sym = lsym, body = S(Term.Ref(rsym))) if rsym == p.sym =>
+                    case TermDefinition(k = ImmutVal, sym = lsym, body = S(Term.Ref(rsym))) if rsym is p.sym =>
                       lsym
                   if syms.size > 1 then lastWords("more than one duplicated symbols found")
                   ictx + (tpe, syms.head)
@@ -535,10 +554,7 @@ class Resolver(tl: TraceLogger)
           case _ => N
         val newICtx = (tparams, targs) match
           case (S(tparams), S(targs)) =>
-            // Don't check the number of type arguments for class-like
-            // definitions because they are already checked in the
-            // VarianceTraverser.
-            if tparams.length != targs.length && !defn.defn.isInstanceOf[ClassLikeDef] then
+            if tparams.length != targs.length then
               raise(ErrorReport(msg"Expected ${tparams.length.toString()} type arguments, " +
                 msg"got ${targs.length.toString()}" -> t.toLoc :: Nil))
             (tparams zip targs).foldLeft(ictx):

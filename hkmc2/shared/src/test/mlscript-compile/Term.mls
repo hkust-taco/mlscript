@@ -45,7 +45,7 @@ class Pattern with
     ClassLike(val sym: Symbol, val trm: Term, val parameters: Array[Symbol] | null)
     Synonym(val symbol: Symbol, val patternArguments: Array[DebrujinSplit])
     Tuple(val size: Int, val inf: Bool)
-    Record(val entities: Array[(Str, Symbol)])
+    Record(val entities: Array[[Str, Symbol]])
 
 class Branch(val scrutinee: Ref, val ptrn: Pattern, val continuation: Split)
 

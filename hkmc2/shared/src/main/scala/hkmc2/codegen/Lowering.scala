@@ -69,6 +69,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
+  def parentConstructor(argss: Ls[Ls[Term]])(using Subst) = 
+    if argss.length > 1 then 
+      raise:
+        ErrorReport(
+          msg"Extending a class with multiple parameter lists is not supported" -> Loc(argss.flatten) :: Nil,
+          source = Diagnostic.Source.Compilation
+        )
+    plainArgs(argss.headOr(Nil)): args =>
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
+  
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
   final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using Subst): Block =
     term(t: st, inStmtPos: Bool)(k)
@@ -177,15 +187,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case S(ext) =>
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
-            if ext.argss.length > 1 then 
-              raise:
-                ErrorReport(
-                  msg"Extending a class with multiple parameter lists is not supported" -> ext.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation
-                )
-            val pctor = // TODO dedup with New case
-              plainArgs(ext.argss.headOr(Nil)): args =>
-                Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
+            val pctor = parentConstructor(ext.argss)
             Define(
               ClsLikeDefn(
                 cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, cls.auxParams, S(clsp),
@@ -577,15 +579,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       subTerm(cls): clsp =>
         val sym = new BlockMemberSymbol(isym.name, Nil)
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-        if ass.length > 1 then 
-          raise:
-            ErrorReport(
-              msg"Inheriting class with multiple parameter lists is not supported" -> cls.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation
-            )
-        val pctor =
-          plainArgs(ass.headOr(Nil)): args =>
-            Return(Call(Value.Ref(State.builtinOpsMap("super")), args)(true, true), implct = true)
+        val pctor = parentConstructor(ass)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
         Define(clsDef, term_nonTail(New(sym.ref().noIArgs, Nil, N))(k))

@@ -1080,23 +1080,14 @@ extends Importer:
                 val decl = LetDecl(psym, Nil)
                 val defn = DefineVar(psym, p.sym.ref())
                 decl :: defn :: Nil
-              
-          val ctxWithFields = ctx
-            .withMembers(
-              fields.foldRight(Nil):
-                case (f: TermDefinition, acc) =>
-                  // class fields
-                  f.sym.nme -> f.sym :: acc
-                case (_, acc) =>
-                  acc
-              ,
-              ctx.outer.inner
-            ) ++ fields.foldRight(Nil):
-              case (f: LetDecl, acc) =>
-                // params
-                f.sym.nme -> f.sym :: acc
-              case (_, acc) =>
-                acc
+          
+          val valParams = fields.collect:
+            case f: TermDefinition =>
+              f.sym.nme -> f.sym
+          val params = fields.collect:
+            case (f: LetDecl) =>
+              f.sym.nme -> f.sym
+          val ctxWithFields = ctx.withMembers(valParams,ctx.outer.inner) ++ params
           val (blk, c) = fn(using ctxWithFields)
           val blkWithFields: Blk = blk.copy(stats = fields ::: blk.stats)
           (blkWithFields, c)
