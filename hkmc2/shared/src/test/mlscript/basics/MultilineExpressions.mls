@@ -131,7 +131,7 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.120: 	  * 3 then 0
 //│ ╙──       	  ^
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.119: 	if 1 + 2
 //│ ║         	       ^
 //│ ║  l.120: 	  * 3 then 0

@@ -48,7 +48,12 @@ object Keyword:
     _curPrec += 1
     S(_curPrec)
   
-  val `class` = Keyword("class", N, curPrec)
+  val `class` = Keyword("class", N, N)
+  
+  val `extends` = Keyword("extends", nextPrec, curPrec)
+  val `restricts` = Keyword("restricts", curPrec, curPrec)
+  val `with` = Keyword("with", curPrec, curPrec)
+  
   val `val` = Keyword("val", N, curPrec)
   val `mut` = Keyword("mut", N, curPrec)
   
@@ -78,9 +83,10 @@ object Keyword:
   val `and` = Keyword("and", nextPrec, nextPrec)
   val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
   val `as` = Keyword("as", nextPrec, curPrec)
-  val `let` = Keyword("let", nextPrec, curPrec)
-  val `handle` = Keyword("handle", nextPrec, curPrec)
-  val `region` = Keyword("region", curPrec, curPrec)
+  // val `let` = Keyword("let", nextPrec, curPrec)
+  val `let` = Keyword("let", N, N)
+  val `handle` = Keyword("handle", N, N)
+  val `region` = Keyword("region", N, N)
   val `rec` = Keyword("rec", N, N)
   val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, curPrec)
@@ -90,17 +96,13 @@ object Keyword:
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
-  val `restricts` = Keyword("restricts", eqPrec, nextPrec)
-  val `extends` = Keyword("extends", nextPrec, nextPrec)
-  val `with` = Keyword("with", curPrec, curPrec)
   val `override` = Keyword("override", N, N)
   val `super` = Keyword("super", N, N)
-  val `new` = Keyword("new", N, curPrec) // TODO: check the prec
   // val `namespace` = Keyword("namespace", N, N)
   val `use` = Keyword("use", N, curPrec)
   val `using` = Keyword("using", N, N)
-  val `module` = Keyword("module", N, curPrec)
-  val `object` = Keyword("object", N, curPrec)
+  val `module` = Keyword("module", N, N)
+  val `object` = Keyword("object", N, N)
   val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
   val `where` = Keyword("where", curPrec, curPrec)
@@ -131,7 +133,15 @@ object Keyword:
   // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
   // * Currently, the precedence of normal operators starts at the maximum precedence of keywords,
   // * so we need to start the precedence of `=>` to account for that.
-  val `=>` = Keyword("=>", S(_curPrec + charPrecList.length), eqPrec)
+  val `=>` = Keyword("=>", S(maxPrec.get + charPrecList.length), eqPrec)
+  
+  // * `new` is a strange keyword:
+  // * it has a very high precedence that sits between that of selection and that of application.
+  // * Indeed, `new Foo().bar` should parse as `(new Foo()).bar`, not `new (Foo().bar)`,
+  // * but `new Foo.Bar` should parse as `new (Foo.Bar)`.
+  val newRightPrec = S(maxPrec.get + charPrecList.length - 1)
+  // * ^ maxPrec.get + charPrecList.length is the precedence of selection
+  val `new` = Keyword("new", N, newRightPrec)
   
   val __ = Keyword("_", N, N)
   
@@ -139,11 +149,11 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Infix =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
     `and`.type | `or`.type | `then`.type | `else`.type
   
   type InfixSplittable =
-    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type |
+    `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |
     `of`.type
   
   type Ellipsis = `...`.type | `..`.type

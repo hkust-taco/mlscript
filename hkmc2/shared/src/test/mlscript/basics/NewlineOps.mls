@@ -408,27 +408,26 @@ ys |> Arr.len
 
 class Foo(x)
 
-:re
 new Foo(1) is Foo
-//│ ═══[RUNTIME ERROR] TypeError: tmp83 is not a constructor
+//│ = true
 
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.416: 	new Foo(1) ,is Foo
+//│ ║  l.415: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.416: 	new Foo(1) ,is Foo
+//│ ║  l.415: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.426: 	is Foo
+//│ ║  l.425: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.426: 	is Foo
+//│ ║  l.425: 	is Foo
 //│ ╙──       	   ^^^
 
 

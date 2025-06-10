@@ -269,7 +269,7 @@ while print("Hello World"); false
 while { print("Hello World"), false }
   then 0(0)
   else 1
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.269: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.270: 	  then 0(0)
@@ -282,7 +282,7 @@ while
     false
   then 0(0)
   else 1
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.281: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.282: 	    false

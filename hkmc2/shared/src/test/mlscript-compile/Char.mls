@@ -1,3 +1,4 @@
+
 module Char with
   pattern Lowercase = "a" ..= "z"
   pattern Uppercase = "A" ..= "Z"
@@ -7,3 +8,4 @@ module Char with
   pattern OctDigit = "0" ..= "7"
   pattern BinDigit = "0" | "1"
   pattern Whitespace = " " | "\t" | "\n" | "\r"
+

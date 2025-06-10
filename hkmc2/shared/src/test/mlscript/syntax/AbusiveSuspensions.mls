@@ -39,10 +39,10 @@ fun foo(expr1) =
 //│ ║        	             ^
 //│ ║  l.29: 	  Error(b) then b
 //│ ╙──      	^^
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.29: 	  Error(b) then b
 //│ ╙──      	  ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.30: 	  Ok(a) then...
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ║  l.31: 	  a

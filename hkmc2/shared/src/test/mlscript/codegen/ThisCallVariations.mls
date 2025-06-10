@@ -79,13 +79,13 @@ Example2(1). oops2(2). oops2(2)
 :todo
 new Example2(1)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp16 is not a constructor
+//│ = Example2(1)
 
 :todo
 new Example2(1)
   . oops2(2)
   . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: tmp21 is not a constructor
+//│ = Example2(1)
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -105,7 +105,7 @@ Example .> oops(2)
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp22; tmp22 = runtime.safeCall(oops(2)); call1(Example1, tmp22)
+//│ let tmp21; tmp21 = runtime.safeCall(oops(2)); call1(Example1, tmp21)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:

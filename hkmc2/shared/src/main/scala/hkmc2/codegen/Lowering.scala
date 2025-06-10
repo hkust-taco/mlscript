@@ -472,7 +472,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                   val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
                   // Normalization should reject cases where the user provides
                   // more sub-patterns than there are actual class parameters.
-                  assert(argsOpt.isEmpty || args.length <= clsParams.length)
+                  assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
                   def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                     case Nil =>
                       Case.Cls(ctorSym, st) -> go(tail, topLevel = false)

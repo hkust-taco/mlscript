@@ -71,18 +71,10 @@ class ParseRules(using State):
     Expr(body)(k) ::
     Blk(body)(k) ::
     Nil
-
-  def typeDeclTemplateThen[A](after: Alt[A]*): Alt[(S[Tree], A)] =
-    Kw(`with`):
-      ParseRule("type declaration body")(
-        Blk(
-          ParseRule("type declaration block")(after*)
-        ) { case (res, t) => (S(res), t) }
-      )
   
-  val typeDeclTemplate: Alt[Opt[Tree]] = typeDeclTemplateThen(end(())).map((res, _) => res)
+  val typeDeclTemplate: Alt[Opt[Tree]] = end(N)
   
-  /*
+  /* // * What we had before we allowed parsing juxtapositions
   def termDefBody(k: TermDefKind): ParseRule[Tree] = 
       ParseRule(s"'${k.str}' binding keyword")(
         Expr(
@@ -117,22 +109,11 @@ class ParseRules(using State):
   def typeDeclBody(k: TypeDefKind): ParseRule[TypeDef] =
     ParseRule("type declaration keyword"):
       Expr(
-        ParseRule("type declaration head")(
-          end((N, N)),
-          Kw(`extends`): // TODO: rm? this no longer triggers after `extension` was made an infix kw
-            ParseRule("extension clause")(
-              Expr(
-                ParseRule("parent specification")(
-                  typeDeclTemplate,
-                  end(N),
-                )
-              ) { case (ext, bod) => (S(ext), bod) }
-            ),
-          typeDeclTemplate.map(bod => (N, bod)),
-        )
+        ParseRule("type declaration head"):
+          end(())
       ):
-        case (head, (ext, bod)) =>
-          TypeDef(k, head, ext, bod)
+        case (head, ()) =>
+          TypeDef(k, head, N)
   
   def letLike(kw: Keyword.letLike) = 
     Kw(kw):
@@ -212,7 +193,7 @@ class ParseRules(using State):
                 ) { case (rhs, ()) => S(rhs) },
             end(N),
           )
-        ) { (lhs, rhs) => TypeDef(kind, lhs, rhs, N) }
+        ) { (lhs, rhs) => TypeDef(kind, lhs, rhs) }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of expression", omitAltsStr = true)(
     letLike(`let`),
@@ -226,13 +207,17 @@ class ParseRules(using State):
               ParseRule("'handle' binding equals sign"):
                 Expr(
                   ParseRule("'handle' binding class name"):
-                    typeDeclTemplateThen(
-                      Kw(`in`):
-                        ParseRule(s"'handle' binding `in` clause")(
-                          exprOrBlk(ParseRule(s"'handle' binding body")(end(())))((body, _: Unit) => S(body))*
-                        ),
-                      end(N)
-                    )
+                    Kw(`with`):
+                      ParseRule("type declaration body")(
+                        Blk(
+                          ParseRule("type declaration block")(
+                            Kw(`in`):
+                              ParseRule(s"'handle' binding `in` clause")(
+                                exprOrBlk(ParseRule(s"'handle' binding body")(end(())))((body, _: Unit) => S(body))*
+                              ),
+                            end(N))
+                        ) { case (res, t) => (S(res), t) }
+                      )
                 ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
         ) { case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body) }
     ,
@@ -245,11 +230,11 @@ class ParseRules(using State):
         )
       ParseRule("`new` keyword")(
         (
-          withRefinement.map(rfto => New(N, rfto)) ::
+          withRefinement.map(rfto => LexicalNew(N, rfto)) ::
           exprOrBlk(ParseRule("`new` expression")(
             withRefinement,
             end(N),
-          ))((body, rfto) => New(S(body), rfto))
+          ))((body, rfto) => LexicalNew(S(body), rfto))
         )*
       )
     ,
@@ -399,6 +384,7 @@ class ParseRules(using State):
     genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
     genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
     genInfixRule(`where`, (rhs, _: Unit) => lhs => InfixApp(lhs, `where`, rhs)),
+    genInfixRule(`with`, (rhs, _: Unit) => lhs => InfixApp(lhs, `with`, rhs)),
   )
 
 end ParseRules

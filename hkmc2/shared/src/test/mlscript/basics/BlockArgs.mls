@@ -33,12 +33,9 @@ foo(1) { x => x }
 //│ ╙──      	         ^^^^^^
 
 foo(1) with x => x
-//│ ╔══[PARSE ERROR] Expected end of input; found 'with' keyword instead
+//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.35: 	foo(1) with x => x
-//│ ╙──      	       ^^^^
-//│ ╔══[ERROR] Name not found: foo
-//│ ║  l.35: 	foo(1) with x => x
-//│ ╙──      	^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 
 
 

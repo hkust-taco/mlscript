@@ -58,7 +58,7 @@ enum Tree extends AutoLocated:
   case Hndl(lhs: Tree, cls: Tree, defs: Tree, body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
-  case TypeDef(k: TypeDefKind, head: Tree, rhs: Opt[Tree], body: Opt[Tree])(using State)
+  case TypeDef(k: TypeDefKind, head: Tree, rhs: Opt[Tree])(using State)
     extends Tree with TypeDefImpl
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
@@ -75,7 +75,8 @@ enum Tree extends AutoLocated:
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
-  case New(body: Opt[Tree], rft: Opt[Block])
+  case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence
+  case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
@@ -111,8 +112,7 @@ enum Tree extends AutoLocated:
     case Hndl(lhs, rhs, defs, body) => body match
       case Some(value) => lhs :: rhs :: defs :: value :: Nil
       case None => lhs :: rhs :: defs :: Nil
-    case TypeDef(k, head, extension, body) =>
-      head :: extension.toList ::: body.toList
+    case TypeDef(k, head, rhs) => head :: rhs.toList
     case Modified(_, _, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
@@ -122,7 +122,8 @@ enum Tree extends AutoLocated:
     case Jux(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
-    case New(body, rft) => body.toList ::: rft.toList
+    case LexicalNew(body, rft) => body.toList ::: rft.toList
+    case ProperNew(body, rft) => body.toList ::: rft.toList
     case IfLike(_, _, split) => split :: Nil
     case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
@@ -161,7 +162,7 @@ enum Tree extends AutoLocated:
     case Block(stmts) => "block"
     case LetLike(kw, lhs, rhs, body) => kw.name
     case TermDef(k, alphaName, rhs) => "term definition"
-    case TypeDef(k, head, extension, body) => "type definition"
+    case TypeDef(k, head, rhs) => "type definition"
     case Modified(kw, _, body) => s"${kw.name}-modified ${body.describe}"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
@@ -175,7 +176,8 @@ enum Tree extends AutoLocated:
     case DynAccess(prefix, name, true) => "dynamic index access"
     case DynAccess(prefix, name, false) => "dynamic field access"
     case InfixApp(lhs, kw, rhs) => "infix operator"
-    case New(body, _) => "new"
+    case LexicalNew(body, _) => "new"
+    case ProperNew(body, _) => "new"
     case IfLike(Keyword.`if`, _, split) => "if expression"
     case IfLike(Keyword.`while`, _, split) => "while expression"
     case Case(_, branches) => "case"
@@ -228,6 +230,13 @@ enum Tree extends AutoLocated:
       // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
       PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
+    case Apps(LexicalNew(S(body), N), argss) =>
+      ProperNew(S(Apps(body, argss)), N).withLocOf(this)
+    case LexicalNew(bodo, rfto) =>
+      ProperNew(bodo, rfto).withLocOf(this)
+    case InfixApp(Desugared(ProperNew(bodo, N)), Keyword.`with`, rhs: Block) =>
+      ProperNew(bodo, S(rhs)).withLocOf(this)
+    
     case _ => this
   
   /** 
@@ -252,14 +261,14 @@ enum Tree extends AutoLocated:
       case _ => S(N, Ident(""), S(inner))
   
   def isModuleModifier: Bool = this match
-    case Tree.TypeDef(Mod, _, N, N) => true
+    case td @ Tree.TypeDef(Mod, _, rhs) => rhs.isEmpty && td.extension.isEmpty && td.withPart.isEmpty
     case _ => false
 
 object Tree:
   val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
-    Tree.TypeDef(syntax.Cls, Tree.Dummy, N, N)
+    Tree.TypeDef(syntax.Cls, Tree.Dummy, N)
   object Block:
     def mk(stmts: Ls[Tree])(using State): Tree = stmts match
       case Nil => UnitLit(false)
@@ -272,10 +281,16 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
 
+object Desugared:
+  def unapply(t: Tree): S[Tree] = S(t.desugared)
+
 object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)
 
 object Apps:
+  def apply(t: Tree, as: Ls[Tup]): Tree = as match
+    case Nil => t
+    case arg :: args => App(Apps(t, args), arg)
   def unapply(t: Tree): S[(Tree, Ls[Tup])] = t match
     case App(Apps(base, args), arg: Tup) => S(base, args :+ arg)
     case t => S(t, Nil)
@@ -304,7 +319,7 @@ case object LetBind extends ValLike("let", "let binding")
 case object HandlerBind extends TermDefKind("handler", "handler binding")
 case object ParamBind extends ValLike("", "parameter")
 case object Fun extends TermDefKind("fun", "function")
-case object Ins extends TermDefKind("use", "implicit instance")
+case object Ins extends TermDefKind("using", "implicit instance")
 sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
 sealed trait ObjDefKind
 sealed trait ClsLikeKind extends ObjDefKind:
@@ -397,12 +412,16 @@ trait TypeOrTermDef:
       
     rec(baseHead, N, N)
   
-  val (baseHead, extension) =
+  val (baseHead, extension, withPart) =
     head match
+    case InfixApp(InfixApp(base, Keyword.`extends`, ext), Keyword.`with`, wp) =>
+      (base, S(ext), S(wp))
+    case InfixApp(base, Keyword.`with`, wp) =>
+      (base, N, S(wp))
     case InfixApp(base, Keyword.`extends`, ext) =>
-      (base, S(ext))
+      (base, S(ext), N)
     case h => 
-      (h, N)
+      (h, N, N)
   
 end TypeOrTermDef
 
@@ -423,7 +442,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   lazy val definedSymbols: Map[Str, semantics.BlockMemberSymbol] =
     // val fromParams = 
     // val fromTypeParams = 
-    body match
+    withPart match
     case S(blk: Block) =>
       blk.definedSymbols.toMap
     case _ =>

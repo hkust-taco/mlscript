@@ -15,11 +15,12 @@ class Expr[A] with
   constructor
     Lit(n: Int) { A = Int }
     Add(lhs: Expr[Int], rhs: Expr[Int]) { A = Int }
-//│ ╔══[ERROR] Unsupported constructor in this position.
+//│ ╔══[ERROR] Expected a valid class definition head; found block instead
 //│ ║  l.16: 	    Lit(n: Int) { A = Int }
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                ^^^^^^^^^^^
+//│ ╔══[ERROR] Expected a valid class definition head; found block instead
 //│ ║  l.17: 	    Add(lhs: Expr[Int], rhs: Expr[Int]) { A = Int }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	                                        ^^^^^^^^^^^
 
 
 // * one can also go the TypeScript way
@@ -36,7 +37,7 @@ enum Expr =
   | Lit(n: Int)
   | Add(lhs: Expr, rhs: Expr)
 //│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
-//│ ║  l.35: 	enum Expr =
+//│ ║  l.36: 	enum Expr =
 //│ ╙──      	^^^^^^^^^
 
 
