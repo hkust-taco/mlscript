@@ -77,7 +77,7 @@ trait DesugaringBase(using Ctx, State):
     app(matchResultClass, tup(fld(captures)), "result of `MatchResult`")
     
   protected final def makeMatchFailure =
-    app(matchFailureClass, tup(), "result of `MatchFailure`")
+    app(matchFailureClass, tup(fld(Term.Lit(UnitLit(true)))), "result of `MatchFailure`")
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(

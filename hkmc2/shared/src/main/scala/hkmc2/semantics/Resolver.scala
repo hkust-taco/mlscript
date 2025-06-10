@@ -593,12 +593,7 @@ class Resolver(tl: TraceLogger)
           // Other: spread arguments
           case _ => (false, 0)
           
-          log(s"${defn.sym}, ${state.matchResultClsSymbol.defn}, ${state.matchFailureClsSymbol.defn}")
           (ps.paramCountUB, argCountUB) match
-            // Don't check the internal classes MatchResult and MatchFailure
-            case _ if state.matchResultClsSymbol.defn.exists(cdef => defn.sym == cdef.bsym) => ()
-            case _ if state.matchFailureClsSymbol.defn.exists(cdef => defn.sym == cdef.bsym) => ()
-            
             case (true, true) => if ps.paramCountLB != argCountLB then
               raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
                 msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
