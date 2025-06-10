@@ -74,3 +74,5 @@ Foo.foo
 :expect 99
 Foo.bar
 //│ = 99
+
+
