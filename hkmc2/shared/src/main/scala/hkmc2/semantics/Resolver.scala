@@ -95,6 +95,8 @@ object Resolver:
     def showEnv: Str =
       iEnv.values
         .flatMap(_.map((typ, instance) => s"${typ.show}"))
+        .toList
+        .distinct
         .mkString("[", ", ", "]")
     
     def describeType(tpe: Type): Str = tpe match
@@ -355,9 +357,9 @@ class Resolver(tl: TraceLogger)
   def resolveDefn(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
-      val TermDefinition(_, _, _, 
+      val TermDefinition(_owner, _k, _sym, 
         pss, tps, sign, body, 
-        _, TermDefFlags(isMethod), modulefulness, annotations
+        _resSym, TermDefFlags(isMethod), modulefulness, annotations
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they

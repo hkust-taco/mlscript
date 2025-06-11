@@ -88,5 +88,5 @@ Foo
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.79: 	class Foo(using Int)(using Str) with
 //│ ║        	                           ^^^
-//│ ╙── Missing instance: Expected: Str; Available: [Int, Int]
+//│ ╙── Missing instance: Expected: Str; Available: [Int]
 //│ = Foo()
