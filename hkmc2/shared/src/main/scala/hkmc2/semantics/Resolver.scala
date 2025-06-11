@@ -408,22 +408,8 @@ class Resolver(tl: TraceLogger)
               case S(sign) => resolveType(sign) match
                 case N => ictx
                 case S(tpe) =>
-                  // The symbol should be the duplicated one from
-                  // elaborator. This is because (the symbol of) the
-                  // class parameters are only accessible in the
-                  // constructor of the class-like definition in the
-                  // lowering stage. So, in the elaborator we duplicate
-                  // the class parametes into a private/public fields
-                  // (depending on if the parameter is modified by `val`
-                  // or not). We have to use the field symbols instead
-                  // of the parameter symbols here.
-                  val syms = cld.body.blk.stats.collect:
-                    case DefineVar(lsym, Term.Ref(rsym)) if rsym is p.sym =>
-                      lsym
-                    case TermDefinition(k = ImmutVal, sym = lsym, body = S(Term.Ref(rsym))) if rsym is p.sym =>
-                      lsym
-                  if syms.size > 1 then lastWords("more than one duplicated symbols found")
-                  ictx + (tpe, syms.head)
+                  val sym = p.fldSym.getOrElse(die)
+                  ictx + (tpe, sym)
               case N =>
                 // The type signature should be present because of the syntax of contextual parameter.
                 lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")

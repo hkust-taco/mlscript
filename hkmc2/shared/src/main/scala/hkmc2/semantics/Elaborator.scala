@@ -1073,21 +1073,25 @@ extends Importer:
                   p.modulefulness,
                   Nil
                 )
+                p.fldSym = S(fsym)
+                fsym.defn = S(fdef)
                 sym.defn = S(fdef)
                 fdef :: Nil
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id)
                 val decl = LetDecl(psym, Nil)
                 val defn = DefineVar(psym, p.sym.ref())
+                p.fldSym = S(psym)
                 decl :: defn :: Nil
           
-          val valParams = fields.collect:
-            case f: TermDefinition =>
-              f.sym.nme -> f.sym
-          val params = fields.collect:
-            case (f: LetDecl) =>
-              f.sym.nme -> f.sym
-          val ctxWithFields = ctx.withMembers(valParams,ctx.outer.inner) ++ params
+          val ctxWithFields =
+            val valParams = fields.collect:
+              case f: TermDefinition =>
+                f.sym.nme -> f.sym
+            val params = fields.collect:
+              case (f: LetDecl) =>
+                f.sym.nme -> f.sym
+            ctx.withMembers(valParams, ctx.outer.inner) ++ params
           val (blk, c) = fn(using ctxWithFields)
           val blkWithFields: Blk = blk.copy(stats = fields ::: blk.stats)
           (blkWithFields, c)
