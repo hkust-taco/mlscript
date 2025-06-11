@@ -17,7 +17,7 @@ use[Num]
 //│ ╔══[ERROR] Cannot query instance for use-expression of type Num
 //│ ║  l.16: 	use[Num]
 //│ ║        	    ^^^
-//│ ╙── Missing instance: Expected: Num; Available: (Int, Str)
+//│ ╙── Missing instance: Expected: Num; Available: [Int, Str]
 
 :expect 42
 let x = use[Int]
@@ -48,7 +48,7 @@ fun f(using Int) = use[Num]
 //│ ╔══[ERROR] Cannot query instance for use-expression of type Num
 //│ ║  l.47: 	fun f(using Int) = use[Num]
 //│ ║        	                       ^^^
-//│ ╙── Missing instance: Expected: Num; Available: (Int, Int, Int, Str, Str)
+//│ ╙── Missing instance: Expected: Num; Available: [Int, Int, Int, Str, Str]
 
 
 data class Some[T](value: T)

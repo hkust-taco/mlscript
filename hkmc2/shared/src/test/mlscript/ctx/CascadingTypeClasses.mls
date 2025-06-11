@@ -22,7 +22,7 @@ foo[Baz]
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^
-//│ ╙── Missing instance: Expected: Baz (A); Available: (Foo[Baz])
+//│ ╙── Missing instance: Expected: Baz (A); Available: [Foo[Baz]]
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected 2 arguments but got 1
 
 :e

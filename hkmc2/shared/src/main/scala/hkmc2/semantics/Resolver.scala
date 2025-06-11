@@ -95,7 +95,7 @@ object Resolver:
     def showEnv: Str =
       iEnv.values
         .flatMap(_.map((typ, instance) => s"${typ.show}"))
-        .mkString("(", ", ", ")")
+        .mkString("[", ", ", "]")
     
     def describeType(tpe: Type): Str = tpe match
       case Type.Sym(sym: VarSymbol) =>
