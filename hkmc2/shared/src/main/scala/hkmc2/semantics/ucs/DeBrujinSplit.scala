@@ -352,7 +352,7 @@ extension (split: DeBrujinSplit)
             case (0, body) => go(body, ctx)
           pattern match
             case Literal(value) => 
-              semantics.Branch(ctx(scrutinee - 1)(), Pattern.Lit(value), nullaryConsequent) ~: go(alternative, ctx)
+              semantics.Branch(ctx(scrutinee - 1)(), FlatPattern.Lit(value), nullaryConsequent) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.Symbol(symbol: ClassSymbol)) =>
               log(s"make temporary symbols for $symbol")
               val subSymbols = (1 to symbol.arity).map(i => TempSymbol(N, s"arg_$i")).toList
@@ -367,12 +367,12 @@ extension (split: DeBrujinSplit)
               // Here we add a speical case as a workaround:
               // If the class is virtual, then we don't make arguments empty.
               val arguments = if Elaborator.ctx.builtins.virtualClasses contains symbol then N else S(subSymbols)
-              val pattern = Pattern.ClassLike(select, arguments)
+              val pattern = FlatPattern.ClassLike(select, arguments)
               semantics.Branch(ctx(scrutinee - 1)(), pattern, consequent2) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.Symbol(symbol: ModuleSymbol)) =>
               val select = scoped("ucs:sel"):
                 reference(symbol).getOrElse(Term.Error)
-              val pattern = Pattern.ClassLike(select, N)
+              val pattern = FlatPattern.ClassLike(select, N)
               semantics.Branch(ctx(scrutinee - 1)(), pattern, nullaryConsequent) ~: go(alternative, ctx)
             case ClassLike(ConstructorLike.LocalPattern(id)) =>
               log(s"apply scrutinee $scrutinee to local pattern $id")

@@ -1,15 +1,16 @@
 package hkmc2
 package semantics
+package ucs
 
 import mlscript.utils.*, shorthands.*
 import syntax.*, Tree.Ident
 import Elaborator.{Ctx, ctx}
-import ucs.DeBrujinSplit
+import DeBrujinSplit.*
 
-import Pattern.*
+import FlatPattern.*
 
 /** Flat patterns for pattern matching */
-enum Pattern extends AutoLocated:
+enum FlatPattern extends AutoLocated:
   
   case Lit(literal: Literal)
   
@@ -57,7 +58,7 @@ enum Pattern extends AutoLocated:
     case Record(entries) =>
       entries.iterator.map(_.name + ": " + _).mkString("{ ", ", ", " }")
 
-object Pattern:
+object FlatPattern:
   /** Represent the type of arguments in `ClassLike` patterns. This type alias
    *  is used to reduce repetition in the code.
    * 
@@ -70,14 +71,14 @@ object Pattern:
   
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:
-    def unapply(p: Pattern): Opt[ClassSymbol] = p match
-      case p: Pattern.ClassLike => p.constructor.symbol.flatMap(_.asCls)
+    def unapply(p: FlatPattern): Opt[ClassSymbol] = p match
+      case p: FlatPattern.ClassLike => p.constructor.symbol.flatMap(_.asCls)
       case _ => N
   
   /** A class-like pattern whose symbol is resolved to a module. */
   object Module:
-    def unapply(p: Pattern): Opt[ModuleSymbol] = p match
-      case p: Pattern.ClassLike => p.constructor.symbol.flatMap(_.asModOrObj)
+    def unapply(p: FlatPattern): Opt[ModuleSymbol] = p match
+      case p: FlatPattern.ClassLike => p.constructor.symbol.flatMap(_.asModOrObj)
       case _ => N
   
   enum MatchMode:

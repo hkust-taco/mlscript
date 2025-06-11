@@ -1,0 +1,29 @@
+:js
+
+:e
+pattern Foo(val T) = null | T
+//│ ╔══[ERROR] Unexpected pattern parameter T with flags val
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                ^
+//│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                ^
+//│ ╔══[ERROR] Name not found: T
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                            ^
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                            ^
+
+pattern Foo(pattern T) = null | T
+
+:fixme
+pattern Foo(pattern T)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
+:fixme
+pattern Foo
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
+:todo
+data pattern Foo = _

@@ -10,7 +10,7 @@ import Keyword.{as, and, `do`, `else`, is, let, `then`, where}
 import collection.mutable.{Buffer, HashMap, SortedSet}
 import Elaborator.{Ctx, Ctxl, State, UnderCtx, ctx}
 import scala.annotation.targetName
-import Pattern.MatchMode
+import FlatPattern.MatchMode
 
 object Desugarer:
   extension (op: Keyword.Infix)
@@ -445,7 +445,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
   def expandMatch(scrutSymbol: BlockLocalSymbol, pattern: Tree, sequel: Sequel): Split => Sequel =
     def ref = scrutSymbol.ref(/* FIXME ident? */)
     def dealWithCtorCase(ctor: Ctor, mode: MatchMode)(fallback: Split): Sequel = ctx =>
-      Branch(ref, Pattern.ClassLike(term(ctor), N, mode, false)(ctor), sequel(ctx)) ~: fallback
+      Branch(ref, FlatPattern.ClassLike(term(ctor), N, mode, false)(ctor), sequel(ctx)) ~: fallback
     def dealWithAppCtorCase(
         app: Tree, ctor: Ctor, args: Ls[Tree], mode: MatchMode
     )(fallback: Split): Sequel = ctx =>
@@ -461,7 +461,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       .toList
       Branch(
         ref,
-        Pattern.ClassLike(term(ctor), S(matches), mode, false)(app), // TODO: refined?
+        FlatPattern.ClassLike(term(ctor), S(matches), mode, false)(app), // TODO: refined?
         subMatches(matches, sequel)(Split.End)(ctx)
       ) ~: fallback
     pattern.deparenthesized.desugared match
@@ -520,15 +520,15 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
             (wrap, (sym, pat) :: matches)
         Branch(
           ref,
-          Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
+          FlatPattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
           // The outermost is a tuple, so pattern arguments are not possible.
           wrap(subMatches(matches.map { case (s, t) => (s, t, N) }, sequel)(Split.End)(ctx))
         ) ~: fallback
       // Negative numeric literals
       case App(Ident("-"), Tup(IntLit(value) :: Nil)) => fallback => ctx =>
-        Branch(ref, Pattern.Lit(IntLit(-value)), sequel(ctx)) ~: fallback
+        Branch(ref, FlatPattern.Lit(IntLit(-value)), sequel(ctx)) ~: fallback
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) => fallback => ctx =>
-        Branch(ref, Pattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
+        Branch(ref, FlatPattern.Lit(DecLit(-value)), sequel(ctx)) ~: fallback
       case OpApp(lhs, Ident("&"), rhs :: Nil) => fallback => ctx =>
         val newSequel = expandMatch(scrutSymbol, rhs, sequel)(fallback)
         expandMatch(scrutSymbol, lhs, newSequel)(fallback)(ctx)
@@ -548,7 +548,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         pre = s"expandMatch: literal <<< $literal",
         post = (r: Split) => s"expandMatch: literal >>> ${r.showDbg}"
       ):
-        Branch(ref, Pattern.Lit(literal), sequel(ctx)) ~: fallback
+        Branch(ref, FlatPattern.Lit(literal), sequel(ctx)) ~: fallback
       // A single pattern in conjunction with more conditions
       case pattern and consequent => fallback => ctx =>
         val innerSplit = termSplit(consequent, identity)(Split.End)
@@ -565,14 +565,14 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         val symbol = scrutSymbol.getFieldScrutinee(fieldName)
         Branch(
           ref,
-          Pattern.Record((fieldName, symbol) :: Nil),
+          FlatPattern.Record((fieldName, symbol) :: Nil),
           subMatches((symbol, pat, N) :: Nil, sequel)(Split.End)(ctx)
         ) ~: fallback
       case Pun(false, fieldName) => fallback => ctx =>
         val symbol = scrutSymbol.getFieldScrutinee(fieldName)
         Branch(
           ref,
-          Pattern.Record((fieldName, symbol) :: Nil),
+          FlatPattern.Record((fieldName, symbol) :: Nil),
           subMatches((symbol, fieldName, N) :: Nil, sequel)(Split.End)(ctx)
         ) ~: fallback
       case Block(st :: Nil) => fallback => ctx =>
@@ -593,7 +593,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         }.fold(fallback)(recordContent =>
           Branch(
             ref,
-            Pattern.Record(recordContent.map((fieldName, symbol, _) => (fieldName, symbol))),
+            FlatPattern.Record(recordContent.map((fieldName, symbol, _) => (fieldName, symbol))),
             subMatches(recordContent.map((_, symbol, pat) => (symbol, pat, N)), sequel)(Split.End)(ctx)
           ) ~: fallback
         )

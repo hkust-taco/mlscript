@@ -250,6 +250,7 @@ enum Tree extends AutoLocated:
       case inner: InfixApp => inner.asParam(inUsing)
       // Param of form (using Type). Synthesize an identifier for it.
       case _ => S(N, Ident(""), S(inner))
+    case _: Tree => N
   
   def isModuleModifier: Bool = this match
     case Tree.TypeDef(Mod, _, N, N) => true

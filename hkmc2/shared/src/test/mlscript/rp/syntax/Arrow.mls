@@ -1,0 +1,36 @@
+:js
+
+:fixme
+pattern BooleanLike = true | false | (0 => false) | (1 => true)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+:fixme
+pattern PlainList(pattern T) = (null as Nil) | ([T as hd, PlainList(pattern T) as tl] => hd :: tl)
+//│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(InfixApp(Ident(T),keyword 'as',Ident(hd)), InfixApp(App(Ident(PlainList),Tup(List(TypeDef(Pat,Ident(T),None,None)))),keyword 'as',Ident(tl)))) (of class hkmc2.syntax.Tree$TyTup)
+
+[T as hd, PlainList(pattern T) as tl]
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:418)
+//│ ╔══[ERROR] Name not found: hd
+//│ ║  l.15: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	      ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:418)
+//│ ╔══[ERROR] Name not found: PlainList
+//│ ║  l.15: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	          ^^^^^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:671)
+//│ ╔══[ERROR] Illegal type declaration in term position.
+//│ ║  l.15: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	                            ^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:418)
+//│ ╔══[ERROR] Name not found: tl
+//│ ║  l.15: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	                                  ^^
+//│ = [undefined]

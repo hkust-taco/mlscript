@@ -2,15 +2,15 @@ package hkmc2
 package semantics
 
 import mlscript.utils.*, shorthands.*
-import syntax.*
+import syntax.*, ucs.FlatPattern
 
-final case class Branch(scrutinee: Term.Ref, pattern: Pattern, continuation: Split) extends AutoLocated:
+final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
   override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
   def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
-    Branch(scrutinee, Pattern.Lit(Tree.BoolLit(true)), continuation)
+    Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)

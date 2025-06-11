@@ -9,7 +9,7 @@ import Elaborator.{Ctx, State, ctx}
 import utils.*
 
 class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBase:
-  import Normalization.*, Mode.*, Pattern.MatchMode
+  import Normalization.*, Mode.*, FlatPattern.MatchMode
   import tl.*
 
   def reportUnreachableCase[T <: Located](unreachable: Located, subsumedBy: T, when: Bool = true): T =
@@ -36,9 +36,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
 
-  extension (lhs: Pattern.ClassLike)
+  extension (lhs: FlatPattern.ClassLike)
     /** Generate a term that really resolves to the class at runtime. */
-    def selectClass: Pattern.ClassLike =
+    def selectClass: FlatPattern.ClassLike =
       val constructor = lhs.constructor.symbol match
         case S(cls: ClassSymbol) => lhs.constructor
         case S(mem: BlockMemberSymbol) =>
@@ -51,28 +51,28 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         case _ => lhs.constructor
       lhs.copy(constructor)(lhs.tree)
   
-  extension (lhs: Pattern)
+  extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
-    def =:=(rhs: Pattern): Bool = (lhs, rhs) match
-      case (lhs: Pattern.ClassLike, rhs: Pattern.ClassLike) =>
+    def =:=(rhs: FlatPattern): Bool = (lhs, rhs) match
+      case (lhs: FlatPattern.ClassLike, rhs: FlatPattern.ClassLike) =>
         lhs.constructor.symbol === rhs.constructor.symbol
-      case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
-      case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
-      case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
+      case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
+      case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
+      case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
         ls1.lazyZip(ls2).forall:
           case ((fieldName1, p1), (fieldName2, p2)) =>
             fieldName1 === fieldName2 && p1 === p2
-      case (_: Pattern.ClassLike, _) | (_: Pattern.Lit, _) |
-        (_: Pattern.Tuple, _) | (_: Pattern.Record, _) => false
+      case (_: FlatPattern.ClassLike, _) | (_: FlatPattern.Lit, _) |
+        (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
-    def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
+    def <:<(rhs: FlatPattern): Bool = compareCasePattern(lhs, rhs)
     /**
       * If two class-like patterns has different `refined` flag. Report the
       * inconsistency as a warning.
       */
-    infix def reportInconsistentRefinedWith(rhs: Pattern): Unit = (lhs, rhs) match
+    infix def reportInconsistentRefinedWith(rhs: FlatPattern): Unit = (lhs, rhs) match
       // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
-      case (Pattern.ClassLike(c1, _, _, rfd1), Pattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
+      case (FlatPattern.ClassLike(c1, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
         def be(value: Bool): Str = if value then "is" else "is not"
         warn(
           msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
@@ -81,24 +81,24 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       case (_, _) => ()
     /** If the pattern is a class-like pattern, override its `refined` flag. */
     def markAsRefined: Unit = lhs match
-      case lhs: Pattern.ClassLike => lhs.refined = true
+      case lhs: FlatPattern.ClassLike => lhs.refined = true
       case _ => ()
   
-  extension (lhs: Pattern.Record)
+  extension (lhs: FlatPattern.Record)
     /** reduces the record pattern `lhs` assuming we have matched `rhs`.
       * It removes field matches that may now be unnecessary
       */
-    infix def assuming(rhs: Pattern): Pattern.Record = rhs match
-      case Pattern.Record(rhsEntries) =>
+    infix def assuming(rhs: FlatPattern): FlatPattern.Record = rhs match
+      case FlatPattern.Record(rhsEntries) =>
         val filteredEntries = lhs.entries.filter:
           (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        Pattern.Record(filteredEntries)
-      case rhs: Pattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
+        FlatPattern.Record(filteredEntries)
+      case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
             val filteredEntries = lhs.entries.filter:
               (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
-            Pattern.Record(filteredEntries)
+            FlatPattern.Record(filteredEntries)
           case S(_) | N => lhs
         case S(_) | N => lhs
       case _ => lhs
@@ -119,13 +119,13 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-      case pattern: (Pattern.Lit | Pattern.Tuple | Pattern.Record) =>
+      case pattern: (FlatPattern.Lit | FlatPattern.Tuple | FlatPattern.Record) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // TODO(ucs): deduplicate [1]
         val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
         Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-      case pattern @ Pattern.ClassLike(ctor, argsOpt, mode, _) =>
+      case pattern @ FlatPattern.ClassLike(ctor, argsOpt, mode, _) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // Make sure that the pattern has correct arity and fields are accessible.
         ctor.symbol.map(_.asClsLike) match
@@ -190,7 +190,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   private def validateClassPattern(
       ctorTerm: Term,
       ctorSymbol: ClassSymbol,
-      argsOpt: Opt[Ls[Pattern.Argument]]
+      argsOpt: Opt[Ls[FlatPattern.Argument]]
   ): Bool =
     // Obtain the `classHead` used for error reporting and the parameter list
     // from the class definitions.
@@ -242,7 +242,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           case N => true
   
   /** Check whether the object pattern has an argument list. */
-  private def validateObjectPattern(pattern: Pattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[Pattern.Argument]]): Bool = argsOpt match
+  private def validateObjectPattern(pattern: FlatPattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[FlatPattern.Argument]]): Bool = argsOpt match
     case S(Nil) =>
       // This means the pattern has an unnecessary parameter list.
       error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
@@ -294,7 +294,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       scrutinee: Term.Ref,
       symbol: PatternSymbol,
       ctorTerm: Term,
-      argsOpt: Opt[Ls[Pattern.Argument]],
+      argsOpt: Opt[Ls[FlatPattern.Argument]],
       mode: MatchMode,
       consequent: Split,
       alternative: Split,
@@ -396,7 +396,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       split: Split,
       mode: Mode,
       scrutinee: Term.Ref,
-      pattern: Pattern
+      pattern: FlatPattern
   )(using VarSet): Split = trace(
     pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
     post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
@@ -423,7 +423,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
             else thatPattern match
-            case thatPattern: Pattern.Record =>
+            case thatPattern: FlatPattern.Record =>
               log(s"Case 1.1.4: $thatPattern is a record")
               // we can use information if pattern is itself a record, or if it is a constructor with arguments
               val simplifiedRecord = thatPattern assuming pattern
@@ -466,8 +466,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     end rec
     rec(split)(using mode, summon)
   
-  private def aliasBindings(p: Pattern, q: Pattern): Split => Split = (p, q) match
-    case (Pattern.ClassLike(_, S(ss1), _, _), Pattern.ClassLike(_, S(ss2), _, _)) =>
+  private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
+    case (FlatPattern.ClassLike(_, S(ss1), _, _), FlatPattern.ClassLike(_, S(ss2), _, _)) =>
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l.scrutinee === r.scrutinee => acc
         case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.ref(), acc(innermost))
@@ -479,8 +479,8 @@ object Normalization:
     * Hard-coded subtyping relations used in normalization and coverage checking.
     * TODO use base classes and also handle modules
     */
-  def compareCasePattern(lhs: Pattern, rhs: Pattern)(using ctx: Elaborator.Ctx): Bool =
-    import Pattern.*, ctx.builtins as blt
+  def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
+    import FlatPattern.*, ctx.builtins as blt
     (lhs, rhs) match
     // `Object` is the supertype of all (non-virtual) classes and modules.
     case (Class(cs: ClassSymbol), Class(blt.`Object`))
@@ -506,7 +506,7 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
       }}
-    case (_: Pattern, _: Pattern)  => false
+    case (_: FlatPattern, _: FlatPattern)  => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

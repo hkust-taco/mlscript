@@ -1114,14 +1114,26 @@ extends Importer:
           val owner = ctx.outer.inner
           newCtx.nestInner(patSym).givenIn:
             assert(body.isEmpty)
+            // Filter out parameters marked as `pattern`.
+            val (patternParams, extractionParams) = ps match
+              case S(ParamList(_, params, _)) => params.partition:
+                case param @ Param(flags = FldFlags(false, false, false, true, false)) => true
+                case param @ Param(flags = FldFlags(false, false, false, false, false)) => false
+                case Param(flags, sym, _, _) =>
+                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.showDbg}" -> sym.toLoc :: Nil))
+                  false
+              case N => (Nil, Nil)
+            // Elaborate pattern RHS using term elaboration.
+            val rhsTree = td.rhs.getOrElse:
+              raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
+              Tree.Under()
+            val rhsTerm = term(rhsTree)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
+            scoped("ucs:ups"):
+              log(s"elaborated pattern body: ${rhsTerm.showDbg}")
+            // *** BEGIN OBSOLETE CODE ***
             td.rhs match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               case S(tree) =>
-                val (patternParams, extractionParams) = ps match // Filter out pattern parameters.
-                  case S(ParamList(_, params, _)) => params.partition:
-                    case param @ Param(flags = FldFlags(false, false, false, true, false)) => true
-                    case param @ Param(flags = FldFlags(pat = false)) => false
-                  case N => (Nil, Nil)
                 // TODO: Implement extraction parameters.
                 if extractionParams.nonEmpty then
                   raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
@@ -1138,7 +1150,8 @@ extends Importer:
               patSym.patternParams,
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
               td.rhs.getOrElse(die))
-            val pd = PatternDef(owner, patSym, sym, tps, ps,
+            // *** END OBSOLETE CODE ***
+            val pd = PatternDef(owner, patSym, sym, tps, ps, rhsTerm,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)
             pd

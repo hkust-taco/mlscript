@@ -10,7 +10,7 @@ import utils.*
 
 import hkmc2.Message.MessageContext
 
-import semantics.*
+import semantics.*, ucs.FlatPattern
 import hkmc2.{semantics => sem}
 import semantics.{Term => st}
 import semantics.Term.{Throw => _, *}
@@ -465,8 +465,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 End()
               )
             pat match
-              case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
+              case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case FlatPattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
                 /** Make a continuation that creates the match. */
                 def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
                   val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
@@ -496,8 +496,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                     // resolves to a class or module. Branches with unresolved
                     // constructors should have been removed.
                     lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
-              case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
-              case Pattern.Record(entries) =>
+              case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
+              case FlatPattern.Record(entries) =>
                 val objectSym = ctx.builtins.Object
                 mkMatch( // checking that we have an object
                   Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
@@ -630,8 +630,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def setupSymbol(symbol: Local)(k: Result => Block)(using Subst): Block =
     k(Instantiate(Value.Ref(State.termSymbol).selSN("Symbol"), Value.Lit(Tree.StrLit(symbol.nme)) :: Nil))
 
-  def quotePattern(p: Pattern)(k: Result => Block)(using Subst): Block = p match
-    case Pattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
+  def quotePattern(p: FlatPattern)(k: Result => Block)(using Subst): Block = p match
+    case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
     case _ => // TODO
       raise(ErrorReport(
         msg"Unsupported quasiquote pattern type ${p.showDbg}" ->

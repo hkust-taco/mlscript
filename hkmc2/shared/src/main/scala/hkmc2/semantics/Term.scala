@@ -248,7 +248,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case td: TypeDef =>
       td.rhs.toList ::: td.annotations.flatMap(_.subTerms)
     case pat: PatternDef =>
-      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
+      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.patternTerm :: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
@@ -498,7 +498,13 @@ case class PatternDef(
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
     paramsOpt: Opt[ParamList],
-    body: ObjBody,
+    // We reuse `term` to represent `pattern`, so we can reuse the logic of
+    // `Elaborator` and `Resolver`. Before pattern compilation, they will be
+    // transformed into a separate `Pattern` class.
+    patternTerm: Term,
+    // Here, `ObjBody` contains methods `unapply` and `unapplyStringPrefix`,
+    // which are generated from the pattern definition.
+    body: ObjBody, 
     annotations: Ls[Annot],
 ) extends ClassLikeDef:
   self =>

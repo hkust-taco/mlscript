@@ -26,7 +26,7 @@ import Translator.*
  *  perform pattern matching on terms described by the pattern.
  */
 class Translator(val elaborator: Elaborator)(using State, Ctx) extends DesugaringBase:
-  import elaborator.term, elaborator.tl.*, HelperExtractors.*, Pattern.MatchMode
+  import elaborator.term, elaborator.tl.*, HelperExtractors.*, FlatPattern.MatchMode
   
   /** Each scrutinee is represented by a function that creates a reference to
    *  the scrutinee symbol. It is sufficient for current implementation.
@@ -64,22 +64,22 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
       case (lo: Literal) to (_, hi: Literal) =>
         error(msg"Incompatible range types: ${lo.describe} to ${hi.describe}" -> pat.toLoc)
         failure
-      case lit: Literal => Branch(scrut(), Pattern.Lit(lit), inner(Map.empty)) ~: Split.End
+      case lit: Literal => Branch(scrut(), FlatPattern.Lit(lit), inner(Map.empty)) ~: Split.End
       case App(Ident("-"), Tup(IntLit(value) :: Nil)) =>
-        Branch(scrut(), Pattern.Lit(IntLit(-value)), inner(Map.empty)) ~: Split.End
+        Branch(scrut(), FlatPattern.Lit(IntLit(-value)), inner(Map.empty)) ~: Split.End
       case App(Ident("-"), Tup(DecLit(value) :: Nil)) =>
-        Branch(scrut(), Pattern.Lit(DecLit(-value)), inner(Map.empty)) ~: Split.End
+        Branch(scrut(), FlatPattern.Lit(DecLit(-value)), inner(Map.empty)) ~: Split.End
       case prefix ~ postfix => stringPrefix(scrut, prefix, (captures1, postfixScrut) =>
         full(postfixScrut, postfix, captures2 => inner(captures2 ++ captures1)))
       case Under() => inner(Map.empty)
       case ctor @ (_: Ident | _: Sel) =>
         val ctorTrm = term(ctor)
-        val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
+        val pattern = FlatPattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
       case App(ctor @ (_: Ident | _: Sel), Tup(params)) =>
         // TODO(rp/str): handle input params
         val ctorTrm = term(ctor)
-        val pattern = Pattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
+        val pattern = FlatPattern.ClassLike(ctorTrm, N, MatchMode.Default, false)(ctor)
         Branch(scrut(), pattern, inner(Map.empty)) ~: Split.End
       case pat =>
         error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)
@@ -120,7 +120,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
       val prefixSymbol = new TempSymbol(N, "prefix")
       val postfixSymbol = new TempSymbol(N, "postfix")
       val mode = MatchMode.StringPrefix(prefixSymbol, postfixSymbol)
-      val pattern = Pattern.ClassLike(ctorTrm, N, mode, false)(ctor)
+      val pattern = FlatPattern.ClassLike(ctorTrm, N, mode, false)(ctor)
       Branch(scrut(), pattern, inner(Map.empty, () => postfixSymbol.ref())) ~: Split.End
     case pat =>
       error(msg"Unrecognized pattern (${pat.describe})" -> pat.toLoc)

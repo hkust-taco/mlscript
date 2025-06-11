@@ -9,7 +9,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import Message.MessageContext
-import semantics.*, semantics.Term.*
+import semantics.*, Term.*, ucs.FlatPattern
 import Elaborator.Ctx
 import syntax.*
 import Tree.*
@@ -258,7 +258,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(new TempSymbol(S(blk), "ctx"))(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, Pattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
+    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, FlatPattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts)))) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -295,7 +295,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       val patTy = pattern match
-      case pat: Pattern.ClassLike =>
+      case pat: FlatPattern.ClassLike =>
         pat.constructor.symbol.flatMap(_.asCls) match
           case S(sym) =>
             val (clsTy, tv, emptyTy) = sym.defn.map(sym -> _) match
@@ -313,7 +313,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           case N =>
             error(msg"Not a valid class: ${pat.constructor.describe}" -> pat.constructor.toLoc :: Nil)
             Bot
-      case Pattern.Lit(lit) => lit match
+      case FlatPattern.Lit(lit) => lit match
         case _: Tree.BoolLit => BbCtx.boolTy
         case _: Tree.IntLit => BbCtx.intTy
         case _: Tree.DecLit => BbCtx.numTy
