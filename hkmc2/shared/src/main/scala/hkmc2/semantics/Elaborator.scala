@@ -1089,6 +1089,7 @@ extends Importer:
                   p.modulefulness,
                   Nil
                 )
+                assert(p.fldSym.isEmpty)
                 p.fldSym = S(fsym)
                 fsym.defn = S(fdef)
                 sym.defn = S(fdef)
