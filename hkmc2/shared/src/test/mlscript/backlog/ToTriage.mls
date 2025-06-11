@@ -223,7 +223,7 @@ class Foo' with
 module Example with
 // whoops
   val a = this
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
 //│ ║  l.223: 	module Example with
 //│ ║         	                   ^
 //│ ║  l.224: 	// whoops

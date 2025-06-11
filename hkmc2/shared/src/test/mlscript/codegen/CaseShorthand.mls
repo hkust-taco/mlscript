@@ -56,7 +56,7 @@ case 0 then true
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.58: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position

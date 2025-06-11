@@ -22,8 +22,8 @@ abstract
     Bar(b)
 //│ ┊abstract┊→⟨┊class┊→⟨┊Foo┊(⟨┊a┊⟩)┊↵┊Bar┊(⟨┊b┊⟩)┊⟩←┊⟩←┊
 //│ Parsed:
-//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Foo),Tup(List(Ident(a)))),None,None))
-//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Bar),Tup(List(Ident(b)))),None,None))
+//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Foo),Tup(List(Ident(a)))),None))
+//│ 	Modified(keyword 'abstract',None,TypeDef(Cls,App(Ident(Bar),Tup(List(Ident(b)))),None))
 
 :todo
 abstract class

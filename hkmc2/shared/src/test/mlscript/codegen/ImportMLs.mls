@@ -42,14 +42,12 @@ Some(1)
 //│ let tmp3; tmp3 = new Option.Some.class(1); Option.isDefined(tmp3)
 //│ = true
 
-:re
 new Some(1) isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp5 is not a constructor
+//│ = true
 
-:re
 new Some(1)
   isDefined()
-//│ ═══[RUNTIME ERROR] TypeError: tmp7 is not a constructor
+//│ = true
 
 
 open Option { Some, None, isDefined }
@@ -68,14 +66,14 @@ None == Option.None
 :re
 Option.oops
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.69: 	Option.oops
+//│ ║  l.67: 	Option.oops
 //│ ╙──      	      ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 :e
 open Option { oops }
 //│ ╔══[ERROR] Module 'Option' does not contain member 'oops'
-//│ ║  l.76: 	open Option { oops }
+//│ ║  l.74: 	open Option { oops }
 //│ ╙──      	              ^^^^
 
 oops
@@ -84,7 +82,7 @@ oops
 :re
 Option.None.oops
 //│ ╔══[ERROR] Object 'None' does not contain member 'oops'
-//│ ║  l.85: 	Option.None.oops
+//│ ║  l.83: 	Option.None.oops
 //│ ╙──      	           ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

@@ -110,7 +110,7 @@ if input is Lines of Email then
 //│ ║  l.108: 	if input is Lines of Email then
 //│ ╙──       	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(OpApp(StrLit(
-//│ ),Ident(~),List(Bra(Round,App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',OpApp(Ident(h),Ident(~),List(Ident(Tail)))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+100)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ),Ident(~),List(Bra(Round,App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t))))))), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',OpApp(Ident(h),Ident(~),List(Ident(Tail)))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+100)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 pattern Opt(pattern P) = case

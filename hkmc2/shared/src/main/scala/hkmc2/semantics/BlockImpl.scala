@@ -13,14 +13,25 @@ trait BlockImpl(using Elaborator.State):
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match
+      case PossiblyAnnotated(anns, syntax.Desugared(td: TypeDef)) :: stmts =>
+        val ctors = td.withPart.toList.flatMap:
+          case Block(sts) => sts.flatMap:
+            case Constructor(Block(ctors)) => ctors
+            case _ => Nil
+          case _ => Nil
+        PossiblyAnnotated(anns, td) :: (
+          ctors.map(head => PossiblyAnnotated(anns, TypeDef(syntax.Cls,
+              td.name match
+              case L(_) => head
+              case R(name) =>
+                InfixApp(head, syntax.Keyword.`extends`, name)
+              , N
+            )))
+        ) ::: desug(stmts)
       case stmt :: stmts =>
         stmt.desugared match
         case PossiblyAnnotated(anns, h @ Hndl(body = N)) =>
           PossiblyAnnotated(anns, h.copy(body = S(Block(stmts)))) :: Nil
-        case PossiblyAnnotated(anns, TypeDef(syntax.Cls, Ident(name), rhs, S(Block(Constructor(Block(ctors)) :: rest)))) =>
-          PossiblyAnnotated(anns, TypeDef(syntax.Cls, Ident(name), rhs, if rest.isEmpty then N else S(Block(rest)))) ::
-            (ctors.map(head => PossiblyAnnotated(anns, TypeDef(syntax.Cls, InfixApp(head, syntax.Keyword.`extends`, Ident(name)), N, N))))
-          ::: desug(stmts)
         case stmt => stmt :: desug(stmts)
       case Nil => Nil
     desug(stmts)

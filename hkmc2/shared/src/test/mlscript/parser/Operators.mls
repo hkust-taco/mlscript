@@ -85,7 +85,7 @@ x =>
  x
  42
 //│ Parsed:
-//│ 	OpApp(IntLit(1),Ident(+),List(Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(2)),None), TypeDef(Cls,Ident(A),None,None), Ident(x), IntLit(42)))))
+//│ 	OpApp(IntLit(1),Ident(+),List(Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(2)),None), TypeDef(Cls,Ident(A),None), Ident(x), IntLit(42)))))
 
 :pe
 1 +

@@ -145,8 +145,8 @@ object Elaborator:
           case huh => wat(huh)
         protected def assumeObject(nme: Str): BlockMemberSymbol =
           module.tree.definedSymbols.get(nme).getOrElse:
-            throw new NoSuchElementException:
-              s"builtin module symbol source.$nme. we have"
+            throw new NoSuchElementException(
+              s"builtin module symbol source.$nme")
       object source extends VirtualModule(assumeBuiltinMod("source")):
         val line = assumeObject("line")
         val name = assumeObject("name")
@@ -202,17 +202,18 @@ object Elaborator:
     val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
     val termSymbol = TempSymbol(N, "Term")
-    val effectSigSymbol = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), Ident("EffectSig"))
+    val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
-      val sym = ClassSymbol(TypeDef(syntax.Cls, Dummy, N, N), id)
+      val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       Term.Sel(runtimeSymbol.ref(), id)(S(sym))
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
     val matchResultClsSymbol =
       val id = new Ident("MatchResult")
-      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N)
+      // val td = DummyTypeDef(syntax.Cls)
+      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N)
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(value = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
@@ -221,7 +222,7 @@ object Elaborator:
       cs
     val matchFailureClsSymbol =
       val id = new Ident("MatchFailure")
-      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("errors") :: Nil)), N, N)
+      val td = DummyTypeDef(syntax.Cls)
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(value = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
@@ -337,11 +338,11 @@ extends Importer:
       subterm(Block(d :: Unt() :: Nil))
     case LetLike(`let`, lhs, rhso, S(bod)) =>
       subterm(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
-    case LetLike(`let`, lhs, S(rhs), N) =>
+    case LetLike(`let`, lhs, rhso, N) =>
       raise(ErrorReport(
         msg"Expected a body for let bindings in expression position" ->
           tree.toLoc :: Nil))
-      block(LetLike(`let`, lhs, S(rhs), N) :: Nil, hasResult = true)._1
+      block(LetLike(`let`, lhs, rhso, N) :: Nil, hasResult = true)._1
     case LetLike(`set`, lhs, S(rhs), N) =>
       Term.Assgn(subterm(lhs), subterm(rhs))
     case LetLike(`set`, lhs, S(rhs), S(bod)) =>
@@ -361,7 +362,7 @@ extends Importer:
       val sym = fieldOrVarSym(HandlerBind, id)
       log(s"Processing `handle` statement $id (${sym}) ${ctx.outer}")
       
-      val derivedClsSym = ClassSymbol(Tree.TypeDef(syntax.Cls, Tree.Error(), N, N), Tree.Ident(s"Handler$$${id.name}$$"))
+      val derivedClsSym = ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident(s"Handler$$${id.name}$$"))
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil),
@@ -481,9 +482,9 @@ extends Importer:
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
       Term.IfLike(Keyword.`if`, des)
-    case InfixApp(lhs, Keyword.`then`, rhs) =>
+    case InfixApp(lhs, kw @ (Keyword.`then` | Keyword.`with`), rhs) =>
       raise:
-        ErrorReport(msg"Unexpected infix use of 'then' keyword here" -> tree.toLoc :: Nil)
+        ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
       Term.Error
     case OpApp(lhs, Ident("|"), rhs :: Nil) =>
       Term.CompType(subterm(lhs), subterm(rhs), true)
@@ -585,7 +586,10 @@ extends Importer:
       )
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
-    case New(body, rfto) => // TODO handle Under
+    // case New(c, rfto) =>
+    //   assert(rfto.isEmpty)
+    //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
+    case ProperNew(body, rfto) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
         val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident("$anon"))
         ctx.nestInner(clsSym).givenIn:
@@ -650,7 +654,7 @@ extends Importer:
       Term.Throw(subterm(body))
     case Modified(Keyword.`do`, kwLoc, body) =>
       Blk(subterm(body) :: Nil, unit)
-    case TypeDef(Mod, head, N, N) =>
+    case TypeDef(Mod, head, N) =>
       subterm(head)
     case Tree.Region(id: Tree.Ident, body) =>
       val sym = VarSymbol(id)
@@ -673,7 +677,7 @@ extends Importer:
     case TermDef(k, nme, rhs) =>
       raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case TypeDef(k, head, rhs, body) =>
+    case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
     case Modified(kw, kwLoc, body) =>
@@ -821,6 +825,9 @@ extends Importer:
       case Nil =>
         reportUnusedAnnotations
         (mkBlk(acc, N, hasResult), ctx)
+      case Constructor(Block(ctors)) :: sts =>
+        // TODO properly handle (it currently desugars to sibling classes)
+        go(sts, annotations, acc)
       case Open(bod) :: sts =>
         reportUnusedAnnotations
         bod match
@@ -928,7 +935,7 @@ extends Importer:
             LetDecl(sym, annotations) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
-      case (tree @ LetLike(`let`, lhs, S(rhs), N)) :: sts =>
+      case (tree @ LetLike(`let`, lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Nil, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>
@@ -996,7 +1003,7 @@ extends Importer:
                 // TypeDef(Mod, _, N, N) indicates if the function marks
                 // its result as "module". e.g, `fun f: module M`
                 //                                      ^^^^^^
-                case S(TypeDef(Mod, _, N, N)) => 
+                case S(TypeDef(Mod, _, N)) => 
                   Modulefulness.ofSign(s)(true)
                 case _ =>
                   Modulefulness.none
@@ -1011,8 +1018,11 @@ extends Importer:
             reportUnusedAnnotations
             raise(d)
             go(sts, Nil, acc)
-      case (td @ TypeDef(k, head, rhs, body)) :: sts =>
+      case (td @ TypeDef(k, head, rhs)) :: sts =>
+        
         assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
+        val body = td.withPart
+        
         td.symbName match
         case S(L(d)) => raise(d)
         case _ => ()
@@ -1022,9 +1032,11 @@ extends Importer:
             raise(d)
             return go(sts, Nil, acc)
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
+        
         var newCtx = S(td.symbol).collectFirst:
             case s: InnerSymbol => s
           .fold(ctx.nest(OuterCtx.NonReturnContext))(ctx.nestInner(_))
+        
         val tps = td.typeParams match
           case S(ts) =>
             ts.tys.flatMap: targ =>
@@ -1040,16 +1052,20 @@ extends Importer:
               vs.decl = S(res)
               res :: Nil
           case N => Nil
+        
         newCtx ++= tps.map(tp => tp.sym.name -> tp.sym) // TODO: correct ++?
+        
         val isDataClass = annotations.exists:
           case Annot.Modifier(Keyword.`data`) => true
           case _ => false
+        
         val pss = td.paramLists.map: ps =>
           val (res, newCtx2) =
             given Ctx = newCtx
             params(ps, isDataClass)
           newCtx = newCtx2
           res
+        
         def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
           val fields: Ls[Statement] = pss.flatMap: ps =>
             ps.params.flatMap: p =>
@@ -1092,9 +1108,20 @@ extends Importer:
               case (f: LetDecl) =>
                 f.sym.nme -> f.sym
             ctx.withMembers(valParams, ctx.outer.inner) ++ params
+          
           val (blk, c) = fn(using ctxWithFields)
           val blkWithFields: Blk = blk.copy(stats = fields ::: blk.stats)
           (blkWithFields, c)
+        
+        def mkBody(using Ctx) = withFields:
+          body match
+          case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+          case S(b: Tree.Block) => block(b, hasResult = false)
+          case S(t) =>
+            raise(ErrorReport(
+              msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
+            (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+        
         val defn = k match
         case Als =>
           val alsSym = td.symbol.asInstanceOf[TypeAliasSymbol] // TODO improve `asInstanceOf`
@@ -1151,12 +1178,7 @@ extends Importer:
           newCtx.nestInner(clsSym).givenIn:
             log(s"Processing type definition $nme")
             val cd =
-              val (bod, c) = withFields: 
-                body match
-                case S(b: Tree.Block) => block(b, hasResult = false)
-                // case S(t) => block(t :: Nil)
-                case S(t) => ???
-                case N => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+              val (bod, c) = mkBody
               ModuleDef(owner, clsSym, sym, tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), annotations)
             clsSym.defn = S(cd)
             cd
@@ -1166,12 +1188,7 @@ extends Importer:
           newCtx.nestInner(clsSym).givenIn:
             log(s"Processing type definition $nme")
             val cd =
-              val (bod, c) = withFields: 
-                body match
-                case S(b: Tree.Block) => block(b, hasResult = false)
-                // case S(t) => block(t :: Nil)
-                case S(t) => ???
-                case N => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
+              val (bod, c) = mkBody
               ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), annotations)
             clsSym.defn = S(cd)
             cd
@@ -1207,7 +1224,7 @@ extends Importer:
   def newOf(td: TypeDef)(using Ctx): Opt[Term.New] =
     td.extension
     match
-    case S(ext) => S(term(New(S(ext), N)))
+    case S(ext) => S(term(ProperNew(S(ext), N)))
     case N => N
     match
     case S(n: Term.New) => S(n)
@@ -1225,9 +1242,9 @@ extends Importer:
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
     // mm: `module`-modified
     def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
-    case TypeDef(Mod, inner, N, N) =>
+    case TypeDef(Mod, inner, N) =>
       go(inner, inUsing, flags, true)
-    case TypeDef(Pat, inner, N, N) =>
+    case TypeDef(Pat, inner, N) =>
       go(inner, inUsing, flags.copy(pat = true), mm)
     case TermDef(ImmutVal, inner, _) =>
       go(inner, inUsing, flags.copy(value = true), mm)

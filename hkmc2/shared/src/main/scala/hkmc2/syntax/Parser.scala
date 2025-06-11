@@ -40,6 +40,7 @@ val charPrecList: List[Str] = List(
     "~",
     "", // Precedence of prefix operators
     "", // Precedence of application
+    "", // Precedence of `new`
     // ".",
     ". \\",
   )
@@ -62,6 +63,8 @@ object Parser:
     charPrecList.zipWithIndex.flatMap {
       case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + Keyword.maxPrec.get))
     }.toMap.withDefaultValue(Int.MaxValue)
+  
+  // * Note: keywords without a specified right precedence are now assumed to have right precedence `CommaPrecNext`
   
   // private val CommaPrec = prec(',')
   private val CommaPrec = 0
@@ -317,7 +320,8 @@ abstract class Parser(
               errExpr
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
-            val res = parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
+            val p = kw.rightPrec.getOrElse(CommaPrecNext)
+            val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
             annotations.annotate(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines)) :: blockContOf(rule)
         case N =>
           
@@ -411,9 +415,9 @@ abstract class Parser(
           case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
             rec(toks, S(tok.innerLoc), tok.describe)
-              .concludeWith(_.parseRule(kw.rightPrecOrMax, subRule, allowNewlines = true))
+              .concludeWith(_.parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = true))
           case _ =>
-            parseRule(kw.rightPrecOrMax, subRule, allowNewlines = allowNewlines)
+            parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = allowNewlines)
         case N =>
           if verbose then printDbg(s"$$ cannot find a rule starting with: ${id.name}")
           rule.exprAlt match

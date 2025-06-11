@@ -113,7 +113,7 @@ object DeBrujinSplit:
       case App(ctor: (Ident | Sel), Tup(params)) => dealWithCtor(ctor, params)
       case OpApp(lhs, op: Ident, rhs :: Nil) => dealWithCtor(op, Ls(lhs, rhs))
       case literal: syntax.Literal => Branch(_, Literal(literal), _, _)
-      case Tree.TypeDef(syntax.Pat, body, N, N) => go(body)
+      case Tree.TypeDef(syntax.Pat, body, N) => go(body)
     scoped("ucs:rp:elaborate"):
       log(s"tree: ${tree.showDbg}")
       Binder(go(tree)(Outermost, Accept(0), Reject))

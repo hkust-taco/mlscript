@@ -453,7 +453,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       val matches = scrutinees.iterator.zip(args).map:
         case (symbol, tree) =>
           val argument = tree match
-            case TypeDef(syntax.Pat, body, N, N) => S(DeBrujinSplit.elaborate(Nil, body, elaborator))
+            case TypeDef(syntax.Pat, body, N) => S(DeBrujinSplit.elaborate(Nil, body, elaborator))
             case td @ TypeDef(k = syntax.Pat) =>
               error(msg"Ill-formed pattern argument" -> td.toLoc); N
             case _ => N
