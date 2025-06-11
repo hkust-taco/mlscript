@@ -17,7 +17,7 @@ M.f
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.10: 	  fun f(using Int)
 //│ ║        	              ^^^
-//│ ╙── Missing instance: Expected: Int; Available: []
+//│ ╙── Missing instance: Expected: Int; Available: <no available>
 
 :e
 using 42 = 42
