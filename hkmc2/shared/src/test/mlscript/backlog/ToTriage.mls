@@ -352,11 +352,9 @@ mkStr of ... // hello
 
 data class Foo(x, y)
 
-:e
-Foo(1)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.356: 	Foo(1)
-//│ ╙──       	   ^^^
+// TODO missing sanity check
+:re
+id(Foo)(1)
 //│ = Foo(1, undefined)
 
 // ——— ——— ———
