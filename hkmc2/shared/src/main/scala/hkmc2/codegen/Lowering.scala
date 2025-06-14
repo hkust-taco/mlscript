@@ -69,11 +69,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
-  def parentConstructor(argss: Ls[Ls[Term]])(using Subst) = 
+  def parentConstructor(cls: Term, argss: Ls[Ls[Term]])(using Subst) = 
     if argss.length > 1 then 
       raise:
         ErrorReport(
-          msg"Extending a class with multiple parameter lists is not supported" -> Loc(argss.flatten) :: Nil,
+          msg"Extending a class with multiple parameter lists is not supported" -> Loc(cls :: argss.flatten) :: Nil,
           source = Diagnostic.Source.Compilation
         )
     plainArgs(argss.headOr(Nil)): args =>
@@ -187,7 +187,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case S(ext) =>
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
-            val pctor = parentConstructor(ext.argss)
+            val pctor = parentConstructor(ext.cls, ext.argss)
             Define(
               ClsLikeDefn(
                 cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, cls.auxParams, S(clsp),
@@ -579,7 +579,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       subTerm(cls): clsp =>
         val sym = new BlockMemberSymbol(isym.name, Nil)
         val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
-        val pctor = parentConstructor(ass)
+        val pctor = parentConstructor(cls, ass)
         val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(clsp),
           mtds, privateFlds, publicFlds, pctor, ctor)
         Define(clsDef, term_nonTail(New(sym.ref().noIArgs, Nil, N))(k))
