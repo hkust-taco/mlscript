@@ -97,7 +97,7 @@ object Resolver:
         .flatMap(_.map((typ, instance) => s"${typ.show}"))
         .toList
         .distinct
-        .mkStringOr(", ", els = "<none available>")
+        .mkStringOr(", ", els = "‹none available›")
     
     def describeType(tpe: Type): Str = tpe match
       case Type.Sym(sym: VarSymbol) =>
