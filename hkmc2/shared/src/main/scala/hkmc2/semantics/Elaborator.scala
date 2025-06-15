@@ -408,15 +408,9 @@ extends Importer:
       case N =>
         raise(ErrorReport(msg"Cannot use 'this' outside of an object scope." -> tree.toLoc :: Nil))
         Term.Error
-    case id @ Ident(name) =>
-      ctx.get(name) match
-      case S(elem) => elem.ref(id)
-      case N =>
-        state.builtinOpsMap.get(name) match
-        case S(bi) => bi.ref(id)
-        case N =>
-          raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
-          Term.Error
+    case id @ Ident(name) => ident(id).getOrElse:
+      raise(ErrorReport(msg"Name not found: $name" -> id.toLoc :: Nil))
+      Term.Error
     // A use[T] construct: analogous to Scala's summon[T].
     case TyApp(Keywrd(Keyword.`use`), targs) => 
       if targs.length != 1 then
@@ -1127,9 +1121,9 @@ extends Importer:
             val rhsTree = td.rhs.getOrElse:
               raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               Tree.Under()
-            val rhsTerm = term(rhsTree)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
+            val rhsPat = pattern(rhsTree)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
             scoped("ucs:ups"):
-              log(s"elaborated pattern body: ${rhsTerm.showDbg}")
+              log(s"elaborated pattern body: ${rhsPat.showDbg}")
             // *** BEGIN OBSOLETE CODE ***
             td.rhs match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
@@ -1151,7 +1145,7 @@ extends Importer:
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
               td.rhs.getOrElse(die))
             // *** END OBSOLETE CODE ***
-            val pd = PatternDef(owner, patSym, sym, tps, ps, rhsTerm,
+            val pd = PatternDef(owner, patSym, sym, tps, ps, rhsPat,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -1275,6 +1269,121 @@ extends Importer:
           case N =>
             ???
       go(ps, Nil, ctx, ParamListFlags.empty)
+  
+  def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
+    case S(elem) => S(elem.ref(id))
+    case N =>
+      state.builtinOpsMap.get(id.name) match
+      case S(bi) => S(bi.ref(id))
+      case N => N
+  
+  def pattern(t: Tree): Ctxl[Pattern] =
+    import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
+    import ucs.Translator.isInvalidStringBounds, ucs.HelperExtractors.to
+    /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
+     *  variables we found in `p`. */
+    def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
+      val pattern = go(lhs)
+      val ctx2 = ctx ++ pattern.variables.map:
+        case alias => alias.id.name -> alias.allocate
+      // Report all invalid variables we found in `pattern`.
+      pattern.variables.invalidVars.foreach:
+        case (Alias(_, id), Duplicated(previous)) =>
+          raise(ErrorReport(msg"Duplicate pattern variable." -> id.toLoc ::
+            msg"The previous definition is here." -> previous.toLoc :: Nil))
+        case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) =>
+          raise(ErrorReport(
+            msg"Found an inconsistent variable in disjunction patterns." -> id.toLoc ::
+            msg"The variable is missing from this sub-pattern." -> (
+              if missingOnTheLeft then disjunction.left else disjunction.right
+            ).toLoc :: Nil))
+        case (Alias(pattern, id), Negated(negation)) =>
+          raise(ErrorReport((pattern match
+            case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
+            case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc
+          ) :: msg"Because the pattern it belongs to is negated." -> negation.toLoc :: Nil))
+      Transform(pattern, term(rhs)(using ctx2))
+    /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
+    def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
+      val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())
+      val (leading, spread, trailing) = ts.foldLeft(z):
+        case (acc @ (_, S(_), _), Spread(`...`, _, _)) =>
+          // Found two spreads in the same tuple pattern. Report an error.
+          raise(ErrorReport(msg"Multiple spread patterns are not supported." -> t.toLoc :: Nil))
+          acc // Do not modify the accumulator and skip this spread.
+        case ((leading, N, trailing), Spread(`...`, _, S(t))) =>
+          // Elaborate the spread pattern and add it to spread element.
+          (leading, S(go(t)), trailing)
+        case ((leading, N, trailing), Spread(`...`, _, N)) =>
+          // Empty spreads results in a wildcard pattern.
+          (leading, S(Wildcard()), trailing)
+        case ((leading, N, trailing), t) => 
+          // The spread is not filled. Add new patterns to the leading.
+          (go(t) :: leading, N, trailing)
+        case ((leading, spread @ S(_), trailing), t) => 
+          // The spread is filled. Add new patterns to the trailing.
+          (leading, spread, go(t) :: trailing)
+      Tuple(leading.reverse, spread, trailing.reverse)
+    /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
+    def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
+      val entries = ps.foldLeft(List[(Ident, Pattern)]()):
+        case (acc, InfixApp(id: Ident, Keyword.`:`, p)) => (id, go(p)) :: acc
+        case (acc, Pun(false, p)) => (p, Variable(p)) :: acc
+        case (acc, t) =>
+          raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
+          acc
+      Record(entries.reverse)
+    def go(t: Tree): Ctxl[Pattern] = t match
+      // Brackets.
+      case Bra(BracketKind.Round, t) => go(t)
+      // Tuple patterns like `[p1, p2, ...ps, pn]`.
+      case TyTup(ps) => tuple(ps)
+      case Tup(ps) => tuple(ps)
+      case t: syntax.Literal => Literal(t)
+      // Negation patterns: `~p`
+      case App(Ident("~"), Tup(p :: Nil)) => Negation(go(p))
+      // Union and intersection patterns: `p | q` and `p & q`
+      case OpApp(lhs, Ident(op @ ("|" | "&")), rhs :: Nil) =>
+        Composition(op === "|", go(lhs), go(rhs))
+      // Constructor patterns with arguments.
+      case App(ctor: Ctor, Tup(args)) =>
+        Constructor(term(ctor), args.map(go(_)))
+      // `[p1, p2, ...ps, pn] => term`: All patterns are in the `TyTup`.
+      case (lhs: TyTup) `=>` rhs => arrow(lhs, rhs)
+      // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.
+      case Tup(lhs) `=>` rhs => lhs match
+        case p @ Pun(false, _) :: Nil => record(p)
+        case p @ InfixApp(_: Ident, Keyword.`:`, _) :: Nil => record(p)
+        case lhs :: Nil => arrow(lhs, rhs)
+        case _ :: _ | Nil => ??? // TODO: When is this case reached?
+      case p as (id: Ident) => go(p) bind id
+      case Under() => Pattern.Wildcard()
+      // Record patterns like `(a: p1, b: p2, ...pn)`.
+      case Block(ps) => record(ps)
+      // A single pun pattern is a record pattern.
+      case p @ Pun(false, _) => record(p :: Nil)
+      // Range patterns. We can also desugar them into disjunctions of all the
+      // literals in the range.
+      case (lower: StrLit) to (incl, upper: StrLit) =>
+        if isInvalidStringBounds(lower, upper) then Pattern.Wildcard()
+        else Pattern.Range(lower, upper, incl)
+      case (lower: IntLit) to (incl, upper: IntLit) => Pattern.Range(lower, upper, incl)
+      case (lower: DecLit) to (incl, upper: DecLit) => Pattern.Range(lower, upper, incl)
+      case (lower: syntax.Literal) to (_, upper: syntax.Literal) =>
+        raise(ErrorReport(msg"The upper and lower bounds of range patterns should be literals of the same type." -> t.toLoc :: Nil))
+        Pattern.Wildcard()
+      // String concatenation patterns: `p ~ q`. Currently, not supported by the
+      // pattern compilation. We elaborate them to keep the consistency with the
+      // pattern translation.
+      case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
+      // Constructor patterns can be written in the infix form.
+      case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op), Ls(go(lhs), go(rhs)))
+      // Constructor patterns without arguments
+      case id @ Ident(name) => ident(id) match
+        case S(target) => Constructor(target, Nil)
+        case N => Variable(id) // Fallback to variable pattern.
+      case sel: (SynthSel | Sel) => Constructor(term(sel), Nil)
+    go(t)
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
     case TyTup(ps) =>

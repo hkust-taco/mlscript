@@ -18,6 +18,8 @@ object Desugarer:
       case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
       case _ => N
   
+  type Ctor = SynthSel | Sel | Ident
+  
   class ScrutineeData:
     val subScrutinees: Buffer[BlockLocalSymbol] = Buffer.empty
     val fields: HashMap[Ident, BlockLocalSymbol] = HashMap.empty
@@ -66,7 +68,6 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
 
   type Sequel = Ctx => Split
   
-  type Ctor = SynthSel | Sel | Ident
 
   extension (sequel: Sequel)
     @targetName("traceSequel")

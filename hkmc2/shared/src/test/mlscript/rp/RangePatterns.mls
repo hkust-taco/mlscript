@@ -58,14 +58,20 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
+//│ ╔══[ERROR] Name not found: .<
+//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
+//│ ╙──      	                         ^^
 //│ ╔══[ERROR] Unrecognized pattern (operator application)
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                       ^^^^^^^^
 
 :e
 pattern BadRange = "s"..=0
+//│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
+//│ ║  l.69: 	pattern BadRange = "s"..=0
+//│ ╙──      	                   ^^^^^^^
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.66: 	pattern BadRange = "s"..=0
+//│ ║  l.69: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -74,15 +80,24 @@ pattern BadRange = "s"..=0
 
 :e
 pattern BadRange = 0 ..= "s"
+//│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
+//│ ║  l.82: 	pattern BadRange = 0 ..= "s"
+//│ ╙──      	                   ^^^^^^^^^
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.76: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.82: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.91: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.91: 	pattern BadRange = "yolo" ..= "swag"
+//│ ╙──      	                              ^^^^^^
+//│ ╔══[ERROR] String range bounds must have only one character.
+//│ ║  l.91: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║        	                   ^^^^^^
+//│ ╟── String range bounds must have only one character.
+//│ ║  l.91: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

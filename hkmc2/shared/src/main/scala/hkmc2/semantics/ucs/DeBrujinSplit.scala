@@ -17,7 +17,7 @@ object DeBrujinSplit:
                (using Elaborator.Ctx,
                       Elaborator.State,
                       Raise): DeBrujinSplit =
-    import elaborator.tl.*, syntax.Tree, Tree.*, PatternStub.*, HelperExtractors.*
+    import elaborator.tl.*, syntax.Tree, Tree.*, PatternStub.*, HelperExtractors.*, Desugarer.unapply, syntax.Keyword.{as, `=>`}
     type F = (Int, => DeBrujinSplit, => DeBrujinSplit) => DeBrujinSplit
     /** Resolve the constructor in the elaborator context. */
     def resolve(ctor: Ident | Sel, params: Ls[Tree]): Opt[F] =
@@ -83,6 +83,18 @@ object DeBrujinSplit:
         error(msg"Name not found: ${ctor.showDbg}" -> ctor.toLoc)
         alternative
     def go(tree: Tree): F = tree.deparenthesized match
+      // BEGIN OF TEMPORARY ALLOWANCE
+      // This allows the pattern `p => t`.
+      case _ `=>` _ => (_, _, alternative) => alternative
+      // This allows the pattern `p as id`.
+      case _ as _ => (_, _, alternative) => alternative
+      // This allows the pattern `~p`.
+      case App(Ident("~"), Tup(p :: Nil)) => (_, _, alternative) => alternative
+      // This allows the pattern `(a: p1, b: p2, ...pn)`.
+      case Block(_) => (_, _, alternative) => alternative
+      // This allows the pattern `[p1, p2, ...pn]`.
+      case Tup(_) => (_, _, alternative) => alternative
+      // END OF TEMPORARY ALLOWANCE
       case lhs or rhs => (scrutinee, consequence, alternative) => trace(
         pre = s"or <<<",
         post = (_: DeBrujinSplit) => s"or >>>"

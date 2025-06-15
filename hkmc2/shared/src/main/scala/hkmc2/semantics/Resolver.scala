@@ -382,7 +382,13 @@ class Resolver(tl: TraceLogger)
       defn.paramsOpt.foreach(_.allParams.foreach(resolveParam(_)))
       defn.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
       defn.ext.foreach(traverse(_, expect = NonModule(N)))
-
+      
+      // For pattern definitions, we need to traverse through the pattern body.
+      defn match
+        case defn: PatternDef =>
+          defn.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
+        case _: ClassLikeDef => ()
+      
       traverseBlock(defn.body.blk)(using resolveCtxParams(defn.paramsOpt.toList))
     
     // Case: other definition forms. Just traverse through the sub-terms.

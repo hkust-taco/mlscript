@@ -5,9 +5,10 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import Split.display, ucs.Normalization
-import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.`as`
+import syntax.{Fun, Keyword, Literal, ParamBind, Tree}, Tree.*, Keyword.{`as`, `=>`}
 import scala.collection.mutable.{Buffer, Set as MutSet}
 import Elaborator.{Ctx, State}
+import Desugarer.unapply
 
 object Translator:
   /** String range bounds must be single characters. */
@@ -56,6 +57,19 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
     post = (split: Split) => s"full >>> $split"
   ):
     pat.deparenthesized match
+      // TODO: Implement this after we're about to finish the pattern compilation.
+      // BEGIN OF TEMPORARY ALLOWANCE
+      // This temporarily allows the pattern `p => t`.
+      case _ `=>` _ => errorSplit
+      // This temporarily allows the pattern `~p`.
+      case App(Ident("~"), Tup(p :: Nil)) => errorSplit
+      // This temporarily allows the pattern `(a: p1, b: p2, ...pn)`.
+      case Block(_) => errorSplit
+      // This temporarily allows the pattern `[p1, p2, ...pn]`.
+      case Tup(_) => errorSplit
+      // This temporarily allows the pattern `p as id`.
+      case _ as _ => errorSplit
+      // END OF TEMPORARY ALLOWANCE
       case lhs or rhs => full(scrut, lhs, inner) ~~: full(scrut, rhs, inner)
       case (lo: StrLit) to (incl, hi: StrLit) => if isInvalidStringBounds(lo, hi) then failure else
         makeRange(scrut, lo, hi, incl, inner)

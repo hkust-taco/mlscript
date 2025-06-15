@@ -248,7 +248,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case td: TypeDef =>
       td.rhs.toList ::: td.annotations.flatMap(_.subTerms)
     case pat: PatternDef =>
-      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.patternTerm :: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
+      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
@@ -304,7 +304,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
-    case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
+    case Lam(params, body) => s"λ${params.paramSyms.map(_.id).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
       .mkString("( ", "", ")")
@@ -498,10 +498,8 @@ case class PatternDef(
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
     paramsOpt: Opt[ParamList],
-    // We reuse `term` to represent `pattern`, so we can reuse the logic of
-    // `Elaborator` and `Resolver`. Before pattern compilation, they will be
-    // transformed into a separate `Pattern` class.
-    patternTerm: Term,
+    /** The elaborated pattern right-hand side. */
+    pattern: Pattern,
     // Here, `ObjBody` contains methods `unapply` and `unapplyStringPrefix`,
     // which are generated from the pattern definition.
     body: ObjBody, 

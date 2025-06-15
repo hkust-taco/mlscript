@@ -1,0 +1,138 @@
+:js
+
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Option.mls"
+
+open Stack
+open Option { Some, None }
+
+pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
+
+:ucs ups
+pattern HomogeneousCoordinate = ((:x, :y, w: ~0 as w)) => (x: x / w, y: y / w)
+//│ elaborated pattern body: {x: x, y: y, w: ¬0 as w} => { let x; x = builtin:/#0(x#666, w#666); "x": x#0; let y; y = builtin:/#1(y#666, w#666); "y": y#0; }
+
+:ucs ups
+pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl
+//│ elaborated pattern body: #Nil() => 0 ∨ #Cons(#Int() as hd, #SumList() as tl) => builtin:+#0(hd#666, tl#666)
+
+// Flatten the nested tuples. Note that it makes use of biased union.
+pattern Flatten = ([Flatten as hd, ...Flatten as tl] => Array.concat(hd, tl)) | _
+
+object Leaf
+data class Node[A](value: A, left: Node[A], right: Node[A])
+
+pattern TreeDepth = (Leaf => 0) | (Node(_, TreeDepth as left, TreeDepth as right) => 1 + Math.max(left, right))
+
+pattern CountTree(pattern P) =
+  (Node(P as x, CountTree(P) as left, CountTree(P) as right) => 1 + left + right) |
+  ((Node(_, _, _) | Leaf) => 0)
+
+// Match a 2x2 matrix and return its transpose.
+:ucs ups
+pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
+//│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a#666, c#666], [b#666, d#666]]
+
+// Convert a color in RGB format to grayscale
+pattern Grayscale = ((:r, :g, :b)) => r * 0.299 + g * 0.587 + b * 0.114
+
+// Return the middle element of a list. It won't match if the length is even.
+pattern Middle = ([x] => x) | ([x, ...Middle, y] => Middle)
+
+// Return the leaves of a tree.
+pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)
+
+// Extract the first and last elements of a list
+pattern FirstLast = ([x, ..._, y] => (x, y))
+
+// Check if a list is a palindrome
+pattern IsPalindrome = ([x, ...IsPalindrome as m, y] => m && x == y) | (([_] | []) => true) | (_ => false)
+
+// Extract the diagonal elements of a 3x3 matrix
+pattern MatrixDiagonal = ([[a, _, _], [_, b, _], [_, _, c]] => [a, b, c])
+
+// Flatten a binary tree to a list using in-order traversal
+pattern InOrderTraversal =
+  (Leaf => []) |
+  (Node(x, InOrderTraversal as left, InOrderTraversal as right) => left ::: [x] ::: right)
+
+fun max(ow, v) = if ow is
+  Some(w) and w > v then w
+  else v
+
+fun min(ow, v) = if ow is
+  Some(w) and w < v then w
+  else v
+
+// Extract the maximum value from a binary tree
+pattern TreeMax =
+  (Leaf => None) |
+  (Node(x, TreeMax as left, TreeMax as right) => max(max(left, x), right))
+pattern TreeMin =
+  (Leaf => None) |
+  (Node(x, TreeMin as left, TreeMin as right) => min(min(left, x), right))
+
+// Check if a binary tree is balanced
+pattern IsBalanced = (Leaf => true) | (Node(_, IsBalanced as left, IsBalanced as right) => Math.abs(TreeDepth(left) - TreeDepth(right)) <= 1)
+
+// Extract the path from root to a target value in a binary tree
+pattern PathToValue(pattern target) = 
+  (Leaf => []) | 
+  (Node(PathToValue(target) as left, target, _) => [0] ::: left) |
+  (Node(_, target, PathToValue(target) as right) => [1] ::: right) |
+  (Node(PathToValue(target) as left, _, _) => [0] ::: left) |
+  (Node(_, _, PathToValue(target) as right) => [1] ::: right)
+
+:e
+// Convert a list of pairs to a map-like object
+pattern ListToMap = (Nil => ()) | ([[Str as k, v], ...ListToMap as rest] => (...rest, [k]: v))
+//│ ╔══[ERROR] Unexpected record key shape.
+//│ ║  l.88: 	pattern ListToMap = (Nil => ()) | ([[Str as k, v], ...ListToMap as rest] => (...rest, [k]: v))
+//│ ╙──      	                                                                                      ^^^
+
+fun contains(xs, x) = if xs is
+  hd :: tl and
+    hd == x then true
+    else tl contains(x)
+  Nil then false
+
+// Apply a pattern to a list and return a list of unique elements.
+pattern Unique(pattern P) =
+  (Nil => Nil) |
+  (((P as hd) :: (Unique(P) as tl)) => if tl contains(hd) then tl else hd :: tl)
+
+// Extract elements at even indices in a tuple.
+pattern EvenIndicesTuple = 
+  ([] => []) | 
+  ([x] => [x]) | 
+  ([x, _, ...EvenIndices as rest] => [x, ...rest])
+  
+// Extract elements at even indices in a list.
+pattern EvenIndicesList = 
+  (Nil => Nil) | 
+  ((x :: Nil) => x) | 
+  ([x, _, ...EvenIndices as xs] => x :: xs)
+
+
+pattern CelsiusToFahrenheit = (Num as c) => c * 9 / 5 + 32
+pattern FahrenheitToCelsius = (Num as f) => (f - 32) * 5/9
+
+// Compute Body Mass Index (BMI) from weight (kg) and height (m)
+pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
+
+// Convert 24-hour time format to 12-hour format with AM/PM
+pattern Time12Hour =
+  ((hour: hour & ((((0 ..= 12) => "AM") | ((13 ..= 23) => "PM")) as flag), :minute)) =>
+    hour + ":" + minute + " " + flag
+
+// Calculate the area of different shapes
+pattern ShapeArea = 
+  (((:radius)) => Math.PI * radius * radius) |  // Circle
+  (((:width, :height)) => width * height) |     // Rectangle
+  (((:base, :height)) => base * height / 2)     // Triangle
+
+// Convert between different number systems
+pattern NumberSystem = 
+  (((:value, radix: "binary")) => value.toString(2)) |
+  (((:value, radix: "hex")) => value.toString(16)) |
+  (((:value, radix: "octal")) => value.toString(8))
