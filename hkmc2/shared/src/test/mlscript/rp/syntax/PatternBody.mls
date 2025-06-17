@@ -58,16 +58,22 @@ pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
 //│ elaborated pattern body: (#Int() as x ∨ #Str() as x) => x#666.toString()
 
 :e
-pattern Inconsistent = ((Int as x) | Str) => x.toString()
-//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.61: 	pattern Inconsistent = ((Int as x) | Str) => x.toString()
-//│ ║        	                                ^
-//│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.61: 	pattern Inconsistent = ((Int as x) | Str) => x.toString()
-//│ ╙──      	                                     ^^^
+pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╔══[ERROR] This pattern cannot be bound.
+//│ ║  l.61: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║        	                           ^^^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.61: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                           ^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.61: 	pattern Inconsistent = ((Int as x) | Str) => x.toString()
-//│ ╙──      	                                             ^
+//│ ║  l.61: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                                               ^
+
+:e
+pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.73: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╙──      	                                                        ^
 
 :ucs ups
 pattern Negated = ~(Int | Str)
@@ -97,29 +103,37 @@ pattern BadNegated = ~(Int as x) => x
 :e
 pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[ERROR] This pattern cannot be bound.
-//│ ║  l.98: 	pattern BadNegated = (~(Int as x)) => x
-//│ ║        	                        ^^^
+//│ ║  l.104: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.98: 	pattern BadNegated = (~(Int as x)) => x
-//│ ╙──      	                        ^^^^^^^^
+//│ ║  l.104: 	pattern BadNegated = (~(Int as x)) => x
+//│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.98: 	pattern BadNegated = (~(Int as x)) => x
-//│ ╙──      	                                      ^
+//│ ║  l.104: 	pattern BadNegated = (~(Int as x)) => x
+//│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(#Int() as x) => <error>
 
 :ucs ups
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[ERROR] This variable cannot be accessed.
-//│ ║  l.112: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.118: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.112: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.118: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.112: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.118: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬#Pair(#Int(), x) => <error>
+
+:ucs ups
+pattern DoubleNegated = ~(~Int)
+//│ elaborated pattern body: ¬¬#Int()
+
+:ucs ups
+pattern Nothing = ~_
+//│ elaborated pattern body: ¬_
 
 :ucs ups
 pattern Origin = (x: 0, y: 0)
@@ -153,4 +167,4 @@ module HiddenCorner with
   val m: module HiddenCorner = HiddenCorner
   class YouCantSeeMe(wow: Int)
   val k = 0
-//│ Resolved: ( ‹› fun member:y = member:HiddenCorner#666.m‹member:m›.m.k; Pat Naughty ( ‹› fun member:unapply(Param(‹›,scrut,None,Modulefulness(None)), ) = if { else <error> }; ‹› fun member:unapplyStringPrefix(Param(‹›,topic,None,Modulefulness(None)), ) = if { else ($runtime#18.)MatchFailure‹class:MatchFailure›() }; ); Mod HiddenCorner ( ‹› val member:m: member:HiddenCorner#666 = member:HiddenCorner#666; Cls YouCantSeeMeParamList(‹›,List(Param(‹›,wow,Some(Ref(member:Int)),Modulefulness(None))),None) ( let class:YouCantSeeMe.wow; class:YouCantSeeMe.wow = wow#0; ); ‹› val member:k = 0; ); )
+//│ Resolved: ( ‹› fun member:y = member:HiddenCorner#666.m‹member:m›.m.k; Pat Naughty ( ‹› fun member:unapply(Param(‹›,scrut,None,Modulefulness(None)), ) = if { else <error> }; ‹› fun member:unapplyStringPrefix(Param(‹›,topic,None,Modulefulness(None)), ) = if { else ($runtime#21.)MatchFailure‹class:MatchFailure›() }; ); Mod HiddenCorner ( ‹› val member:m: member:HiddenCorner#666 = member:HiddenCorner#666; Cls YouCantSeeMeParamList(‹›,List(Param(‹›,wow,Some(Ref(member:Int)),Modulefulness(None))),None) ( let class:YouCantSeeMe.wow; class:YouCantSeeMe.wow = wow#0; ); ‹› val member:k = 0; ); )

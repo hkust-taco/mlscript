@@ -26,7 +26,8 @@ pattern TreeDepth = (Leaf => 0) | (Node(_, TreeDepth as left, TreeDepth as right
 
 pattern CountTree(pattern P) =
   (Node(P as x, CountTree(P) as left, CountTree(P) as right) => 1 + left + right) |
-  ((Node(_, _, _) | Leaf) => 0)
+  (Node(_, CountTree(P) as left, CountTree(P) as right) => left + right) |
+  (Leaf => 0)
 
 // Match a 2x2 matrix and return its transpose.
 :ucs ups
@@ -37,16 +38,20 @@ pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
 pattern Grayscale = ((:r, :g, :b)) => r * 0.299 + g * 0.587 + b * 0.114
 
 // Return the middle element of a list. It won't match if the length is even.
-pattern Middle = ([x] => x) | ([x, ...Middle, y] => Middle)
+:ucs ups
+pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
+//│ elaborated pattern body: [x] => x#666 ∨ [x, ...#Middle() as m, y] => m#666
 
 // Return the leaves of a tree.
 pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)
 
 // Extract the first and last elements of a list
-pattern FirstLast = ([x, ..._, y] => (x, y))
+pattern FirstLast = ([x, ..._, y] => [x, y])
 
 // Check if a list is a palindrome
+:ucs ups
 pattern IsPalindrome = ([x, ...IsPalindrome as m, y] => m && x == y) | (([_] | []) => true) | (_ => false)
+//│ elaborated pattern body: [x, ...#IsPalindrome() as m, y] => builtin:&&#0(m#666, builtin:==#0(x#666, y#666)) ∨ ([_] ∨ []) => true ∨ _ => false
 
 // Extract the diagonal elements of a 3x3 matrix
 pattern MatrixDiagonal = ([[a, _, _], [_, b, _], [_, _, c]] => [a, b, c])
@@ -83,17 +88,11 @@ pattern PathToValue(pattern target) =
   (Node(PathToValue(target) as left, _, _) => [0] ::: left) |
   (Node(_, _, PathToValue(target) as right) => [1] ::: right)
 
-:e
 // Convert a list of pairs to a map-like object
-pattern ListToMap = (Nil => ()) | ([[Str as k, v], ...ListToMap as rest] => (...rest, [k]: v))
-//│ ╔══[ERROR] Unexpected record key shape.
-//│ ║  l.88: 	pattern ListToMap = (Nil => ()) | ([[Str as k, v], ...ListToMap as rest] => (...rest, [k]: v))
-//│ ╙──      	                                                                                      ^^^
+pattern ListToMap = (Nil => ()) | (([Str as k, v] :: ListToMap as rest) => (...rest, (k): v))
 
 fun contains(xs, x) = if xs is
-  hd :: tl and
-    hd == x then true
-    else tl contains(x)
+  hd :: tl and { hd === x then true, else tl contains(x) }
   Nil then false
 
 // Apply a pattern to a list and return a list of unique elements.
@@ -110,9 +109,8 @@ pattern EvenIndicesTuple =
 // Extract elements at even indices in a list.
 pattern EvenIndicesList = 
   (Nil => Nil) | 
-  ((x :: Nil) => x) | 
-  ([x, _, ...EvenIndices as xs] => x :: xs)
-
+  ((x :: Nil) => x) |
+  ((x :: _ :: EvenIndices as xs) => x :: xs)
 
 pattern CelsiusToFahrenheit = (Num as c) => c * 9 / 5 + 32
 pattern FahrenheitToCelsius = (Num as f) => (f - 32) * 5/9
@@ -120,10 +118,14 @@ pattern FahrenheitToCelsius = (Num as f) => (f - 32) * 5/9
 // Compute Body Mass Index (BMI) from weight (kg) and height (m)
 pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
 
+pattern HourAM = 0 ..= 12
+pattern HourPM = ((13 ..= 23) as hour) => hour - 12
+
 // Convert 24-hour time format to 12-hour format with AM/PM
-pattern Time12Hour =
-  ((hour: hour & ((((0 ..= 12) => "AM") | ((13 ..= 23) => "PM")) as flag), :minute)) =>
-    hour + ":" + minute + " " + flag
+pattern Time12Hour = ((
+  hour: ((HourAM | HourPM) as hour) & ((HourAM => "AM" | HourPM => "PM") as flag),
+  :minute
+)) => hour + ":" + minute + " " + flag
 
 // Calculate the area of different shapes
 pattern ShapeArea = 

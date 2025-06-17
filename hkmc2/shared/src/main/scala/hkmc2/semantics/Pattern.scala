@@ -195,10 +195,9 @@ enum Pattern extends AutoLocated:
       s"${lower.idStr} ${if rightInclusive then "to" else "until"} ${upper.idStr}"
     case Concatenation(left, right) => s"${left.showDbg} ~ ${right.showDbg}"
     case Tuple(leading, spread, trailing) =>
-      val leadingStr = leading.map(_.showDbg).mkString(", ")
-      val spreadStr = spread.map(s => s", ...${s.showDbg}").mkStringOr("", ", ", "")
-      val trailingStr = trailing.map(_.showDbg).mkStringOr("", ", ", "")
-      List(leadingStr, spreadStr, trailingStr).filter(_.nonEmpty).mkString("[", ", ", "]")
+      (leading.iterator.map(_.showDbg) ++
+        spread.iterator.map(s => "..." + s.showDbg) ++
+        trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
