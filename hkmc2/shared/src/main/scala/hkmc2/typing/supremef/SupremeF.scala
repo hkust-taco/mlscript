@@ -167,7 +167,7 @@ enum QuantType extends Type derives CanEqual:
     case Forall(al, ty) =>
       ctx.counter += 1
       ctx.mapping.addOne((al.uid, -ctx.counter))
-      Forall(al, ty)
+      Forall(al.canonicalize, ty.canonicalize)
 
   def refresh(using ctx: InferenceCtx, mapping: Map[Int, TypeVar])
     : QuantType = this match
