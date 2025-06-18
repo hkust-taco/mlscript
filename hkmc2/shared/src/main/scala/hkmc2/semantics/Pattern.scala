@@ -2,14 +2,14 @@ package hkmc2
 package semantics
 
 import mlscript.utils.*, shorthands.*, collection.immutable.HashMap
-import syntax.Tree, Elaborator.State
+import syntax.Tree, Tree.Ident, Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
 
 object Pattern:
   /** The reason why a variable obtained from `Pattern.variables` is invalid. */
   enum InvalidReason:
     /** The variable shadowed another variable. */
-    case Duplicated(previous: Tree.Ident)
+    case Duplicated(previous: Ident)
     /** The variable presents in one side of disjunction, but not the other. */
     case Inconsistent(disjunction: Pattern.Composition, missingOnTheLeft: Bool)
     /** The variable is bound in a `Negation` pattern. */
@@ -18,6 +18,16 @@ object Pattern:
   
   import InvalidReason.*
   
+  /** A set of variables that present in a pattern.
+   *  
+   *  These variables are represented by `Tree.Ident` because not every identifier
+   *  can represent a meaningful binding. This set is used in the computed property
+   *  on the `Pattern` tree. We only create `VarSymbol` for these variables at the
+   *  root node or when elaborating the term of a `Transform` pattern.
+   * 
+   *  @param varMap A map from variable names to their latest aliases.
+   *  @param invalidVars A list of variables and the reason why they are invalid.
+   */
   final case class Variables(
       varMap: HashMap[Str, Pattern.Alias],
       invalidVars: Ls[(Pattern.Alias, InvalidReason)]
@@ -58,8 +68,24 @@ object Pattern:
           notInThis.iterator.map(_._2 -> Inconsistent(pattern, true)).toList :::
           notInThat.iterator.map(_._2 -> Inconsistent(pattern, false)).toList)
     
+    /** Mark all variables in this set as invalid. */
     def invalidated(reason: InvalidReason): Variables =
       Variables(HashMap.empty, invalidVars appendedAll varMap.iterator.map(_._2 -> reason))
+    
+    /** Report all invalid variables. */
+    def report(using Raise): Unit = invalidVars.foreach:
+      case (Alias(_, id), Duplicated(previous)) => error(
+        msg"Duplicate pattern variable." -> id.toLoc,
+        msg"The previous definition is here." -> previous.toLoc)
+      case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) => error(
+        msg"Found an inconsistent variable in disjunction patterns." -> id.toLoc,
+        msg"The variable is missing from this sub-pattern." -> (
+          if missingOnTheLeft then disjunction.left else disjunction.right
+        ).toLoc)
+      case (Alias(pattern, id), Negated(negation)) => error(pattern match
+        case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
+        case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc,
+        msg"Because the pattern it belongs to is negated." -> negation.toLoc)
     
   object Variables:
     lazy val empty: Variables = Variables(HashMap.empty, Nil)
@@ -69,11 +95,24 @@ object Pattern:
       case (vars, pattern) => vars ++ pattern.variables
   
   /** A shorthand for creating a variable pattern. */
-  def Variable(id: Tree.Ident): Pattern.Alias = Pattern.Wildcard().bind(id)
+  def Variable(id: Ident): Pattern.Alias = Pattern.Wildcard().bind(id)
   
+  trait ConstructorImpl:
+    self: Pattern.Constructor =>
+    
+    /** Get the resolved symbol of the target term. */
+    def symbol: Opt[Symbol] = self.target.resolvedSymbol
+    
+    /** Expect the `symbol` to be set. */
+    def symbol_! : Symbol = symbol.getOrElse(lastWords("symbol is not set"))
+  
+  /** Add a mutable field to the `Alias` pattern to store the symbol for the
+   *  variable. Note that NOT every `Alias` pattern has a symbol. */
   trait AliasImpl:
     self: Pattern.Alias =>
     private var _symbol: Opt[VarSymbol] = N
+    /** Directly set the symbol for the variable. This should be called in the
+     *  elaborator when elaborating the non-`Transform` top-level pattern. */
     def symbol_=(symbol: VarSymbol): Unit = _symbol = S(symbol)
     def symbol: VarSymbol = _symbol.getOrElse(lastWords("symbol is not set"))
     /** Allocate the symbol for the variable. This should be called in the
@@ -108,26 +147,30 @@ enum Pattern extends AutoLocated:
   /** A pattern that matches a range of values. */
   case Range(lower: syntax.Literal, upper: syntax.Literal, rightInclusive: Bool)
   
-  /** A pattern that matches the concatenation of two string patterns. */
+  /** A pattern that matches the concatenation of two string patterns. The
+   *  concatenation of non-string patterns results in a never-match pattern. */
   case Concatenation(left: Pattern, right: Pattern)
   
-  /** A pattern that matches a tuple. */
+  /** A pattern that matches a tuple. At most one `spread` pattern is allowed.
+   *  When the `spread` pattern is absent, sub-patterns should be placed in the 
+   *  `leading` field. */
   case Tuple(leading: Ls[Pattern], spread: Opt[Pattern], trailing: Ls[Pattern])
   
-  /** A pattern that matches a record. */
-  case Record(fields: Ls[(Tree.Ident, Pattern)])
+  /** A pattern that matches a record consisting of a list of fields. Note that
+   *  the fields are not ordered semantically. */
+  case Record(fields: Ls[(Ident, Pattern)])
   
   /** A pattern that matches the same value as another pattern, but bind the
    *  matched value to a new variable. This is the only class that holds the
    *  symbol for the variable. */
-  case Alias(pattern: Pattern, id: Tree.Ident) extends Pattern with AliasImpl
+  case Alias(pattern: Pattern, id: Ident) extends Pattern with AliasImpl
   
   /** A pattern that matches the same value as other pattern, with an additional
    *  function applied to the bound variables in the pattern.
    */
   case Transform(pattern: Pattern, transform: Term)
   
-  infix def bind(id: Tree.Ident): Pattern.Alias = Pattern.Alias(this, id)
+  infix def bind(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
@@ -184,7 +227,7 @@ enum Pattern extends AutoLocated:
   
   def showDbg: Str = this match
     case Constructor(target, arguments) =>
-      val targetText = target.symbol.fold(target.showDbg)(_.nme.prepended('#'))
+      val targetText = target.symbol.fold(target.showDbg)(_.toString())
       s"$targetText(${arguments.map(_.showDbg).mkString(", ")})"
     case Composition(true, left, right) => s"${left.showDbg} \u2228 ${right.showDbg}"
     case Composition(false, left, right) => s"${left.showDbg} \u2227 ${right.showDbg}"

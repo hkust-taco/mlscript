@@ -5,13 +5,20 @@ pattern Foo(val T) = null | T
 //│ ╔══[ERROR] Unexpected pattern parameter T with flags val
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                ^
-//│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.4: 	pattern Foo(val T) = null | T
-//│ ╙──     	                ^
+//│ ║       	                            ^
+//│ ╙── The variable is missing from this sub-pattern.
 //│ ╔══[ERROR] Name not found: T
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                            ^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ╔══[ERROR] Name not found: T
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                            ^
+//│ ╔══[ERROR] Name not found: T
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                            ^
+//│ ╔══[ERROR] Name not found: T
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                            ^
 

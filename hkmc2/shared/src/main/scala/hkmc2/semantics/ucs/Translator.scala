@@ -26,7 +26,7 @@ import Translator.*
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
-class Translator(val elaborator: Elaborator)(using State, Ctx) extends DesugaringBase:
+class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends DesugaringBase:
   import elaborator.term, elaborator.tl.*, HelperExtractors.*, FlatPattern.MatchMode
   
   /** Each scrutinee is represented by a function that creates a reference to
@@ -52,7 +52,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
     plainTest(test1, "gtLo")(plainTest(test2, "ltHi")(inner(Map.empty)))
   
   /** Generate a split that consumes the entire scrutinee. */
-  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using patternParams: Ls[Param], raise: Raise): Split = trace(
+  private def full(scrut: Scrut, pat: Tree, inner: Inner)(using patternParams: Ls[Param]): Split = trace(
     pre = s"full <<< $pat", 
     post = (split: Split) => s"full >>> $split"
   ):
@@ -143,7 +143,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
   /** Create a function that compiles the resulting term of each case. It checks
    *  the captured references and sort them in the order of parameters.
    */
-  private def success(params: Ls[Param])(using Raise): Inner =
+  private def success(params: Ls[Param]): Inner =
     val paramIndexMap = params.zipWithIndex.toMap
     captures => trace(
       pre = s"success <<< ${params.iterator.map(_.sym).mkString(", ")}", 
@@ -160,7 +160,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
         Split.Else(makeMatchResult(Term.Tup(fields)(Tup(Nil))))
   
   /* The successful matching result used in prefix matching functions. */
-  private def prefixSuccess(params: Ls[Param])(using Raise): PrefixInner =
+  private def prefixSuccess(params: Ls[Param]): PrefixInner =
     val paramIndexMap = params.zipWithIndex.toMap
     (captures, postfixScrut) => trace(
       pre = s"prefixSuccess <<< ${params.iterator.map(_.sym).mkString(", ")}", 
@@ -183,7 +183,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
   private def errorSplit: Split = Split.Else(Term.Error)
   
   /** Create a function definition from the given UCS splits. */
-  private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split)(using Raise): TermDefinition =
+  private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split): TermDefinition =
     val sym = BlockMemberSymbol(name, Nil)
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)
@@ -200,7 +200,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
    *    values. If the given tree does not represent a string pattern, this
    *    function will not be generated.
    */
-  def apply(patternParams: Ls[Param], params: Ls[Param], body: Tree)(using Raise): Ls[TermDefinition] = trace(
+  def apply(patternParams: Ls[Param], params: Ls[Param], body: Tree): Ls[TermDefinition] = trace(
     pre = s"Translator <<< ${params.mkString(", ")} $body", 
     post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
   ):
@@ -211,7 +211,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
     else
       val unapply = scoped("ucs:cp"):
         val scrutSym = VarSymbol(Ident("scrut"))
-        val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams, raise) ~~: failure
+        val topmost = full(() => scrutSym.ref(), body, success(params))(using patternParams) ~~: failure
         log(s"Translated `unapply`: ${display(topmost)}")
         makeMatcher("unapply", scrutSym, topmost)
       val unapplyStringPrefix = scoped("ucs:cp"):

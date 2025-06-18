@@ -464,7 +464,7 @@ extends Importer:
       Term.FunTy(subterm(lhs), subterm(rhs), N)
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
       ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
-        val (syms, nestCtx) = params(lhs, false)
+        val (syms, nestCtx) = params(lhs, false, false)
         Term.Lam(syms, term(rhs)(using nestCtx))
     case InfixApp(lhs, Keyword.`as`, rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
@@ -959,7 +959,7 @@ extends Importer:
               // * Add parameters to context
               var newCtx = newCtx1
               val pss = td.paramLists.map: ps =>
-                val (res, newCtx2) = params(ps, false)(using newCtx)
+                val (res, newCtx2) = params(ps, false, false)(using newCtx)
                 newCtx = newCtx2
                 res
               // * Elaborate signature
@@ -1045,7 +1045,7 @@ extends Importer:
           .map: ps =>
             val (res, newCtx2) =
               given Ctx = newCtx
-              params(ps, isDataClass)
+              params(ps, isDataClass, k is Pat)
             newCtx = newCtx2
             res
         def withFields(using Ctx)(fn: (Ctx) ?=> (Term.Blk, Ctx)): (Term.Blk, Ctx) =
@@ -1106,32 +1106,53 @@ extends Importer:
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
           val owner = ctx.outer.inner
+          // OK. It seems that the context after `nestInner` already have all parameters.
           newCtx.nestInner(patSym).givenIn:
+            // Pattern definition should not have a body like class definition.
             assert(body.isEmpty)
-            // Filter out parameters marked as `pattern`.
-            val (patternParams, extractionParams) = ps match
-              case S(ParamList(_, params, _)) => params.partition:
-                case param @ Param(flags = FldFlags(false, false, false, true, false)) => true
-                case param @ Param(flags = FldFlags(false, false, false, false, false)) => false
+            // The following iteration filters out:
+            // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
+            // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
+            // 3. the rest are reported as invalid parameters.
+            val (patternParams, extractionParams) = ps.fold((Nil, Nil)):
+              _.params.flatMap:
+                // Only `pat` flag is `true`.
+                case p @ Param(flags = FldFlags(false, false, false, true, false)) => S(p)
+                // All flags are `false`.
+                case p @ Param(flags = FldFlags(false, false, false, false, false)) => S(p)
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.showDbg}" -> sym.toLoc :: Nil))
-                  false
-              case N => (Nil, Nil)
-            // Elaborate pattern RHS using term elaboration.
-            val rhsTree = td.rhs.getOrElse:
+                  N
+              .partition(_.flags.pat)
+            log(s"pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
+            log(s"extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
+            // Empty pattern body is considered as wildcard patterns.
+            val rhs = td.rhs.getOrElse:
               raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               Tree.Under()
-            val rhsPat = pattern(rhsTree)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
-            scoped("ucs:ups"):
-              log(s"elaborated pattern body: ${rhsPat.showDbg}")
+            // Elaborate the pattern body with the pattern parameters.
+            val pat = pattern(rhs)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
+            // Report all invalid variables we found in the top-level pattern.
+            pat.variables.report
+            // Note that the remaining variables have not been bounded to any
+            // `VarSymbol` yet. Thus, we need to pair them with the extraction
+            // parameters. We only report warnings for unbounded variables
+            // because they are harmless.
+            pat.variables.varMap.foreach: (name, alias) =>
+              extractionParams.find(_.sym.name == name) match
+                case S(param) => alias.symbol = param.sym
+                case N => raise(WarningReport(msg"Useless pattern binding: $name." -> alias.toLoc :: Nil))
+            scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
+            scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
+            
             // *** BEGIN OBSOLETE CODE ***
             td.rhs match
               case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
               case S(tree) =>
-                // TODO: Implement extraction parameters.
-                if extractionParams.nonEmpty then
-                  raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
-                    Loc(extractionParams.iterator.map(_.sym)) :: Nil))
+                // // TODO: Implement extraction parameters.
+                // if extractionParams.nonEmpty then
+                //   raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
+                //     Loc(extractionParams.iterator.map(_.sym)) :: Nil))
                 log(s"pattern parameters: ${patternParams.mkString("{ ", ", ", " }")}")
                 patSym.patternParams = patternParams
                 val split = ucs.DeBrujinSplit.elaborate(patternParams, tree, this)
@@ -1145,7 +1166,7 @@ extends Importer:
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
               td.rhs.getOrElse(die))
             // *** END OBSOLETE CODE ***
-            val pd = PatternDef(owner, patSym, sym, tps, ps, rhsPat,
+            val pd = PatternDef(owner, patSym, sym, tps, ps, pat,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -1245,7 +1266,13 @@ extends Importer:
     go(t, inUsing, if inDataClass then FldFlags.empty.copy(value = true) else FldFlags.empty, false)
       
   
-  def params(t: Tree, inDataClass: Bool): Ctxl[(ParamList, Ctx)] = t match
+  /** Elaborate a parameter list of a term or a definition.
+   * @param inDataClass Whether the parameter list belongs to a data class.
+   * @param inPattern Whether the parameter list belongs to a pattern definition.
+   *                  If `inPattern` is `true`, only parameters with `pat` flag
+   *                  will be added to the context.
+   */
+  def params(t: Tree, inDataClass: Bool, inPattern: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
@@ -1256,7 +1283,7 @@ extends Importer:
             val isCtx = hd match
               case TermDef(k = Ins, rhs = N) => true
               case _ => false
-            val newCtx = ctx + (p.sym.name -> p.sym)
+            val newCtx = if !inPattern || p.flags.pat then ctx + (p.sym.name -> p.sym) else ctx
             val newFlags = if isCtx then flags.copy(ctx = true) else flags
             if isCtx && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
@@ -1284,25 +1311,10 @@ extends Importer:
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
       val pattern = go(lhs)
-      val ctx2 = ctx ++ pattern.variables.map:
+      val termCtx = ctx ++ pattern.variables.map:
         case alias => alias.id.name -> alias.allocate
-      // Report all invalid variables we found in `pattern`.
-      pattern.variables.invalidVars.foreach:
-        case (Alias(_, id), Duplicated(previous)) =>
-          raise(ErrorReport(msg"Duplicate pattern variable." -> id.toLoc ::
-            msg"The previous definition is here." -> previous.toLoc :: Nil))
-        case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) =>
-          raise(ErrorReport(
-            msg"Found an inconsistent variable in disjunction patterns." -> id.toLoc ::
-            msg"The variable is missing from this sub-pattern." -> (
-              if missingOnTheLeft then disjunction.left else disjunction.right
-            ).toLoc :: Nil))
-        case (Alias(pattern, id), Negated(negation)) =>
-          raise(ErrorReport((pattern match
-            case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
-            case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc
-          ) :: msg"Because the pattern it belongs to is negated." -> negation.toLoc :: Nil))
-      Transform(pattern, term(rhs)(using ctx2))
+      pattern.variables.report // Report all invalid variables we found in `pattern`.
+      Transform(pattern, term(rhs)(using termCtx))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
       val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())

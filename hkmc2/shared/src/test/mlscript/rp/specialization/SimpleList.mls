@@ -140,9 +140,13 @@ fun (::) cons(head, tail) = Pair(head, tail)
 
 :todo
 pattern List(a) = null | Pair(a, List)
-//│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
-//│ ╙──       	             ^
+//│ ║         	                              ^
+//│ ╙── The variable is missing from this sub-pattern.
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	                              ^
 //│ ╔══[ERROR] Name not found: a
 //│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                              ^
