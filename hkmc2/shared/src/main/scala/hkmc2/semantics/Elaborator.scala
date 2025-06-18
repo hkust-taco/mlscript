@@ -1368,7 +1368,11 @@ extends Importer:
         case p @ InfixApp(_: Ident, Keyword.`:`, _) :: Nil => record(p)
         case lhs :: Nil => arrow(lhs, rhs)
         case _ :: _ | Nil => ??? // TODO: When is this case reached?
-      case p as (id: Ident) => go(p) bind id
+      case p as q => q match
+        // `p as id` is elaborated into alias patterns
+        case id: Ident => go(p) binds id
+        // `p as q` is elaborated into chain patterns
+        case _: Tree => Chain(go(p), go(q))
       case Under() => Pattern.Wildcard()
       // Record patterns like `(a: p1, b: p2, ...pn)`.
       case Block(ps) => record(ps)

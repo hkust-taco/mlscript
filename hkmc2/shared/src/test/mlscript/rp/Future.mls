@@ -45,11 +45,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator).
-//│ ║  l.38: 	  view as
+//│ ║  l.44: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.39: 	    Unit then ....
+//│ ║  l.45: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.40: 	    Arrow(...) then ....
+//│ ║  l.46: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -67,14 +67,14 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.58: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.64: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(a),Ident(to)) (of class hkmc2.syntax.Tree$Jux)
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.69: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ║  l.75: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                          ^^^^^^^^^^^^
 
 :todo
@@ -83,7 +83,7 @@ pattern LineSep(pattern P) = case
   L(...nd) ~
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), OpApp(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+78)),Some(Ident(nd)))))),Ident(~),List(Block(List(InfixApp(StrLit(),keyword 'then',OpApp(Ident(nd),Ident(::),List(Ident(Nil)))), InfixApp(OpApp(StrLit(
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Ident(Nil)), OpApp(App(Ident(L),Tup(List(Spread(keyword '...',Some(Loc(52,55,Future.mls:+81)),Some(Ident(nd)))))),Ident(~),List(Block(List(InfixApp(StrLit(),keyword 'then',OpApp(Ident(nd),Ident(::),List(Ident(Nil)))), InfixApp(OpApp(StrLit(
 //│ ),Ident(~),List(App(Ident(LineSep),Tup(List(Ident(P), Ident(t)))))),keyword 'then',OpApp(Ident(nd),Ident(::),List(Ident(t))))))))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
@@ -97,10 +97,10 @@ pattern Lines(pattern L) = case
 :todo
 if input is Lines of Email then
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.95: 	if input is Lines of Email then
+//│ ║  l.98: 	if input is Lines of Email then
 //│ ╙──      	                               ^
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), TypeDef(Pat,Ident(Tail),Some(Case(None,Block(List(InfixApp(StrLit(),keyword 'then',Tup(List())), InfixApp(InfixApp(OpApp(StrLit(
-//│ ),Ident(~),List(Bra(Round,App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',OpApp(Ident(h),Ident(~),List(Ident(Tail)))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+87)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ),Ident(~),List(Bra(Round,App(Ident(Lines),Tup(List(Ident(L))))))),keyword 'as',Ident(t)),keyword 'then',Ident(t)))))),None), InfixApp(InfixApp(InfixApp(Ident(L),keyword 'as',OpApp(Ident(h),Ident(~),List(Ident(Tail)))),keyword 'as',Ident(t)),keyword 'then',Tup(List(Ident(h), Spread(keyword '...',Some(Loc(148,151,Future.mls:+90)),Some(Ident(t))))))))),keyword ':',Ident(todo)) (of class hkmc2.syntax.Tree$InfixApp)
 
 :todo
 pattern Opt(pattern P) = case
@@ -114,33 +114,33 @@ pattern Email(name, domain) = ...
 :todo
 if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.112: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.115: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Name not found: Opt
-//│ ║  l.112: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.115: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	            ^^^
 //│ ╔══[ERROR] Name not found: Some
-//│ ║  l.112: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.115: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
 //│ ╔══[ERROR] invalid record field pattern
-//│ ║  l.112: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.115: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                                ^
 
 :todo
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+127)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+130)),Some(Ident(values)))))),keyword 'then',Bra(Round,App(Ident(Some),Tup(List(Ident(values)))))), InfixApp(StrLit(),keyword 'then',Bra(Round,Ident(None)))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo
 pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
-//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+133)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(None,Block(List(InfixApp(App(Ident(P),Tup(List(Spread(keyword '...',Some(Loc(34,37,Future.mls:+136)),Some(Ident(values)))))),keyword 'then',App(Ident(Some),Tup(List(Ident(values))))), InfixApp(StrLit(),keyword 'then',Ident(None))))) (of class hkmc2.syntax.Tree$Case)
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.139: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.142: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ /!!!\ Uncaught error: scala.MatchError: Jux(StrLit(0),Ident(to)) (of class hkmc2.syntax.Tree$Jux)

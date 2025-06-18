@@ -95,7 +95,7 @@ object Pattern:
       case (vars, pattern) => vars ++ pattern.variables
   
   /** A shorthand for creating a variable pattern. */
-  def Variable(id: Ident): Pattern.Alias = Pattern.Wildcard().bind(id)
+  def Variable(id: Ident): Pattern.Alias = Pattern.Wildcard().binds(id)
   
   trait ConstructorImpl:
     self: Pattern.Constructor =>
@@ -160,6 +160,12 @@ enum Pattern extends AutoLocated:
    *  the fields are not ordered semantically. */
   case Record(fields: Ls[(Ident, Pattern)])
   
+  /** Chain one pattern to another. The pattern matches the input value against
+   *  the `first` pattern, and then matches its output against the `second`
+   *  pattern. It fails when either of the patterns fails.
+   */
+  case Chain(first: Pattern, second: Pattern)
+  
   /** A pattern that matches the same value as another pattern, but bind the
    *  matched value to a new variable. This is the only class that holds the
    *  symbol for the variable. */
@@ -170,7 +176,7 @@ enum Pattern extends AutoLocated:
    */
   case Transform(pattern: Pattern, transform: Term)
   
-  infix def bind(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
+  infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
@@ -191,6 +197,7 @@ enum Pattern extends AutoLocated:
       leading.variables ++ spread.map(_.variables).getOrElse(Variables.empty) ++ trailing.variables
     case Record(fields) => fields.iterator.map(_._2).variables
     case alias @ Alias(pattern, _) => pattern.variables + alias
+    case Chain(first, second) => first.variables ++ second.variables
   
   def children: Ls[Located] = this match
     case Constructor(target, arguments) => target :: arguments
@@ -203,6 +210,7 @@ enum Pattern extends AutoLocated:
     case Tuple(leading, spread, trailing) => leading ::: spread.toList ::: trailing
     case Record(fields) => fields.flatMap:
       case (name, pattern) => name :: pattern.children
+    case Chain(first, second) => first :: second :: Nil
     case Alias(pattern, alias) => pattern :: alias :: Nil
     case Transform(pattern, transform) => pattern :: transform :: Nil
   
@@ -215,6 +223,7 @@ enum Pattern extends AutoLocated:
     case Tuple(leading, spread, trailing) => leading.flatMap(_.subTerms) :::
       spread.fold(Nil)(_.subTerms) ::: trailing.flatMap(_.subTerms)
     case Record(fields) => fields.flatMap(_._2.subTerms)
+    case Chain(first, second) => first.subTerms ::: second.subTerms
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, transform) => pattern.subTerms :+ transform
   
@@ -222,7 +231,7 @@ enum Pattern extends AutoLocated:
     val addPar = this match
       case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation) => false
       case Alias(Wildcard(), _) => false
-      case _: (Alias | Composition | Transform | Range | Concatenation) => true
+      case _: (Alias | Composition | Transform | Range | Concatenation | Chain) => true
     if addPar then s"(${showDbg})" else showDbg
   
   def showDbg: Str = this match
@@ -242,6 +251,7 @@ enum Pattern extends AutoLocated:
         spread.iterator.map(s => "..." + s.showDbg) ++
         trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
+    case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
     case Transform(pattern, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"

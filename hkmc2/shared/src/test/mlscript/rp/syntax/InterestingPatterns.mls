@@ -53,6 +53,12 @@ pattern FirstLast = ([x, ..._, y] => [x, y])
 pattern IsPalindrome = ([x, ...IsPalindrome as m, y] => m && x == y) | (([_] | []) => true) | (_ => false)
 //│ elaborated pattern body: [x, ...member:IsPalindrome() as m, y] => builtin:&&#0(m#666, builtin:==#0(x#666, y#666)) ∨ ([_] ∨ []) => true ∨ _ => false
 
+:ucs ups
+// A better `IsPalindrome`, which matches palindrome sequences exactly.
+pattern IsPalindrome =
+  (([first, ...IsPalindrome, last] => first === last) as true) | [_] | []
+//│ elaborated pattern body: ([first, ...member:IsPalindrome(), last] => builtin:===#0(first#666, last#666)) as true ∨ [_] ∨ []
+
 // Extract the diagonal elements of a 3x3 matrix
 pattern MatrixDiagonal = ([[a, _, _], [_, b, _], [_, _, c]] => [a, b, c])
 
@@ -126,6 +132,17 @@ pattern Time12Hour = ((
   hour: ((HourAM | HourPM) as hour) & ((HourAM => "AM" | HourPM => "PM") as flag),
   :minute
 )) => hour + ":" + minute + " " + flag
+
+:ucs ups
+// This makes use of the chain pattern.
+pattern Time12Hour = ((
+  hour: (
+    ((hour as (0 ..= 12)) => ["AM", hour]) |
+    ((hour as (13 ..= 23)) => ["PM", hour - 12])
+  ) as [hour, flag],
+  :minute
+)) => hour + ":" + minute + " " + flag
+//│ elaborated pattern body: {hour: ((hour as (0 to 12)) => ["AM", hour#666] ∨ (hour as (13 to 23)) => ["PM", builtin:-#4(hour#666, 12)]) as [hour, flag], minute: minute} => builtin:+#15(builtin:+#14(builtin:+#13(builtin:+#12(hour#666, ":"), minute#666), " "), flag#666)
 
 // Calculate the area of different shapes
 pattern ShapeArea = 
