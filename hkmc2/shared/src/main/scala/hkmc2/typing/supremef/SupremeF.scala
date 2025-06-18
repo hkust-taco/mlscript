@@ -1,435 +1,437 @@
 package hkmc2
 package typing.supremef
 
-import mlscript.utils.*, shorthands.*
-import hkmc2.utils.*
-import hkmc2.syntax.*
+import scala.language.strictEquality
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+
+import mlscript.utils.GenHelper
+import mlscript.utils.shorthands.*
+import hkmc2.syntax.Tree
 import hkmc2.semantics.*
 import hkmc2.document.*
-
 import Message.MessageContext
-import Elaborator.State
-import Scope.scope
-
-// import syntax.Literal
-
-/* 
-sealed abstract class Type
-
-object Type:
-  
-  case class Lit(lit: Literal)
-  // case class Ref(ref: Term.Ref)
-  case class Ref(sym: Symbol)
-  
-end Type
-*/
-
 
 private val TopPrec = 0
 
 private val ArrowLhsPrec = 10
 private val ArrowRhsPrec = 9
 private val ForallPrec = 9
-// private val ConstrPrec = 11
+private val ConstrPrec = 11
 
+private val BindingPrec = 1
 private val LamPrec = 5
 private val ArgPrec = 20
 private val FunPrec = 10
 
+enum CoreTerm derives CanEqual:
+  case Unit
+  case Var(x: String)
+  case Lam(x: String, body: CoreTerm)
+  case App(t1: CoreTerm, t2: CoreTerm)
+  case Let(bindings: List[(String, CoreTerm)], body: CoreTerm)
+
+  def show = showImpl(TopPrec)
+  private def showImpl(prec: Int): Document =
+    def parens(p: Int)(d: Document): Document =
+      if p < prec then doc"(${d})" else d
+    this match
+      case Unit => "()"
+      case Var(x) => x
+      case Lam(x, body) =>
+        doc"λ${x}. ${body.showImpl(LamPrec)}" |> parens(LamPrec)
+      case App(t1, t2) =>
+        doc"${t1.showImpl(FunPrec)} ${t2.showImpl(ArgPrec)}" |> parens(LamPrec)
+      case Let(bindings, body) =>
+        val binder = bindings.map((x, y) =>
+          doc"${x} = ${y.showImpl(BindingPrec)}").mkString("; ")
+        doc"let ${binder} in ${body.showImpl(TopPrec)}" |> parens(TopPrec)
 
 sealed trait Type:
-  
-  def children: List[Type] = this match
-    case QuantType.Base(ty) => ty :: Nil
-    case QuantType.Forall(_, ty) => ty :: Nil
-    case QuantType.Constr(cst, ty) => cst.in :: cst.out :: ty :: Nil
-    case PosType.Inf(_) => Nil
-    case PosType.Lit(_) => Nil
-    case PosType.Lam(_, bod) => bod :: Nil
-    case NegType.Inf(_) => Nil
-    case NegType.App(lhs, rhs) => lhs :: Nil
-  
-  lazy val infVars: Set[InfSymbol] =
-    this match
-    case QuantType.Forall(inf, ty) => ty.infVars - inf
-    case PosType.Inf(sym) => Set.single(sym)
-    case PosType.Lam(par, bod) => bod.infVars + par
-    case NegType.Inf(sym) => Set.single(sym)
-    case NegType.App(lhs, rhs) => lhs.infVars + rhs
-    case _ => children.iterator.flatMap(_.infVars).toSet
-  
-  def showAsType(using Scope): Document = showAsTypeImpl(TopPrec)
-  def showAsTypeImpl(prec: Int)(using Scope): Document =
+  def asVar: Option[TypeVar] = this match
+    case al: TypeVar => Some(al)
+    case QuantType.Base(ty) => ty.asVar
+    case PosType.Var(al) => Some(al)
+    case NegType.Var(al) => Some(al)
+    case _ => None
+
+  // note: we use the same outermost naming ctx to ensure consistency
+  def showAsType(using NamingCtx): Document = showAsTypeImpl(TopPrec)
+  def showAsTypeImpl(prec: Int)(using ctx: NamingCtx): Document = 
     def parens(p: Int)(d: Document): Document =
-      if p < prec then doc"(${d})"
-      else d
+      if p < prec then doc"(${d})" else d
     this match
-    case QuantType.Base(ty) => ty.showAsTypeImpl(prec)
-    case QuantType.Forall(inf, ty) => doc"∀${inf.show}. ${ty.showAsTypeImpl(ForallPrec)}" |> parens(ForallPrec)
-    case QuantType.Constr(c, ty) => doc"(${c.show}) => #{  # ${ty.showAsTypeImpl(ForallPrec)} #} " |> parens(ForallPrec)
-    case PosType.Inf(sym) => sym.show
-    case PosType.Lit(lit) => lit.idStr
-    case PosType.Lam(par, bod) =>
-      // doc"(${par.show}) => ${bod.showAsTypeImpl})"
-      // doc"${par.show} # -> # ${bod.showAsTypeImpl}"
-      doc"${par.show} -> ${bod.showAsTypeImpl(ArrowRhsPrec)}" |> parens(ArrowLhsPrec)
-    // case NegType.Inf(sym) => scope.lookup(sym).getOrElse(scope.allocateName(sym, sym.nme))
-    case NegType.Inf(sym) => sym.show
-    case NegType.App(lhs, rhs) =>
-      // doc"λ${lhs.showAsTypeImpl}. ${rhs.show}"
-      // doc"${lhs.showAsTypeImpl} # -> # ${rhs.show}"
-      doc"${lhs.showAsTypeImpl(ArrowLhsPrec)} -> ${rhs.show}" |> parens(ArrowLhsPrec)
-  
-  def showAsTerm(using Scope): Document = showAsTermImpl(TopPrec)
-  def showAsTermImpl(prec: Int)(using Scope): Document =
+      case al: TypeVar => ctx.lookupTypeVar(al)
+      case QuantType.Base(ty) => ty.showAsTypeImpl(prec)
+      case QuantType.Forall(al, ty) => 
+        doc"∀${al.show}. ${ty.showAsTypeImpl(ForallPrec)}"
+          |> parens(ForallPrec)
+      case QuantType.Constr(c, ty) => 
+        val cons = doc"${c.show}" |> parens(ConstrPrec)
+        doc"${cons} => ${ty.showAsTypeImpl(ForallPrec)}"
+          |> parens(ForallPrec)
+      case PosType.Unit() => "()"
+      case PosType.Var(al) => al.show
+      case PosType.Lam(al, sigma) => 
+        doc"${al.show} -> ${sigma.showAsTypeImpl(ArrowRhsPrec)}"
+          |> parens(ArrowLhsPrec)
+      case PosType.Mrked(al, m) =>
+        if ctx.showMarks then doc"(${al.show})^m${m.uid}" else al.show
+      case NegType.Var(al) => al.show
+      case NegType.App(sigma, al) => 
+        doc"${sigma.showAsTypeImpl(ArrowLhsPrec)} -> ${al.show}"
+          |> parens(ArrowLhsPrec)
+
+  def showAsTerm(using ctx: NamingCtx) = showAsTermImpl(TopPrec)
+  def showAsTermImpl(prec: Int)(using ctx: NamingCtx): Document =
     def parens(p: Int)(d: Document): Document =
-      if p < prec then doc"(${d})"
-      else d
+      if p < prec then doc"(${d})" else d
+    def getOutermostNonConstr(sigma: QuantType)
+      : (List[Constraint], QuantType) = sigma match
+      case _: QuantType.Base => (Nil, sigma)
+      case _: QuantType.Forall => (Nil, sigma)
+      case QuantType.Constr(c, ty) =>
+        val (cons, sigma1) = getOutermostNonConstr(ty)
+        (c :: cons, sigma1)
     this match
-    case QuantType.Base(ty) => ty.showAsTermImpl(prec)
-    case QuantType.Forall(inf, ty) => ty.showAsTermImpl(prec)
-    case QuantType.Constr(c, ty) => doc"${c.showAsTerm(prec)(ty)}"
-    case PosType.Err => doc"‹error›"
-    case PosType.Inf(sym) => sym.show
-    case PosType.Lit(lit) => lit.idStr
-    case PosType.Lam(par, bod) =>
-      // doc"λ${par.show}. #{  # ${bod.showAsTypeImpl(ArrowRhsPrec)} #} " |> parens(ArrowLhsPrec)
-      doc"λ${par.show}. ${bod.showAsTermImpl(LamPrec)}" |> parens(LamPrec)
-  
-end Type
+      case al: TypeVar => ctx.lookupTypeVar(al)
+      case QuantType.Base(ty) => ty.showAsTermImpl(prec)
+      case QuantType.Forall(_, ty) => ty.showAsTermImpl(prec)
+      // find the outermost non-constr sigma
+      case QuantType.Constr(c, ty) =>
+        val (cons, sigma) = getOutermostNonConstr(ty)
+        val bindings = (c :: cons).map(_.showAsTerm).mkString("; ")
+        doc"let ${bindings} in ${sigma.showAsTermImpl(TopPrec)}"
+          |> parens(TopPrec)
 
+      case PosType.Unit() => "()"
+      case PosType.Var(al) => al.show
+      case PosType.Lam(al, sigma) =>
+        doc"λ${al.show} -> ${sigma.showAsTermImpl(LamPrec)}"
+          |> parens(LamPrec)
+      case PosType.Mrked(al, m) => al.show
+      case _ => "???"
 
-object NotInf:
-  // def unapply(ty: Type): Opt[ty.type] =
-  //   ty match
-  //   case PosType.Inf(_) => N
-  //   case NegType.Inf(_) => N
-  //   case _ => S(ty)
-  def unapply(ty: Type): Bool =
-    ty match
-    case PosType.Inf(_) => false
-    case NegType.Inf(_) => false
-    case _ => true
-end NotInf
+// m
+class Mark(val uid: Int) derives CanEqual
+// c
+class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
+  derives CanEqual:
+  def refresh(using InferenceCtx, Map[Int, TypeVar]) =
+    Constraint(lb.refresh, ub.refresh, mrks)
 
+  def canonicalize(using CanonicalizeCtx) =
+    Constraint(lb.canonicalize, ub.canonicalize, Nil)
 
-case class Constraint(in: QuantType, out: NegType):
-  def freshen(using InfSymbol): Constraint =
-    Constraint(in.freshen, out.freshen)
-  def show(using Scope): Document =
-    // doc"${in.showAsTypeImpl} # ≤ # ${out.showAsTypeImpl}"
-    doc"${in.showAsTypeImpl(TopPrec)} ≤ ${out.showAsTypeImpl(TopPrec)}"
-  def showAsTerm(prec: Int)(ty: Type)(using Scope): Document =
-    this match
-    case Constraint(in, NegType.Inf(inf)) =>
-      // doc"let ${inf.show} = #{  # ${in.showAsTermImpl(prec)} #}  in # ${ty.showAsTermImpl(prec)}"
-      doc"let ${inf.show} = #{  # ${in.showAsTermImpl(prec)} #}  # in ${ty.showAsTermImpl(prec)}"
-    case Constraint(in, NegType.App(arg, inf)) =>
-      doc"let ${inf.show} = ${in.showAsTermImpl(FunPrec)} ${arg.showAsTermImpl(ArgPrec)} in # ${ty.showAsTermImpl(prec)}"
-end Constraint
+  def withMrks(newMrks: List[Mark]) = Constraint(lb, ub, newMrks)
 
+  def show(using ctx: NamingCtx) =
+    val s = if ctx.showMarks && !mrks.isEmpty then
+      mrks.map(m => f"m${m.uid}").mkString("[", ",","]") else ""
+    doc"${lb.showAsTypeImpl(TopPrec)} ≤${s} ${ub.showAsTypeImpl(TopPrec)}"
 
-// class InfSymbol(val origin: FlowSymbol)(using State):
-class InfSymbol(val origin: FlowSymbol | InfSymbol)(using State) extends Symbol:
-  def toLoc: Opt[Loc] = origin.toLoc
-  def nme: Str = origin.nme
-  def subst(using SymbolSubst): Symbol = ???
-  override def toString(): String = s"$origin^${uid}"
-  def show(using Scope): Document =
-    // val res = scope.lookup(this).getOrElse(scope.allocateName(this))
-    // println(nme)
-    // res
-    scope.lookup(this).getOrElse(scope.allocateName(this))
+  def showAsTerm(using ctx: NamingCtx) = 
+    def parens(p: Int)(d: Document): Document =
+      if p < BindingPrec then doc"(${d})" else d
+    val (beta, rhs) = ub match
+      case NegType.Var(al) => (al, doc"${lb.showAsTermImpl(BindingPrec)}")
+      case NegType.App(sigma, al) => (al,
+        doc"${lb.showAsTermImpl(FunPrec)} ${sigma.showAsTermImpl(ArgPrec)}"
+          |> parens(BindingPrec))
+    doc"${beta.show} = ${rhs}"
 
-enum QuantType extends Type:
+// α, β
+class TypeVar(val prefix: String, val uid: Int) extends Type:
+  def refresh(using ctx: InferenceCtx, mapping: Map[Int, TypeVar]) =
+    mapping.getOrElse(uid, this)
+
+  def canonicalize(using ctx: CanonicalizeCtx): TypeVar =
+    ctx.mapping.get(uid).map(new TypeVar("γ", _)).getOrElse(this)
+
+  def show(using NamingCtx) = showAsTypeImpl(TopPrec)
+
+  override def equals(that: Any) = that match
+    case al: TypeVar => uid == al.uid
+    case _ => false
+
+  override def hashCode() = uid
+
+// σ
+enum QuantType extends Type derives CanEqual:
   case Base(ty: PosType)
-  case Forall(inf: InfSymbol, ty: QuantType)
-  case Constr(cst: Constraint, ty: QuantType)
-  
-  // def showAsTypeImpl(using Scope): Document =
-  //   this match
-  //   case Base(ty) => ty.showAsTypeImpl
-  
-  // def showAsTerm: Document = ???
-  
-  def freshen(using InfSymbol): QuantType = this match
-    case Base(ty) => Base(ty.freshen)
-    case Forall(inf, ty) =>
-      assert(inf.origin isnt inf)
-      Forall(inf, ty.freshen)
-    case Constr(cst, ty) => Constr(cst.freshen, ty.freshen)
-  
-end QuantType
+  case Forall(al: TypeVar, ty: QuantType)
+  case Constr(c: Constraint, ty: QuantType)
 
-enum PosType extends Type:
-  case Err
-  case Inf(sym: InfSymbol)
-  case Lit(lit: Literal)
-  case Lam(param: InfSymbol, body: QuantType)
-  case Ctor(sym: CtorSymbol, targs: List[PosType], args: List[PosType])
-  
-  def freshen(using sym: InfSymbol): PosType = this match
-    // case Inf(`sym`) => 
-    case Inf(sym.origin) => Inf(sym)
-    case Inf(_) => this
-    case Lit(lit) => Lit(lit)
-    case Lam(param, body) =>
-      val newParam = param match
-        case sym.origin => sym
-        case _ => param
-      Lam(newParam, body.freshen)
-  
-end PosType
+  def canonicalize(using ctx: CanonicalizeCtx): QuantType = this match
+    case Base(ty) => Base(ty.canonicalize)
+    case Constr(c, ty) => Constr(c.canonicalize, ty.canonicalize)
+    case Forall(al, ty) =>
+      ctx.counter += 1
+      ctx.mapping.addOne((al.uid, -ctx.counter))
+      Forall(al, ty)
 
-enum NegType extends Type:
-  case Inf(sym: InfSymbol)
-  case App(lhs: QuantType, rhs: InfSymbol)
-  case Ctor(sym: CtorSymbol)
-  
-  def freshen(using sym: InfSymbol): NegType = this match
-    case Inf(sym.origin) => Inf(sym)
-    case App(lhs, sym.origin) => App(lhs.freshen, sym)
-    case App(lhs, rhs) => App(lhs.freshen, rhs)
-    case Ctor(sym) => Ctor(sym)
-  
-end NegType
+  def refresh(using ctx: InferenceCtx, mapping: Map[Int, TypeVar])
+    : QuantType = this match
+    case Base(ty) => Base(ty.refresh)
+    case Constr(c, ty) => Constr(c.refresh, ty.refresh)
+    case Forall(al, ty) =>
+      given mapping1: Map[Int, TypeVar] =
+        mapping + (al.uid -> ctx.getFreshTv(al.prefix))
+      Forall(mapping1(al.uid), ty.refresh)
 
-enum TypeArg:
-  case Single(t: Type)
-  case Bounds(lb: PosType, ub: PosType)
-end TypeArg
+// τ^+
+enum PosType extends Type derives CanEqual:
+  case Unit()
+  case Var(al: TypeVar)
+  case Lam(al: TypeVar, sigma: QuantType)
+  case Mrked(al: TypeVar, m: Mark)
+
+  def canonicalize(using ctx: CanonicalizeCtx): PosType = this match
+    case Unit() => Unit()
+    case Var(al) => Var(al.canonicalize)
+    case Lam(al, sigma) => Lam(al.canonicalize, sigma.canonicalize)
+    case Mrked(al, m) => Var(al.canonicalize)
+
+  def refresh(using InferenceCtx, Map[Int, TypeVar]): PosType = this match
+    case Unit() => Unit()
+    case Var(al) => Var(al.refresh)
+    case Lam(al, sigma) => Lam(al.refresh, sigma.refresh)
+    case Mrked(al, m) => Mrked(al.refresh, m)
+
+// τ^-
+enum NegType extends Type derives CanEqual:
+  case Var(al: TypeVar)
+  case App(sigma: QuantType, al: TypeVar)
+
+  def canonicalize(using ctx: CanonicalizeCtx): NegType = this match
+    case Var(al) => Var(al.canonicalize)
+    case App(sigma, al) => App(sigma.canonicalize, al.canonicalize)
 
 
-case class Ctx(env: Map[Symbol, PosType]):
-  def get(sym: Symbol): Opt[PosType] = env.get(sym)
-  def +(sym_ty: Symbol -> PosType): Ctx =
-    Ctx(env + sym_ty)
-end Ctx
+  def refresh(using InferenceCtx, Map[Int, TypeVar]): NegType = this match
+    case Var(al) => Var(al.refresh)
+    case App(sigma, al) => App(sigma.refresh, al.refresh)
 
-def ctx(using Ctx): Ctx = summon
+object QuantType:
+  def fromVar(al: TypeVar) = QuantType.Base(PosType.Var(al))
 
+type CtxElem = TypeVar | Constraint
 
-enum CCtx:
-  case Empty
-  case Constr(ctx: CCtx, cst: Constraint) extends CCtx //with ProductWithTail
-  case Bind(ctx: CCtx, sym: InfSymbol) extends CCtx //with ProductWithTail
-  case Err(c: Constraint) extends CCtx
-  
-  def ++(that: CCtx): CCtx = that match
-    case Empty => this
-    case Bind(ctx, sym) => Bind(this ++ ctx, sym)
-    case Constr(ctx, cst) => Constr(this ++ ctx, cst)
-  
-  def + (cst: Constraint): CCtx = Constr(this, cst)
-  def ++ (csts: IterableOnce[Constraint]): CCtx =
-    csts.iterator.foldLeft(this)((ctx, cst) => ctx + cst)
-  def + (sym: InfSymbol): CCtx = Bind(this, sym)
-  
-  def quantify(ty: PosType): QuantType = quantify(QuantType.Base(ty))
-  
-  def quantify(qty: QuantType): QuantType = this match
-    case Empty => qty
-    case e @ Err(c) => QuantType.Base(PosType.Err)
-    case Bind(ctx, sym) => ctx.quantify(QuantType.Forall(sym, qty))
-    case Constr(ctx, cst) => ctx.quantify(QuantType.Constr(cst, qty))
-  
-  lazy val lowerBounds: Map[InfSymbol, Ls[QuantType]] = this match
-    case Empty | _: Err => Map.empty
-    case Bind(ctx, sym) => ctx.lowerBounds
-    case Constr(ctx, Constraint(lb, NegType.Inf(inf))) =>
-      val clbs = ctx.lowerBounds
-      clbs.get(inf) match
-        case Some(lbs) => lowerBounds + (inf -> (lb :: lbs))
-        case None => clbs + (inf -> (lb :: Nil))
-    case Constr(ctx, cst) => ctx.lowerBounds
-  
-  lazy val upperBounds: Map[InfSymbol, Ls[NegType]] = this match
-    case Empty | _: Err => Map.empty
-    case Bind(ctx, sym) => ctx.upperBounds
-    case Constr(ctx, Constraint(QuantType.Base(PosType.Inf(inf)), ub)) =>
-      val cubs = ctx.upperBounds
-      cubs.get(inf) match
-        case Some(ubs) => upperBounds + (inf -> (ub :: ubs))
-        case None => cubs + (inf -> (ub :: Nil))
-    case Constr(ctx, cst) => ctx.upperBounds
-  
-  def step(using TL, State): Opt[CCtx] =
-    // this match
-    // case Empty => N
-    // case Bind(ctx, sym) => S(ctx)
-    // case Constr(ctx, cst) => S(ctx)
-    val LBs = lowerBounds
-    // tl.log("LBs: " + LBs)
-    def go(cs: CCtx, rebuild: CCtx => CCtx): Opt[CCtx] = cs match
-      // case cs @ Empty => rebuild(cs)
-      case Empty | _: Err => N
-      case Bind(ctx, sym) => go(ctx, rebuild compose (Bind(_, sym)))
-      // case Constr(ctx, c @ Constraint(QuantType.Base(PosType.Inf(inf)), ub)) =>
-      //   ctx.lowerBounds.get(inf) match
-      //     case N => go(ctx, Constr(_, c))
-      //     case S(Nil) => die
-      //     case S(lbs) =>
-      //       val newCsts = lbs.map(lb => Constraint(lb, ub))
-      //       val newCtx = ctx ++ newCsts
-      //       S(rebuild(newCtx))
-      case Constr(ctx, c) =>
-        tl.log:
-          given Scope = Scope.reallyEmpty
-          s"Constr (${c.show}) ${c.in.getClass.getSimpleName} ${c.out.getClass.getSimpleName}"
-        // tl.log(s"Constr: ${NotInf.unapply(c.out)}")
-        // tl.log(s"Constr: ${c.out match { case n @ NotInf() => n; case _ => "??"}}")
-        c match
-        case Constraint(QuantType.Base(PosType.Lam(par, bod)), NegType.App(arg, res)) =>
-          val newCtx = ctx +
-            Constraint(arg, NegType.Inf(par)) +
-            Constraint(bod, NegType.Inf(res))
-          S(rebuild(newCtx))
-        case Constraint(QuantType.Forall(inf, ty), ub @ NotInf()) =>
-          val ninf = new InfSymbol(inf)
-          tl.log(s"Forall: $inf ~> $ninf | $ty ~> ${ty.freshen(using ninf)}")
-          S(rebuild(ctx + Constraint(ty.freshen(using ninf), ub)))
-          // S(rebuild(ctx + Constraint(ty.freshen(using new InfSymbol(inf)), ub)))
-        case Constraint(QuantType.Constr(c, ty), ub @ NotInf()) =>
-          S(rebuild(ctx + c + Constraint(ty, ub)))
-        case Constraint(QuantType.Base(PosType.Inf(inf)), ub) =>
-          LBs.get(inf) match
-            case N => go(ctx, rebuild compose (Constr(_, c)))
-            case S(Nil) => die
-            case S(lbs) =>
-              // tl.log(s"LBs: $lbs <: $inf")
-              val newCsts = lbs.map(lb => Constraint(lb, ub))
-              val newCtx = ctx ++ newCsts
-              S(rebuild(newCtx))
-        case Constraint(_, NegType.Inf(inf)) =>
-          go(ctx, rebuild compose (Constr(_, c)))
-        // case _ =>
-        //   go(ctx, rebuild compose (Constr(_, c)))
-        //   // tl.log(s"ELSE...")
-        //   // go(ctx, nctx =>
-        //   //   tl.log(s"ELSE RE $nctx")
-        //   //   Constr(nctx, c))
-        case _ =>
-          // S(rebuild(ctx + Err(c)))
-          S(Err(c))
-    go(this, identity)
-  
-  def gc(root: Type): CCtx =
-    var infs = root.infVars
-    def analyze(ctx: CCtx): Unit = ctx match
-      case Empty | _: Err => ()
-      case Bind(ctx, sym) => analyze(ctx)
-      case Constr(ctx, cst) =>
-        cst match
-        case Constraint(QuantType.Base(PosType.Inf(sym)), ub)
-          if lowerBounds.get(sym).isEmpty => analyze(ctx)
-        case Constraint(lb @ NotInf(), NegType.Inf(sym))
-          // if upperBounds.get(sym).isEmpty => analyze(ctx)
-          if !infs.contains(sym) => analyze(ctx)
-        case _ =>
-          infs |= cst.in.infVars
-          infs |= cst.out.infVars
-          analyze(ctx)
-    analyze(this)
-    def go(ctx: CCtx): CCtx = ctx match
-      case Empty => Empty
-      case Err(c) => Err(c)
-      case Bind(ctx, sym) =>
-        if infs.contains(sym) then Bind(go(ctx), sym)
-        else go(ctx)
-      case Constr(ctx, cst) =>
-        // if infs.contains(cst.in) || infs.contains(cst.out) then
-        //   Constr(go(ctx), cst)
-        // else go(ctx)
-        cst match
-        case Constraint(QuantType.Base(PosType.Inf(sym)), ub) =>
-          if infs.contains(sym) then
-            infs |= ub.infVars
-            Constr(go(ctx), cst)
-          else go(ctx)
-        case Constraint(lb, NegType.Inf(sym)) =>
-          if infs.contains(sym) then
-            infs |= lb.infVars
-            Constr(go(ctx), cst)
-          else go(ctx)
-        case _ =>
-          Constr(go(ctx), cst)
-    go(this)
-  
-  def show(using Scope): Document =
-    doc" #{ ${showSeq} #} "
-  def showSeq(using Scope): Document =
-    this match
-    case Empty => doc""
-    case Err(c) => doc"ERROR: ${c.in.showAsType} ≤ ${c.out.showAsType}"
-    case Bind(Empty, sym) => sym.show
-    case Bind(ctx, sym) => doc"${ctx.showSeq}, # ${sym.show}"
-    case Constr(Empty, cst) => cst.show
-    case Constr(ctx, cst) => doc"${ctx.showSeq}, # ${cst.show}"
-  
-end CCtx
+class Typer(using Raise):
+  def checkWellFormed(term: CoreTerm) = checkWellFormedImpl(term)(using Set())
+  def fromTerm(term: Term): CoreTerm = 
+    val res = term match
+      case Term.Blk(stats, res) =>
+        def getBindings(stats: List[Statement])
+          : List[(String, CoreTerm)] = stats match
+          case LetDecl(_, _) :: ss => getBindings(ss)
+          case (d: TermDefinition) :: ss if d.body.isDefined =>
+            (d.sym.nme, fromTerm(d.body.get)) :: getBindings(ss)
+          case DefineVar(sym, t) :: ss =>
+            (sym.nme, fromTerm(t)) :: getBindings(ss)
+          case t :: ss =>
+            raise(ErrorReport(msg"invalid term ${t.toString}" -> t.toLoc::Nil))
+            getBindings(ss)
+          case Nil => Nil
+        fromTerm(res) match
+          case CoreTerm.Let(bindings, body) =>
+            CoreTerm.Let(getBindings(stats) ++ bindings, body)
+          case x => CoreTerm.Let(getBindings(stats), x)
+      case Term.Lit(Tree.UnitLit(_)) => CoreTerm.Unit
+      case Term.UnitVal() => CoreTerm.Unit
+      case Term.Lam(ParamList(flags, p :: ps, rest), body) =>
+        val body1 = fromTerm(Term.Lam(ParamList(flags, ps, rest), body))
+        CoreTerm.Lam(p.sym.nme, body1)
+      case Term.Lam(ParamList(_, Nil, _), body) => fromTerm(body)
+      case Term.App(lhs, Term.Tup(Fld(_, rhs, _) :: Nil)) =>
+        CoreTerm.App(fromTerm(lhs), fromTerm(rhs))
+      case Term.Ref(sym) => CoreTerm.Var(sym.nme)
+      case _ =>
+        val m = msg"invalid term ${term.toString}"
+        raise(ErrorReport(m -> term.toLoc :: Nil))
+        CoreTerm.Unit
+    res match
+      case CoreTerm.Let(Nil, body) => body
+      case _ => res
+
+  def checkWellFormedImpl(term: CoreTerm)(using ctx: Set[String])
+    : Unit = term match
+    case CoreTerm.Unit => ()
+    case CoreTerm.Var(x) => if !ctx.contains(x) then
+      raise(ErrorReport( msg"invalid scope ${x}" -> None :: Nil))
+    case CoreTerm.Lam(x, body) =>
+      if ctx.contains(x) then
+        raise(ErrorReport( msg"invalid scope ${x}" -> None :: Nil))
+      checkWellFormedImpl(body)(using ctx + x)
+    case CoreTerm.App(t1, t2) =>
+      checkWellFormedImpl(t1); checkWellFormedImpl(t2)
+    case CoreTerm.Let(bindings, body) =>
+      val variables = Set.from(bindings.map(_._1))
+      val intersections = ctx.intersect(variables)
+      if !intersections.isEmpty then
+        val first = bindings.find((x, _) => intersections.contains(x)).get
+        raise(ErrorReport( msg"invalid scope ${first._1}" -> None :: Nil))
+      given Set[String] = ctx ++ variables
+      for (_, t) <- bindings do checkWellFormedImpl(t)
+      checkWellFormedImpl(body)
+
+  def wrap(pair: (PosType, List[CtxElem])): QuantType =
+    quantify(pair._2, pair._1)
+  def quantify(constraints: List[CtxElem], ty: PosType)
+    : QuantType = constraints match
+    case (al: TypeVar) :: cons => QuantType.Forall(al, quantify(cons, ty))
+    case (c: Constraint) :: cons => QuantType.Constr(c, quantify(cons, ty))
+    case _ => QuantType.Base(ty)
+
+  def inferType(term: CoreTerm)
+    (using ctx: InferenceCtx): (PosType, List[CtxElem]) = term match
+    case CoreTerm.Unit => (PosType.Unit(), Nil)
+    case CoreTerm.Var(x) =>
+      (PosType.Mrked(ctx.mappings(x), ctx.getFreshMrk), Nil)
+    case CoreTerm.Lam(x, body) =>
+      val al = ctx.getFreshTv(x)
+      (PosType.Lam(al, wrap(inferType(body)(using ctx.scoped(Map(x-> al)))))
+        , al :: Nil)
+    case CoreTerm.App(t1, t2) =>
+      val al = ctx.getFreshTv("α")
+      val (typos1, cctx) = inferType(t1)
+      val lhs = QuantType.Base(typos1)
+      val rhs = NegType.App(wrap(inferType(t2)), al)
+      (PosType.Var(al), cctx ++ (al :: (Constraint(lhs, rhs, Nil)) :: Nil))
+    case CoreTerm.Let(bindings, body) =>
+      val vars = Set.from(bindings.map(_._1))
+      val mapping = Map.from(vars.map(name => (name, ctx.getFreshTv(name))))
+      given InferenceCtx = ctx.scoped(mapping)
+      val constraints = bindings.map((x, t) =>
+        Constraint(wrap(inferType(t)), NegType.Var(mapping(x)), Nil))
+      val (ty, dctx) = inferType(body)
+      (ty, List.from(mapping.map(_._2)) ++ constraints ++ dctx)
 
 
-class Typer(using State, TL, Raise):
-  // import tl.{trace, log}1
-  
-  // val upperBounds: mutable.Map[FlowSymbol, Ls[PosType]] = mutable.Map.empty
-  
-  def freshInf(sym: FlowSymbol): InfSymbol =
-    new InfSymbol(sym)
-  
-  def typeCheck(term: Term)(using Ctx)
-      : (PosType, CCtx)
-      = term match
-    case Term.Blk(Nil, res) => typeCheck(res)
-    case Term.Lit(lit) => (PosType.Lit(lit), CCtx.Empty)
-    case Term.Ref(sym) =>
-      ctx.get(sym) match
-        case Some(ty) => (ty, CCtx.Empty)
-        case None =>
-          raise(ErrorReport(
-            msg"Symbol not found: ${sym.nme}" -> term.toLoc :: Nil
-          ))
-          (PosType.Err, CCtx.Empty)
-    case app @ Term.App(f, Term.Tup(PlainFld(arg) :: Nil)) =>
-      val (fTy, fCtx) = typeCheck(f)
-      val (argTy, argCtx) = typeCheck(arg)
-      val argQTy = argCtx.quantify(argTy)
-      val resTy = freshInf(app.resSym)
-      // val appTy = NegType.App(argQTy, NegType.Inf(resTy))
-      val appTy = NegType.App(argQTy, resTy)
-      val cst = Constraint(QuantType.Base(fTy), appTy)
-      (PosType.Inf(resTy), fCtx + resTy + cst)
-    case Term.Lam(PlainParamList(p :: Nil), bod) =>
-      val param = freshInf(p.sym)
-      val (bodTy, bodCtx) =
-        given Ctx = ctx + (p.sym -> PosType.Inf(param))
-        typeCheck(bod)
-      val lamTy = PosType.Lam(param, bodCtx.quantify(bodTy))
-      (lamTy, CCtx.Empty + param)
-    // case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body)
-    // if sym2 is sym => // TODO: more than one!!
-    //   ???
-    case Term.Blk(stats, res) =>
-      def go(stats: Ls[Statement]): (PosType, CCtx) = stats match
-        case Nil => typeCheck(res)
-        // case (term: Term) :: stats =>
-        //   effBuff += typeCheck(term)._2
-        //   go(stats)
-        case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
-          require(sym2 is sym)
-          val (rhsTy, rhsCtx) = typeCheck(rhs)
-          // val (bodTy, bodCtx) =
-          //   given Ctx = ctx + (p.sym -> PosType.Inf(param))
-          //   typeCheck(bod)
-          // ctx += sym -> rhsTy
-          // go(stats)
-          ???
-      go(stats)
-    
-  
-end Typer
+class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
+  var upperBounds = MutMap.empty[TypeVar, MutSet[NegType]]
+  var lowerBounds = MutMap.empty[TypeVar, MutSet[QuantType]]
+  // note: resolved is stored in reversed order
+  type ResolvedElem = CtxElem | (List[Mark], TypeVar, QuantType)
+  var resolved = List.empty[ResolvedElem]
+  var quantCache = MutMap.empty[(Set[Mark], TypeVar), QuantType]
+  // var quantCache = MutMap.empty[(Set[Mark], QuantType), QuantType]
 
+  def showFront(using NamingCtx) = unresolved match
+    case (al: TypeVar) :: _ => al.show
+    case (c: Constraint) :: _ => c.show
+    case _ => ""
 
+  def step = unresolved match
+    case (al: TypeVar) :: cons =>
+      resolved = al :: resolved
+      unresolved = cons
+      ("C-Promote", Some(al), List.empty[Constraint])
+    case (c: Constraint) :: cons =>
+      val res = handleCon(c)
+      if res._2.isDefined then resolved = res._2.get :: resolved
+      unresolved = res._3 ++ cons
+      res
+    case _ => ("", Option.empty[ResolvedElem], List.empty[Constraint])
 
+  def handleCon(c: Constraint)
+    : (String, Option[ResolvedElem], List[Constraint]) = (c.lb, c.ub) match
+    case (QuantType.Constr(c1, sigma), pi: NegType.App) =>
+      ("C-Constr", None, List(c1.withMrks(c.mrks),
+                              Constraint(sigma, pi, c.mrks)))
+    case (QuantType.Base(PosType.Var(al)), ty) =>
+      // check if we can skip
+      if upperBounds.getOrElseUpdate(al, MutSet.empty).contains(ty) then
+        ("C-Skip", None, List.empty)
+      else
+        val lbs = lowerBounds.getOrElseUpdate(al, MutSet.empty)
+        // if ty is a type var, install lower bounds
+        ty.asVar.map(ub => lowerBounds.getOrElseUpdate(ub, MutSet.empty)
+          .addAll(lbs).add(QuantType.fromVar(al)))
+        // install transitive upper bound for our lower bounds (including al)
+        for lb <- lbs.flatMap(_.asVar).concat(Some(al)) do
+          upperBounds.getOrElseUpdate(lb, MutSet.empty).add(ty)
+        given Map[Int, TypeVar] = Map.empty
+        // note that we avoid cases where lb = al, which may happen?
+        // ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
+        //   .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
+        ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
+          .map(lb => Constraint(lb, ty, c.mrks)).toList)
+    case (sigma, NegType.Var(al)) =>
+      if lowerBounds.getOrElseUpdate(al, MutSet.empty).contains(sigma) then
+        ("C-Skip", None, List.empty)
+      else
+        val ubs = upperBounds.getOrElseUpdate(al, MutSet.empty)
+        // if sigma is a type var, install upper bounds
+        sigma.asVar.map(lb => upperBounds.getOrElseUpdate(lb, MutSet.empty)
+          .addAll(ubs).add(NegType.Var(al)))
+        // install transitive lower bound for our upper bounds (including al)
+        for ub <- ubs.flatMap(_.asVar).concat(Some(al)) do
+          lowerBounds.getOrElseUpdate(ub, MutSet.empty).add(sigma)
+        given Map[Int, TypeVar] = Map.empty
+        // note that we avoid cases where ub = al, which may happen?
+        // ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
+        //   .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
+        ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
+          .map(ub => Constraint(sigma, ub, c.mrks)).toList)
+
+    case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
+      val c1 = Constraint(sigma1, NegType.Var(al), c.mrks)
+      val c2 = Constraint(sigma, NegType.Var(beta), c.mrks)
+      ("C-Fun", None, List(c1, c2))
+
+    case (QuantType.Base(PosType.Mrked(al, m)), pi: NegType.App) =>
+      ("C-Unwrap", None,
+        List(Constraint(QuantType.fromVar(al), pi, m :: c.mrks)))
+
+    case (QuantType.Forall(al, sigma), pi: NegType.App) =>
+      // val canonicalSigma = sigma.canonicalize(
+      //   using CanonicalizeCtx(1, MutMap((al.uid -> -1))))
+      quantCache.get((Set.from(c.mrks), al)) match
+      case Some(sigma1) =>
+        ("C-Forall1", None, List(Constraint(sigma1, pi, c.mrks)))
+      case None =>
+        quantCache += (Set.from(c.mrks), al) -> sigma
+        ("C-Forall2", Some(al), List(Constraint(sigma, pi, c.mrks)))
+    // e.g. application where lhs is a unit
+    case _ => ("C-Err", None, Nil)
+
+class InferenceCtx(var root: Option[InferenceCtx],
+                   val mappings: Map[String, TypeVar]):
+  var mrkUid = 0
+  var tvUid = 0
+
+  def scoped(maps: Map[String, TypeVar]) = InferenceCtx(
+    if root.isEmpty then Some(this) else root, mappings ++ maps)
+
+  def getFreshMrk =
+    val r = getRoot
+    r.mrkUid += 1
+    Mark(r.mrkUid)
+
+  def getFreshTv(prefix: String = "α") =
+    val r = getRoot
+    r.tvUid += 1
+    new TypeVar(prefix, r.tvUid)
+
+  private def getRoot = root match
+    case Some(r) => r
+    case None => this
+
+class NamingCtx(val showMarks: Boolean):
+  private var varmapping = MutMap.empty[Int, String]
+  private var usedNames = MutSet.empty[String]
+  private var uid = 0
+  def lookupTypeVar(al: TypeVar) =
+    varmapping.getOrElseUpdate(al.uid, getUniqueName(al.prefix))
+  def getUniqueName(prefix: String) =
+    val name = if usedNames.contains(prefix) then
+      var counter = 0
+      while usedNames.contains(f"${prefix}${counter}") do counter += 1
+      f"${prefix}${counter}"
+    else
+      prefix
+    usedNames.add(name)
+    name
+
+class CanonicalizeCtx(var counter: Int, var mapping: MutMap[Int, Int])
 

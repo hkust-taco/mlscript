@@ -269,39 +269,66 @@ abstract class MLsDiffMaker extends DiffMaker:
       import typing.*
       import typing.supremef.*
       val typer = Typer()
-      given supremef.Ctx = supremef.Ctx(Map.empty)
-      var (ty, cs) = typer.typeCheck(trm)
-      locally:
-        // given Scope = Scope.empty
-        // given Scope =
-        //   import scala.collection.mutable.{Map => MutMap}
-        //   new Scope(N, N, MutMap.empty, escapeChars = false)
-        given Scope = Scope.reallyEmpty
-        // given TL = new TraceLogger:
-        //   // override def doTrace = dbgResolving.isSet
-        //   override def emitDbg(str: String): Unit = output(str)
-        val fuel = 50
-        var iter = 0
-        showTypeAsTree.get.foreach: post =>
-          output(s"SupremeF Type: ${ty.showAsTree(using post)}")
-        // output(s": ${ty.showAsType.mkString(120)}")
-        output(s": ${cs.quantify(ty).showAsType.mkString(120)}")
-        while iter < fuel do
-          iter += 1
-          output(s"====== (${iter}) ======")
-          if tl.doTrace then output("Pregc " + cs.show.mkString(120))
-          cs = cs.gc(ty)
-          showTypeAsTree.get.foreach: post =>
-            // output(s"====== (${iter}) ======\n ${cs.showAsTree(using post)}")
-            output(s" ${cs.showAsTree(using post)}")
-          // output(s"${cs.quantify(ty).showAsType.mkString(120)}")
-          output("Cons: " + cs.show.mkString(120))
-          output("Term: " + cs.quantify(ty).showAsTerm.mkString(120))
-          cs.step match
-          case N => iter = fuel + 1
-          case S(ncs) => cs = ncs
+      given NamingCtx = NamingCtx(true)
+      given InferenceCtx = InferenceCtx(None, Map.empty)
+      val ctrm = typer.fromTerm(trm)
+      output("Parsed Core: " + ctrm.show)
+      typer.checkWellFormed(ctrm)
+      val (ty, cons) = typer.inferType(ctrm)
+      output("Inferred: " + ty.showAsType)
+      output("As term: " + ty.showAsTerm)
+
+      output("|> " + cons.map(s => s match
+        case c: Constraint => c.show
+        case al: TypeVar => al.show
+      ).mkString(", "))
+
+      var solver = CtxSolver(cons)
+      var fuel = 50
+      var iter = 0
+      def printBounds = 
+        // print bounds
+        val ubs = solver.upperBounds.valuesIterator.map(_.size).sum
+        val lbs = solver.lowerBounds.valuesIterator.map(_.size).sum
+        val bounded = solver.upperBounds.keySet ++ solver.lowerBounds.keySet
+        if ubs > 0 then
+          output("-------- UBS --------")
+        for al <- bounded do
+          for ty <- solver.upperBounds.getOrElse(al, Set.empty[NegType]) do
+            output(s"${al.show} ≤ ${ty.showAsType}")
+        if lbs > 0 then
+          output("-------- LBS --------")
+        for al <- bounded do
+          for ty <- solver.lowerBounds.getOrElse(al, Set.empty[QuantType]) do
+            output(s"${al.show} ≥ ${ty.showAsType}")
+        if ubs + lbs > 0 then
+          output("---------------------")
+      while iter < fuel && !solver.unresolved.isEmpty do
+        iter += 1
+        output(s"====== (${iter}) ======")
+        printBounds
+        output(s"Front: ${solver.showFront}")
+        val (rule, newResolved, newCons) = solver.step
+        output(s"Rule: ${rule}")
+        for con <- newCons do
+          output(s"|> ${con.show}")
         if iter == fuel then
-          output(s"/!!\\ Warning: reached fuel limit ($fuel) in SupremeF /!!\\")
-      
-  
+          output(s"==== Out of fuel ====")
+        if rule == "C-Err" then
+          iter = fuel
+        if rule.startsWith("C-Forall") then
+          for (key, value) <- solver.quantCache.iterator do
+            val mrks = key._1.toList.sortBy(_.uid).map(m => s"m${m.uid}").mkString(",")
+            output(s"[${mrks}], ${key._2.showAsType}")
+            output(s"  -> ${value.showAsType}")
+        output(s"Remaining: ${solver.unresolved.size}")
+
+      if iter == fuel then
+        output(s"====== Remaining ======")
+        for elem <- solver.unresolved do elem match
+          case al: TypeVar => output(s"${al.show}")
+          case c : Constraint => output(s"${c.show}")
+      else
+        output(s"====== Final ======")
+        printBounds
 
