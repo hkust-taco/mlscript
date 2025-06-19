@@ -2,7 +2,7 @@ package hkmc2
 package typing.supremef
 
 import scala.language.strictEquality
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{LinkedHashMap => MutMap, LinkedHashSet => MutSet}
 
 import mlscript.utils.GenHelper
 import mlscript.utils.shorthands.*
@@ -352,10 +352,10 @@ class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
           upperBounds.getOrElseUpdate(lb, MutSet.empty).add(ty)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where lb = al, which may happen?
-        // ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
-        //   .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
         ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
-          .map(lb => Constraint(lb, ty, c.mrks)).toList)
+          .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
+        // ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
+        //   .map(lb => Constraint(lb, ty, c.mrks)).toList)
     case (sigma, NegType.Var(al)) =>
       if lowerBounds.getOrElseUpdate(al, MutSet.empty).contains(sigma) then
         ("C-Skip", None, List.empty)
@@ -369,10 +369,10 @@ class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
           lowerBounds.getOrElseUpdate(ub, MutSet.empty).add(sigma)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where ub = al, which may happen?
-        // ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
-        //   .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
         ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
-          .map(ub => Constraint(sigma, ub, c.mrks)).toList)
+          .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
+        // ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
+        //   .map(ub => Constraint(sigma, ub, c.mrks)).toList)
 
     case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
       val c1 = Constraint(sigma1, NegType.Var(al), c.mrks)
