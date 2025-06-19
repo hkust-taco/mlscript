@@ -90,6 +90,8 @@ object FlatPattern:
     case Default
     /** Call `unapplyStringPrefix` instead of `unapply`. */
     case StringPrefix(prefix: TempSymbol, postfix: TempSymbol)
+    /** Call `unapplyTuplePrefix` instead of `unapply`. */
+    case TuplePrefix(prefix: TempSymbol, postfix: TempSymbol)
     /** The pattern is annotated. The normalization will intepret the pattern
      *  matching behavior based on the resolved symbol
      */

@@ -1160,12 +1160,14 @@ extends Importer:
                   log(s"elaborated ${patSym.nme}:\n${split.display}")
                 patSym.split = split
             log(s"pattern body is ${td.rhs}")
-            val translate = new ucs.Translator(this)
-            val bod = translate(
+            // *** END OBSOLETE CODE ***
+            
+            // Translate the pattern directly into methods that perform matching
+            // using backtracking.
+            val bod = new ucs.Translator(this)(
               patSym.patternParams,
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
-              td.rhs.getOrElse(die))
-            // *** END OBSOLETE CODE ***
+              td.rhs.getOrElse(die), pat)
             val pd = PatternDef(owner, patSym, sym, tps, ps, pat,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)

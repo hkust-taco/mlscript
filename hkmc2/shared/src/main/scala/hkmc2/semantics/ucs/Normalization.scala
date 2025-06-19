@@ -159,7 +159,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             // the current implementation does not use it. The future version
             // should properly handle the pattern arguments.
             case MatchMode.Default =>
-              normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+              normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, consequent, alternative)
             case MatchMode.StringPrefix(prefix, postfix) =>
               normalizeStringPrefixPattern(scrutinee, pat, ctor, postfix, consequent, alternative)
             case MatchMode.Annotated(annotation) => annotation.symbol match
@@ -168,11 +168,11 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               case S(_) =>
                 warn(msg"This annotation is not supported here." -> annotation.toLoc,
                   msg"Note: Patterns (like `${pat.nme}`) only support the `@compile` annotation." -> N)
-                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+                normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, consequent, alternative)
               case N =>
                 // Name resolution should have already reported an error. We
                 // treat this as an extractor pattern.
-                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+                normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, consequent, alternative)
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -274,10 +274,11 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       scrutinee: Term.Ref,
       patternSymbol: PatternSymbol,
       ctorTerm: Term,
+      argsOpt: Opt[Ls[FlatPattern.Argument]],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
-    normalize(makeUnapplyBranch(scrutinee, ctorTerm, consequent)(alternative))
+    normalize(makeUnapplyBranch(scrutinee, ctorTerm, argsOpt, consequent)(alternative))
   
   private def normalizeStringPrefixPattern(
       scrutinee: Term.Ref,
@@ -470,7 +471,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     case (FlatPattern.ClassLike(_, S(ss1), _, _), FlatPattern.ClassLike(_, S(ss2), _, _)) =>
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l.scrutinee === r.scrutinee => acc
-        case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.ref(), acc(innermost))
+        case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.ref().withIArgs(Nil), acc(innermost))
     case (_, _) => identity
 end Normalization
 

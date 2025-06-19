@@ -95,7 +95,7 @@ object Pattern:
       case (vars, pattern) => vars ++ pattern.variables
   
   /** A shorthand for creating a variable pattern. */
-  def Variable(id: Ident): Pattern.Alias = Pattern.Wildcard().binds(id)
+  def Variable = Pattern.Wildcard() binds (_: Ident)
   
   trait ConstructorImpl:
     self: Pattern.Constructor =>

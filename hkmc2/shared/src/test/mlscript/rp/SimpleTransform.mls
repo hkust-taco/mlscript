@@ -1,0 +1,148 @@
+:js
+
+data class Pair[A, B](first: A, second: B)
+
+pattern SumPair = Pair(a, b) => a + b
+
+fun foo(value) = if value is
+  SumPair(sum) then print("sum: " + sum)
+  else print("not a pair")
+
+foo of Pair(1, 2)
+foo of Pair(10, 25)
+foo of ()
+foo of 10
+foo of "hello"
+//│ > sum: 3
+//│ > sum: 35
+//│ > not a pair
+//│ > not a pair
+//│ > not a pair
+
+:fixme
+pattern BoolLike = true | false | ((Int as x) => x !== 0)
+//│ ╔══[ERROR] Class Int does not have a parameter list
+//│ ║  l.23: 	pattern BoolLike = true | false | ((Int as x) => x !== 0)
+//│ ╙──      	                                    ^^^
+
+fun foo(value) = if value is
+  BoolLike(b) then print("" + value + " is equivalent to " + b)
+  else print("the input " + value + " is not a boolean")
+
+foo of true
+foo of false
+foo of 0
+foo of 1
+foo of 2
+//│ > true is equivalent to true
+//│ > false is equivalent to false
+//│ > 0 is equivalent to false
+//│ > 1 is equivalent to true
+//│ > 2 is equivalent to true
+
+:todo // Similar problem as `EvaluatedTerm`.
+pattern TrueLike = BoolLike as true
+
+:expect true
+:fixme
+true is TrueLike
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
+//│ = false
+
+42 is BoolLike(true)
+//│ = true
+
+data class Term with
+  constructor
+    Literal(value: Int)
+    Infix(op: Str, left: Term, right: Term)
+    Prefix(op: Str, right: Term)
+
+// The following pattern generates a lot of code.
+// pattern EvaluatedTerm =
+//   (Literal(value) => value) |
+//   (Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right) |
+//   (Infix("-", EvaluatedTerm as left, EvaluatedTerm as right) => left - right) |
+//   (Infix("*", EvaluatedTerm as left, EvaluatedTerm as right) => left * right) |
+//   (Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right) |
+//   (Prefix("-", EvaluatedTerm as operand) => -operand) |
+//   (Prefix("+", EvaluatedTerm as operand) => +operand)
+
+pattern EvaluatedTerm =
+  (Literal(value) => value) |
+  (Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right) |
+  (Infix("-", EvaluatedTerm as left, EvaluatedTerm as right) => left - right)
+
+fun eval(term) = if term is
+  EvaluatedTerm(value) then print("value: " + value)
+  else print("invalid term")
+
+:todo
+// This doesn't work because the semantics of `as` is different in `Desugarer`
+// and `Translator`. Operator `as` was to bind the LHS pattern to the RHS
+// variable, but now it is to match the LHS pattern against the RHS pattern.
+eval of Literal(1)
+eval of Infix("+", Literal(1), Literal(2))
+eval of Infix("-", Literal(1), Literal(2))
+eval of Infix("*", Literal(1), Literal(2))
+eval of Infix("/", Literal(1), Literal(2))
+eval of Prefix("-", Literal(1))
+//│ > value: 1
+//│ > invalid term
+//│ > invalid term
+//│ > invalid term
+//│ > invalid term
+//│ > invalid term
+
+pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
+
+(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 2))
+//│ = true
+
+(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 3))
+//│ = false
+
+pattern ShapeArea = 
+  (((:radius)) => Math.PI * radius * radius) |  // Circle
+  (((:width, :height)) => width * height) |     // Rectangle
+  (((:base, :height)) => base * height / 2)     // Triangle
+
+fun area(shape) = if shape is
+  ShapeArea(area) then print("area: " + area)
+  else print("invalid shape")
+
+area of radius: 10
+area of width: 10, height: 20
+area of base: 10, height: 20
+//│ > area: 314.1592653589793
+//│ > area: 200
+//│ > area: 100
+
+pattern PairLike = [_, _] | Pair(_, _)
+
+[1, 2] is PairLike
+//│ = true
+
+[] is PairLike
+//│ = false
+
+[1] is PairLike
+//│ = false
+
+Pair(1, 2) is PairLike
+//│ = true
+
+:todo
+pattern TransformTwice = (((Int as x) => x + 4) as y) => y * 2
+//│ ╔══[ERROR] Class Int does not have a parameter list
+//│ ║  l.136: 	pattern TransformTwice = (((Int as x) => x + 4) as y) => y * 2
+//│ ╙──       	                            ^^^
+
+2 is TransformTwice(12)
+//│ = true
+
+100 is TransformTwice(0)
+//│ = false
+
+17 is TransformTwice(42)
+//│ = true

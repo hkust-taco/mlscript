@@ -93,12 +93,33 @@ trait DesugaringBase(using Ctx, State):
   protected final def makeUnapplyBranch(
       scrut: => Term.Ref,
       clsTerm: Term,
+      argsOpt: Opt[Ls[FlatPattern.Argument]],
       inner: => Split,
       method: Str = "unapply"
   )(fallback: Split): Split =
     val call = app(sel(clsTerm, method).withIArgs(Nil), tup(fld(scrut)), s"result of $method")
     tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
+      argsOpt match
+        case N => Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
+        case S(args) =>
+          val tupleSymbol = TempSymbol(N, "tuple")
+          Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(S(tupleSymbol :: Nil)),
+            makeTupleBranch(tupleSymbol.ref().withIArgs(Nil), args.map(_.scrutinee), inner, Split.End)
+          ) ~: fallback
+  
+  protected final def makeTupleBranch(
+    scrut: => Term.Ref,
+    subScrutinees: Ls[BlockLocalSymbol],
+    consequent: => Split,
+    alternative: Split
+  ): Split =
+    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false),
+      subScrutinees.iterator.zipWithIndex.foldRight(consequent):
+        case ((arg, index), innerSplit) =>
+          val label = s"the $index-th element of the match result"
+          Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
+    ) ~: alternative
+    
   
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
   protected final def makeUnapplyStringPrefixBranch(
