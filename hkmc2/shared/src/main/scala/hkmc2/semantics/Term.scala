@@ -28,20 +28,69 @@ enum Annot extends AutoLocated:
     case Trm(trm) => trm :: Nil
     case _: Modifier | Untyped => Nil
 
+type Resolvable = Term & ResolvableImpl
+
+sealed trait ResolvableImpl:
+  t: Term =>
+  
+  var iargsLs: Opt[Ls[Term.Tup]] = N
+  
+  override def show: Str = t.showDbg + iargsLs.map(_.map(_.showDbg))
+  
+  def withoutIArgs = t match
+    case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym).noIArgs
+    case t: Term.App => t.copy()(t.tree, t.sym, t.resSym).noIArgs
+    case t: Term.TyApp => t.copy()(t.sym).noIArgs
+    case t: Term.Sel => t.copy()(t.sym).noIArgs
+    case t: Term.SynthSel => t.copy()(t.sym).noIArgs
+    case t: Term.Summon => t.copy()(t.tree, t.sym).noIArgs
+  
+  def instantiate(using State): Term = iargsLs match
+    case N => lastWords(s"missing implicit arguments for term ${t}")
+    case S(iargsLs) => iargsLs.foldLeft(t.withoutIArgs): (t, args) => 
+      Term.App(t, args)(Tree.DummyApp, N, FlowSymbol("implicit app")).noIArgs // N: todo
+  
+  def defn: Opt[Definition] = t.resolvedSymbol match
+    case S(sym: MemberSymbol[?]) => sym.defn
+    case S(sym: BlockLocalSymbol) => sym.decl match
+      case S(td: Definition) => S(td)
+      case _ => N
+    case _ => N
+  
+  def termDefn: Opt[TermDefinition] = t.defn match
+    case S(td: TermDefinition) => S(td)
+    case _ => N
+  
+  def typeDefn: Opt[ClassLikeDef] = t.defn match
+    case S(td: ClassLikeDef) => S(td)
+    case _ => N
+  
+  def withIArgs(iargsLs: Ls[Term.Tup]): this.type = 
+    if !(this.iargsLs.isEmpty || this.iargsLs.get == iargsLs) then
+      lastWords:
+        s"the implicit arguments for term ${t.showDbg} " +
+        s"are already set to ${this.iargsLs.get}; " +
+        s"they cannot be set to some different terms ${iargsLs}"
+    this.iargsLs = S(iargsLs)
+    this
+  
+  def noIArgs: Term = withIArgs(Nil)
+
+
 enum Term extends Statement:
   case Error
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Builtin(id: Tree.Ident, nme: Str)
-  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
-  case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
-  case TyApp(lhs: Term, targs: Ls[Term])
-  case Sel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
-  case SynthSel(prefix: Term, nme: Tree.Ident)(val sym: Opt[FieldSymbol])
+  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[Symbol]) extends Term with ResolvableImpl
+  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with ResolvableImpl
+  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[Symbol]) extends Term with ResolvableImpl
+  case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
+  case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)(val normalized: Split)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -50,7 +99,7 @@ enum Term extends Statement:
   case Rcd(stats: Ls[Statement])
   case Quoted(body: Term)
   case Unquoted(body: Term)
-  case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
+  case New(cls: Term, argss: Ls[Ls[Term]], rft: Opt[ClassSymbol -> ObjBody])
   case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)(val sym: Opt[FieldSymbol])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
@@ -66,12 +115,32 @@ enum Term extends Statement:
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
+  case Summon(ty: Term)(val tree: Tree, var sym: Opt[Symbol]) extends Term with ResolvableImpl
   
+  /**
+   * The prelinminary symbol for the term that is resolved during
+   * elaboration. 
+   */
   lazy val symbol: Opt[Symbol] = this match
     case Ref(sym) => S(sym)
-    case sel: SynthSel => sel.sym
     case sel: Sel => sel.sym
+    case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
+    case TyApp(lhs = lhs) => lhs.symbol
+    case _ => N
+  
+  /**
+   * The symbol representing the evaluation result of the term. This
+   * symbol is resolved during the resolution stage.
+   */
+  def resolvedSymbol: Opt[Symbol] = this match
+    case ref: Ref => ref.resSym
+    case sel: Sel => sel.sym
+    case sel: SynthSel => sel.sym
+    case sel: SelProj => sel.sym
+    case app: App => app.sym
+    case tyApp: TyApp => tyApp.sym
+    case summon: Summon => summon.sym
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -83,8 +152,8 @@ enum Term extends Statement:
     else sel(id, N)
   
   def app(args: Term*)(using State) =
-    App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))(Tree.App(Tree.Dummy, Tree.Dummy),
-      FlowSymbol(""))
+    App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))
+      (Tree.App(Tree.Dummy, Tree.Dummy), N, FlowSymbol(""))
   
   def describe: Str = this match
     case Error => "<error>"
@@ -130,7 +199,9 @@ extension (self: Blk)
 sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
   
   def extraInfo: Str = this match
-    case trm @ (_: Sel | _: SynthSel | _: SelProj) => trm.symbol.mkString
+    case ref: Ref if ref.resSym.isEmpty => ""
+    case r: Resolvable => r.resolvedSymbol.mkString
+    case r: SelProj => r.symbol.mkString
     case _ => ""
   
   def subStatements: Ls[Statement] = this match
@@ -153,7 +224,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Rcd(stats) => stats.flatMap(_.subTerms)
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
-    case New(_, args, rft) => args ::: rft.toList.flatMap(_._2.blk.subTerms)
+    case New(cls, argss, rft) => cls :: argss.flatten ::: rft.toList.flatMap(_._2.blk.subTerms)
     case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
     case Ret(res) => res :: Nil
@@ -168,28 +239,35 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case SetRef(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
-    case TermDefinition(_, k, _, pss, tps, sign, body, res, _, annotations) =>
+    case TermDefinition(_, k, _, pss, tps, sign, body, res, _, _, annotations) =>
       pss.toList.flatMap(_.subTerms) ::: tps.getOrElse(Nil).flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
     case cls: ClassDef =>
-      cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: Nil
+      cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: cls.annotations.flatMap(_.subTerms)
     case mod: ModuleDef =>
-      mod.paramsOpt.toList.flatMap(_.subTerms) ::: mod.body.blk :: Nil
+      mod.paramsOpt.toList.flatMap(_.subTerms) ::: mod.body.blk :: mod.annotations.flatMap(_.subTerms)
     case td: TypeDef =>
-      td.rhs.toList
+      td.rhs.toList ::: td.annotations.flatMap(_.subTerms)
     case pat: PatternDef =>
-      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: Nil
+      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
     case Import(sym, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
+    case Summon(ty) => ty :: Nil
+  
+  // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
+  private def treeOrSubterms(t: Tree): Ls[Located] = t match
+    case Tree.DummyApp | Tree.DummyTup => subTerms
+    case _ => t :: Nil
   
   protected def children: Ls[Located] = this match
     case t: Lit => t.lit.asTree :: Nil
-    case t: Ref => t.tree :: Nil
-    case t: Tup => t.tree :: Nil
+    case t: Ref => treeOrSubterms(t.tree)
+    case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
-    case t: App => t.tree :: Nil
+    case t: App => treeOrSubterms(t.tree)
+    case IfLike(kw, desug) => desug :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
@@ -252,7 +330,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
-    case TermDefinition(_, k, sym, pss, tps, sign, body, res, flags, _) => s"${flags} ${k.str} ${sym}${
+    case TermDefinition(_, k, sym, pss, tps, sign, body, res, flags, _, _) => s"${flags} ${k.str} ${sym}${
       tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
     }${
       pss.map(_.showDbg).mkString("")
@@ -272,6 +350,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Ret(res) => s"return ${res.showDbg}"
     case TypeDef(sym, tparams, rhs, _, _) =>
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
+    case Missing => "missing"
+    case Summon(ty) => s"use[${ty.showDbg}]"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 
@@ -282,17 +362,50 @@ final case class DefineVar(sym: LocalSymbol, rhs: Term) extends Statement
 
 /**
  * isMethod: if the term is a method (as opposed to a function)
- * isModTyped: if the term's return type is marked as `module`.
  */
-final case class TermDefFlags(isMethod: Bool, isModTyped: Bool):
+final case class TermDefFlags(isMethod: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if isMethod then flags += "method"
-    if isModTyped then flags += "modTyped"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
-object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false, false) }
+object TermDefFlags { val empty: TermDefFlags = TermDefFlags(false) }
+
+/**
+ * A case class representing the modulefulness of a declaration.
+ *
+ * @param msym if None, the declaration is non-moduful; if Some of
+ * symbol, the declaration is moduleful and the symbol is the symbol of
+ * the module's type
+ */
+final case class Modulefulness(msym: Opt[MemberSymbol[?]])(val modified: Bool):
+  
+  def isModuleful: Bool = msym.isDefined
+  
+  /**
+   * Return Some of the module definition if it is moduleful; None
+   * otherwise.
+   */
+  def mdef: Opt[ModuleDef] = msym match
+    case S(msym) => msym.defn match
+      case S(defn: ModuleDef) => S(defn)
+      case _ => lastWords(s"no module definition for moduleful symbol $msym")
+    case N => N
+
+object Modulefulness:
+  
+  def ofSign(sign: Option[Term])(modified: Bool) = 
+    sign.flatMap(_.symbol) match
+      case S(sym: BlockMemberSymbol) if modified => sym.modTree.collect(_.symbol) match
+        case S(value: MemberSymbol[?]) => 
+          Modulefulness(S(value))(modified)
+        case _ =>
+          Modulefulness(S(sym))(modified)
+      case _ =>
+        Modulefulness(N)(modified)
+  
+  val none = Modulefulness(N)(false)
 
 final case class TermDefinition(
     owner: Opt[InnerSymbol],
@@ -304,6 +417,7 @@ final case class TermDefinition(
     body: Opt[Term],
     resSym: FlowSymbol,
     flags: TermDefFlags,
+    modulefulness: Modulefulness,
     annotations: Ls[Annot],
 ) extends CompanionValue:
   def extraAnnotations: Ls[Annot] = annotations.filter:
@@ -316,6 +430,12 @@ final case class HandlerTermDefinition(
 )
 
 case class ObjBody(blk: Term.Blk):
+  
+  lazy val members: Map[Str, FieldSymbol] = blk.stats.collect:
+    case td: TermDefinition => td.sym.nme -> td.sym
+    case td: ClassLikeDef => td.sym.nme -> td.sym
+    case td: TypeDef => td.sym.nme -> td.sym
+  .toMap
   
   lazy val (methods, nonMethods) = blk.stats.partitionMap:
     case td: TermDefinition if td.k is syntax.Fun => L(td)
@@ -352,6 +472,7 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   val bsym: BlockMemberSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]
+  val auxParams: Ls[ParamList]
   val ext: Opt[New]
   val body: ObjBody
   val annotations: Ls[Annot]
@@ -366,6 +487,7 @@ case class ModuleDef(
   bsym: BlockMemberSymbol,
   tparams: Ls[TyParam], 
   paramsOpt: Opt[ParamList], 
+  auxParams: Ls[ParamList], 
   ext: Opt[New],
   kind: ClsLikeKind,
   body: ObjBody,
@@ -378,6 +500,7 @@ case class PatternDef(
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
     paramsOpt: Opt[ParamList],
+    auxParams: Ls[ParamList],
     body: ObjBody,
     annotations: Ls[Annot],
 ) extends ClassLikeDef:
@@ -391,6 +514,7 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val sym: ClassSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]
+  val auxParams: Ls[ParamList]
   val body: ObjBody
   val companion: Opt[CompanionValue]
   val annotations: Ls[Annot]
@@ -407,16 +531,16 @@ object ClassDef:
       sym: InnerSymbol,
       bsym: BlockMemberSymbol,
       tparams: Ls[TyParam],
-      paramsOpt: Opt[ParamList],
+      params: Ls[ParamList],
       ext: Opt[New],
       body: ObjBody,
       annotations: Ls[Annot],
   ): ClassDef =
-    paramsOpt match
-      case S(params) => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
+    params match
+      case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
-        , tparams, params, ext, body, N, annotations)
-      case N => Plain(owner, kind, sym.asInstanceOf// TODO: improve
+        , tparams, ps, pss, ext, body, N, annotations)
+      case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
         , tparams, ext, body, N, annotations)
   
@@ -430,6 +554,7 @@ object ClassDef:
       bsym: BlockMemberSymbol,
       tparams: Ls[TyParam],
       params: ParamList,
+      auxParams: Ls[ParamList],
       ext: Opt[New],
       body: ObjBody,
       companion: Opt[ModuleDef],
@@ -447,6 +572,7 @@ object ClassDef:
       annotations: Ls[Annot]
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
+    val auxParams: List[ParamList] = Nil
   
 end ClassDef
 
@@ -461,20 +587,19 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, mod: Bool, pat: Bool, value: Bool):
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, pat: Bool, value: Bool):
   def showDbg: Str = 
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
     if genGetter then flags += "gen"
-    if mod then flags += "module"
     if pat then flags += "pattern"
     if value then flags += "val"
     flags.mkString(" ")
   override def toString: String = "‹" + showDbg + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false, false)
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
@@ -485,7 +610,6 @@ sealed abstract class Elem:
   def subTerms: Ls[Term] = this match
     case Fld(_, term, asc) => term :: asc.toList
     case Spd(_, term) => term :: Nil
-    case _: CtxArg => Nil
   def showDbg: Str
 object Elem:
   given Conversion[Term, Elem] = PlainFld(_)
@@ -495,16 +619,6 @@ object PlainFld:
   def unapply(fld: Fld): Opt[Term] = S(fld.term)
 final case class Spd(eager: Bool, term: Term) extends Elem:
   def showDbg: Str = (if eager then "..." else "..") + term.showDbg
-
-/** 
- * Context arguments. 
- * 
- * Placeholders represent nonexistent terms that are *expected*
- * to be populated (resolved) by the implicit resolver later to represent some concrete term.
- */
-abstract class CtxArg extends Elem:
-  def term: Opt[Term]
-  override def toString(): String = s"CtxArg(${term})"
 
 final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   
@@ -521,8 +635,9 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     flags.showDbg + sym
 
 
-final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]) 
+final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness) 
 extends Declaration with AutoLocated:
+  var fldSym: Opt[FieldSymbol] = N
   def subTerms: Ls[Term] = sign.toList
   override protected def children: List[Located] = sym :: sign.toList
   def showDbg: Str = flags.toString + sym + sign.fold("")(": " + _.showDbg)
@@ -535,6 +650,7 @@ extends AutoLocated:
   def paramCountLB: Int = params.length
   def paramCountUB: Bool = restParam.isEmpty
   def paramSyms = params.map(_.sym) ++ restParam.map(_.sym)
+  def allParams = params ++ restParam.toList
   def subTerms: Ls[Term] = params.flatMap(_.subTerms) ++ restParam.toList.flatMap(_.subTerms)
   def showDbg: Str = flags.showDbg + (params :+ restParam.fold("")("..." + _)).mkString("(", ", ", ")")
 object PlainParamList:

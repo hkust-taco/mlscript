@@ -244,7 +244,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       val varSym = VarSymbol(Tree.Ident(nme))
       val fldSym = BlockMemberSymbol(nme, Nil)
       
-      val p = Param(FldFlags.empty.copy(value = true), varSym, None)
+      val p = Param(FldFlags.empty.copy(value = true), varSym, N, Modulefulness.none)
       varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
       
       val vd = ValDefn(
@@ -750,25 +750,25 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         (sym, createSym(sym.nme + "$member"))
 
       val extraParamsCaptures = capturesSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, None)
+        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
       val newCapturePaths = capturesSymbols.map: // mapping from sym to param symbol
           case (d, (_, sym)) => d -> sym.asPath
         .toMap
 
       val extraParamsLocals = localsSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, None)
+        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
       val newLocalsPaths = localsSymbols.map: // mapping from sym to param symbol
           case (d, (_, sym)) => d -> sym
         .toMap
 
       val extraParamsIsyms = isymSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, None)
+        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
       val newIsymPaths = isymSymbols.map: // mapping from sym to param symbol
           case (d, (_, sym)) => d -> sym
         .toMap
 
       val extraParamsBms = bmsSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, None)
+        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
       val newBmsPaths = bmsSymbols.map: // mapping from sym to param symbol
           case (d, (_, sym)) => d -> sym.asPath
         .toMap
@@ -838,7 +838,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             acc = blk => acc(Assign(curSym, call, blk))
           val bod = acc(Return(Call(curSym.asPath, extraSyms.map(_.asPath.asArg))(true, false), false))
 
-          inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N)))
+          inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N, Modulefulness.none)))
 
           val paramPlist = paramSyms.map(toPlist)
           val auxPlist = auxSyms.map(toPlist)

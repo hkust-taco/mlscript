@@ -1,13 +1,12 @@
-package hkmc2.codegen.cpp
+package hkmc2
+package codegen.cpp
 
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
-
-import hkmc2.Message.MessageContext
-import hkmc2.document._
-
 import scala.language.implicitConversions
+
+import document._
 
 private def raw(x: String): Document = doc"$x"
 given Conversion[String, Document] = x => doc"$x"
@@ -130,14 +129,13 @@ enum Expr:
   case Unary(op: Str, expr: Expr)
   case Binary(op: Str, lhs: Expr, rhs: Expr)
   case Initializer(exprs: Ls[Expr])
-  case Constructor(name: Str, init: Expr)
 
   def toDocument: Document =
     def aux(x: Expr): Document = x match
       case Var(name) => name
       case IntLit(value) => value.toString
       case DoubleLit(value) => value.toString
-      case StrLit(value) => s"\"$value\"" // need more reliable escape utils
+      case StrLit(value) => value.escaped
       case CharLit(value) => value.toInt.toString
       case Call(func, args) =>
         doc"${func.toDocument}(${Expr.toDocuments(args, sep = ", ")})"
@@ -151,8 +149,6 @@ enum Expr:
         doc"(${lhs.toDocument} $op ${rhs.toDocument})"
       case Initializer(exprs) => 
         doc"{${Expr.toDocuments(exprs, sep = ", ")}}"
-      case Constructor(name, init) =>
-        doc"$name(${init.toDocument})"
     aux(this)
 
 case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
@@ -161,43 +157,48 @@ case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
   def toDocumentWithoutHidden: Document =
     val hiddenNames: Set[Str] = Set()
     defs.filterNot { 
-      case Def.StructDef(name, _, _, _) => hiddenNames.contains(name.stripPrefix("_mls_"))
+      case Def.StructDef(name, _, _, _, _) => hiddenNames.contains(name.stripPrefix("_mls_"))
       case _ => false
     }.map(_.toDocument).mkDocument(doc" # ")
 
 enum Decl:
   case StructDecl(name: Str)
   case EnumDecl(name: Str)
-  case FuncDecl(ret: Type, name: Str, args: Ls[Type])
+  case FuncDecl(ret: Type, name: Str, args: Ls[Type], isOverride: Bool, isVirtual: Bool)
   case VarDecl(name: Str, typ: Type)
 
   def toDocument: Document =
     def aux(x: Decl): Document = x match
       case StructDecl(name) => doc"struct $name;"
       case EnumDecl(name) => doc"enum $name;"
-      case FuncDecl(ret, name, args) =>
-        doc"${ret.toDocument()} $name(${Type.toDocuments(args, sep = ", ")});"
+      case FuncDecl(ret, name, args, or, virt) =>
+        val docVirt = (if virt then doc"virtual " else doc"")
+        val docSpecRet = ret.toDocument()
+        val docArgs = Type.toDocuments(args, sep = ", ")
+        val docOverride = if or then doc" override" else doc""
+        doc"$docVirt$docSpecRet $name($docArgs)$docOverride;"
       case VarDecl(name, typ) => 
         doc"${typ.toDocument()} $name;"
     aux(this)
 
 enum Def:
-  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def] = Ls.empty)
+  case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def], methodsDecl: Ls[Decl])
   case EnumDef(name: Str, fields: Ls[(Str, Opt[Int])])
-  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, or: Bool = false, virt: Bool = false)
+  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, isOverride: Bool, isVirtual: Bool, in_scope: Opt[Str])
   case VarDef(typ: Type, name: Str, init: Opt[Expr])
   case RawDef(raw: Str)
 
   def toDocument: Document =
     def aux(x: Def): Document = x match
-      case StructDef(name, fields, inherit, defs) =>
+      case StructDef(name, fields, inherit, defs, decls) =>
         val docFirst = doc"struct $name${inherit.fold(doc"")(x => doc": public ${x.mkDocument(doc", ")}")} {"
         val docFields = fields.map {
           case (name, typ) => doc"${typ.toDocument()} $name;"
         }.mkDocument(doc" # ")
         val docDefs = defs.map(_.toDocument).mkDocument(doc" # ")
+        val docDecls = decls.map(_.toDocument).mkDocument(doc" # ")
         val docLast = "};"
-        doc"$docFirst #{  # $docFields # $docDefs #}  # $docLast"
+        doc"$docFirst #{  # $docFields # $docDefs # $docDecls #}  # $docLast"
       case EnumDef(name, fields) =>
         val docFirst = doc"enum $name {"
         val docFields = fields.map {
@@ -205,13 +206,14 @@ enum Def:
         }.mkDocument(doc" # ")
         val docLast = "};"
         doc"$docFirst #{  # $docFields #}  # $docLast"
-      case FuncDef(specret, name, args, body, or, virt) =>
+      case FuncDef(specret, name, args, body, or, virt, scope) =>
         val docVirt = (if virt then doc"virtual " else doc"")
         val docSpecRet = specret.toDocument()
         val docArgs = Type.toDocuments(args, sep = ", ")
         val docOverride = if or then doc" override" else doc""
         val docBody = body.toDocument
-        doc"$docVirt$docSpecRet $name($docArgs)$docOverride ${body.toDocument}"
+        val docScope = scope.fold(doc"")(x => doc"$x::")
+        doc"$docVirt$docSpecRet $docScope$name($docArgs)$docOverride ${body.toDocument}"
       case VarDef(typ, name, init) =>
         val docTyp = typ.toDocument()
         val docInit = init.fold(raw(""))(x => doc" = ${x.toDocument}")

@@ -8,7 +8,7 @@
 //│ ╔══[ERROR] Type error in application
 //│ ║  l.7: 	2(2)
 //│ ║       	^^^^
-//│ ╙── because: cannot constrain  Int  <:  Int ->{'eff} 'app
+//│ ╙── because: cannot constrain  Int  <:  (Int) ->{'eff} ('app)
 //│ Type: ⊥
 
 (x => x(0))(1)
@@ -17,7 +17,7 @@
 //│ ║        	            ^
 //│ ╟── because: cannot constrain  Int  <:  'x
 //│ ╟── because: cannot constrain  Int  <:  'x
-//│ ╙── because: cannot constrain  Int  <:  ¬(¬{Int ->{'eff} 'app})
+//│ ╙── because: cannot constrain  Int  <:  (Int) ->{'eff} ('app)
 //│ Type: ⊥
 
 (1).Foo#a()
@@ -60,7 +60,7 @@ inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
-//│ ╙── because: cannot constrain  Str  <:  ¬¬Int
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 fun inc(x) = x + 1
@@ -68,7 +68,7 @@ inc as Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.67: 	inc as Int
 //│ ║        	^^^
-//│ ╙── because: cannot constrain  'x -> Int  <:  Int
+//│ ╙── because: cannot constrain  ('x) ->{⊥} (Int)  <:  Int
 //│ Type: Int
 
 

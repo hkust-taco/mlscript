@@ -66,7 +66,7 @@ data class Lol(h) with
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$ctor$Lol$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│       toString() { return "Cont$ctor$Lol$(" + runtime.render(this.pc) + ")"; }
 //│     };
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
@@ -83,7 +83,7 @@ data class Lol(h) with
 //│     }
 //│     res
 //│   }
-//│   toString() { return "Lol(" + globalThis.Predef.render(this.h) + ")"; }
+//│   toString() { return "Lol(" + runtime.render(this.h) + ")"; }
 //│ };
 
 

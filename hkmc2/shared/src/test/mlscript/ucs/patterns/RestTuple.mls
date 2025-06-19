@@ -1,17 +1,5 @@
 :js
 
-// Drop the first and last elements.
-tupleSlice([1, 2, 3, 4], 1, -1)
-//│ = [2, 3, 4]
-
-// Get the first element.
-tupleGet([1, 2, 3, 4], 0)
-//│ = 1
-
-// Get the last element.
-tupleGet([1, 2, 3, 4], -1)
-//│ = 4
-
 :sjs
 fun nonsense(xs) = if xs is
   [..ys] then ys
@@ -21,7 +9,7 @@ fun nonsense(xs) = if xs is
 //│ nonsense = function nonsense(xs) {
 //│   let rest, ys;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
-//│     rest = runtime.safeCall(globalThis.Predef.tupleSlice(xs, 0, 0));
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
 //│     ys = rest;
 //│     return ys
 //│   } else {
@@ -45,8 +33,8 @@ fun lead_and_last(xs) = if xs is
 //│   let last0, rest, first0, x, ys, y;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = runtime.safeCall(globalThis.Predef.tupleSlice(xs, 1, 1));
-//│     last0 = globalThis.Predef.tupleGet(xs, -1);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
@@ -78,11 +66,11 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ JS (unsanitized):
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let last0, rest, first0, x, first1, first01, y, z, w, tmp2, tmp3;
+//│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
 //│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
 //│     first0 = xs[0];
-//│     rest = runtime.safeCall(globalThis.Predef.tupleSlice(xs, 1, 1));
-//│     last0 = globalThis.Predef.tupleGet(xs, -1);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
 //│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
 //│       first01 = rest[0];
@@ -90,9 +78,9 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       y = first01;
 //│       z = first1;
 //│       w = last0;
-//│       tmp2 = x + y;
-//│       tmp3 = tmp2 + z;
-//│       return tmp3 + w
+//│       tmp = x + y;
+//│       tmp1 = tmp + z;
+//│       return tmp1 + w
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }

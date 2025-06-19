@@ -26,12 +26,12 @@ let r = region x in x.ref 42
 //│ ║  l.22: 	!r
 //│ ║        	^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Int
 
 fun mkRef() = region x in x.ref 42
@@ -46,19 +46,19 @@ let t = region x in x in t.ref 42
 //│ ╟── because: cannot constrain  Region[in 'x out 'x1]  <:  Region['reg]
 //│ ╟── because: cannot constrain  'x1  <:  'reg
 //│ ╟── because: cannot constrain  'x1  <:  'reg
-//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
-//│ ╟── because: cannot constrain  'x1  <:  ¬(¬'x)
-//│ ╟── because: cannot constrain    <:  ¬(¬'x)
-//│ ╟── because: cannot constrain    <:  'x
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'x1  <:  'x
+//│ ╟── because: cannot constrain  'x1  <:  'x
+//│ ╟── because: cannot constrain  ⊤  <:  'x
+//│ ╟── because: cannot constrain  ⊤  <:  'x
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'x1  <:  ¬()
-//│ ╟── because: cannot constrain  'x1  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'x1  <:  ⊥
+//│ ╟── because: cannot constrain  'x1  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Ref[Int, ?]
 
 
@@ -76,12 +76,12 @@ in t := 0
 //│ ║  l.72: 	in t := 0
 //│ ║        	^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Int
 
 
@@ -99,12 +99,12 @@ in !t
 //│ ║  l.95: 	in !t
 //│ ║        	^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  'reg1  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'reg1  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Int
 
 region x in
@@ -129,8 +129,8 @@ region x in
 //│ ║  l.127: 	  (let dz = x.ref 42 in 42) as [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╙── because: cannot constrain  x  <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╙── because: cannot constrain  x  <:  ⊥
 //│ Type: Int
 
 
@@ -145,10 +145,10 @@ in t(42)
 //│ ║  l.141: 	in t(42)
 //│ ║         	^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
-//│ ╟── because: cannot constrain  'reg  <:  ¬()
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'x  <:  ¬()
-//│ ╟── because: cannot constrain  'x  <:  ¬()
-//│ ╙── because: cannot constrain    <:  ¬()
+//│ ╟── because: cannot constrain  'reg  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╟── because: cannot constrain  'x  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: Ref[in 'y out 'y ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A} Int

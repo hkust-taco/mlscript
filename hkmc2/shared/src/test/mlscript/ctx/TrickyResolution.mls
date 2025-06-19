@@ -1,0 +1,29 @@
+:js
+
+
+class Foo[A]
+class Bar[B]
+
+
+fun foo[A](using Foo[A], Bar[A])
+
+
+fun foo[A](using f: Foo[A], b: Bar[A]): A
+
+using Foo[Str] = new Foo
+using Foo[Int] = new Foo
+
+using Bar[Int] = new Bar
+using Bar[Str] = new Bar
+
+
+// * Probably picks A = Int due to the Foo constraint, picking up the latest-defined Foo instance,
+// * and thus picks the Bar[Int] instance
+:fixme
+foo
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'foo'
+//│ ║  l.11: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
+
+

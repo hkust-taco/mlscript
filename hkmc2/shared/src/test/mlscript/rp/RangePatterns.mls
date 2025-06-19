@@ -49,7 +49,7 @@ pattern UnsignedShort = 0 ..< 65536
 :e
 // Don't forget to add a space between numbers and the range operator.
 pattern UnsignedByte = 0..< 256
-//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^
 //│ ╔══[ERROR] Name not found: .<
@@ -58,17 +58,14 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
-//│ ╔══[ERROR] Name not found: .<
+//│ ╔══[ERROR] Unrecognized pattern (operator application)
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
+//│ ╙──      	                       ^^^^^^^^
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.69: 	pattern BadRange = "s"..=0
+//│ ║  l.66: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -78,14 +75,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.79: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.76: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.85: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.85: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^

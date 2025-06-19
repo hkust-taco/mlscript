@@ -44,14 +44,14 @@ fun mapi = s => f =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
-//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
-//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
+//│ ╟── because: cannot constrain  'r  <:  E ∨ outer
+//│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -61,14 +61,14 @@ fun mapi = s => f =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
-//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
-//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
+//│ ╟── because: cannot constrain  'r  <:  E ∨ outer
+//│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
@@ -78,14 +78,14 @@ fun mapi = s => f =>
 //│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.37: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  Seq[out 'B, out 'E1]  <:  Seq[out A, out E]
+//│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
-//│ ╟── because: cannot constrain  'E1  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  ¬⊥ ∧ 'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'reg  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  (¬⊥ ∧ 'r) ∧ ¬outer  <:  ¬(¬E)
-//│ ╟── because: cannot constrain  'r  <:  ¬(¬E ∧ ¬outer)
-//│ ╙── because: cannot constrain  ¬outer  <:  ¬(¬E ∧ ¬outer)
+//│ ╟── because: cannot constrain  'E1  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'reg  <:  E
+//│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
+//│ ╟── because: cannot constrain  'r  <:  E ∨ outer
+//│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
 //│ Type: ⊤
 
 // * Notice the inferred type, which produces an unusable Sequence (of effect `?` ie `Any`)
@@ -136,11 +136,30 @@ fun head: [A, E] -> Seq[out A, out E] ->{E} A
 region r in
   let sum = r.ref 0
   let s1 = mkSeq of () =>
-    sum := !sum + 1
+    sum := !sum + 1,
     !sum
   let s2 = mapi(s1, r) of (x, i) => x * i
   !sum + head(s2)
 //│ Type: Int
 
+
+fun r: Ref[Int, Nothing]
+//│ Type: ⊤
+
+r := 1
+!r
+//│ Type: Int
+
+:e
+r := 1
+! r // because of the space, this is a NL-op
+//│ ╔══[ERROR] Variable not found: !
+//│ ║  l.155: 	! r // because of the space, this is a NL-op
+//│ ╙──       	^
+//│ Type: ⊥
+
+r := 1, // `,` to avoid parsing `! r` on next line as continuation of expression
+! r
+//│ Type: Int
 
 

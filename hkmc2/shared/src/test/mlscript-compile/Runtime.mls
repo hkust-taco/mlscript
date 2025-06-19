@@ -9,6 +9,21 @@ object Unit with
   fun toString() = "()"
 
 
+fun unreachable = throw Error("unreachable")
+
+fun checkArgs(functionName, expected, isUB, got) =
+  if got < expected || isUB && got > expected do
+    let name = if functionName.length > 0 then " '" + functionName + "'" else ""
+    // throw globalThis.Error("Function" + name + " expected "
+    //   + (if isUB then "" else "at least ")
+    //   + expected
+    //   + " argument(s) but got " + got)
+    throw Error of "Function" + name + " expected "
+      + (if isUB then "" else "at least " )
+      + expected + " argument"
+      + (if expected === 1 then "" else "s")
+      + " but got " + got
+
 fun safeCall(x) =
   if x is undefined then Unit else x
 
@@ -29,7 +44,7 @@ class EffectHandle(_reified) with
   fun resumeWith(value) =
     Runtime.try(() => resume(reified.contTrace)(value))
   fun raise() =
-    topLevelEffect(reified)
+    topLevelEffect(reified, false)
 
 fun try(f) =
   let res = f()
@@ -40,6 +55,53 @@ fun try(f) =
 data class MatchResult(captures)
 data class MatchFailure(errors)
 
+// For pattern matching on tuples
+module Tuple with
+  fun slice(xs, i, j) =
+    // * This is more robust than `xs.slice(i, xs.length - j)`
+    // * as it is not affected by users redefining `slice`
+    globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+
+  fun get(xs, i) =
+    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
+    if i >= xs.length then
+      throw RangeError("Tuple.get: index out of bounds")
+    else globalThis.Array.prototype.at.call(xs, i)
+
+module Str with
+  fun startsWith(string, prefix) = string.startsWith(prefix)
+
+  fun get(string, i) =
+    if i >= string.length then
+      throw RangeError("Str.get: index out of bounds")
+    else string.at(i)
+
+  fun drop(string, n) = string.slice(n)
+
+// Re-export rendering functions
+val render = Rendering.render
+
+fun printRaw(x) = console.log(render(x))
+
+// TraceLogger
+
+module TraceLogger with
+  mut val enabled = false
+  mut val indentLvl = 0
+  fun indent() =
+    if enabled then
+      let prev = indentLvl
+      set indentLvl = prev + 1
+      prev
+    else ()
+  fun resetIndent(n) =
+    if enabled then
+      set indentLvl = n
+    else ()
+  fun log(msg) =
+    if enabled then
+      console.log("| ".repeat(indentLvl) + msg.replaceAll("\n", "\n" + "  ".repeat(indentLvl)))
+    else ()
 
 // Private definitions for algebraic effects
 

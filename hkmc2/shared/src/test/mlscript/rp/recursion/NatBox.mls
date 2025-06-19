@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 data class Box[A](val value: A)
 
 pattern NatBox = null | Box(NatBox)

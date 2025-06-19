@@ -23,7 +23,7 @@ abstract class Symbol(using State) extends Located:
   def ref(id: Tree.Ident =
     Tree.Ident("") // FIXME hack
   ): Term.Ref =
-    val res = new Term.Ref(this)(id, directRefs.size)
+    val res = new Term.Ref(this)(id, directRefs.size, N)
     directRefs += res
     res
   def refsNumber: Int = directRefs.size
@@ -40,6 +40,7 @@ abstract class Symbol(using State) extends Located:
     case _ => N
   def asMod: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Mod)
   def asObj: Opt[ModuleSymbol] = asModOrObj.filter(_.tree.k is Obj)
+  def asClsOrMod: Opt[ClassSymbol | ModuleSymbol] = asCls orElse asModOrObj
   /* 
   def asTrm: Opt[TermSymbol] = this match
     case trm: TermSymbol => S(trm)
@@ -213,8 +214,22 @@ type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
 
 type FieldSymbol = MemberSymbol[?]
 
+/**
+  * ErrorSymbol is a placeholder symbol denoting error (during symbol
+  * resolution in the elaborator / resolver). This helps prevent the
+  * same error from throwing multiple times.
+  */
+case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymbol[Nothing]:
+
+  override def toLoc: Option[Loc] = tree.toLoc
+
+  override def subst(using sub: SymbolSubst): MemberSymbol[Nothing] = sub.mapErrorSym(this)
+
+  override def toString = s"error:$nme"
+
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>
+  val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
 

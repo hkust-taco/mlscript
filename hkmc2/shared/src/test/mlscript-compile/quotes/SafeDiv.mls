@@ -1,0 +1,8 @@
+
+module SafeDiv with ...
+fun res =
+  (x_0, y_0, d_0) =>
+    if 
+      let scrut_0 = (==)(y_0, 0)
+      scrut_0 is true then d_0
+      else (/)(x_0, y_0)

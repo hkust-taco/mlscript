@@ -57,7 +57,7 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$hi$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
 //│   };
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
@@ -144,7 +144,7 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$func$sum$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
 //│   };
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();

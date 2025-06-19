@@ -1,0 +1,28 @@
+import "./Token.mls"
+import "../../Stack.mls"
+import "../../Predef.mls"
+
+open Stack
+open Predef { mkStr }
+
+type StackT[A] = Stack.Cons[A] | Stack.Nil
+
+module TokenHelpers with ...
+
+fun display(tokens: StackT[Token.Token], limit: Int): Str =
+  let
+    i = 0
+    values = []
+  while i < limit and tokens is head :: tail do
+    values.push of head Token.summary()
+    set
+      tokens = tail
+      i += 1
+  mkStr of
+    "┃"
+    values.join("│"),
+    if tokens is _ :: _ then "│⋯" else "┃"
+    
+fun panorama(tokens) = display(tokens, Number.MAX_SAFE_INTEGER)
+
+fun preview(tokens) = display(tokens, 5)

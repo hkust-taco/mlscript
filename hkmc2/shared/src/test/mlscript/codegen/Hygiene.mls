@@ -125,7 +125,7 @@ data class Cls(x) with
 //│   get bar() {
 //│     return this.#x1;
 //│   }
-//│   toString() { return "Cls(" + globalThis.Predef.render(this.x) + ")"; }
+//│   toString() { return "Cls(" + runtime.render(this.x) + ")"; }
 //│ };
 
 let cls = Cls(10)

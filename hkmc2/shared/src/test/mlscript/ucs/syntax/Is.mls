@@ -7,18 +7,10 @@ x
 //│ 	InfixApp(Ident(x),keyword 'is',Ident(A))
 
 
-:pe
 x
   is A
   is B
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.13: 	  is B
-//│ ╙──      	  ^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.13: 	  is B
-//│ ╙──      	     ^
 //│ Parsed:
-//│ 	InfixApp(Ident(x),keyword 'is',Ident(A))
-//│ 	Error()
+//│ 	OpSplit(Ident(x),List(InfixApp(SplitPoint(),keyword 'is',Ident(A)), InfixApp(SplitPoint(),keyword 'is',Ident(B))))
 
 

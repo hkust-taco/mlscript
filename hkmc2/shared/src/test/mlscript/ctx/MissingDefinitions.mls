@@ -1,0 +1,30 @@
+
+
+fun f: Any -> Any
+
+:e
+g(5)
+//│ ╔══[ERROR] Name not found: g
+//│ ║  l.6: 	g(5)
+//│ ╙──     	^
+
+:js
+:ge
+:re
+f(1)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'f'
+//│ ║  l.3: 	fun f: Any -> Any
+//│ ╙──     	    ^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: f is not defined
+
+// no errors if we don't generate code
+f(1)
+
+fun g(x) = f(x)
+
+:js
+:ge
+fun g(x) = f(x)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'f'
+//│ ║  l.3: 	fun f: Any -> Any
+//│ ╙──     	    ^^^^^^^^^^^^^

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link href="
+https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css
+" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/typeface-inconsolata@1.1.13/index.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <div id="input">
+      <header class="toolbar">
+        <button class="button" id="parse">Parse</button>
+        <select class="select" id="example"></select>
+      </header>
+      <textarea id="editor" spellcheck="false" autocapitalize="off"></textarea>
+    </div>
+    <div id="output"></div>
+  </div>
+  <div id="syntax-diagrams">
+    <h2>Syntax Diagrams</h2>
+    <main></main>
+  </div>
+  <script type="module" src="./main.mjs"></script>
+  <style>
+    :root {
+      --monospace: Inconsolata, Menlo, Consolas, 'Courier New', Courier, monospace;
+    }
+
+    body {
+      font-size: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    h3 {
+      margin: 0;
+    }
+
+    #app {
+      width: 100vw;
+      height: calc(100vh - 4rem);
+      display: flex;
+      flex-direction: row;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    #syntax-diagrams {
+      box-sizing: border-box;
+      padding: 1rem;
+      border-top: 1px solid #000;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    #syntax-diagrams main {
+      padding: 1rem;
+      /* min-height: 0;
+      flex: 1; */
+      /* overflow: auto; */
+      border: 1px solid #000;
+    }
+
+    #input,
+    #output {
+      flex: 1;
+      border: 1px solid #000;
+    }
+
+    #input {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #input .toolbar {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: #f0f0f0;
+      border-bottom: 1px solid #000;
+    }
+
+    #output {
+      overflow: auto;
+      padding: 0.5rem;
+    }
+
+    #editor {
+      padding: 0.5rem;
+      width: 100%;
+      height: 100%;
+      resize: none;
+      border: none;
+      font-family: var(--monospace);
+    }
+
+    #editor:focus {
+      outline: none;
+    }
+    
+    .select {
+      line-height: 1.5;
+      background: #ffffff;
+      border: 1px solid #000;
+      box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
+    }
+    
+    .select:focus {
+      outline: none;
+      box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px, 0 0 0 .1rem rgba(52, 130, 255, 0.84);
+    }
+
+    .button {
+      line-height: 1.5;
+      background: rgb(153, 197, 255);
+      border: 1px solid #000;
+      box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px;
+    }
+
+    .button:focus {
+      box-shadow: rgb(187, 187, 187) 2px 2px 0px 0px, 0 0 0 .1rem rgba(0, 0, 0, .2);
+    }
+
+    collapsible-tree {
+      font-family: var(--monospace);
+    }
+
+    details {
+      margin-left: 1em;
+      cursor: pointer;
+    }
+
+    summary {
+      outline: none;
+      list-style: none;
+    }
+
+    details>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details:not([open]):not([leaf])>summary::after {
+      content: " ...";
+    }
+
+    collapsible-tree details {
+      position: relative;
+    }
+
+    collapsible-tree details>.rule {
+      position: absolute;
+      top: 1rem;
+      left: 1px;
+      bottom: 0;
+      border-left: 1px dashed rgba(0, 0, 0, .2);
+    }
+
+    collapsible-tree>details {
+      margin-left: 0;
+    }
+
+    figcaption {
+      font-style: italic;
+      font-weight: 600
+    }
+
+    figure:target figcaption {
+      color: #007bff
+    }
+
+    figure:target figcaption::before {
+      font-style: normal;
+      content: '⯈ '
+    }
+
+    figure:target figcaption::after {
+      font-style: normal;
+      content: ' ⯇'
+    }
+
+    svg.railroad-diagram {
+      /* background-color: hsl(30,20%,95%); */
+      background: transparent;
+    }
+
+    svg.railroad-diagram path {
+      stroke-width: 2;
+      stroke: rgba(1, 1, 1, 0.80);
+      fill: transparent;
+    }
+
+    svg.railroad-diagram text {
+      text-anchor: middle;
+      white-space: pre;
+    }
+
+    svg.railroad-diagram text.diagram-text {
+      font-size: 12px;
+    }
+
+    svg.railroad-diagram text.diagram-arrow {
+      font-size: 16px;
+    }
+
+    svg.railroad-diagram text.label {
+      text-anchor: start;
+    }
+
+    svg.railroad-diagram text.comment {
+      font: italic 12px monospace;
+    }
+
+    svg.railroad-diagram g.non-terminal text {
+      font-style: -apple-system, system-ui, sans-serif;
+      font-weight: 600;
+      font-style: italic;
+    }
+
+    svg.railroad-diagram g.terminal text {
+      font-family: Inconsolata, monospace;
+    }
+
+    svg.railroad-diagram rect {
+      stroke-width: 1.5;
+      stroke: black;
+      fill: #ffffff;
+    }
+
+    svg.railroad-diagram rect.group-box {
+      stroke: gray;
+      stroke-dasharray: 10 5;
+      fill: none;
+    }
+
+    svg.railroad-diagram path.diagram-text {
+      stroke-width: 1.5;
+      stroke: black;
+      fill: white;
+      cursor: help;
+    }
+
+    svg.railroad-diagram g.diagram-text:hover path.diagram-text {
+      fill: #eee;
+    }
+  </style>
+</body>
+
+</html>

@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 data class Pair[A, B](a: A, b: B)
 
 data class Box[A](value: A)
@@ -12,7 +14,12 @@ data class Triplet[A, B, C](a: A, b: B, c: C)
 
 pattern Everything = _
 
+:expect true
 0 is @compile Everything
+//│ = true
+
+:expect true
+null is @compile Everything
 //│ = true
 
 pattern A = Box | Box
@@ -134,10 +141,10 @@ fun (::) cons(head, tail) = Pair(head, tail)
 :todo
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.135: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                              ^
 
 null is @compile List

@@ -1,0 +1,55 @@
+import "../../MutMap.mls"
+import "../../Predef.mls"
+
+open Predef
+module Examples with...
+
+val examples = MutMap.empty
+
+examples |> MutMap.insert of
+  "hanoi"
+  name: "Hanoi from Caml Light"
+  source: """let spaces n = make_string n " ";;
+let disk size =
+    let right_half = make_string size ">"
+    and left_half = make_string size "<"
+    in left_half ^ "|" ^ right_half;;
+let disk_number n largest_disk_size =
+    let white_part = spaces (largest_disk_size + 1 - n) in
+    white_part ^ (disk n) ^ white_part;;
+let peg_base largest_disk_size =
+    let half = make_string largest_disk_size "_" in
+    " " ^ half ^ "|" ^ half ^ " ";;
+let rec peg largest_disk_size = function
+  | (0, []) -> []
+  | (0, head::rest) ->
+      disk_number head largest_disk_size ::
+      peg largest_disk_size (0, rest)
+  | (offset, lst) ->
+      disk_number 0 largest_disk_size ::
+      peg largest_disk_size (offset-1, lst);;
+let rec join_lines l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> []
+  | (t1::r1, t2::r2, t3::r3) -> (t1 ^ t2 ^ t3) :: join_lines r1 r2 r3
+  | _ -> failwith "join_lines";;
+"""
+
+examples |> MutMap.insert of
+  "extensible"
+  name: "Extensible Syntax"
+  source: """#newKeyword ("hello", Some 3, Some 3)
+#newKeyword ("goodbye", None, None)
+  
+#newCategory("greeting")
+  
+#extendCategory("greeting", [ keyword("hello"), "term", "greeting" ], foo)
+#extendCategory("greeting", [ keyword("goodbye") ], bar)
+  
+#extendCategory("decl", [ "greeting" ], baz)
+  
+  
+hello "Rob" hello "Bob" goodbye
+  
+#diagram ""
+"""

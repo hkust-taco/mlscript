@@ -1,0 +1,11 @@
+:js
+:llir
+:cpp
+
+object None
+fun testCtor1() = None
+fun testCtor2() = new None
+
+class A(x)
+fun testCtor1() = A(1)
+fun testCtor2() = new A(1)

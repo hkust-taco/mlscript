@@ -1,0 +1,42 @@
+import "../../Str.mls"
+import "../../Option.mls"
+import "../../Predef.mls"
+
+open Str { parenthesizedIf }
+open Option { Some, None }
+
+type OptionT[A] = Some[A] | None
+
+module Expr with
+  val opPrec = case
+    "**" then [70, 69]
+    "*" then [50, 50]
+    "/" then [50, 50]
+    "+" then [30, 30]
+    "-" then [30, 30]
+
+  type Expr = Lit | Var | Inf | Err
+  
+  data
+    class
+      Lit(value: Int)
+      Var(name: Str)
+      Inf(op: Str, left: Expr, right: Expr)
+      Err(expr: OptionT[Expr], msg: Str)
+  
+  fun withErr(expr, msg) = Err(Some(expr), msg)
+  fun justErr(msg) = Err(None, msg)
+  
+  fun prettyPrint(tree: Expr): Str = if tree is
+    Lit(value) then value.toString()
+    Var(name) then name
+    Inf(op, left, right) then if opPrec(op) is [l, r] then Str.concat of
+      left prettyPrint() parenthesizedIf of 
+        left is Inf(op', _, _) and opPrec(op') is [_, r'] and r' < l
+      " "
+      op
+      " "
+      right prettyPrint() parenthesizedIf of
+        right is Inf(op', _, _) and opPrec(op') is [l', _] and r > l'
+    Err(Some(expr), msg) then "{ " + expr prettyPrint() + " | " + JSON.stringify(msg) + " }"
+    Err(None, msg) then "{ " + JSON.stringify(msg) + " }"

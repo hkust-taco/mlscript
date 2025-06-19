@@ -8,14 +8,16 @@ open Predef
 
 module Option with ...
 
-data class Some(value)
+// See https://github.com/hkust-taco/mlscript/pull/295#discussion_r2029692230
+// TODO support type/module overloading
+type T[A]
+
+data class Some[T](value)
 object None
 
 fun isDefined(x) = if x is
   Some then true
   None then false
-
-fun test() = 2134 |> print
 
 data class Both(fst, snd)
 
@@ -23,6 +25,10 @@ data class Both(fst, snd)
 fun getOrElse(opt, default) = if opt is
   Some(value) then value
   None then default
+
+fun flatMap(opt, f) = if opt is
+  Some(value) then f(value)
+  None then None
 
 module unsafe with
   fun get(opt) = if opt is
