@@ -2,7 +2,7 @@ package hkmc2
 package typing.supremef
 
 import scala.language.strictEquality
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{LinkedHashMap => MutMap, LinkedHashSet => MutSet}
 
 import mlscript.utils.GenHelper
 import mlscript.utils.shorthands.*
@@ -62,8 +62,8 @@ sealed trait Type:
     this match
       case al: TypeVar => ctx.lookupTypeVar(al)
       case QuantType.Base(ty) => ty.showAsTypeImpl(prec)
-      case QuantType.Forall(al, ty) => 
-        doc"∀${al.show}. ${ty.showAsTypeImpl(ForallPrec)}"
+      case QuantType.Forall(al, m, ty) => 
+        doc"∀^m${m.uid} ${al.show}. ${ty.showAsTypeImpl(ForallPrec)}"
           |> parens(ForallPrec)
       case QuantType.Constr(c, ty) => 
         val cons = doc"${c.show}" |> parens(ConstrPrec)
@@ -95,7 +95,7 @@ sealed trait Type:
     this match
       case al: TypeVar => ctx.lookupTypeVar(al)
       case QuantType.Base(ty) => ty.showAsTermImpl(prec)
-      case QuantType.Forall(_, ty) => ty.showAsTermImpl(prec)
+      case QuantType.Forall(_, _, ty) => ty.showAsTermImpl(prec)
       // find the outermost non-constr sigma
       case QuantType.Constr(c, ty) =>
         val (cons, sigma) = getOutermostNonConstr(ty)
@@ -112,7 +112,9 @@ sealed trait Type:
       case _ => "???"
 
 // m
-class Mark(val uid: Int) derives CanEqual
+class Mark(val uid: Int) extends Ordered[Mark] derives CanEqual:
+  override def compare(that: Mark): Int = uid - that.uid
+
 // c
 class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
   derives CanEqual:
@@ -158,25 +160,25 @@ class TypeVar(val prefix: String, val uid: Int) extends Type:
 // σ
 enum QuantType extends Type derives CanEqual:
   case Base(ty: PosType)
-  case Forall(al: TypeVar, ty: QuantType)
+  case Forall(al: TypeVar, mrk: Mark, ty: QuantType)
   case Constr(c: Constraint, ty: QuantType)
 
   def canonicalize(using ctx: CanonicalizeCtx): QuantType = this match
     case Base(ty) => Base(ty.canonicalize)
     case Constr(c, ty) => Constr(c.canonicalize, ty.canonicalize)
-    case Forall(al, ty) =>
+    case Forall(al, m, ty) =>
       ctx.counter += 1
       ctx.mapping.addOne((al.uid, -ctx.counter))
-      Forall(al.canonicalize, ty.canonicalize)
+      Forall(al.canonicalize, m, ty.canonicalize)
 
   def refresh(using ctx: InferenceCtx, mapping: Map[Int, TypeVar])
     : QuantType = this match
     case Base(ty) => Base(ty.refresh)
     case Constr(c, ty) => Constr(c.refresh, ty.refresh)
-    case Forall(al, ty) =>
+    case Forall(al, m, ty) =>
       given mapping1: Map[Int, TypeVar] =
         mapping + (al.uid -> ctx.getFreshTv(al.prefix))
-      Forall(mapping1(al.uid), ty.refresh)
+      Forall(mapping1(al.uid), m, ty.refresh)
 
 // τ^+
 enum PosType extends Type derives CanEqual:
@@ -214,7 +216,7 @@ enum NegType extends Type derives CanEqual:
 object QuantType:
   def fromVar(al: TypeVar) = QuantType.Base(PosType.Var(al))
 
-type CtxElem = TypeVar | Constraint
+type CtxElem = (TypeVar, Mark) | Constraint
 
 class Typer(using Raise):
   def checkWellFormed(term: CoreTerm) = checkWellFormedImpl(term)(using Set())
@@ -278,7 +280,7 @@ class Typer(using Raise):
     quantify(pair._2, pair._1)
   def quantify(constraints: List[CtxElem], ty: PosType)
     : QuantType = constraints match
-    case (al: TypeVar) :: cons => QuantType.Forall(al, quantify(cons, ty))
+    case (al: TypeVar, m) :: cons => QuantType.Forall(al, m, quantify(cons, ty))
     case (c: Constraint) :: cons => QuantType.Constr(c, quantify(cons, ty))
     case _ => QuantType.Base(ty)
 
@@ -290,40 +292,75 @@ class Typer(using Raise):
     case CoreTerm.Lam(x, body) =>
       val al = ctx.getFreshTv(x)
       (PosType.Lam(al, wrap(inferType(body)(using ctx.scoped(Map(x-> al)))))
-        , al :: Nil)
+        , (al, ctx.getFreshMrk) :: Nil)
     case CoreTerm.App(t1, t2) =>
       val al = ctx.getFreshTv("α")
       val (typos1, cctx) = inferType(t1)
       val lhs = QuantType.Base(typos1)
       val rhs = NegType.App(wrap(inferType(t2)), al)
-      (PosType.Var(al), cctx ++ (al :: (Constraint(lhs, rhs, Nil)) :: Nil))
+      (PosType.Var(al), cctx ++ ((al, ctx.getFreshMrk) :: (Constraint(lhs, rhs, Nil)) :: Nil))
     case CoreTerm.Let(bindings, body) =>
       val vars = Set.from(bindings.map(_._1))
-      val mapping = Map.from(vars.map(name => (name, ctx.getFreshTv(name))))
+      val mapping = Map.from(vars.iterator.map(name => (name, ctx.getFreshTv(name))))
       given InferenceCtx = ctx.scoped(mapping)
       val constraints = bindings.map((x, t) =>
         Constraint(wrap(inferType(t)), NegType.Var(mapping(x)), Nil))
       val (ty, dctx) = inferType(body)
-      (ty, List.from(mapping.map(_._2)) ++ constraints ++ dctx)
+      (ty, List.from(mapping.map(_._2).map((_, ctx.getFreshMrk))) ++ constraints ++ dctx)
 
 
-class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
+def unify(ty1: Type, ty2: Type)
+  (using bv: Set[TypeVar], naming: NamingCtx, rai: Raise): List[Constraint] =
+  (ty1, ty2) match
+  case (al: TypeVar, be: TypeVar) =>
+    if al.uid == be.uid then List.empty
+    val alBounded = bv.contains(al)
+    val beBounded = bv.contains(be)
+    // the forall type should be the same?
+    if alBounded && beBounded then List.empty
+    // should not happen
+    if alBounded || beBounded then
+      raise(ErrorReport(msg"attempt to unify bounded tvs" -> None::Nil))
+      List.empty
+    Constraint(QuantType.fromVar(al), NegType.Var(be), Nil) :: 
+      Constraint(QuantType.fromVar(be), NegType.Var(al), Nil) :: Nil
+  case (QuantType.Base(a), QuantType.Base(b)) => unify(a, b)
+  case (QuantType.Forall(a, _, s1), QuantType.Forall(b, _, s2)) =>
+    unify(s1, s2)(using bv + a + b)
+  case (QuantType.Constr(c1, s1), QuantType.Constr(c2, s2)) =>
+    unifyConstr(c1, c2) ++ unify(s1, s2)
+  case (PosType.Unit(), PosType.Unit()) => List.empty
+  case (PosType.Var(al), PosType.Var(be)) => unify(al, be)
+  case (PosType.Lam(al, s1), PosType.Lam(be, s2)) => unify(al, be) ++ unify(s1, s2)
+  case (PosType.Mrked(al, _), PosType.Mrked(be, _)) => unify(al, be)
+  case (NegType.Var(al), NegType.Var(be)) => unify(al, be)
+  case (NegType.App(s1, al), NegType.App(s2, be)) => unify(s1, s2) ++ unify(al, be)
+  case _ =>
+    val a = ty1.showAsType.toString
+    val b = ty2.showAsType.toString
+    raise(ErrorReport(msg"attempt to unify ${a} with ${b}" -> None::Nil))
+    List.empty
+
+def unifyConstr(c1: Constraint, c2: Constraint)
+  (using bv: Set[TypeVar], naming: NamingCtx, rai: Raise): List[Constraint] =
+  unify(c1.lb, c2.lb) ++ unify(c1.ub, c2.ub)
+
+class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingCtx, ctx: InferenceCtx):
   var upperBounds = MutMap.empty[TypeVar, MutSet[NegType]]
   var lowerBounds = MutMap.empty[TypeVar, MutSet[QuantType]]
   // note: resolved is stored in reversed order
   type ResolvedElem = CtxElem | (List[Mark], TypeVar, QuantType)
   var resolved = List.empty[ResolvedElem]
-  var quantCache = MutMap.empty[(Set[Mark], TypeVar), QuantType]
-  // var quantCache = MutMap.empty[(Set[Mark], QuantType), QuantType]
+  var quantCache = MutMap.empty[Set[Mark], QuantType]
 
   def showFront(using NamingCtx) = unresolved match
-    case (al: TypeVar) :: _ => al.show
+    case (al: TypeVar, _) :: _ => al.show
     case (c: Constraint) :: _ => c.show
     case _ => ""
 
   def step = unresolved match
-    case (al: TypeVar) :: cons =>
-      resolved = al :: resolved
+    case (al: TypeVar, m) :: cons =>
+      resolved = (al, m) :: resolved
       unresolved = cons
       ("C-Promote", Some(al), List.empty[Constraint])
     case (c: Constraint) :: cons =>
@@ -352,10 +389,8 @@ class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
           upperBounds.getOrElseUpdate(lb, MutSet.empty).add(ty)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where lb = al, which may happen?
-        // ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
-        //   .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
         ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
-          .map(lb => Constraint(lb, ty, c.mrks)).toList)
+          .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
     case (sigma, NegType.Var(al)) =>
       if lowerBounds.getOrElseUpdate(al, MutSet.empty).contains(sigma) then
         ("C-Skip", None, List.empty)
@@ -369,11 +404,8 @@ class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
           lowerBounds.getOrElseUpdate(ub, MutSet.empty).add(sigma)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where ub = al, which may happen?
-        // ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
-        //   .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
         ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
-          .map(ub => Constraint(sigma, ub, c.mrks)).toList)
-
+          .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
     case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
       val c1 = Constraint(sigma1, NegType.Var(al), c.mrks)
       val c2 = Constraint(sigma, NegType.Var(beta), c.mrks)
@@ -383,15 +415,15 @@ class CtxSolver(var unresolved: List[CtxElem])(using ctx: InferenceCtx):
       ("C-Unwrap", None,
         List(Constraint(QuantType.fromVar(al), pi, m :: c.mrks)))
 
-    case (QuantType.Forall(al, sigma), pi: NegType.App) =>
-      // val canonicalSigma = sigma.canonicalize(
-      //   using CanonicalizeCtx(1, MutMap((al.uid -> -1))))
-      quantCache.get((Set.from(c.mrks), al)) match
-      case Some(sigma1) =>
-        ("C-Forall1", None, List(Constraint(sigma1, pi, c.mrks)))
+    case (QuantType.Forall(al, m, sigma), pi: NegType.App) =>
+      val marks = Set.from(c.mrks.iterator.concat(Some(m)))
+      quantCache.get(marks) match
       case None =>
-        quantCache += (Set.from(c.mrks), al) -> sigma
-        ("C-Forall2", Some(al), List(Constraint(sigma, pi, c.mrks)))
+        quantCache += marks -> sigma
+        ("C-Forall1", Some((al, m)), List(Constraint(sigma, pi, c.mrks)))
+      case Some(sigma1) =>
+        val eqConstr = unify(sigma, sigma1)(using Set.empty[TypeVar])
+        ("C-Forall2", None, eqConstr ++ List(Constraint(sigma1, pi, c.mrks)))
     // e.g. application where lhs is a unit
     case _ => ("C-Err", None, Nil)
 

@@ -280,7 +280,7 @@ abstract class MLsDiffMaker extends DiffMaker:
 
       output("|> " + cons.map(s => s match
         case c: Constraint => c.show
-        case al: TypeVar => al.show
+        case (al: TypeVar, _) => al.show
       ).mkString(", "))
 
       var solver = CtxSolver(cons)
@@ -318,15 +318,15 @@ abstract class MLsDiffMaker extends DiffMaker:
           iter = fuel
         if rule.startsWith("C-Forall") then
           for (key, value) <- solver.quantCache.iterator do
-            val mrks = key._1.toList.sortBy(_.uid).map(m => s"m${m.uid}").mkString(",")
-            output(s"[${mrks}], ${key._2.showAsType}")
+            val mrks = key.iterator.map(m => s"m${m.uid}").mkString(",")
+            output(s"[${mrks}]")
             output(s"  -> ${value.showAsType}")
         output(s"Remaining: ${solver.unresolved.size}")
 
       if iter == fuel then
         output(s"====== Remaining ======")
         for elem <- solver.unresolved do elem match
-          case al: TypeVar => output(s"${al.show}")
+          case (al: TypeVar, _) => output(s"${al.show}")
           case c : Constraint => output(s"${c.show}")
       else
         output(s"====== Final ======")
