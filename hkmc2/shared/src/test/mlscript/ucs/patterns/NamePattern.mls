@@ -1,9 +1,12 @@
+:js
+
 fun id(x) = x
 
 :ucs desugared
 if id(0) is t then t
 //│ Desugared:
 //│ >  if
-//│ >    let $scrut = (member:Predef#666.)id‹member:id›(0)
+//│ >    let $scrut = member:id#666(0)
 //│ >    let t = $scrut#0
 //│ >    else t#666
+//│ = 0

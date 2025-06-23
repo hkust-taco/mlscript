@@ -1,22 +1,19 @@
-package hkmc2.codegen.llir
-
-import mlscript._
-import hkmc2.codegen._
-import hkmc2.codegen.llir.{ Program => LlirProgram, Node, Func }
-import mlscript.utils._
-import mlscript.utils.shorthands._
-import hkmc2.semantics.BuiltinSymbol
-import hkmc2.syntax.Tree.UnitLit
-import hkmc2.{Raise, raise, Diagnostic, ErrorReport, Message}
-import hkmc2.Message.MessageContext
-import hkmc2.semantics.InnerSymbol
-import hkmc2.codegen.llir.FuncRef.fromName
-import scala.collection.mutable.ListBuffer
+package hkmc2
+package codegen
+package llir
 
 import scala.annotation.tailrec
 import scala.collection.immutable.*
+import scala.collection.mutable.ListBuffer
 import scala.collection.mutable.{HashMap => MutHMap}
 import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
+
+import mlscript._
+import mlscript.utils._
+import mlscript.utils.shorthands._
+
+import syntax.Tree.UnitLit
+import semantics.{BuiltinSymbol, InnerSymbol}
 
 class UsefulnessAnalysis(verbose: Bool = false): 
   import Expr._
@@ -24,13 +21,13 @@ class UsefulnessAnalysis(verbose: Bool = false):
 
   def log(x: Any) = if verbose then println(x)
   
-  val uses = MutHMap[(Name, Int), Int]()
-  val defs = MutHMap[Name, Int]()
+  val uses = MutHMap[(Local, Int), Int]()
+  val defs = MutHMap[Local, Int]()
 
-  private def addDef(x: Name) =
+  private def addDef(x: Local) =
     defs.update(x, defs.getOrElse(x, 0) + 1)
   
-  private def addUse(x: Name) =
+  private def addUse(x: Local) =
     val def_count = defs.get(x) match
       case None => throw Exception(s"Use of undefined variable $x")
       case Some(value) => value
@@ -68,58 +65,49 @@ class UsefulnessAnalysis(verbose: Bool = false):
     f(x.body)
     uses.toMap
 
-class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
+class FreeVarAnalysis(ctx: Local => Func):
   import Expr._
   import Node._
 
-  private val visited = MutHSet[Str]()
-  private def f(using defined: Set[Str])(defn: Func, fv: Set[Str]): Set[Str] =
-    val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
+  private val visited = MutHSet[Local]()
+  private def f(using defined: Set[Local])(defn: Func, fv: Set[Local]): Set[Local] =
+    val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param)
     f(using defined2)(defn.body, fv)
-  private def f(using defined: Set[Str])(expr: Expr, fv: Set[Str]): Set[Str] = expr match
-    case Ref(name) => if defined.contains(name.str) then fv else fv + name.str
+  private def f(using defined: Set[Local])(expr: Expr, fv: Set[Local]): Set[Local] = expr match
+    case Ref(name) => if defined.contains(name) then fv else fv + name
     case Literal(lit) => fv
     case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-    case Select(name, cls, field) => if defined.contains(name.str) then fv else fv + name.str
+    case Select(name, cls, field) => if defined.contains(name) then fv else fv + name
     case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case AssignField(assignee, _, _, value) => f(using defined)(
       value.toExpr, 
-      if defined.contains(assignee.str) then fv + assignee.str else fv
+      if defined.contains(assignee) then fv + assignee else fv
     ) 
-  private def f(using defined: Set[Str])(node: Node, fv: Set[Str]): Set[Str] = node match
+  private def f(using defined: Set[Local])(node: Node, fv: Set[Local]): Set[Local] = node match
     case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-    case Jump(defnref, args) =>
-      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-      if extended_scope && !visited.contains(defnref.name) then
-        val defn = defnref.expectFn
-        visited.add(defn.name)
-        val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
-        fv2 = f(using defined2)(defn, fv2)
-      fv2
+    case Jump(defn, args) =>
+      args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Case(scrut, cases, default) =>
       val fv2 = scrut match
-        case Ref(name) => if defined.contains(name.str) then fv else fv + name.str
+        case Ref(name) => if defined.contains(name) then fv else fv + name
         case _ => fv
-      val fv3 = cases.foldLeft(fv2) {
+      val fv3 = cases.foldLeft(fv2):
         case (acc, (cls, body)) => f(using defined)(body, acc)
-      }
-      fv3
+      default match
+        case Some(body) => f(using defined)(body, fv3)
+        case None => fv3
+    case Panic(msg) => fv
     case LetMethodCall(resultNames, cls, method, args, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
+      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name)
       f(using defined2)(body, fv2)
     case LetExpr(name, expr, body) =>
       val fv2 = f(using defined)(expr, fv)
-      val defined2 = defined + name.str
+      val defined2 = defined + name
       f(using defined2)(body, fv2)
-    case LetCall(resultNames, defnref, args, body) =>
+    case LetCall(resultNames, defn, args, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
-      if extended_scope && !visited.contains(defnref.name) then
-        val defn = defnref.expectFn
-        visited.add(defn.name)
-        val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
-        fv2 = f(using defined2)(defn, fv2)
+      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name)
       f(using defined2)(body, fv2)
   def run(node: Node) = f(using Set.empty)(node, Set.empty)
-  def run_with(node: Node, defined: Set[Str]) = f(using defined)(node, Set.empty)
+  def run_with(node: Node, defined: Set[Local]) = f(using defined)(node, Set.empty)

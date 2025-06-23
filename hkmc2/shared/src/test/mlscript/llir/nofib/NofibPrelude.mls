@@ -1,0 +1,354 @@
+// shadow the one in Predef
+fun not(c) = if c then false else true
+
+type Char = String
+
+abstract class Option[out T]: Some[T] | None
+data class Some[out T](x: T) extends Option[T]
+object None extends Option
+
+// This should ideally be a declaration.
+// Now it is a built-in class specially handled in the C++ backend,
+// with related logic defined in `mlsprelude.h`.
+abstract class Lazy[out A](init: () -> A) with
+  fun get()
+fun lazy(x) = Lazy(x) 
+fun force(x) = if x is Lazy then x.Lazy#get()
+
+fun fromSome(s) = if s is Some(x) then x
+
+abstract class List[out T]: Cons[T] | Nil
+data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
+object Nil extends List
+fun ltList(xs, ys, lt, gt) = if xs is
+  Nil and
+    ys is Nil then false
+    else true
+  x :: xs and ys is
+    Nil then false
+    y :: ys and
+      lt(x, y) then true
+      gt(x, y) then false
+      else ltList(xs, ys, lt, gt)
+
+type LazyList[out T] = Lazy[LzList[T]]
+abstract class LzList[out T]: LzCons[T] | LzNil
+data class LzCons[out T](head: T, tail: LazyList[T]) extends LzList[T]
+object LzNil extends LzList
+
+fun ltTup2(t1, t2, lt1, gt1, lt2) = if t1 is [a, b] and t2 is [c, d] and
+  lt1(a, c) then true
+  gt1(a, c) then false
+  else lt2(b, d)
+fun eqTup2(t1, t2) = if t1 is [a, b] and t2 is [c, d] then a == c and b == d
+
+fun compose(f, g) = x => f(g(x))
+
+fun snd(x) = if x is [f, s] then s
+fun fst(x) = if x is [f, s] then f
+
+fun until(p, f, i) = if p(i) then i else until(p, f, f(i))
+
+fun flip(f, x, y) = f(y)(x)
+
+fun power(a, n) = Math.pow(a, n)
+
+fun intDiv(a, b) = globalThis.builtin("floor_div", a, b)
+fun intQuot(a, b) = globalThis.builtin("trunc_div", a, b)
+
+fun intMod(a, b) = globalThis.builtin("floor_mod", a, b)
+fun intRem(a, b) = globalThis.builtin("trunc_mod", a, b)
+
+fun quotRem(a, b) = [intQuot(a, b), intRem(a, b)]
+fun divMod(a, b) = [intDiv(a, b), intMod(a, b)]
+
+fun head(l) = if l is h :: t then h
+fun tail(l) = if l is h :: t then t
+
+fun while_(p, f, x) = if p(x) then while_(p, f, f(x)) else x
+
+fun reverse(l) =
+  fun r(l', l) = if l is x :: xs then r(x :: l', xs) else l'
+  r(Nil, l)
+
+fun map(f, xs) = if xs is
+  x :: xs then f(x) :: map(f, xs)
+  Nil then Nil
+
+fun listLen(ls) =
+  fun l(ls, a) = if ls is
+    Nil then a
+    h :: t then l(t, a + 1)
+  l(ls, 0)
+
+fun listEq(xs, ys) = if
+  xs is Nil and ys is Nil then true
+  xs is hx :: tx and ys is hy :: ty and (hx == hy) then listEq(tx, ty)
+  else false
+
+fun listEqBy(f, a, b) = if a is
+  Nil and b is Nil then true
+  x :: xs and b is y :: ys then f(x, y) && listEqBy(f, xs, ys)
+  else false
+
+fun listNeq(xs, ys) = if
+  xs is Nil and ys is Nil then false
+  xs is hx :: tx and ys is hy :: ty and (hx == hy) then listNeq(tx, ty)
+  else true
+
+fun enumFromTo(a, b) = if a <= b then a :: enumFromTo(a + 1, b) else Nil
+
+fun enumFromThenTo(a, t, b) = if a <= b then a :: enumFromThenTo(t, 2 * t - a, b) else Nil
+
+fun drop(n, ls) = if ls is
+  Nil then Nil
+  h :: t and
+    n <= 0 then ls
+    else drop(n - 1, t)
+
+fun take(n, ls) = if ls is
+  Nil then Nil
+  h :: t and
+    n <= 0 then Nil
+    else h :: take(n - 1, t)
+
+fun splitAt(n, ls) = [take(n, ls), drop(n, ls)]
+
+fun zip(xs, ys) = if xs is
+  x :: xs and ys is y :: ys then [x, y] :: zip(xs, ys)
+  else Nil
+
+fun inList(x, ls) = if ls is
+  h :: t and
+    x === h then true
+    else inList(x, t)
+  Nil then false
+
+fun notElem(x, ls) = not(inList(x, ls))
+
+fun (+:) append(xs, ys) = if xs is
+  Nil then ys
+  x :: xs then x :: append(xs, ys)
+
+fun concat(ls) = if ls is
+  Nil then Nil
+  x :: xs then append(x, concat(xs))
+
+fun filter(f, ls) = if ls is
+  Nil then Nil
+  h :: t and
+    f(h) then h :: filter(f, t)
+    else filter(f, t)
+
+fun filterCurried(f)(ls) = if ls is
+  Nil then Nil
+  h :: t and
+    f(h) then h :: filter(f, t)
+    else filter(f, t)
+
+fun all(p, ls) = if ls is
+  Nil then true
+  h :: t and
+    p(h) then all(p, t)
+    else false
+
+fun orList(ls) = if ls is
+  Nil then false
+  h :: t and
+    h then true
+    else orList(t)
+
+fun dropWhile(f, ls) = if ls is
+  Nil then Nil
+  h :: t and
+    f(h) then dropWhile(f, t)
+    else h :: t
+
+fun foldl(f, a, xs) = if xs is
+  Nil then a
+  h :: t then foldl(f, f(a, h), t)
+
+fun scanl(f, q, ls) = if ls is
+  Nil then q :: Nil
+  x :: xs then q :: scanl(f, f(q, x), xs)
+
+fun scanr(f, q, ls) = if ls is
+  Nil then q :: Nil
+  x :: xs and scanr(f, q, xs) is q :: t then f(x, q) :: q :: t
+
+fun foldr(f, z, xs) = if xs is
+  Nil then z
+  h :: t then f(h, foldr(f, z, t))
+
+fun foldl1(f, ls) = if
+  ls is x :: xs then foldl(f, x, xs)
+
+fun foldr1(f, ls) = if ls is
+  x :: Nil then x
+  x :: xs then f(x, foldr1(f, xs))
+
+fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
+
+fun nubBy(eq, ls) = if ls is
+  Nil then Nil
+  h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+
+fun zipWith(f, xss, yss) = if
+  xss is x :: xs and yss is y :: ys then f(x, y) :: zipWith(f, xs, ys)
+  else Nil
+
+fun deleteBy(eq, x, ys) = if ys is
+  Nil then Nil
+  y :: ys and
+    eq(x, y) then ys
+    else y :: deleteBy(eq, x, ys)
+
+fun unionBy(eq, xs, ys) = append(xs, foldl((acc, y) => deleteBy(eq, y, acc), nubBy(eq, ys), xs))
+
+fun union(xs, ys) = unionBy((x, y) => x == y, xs, ys)
+
+fun atIndex(i, ls) = if ls is
+  h :: t and
+    i == 0 then h
+    else atIndex(i - 1, t)
+
+fun sum(xs) =
+  fun go(xs, a) = if xs is
+    Nil then a
+    h :: t then go(t, a + h)
+  go(xs, 0)
+
+fun null_(ls) = if ls is
+  Nil then true
+  else false
+
+fun replicate(n, x) = if n == 0 then Nil else x :: replicate(n - 1, x)
+
+fun unzip(l) =
+  fun f(l, a, b) = if l is
+    Nil then [reverse(a), reverse(b)]
+    [x, y] :: t then f(t, x :: a,  y :: b)
+  f(l, Nil, Nil)
+
+fun zip3(xs, ys, zs) = if
+  xs is x :: xs and ys is y :: ys and zs is z :: zs then [x, y, z] :: zip3(xs, ys, zs)
+  else Nil
+
+fun transpose(xss) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    h :: t and h is
+      hd :: tl then [hd, tl] :: lscomp(t)
+      else lscomp(t)
+  fun combine(y, h, ys, t) = (y :: h) :: transpose(ys :: t)
+  if xss is
+    Nil then Nil
+    Nil :: xss then transpose(xss)
+    (x :: xs) :: xss and unzip(lscomp(xss)) is [hds, tls] then combine(x, hds, xs, tls)
+
+fun break_(p, ls) = if ls is
+  Nil then [Nil, Nil]
+  x :: xs and
+    p(x) then [Nil, x :: xs]
+    break_(p, xs) is [ys, zs] then [x :: ys, zs]
+
+fun flatMap(f, ls) = if ls is
+  Nil then Nil
+  h :: t then append(f(h), flatMap(f, t))
+
+
+// =====================
+
+fun map_lz(f, ls) = lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(f(h), map_lz(f, t))
+
+fun filter_lz(p, ls) = Lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) and
+      p(h) then LzCons(h, filter_lz(p, t))
+      else force(filter_lz(p, t))
+
+fun nubBy_lz(eq, ls) = Lazy of () =>
+  if force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
+
+fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
+
+fun take_lz(n, ls) = if
+  n > 0 and force(ls) is
+    LzNil then Nil
+    LzCons(h, t) then h :: take_lz(n - 1, t)
+  else Nil
+
+fun take_lz_lz(n, ls) = lazy of () =>
+  if n > 0 and force(ls) is
+    LzNil then LzNil
+    LzCons(h, t) then LzCons(h, take_lz_lz(n - 1, t))
+  else LzNil
+
+fun drop_lz(n, ls) = if
+  n <= 0 then ls
+  force(ls) is
+    LzNil then lazy of () => LzNil
+    LzCons(h, t) then drop_lz(n - 1, t)
+
+fun splitAt_lz(n, ls) = [take_lz(n, ls), drop_lz(n, ls)]
+
+fun zip_lz_nl(xs, ys) = if
+  force(xs) is LzCons(x, xs) and ys is y :: ys then [x, y] :: zip_lz_nl(xs, ys)
+  else Nil
+
+fun zip_lz_lz(xs, ys) = if
+  force(xs) is LzCons(x, xs) and force(ys) is LzCons(y, ys) then lazy of () => LzCons([x, y], zip_lz_lz(xs, ys))
+  else lazy of () => LzNil
+
+fun zipWith_lz_lz(f, xss, yss) = lazy of () => if
+  force(xss) is LzCons(x, xs) and (force(yss)) is LzCons(y, ys) then LzCons(f(x, y), zipWith_lz_lz(f, xs, ys))
+  else LzNil
+
+fun zipWith_lz_nl(f, xss, yss) = if
+  force(xss) is LzCons(x, xs) and yss is y :: ys then f(x, y) :: zipWith_lz_nl(f, xs, ys)
+  else Nil
+
+fun iterate(f, x) = lazy of () => LzCons(x, iterate(f, f(x)))
+
+fun append_nl_lz(xs, ys) = if xs is
+  Nil then ys
+  h :: t then lazy of () => LzCons(h, append_nl_lz(t, ys))
+
+fun append_lz_lz(xs, ys) = lazy of () => if force(xs) is
+  LzNil then force(ys)
+  LzCons(h, t) then LzCons(h, append_lz_lz(t, ys))
+
+fun replicate_lz(n, x) = if n == 0 then lazy of () => LzNil else lazy of () => LzCons(x, replicate_lz(n - 1, x))
+
+fun enumFrom(a) = lazy of () => LzCons(a, enumFrom(a + 1))
+
+fun head_lz(ls) = if force(ls) is LzCons(h, t) then h
+
+fun repeat(x) = lazy of () => LzCons(x, repeat(x))
+// =====================
+
+fun stringOfInt(x) = globalThis.builtin("int2str", x)
+fun stringOfFloat(x) = globalThis.builtin("float2str", x)
+fun stringConcat(x, y) = globalThis.builtin("str_concat", x, y)
+fun stringListConcat(ls) = if ls is
+  Nil then ""
+  h :: t then stringConcat(h, stringListConcat(t))
+fun print(x) = globalThis.builtin("println", x)
+fun abs(x) = globalThis.Math.abs(x)
+fun floatOfInt(x) = globalThis.builtin("int2float", x)
+
+// fun max(a, b) = Math.min(a, b)
+// fun min(a, b) = Math.max(a, b)
+// fun abs(x) = Math.abs(x)
+// fun sqrt(x) = Math.sqrt(x)
+// fun tan(x) = Math.tan(x)
+// fun sin(x) = Math.sin(x)
+// fun cos(x) = Math.cos(x)
+// fun round(x) = Math.round(x)
+

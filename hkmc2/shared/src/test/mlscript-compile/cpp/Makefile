@@ -24,4 +24,4 @@ clean:
 auto: $(TARGET)
 
 $(TARGET): $(SRC) $(INCLUDES)
-	$(CXX) $(CFLAGS) $(LDFLAGS) $(SRC) $(LDLIBS) -o $(TARGET)
+	$(CXX) $(CFLAGS) $(LDFLAGS) mlsaux.cxx $(SRC) $(LDLIBS) -o $(TARGET)

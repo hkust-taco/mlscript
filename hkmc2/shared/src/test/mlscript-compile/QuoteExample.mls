@@ -1,0 +1,15 @@
+import "./Predef.mls"
+
+module QuoteExample with
+  fun foo() = `1 `+ `1
+  fun inc() = x `=> x `+ `1
+  fun power(x) = case
+    0 then `1.0
+    n then x `*. power(x)(n - 1)
+  fun bind(rhs, k) = `let x = rhs `in k(x)
+  fun body(x, y) = case
+    0 then x
+    1 then y
+    n then bind of x `+ y, (z => body(y, z)(n - 1))
+  fun gib(n) = (x, y) `=> body(x, y)(n)
+  fun safeDiv() = (x, y, d) `=> `if y `== `0.0 then d else x `/ y

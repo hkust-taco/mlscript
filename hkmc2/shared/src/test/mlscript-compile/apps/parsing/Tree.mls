@@ -1,0 +1,207 @@
+import "../../Iter.mls"
+import "../../Predef.mls"
+import "../../Stack.mls"
+import "../../Option.mls"
+import "../../Str.mls"
+import "./Keywords.mls"
+import "./Token.mls"
+
+open Predef { fold, mkStr }
+open Stack
+open Option { Some, None }
+open Token { LiteralKind, BracketKind }
+open Keywords { opPrec, INT_MAX }
+
+type StackT[A] = Stack.Cons[A] | Stack.Nil
+
+//  _____
+// |_   _| __ ___  ___
+//   | || '__/ _ \/ _ \
+//   | || | |  __/  __/
+//   |_||_|  \___|\___|
+//
+// ====================
+
+module Tree with
+  abstract class Tree
+  
+  module DefineKind with
+    data class Let(recursive: Bool)
+    object Type
+    object Exception
+    object Directive
+    
+    type DefineKind = Let | Type | Exception | Directive
+  
+  open DefineKind
+  
+  data
+    class
+      Empty() extends Tree
+      Error(tree: Tree, message: Str) extends Tree
+      Bracketed(kind: BracketKind, tree: Tree) extends Tree
+      Ident(name: Str, symbolic: Bool) extends Tree
+      Underscore() extends Tree
+      Modified(modifier, subject) extends Tree
+      Tuple(trees: StackT) extends Tree
+      Sequence(trees: StackT) extends Tree
+      Literal(kind, value) extends Tree
+      Match(scrutinee: Tree, branches: StackT) extends Tree
+      Lambda(params: StackT, body: Tree) extends Tree
+      App(callee: Tree, argument: Tree) extends Tree
+      Infix(op: Keywords.Keyword, lhs: Tree, rhs: Tree) extends Tree
+      // `items` is separated by `and`
+      Define(kind: DefineKind.DefineKind, items: StackT[[Tree, Tree]]) extends Tree
+      LetIn(bindings: StackT, body: Tree) extends Tree
+      While(cond: Tree, body: Tree) extends Tree
+      For(head: Tree, start: Tree, end: Tree, body: Tree) extends Tree
+      // For `if`-`then`-`else`. The last part is optional.
+      Ternary(keyword: Keywords.Keyword, lhs: Tree, rhs: Tree, body) extends Tree
+  
+  fun empty = Empty()
+  fun error(message: Str) = empty Error(message)
+  fun summary(tree) =
+    fun par(text: Str, cond: Bool) = if cond then "(" + text + ")" else text
+    fun prec(tree: Tree, side: Bool) = if tree is
+      Empty then INT_MAX
+      Error(tree, _) then prec(tree, side)
+      Bracketed(_, _) then INT_MAX
+      Ident then INT_MAX
+      Underscore then INT_MAX
+      Modified then 1
+      Tuple then INT_MAX
+      Sequence then 1
+      Literal then INT_MAX
+      Match then 2
+      App(callee, _) and callee is
+        Ident(op, true) and opPrec(op) is [leftPrec, rightPrec] and
+          side then rightPrec
+          else leftPrec
+        else Keywords.appPrec
+      Infix(op, _, _) and
+        side then op.rightPrecOrMax
+        else op.leftPrecOrMax
+      Ternary then 3
+      Lambda then Keywords._fun.leftPrecOrMax
+    // Wrap trees in guillemet so they are easier to spot.
+    fun wrap(something) = if something is
+      Tree then "«" + go(something) + "»"
+      else go(something)
+    fun go(tree) = if tree is
+      Empty then "{}"
+      Error(Empty, _) then "⚠"
+      Error(tree, _) then "<⚠:" + go(tree) + ">"
+      Bracketed(kind, tree) and kind is
+        Token.Round then "(" + go(tree) + ")"
+        Token.Square then "[" + go(tree) + "]"
+        Token.Curly then "{" + go(tree) + "}"
+        Token.Angle then "<" + go(tree) + ">"
+      Ident(name, _) then name
+      Underscore() then "_"
+      Modified(modifier, subject) then go(modifier) + " " + go(subject)
+      Tuple(trees) then "(" + trees Iter.fromStack() Iter.mapping(go) Iter.joined(", ") + ")"
+      Sequence(trees) then trees Iter.fromStack() Iter.mapping(go) Iter.joined("; ")
+      Literal(LiteralKind.String, value) and
+        value.length > 5 then JSON.stringify(value.slice(0, 5)).slice(0, -1) + "…\""
+        else JSON.stringify(value)
+      Literal(_, value) then value
+      Match(scrutinee, branches) then mkStr of
+        if scrutinee is Empty then "function " else
+          "match " + go(scrutinee) + " with "
+        branches Iter.fromStack() Iter.mapping(go) Iter.joined(" | ")
+      // Function application for binary operators.
+      App(Ident(op, true), lhs :: rhs :: Nil) then
+        if opPrec(op) is [leftPrec, rightPrec] then fold(+) of
+          par of go(lhs), prec(lhs, false) < leftPrec
+          " ", op, " "
+          par of go(rhs), prec(rhs, true) < rightPrec
+      // Unary expressions
+      App(Ident(op, true), arg) then mkStr of
+        op
+        par of go(arg), prec(arg, false) <= Keywords.prefixPrec
+      // Function application
+      App(callee, argument) then mkStr of
+        go(callee)
+        " "
+        par of go(argument), prec(argument, false) <= Keywords.appPrec
+      Infix(Keywords.Keyword(".", _, _), target, Ident(field, _)) then
+        if opPrec(".") is [leftPrec, _] then mkStr of
+          par of go(target), prec(target, false) < leftPrec
+          "."
+          field
+      Infix(op, lhs, rhs) then fold(+) of
+        go(lhs), " ", go(op), " ", go(rhs)
+      Define(Directive, [name, value] :: Nil) then Str.concat of
+        "#", go(name), " ", go(value)
+      Define(kind, items) then mkStr of
+        if kind is
+          Let(true) then "let rec "
+          Let(false) then "let "
+          Type then "type "
+          Exception then "exception "
+        items
+          Iter.fromStack()
+          Iter.mapping of case
+            Tree as tree then go(tree)
+            [lhs, rhs] then go(lhs) + " = " + go(rhs)
+          Iter.joined(" and ")
+      LetIn(bindings, body) then mkStr of
+        "let "
+        bindings
+          Iter.fromStack()
+          Iter.mapping of go
+          Iter.joined(" and ")
+        ...if body is
+          Some(body) then [" in ", go(body)]
+          None then []
+      While(cond, body) then mkStr of "while ", go(cond), " do ", go(body), " done"
+      For(head, start, end, body) then mkStr of
+        "for ", go(head), " = ", go(start), " to ", go(end), " do ", go(body), " done"
+      Ternary(keyword, lhs, rhs, body) then fold(+) of
+        keyword.name, " ", go(lhs),
+        if keyword.name is
+          "if" then " then "
+          "type" then " = "
+          "let" then " = "
+        if rhs is Some(rhs') then go(rhs') else go(rhs)
+        if keyword.name is
+          "if" then " then "
+          "type" then ""
+          "let" then " in "
+        if body is Some(body) then go(body) else go(body)
+      Lambda(params, body) then fold(+) of
+        "fun ", params Iter.fromStack() Iter.mapping(go) Iter.joined(" "), " -> ", go(body)
+      Keywords.Keyword(name, _, _) then name
+      Some(tree) then "Some(" + wrap(tree) + ")"
+      None then "None"
+      _ :: _ then tree Iter.fromStack() Iter.mapping(wrap) Iter.joined(" :: ") + " :: Nil"
+      Nil then "Nil"
+      [..trees] then "[" + trees.map((tree, _, _) => wrap(tree)).join(", ") + "]"
+      else "<unexpected:" + tree + ">"
+    wrap(tree)
+  
+  fun infix(op)(lhs, rhs) = Infix(op, lhs, rhs)
+  
+  fun bracketed(tree, kind) = Bracketed(kind, tree)
+  
+  fun asSequence(tree) = if tree is
+    Empty then Sequence of Nil
+    Sequence then tree
+    else Sequence of tree :: Nil
+  
+  fun tupleWithHead(tree, head) = if tree is
+    Tuple(tail) then Tuple(head :: tail)
+    else Tuple(head :: tree :: Nil)
+  
+  fun sequenceWithHead(tree, head) = if tree is
+    Sequence(tail) then Sequence(head :: tail)
+    else Sequence(head :: tree :: Nil)
+  
+  fun nonEmpty(tree) = if tree is
+    Empty then false
+    Error(Empty, _) then false
+    else true
+  
+  fun nonEmptyError(tree) = if tree is
+    Error(Empty, _) then false
+    else true

@@ -1,4 +1,4 @@
-
+:js
 
 data class Card[T](color: T)
 
@@ -11,7 +11,10 @@ object Club extends Suit
 fun suit(x) = if x is Card(a) then a
 
 let card = Card(Heart)
+//│ card = Card(Heart)
+
 suit of card
+//│ = Heart
 
 // :ucs desugared normalized
 fun foo(x) = if x is

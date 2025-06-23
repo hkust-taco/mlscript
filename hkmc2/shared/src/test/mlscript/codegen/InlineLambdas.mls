@@ -36,12 +36,12 @@
 (x => x) + 1
 //│ JS (unsanitized):
 //│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2 + 1
-//│ = "function (...args) {   globalThis.Predef.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }1"
+//│ = "function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }1"
 
 :sjs
 1 + (x => x)
 //│ JS (unsanitized):
 //│ let lambda3; lambda3 = (undefined, function (x) { return x }); 1 + lambda3
-//│ = "1function (...args) {   globalThis.Predef.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }"
+//│ = "1function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }"
 
 

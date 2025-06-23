@@ -1,0 +1,24 @@
+:js
+
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/MutMap.mls"
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+import "../../../mlscript-compile/apps/parsing-web-demo/Examples.mls"
+
+:silent
+val examples = (Examples.examples |> MutMap.values).sort of
+  (a, b) => a.name.localeCompare(b.name)
+
+examples Iter.each of case entry then
+  print of "Testing example: " + entry.name
+  Test.example of entry.source
+//│ > Testing example: Extensible Syntax
+//│ > «baz (foo "Rob" (foo "Bob" bar))»
+//│ > «#diagram ""»
+//│ > Testing example: Hanoi from Caml Light
+//│ > «let spaces n = make_string n " "»
+//│ > «let disk size = let right_half = make_string size ">" and left_half = make_string size "<" in left_half ^ "|" ^ right_half»
+//│ > «let disk_number n largest_disk_size = let white_part = spaces (largest_disk_size + 1 - n) in white_part ^ disk n ^ white_part»
+//│ > «let peg_base largest_disk_size = let half = make_string largest_disk_size "_" in " " ^ half ^ "|" ^ half ^ " "»
+//│ > «let peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
+//│ > «let join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»

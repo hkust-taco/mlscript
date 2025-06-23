@@ -134,19 +134,13 @@ let t = new Some(true) in t.Some#value
 :fixme
 :pe
 42.Some#value
-//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
 //│ ║  l.136: 	42.Some#value
 //│ ╙──       	   ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
 //│ ║  l.136: 	42.Some#value
-//│ ╙──       	   ^^^^
-//│ ╔══[ERROR] Name not found: #
-//│ ║  l.136: 	42.Some#value
-//│ ╙──       	       ^
-//│ ╔══[ERROR] Name not found: value
-//│ ║  l.136: 	42.Some#value
-//│ ╙──       	        ^^^^^
-//│ Type: ⊥
+//│ ╙──       	   ^^^^^^^^^^
+//│ Type: Num
 
 
 data class Printer[T](f: T -> Str)
@@ -167,13 +161,13 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.168: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║  l.162: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
 data class TFun[T](f: T -> T)
@@ -194,13 +188,13 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ╔══[ERROR] Type error in string literal with expected type 'T
-//│ ║  l.195: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║  l.189: 	let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str ∨ Int
 
 data class Pair[A, B](fst: A, snd: B)
@@ -315,7 +309,7 @@ throw new Error("oops")
 :e
 throw 42
 //│ ╔══[ERROR] Type error in throw
-//│ ║  l.316: 	throw 42
+//│ ║  l.310: 	throw 42
 //│ ║         	      ^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥

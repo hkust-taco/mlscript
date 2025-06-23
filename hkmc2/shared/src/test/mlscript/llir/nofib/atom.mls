@@ -1,0 +1,45 @@
+:llir
+
+:import NofibPrelude.mls
+//│ Imported 104 member(s)
+
+data class State(position: List[Num], velocity: List[Num])
+
+fun dotPlus(fs, gs) = if
+  fs is Nil then gs
+  gs is Nil then fs
+  fs is f :: fs and gs is g :: gs then (f + g) :: dotPlus(fs, gs)
+
+fun dotMult(fs, gs) = if
+  fs is f :: fs and gs is g :: gs then (f * g) :: dotMult(fs, gs)
+  else Nil
+
+fun scalarMut(c, fs) = if fs is
+  Nil then Nil
+  f :: fs then (c * f) :: scalarMut(c, fs)
+
+fun testforce(k, ss) = lazy of () =>
+  if force(ss) is
+    LzCons(State(pos, vel), atoms) then LzCons(dotMult(scalarMut(-1.0, k), pos), testforce(k, atoms))
+
+fun show(s) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    component :: t then Cons(stringConcat(stringOfFloat(component), "\t"), lscomp(t))
+  if s is State(pos, vel) then
+    stringListConcat of lscomp(pos)
+
+fun propagate(dt, aforce, state) = if state is State(pos, vel) then
+  State(dotPlus(pos, scalarMut(dt, vel)), dotPlus(vel, scalarMut(dt, aforce)))
+
+fun runExperiment(law, dt, param, init) = lazy of () =>
+  let stream = runExperiment(law, dt, param, init)
+  LzCons(init, zipWith_lz_lz((x, y) => propagate(dt, x, y), law(param, stream), stream))
+
+fun testAtom_nofib(n) =
+  fun lscomp(ls) = if ls is
+    Nil then Nil
+    state :: t then stringConcat(show(state), "\n") :: lscomp(t)
+  stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, 1.0 :: Nil, State(1.0 :: Nil, 0.0 :: Nil))))
+
+testAtom_nofib(20)

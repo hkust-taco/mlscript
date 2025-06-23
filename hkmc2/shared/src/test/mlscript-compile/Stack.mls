@@ -12,7 +12,7 @@ module Stack[T] with ...
 // TODO support type/module overloading
 type T[A]
 
-data class (::) Cons[A](head: A, tail: Stack[A])
+data class (::) Cons[A](head: A, tail: T[A])
 object Nil
 
 fun isEmpty(xs) = xs is Nil

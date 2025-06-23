@@ -17,18 +17,18 @@ MatchFailure("oops")
 if MatchFailure("oops") is MatchFailure(x) then x
 //│ = "oops"
 
-data class MatchResult(x, y, z)
+data class MatchResult(x)
 
 MatchResult(0)
-//│ = MatchResult(0, undefined, undefined)
+//│ = MatchResult(0)
 
 pattern Cross = "X"
 
-Cross.unapply("X")
-//│ = MatchResult([])
+Cross.unapply("X") is Runtime.MatchResult
+//│ = true
 
-Cross.unapply("0")
-//│ = MatchFailure(undefined)
+Cross.unapply("0") is Runtime.MatchFailure
+//│ = true
 
 :sjs
 fun foo(x) = x is Cross

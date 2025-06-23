@@ -43,27 +43,22 @@ y
 
 
 :e
-:ge
 fun ++ z = 0
 //│ ╔══[ERROR] Invalid function definition head: unexpected identifier in this position
-//│ ║  l.47: 	fun ++ z = 0
+//│ ║  l.46: 	fun ++ z = 0
 //│ ╙──      	       ^
-//│ > let $_$_2;try { $_$_2 = function ++(...args) {   globalThis.Predef.checkArgs("++", 0, true, args.length);   return 0 }; block$res9 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                  ^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token '++'
 
 :sjs
-:re
 ++
 //│ JS (unsanitized):
 //│ let tmp; tmp = $_$_2(); tmp
-//│ ═══[RUNTIME ERROR] ReferenceError: $_$_2 is not defined
+//│ = 0
 
 
 :e
 fun (class Lol) foo = 0
 //│ ╔══[ERROR] This type definition is not a valid symbolic name
-//│ ║  l.64: 	fun (class Lol) foo = 0
+//│ ║  l.59: 	fun (class Lol) foo = 0
 //│ ╙──      	           ^^^
 
 foo
@@ -72,7 +67,7 @@ foo
 :e
 Lol
 //│ ╔══[ERROR] Name not found: Lol
-//│ ║  l.73: 	Lol
+//│ ║  l.68: 	Lol
 //│ ╙──      	^^^
 
 

@@ -1,0 +1,90 @@
+:js
+:qq
+
+//│ Term = Term
+
+`42
+//│ = Lit(42)
+
+
+`3.14
+//│ = Lit(3.14)
+
+
+`true
+//│ = Lit(true)
+
+
+`"abc"
+//│ = Lit("abc")
+
+
+`+
+//│ = Builtin("+")
+
+
+`1 `+ `2
+//│ = App(Builtin("+"), Tup([Lit(1), Lit(2)]))
+
+
+x `=> x
+//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+
+
+:sjs
+x `=>
+  print(x)
+  x
+//│ JS (unsanitized):
+//│ let x1, tmp6, tmp7, tmp8;
+//│ tmp6 = new Term.Symbol("x");
+//│ x1 = new Term.Ref(tmp6);
+//│ tmp7 = Predef.print(x1);
+//│ tmp8 = x1;
+//│ new Term.Lam([
+//│   tmp6
+//│ ], tmp8)
+//│ > Ref(Symbol("x"))
+//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+
+
+let f = x `=> x `+ `1
+//│ f = Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)])))
+
+
+f`(`0)
+//│ = App(Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)]))), Tup([Lit(0)]))
+
+
+`let x = `42 `in x
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+
+
+`let x = `42 `in print(x); x
+//│ > Ref(Symbol("x"))
+//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+
+
+:sjs
+`if `true then `true else `false
+//│ JS (unsanitized):
+//│ let scrut, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40;
+//│ tmp30 = new Term.Symbol("scrut");
+//│ scrut = new Term.Ref(tmp30);
+//│ tmp31 = new Term.Lit(true);
+//│ tmp34 = scrut;
+//│ tmp35 = new Term.LitPattern(true);
+//│ tmp40 = new Term.Lit(true);
+//│ tmp36 = new Term.Else(tmp40);
+//│ tmp37 = new Term.Branch(tmp34, tmp35, tmp36);
+//│ tmp39 = new Term.Lit(false);
+//│ tmp38 = new Term.Else(tmp39);
+//│ tmp32 = new Term.Cons(tmp37, tmp38);
+//│ tmp33 = new Term.Let(tmp30, tmp31, tmp32);
+//│ new Term.IfLike(Term.Keyword.If, tmp33)
+//│ = IfLike(If, Let(Symbol("scrut"), Lit(true), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+
+
+x `=> `if x `== `0.0 then `1.0 else x
+//│ = Lam([Symbol("x")], IfLike(If, Let(Symbol("scrut"), App(Builtin("=="), Tup([Ref(Symbol("x")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
+

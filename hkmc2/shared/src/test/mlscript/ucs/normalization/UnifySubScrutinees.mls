@@ -1,3 +1,5 @@
+:js
+
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Option.mls"
 
@@ -17,6 +19,7 @@ fun sum(acc, xs) =
     x :: xs then sum(acc + x, xs)
     Nil     then acc
 
+// :ucs normalized
 fun test(xs) =
   if xs is
     Some(Cons("add", Cons(x, Cons(y, Nil)))) then x + y

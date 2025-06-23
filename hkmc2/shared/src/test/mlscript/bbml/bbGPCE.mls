@@ -56,23 +56,23 @@ let gn5 = run(gib_naive(5))
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Type: ['cde, 'ctx, 'cde1, 'eff, 'cde2, 'ctx1] -> (CodeBase[out 'cde, out 'ctx, ?], CodeBase[in 'cde1 out 'cde1 ∨ 'cde, ?, ⊥] ->{'eff} CodeBase[out 'cde2, out 'ctx1, ?]) ->{'eff} CodeBase[out 'cde2, out 'ctx ∨ 'ctx1, ?]
+//│ Type: ['cde, 'ctx, 'eff, 'cde1, 'ctx1] -> (CodeBase[out 'cde, out 'ctx, ?], CodeBase['cde, ?, ⊥] ->{'eff} CodeBase[out 'cde1, out 'ctx1, ?]) ->{'eff} CodeBase[out 'cde1, out 'ctx ∨ 'ctx1, ?]
 
 :e
 fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, out Any]) -> Int -> CodeBase[out Int, out G, out Any]
 fun body(x, y) = case
   0 then x
   1 then y
-  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
+  n then bind of x `+ y, (z => body(y, z)(n - 1))
 //│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
-//│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because: cannot constrain  CodeBase[out 'cde, out 'ctx ∨ 'ctx1, ?]  <:  CodeBase[out Int, out G, ?]
+//│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1))
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── because: cannot constrain  CodeBase[in ⊥ out 'cde, in ⊥ out 'ctx ∨ 'ctx1, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out Int, in ⊥ out G, in ⊥ out ⊤]
 //│ ╟── because: cannot constrain  'ctx ∨ 'ctx1  <:  G
-//│ ╟── because: cannot constrain  'ctx1  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╟── because: cannot constrain  'ctx2  <:  ¬(¬G)
-//│ ╙── because: cannot constrain    <:  ¬(¬G)
+//│ ╟── because: cannot constrain  'ctx1  <:  G
+//│ ╟── because: cannot constrain  'ctx2  <:  G
+//│ ╟── because: cannot constrain  'ctx2  <:  G
+//│ ╙── because: cannot constrain  ⊤  <:  G
 //│ Type: ⊤
 
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
@@ -85,7 +85,7 @@ fun body: [G] -> (CodeBase[out Int, out G, out Any], CodeBase[out Int, out G, ou
 fun body(x, y) = case
   0 then x
   1 then y
-  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C, out Any]
+  n then bind of x `+ y, (z => body(y, z)(n - 1))
 body
 //│ Type: ['G] -> (CodeBase[out Int, out 'G, ?], CodeBase[out Int, out 'G, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out 'G, ?]
 

@@ -1,0 +1,52 @@
+:js
+
+import "../../mlscript-compile/Record.mls"
+
+
+let src =
+  k0: 0
+  k1: 1
+  k2: 2
+  k3: 3
+  k4: 4
+//│ src = {k0: 0, k1: 1, k2: 2, k3: 3, k4: 4}
+
+src Record.steal("k1", "k2", "k3")
+//│ = {k1: 1, k2: 2, k3: 3}
+
+let dst =
+  k0: "0"
+  ...src Record.steal("k1", "k2", "k3")
+  k4: "4"
+//│ dst = {k0: "0", k1: 1, k2: 2, k3: 3, k4: "4"}
+
+
+// * Alternative 'cute' API
+
+import "../../mlscript-compile/Iter.mls"
+
+fun steal(...fields_from) =
+  let from = fields_from.at(-1).from
+  let fields = fields_from.slice(0, -1)
+  let rcd = new Object
+  fields Iter.each of f => set rcd.(f) = from.(f)
+  rcd
+
+let src =
+  k0: 0
+  k1: 1
+  k2: 2
+  k3: 3
+  k4: 4
+//│ src = {k0: 0, k1: 1, k2: 2, k3: 3, k4: 4}
+
+steal("k1", "k2", "k3", from: src)
+//│ = {k1: 1, k2: 2, k3: 3}
+
+let dst =
+  k0: "0"
+  ...steal("k1", "k2", "k3", from: src)
+  k4: "4"
+//│ dst = {k0: "0", k1: 1, k2: 2, k3: 3, k4: "4"}
+
+

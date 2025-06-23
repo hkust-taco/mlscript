@@ -1,0 +1,15 @@
+
+import "./Predef.mls"
+open Predef
+
+import "./Iter.mls"
+
+
+module Record with...
+
+fun steal(from, ...fields) =
+  let rcd = new Object
+  fields Iter.each of f => set rcd.(f) = from.(f)
+  rcd
+
+

@@ -34,5 +34,5 @@ let x = x + 1
 //│ set tmp1 = +(x3, 1) in
 //│ set x4 = tmp1 in
 //│ set block$res3 = undefined in
-//│ end 
+//│ end
 //│ x = 1

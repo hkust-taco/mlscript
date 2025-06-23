@@ -204,7 +204,7 @@ if true do
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock$h$(" + globalThis.Predef.render(this.pc) + ")"; }
+//│     toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
 //│   };
 //│   f = function f() {
 //│     return 3

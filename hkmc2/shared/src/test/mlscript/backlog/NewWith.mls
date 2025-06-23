@@ -22,20 +22,41 @@ new Object with
 //│ ║  l.20: 	new Object with
 //│ ╙──      	               ^
 
+:pe
+new Object with 1
+//│ ╔══[PARSE ERROR] Expected block after 'new' body; found literal instead
+//│ ║  l.26: 	new Object with 1
+//│ ╙──      	                ^
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.26: 	new Object with 1
+//│ ╙──      	                ^
+
+:e
+(new Object) with 1
+//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
+//│ ║  l.35: 	(new Object) with 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+
+// TODO don't show as `$anon`
+new Object with { val x = 1 }
+//│ = $anon
+
+:e
+new Object with { val x = 1 } with { val y = 1 }
+//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
+//│ ║  l.45: 	new Object with { val x = 1 } with { val y = 1 }
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 let obj =
   new Object with
-   val x = 12
+    val x = 12
 //│ obj = $anon
 
 obj.x
 //│ = 12
 
-:s
-// :pt
-// :lot
-// :dl
-// :sjs
-// :lot
+
 let n =
   new with
     val x = 12
@@ -45,30 +66,38 @@ n.x
 //│ = 12
 
 
-:sjs
-object Foo with
-  val x = 1
-//│ JS (unsanitized):
-//│ let Foo1;
-//│ const Foo$class = class Foo {
-//│   constructor() {
-//│     this.x = 1;
-//│   }
-//│   toString() { return "Foo"; }
-//│ }; Foo1 = new Foo$class;
-//│ Foo1.class = Foo$class;
-
-
 class Foo(x) with
   fun foo = x + 1
   print("Foo", x, foo)
 
+new Foo(123) with { fun foo = 27 }
+//│ > Foo 123 27
+//│ = $anon
+
+// TODO change semantics? Looks error-prone
+:re
+new (Foo(123)) with { fun foo = 27 }
+//│ > Foo 123 124
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
+
+// TODO change semantics? Looks error-prone
+:re
+new {Foo(123)} with { fun foo = 27 }
+//│ > Foo 123 124
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
+
 new Foo(123) with
-  // fun foo = super.foo + 1 // TODO
+  // fun foo = super.foo + 1 // TODO (super)
   fun foo = 27
   print("Bar", foo)
 //│ > Foo 123 27
 //│ > Bar 27
 //│ = $anon
+
+:e
+new Foo(123) with 1
+//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
+//│ ║  l.98: 	new Foo(123) with 1
+//│ ╙──      	    ^^^^^^^^^^^^^^^
 
 

@@ -1,0 +1,76 @@
+import "../../Option.mls"
+import "../../Predef.mls"
+import "../../Stack.mls"
+import "./Tree.mls"
+import "./Keywords.mls"
+import "./Token.mls"
+
+open Predef
+open Stack
+open Token { LiteralKind }
+open Option { Some, None }
+
+module TreeHelpers with ...
+
+fun first(array) = if array is [first, ...] then first
+
+fun second(array) = if array is [_, second, ...] then second
+
+fun indented(text) = text.split("\n").join("\n  ")
+
+fun showAsTree(thing) =
+  fun itemize(something) = if something is
+    Some(content) then tuple of ["Some of " + go(content)], []
+    None then tuple of "None", []
+    head :: tail then
+      let
+        items = [go(head)]
+        remaining = tail
+      while remaining is
+        head' :: tail' do
+          items.push(go of head')
+          set remaining = tail'
+      tuple of ("Stack of \n" + "  " + indented of items.join("\n")), []
+    Nil then ["Nil", []]
+    Str then [JSON.stringify(something), []] // TODO: This doesn't work.
+    Int then [something.toString(), []]
+    Tree.Empty then ["Empty", []]
+    Tree.Error(Tree.Empty, m) then tuple of "Error", [["message", go(m)]]
+    Tree.Error(t, m) then tuple of "Error", [["tree", go(t)], ["message", go(m)]]
+    Tree.Ident(n, _) then tuple of "Ident", [["name", go(n)]]
+    Tree.Bracketed(k, items) then tuple of
+      "Bracketed#" + k, [["items", go(items)]]
+    Tree.Underscore() then tuple of "Underscore", []
+    Tree.Modified(m, s) then
+      tuple of "Modified", [["modifier", go(m)], ["subject", go(s)]]
+    Tree.Tuple(t) then tuple of "Tuple", [["items", go(t)]]
+    Tree.Sequence(t) then tuple of "Sequence", [["items", go(t)]]
+    Tree.Literal(k, v) then tuple of ("Literal#" + go(k) + " of " + go(v)), []
+    Tree.Match(scrutinee, branches) then tuple of
+      "Match", [["scrutinee", scrutinee], ["branches", go(branches)]]
+    Tree.App(c, a) then tuple of "App", [["callee", go(c)], ["argument", go(a)]]
+    Tree.Infix(op, lhs, rhs) then tuple of
+      "Infix", [["op", go(op)], ["lhs", go(lhs)], ["rhs", go(rhs)]]
+    Tree.Define(k, i) then tuple of "Define", [["kind", k.toString()], ["items", go(i)]]
+    Tree.LetIn(bds, b) then tuple of "LetIn", [["bindings", go(bds)], ["body", go(b)]]
+    Tree.While(c, b) then tuple of "While", [["condition", go(c)], ["body", go(b)]]
+    Tree.For(h, s, e, b) then tuple of
+      "For", [["head", go(h)], ["start", go(s)], ["end", go(e)], ["body", go(b)]]
+    Tree.Ternary(n, l, r, b) then tuple of
+      "Ternary", [["name", go(n)], ["lhs", go(l)], ["rhs", go(r)], ["body", go(b)]]
+    Tree.Lambda(p, b) then tuple of "Lambda", [["params", go(p)], ["body", go(b)]]
+    Keywords.Keyword as keyword then [keyword.toString(), []]
+    LiteralKind.Integer then tuple of "Integer", []
+    LiteralKind.Decimal then tuple of "Decimal", []
+    LiteralKind.String then tuple of "String", []
+    LiteralKind.Boolean then tuple of "Boolean", []
+    [x, y] then tuple of "Pair", [["first", go(x)], ["second", go(y)]]
+    else tuple of "Unknown", [["JSON.stringify(_)", JSON.stringify(something)]]
+  fun go(something) = if itemize(something) is
+    [intro, []] then intro
+    [intro, [field]] and intro != "Unknown" then intro + " of " + second of field
+    [intro, fields] then
+      let dialogue = fields.map of (field, _, _) =>
+        field first() + " = " + field second()
+      intro + ":\n  " + indented of dialogue.join("\n")
+  go(thing)

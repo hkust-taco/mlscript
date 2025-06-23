@@ -189,7 +189,7 @@ class BlockTransformer(subst: SymbolSubst):
   def applyParamList(pl: ParamList): ParamList =
     def applyParam(p: Param): Param =
       val sym2 = p.sym.subst
-      if sym2 is p.sym then p else Param(p.flags, sym2, p.sign)
+      if sym2 is p.sym then p else p.copy(sym = sym2)
     val params2 = pl.params.mapConserve(applyParam)
     val rest2 = pl.restParam.mapConserve(applyParam)
     if (params2 is pl.params) && (rest2 is pl.restParam)
@@ -202,6 +202,7 @@ class BlockTransformer(subst: SymbolSubst):
       val path2 = applyPath(path)
       if (cls2 is cls) && (path2 is path) then cse else Case.Cls(cls2, path2)
     case Case.Tup(len, inf) => cse
+    case Case.Field(name, safe) => cse
   
   def applyHandler(hdr: Handler): Handler =
     val sym2 = hdr.sym.subst

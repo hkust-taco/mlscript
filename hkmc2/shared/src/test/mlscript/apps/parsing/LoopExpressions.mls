@@ -1,0 +1,58 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+example of """
+:tree
+let x = 0 in
+while x < 10 do
+  print_int x;
+  print_newline ();
+  x <- x + 1
+done
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "x"
+//│ >       rhs = Literal#Integer of "0"
+//│ >   body = Some of While:
+//│ >     condition = App:
+//│ >       callee = Ident of "<"
+//│ >       argument = Stack of 
+//│ >         Ident of "x"
+//│ >         Literal#Integer of "10"
+//│ >     body = Sequence of Stack of 
+//│ >       App:
+//│ >         callee = Ident of "print_int"
+//│ >         argument = Ident of "x"
+//│ >       App:
+//│ >         callee = Ident of "print_newline"
+//│ >         argument = Tuple of Nil
+//│ >       Infix:
+//│ >         op = Keyword(`<-`, 9, 9)
+//│ >         lhs = Ident of "x"
+//│ >         rhs = App:
+//│ >           callee = Ident of "+"
+//│ >           argument = Stack of 
+//│ >             Ident of "x"
+//│ >             Literal#Integer of "1"
+//│ > «let x = 0 in while x < 10 do print_int x; print_newline (); x <- x + 1 done»
+
+example of """
+:tree
+for i = 0 to 10 do
+  print i
+done
+"""
+//│ > For:
+//│ >   head = Ident of "i"
+//│ >   start = Literal#Integer of "0"
+//│ >   end = Literal#Integer of "10"
+//│ >   body = App:
+//│ >     callee = Ident of "print"
+//│ >     argument = Ident of "i"
+//│ > «for i = 0 to 10 do print i done»

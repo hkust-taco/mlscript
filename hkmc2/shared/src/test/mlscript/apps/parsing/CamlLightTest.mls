@@ -1,0 +1,216 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+//   ____      _             __        ___               _ 
+//  / ___|___ | | ___  _ __  \ \      / / |__   ___  ___| |
+// | |   / _ \| |/ _ \| '__|  \ \ /\ / /| '_ \ / _ \/ _ \ |
+// | |__| (_) | | (_) | |      \ V  V / | | | |  __/  __/ |
+//  \____\___/|_|\___/|_|       \_/\_/  |_| |_|\___|\___|_|
+//                                                         
+
+// sources/examples/colwheel/colwheel.ml
+// =====================================
+
+// Note: We do not support or patterns for now, so I expanded the or patterns.
+
+example of """
+let max = 255;;
+let nround x y = (2*x+y)/(2*y);;
+let rgb_of_hsb h s v =
+  let h = h*6 in
+  let i = h/max*max in
+  let f = h-i in
+  let m = v*(max-s)/max and n = v*(max-s*f/max)/max
+  and k = v*(max-s*(max-f)/max)/max in
+  graphics__rgb
+    (nround (max*(
+      match i/max with
+      | 0 -> v | 6 -> v | 1 -> n | 2 -> m | 3 -> m | 4 -> k | _ -> v
+    )) max)
+    (nround (max*(
+      match i/max with
+      | 0 -> k | 6 -> k | 1 -> v | 2 -> v | 3 -> n | 4 -> m | _ -> m
+    )) max)
+    (nround (max*(
+      match i/max with
+      | 0 -> m | 6 -> m | 1 -> m | 2 -> k | 3 -> v | 4 -> v | _ -> n
+    )) max)
+;;
+"""
+//│ > «let max = 255»
+//│ > «let nround x y = 2 * x + y / 2 * y»
+//│ > «let rgb_of_hsb h s v = let h = h * 6 in let i = h / max * max in let f = h - i in let m = v * (max - s) / max and n = v * (max - s * f / max) / max and k = v * (max - s * (max - f) / max) / max in graphics__rgb (nround (max * (match i / max with 0 -> v | 6 -> v | 1 -> n | 2 -> m | 3 -> m | 4 -> k | _ -> v)) max) (nround (max * (match i / max with 0 -> k | 6 -> k | 1 -> v | 2 -> v | 3 -> n | 4 -> m | _ -> m)) max) (nround (max * (match i / max with 0 -> m | 6 -> m | 1 -> m | 2 -> k | 3 -> v | 4 -> v | _ -> n)) max)»
+
+example of """
+let pi180 = 3.141592654 /. 180.0;;
+let wheel s v r =
+  for theta = 0 to 23 do
+    set_color (rgb_of_hsb (theta * max / 24) s v);
+    fill_arc (size_x()/2) (size_y()/2) r r (theta * 15) (theta * 15 + 15)
+  done
+;;
+let wheels v =
+  for r = 8 downto 1 do
+    wheel (r * max / 8) v (r * (size_y()/20))
+  done
+;;
+let main() =
+  open_graph "";
+  let (msg_w, msg_h) = text_size "Press 'q' to quit    R=999 G=999 B=999" in
+  try
+    wheels max;
+    set_color foreground;
+    moveto 0 0; draw_string "Press 'q' to quit";
+    while true do
+      let e = wait_next_event [Button_down; Key_pressed] in
+        if e.keypressed then begin
+          match e.key with
+          | "0" ->
+              clear_graph();
+              wheels ((int_of_char e.key - 48) * max / 9)
+          | "q" ->
+              raise Exit
+          | _ ->
+              ()
+        end else
+        if e.button then begin
+          let c = point_color e.mouse_x e.mouse_y in
+          let r = c lsr 16 and g = (c lsr 8) land 255 and b = c land 255 in
+            set_color background;
+            fill_rect 0 0 msg_w msg_h;
+            set_color foreground;
+            moveto 0 0;
+            draw_string ("Press 'q' to quit    R=" ^ string_of_int r ^
+                         " G=" ^ string_of_int g ^ " B=" ^ string_of_int b)
+        end
+    done
+  with Exit ->
+    close_graph()
+;;
+if sys__interactive then () else begin main(); exit 0 end;;
+"""
+//│ > «let pi180 = 3.141592654 /. 180.0»
+//│ > «let wheel s v r = for theta = 0 to 23 do set_color (rgb_of_hsb (theta * max / 24) s v); fill_arc (size_x () / 2) (size_y () / 2) r r (theta * 15) (theta * 15 + 15) done»
+//│ > «let wheels v = for r = 8 to 1 do wheel (r * max / 8) v (r * (size_y () / 20)) done»
+//│ > «let main () = open_graph ""; let (msg_w, msg_h) = text_size "Press…" in try wheels max; set_color foreground; moveto 0 0; draw_string "Press…"; while true do let e = wait_next_event [Button_down; Key_pressed] in if e.keypressed then match e.key with "0" -> clear_graph (); wheels ((int_of_char e.key - 48) * max / 9) | "q" -> raise Exit | _ -> () then if e.button then let c = point_color e.mouse_x e.mouse_y in let r = c lsr 16 and g = c lsr 8 land 255 and b = c land 255 in set_color background; fill_rect 0 0 msg_w msg_h; set_color foreground; moveto 0 0; draw_string ("Press…" ^ string_of_int r ^ " G=" ^ string_of_int g ^ " B=" ^ string_of_int b) then None done»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «if sys__interactive then () then main (); exit 0»
+
+//  _   _                   _ 
+// | | | | __ _ _ __   ___ (_)
+// | |_| |/ _` | '_ \ / _ \| |
+// |  _  | (_| | | | | (_) | |
+// |_| |_|\__,_|_| |_|\___/|_|
+//                            
+
+// sources/examples/hanoi/hanoi.ml
+// ===============================
+
+// The original example is too long and would cause the lexer to overflow,
+// so we will temporarily split it into three parts for parsing.
+
+example of """
+let spaces n = make_string n " ";;
+let disk size =
+    let right_half = make_string size ">"
+    and left_half = make_string size "<"
+    in left_half ^ "|" ^ right_half;;
+let disk_number n largest_disk_size =
+    let white_part = spaces (largest_disk_size + 1 - n) in
+    white_part ^ (disk n) ^ white_part;;
+let peg_base largest_disk_size =
+    let half = make_string largest_disk_size "_" in
+    " " ^ half ^ "|" ^ half ^ " ";;
+let rec peg largest_disk_size = function
+  | (0, []) -> []
+  | (0, head::rest) ->
+      disk_number head largest_disk_size ::
+      peg largest_disk_size (0, rest)
+  | (offset, lst) ->
+      disk_number 0 largest_disk_size ::
+      peg largest_disk_size (offset-1, lst);;
+let rec join_lines l1 l2 l3 =
+  match (l1, l2, l3) with
+  | ([], [], []) -> []
+  | (t1::r1, t2::r2, t3::r3) -> (t1 ^ t2 ^ t3) :: join_lines r1 r2 r3
+  | _ -> failwith "join_lines";;
+"""
+//│ > «let spaces n = make_string n " "»
+//│ > «let disk size = let right_half = make_string size ">" and left_half = make_string size "<" in left_half ^ "|" ^ right_half»
+//│ > «let disk_number n largest_disk_size = let white_part = spaces (largest_disk_size + 1 - n) in white_part ^ disk n ^ white_part»
+//│ > «let peg_base largest_disk_size = let half = make_string largest_disk_size "_" in " " ^ half ^ "|" ^ half ^ " "»
+//│ > «let peg largest_disk_size = function (0, []) -> [] | (0, head :: rest) -> disk_number head largest_disk_size :: peg largest_disk_size (0, rest) | (offset, lst) -> disk_number 0 largest_disk_size :: peg largest_disk_size (offset - 1, lst)»
+//│ > «let join_lines l1 l2 l3 = match (l1, l2, l3) with ([], [], []) -> [] | (t1 :: r1, t2 :: r2, t3 :: r3) -> t1 ^ t2 ^ t3 :: join_lines r1 r2 r3 | _ -> failwith "join_…"»
+
+example of """
+let print_line line = print_string line; print_newline();;
+let print_game num_disks start middle end_ =
+    let drawing =
+        join_lines (peg num_disks start)
+                   (peg num_disks middle)
+                   (peg num_disks end_) in
+    do_list print_line drawing;
+    let b = peg_base num_disks in print_line (b ^ b ^ b);;
+let add_disk disk (offset, disks) =
+    (offset - 1, disk::disks);;
+let top = function
+  | (offset, top :: rest) -> top
+  | (offset, []) -> failwith "top: empty peg";;
+let remove_top = function
+  | (offset, top :: rest) -> (offset + 1, rest)
+  | (offset, []) -> failwith "remove_top: empty peg";;
+"""
+//│ > «let print_line line = print_string line; print_newline ()»
+//│ > «let print_game num_disks start middle end_ = let drawing = join_lines (peg num_disks start) (peg num_disks middle) (peg num_disks end_) in do_list print_line drawing; let b = peg_base num_disks in print_line (b ^ b ^ b)»
+//│ > «let add_disk disk (offset, disks) = (offset - 1, disk :: disks)»
+//│ > «let top = function (offset, top :: rest) -> top | (offset, []) -> failwith "top: …"»
+//│ > «let remove_top = function (offset, top :: rest) -> (offset + 1, rest) | (offset, []) -> failwith "remov…"»
+
+example of """
+let move (name_start, peg_start) (name_finish, peg_finish) =
+    print_line ("I move a disk from " ^
+                name_start ^ " to " ^ name_finish);
+    let moved_disk = top !peg_start in
+    peg_start := remove_top !peg_start;
+    peg_finish := add_disk moved_disk !peg_finish;;
+let empty_peg num_disks = (num_disks, []);;
+let full_peg num_disks =
+    let rec list_of_disks i =
+        if i <= num_disks
+        then i :: list_of_disks (i+1)
+        else [] in
+    (0, list_of_disks 1);;
+let game num_disks =
+    let left = ref (full_peg num_disks)
+    and middle = ref (empty_peg num_disks)
+    and right = ref (empty_peg num_disks) in
+    let rec hanoi height start_ intermediate destination =
+        if height > 0 then
+         begin
+           hanoi (height - 1) start_ destination intermediate;
+           move start_ destination;
+           print_game num_disks !left !middle !right;
+           hanoi (height - 1) intermediate start_ destination
+         end in
+    print_line "I name the pegs A, B, and C.";
+    print_line "Starting position:";
+    print_game num_disks !left !middle !right;
+    hanoi num_disks ("A", left) ("B", middle) ("C", right);;
+if sys__interactive then () else begin
+  game (int_of_string (sys__command_line.(1)));
+  exit 0
+end;;
+"""
+//│ > «let move (name_start, peg_start) (name_finish, peg_finish) = print_line ("I mov…" ^ name_start ^ " to " ^ name_finish); let moved_disk = top ! peg_start in peg_start := remove_top ! peg_start; peg_finish := add_disk moved_disk ! peg_finish»
+//│ > «let empty_peg num_disks = (num_disks, [])»
+//│ > «let full_peg num_disks = let list_of_disks i = if i <= num_disks then i :: list_of_disks (i + 1) then [] in (0, list_of_disks 1)»
+//│ > «let game num_disks = let left = ref (full_peg num_disks) and middle = ref (empty_peg num_disks) and right = ref (empty_peg num_disks) in let hanoi height start_ intermediate destination = if height > 0 then hanoi (height - 1) start_ destination intermediate; move start_ destination; print_game num_disks ! left ! middle ! right; hanoi (height - 1) intermediate start_ destination then None in print_line "I nam…"; print_line "Start…"; print_game num_disks ! left ! middle ! right; hanoi num_disks ("A", left) ("B", middle) ("C", right)»
+//│ > «if sys__interactive then () then game (int_of_string sys__command_line . 1); exit 0»

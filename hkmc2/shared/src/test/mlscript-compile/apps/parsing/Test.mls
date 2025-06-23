@@ -1,0 +1,54 @@
+import "./Lexer.mls"
+import "./Keywords.mls"
+import "./Token.mls"
+import "./Tree.mls"
+import "./TokenHelpers.mls"
+import "./TreeHelpers.mls"
+import "./Parser.mls"
+import "../../Iter.mls"
+import "../../Option.mls"
+import "../../Predef.mls"
+import "../../Stack.mls"
+
+open Token { LiteralKind }
+open Parser { parse, tracer }
+open Option { Some, None }
+open Predef { print }
+open Stack
+open TreeHelpers { showAsTree }
+
+module Test with ...
+
+pattern Flag = "tree" | "trace" | "tokens"
+
+fun flags(tokens) =
+  let result = new Set
+  while tokens is
+    Token.Space :: Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
+      result.add(flag)
+      set tokens = tail
+    Token.Identifier(":", _) :: Token.Identifier(Flag as flag, _) :: tail then
+      result.add(flag)
+      set tokens = tail
+    else [result, tokens]
+
+fun example(...lines) =
+  let
+    source = lines.join("\n")
+    tokens = Lexer.lex(source, noWhitespace: true)
+  if flags(tokens) is [flags, tokens] then ...
+  if flags.has("tokens") do
+    print of TokenHelpers.panorama(tokens)
+  tracer.reset()
+  set tracer.enabled = flags.has("trace")
+  let trees = parse(tokens)
+  set tracer.enabled = false
+  if flags.has("tree") do
+    print of trees
+      Iter.fromStack()
+      Iter.mapping of showAsTree
+      Iter.joined of "\n"
+  print of trees
+    Iter.fromStack()
+    Iter.mapping of Tree.summary
+    Iter.joined of "\n"

@@ -1,0 +1,459 @@
+:js
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+
+open Test { example }
+
+example of "(x) => x"
+//│ > «x => x»
+
+example of "let x: int = 0"
+//│ > «let x : int = 0»
+
+example of "let x: int -> int = function | 0 -> 1 | x -> x"
+//│ > «let x : int -> int = function 0 -> 1 | x -> x»
+
+example of """
+fun x y -> x + y
+"""
+//│ > «fun x y -> x + y»
+
+example of """
+fun true false -> false | false true -> true
+"""
+//│ > «fun true false -> false»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+//│ > «⚠»
+
+example of """
+id (fun x y -> x + y)
+"""
+//│ > «id (fun x y -> x + y)»
+
+example of """
+:tree
+let x: int -> int -> int = fun x y -> x + y
+"""
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Infix:
+//│ >         op = Keyword(`:`, 4, 3)
+//│ >         lhs = Ident of "x"
+//│ >         rhs = Infix:
+//│ >           op = Keyword(`->`, 5, 3)
+//│ >           lhs = Ident of "int"
+//│ >           rhs = Infix:
+//│ >             op = Keyword(`->`, 5, 3)
+//│ >             lhs = Ident of "int"
+//│ >             rhs = Ident of "int"
+//│ >       rhs = Lambda:
+//│ >         params = Stack of 
+//│ >           App:
+//│ >             callee = Ident of "x"
+//│ >             argument = Ident of "y"
+//│ >         body = App:
+//│ >           callee = Ident of "+"
+//│ >           argument = Stack of 
+//│ >             Ident of "x"
+//│ >             Ident of "y"
+//│ >   body = None
+//│ > «let x : int -> int -> int = fun x y -> x + y»
+
+example of "(1 + 2) * 3"
+//│ > «(1 + 2) * 3»
+
+example of "1 + 2 ** 5 * 4"
+//│ > «1 + 2 ** 5 * 4»
+
+example of "let zero = 0 in zero"
+//│ > «let zero = 0 in zero»
+
+example of """
+let one = 1 in
+let zero = 0 in
+one + zero
+"""
+//│ > «let one = 1 in let zero = 0 in one + zero»
+
+example of """
+f x y
+"""
+//│ > «f x y»
+
+example of """
+let pi = 4.0 *. atan 1.0
+"""
+//│ > «let pi = 4.0 *. atan 1.0»
+
+example of "let square x = x *. x"
+//│ > «let square x = x *. x»
+
+example of "square (sin pi) +. square (cos pi)"
+//│ > «square (sin pi) +. square (cos pi)»
+
+example of "(1 < 2) = false"
+//│ > «1 < 2»
+//│ > «⚠»
+//│ > «⚠»
+
+example of "let cat s1 s2 = s1 ^ \" \" ^ s2"
+//│ > «let cat s1 s2 = s1 ^ " " ^ s2»
+
+example of "fun x -> x"
+//│ > «fun x -> x»
+
+example of """
+let compose f g = fun x -> f (g x) in
+  let cos2 = compose square cos
+"""
+//│ > «let compose f g = fun x -> f (g x) in let cos2 = compose square cos»
+
+example of "type sign = Positive | Negative"
+//│ > «type sign = Positive | Negative»
+
+example of "true"
+//│ > «true»
+
+example of """
+match x with true -> 1 | false -> 0
+"""
+//│ > «match x with true -> 1 | false -> 0»
+
+example of """
+function (_, 0) -> "both zero"
+"""
+//│ > «function (_, 0) -> "both …"»
+
+example of """
+function (0, 0) -> "both zero"
+       | (0, _) -> "first only zero"
+       | (_, 0) -> "second only zero"
+       | (_, _) -> "neither zero"
+"""
+//│ > «function (0, 0) -> "both …" | (0, _) -> "first…" | (_, 0) -> "secon…" | (_, _) -> "neith…"»
+
+example of "if f x then y else z"
+//│ > «if f x then y then z»
+
+example of "id (if f x then y else z)"
+//│ > «id (if f x then y then z)»
+
+example of "if f x then if g x then z else w else if h x then y else w"
+//│ > «if f x then if g x then z then w then if h x then y then w»
+
+example of "1, 2, 3"
+//│ > «(1, 2, 3)»
+
+example of "1; 2; 3"
+//│ > «1; 2; 3»
+
+example of """
+1, 2; 3, 4; 5
+"""
+//│ > «(1, 2); (3, 4); 5»
+
+// > The expressions `( expr )` and `begin expr end` have the same value as `expr`.
+// > The two constructs are semantically equivalent, but it is good style to use
+// > `begin … end` inside control structures.
+example of """
+begin
+  print_string "hello";
+  print_string "world"
+end
+"""
+//│ > «print_string "hello"; print_string "world"»
+
+example of "a == b"
+//│ > «a == b»
+
+// TODO: comment on this syntax design smell in the paper
+example of """
+if a == b then
+  a
+else
+  b
+"""
+//│ > «if a == b then a then b»
+
+example of """
+let f a b =
+  if a == b then
+    print_endline "Equal"
+  else begin
+    print_string "Not Equal: ";
+    print_int a;
+    print_string " and ";
+    print_int b;
+    print_newline ()
+  end
+"""
+//│ > «let f a b = if a == b then print_endline "Equal" then print_string "Not E…"; print_int a; print_string " and "; print_int b; print_newline ()»
+
+example of """
+let foo = y; x
+"""
+//│ > «let foo = y; x»
+
+example of """
+let translate p dx dy =
+  p.x <- p.x +. dx;
+  p.y <- p.y +. dy
+"""
+//│ > «let translate p dx dy = p.x <- p.x +. dx; p.y <- p.y +. dy»
+
+example of """:tree f x.y """
+//│ > App:
+//│ >   callee = Ident of "f"
+//│ >   argument = Infix:
+//│ >     op = Keyword(`.`, 26, 26)
+//│ >     lhs = Ident of "x"
+//│ >     rhs = Ident of "y"
+//│ > «f x.y»
+
+example of """:tree f x.y.z x.y """
+//│ > App:
+//│ >   callee = App:
+//│ >     callee = Ident of "f"
+//│ >     argument = Infix:
+//│ >       op = Keyword(`.`, 26, 26)
+//│ >       lhs = Infix:
+//│ >         op = Keyword(`.`, 26, 26)
+//│ >         lhs = Ident of "x"
+//│ >         rhs = Ident of "y"
+//│ >       rhs = Ident of "z"
+//│ >   argument = Infix:
+//│ >     op = Keyword(`.`, 26, 26)
+//│ >     lhs = Ident of "x"
+//│ >     rhs = Ident of "y"
+//│ > «f x.y.z x.y»
+
+example of """:tree f x.y.z x.y """
+//│ > App:
+//│ >   callee = App:
+//│ >     callee = Ident of "f"
+//│ >     argument = Infix:
+//│ >       op = Keyword(`.`, 26, 26)
+//│ >       lhs = Infix:
+//│ >         op = Keyword(`.`, 26, 26)
+//│ >         lhs = Ident of "x"
+//│ >         rhs = Ident of "y"
+//│ >       rhs = Ident of "z"
+//│ >   argument = Infix:
+//│ >     op = Keyword(`.`, 26, 26)
+//│ >     lhs = Ident of "x"
+//│ >     rhs = Ident of "y"
+//│ > «f x.y.z x.y»
+
+example of "()"
+//│ > «()»
+
+example of """
+match x with | 0 -> 1
+"""
+//│ > «match x with 0 -> 1»
+
+example of """
+let fullname title first second =
+  match title with
+  | Some t -> t ^ " " ^ first ^ " " ^ second
+  | None -> first ^ " " ^ second
+"""
+//│ > «let fullname title first second = match title with Some t -> t ^ " " ^ first ^ " " ^ second | None -> first ^ " " ^ second»
+
+example of """
+let a = if x then 1 else 0 in
+let b = 0
+"""
+//│ > «let a = if x then 1 then 0 in let b = 0»
+
+example of """
+let rec factorial x =
+  if x <= 1 then 1 else x * factorial (x - 1)
+and sum l =
+  match l with
+  | [] -> 0
+  | h :: t -> h + sum t
+in
+  factorial 5 + sum [1; 2; 3]
+"""
+//│ > «let factorial x = if x <= 1 then 1 then x * factorial (x - 1) and sum l = match l with [] -> 0 | h :: t -> h + sum t in factorial 5 + sum [1; 2; 3]»
+
+example of "begin end"
+//│ > «»
+
+example of """
+let v' =
+    let a, b = (1, 2) in a + b
+  in v'
+"""
+//│ > «let v' = let (a, b) = (1, 2) in a + b in v'»
+
+example of """
+let a = 0 and b = 1 in a + b
+"""
+//│ > «let a = 0 and b = 1 in a + b»
+
+example of """
+let rec even =
+  function 0 -> true | n -> odd (n - 1)
+and odd =
+  function 0 -> false | n -> even (n - 1)
+in
+  even 1000
+"""
+//│ > «let even = function 0 -> true | n -> odd (n - 1) and odd = function 0 -> false | n -> even (n - 1) in even 1000»
+
+example of """
+let rec even =
+  function 0 -> true | n -> odd (n - 1)
+and odd =
+  function 0 -> false | n -> even (n - 1)
+"""
+//│ > «let even = function 0 -> true | n -> odd (n - 1) and odd = function 0 -> false | n -> even (n - 1)»
+
+example of """
+let a = 0
+let b = 0
+let f x = x + 1
+let g x = f (f x)
+"""
+//│ > «let a = 0»
+//│ > «let b = 0»
+//│ > «let f x = x + 1»
+//│ > «let g x = f (f x)»
+
+example of """
+:tree
+-2 * 3
+;;
+~2 * 3
+let x = !true
+"""
+//│ > App:
+//│ >   callee = Ident of "*"
+//│ >   argument = Stack of 
+//│ >     App:
+//│ >       callee = Ident of "-"
+//│ >       argument = Literal#Integer of "2"
+//│ >     Literal#Integer of "3"
+//│ > App:
+//│ >   callee = Ident of "*"
+//│ >   argument = Stack of 
+//│ >     App:
+//│ >       callee = Ident of "~"
+//│ >       argument = Literal#Integer of "2"
+//│ >     Literal#Integer of "3"
+//│ > LetIn:
+//│ >   bindings = Stack of 
+//│ >     Infix:
+//│ >       op = Keyword(`=`, 3, 3)
+//│ >       lhs = Ident of "x"
+//│ >       rhs = App:
+//│ >         callee = Ident of "!"
+//│ >         argument = Literal#Boolean of "true"
+//│ >   body = None
+//│ > «(-2) * 3»
+//│ > «~2 * 3»
+//│ > «let x = !true»
+
+example of """
+let f x = x
+;;
+1 + 2 * 3
+"""
+//│ > «let f x = x»
+//│ > «1 + 2 * 3»
+
+example of """
+:tree
+x.y <- 0
+"""
+//│ > Infix:
+//│ >   op = Keyword(`<-`, 9, 9)
+//│ >   lhs = Infix:
+//│ >     op = Keyword(`.`, 26, 26)
+//│ >     lhs = Ident of "x"
+//│ >     rhs = Ident of "y"
+//│ >   rhs = Literal#Integer of "0"
+//│ > «x.y <- 0»
+
+example of """
+:tree
+f expr .( expr ) <- expr
+"""
+//│ > Infix:
+//│ >   op = Keyword(`<-`, 9, 9)
+//│ >   lhs = App:
+//│ >     callee = Ident of "f"
+//│ >     argument = Infix:
+//│ >       op = Keyword(`.`, 26, 26)
+//│ >       lhs = Ident of "expr"
+//│ >       rhs = Ident of "expr"
+//│ >   rhs = Ident of "expr"
+//│ > «f expr.expr <- expr»
+
+example of """
+:tree
+f (expr .( expr ) <- expr)
+"""
+//│ > App:
+//│ >   callee = Ident of "f"
+//│ >   argument = Infix:
+//│ >     op = Keyword(`<-`, 9, 9)
+//│ >     lhs = Infix:
+//│ >       op = Keyword(`.`, 26, 26)
+//│ >       lhs = Ident of "expr"
+//│ >       rhs = Ident of "expr"
+//│ >     rhs = Ident of "expr"
+//│ > «f (expr.expr <- expr)»
+
+example of """
+a:;
+"""
+//│ > «a :;»
+
+example of """
+let sub = (-);;
+"""
+//│ > «let sub = -»
+
+example of """
+:tree
+f -1
+"""
+//│ > App:
+//│ >   callee = Ident of "-"
+//│ >   argument = Stack of 
+//│ >     Ident of "f"
+//│ >     Literal#Integer of "1"
+//│ > «f - 1»
+
+example of """
+:tree
+f :: -1
+"""
+//│ > App:
+//│ >   callee = Ident of "::"
+//│ >   argument = Stack of 
+//│ >     Ident of "f"
+//│ >     App:
+//│ >       callee = Ident of "-"
+//│ >       argument = Literal#Integer of "1"
+//│ > «f :: -1»
+
+
+let x = 1
+//│ x = 1
+
+mkStr of "A", x is Str
+//│ // Standard Error:
+//│ Assertion failed
+//│ 
+//│ = "Afalse"
+
+

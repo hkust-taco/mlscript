@@ -27,10 +27,10 @@ fun hasZeroElement(xs) =
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	                ^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (integer literal).
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	         ^
-//│ ╔══[ERROR] Unrecognized pattern split.
+//│ ╔══[ERROR] Unrecognized pattern split (identifier).
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
 

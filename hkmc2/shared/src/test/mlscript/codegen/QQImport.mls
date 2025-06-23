@@ -1,0 +1,140 @@
+:js
+:qq
+
+//│ Term = Term
+
+Term.print
+//│ = [function print]
+
+
+Term.print(`42)
+//│ > 42
+
+
+Term.print(`+)
+//│ > +
+
+
+Term.print(`1 `+ `2)
+//│ > (+)(1, 2)
+
+
+Term.print(x `=> x)
+//│ > (x_0) =>
+//│ >   x_0
+
+
+Term.print((x, y) `=> x `+ y)
+//│ > (x_0, y_0) =>
+//│ >   (+)(x_0, y_0)
+
+
+Term.print(`let x = `42 `in x)
+//│ > let x_0
+//│ > x_0 = 42
+//│ > x_0
+
+
+Term.print(`if `true then `true else `false)
+//│ > if 
+//│ >   let scrut_0 = true
+//│ >   scrut_0 is true then true
+//│ >   else false
+
+
+Term.print(x `=> `if x `== `0.0 then `1.0 else x)
+//│ > (x_0) =>
+//│ >   if 
+//│ >     let scrut_0 = (==)(x_0, 0)
+//│ >     scrut_0 is true then 1
+//│ >     else x_0
+
+
+import "../../mlscript-compile/QuoteExample2.mls"
+
+
+QuoteExample2.codegen()
+
+
+import "../../mlscript-compile/quotes/QuoteFoo.mls"
+
+QuoteFoo.res
+//│ = 2
+
+
+import "../../mlscript-compile/quotes/QuoteInc.mls"
+
+
+QuoteInc.res(42)
+//│ = 43
+
+
+import "../../mlscript-compile/CSP.mls"
+
+
+Term.codegen(CSP.foo(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPFoo.mls")
+
+
+import "../../mlscript-compile/quotes/CSPFoo.mls"
+
+
+CSPFoo.res
+//│ = 124
+
+
+Term.codegen(CSP.bar(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBar.mls")
+
+
+import "../../mlscript-compile/quotes/CSPBar.mls"
+
+
+CSPBar.res
+//│ = 1
+
+
+Term.codegen(CSP.baz(), "./hkmc2/shared/src/test/mlscript-compile/quotes/CSPBaz.mls")
+
+
+import "../../mlscript-compile/quotes/CSPBaz.mls"
+
+CSPBaz.res
+//│ = 42
+
+
+QuoteExample2.genCubic()
+
+
+import "../../mlscript-compile/quotes/Cubic.mls"
+
+let cubic = Cubic.res
+cubic(8)
+//│ = 512
+//│ cubic = [function]
+
+
+QuoteExample2.genGib12()
+
+
+import "../../mlscript-compile/quotes/Gib12.mls"
+
+
+let gib12 = Gib12.res
+gib12(0, 1)
+//│ = 144
+//│ gib12 = [function]
+
+
+QuoteExample2.genSafeDiv()
+
+
+import "../../mlscript-compile/quotes/SafeDiv.mls"
+
+let safeDiv = SafeDiv.res
+//│ safeDiv = [function]
+
+safeDiv(10, 3, 0)
+//│ = 3.3333333333333335
+
+safeDiv(10, 0, -1)
+//│ = -1
+

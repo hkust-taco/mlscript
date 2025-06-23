@@ -25,7 +25,7 @@ if false then 0
 //│ ═══[RUNTIME ERROR] Error: match error
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
-// * This one uses `globalThis.Predef` and `globalThis.Error`
+// * This one uses `globalThis.Error`
 // * Notice the failed exception throw
 :sjs
 :re
@@ -44,7 +44,7 @@ foo()
 //│   }
 //│ };
 //│ foo()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkArgs')
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
 
 

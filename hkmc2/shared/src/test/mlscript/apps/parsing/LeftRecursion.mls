@@ -1,0 +1,62 @@
+:js
+
+import "../../../mlscript-compile/MutMap.mls"
+import "../../../mlscript-compile/Iter.mls"
+
+import "../../../mlscript-compile/apps/parsing/Test.mls"
+import "../../../mlscript-compile/apps/parsing/Rules.mls"
+import "../../../mlscript-compile/apps/parsing/Keywords.mls"
+
+open Test { example }
+
+example of """
+#newKeyword ("count", Some 5, Some 5)
+#newKeyword ("base", None, None)
+#newKeyword ("incr", None, None)
+"""
+//│ > 
+
+print of Keywords.extended |> MutMap.valuesIterator |. Iter.joined("\n")
+//│ > Keyword(`count`, 5, 5)
+//│ > Keyword(`base`, N/A, N/A)
+//│ > Keyword(`incr`, N/A, N/A)
+
+example of """
+#newCategory "counting"
+"""
+//│ > 
+
+// <counting> ::= <counting> "incr" | "base"
+example of """
+#extendCategory "counting", [ "counting", keyword("incr") ], succ
+#extendCategory "counting", [ keyword("base") ], zero
+#extendCategory "term", [ keyword("count"), "counting" ], result
+"""
+//│ > 
+
+Rules.getRuleByKind("counting").display print()
+//│ > <counting> ::= 
+//│ >   | <counting> "incr"
+//│ >   | "base"
+
+example of """count base"""
+//│ > «result zero»
+
+example of """count base incr incr"""
+//│ > «result (succ (succ zero))»
+
+Rules.getRuleByKind("term").display print()
+//│ > <prefix rules for expressions> ::= 
+//│ >   | "let" ["rec"] <let-bindings> ["in" <term>]
+//│ >   | "fun" <term> "->" <term>
+//│ >   | "match" <term> "with" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "function" ["|"] <term> "->" <term> ["|" <simple-matching>]
+//│ >   | "if" <term> "then" <term> ["else" <term>]
+//│ >   | "while" <term> "do" <term> "done"
+//│ >   | "for" <term> "=" <term> ("to" | "downto") <term> "do" <term> "done"
+//│ >   | "(" <term> ")"
+//│ >   | "[" <term> "]"
+//│ >   | "{" <term> "}"
+//│ >   | "begin" <term> "end"
+//│ >   | <term> ("," <term> | ";" <term> | "<-" <term> | "==" <term> | "*" <term> | "." ("(" <term> ")" | <term>) | ":" <type> | <term>)
+//│ >   | "count" <counting>
