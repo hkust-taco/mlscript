@@ -99,7 +99,6 @@ object Keyword:
   val `override` = Keyword("override", N, N)
   val `super` = Keyword("super", N, N)
   // val `namespace` = Keyword("namespace", N, N)
-  val `use` = Keyword("use", N, curPrec)
   val `using` = Keyword("using", N, N)
   val `module` = Keyword("module", N, N)
   val `object` = Keyword("object", N, N)

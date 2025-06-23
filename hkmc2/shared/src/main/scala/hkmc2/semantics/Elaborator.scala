@@ -418,13 +418,6 @@ extends Importer:
         case N =>
           raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
           Term.Error
-    // A use[T] construct: analogous to Scala's summon[T].
-    case TyApp(Keywrd(Keyword.`use`), targs) => 
-      if targs.length != 1 then
-        raise(ErrorReport(msg"Illegal use[T] construct. Only one type is allowed." -> tree.toLoc :: Nil))
-        Term.Error
-      val ty = term(targs.head)
-      Term.Summon(ty)(tree, N)
     case TyApp(lhs, targs) =>
       Term.TyApp(subterm(lhs, inTyAppPrefix = true), targs.map {
         case Modified(Keyword.`in`, inLoc, arg) => Term.WildcardTy(S(subterm(arg)), N)

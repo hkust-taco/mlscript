@@ -67,7 +67,7 @@ M.foo()
 :e
 fun f[T](using t: T) = t
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type variable T) for call: 
 //│ ║  l.69: 	f
 //│ ║        	^
 //│ ╟── Required by contextual parameter declaration: 

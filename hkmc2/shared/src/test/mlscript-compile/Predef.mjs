@@ -163,6 +163,9 @@ let Predef1;
   } 
   static raiseUnhandledEffect() {
     return Runtime.mkEffect(Runtime.FatalEffect, null)
+  } 
+  static use(instance) {
+    return instance
   }
   static toString() { return "Predef"; }
 });

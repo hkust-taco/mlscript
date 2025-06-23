@@ -627,12 +627,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"This annotation has no effect." -> ann.toLoc ::
         msg"Such annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
       term(receiver)(k)
-    case use: Summon =>
-      warnStmt
-      use.sym match
-        case S(_: ErrorSymbol) => End("missing instance")
-        case S(sym) => k(subst(Value.Ref(sym)))
-        case N => lastWords(s"unresolved summon: ${use}")
     case Error => End("error")
     
     // case _ =>

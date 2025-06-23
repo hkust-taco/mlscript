@@ -101,7 +101,7 @@ object Resolver:
     
     def describeType(tpe: Type): Str = tpe match
       case Type.Sym(sym: VarSymbol) =>
-        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (${tpe.show})"
+        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (type variable ${tpe.show})"
       case _ => 
         s"${tpe.show}"
     
@@ -509,26 +509,6 @@ class Resolver(tl: TraceLogger)
       case Term.Ref(_) =>
         resolveSymbol(t)
         (N, ictx)
-          
-      case use @ Term.Summon(ty) =>
-        traverse(ty, expect = NonModule(N))
-        resolveType(ty) match
-          case S(tpe: Type.Specified) =>
-            ictx.get(tpe) match
-              case R(i) =>
-                log(s"Resolved type ${tpe} with instance ${i}")
-                use.sym = S(i.sym)
-              case L(msgs) =>
-                use.sym = S(ErrorSymbol("Missing Instance", use.tree))
-                raise(ErrorReport(
-                  msg"Cannot query instance for use-expression of type ${ictx.describeType(tpe)}" -> t.toLoc ::
-                  msgs
-                ))
-          case N =>
-            use.sym = S(ErrorSymbol("Missing Type", use.tree))
-            // There is an error during resolving the type signature.
-            // The error should have been reported.
-        (t.callableDefn, ictx)
     
     log(s"Resolving resolvable with defn = ${defn}")
     

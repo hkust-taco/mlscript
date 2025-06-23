@@ -93,3 +93,7 @@ fun enterHandleBlock(handler, body) =
 
 fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
+
+// Return the implicit instance of type T from the current scope.
+// Analogous to the `summon` function in Scala.
+fun use[T](using instance: T) = instance
