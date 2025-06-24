@@ -101,7 +101,7 @@ object Resolver:
     
     def describeType(tpe: Type): Str = tpe match
       case Type.Sym(sym: VarSymbol) =>
-        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (type variable ${tpe.show})"
+        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (type parameter ${tpe.show})"
       case _ => 
         s"${tpe.show}"
     
