@@ -89,6 +89,7 @@ enum Term extends Statement:
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
+  case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
@@ -161,6 +162,7 @@ enum Term extends Statement:
     case Sel(pre, nme) => "selection"
     case SynthSel(pre, nme) => "selection"
     case Tup(fields) => "tuple literal"
+    case CtxTup(fields) => "contextual tuple literal"
     case IfLike(Keyword.`if`, body) => "`if` expression"
     case IfLike(Keyword.`while`, body) => "`while` expression"
     case Lam(params, body) => "function literal"
@@ -215,6 +217,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case SynthSel(pre, _) => pre :: Nil
     case DynSel(o, f, _) => o :: f :: Nil
     case Tup(fields) => fields.flatMap(_.subTerms)
+    case CtxTup(fields) => fields.flatMap(_.subTerms)
     case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
@@ -326,6 +329,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
+    case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
     case TermDefinition(_, k, sym, pss, tps, sign, body, res, flags, _, _) => s"${flags} ${k.str} ${sym}${
       tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
     }${

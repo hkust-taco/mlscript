@@ -577,6 +577,8 @@ extends Importer:
           Tree.App(nme, Tree.Tup(Nil)) // FIXME
           , N, rs)
       )
+    case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
+      Term.CtxTup((f :: fs).map(fld(_)))(tree)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     // case New(c, rfto) =>

@@ -467,18 +467,28 @@ class Resolver(tl: TraceLogger)
     *    the semantic of the term, so it has to done before the symbol
     *    resolution.
     *
+    * @param inCtxPrefix if true, the currently resolving term is the
+    * prefix of an App where the implicit arguments are explicitly
+    * specified, e.g., `f(using 42)`. The implicit arguments should be
+    * resolved on the the App `f(using 42)`, but not on the base of the
+    * App `f`.
     * @param inTyPrefix if true, the currently resolving term is the
-    * prefix of an TyApp which the implicit arguments shouldn't be
-    * resolved on it, but on the TyApp instead.
+    * prefix of an TyApp, e.g., `f[Int]`. The implicit arguments should
+    * be resolved on the the TyApp `f[Int]`, but not on the base of the
+    * TyApp `f`.
     */
-  def resolve(t: Resolvable, inTyPrefix: Bool = false)(using ICtx): (Opt[CallableDefinition], ICtx) =
+  def resolve(t: Resolvable, inCtxPrefix: Bool = false, inTyPrefix: Bool = false)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t}"):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = t match
       // Note: the arguments of the App are traversed later because the
       // definition is required.
-      case Term.App(lhs: Resolvable, _) =>
-        val result = resolve(lhs)
+      case Term.App(lhs: Resolvable, args) =>
+        val result = args match
+          case t @ Term.CtxTup(_) => 
+            resolve(lhs, inCtxPrefix = true, inTyPrefix = inTyPrefix)
+          case _ => 
+            resolve(lhs, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
         resolveSymbol(t)
         result
       case Term.App(lhs, _) =>
@@ -547,7 +557,7 @@ class Resolver(tl: TraceLogger)
       //
       // For example: In `fun f(a)(b) = 42`, f's definition should
       // indicate that it accepts two argument lists; f(42)'s definition
-      // should indicate that it accepts one argument list; f(42, 43)'s
+      // should indicate that it accepts one argument list; f(42)(43)'s
       // definition should indicate that it accepts zero argument lists.
       //
       // Currently, only parameters are processed for these new term
@@ -559,18 +569,22 @@ class Resolver(tl: TraceLogger)
         case S(defn @ CallableDefinition(params = ps :: pss)) =>
           val (argCountUB, argCountLB) = as match
           // Tup: regular arguments
-          case tup: Term.Tup => (
-            !tup.fields.exists(_.isInstanceOf[Spd]),
-            tup.fields.map:
-              case Fld(asc = S(_)) => 0
-              case _: Fld => 1
-              case _: Spd => 0
-            .sum +
-            tup.fields.exists:
-              case Fld(asc = S(_)) => true
-              case _ => false
-            .into(if _ then 1 else 0)
-          )
+          case tup: (Term.Tup | Term.CtxTup) => 
+            val fields = tup match
+              case Term.Tup(fs) => fs
+              case Term.CtxTup(fs) => fs
+            (
+              !fields.exists(_.isInstanceOf[Spd]),
+              fields.map:
+                case Fld(asc = S(_)) => 0
+                case _: Fld => 1
+                case _: Spd => 0
+              .sum +
+              fields.exists:
+                case Fld(asc = S(_)) => true
+                case _ => false
+              .into(if _ then 1 else 0)
+            )
           // Other: spread arguments
           case _ => (false, 0)
           
@@ -633,6 +647,7 @@ class Resolver(tl: TraceLogger)
           
           val args = as match
             case Term.Tup(args) => args
+            case Term.CtxTup(args) => args
             case spd => Spd(true, spd) :: Nil
           
           // The lhs of the App is already traversed by the recursive
@@ -648,7 +663,7 @@ class Resolver(tl: TraceLogger)
       
       // Resolve the implicit arguments.
       newDefn match
-      case S(defn) if !inTyPrefix =>
+      case S(defn) if !inCtxPrefix && !inTyPrefix =>
         def resolveParamList(pss: Ls[ParamList], ass: Ls[Term.Tup]): (Ls[ParamList], Ls[Term.Tup]) = pss match
           case ParamList(flags = ParamListFlags(ctx = true), params = ps) :: pss =>
             val as = ps.map(resolveArg(_)(t))
@@ -663,6 +678,9 @@ class Resolver(tl: TraceLogger)
           resolveSymbol(t)
           
         (S(defn.copy(params = pss)), ictx)
+      case S(defn) =>
+        t.withIArgs(Nil)
+        (S(defn), ictx)
       case _ =>
         t.withIArgs(Nil)
         (N, ictx)
