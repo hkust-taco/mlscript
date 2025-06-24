@@ -75,6 +75,8 @@ module Str with
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
+  
+  fun take(string, n) = string.slice(0, n)
 
   fun drop(string, n) = string.slice(n)
 

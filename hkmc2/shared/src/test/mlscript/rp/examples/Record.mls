@@ -1,0 +1,86 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+// Compute Body Mass Index (BMI) from weight (kg) and height (m)
+pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
+
+pattern Rounded = (Num as value) => Math.round(value)
+
+:todo // This looks decent! Make this happen!
+// Note: This needs refactoring the desugarer.
+(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
+//│ ║  l.14: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = false
+
+pattern RoundedBMI = CalculateBMI as Rounded
+
+fun bmi(record) = if record is RoundedBMI as value then value
+
+bmi of weight: 70, height: 1.75
+//│ = 23
+
+:re
+bmi of weight: 70
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// This pattern is useful becuase it turns a pattern into a function that
+// returns `Some` if the pattern matches, and `None` otherwise.
+pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
+
+fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then value
+
+bmi of weight: 70, height: 1.75
+//│ = Some(23)
+
+bmi of height: 1.75
+//│ = None
+
+// Calculate the area of different shapes
+pattern ShapeArea = 
+  (((:radius)) => Math.PI * radius * radius) |  // Circle
+  (((:width, :height)) => width * height) |     // Rectangle
+  (((:base, :height)) => base * height / 2)     // Triangle
+
+fun area(shape) = if shape is ShapeArea as a then Some(a) else None
+
+area of (radius: 10)
+//│ = Some(314.1592653589793)
+
+area of (width: 10, height: 20)
+//│ = Some(200)
+
+area of (base: 10, height: 20)
+//│ = Some(100)
+
+// Fields are tested in the same order as they are written in the pattern.
+area of (radius: 10, height: 20)
+//│ = Some(314.1592653589793)
+
+area of (width: 10, height: 20, base: 10)
+//│ = Some(200)
+
+// Convert between different number systems
+pattern NumberSystem = 
+  (((:digits, radix: "x")) => parseInt(digits, 16)) |
+  (((:digits, radix: "o")) => parseInt(digits, 8)) |
+  (((:digits, radix: "b")) => parseInt(digits, 2))
+
+:todo // This looks decent! Make this happen!
+fun parseIntegerLiteral(value) = if
+  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+    (:radix, :digits) is NumberSystem as value then Some(value)
+  else None
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.75: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+//│ ╙──      	                                              ^
+
+// The workaround we can use currently is to use a pattern declaration.
+:fixme
+pattern IntegerLiteral =
+  ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: radix

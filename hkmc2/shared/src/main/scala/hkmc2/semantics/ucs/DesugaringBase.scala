@@ -29,7 +29,7 @@ trait DesugaringBase(using Ctx, State):
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)
+    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)(Nil)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
@@ -37,12 +37,13 @@ trait DesugaringBase(using Ctx, State):
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)
+    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)(Nil)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
   protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
   protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
   protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")
+  protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take")
   protected lazy val stringDrop = sel(sel(runtimeRef, "Str"), "drop")
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
@@ -52,6 +53,10 @@ trait DesugaringBase(using Ctx, State):
   /** Make a term that looks like `runtime.Tuple.slice(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, s: FlowSymbol): Term =
     app(tupleGet, tup(fld(t), fld(int(i))), s)
+  
+  /** Make a term that looks like `runtime.Tuple.slice(t, i, j)`. */
+  protected final def callTupleSlice(t: Term, i: Int, j: Int, label: Str): Term =
+    app(tupleSlice, tup(fld(t), fld(int(i)), fld(int(j))), label)
 
   /** Make a term that looks like `runtime.Str.startsWith(t, p)`. */
   protected final def callStringStartsWith(t: Term.Ref, p: Term, label: Str) =
@@ -61,6 +66,10 @@ trait DesugaringBase(using Ctx, State):
   protected final def callStringGet(t: Term.Ref, i: Int, label: Str) =
     app(stringGet, tup(fld(t), fld(int(i))), label)
 
+  /** Make a term that looks like `runtime.Str.drop(t, n)`. */
+  protected final def callStringTake(t: Term.Ref, n: Int, label: Str) =
+    app(stringTake, tup(fld(t), fld(int(n))), label)
+  
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
   protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
     app(stringDrop, tup(fld(t), fld(int(n))), label)
@@ -88,24 +97,6 @@ trait DesugaringBase(using Ctx, State):
     val call = app(localPatternSymbol.ref().withIArgs(Nil), tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
     tempLet("matchResult", call): resultSymbol =>
       Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
-
-  /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
-  protected final def makeUnapplyBranch(
-      scrut: => Term.Ref,
-      clsTerm: Term,
-      argsOpt: Opt[Ls[FlatPattern.Argument]],
-      inner: => Split,
-      method: Str = "unapply"
-  )(fallback: Split): Split =
-    val call = app(sel(clsTerm, method).withIArgs(Nil), tup(fld(scrut)), s"result of $method")
-    tempLet("matchResult", call): resultSymbol =>
-      argsOpt match
-        case N => Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
-        case S(args) =>
-          val tupleSymbol = TempSymbol(N, "tuple")
-          Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(S(tupleSymbol :: Nil)),
-            makeTupleBranch(tupleSymbol.ref().withIArgs(Nil), args.map(_.scrutinee), inner, Split.End)
-          ) ~: fallback
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
@@ -113,13 +104,33 @@ trait DesugaringBase(using Ctx, State):
     consequent: => Split,
     alternative: Split
   ): Split =
-    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false),
+    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false)(Nil),
       subScrutinees.iterator.zipWithIndex.foldRight(consequent):
         case ((arg, index), innerSplit) =>
           val label = s"the $index-th element of the match result"
           Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
     ) ~: alternative
-    
+  
+  protected final def makeTupleBranch(
+    scrut: => Term.Ref,
+    leading: Ls[BlockLocalSymbol],
+    spread: BlockLocalSymbol,
+    trailing: Ls[BlockLocalSymbol],
+    consequent: => Split,
+    alternative: Split
+  ): Split =
+    val split0 = trailing.iterator.zipWithIndex.foldRight(consequent):
+      case ((arg, index), innerSplit) =>
+        val reverseIndex = trailing.size - index
+        val label = s"the last $reverseIndex-th element of the tuple"
+        Split.Let(arg, callTupleGet(scrut, -reverseIndex, label), innerSplit)
+    val split1 = Split.Let(spread, callTupleSlice(
+      scrut, leading.size, trailing.size, "the middle part of the tuple"), split0)
+    val split2 = leading.iterator.zipWithIndex.foldRight(split1):
+      case ((arg, index), innerSplit) =>
+        val label = s"the first ${index + 1}-th element of the tuple"
+        Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
+    Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true)(Nil), split2) ~: alternative
   
   /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
   protected final def makeUnapplyStringPrefixBranch(

@@ -1124,8 +1124,8 @@ extends Importer:
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.showDbg}" -> sym.toLoc :: Nil))
                   N
               .partition(_.flags.pat)
-            log(s"pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
-            log(s"extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
+            log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
+            log(s"`${patSym.nme}`'s extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
             // Empty pattern body is considered as wildcard patterns.
             val rhs = td.rhs.getOrElse:
               raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
@@ -1138,10 +1138,10 @@ extends Importer:
             // `VarSymbol` yet. Thus, we need to pair them with the extraction
             // parameters. We only report warnings for unbounded variables
             // because they are harmless.
-            pat.variables.varMap.foreach: (name, alias) =>
+            pat.variables.varMap.foreach: (name, aliases) =>
               extractionParams.find(_.sym.name == name) match
-                case S(param) => alias.symbol = param.sym
-                case N => raise(WarningReport(msg"Useless pattern binding: $name." -> alias.toLoc :: Nil))
+                case S(param) => aliases.foreach(_.symbol = param.sym)
+                case N => raise(WarningReport(msg"Useless pattern binding: $name." -> aliases.head.toLoc :: Nil))
             scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             
@@ -1168,7 +1168,10 @@ extends Importer:
               patSym.patternParams,
               Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
               td.rhs.getOrElse(die), pat)
-            val pd = PatternDef(owner, patSym, sym, tps, ps, pat,
+            // `paramsOpt` is set to `N` because we don't want parameters to
+            // appear in the generated class's constructor.
+            val pd = PatternDef(owner, patSym, sym, tps, N,
+              patternParams, extractionParams, pat,
               ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
             patSym.defn = S(pd)
             pd
@@ -1309,12 +1312,12 @@ extends Importer:
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
     import ucs.Translator.isInvalidStringBounds, ucs.HelperExtractors.to
+    given TraceLogger = tl
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
       val pattern = go(lhs)
-      val termCtx = ctx ++ pattern.variables.map:
-        case alias => alias.id.name -> alias.allocate
+      val termCtx = ctx ++ pattern.variables.allocate
       pattern.variables.report // Report all invalid variables we found in `pattern`.
       Transform(pattern, term(rhs)(using termCtx))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
@@ -1347,6 +1350,10 @@ extends Importer:
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
           acc
       Record(entries.reverse)
+    /** Elaborate a pattern argument. */
+    def arg(t: Tree): Ctxl[Pattern \/ Pattern] = t match
+      case TypeDef(syntax.Pat, body, N, N) => L(go(body))
+      case _ => R(go(t))
     def go(t: Tree): Ctxl[Pattern] = t match
       // Brackets.
       case Bra(BracketKind.Round, t) => go(t)
@@ -1356,12 +1363,18 @@ extends Importer:
       case t: syntax.Literal => Literal(t)
       // Negation patterns: `~p`
       case App(Ident("~"), Tup(p :: Nil)) => Negation(go(p))
+      // Negative integer and decimal literals.
+      case app @ App(Ident("-"), Tup(IntLit(n) :: Nil)) =>
+        Literal(IntLit(-n).withLocOf(app))
+      case app @ App(Ident("-"), Tup(DecLit(n) :: Nil)) =>
+        Literal(DecLit(-n).withLocOf(app))
       // Union and intersection patterns: `p | q` and `p & q`
       case OpApp(lhs, Ident(op @ ("|" | "&")), rhs :: Nil) =>
         Composition(op === "|", go(lhs), go(rhs))
-      // Constructor patterns with arguments.
-      case App(ctor: Ctor, Tup(args)) =>
-        Constructor(term(ctor), args.map(go(_)))
+      // Constructor patterns with pattern arguments and arguments.
+      case App(ctor: Ctor, Tup(argTrees)) =>
+        val (patArgs, args) = argTrees.partitionMap(arg(_))
+        Constructor(term(ctor), patArgs, S(args))
       // `[p1, p2, ...ps, pn] => term`: All patterns are in the `TyTup`.
       case (lhs: TyTup) `=>` rhs => arrow(lhs, rhs)
       // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.
@@ -1371,15 +1384,23 @@ extends Importer:
         case lhs :: Nil => arrow(lhs, rhs)
         case _ :: _ | Nil => ??? // TODO: When is this case reached?
       case p as q => q match
-        // `p as id` is elaborated into alias patterns
-        case id: Ident => go(p) binds id
-        // `p as q` is elaborated into chain patterns
+        // `p as id` is elaborated into alias if `id` is not a constructor.
+        case id: Ident => ident(id) match
+          case S(target) if target.symbol.exists(_.isInstanceOf[VarSymbol]) =>
+            // If the target is a variable, we should shadow it. This check is
+            // probably insufficient as there are more cases.
+            go(p) binds id
+          case S(target) => Chain(go(p), Constructor(target, N))
+          case N => go(p) binds id // Fallback to alias.
+        // `p as q` where `q` is not an identifier is elaborated into chain.
         case _: Tree => Chain(go(p), go(q))
       case Under() => Pattern.Wildcard()
       // Record patterns like `(a: p1, b: p2, ...pn)`.
       case Block(ps) => record(ps)
       // A single pun pattern is a record pattern.
       case p @ Pun(false, _) => record(p :: Nil)
+      // A single record field is a record pattern.
+      case p @ InfixApp(_, Keyword.`:`, _) => record(p :: Nil)
       // Range patterns. We can also desugar them into disjunctions of all the
       // literals in the range.
       case (lower: StrLit) to (incl, upper: StrLit) =>
@@ -1395,12 +1416,15 @@ extends Importer:
       // pattern translation.
       case OpApp(lhs, Ident("~"), rhs :: Nil) => Pattern.Concatenation(go(lhs), go(rhs))
       // Constructor patterns can be written in the infix form.
-      case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op), Ls(go(lhs), go(rhs)))
+      case OpApp(lhs, op, rhs :: Nil) => Pattern.Constructor(term(op), S(Ls(go(lhs), go(rhs))))
       // Constructor patterns without arguments
       case id @ Ident(name) => ident(id) match
-        case S(target) => Constructor(target, Nil)
+        case S(target) => Constructor(target, N)
         case N => Variable(id) // Fallback to variable pattern.
-      case sel: (SynthSel | Sel) => Constructor(term(sel), Nil)
+      case sel: (SynthSel | Sel) => Constructor(term(sel), N)
+      case other: Tree =>
+        raise(ErrorReport(msg"Found an unrecognizable pattern." -> t.toLoc :: Nil))
+        Pattern.Wildcard()
     go(t)
   
   def typeParams(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match

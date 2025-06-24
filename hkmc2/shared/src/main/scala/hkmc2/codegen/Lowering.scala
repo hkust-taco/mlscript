@@ -311,7 +311,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
-        case _ => false
+        // Do not perform safe check on `MatchResult` and `MatchFailure`.
+        case sym => (sym is State.matchResultClsSymbol) ||
+          (sym is State.matchFailureClsSymbol)
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>

@@ -93,8 +93,11 @@ let Runtime1;
           return runtime.safeCall(string1.at(i))
         }
       } 
-      static drop(string2, n) {
-        return runtime.safeCall(string2.slice(n))
+      static take(string2, n) {
+        return string2.slice(0, n)
+      } 
+      static drop(string3, n1) {
+        return runtime.safeCall(string3.slice(n1))
       }
       static toString() { return "Str"; }
     });

@@ -28,18 +28,32 @@ fun isTruthy(value) = value is @compile Truthy
 
 fun isFalsy(value) = value is @compile Falsy
 
+fun isTruthy'(value) = value is Truthy
+
+fun isFalsy'(value) = value is Falsy
+
 :global
 :expect true
 
 // Test each case of `Truthy`.
+// ===========================
 
 isTruthy of true
+//│ = true
+
+isTruthy' of true
 //│ = true
 
 isTruthy of true && true
 //│ = true
 
+isTruthy' of true && true
+//│ = true
+
 isTruthy of true || true
+//│ = true
+
+isTruthy' of true || true
 //│ = true
 
 :re
@@ -47,13 +61,23 @@ isTruthy of true || false
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
+isTruthy' of true || false
+//│ = true
+
 isTruthy of false || true
+//│ = true
+
+isTruthy' of false || true
 //│ = true
 
 isTruthy of Not of false
 //│ = true
 
+isTruthy' of Not of false
+//│ = true
+
 // Test each case of `Falsy`.
+// ==========================
 
 isFalsy of false
 //│ = true
@@ -67,11 +91,23 @@ isFalsy of false && true
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
+isFalsy' of false && true
+//│ = true
+
 isFalsy of true && false
+//│ = true
+
+isFalsy' of true && false
 //│ = true
 
 isFalsy of false || false
 //│ = true
 
+isFalsy' of false || false
+//│ = true
+
 isFalsy of Not of true
+//│ = true
+
+isFalsy' of Not of true
 //│ = true

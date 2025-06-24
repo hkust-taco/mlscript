@@ -281,7 +281,7 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
     * `T` in `pattern Nullable(pattern T) = null | T`.
     */
   var patternParams: Ls[Param] = Nil
-  
+  var extractionParams: Ls[Param] = Nil
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 
 class TopLevelSymbol(blockNme: Str)(using State)

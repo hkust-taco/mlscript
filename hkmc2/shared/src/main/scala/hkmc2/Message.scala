@@ -31,6 +31,7 @@ object Message:
   final case class Code(ty: TypeLike) extends Bit
   implicit def fromType(ty: TypeLike): Message = Message(Code(ty)::Nil)
   implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
+  implicit def fromInt(int: Int): Message = Message(Text(int.toString)::Nil)
   
   implicit class MessageContext(private val ctx: StringContext):
     def msg(inserted: Message*): Message =

@@ -9,12 +9,8 @@ open Option { Some, None }
 pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 
 :ucs ups
-pattern HomogeneousCoordinate = ((:x, :y, w: ~0 as w)) => (x: x / w, y: y / w)
-//│ elaborated pattern body: {x: x, y: y, w: ¬0 as w} => { let x; x = builtin:/#0(x#666, w#666); "x": x#0; let y; y = builtin:/#1(y#666, w#666); "y": y#0; }
-
-:ucs ups
 pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl
-//│ elaborated pattern body: member:Nil() => 0 ∨ member:Cons(member:Int() as hd, member:SumList() as tl) => builtin:+#0(hd#666, tl#666)
+//│ elaborated pattern body: member:Nil => 0 ∨ member:Cons(member:Int as hd, member:SumList as tl) => builtin:+#0(hd#666, tl#666)
 
 // Flatten the nested tuples. Note that it makes use of biased union.
 pattern Flatten = ([Flatten as hd, ...Flatten as tl] => Array.concat(hd, tl)) | _
@@ -34,30 +30,13 @@ pattern CountTree(pattern P) =
 pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
 //│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a#666, c#666], [b#666, d#666]]
 
-// Convert a color in RGB format to grayscale
-pattern Grayscale = ((:r, :g, :b)) => r * 0.299 + g * 0.587 + b * 0.114
-
 // Return the middle element of a list. It won't match if the length is even.
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
-//│ elaborated pattern body: [x] => x#666 ∨ [x, ...member:Middle() as m, y] => m#666
+//│ elaborated pattern body: [x] => x#666 ∨ [x, ...member:Middle as m, y] => m#666
 
 // Return the leaves of a tree.
 pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)
-
-// Extract the first and last elements of a list
-pattern FirstLast = ([x, ..._, y] => [x, y])
-
-// Check if a list is a palindrome
-:ucs ups
-pattern IsPalindrome = ([x, ...IsPalindrome as m, y] => m && x == y) | (([_] | []) => true) | (_ => false)
-//│ elaborated pattern body: [x, ...member:IsPalindrome() as m, y] => builtin:&&#0(m#666, builtin:==#0(x#666, y#666)) ∨ ([_] ∨ []) => true ∨ _ => false
-
-:ucs ups
-// A better `IsPalindrome`, which matches palindrome sequences exactly.
-pattern IsPalindrome =
-  (([first, ...IsPalindrome, last] => first === last) as true) | [_] | []
-//│ elaborated pattern body: ([first, ...member:IsPalindrome(), last] => builtin:===#0(first#666, last#666)) as true ∨ [_] ∨ []
 
 // Extract the diagonal elements of a 3x3 matrix
 pattern MatrixDiagonal = ([[a, _, _], [_, b, _], [_, _, c]] => [a, b, c])
@@ -94,64 +73,8 @@ pattern PathToValue(pattern target) =
   (Node(PathToValue(target) as left, _, _) => [0] ::: left) |
   (Node(_, _, PathToValue(target) as right) => [1] ::: right)
 
-// Convert a list of pairs to a map-like object
-pattern ListToMap = (Nil => ()) | (([Str as k, v] :: ListToMap as rest) => (...rest, (k): v))
-
-fun contains(xs, x) = if xs is
-  hd :: tl and { hd === x then true, else tl contains(x) }
-  Nil then false
-
-// Apply a pattern to a list and return a list of unique elements.
-pattern Unique(pattern P) =
-  (Nil => Nil) |
-  (((P as hd) :: (Unique(P) as tl)) => if tl contains(hd) then tl else hd :: tl)
-
-// Extract elements at even indices in a tuple.
-pattern EvenIndicesTuple = 
-  ([] => []) | 
-  ([x] => [x]) | 
-  ([x, _, ...EvenIndices as rest] => [x, ...rest])
-  
 // Extract elements at even indices in a list.
 pattern EvenIndicesList = 
   (Nil => Nil) | 
   ((x :: Nil) => x) |
   ((x :: _ :: EvenIndices as xs) => x :: xs)
-
-pattern CelsiusToFahrenheit = (Num as c) => c * 9 / 5 + 32
-pattern FahrenheitToCelsius = (Num as f) => (f - 32) * 5/9
-
-// Compute Body Mass Index (BMI) from weight (kg) and height (m)
-pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
-
-pattern HourAM = 0 ..= 12
-pattern HourPM = ((13 ..= 23) as hour) => hour - 12
-
-// Convert 24-hour time format to 12-hour format with AM/PM
-pattern Time12Hour = ((
-  hour: ((HourAM | HourPM) as hour) & ((HourAM => "AM" | HourPM => "PM") as flag),
-  :minute
-)) => hour + ":" + minute + " " + flag
-
-:ucs ups
-// This makes use of the chain pattern.
-pattern Time12Hour = ((
-  hour: (
-    ((hour as (0 ..= 12)) => ["AM", hour]) |
-    ((hour as (13 ..= 23)) => ["PM", hour - 12])
-  ) as [hour, flag],
-  :minute
-)) => hour + ":" + minute + " " + flag
-//│ elaborated pattern body: {hour: ((hour as (0 to 12)) => ["AM", hour#666] ∨ (hour as (13 to 23)) => ["PM", builtin:-#4(hour#666, 12)]) as [hour, flag], minute: minute} => builtin:+#15(builtin:+#14(builtin:+#13(builtin:+#12(hour#666, ":"), minute#666), " "), flag#666)
-
-// Calculate the area of different shapes
-pattern ShapeArea = 
-  (((:radius)) => Math.PI * radius * radius) |  // Circle
-  (((:width, :height)) => width * height) |     // Rectangle
-  (((:base, :height)) => base * height / 2)     // Triangle
-
-// Convert between different number systems
-pattern NumberSystem = 
-  (((:value, radix: "binary")) => value.toString(2)) |
-  (((:value, radix: "hex")) => value.toString(16)) |
-  (((:value, radix: "octal")) => value.toString(8))

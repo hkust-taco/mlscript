@@ -1,22 +1,36 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*, collection.immutable.HashMap
+import mlscript.utils.*, shorthands.*
+import collection.immutable.HashMap, collection.mutable.Buffer
 import syntax.Tree, Tree.Ident, Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
+import utils.{TraceLogger, tl}
 
 object Pattern:
   /** The reason why a variable obtained from `Pattern.variables` is invalid. */
   enum InvalidReason:
-    /** The variable shadowed another variable. */
-    case Duplicated(previous: Ident)
+    /** The variable shadowed another variable.
+     *  @param previous The identifiers shadowed by the current aliases. */
+    case Duplicated(previous: Ls[Ident])
     /** The variable presents in one side of disjunction, but not the other. */
     case Inconsistent(disjunction: Pattern.Composition, missingOnTheLeft: Bool)
     /** The variable is bound in a `Negation` pattern. */
     case Negated(negation: Pattern.Negation)
-  
+    /** Higher-order pattern arguments contain free variables. For example, `x`
+     *  in `pattern MaybeInt = Nullable(pattern Int as x)` is invalid. Because
+     *  `MaybeInt` does not guarantee that `Int as x` is used in `Nullable`. */
+    case Escaped(pattern: Pattern)
   
   import InvalidReason.*
+  
+  extension (aliases: Ls[Pattern.Alias])
+    /** Allocate the symbol for the variable. This should be called in the
+     *  elaborator and before elaborating the term from `Transform`. */
+    def allocate(id: Ident)(using State): VarSymbol =
+      val symbol = VarSymbol(id)
+      aliases.foreach(_.symbol = symbol)
+      symbol
   
   /** A set of variables that present in a pattern.
    *  
@@ -25,33 +39,50 @@ object Pattern:
    *  on the `Pattern` tree. We only create `VarSymbol` for these variables at the
    *  root node or when elaborating the term of a `Transform` pattern.
    * 
-   *  @param varMap A map from variable names to their latest aliases.
+   *  @param varMap A map from variable names to their valid aliases. Multiple
+   *                aliases are allowed when they are in different disjunctions.
    *  @param invalidVars A list of variables and the reason why they are invalid.
    */
   final case class Variables(
-      varMap: HashMap[Str, Pattern.Alias],
+      varMap: HashMap[Str, Ls[Pattern.Alias]],
       invalidVars: Ls[(Pattern.Alias, InvalidReason)]
   ):
-    /** Apply a function to all variables. */
-    def map[A](f: Pattern.Alias => A): Iterator[A] = varMap.iterator.map(_._2).map(f)
+    /** Allocate symbols for all variables. */
+    def allocate(using State, TraceLogger): Seq[(Str, VarSymbol)] =
+      varMap.iterator.map: (name, aliases) =>
+        tl.scoped("ucs:translation"):
+          tl.log(s"allocating symbols for variable: ${name}")
+        val symbol = VarSymbol(Ident(name)) // Location is lost.
+        aliases.foreach: alias =>
+          tl.scoped("ucs:translation"):
+            tl.log(s"allocated symbol for alias: ${alias.showDbg}")
+          alias.symbol = symbol
+        (name, symbol)
+      .toSeq
+    
+    /** Get all symbols for the variables. */
+    def symbols: Ls[VarSymbol] = varMap.iterator.map(_._2.head.symbol).toList
     
     /** Add a single variable to the variable set. */
     def +(alias: Pattern.Alias): Variables =
       varMap.get(alias.id.name) match
-        case N => Variables(varMap + (alias.id.name -> alias), invalidVars)
-        case S(oldVar) => Variables(
-          varMap.updated(alias.id.name, alias),
-          invalidVars :+ (oldVar, Duplicated(alias.id)))
+        // Add the alias to the variable set if the name has not been used.
+        case N => Variables(varMap + (alias.id.name -> Ls(alias)), invalidVars)
+        case S(oldAliases) => Variables(
+          varMap.updated(alias.id.name, Ls(alias)),
+          // Append the invalid reason: `alias` shadows `oldAliases`.
+          invalidVars :+ (alias -> Duplicated(oldAliases.map(_.id))))
     
     /** Union two variable sets. If the latter contains a variable that is
      *  already present in the former, the variable is considered duplicated. */
-    def ++(that: Variables): Variables = Variables(
-      varMap.merged(that.varMap):
-        case ((name, _), (_, id)) => (name, id),
-      invalidVars ::: that.invalidVars ::: that.varMap.iterator.collect:
-        case (name, id) if varMap.contains(name) =>
-          (id, Duplicated(varMap(name).id))
-      .toList)
+    def ++(that: Variables): Variables =
+      val duplicated: Buffer[(Alias, InvalidReason)] = Buffer.empty
+      Variables(
+        varMap.merged(that.varMap):
+          case ((name, previous), (_, aliases)) =>
+            duplicated ++= aliases.map(_ -> Duplicated(previous.map(_.id)))
+            (name, aliases),
+        invalidVars ::: that.invalidVars ::: duplicated.toList)
     
     /** Intersect two variable sets and move variables that are only present in
      *  one side to the invalid variables. This method considers `this` as the
@@ -61,22 +92,25 @@ object Pattern:
       val notInThat = varMap.removedAll(that.varMap.keys)
       val notInThis = that.varMap.removedAll(varMap.keys)
       Variables(
-        // Remove variables that only present in one side.
-        varMap.removedAll(Iterable.concat(notInThat.keys, notInThis.keys)),
+        // Merge two sets and remove variables that only present in one side.
+        varMap.merged(that.varMap):
+          case ((name, left), (_, right)) => (name, left ::: right)
+        .removedAll(Iterable.concat(notInThat.keys, notInThis.keys)),
         // Add variables that only present in one side to the invalid variables.
         invalidVars :::
-          notInThis.iterator.map(_._2 -> Inconsistent(pattern, true)).toList :::
-          notInThat.iterator.map(_._2 -> Inconsistent(pattern, false)).toList)
+          notInThis.iterator.flatMap(_._2.map(_ -> Inconsistent(pattern, true))).toList :::
+          notInThat.iterator.flatMap(_._2.map(_ -> Inconsistent(pattern, false))).toList)
     
     /** Mark all variables in this set as invalid. */
     def invalidated(reason: InvalidReason): Variables =
-      Variables(HashMap.empty, invalidVars appendedAll varMap.iterator.map(_._2 -> reason))
+      Variables(HashMap.empty, invalidVars appendedAll varMap.iterator.flatMap(_._2.map(_ -> reason)))
     
     /** Report all invalid variables. */
     def report(using Raise): Unit = invalidVars.foreach:
-      case (Alias(_, id), Duplicated(previous)) => error(
-        msg"Duplicate pattern variable." -> id.toLoc,
-        msg"The previous definition is here." -> previous.toLoc)
+      case (Alias(_, id), Duplicated(previous)) => raise(ErrorReport(
+        msg"Duplicate pattern variable." -> id.toLoc ::
+        msg"The previous definition ${if previous.size === 1 then "is" else "are"} as follows." -> previous.head.toLoc ::
+        previous.tail.map(msg"" -> _.toLoc)))
       case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) => error(
         msg"Found an inconsistent variable in disjunction patterns." -> id.toLoc,
         msg"The variable is missing from this sub-pattern." -> (
@@ -97,6 +131,10 @@ object Pattern:
   /** A shorthand for creating a variable pattern. */
   def Variable = Pattern.Wildcard() binds (_: Ident)
   
+  object Constructor:
+    def apply(target: Term, arguments: Opt[Ls[Pattern]]): Constructor =
+      Constructor(target, Nil, arguments)
+  
   trait ConstructorImpl:
     self: Pattern.Constructor =>
     
@@ -104,7 +142,8 @@ object Pattern:
     def symbol: Opt[Symbol] = self.target.resolvedSymbol
     
     /** Expect the `symbol` to be set. */
-    def symbol_! : Symbol = symbol.getOrElse(lastWords("symbol is not set"))
+    def symbol_! : Symbol = symbol.getOrElse:
+      lastWords(s"target term `${self.target.showDbg}` does not resolve to a symbol")
   
   /** Add a mutable field to the `Alias` pattern to store the symbol for the
    *  variable. Note that NOT every `Alias` pattern has a symbol. */
@@ -114,17 +153,27 @@ object Pattern:
     /** Directly set the symbol for the variable. This should be called in the
      *  elaborator when elaborating the non-`Transform` top-level pattern. */
     def symbol_=(symbol: VarSymbol): Unit = _symbol = S(symbol)
-    def symbol: VarSymbol = _symbol.getOrElse(lastWords("symbol is not set"))
-    /** Allocate the symbol for the variable. This should be called in the
-     *  elaborator and before elaborating the term from `Transform`. */
-    def allocate(using State): VarSymbol = VarSymbol(self.id).tap(symbol_=)
+    def symbolOption: Opt[VarSymbol] = _symbol
+    def symbol: VarSymbol = _symbol.getOrElse:
+      lastWords(s"no symbol was assigned to variable `${id.name}` at ${id.toLoc}")
 
 import Pattern.*, InvalidReason.*
 
 /** An inductive data type for patterns. */
 enum Pattern extends AutoLocated:
-  /** A pattern that matches a constructor and its arguments. */
-  case Constructor(target: Term, arguments: Ls[Pattern])
+  /** A pattern that matches a constructor and its arguments.
+   *  @param target The term representing the constructor.
+   *  @param patternArguments Arguments of higher-order patterns. They are only
+   *      meaningful when the `target` refers to a pattern symbol. They can't
+   *      have any free variables.
+   *  @param arguments `None` if the pattern does not have a parameter list. The
+   *      patterns that are used to destruct the constructor's arguments.
+   */
+  case Constructor(
+      target: Term,
+      patternArguments: Ls[Pattern],
+      arguments: Opt[Ls[Pattern]]
+  ) extends Pattern with ConstructorImpl
   
   /** A pattern that is the composition of two patterns.
    *  @param polarity `true` if the pattern is a disjunction, `false` if it is
@@ -182,7 +231,7 @@ enum Pattern extends AutoLocated:
    *  which will be reported when constructing symbols for variables. We use a
    *  map becuase we want to replace variables. */
   lazy val variables: Variables = this match
-    case Constructor(_, arguments) => arguments.variables
+    case Constructor(_, _, arguments) => arguments.fold(Variables.empty)(_.variables)
     case Composition(false, left, right) => left.variables ++ right.variables
     case union @ Composition(true, left, right) => left.variables.intersect(right.variables, union)
     // If we only allow negation patterns to be used as the top-level pattern
@@ -200,11 +249,12 @@ enum Pattern extends AutoLocated:
     case Chain(first, second) => first.variables ++ second.variables
   
   def children: Ls[Located] = this match
-    case Constructor(target, arguments) => target :: arguments
+    case Constructor(target, patternArguments, arguments) =>
+      target :: patternArguments ::: arguments.getOrElse(Nil)
     case Composition(polarity, left, right) => left :: right :: Nil
     case Negation(pattern) => pattern :: Nil
     case Wildcard() => Nil
-    case Literal(literal) => Nil
+    case Literal(literal) => literal :: Nil
     case Range(lower, upper, rightInclusive) => lower :: upper :: Nil
     case Concatenation(left, right) => left :: right :: Nil
     case Tuple(leading, spread, trailing) => leading ::: spread.toList ::: trailing
@@ -215,7 +265,8 @@ enum Pattern extends AutoLocated:
     case Transform(pattern, transform) => pattern :: transform :: Nil
   
   def subTerms: Ls[Term] = this match
-    case Constructor(target, arguments) => target :: arguments.flatMap(_.subTerms)
+    case Constructor(target, patternArguments, arguments) =>
+      target :: patternArguments.flatMap(_.subTerms) ::: arguments.fold(Nil)(_.flatMap(_.subTerms))
     case Composition(_, left, right) => left.subTerms ::: right.subTerms
     case Negation(pattern) => pattern.subTerms
     case _: (Wildcard | Literal | Range) => Nil
@@ -235,9 +286,13 @@ enum Pattern extends AutoLocated:
     if addPar then s"(${showDbg})" else showDbg
   
   def showDbg: Str = this match
-    case Constructor(target, arguments) =>
+    case Constructor(target, patternArguments, arguments) =>
       val targetText = target.symbol.fold(target.showDbg)(_.toString())
-      s"$targetText(${arguments.map(_.showDbg).mkString(", ")})"
+      val patternArgumentsText = patternArguments.iterator.map(_.showDbg)
+        .map("pattern " + _).mkStringOr("(", ", ", ")", "")
+      val argumentsText = arguments.fold(""): args =>
+        s"(${args.map(_.showDbg).mkString(", ")})"
+      s"$targetText$patternArgumentsText$argumentsText"
     case Composition(true, left, right) => s"${left.showDbg} \u2228 ${right.showDbg}"
     case Composition(false, left, right) => s"${left.showDbg} \u2227 ${right.showDbg}"
     case Negation(pattern) => s"\u00ac${pattern.showDbgWithPar}"

@@ -25,6 +25,14 @@ pattern SimpleJoin = ("abc" | "xyz") ~ ("def" | "")
 :todo
 pattern Exponential = ("a" | "b") ~ ("c" | "d") ~ ("e" | "f") // ~ ("g" | "h") ~ ("i" | "j") ~ ("k" | "l") ~ ("m" | "n") ~ ("o" | "p") ~ ("q" | "r") ~ ("s" | "t") ~ ("u" | "v") ~ ("w" | "x") ~ ("y" | "z")
 
+:expect true
+"ace" is Exponential
+//│ = true
+
+:expect true
+"bcf" is Exponential
+//│ = true
+
 :todo
 "abcdefghijklm" is Exponential
 //│ = false

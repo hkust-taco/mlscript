@@ -1,0 +1,24 @@
+:js
+
+pattern Null = null
+
+null is Null
+//│ = true
+
+pattern Nullable(pattern T) = null | T
+
+// This creates an inline object with `unapply` method and pass it to
+// `Nullable.unapply`.
+fun isPositiveOrNull(x) = x is Nullable(pattern ((Int as x) => x > 0) as true)
+
+isPositiveOrNull of 0
+//│ = false
+
+isPositiveOrNull of null
+//│ = true
+
+isPositiveOrNull of 1
+//│ = true
+
+isPositiveOrNull of -2
+//│ = false

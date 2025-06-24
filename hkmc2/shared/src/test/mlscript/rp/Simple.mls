@@ -3,7 +3,34 @@
 import "../../mlscript-compile/Runtime.mls"
 
 
+:sjs
 pattern Zero = "0"
+//│ JS (unsanitized):
+//│ let Zero1;
+//│ const Zero$class = class Zero {
+//│   constructor() {}
+//│   unapply(input) {
+//│     if (input === "0") {
+//│       return runtime.MatchResult(input)
+//│     } else {
+//│       return runtime.MatchFailure()
+//│     }
+//│   } 
+//│   unapplyStringPrefix(topic) {
+//│     let cond, sliced;
+//│     cond = runtime.Str.startsWith(topic, "0");
+//│     if (cond === true) {
+//│       sliced = runtime.Str.drop(topic, 1);
+//│       return runtime.MatchResult([
+//│         sliced
+//│       ])
+//│     } else {
+//│       return runtime.MatchFailure()
+//│     }
+//│   }
+//│   toString() { return "Zero"; }
+//│ }; Zero1 = new Zero$class;
+//│ Zero1.class = Zero$class;
 
 :expect true
 Zero.unapply("0") is Runtime.MatchResult

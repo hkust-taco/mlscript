@@ -26,20 +26,36 @@ fun b(lc, rc) = Node(lc, B, rc)
 :expect true
 
 // Test each case of `EvenTree`.
+// =============================
 
 B is @compile EvenTree
+//│ = true
+
+B is EvenTree
 //│ = true
 
 not of A is @compile EvenTree
 //│ = true
 
+not of A is EvenTree
+//│ = true
+
 not of a(B, B) is @compile EvenTree
+//│ = true
+
+not of a(B, B) is EvenTree
 //│ = true
 
 a(B, A) is @compile EvenTree
 //│ = true
 
+a(B, A) is EvenTree
+//│ = true
+
 a(A, B) is @compile EvenTree
+//│ = true
+
+a(A, B) is EvenTree
 //│ = true
 
 :re
@@ -47,20 +63,36 @@ b(A, A) is @compile EvenTree
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
+b(A, A) is EvenTree
+//│ = true
+
 :re
 b(B, B) is @compile EvenTree
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
+b(B, B) is EvenTree
+//│ = true
+
 // Test each case of `OddTree`.
+// ============================
 
 A is @compile OddTree
+//│ = true
+
+A is OddTree
 //│ = true
 
 a(B, B) is @compile OddTree
 //│ = true
 
+a(B, B) is OddTree
+//│ = true
+
 a(A, A) is @compile OddTree
+//│ = true
+
+a(A, A) is OddTree
 //│ = true
 
 :re
@@ -68,7 +100,13 @@ b(B, A) is @compile OddTree
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
 
+b(B, A) is OddTree
+//│ = true
+
 :re
 b(A, B) is @compile OddTree
 //│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
 //│ = false
+
+b(A, B) is OddTree
+//│ = true

@@ -16,9 +16,7 @@ fun map(f) = case
 fun foo = case
   Some(Some(a as b) as c) as d then [a, b, c, d]
 //│ Desugared:
-//│ >  if caseScrut is Option.Some(param0) and $param0 is Option.Some(param0) and
+//│ >  if caseScrut is Option.Some(param0) as d and $param0 is Option.Some(param0) as c and
 //│ >    let a = $param0#0
 //│ >    let b = $param0#1
-//│ >    let c = $param0#1
-//│ >    let d = caseScrut#1
 //│ >    else [a#666, b#666, c#666, d#666]

@@ -498,6 +498,12 @@ case class PatternDef(
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
     paramsOpt: Opt[ParamList],
+    /** The pattern parameters, for example, `T` in
+     *  `pattern Nullable(pattern T) = null | T`. */
+    patternParams: Ls[Param],
+    /** The extraction parameters, for example, `x` in
+     *  `pattern PairLike(x, y) = [x, y] | Pair(x, y)`. */
+    extractionParams: Ls[Param],
     /** The elaborated pattern right-hand side. */
     pattern: Pattern,
     // Here, `ObjBody` contains methods `unapply` and `unapplyStringPrefix`,

@@ -25,7 +25,7 @@ MatchResult(0)
 pattern Cross = "X"
 
 Cross.unapply("X")
-//│ = MatchResult([])
+//│ = MatchResult("X")
 
 Cross.unapply("0")
 //│ = MatchFailure(undefined)
