@@ -15,13 +15,13 @@ use[Str]
 :e
 :re
 use[Num]
-//│ ╔══[ERROR] Cannot query instance of type Num (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
 //│ ║  l.17: 	use[Num]
 //│ ║        	^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.98: 	fun use[T](using instance: T) = instance
 //│ ║        	                 ^^^^^^^^^^^
-//│ ╙── Missing instance: Expected: Num (type variable T); Available: Int, Str
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :expect 42
@@ -34,13 +34,13 @@ x
 :todo
 using Int -> Int = id
 use[Int -> Int](123)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.36: 	use[Int -> Int](123)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.98: 	fun use[T](using instance: T) = instance
 //│ ║        	                 ^^^^^^^^^^^
-//│ ╙── Missing instance: Expected: ‹unspecified› (type variable T); Available: Int, Str
+//│ ╙── Missing instance: Expected: ‹unspecified› (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -58,13 +58,13 @@ f
 
 :e
 fun f(using Int) = use[Num]
-//│ ╔══[ERROR] Cannot query instance of type Num (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
 //│ ║  l.60: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.98: 	fun use[T](using instance: T) = instance
 //│ ║        	                 ^^^^^^^^^^^
-//│ ╙── Missing instance: Expected: Num (type variable T); Available: Int, Str
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 
 
 data class Some[T](value: T)
@@ -82,7 +82,7 @@ use{[Some[Int]].value}
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -94,7 +94,7 @@ use{[Some[Int]].value}
 :e
 :re
 use([Some[Int]].value)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.96: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -113,7 +113,7 @@ f[Int]
 :e
 :re
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type variable T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.115: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
