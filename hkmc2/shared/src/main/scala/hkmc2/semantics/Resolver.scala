@@ -581,10 +581,9 @@ class Resolver(tl: TraceLogger)
                     case _: Fld => true
                     case _: Spd => false
                 ) + (
-                  fields.exists:
-                    case Fld(asc = S(_)) => true
-                    case _ => false
-                  .into(if _ then 1 else 0)
+                  fields.collectFirst:
+                    case Fld(asc = S(_)) => 1
+                  .getOrElse(0)
                 )
               )
             // Other: spread arguments
@@ -647,6 +646,7 @@ class Resolver(tl: TraceLogger)
                 recordArgs.reverse
             end zip
             
+            // Application arguments that are not tuples represent spreads, as in `f(...arg)`
             val args = as match
               case Term.Tup(args) => args
               case Term.CtxTup(args) => args
