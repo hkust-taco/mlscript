@@ -496,7 +496,7 @@ class Resolver(tl: TraceLogger)
         (t.callableDefn, ictx)
       
       case Term.TyApp(lhs: Resolvable, targs) =>
-        resolve(lhs, inCtxPrefix= false, inTyPrefix = true)
+        resolve(lhs, inCtxPrefix = false, inTyPrefix = true)
         targs.foreach(traverse(_, expect = Any))
         resolveSymbol(t)
         (t.callableDefn, ictx)
