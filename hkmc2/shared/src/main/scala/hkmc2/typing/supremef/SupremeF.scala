@@ -80,6 +80,7 @@ sealed trait Type:
       case NegType.App(sigma, al) => 
         doc"${sigma.showAsTypeImpl(ArrowLhsPrec)} -> ${al.show}"
           |> parens(ArrowLhsPrec)
+      case _: NegType.Force.type => "!"
 
   def showAsTerm(using ctx: NamingCtx) = showAsTermImpl(TopPrec)
   def showAsTermImpl(prec: Int)(using ctx: NamingCtx): Document =
@@ -203,15 +204,18 @@ enum PosType extends Type derives CanEqual:
 enum NegType extends Type derives CanEqual:
   case Var(al: TypeVar)
   case App(sigma: QuantType, al: TypeVar)
+  case Force
 
   def canonicalize(using ctx: CanonicalizeCtx): NegType = this match
     case Var(al) => Var(al.canonicalize)
     case App(sigma, al) => App(sigma.canonicalize, al.canonicalize)
+    case Force => Force
 
 
   def refresh(using InferenceCtx, Map[Int, TypeVar]): NegType = this match
     case Var(al) => Var(al.refresh)
     case App(sigma, al) => App(sigma.refresh, al.refresh)
+    case Force => Force
 
 object QuantType:
   def fromVar(al: TypeVar) = QuantType.Base(PosType.Var(al))
@@ -424,6 +428,9 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
       case Some(sigma1) =>
         val eqConstr = unify(sigma, sigma1)(using Set.empty[TypeVar])
         ("C-Forall2", None, eqConstr ++ List(Constraint(sigma1, pi, c.mrks)))
+    
+    case (QuantType.Base(_: (PosType.Lam | PosType.Unit)), NegType.Force) => ("C-Top", None, Nil)
+    
     // e.g. application where lhs is a unit
     case _ => ("C-Err", None, Nil)
 

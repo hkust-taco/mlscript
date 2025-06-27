@@ -280,7 +280,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       val ctrm = typer.fromTerm(trm)
       output("Parsed Core: " + ctrm.show)
       typer.checkWellFormed(ctrm)
-      val (ty, cons) = typer.inferType(ctrm)
+      val (ty, cons_) = typer.inferType(ctrm)
+      val cons = Constraint(QuantType.Base(ty), NegType.Force, Nil) :: cons_
       output("Inferred: " + ty.showAsType)
       output("As term: " + ty.showAsTerm)
 
