@@ -153,6 +153,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
+    case Value.Rcd(Nil) => doc"{}"
     case Value.Rcd(flds) =>
       doc"{ #  #{ ${
         flds.map:

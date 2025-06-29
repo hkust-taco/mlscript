@@ -11,9 +11,9 @@ pattern Zero = "0"
 //│   constructor() {}
 //│   unapply(input) {
 //│     if (input === "0") {
-//│       return runtime.MatchResult(input)
+//│       return runtime.MatchResult(input, {})
 //│     } else {
-//│       return runtime.MatchFailure()
+//│       return runtime.MatchFailure(null)
 //│     }
 //│   } 
 //│   unapplyStringPrefix(topic) {
@@ -23,9 +23,9 @@ pattern Zero = "0"
 //│       sliced = runtime.Str.drop(topic, 1);
 //│       return runtime.MatchResult([
 //│         sliced
-//│       ])
+//│       ], {})
 //│     } else {
-//│       return runtime.MatchFailure()
+//│       return runtime.MatchFailure(null)
 //│     }
 //│   }
 //│   toString() { return "Zero"; }

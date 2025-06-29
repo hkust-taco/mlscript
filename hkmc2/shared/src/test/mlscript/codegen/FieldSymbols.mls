@@ -93,7 +93,6 @@ case
 //│               Argument:
 //│                 scrutinee = $param0
 //│                 tree = Ident of "a"
-//│                 split = N
 //│                 pattern = N
 //│             mode = Default
 //│             refined = false

@@ -1,6 +1,9 @@
 :js
 
+open annotations
+
 import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
 
 open Stack
 

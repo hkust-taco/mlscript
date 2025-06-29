@@ -453,13 +453,6 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       val scrutinees = scrutSymbol.getSubScrutinees(args.size)
       val matches = scrutinees.iterator.zip(args).map:
         case (symbol, tree) =>
-          // BEGIN OBSOLETE CODE
-          val argument = tree match
-            case TypeDef(syntax.Pat, body, N, N) => S(DeBrujinSplit.elaborate(Nil, body, elaborator))
-            case td @ TypeDef(k = syntax.Pat) =>
-              error(msg"Ill-formed pattern argument" -> td.toLoc); N
-            case _ => N
-          // END OBSOLETE CODE
           // We only elaborate arguments marked with `pattern` keyword. This is
           // due to a technical limitation that the desugarer generates flat
           // patterns on the fly and we don't know whether the argument should
@@ -467,11 +460,12 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           val pattern = tree match
             case TypeDef(syntax.Pat, body, N, N) =>
               val pattern = elaborator.pattern(body)
-              S(new Translator(elaborator).translateAnonymousPattern(Nil, Nil, pattern))
+              val term = new Translator(elaborator).translateAnonymousPattern(Nil, Nil, pattern)
+              S((pattern, term))
             case td @ TypeDef(k = syntax.Pat) =>
               error(msg"Ill-formed pattern argument" -> td.toLoc); N
             case _ => N
-          Argument(symbol, tree, argument, pattern)
+          Argument(symbol, tree, pattern)
       .toList
       Branch(
         ref,
@@ -539,7 +533,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           ref,
           FlatPattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined)(output),
           // The outermost is a tuple, so pattern arguments are not possible.
-          wrap(subMatches(matches.map { case (s, t) => Argument(s, t, N, N) }, sequel)(Split.End)(ctx))
+          wrap(subMatches(matches.map { case (s, t) => Argument(s, t, N) }, sequel)(Split.End)(ctx))
         ) ~: fallback
       // Negative numeric literals
       case App(Ident("-"), Tup(IntLit(value) :: Nil)) => fallback => ctx =>
@@ -635,9 +629,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       post = (r: Split) => s"subMatches >>> ${r.showDbg}"
     ):
       sequel(ctx)
-    case Argument(_, Under(), _, _) :: rest => subMatches(rest, sequel) // Skip wildcards
-    case Argument(_, _, S(_), _) :: rest => subMatches(rest, sequel) // Skip pattern arguments
-    case Argument(scrutinee, tree, _, _) :: rest => fallback => trace(
+    case Argument(_, Under(), _) :: rest => subMatches(rest, sequel) // Skip wildcards
+    case Argument(_, _, S(_)) :: rest => subMatches(rest, sequel) // Skip pattern arguments
+    case Argument(scrutinee, tree, _) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $tree",
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):

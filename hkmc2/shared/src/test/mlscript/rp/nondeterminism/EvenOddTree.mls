@@ -58,18 +58,14 @@ a(A, B) is @compile EvenTree
 a(A, B) is EvenTree
 //│ = true
 
-:re
 b(A, A) is @compile EvenTree
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 b(A, A) is EvenTree
 //│ = true
 
-:re
 b(B, B) is @compile EvenTree
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 b(B, B) is EvenTree
 //│ = true
@@ -95,18 +91,14 @@ a(A, A) is @compile OddTree
 a(A, A) is OddTree
 //│ = true
 
-:re
 b(B, A) is @compile OddTree
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 b(B, A) is OddTree
 //│ = true
 
-:re
 b(A, B) is @compile OddTree
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 b(A, B) is OddTree
 //│ = true

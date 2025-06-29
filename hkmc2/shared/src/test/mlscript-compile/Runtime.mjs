@@ -39,14 +39,15 @@ let Runtime1;
       }
       toString() { return "EffectHandle(" + "" + ")"; }
     };
-    this.MatchResult = function MatchResult(captures1) {
-      return new MatchResult.class(captures1);
+    this.MatchResult = function MatchResult(output1, bindings1) {
+      return new MatchResult.class(output1, bindings1);
     };
     this.MatchResult.class = class MatchResult {
-      constructor(captures) {
-        this.captures = captures;
+      constructor(output, bindings) {
+        this.output = output;
+        this.bindings = bindings;
       }
-      toString() { return "MatchResult(" + runtime.render(this.captures) + ")"; }
+      toString() { return "MatchResult(" + runtime.render(this.output) + ", " + runtime.render(this.bindings) + ")"; }
     };
     this.MatchFailure = function MatchFailure(errors1) {
       return new MatchFailure.class(errors1);

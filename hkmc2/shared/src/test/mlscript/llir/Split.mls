@@ -26,6 +26,8 @@ map_sum(x => x, 200)
 //│ 20100
 
 :intl
+:todo
+// Works fine with `~hkmc2DiffTests/Test/run` but not with `hkmc2AllTests/test`.
 abstract class Iter[T]
 object Done
 data class Yield(n)
@@ -52,4 +54,4 @@ fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
 map_sum(x => x, 200)
 //│ 
 //│ Interpreted:
-//│ 20100
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

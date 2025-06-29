@@ -4,20 +4,19 @@ package ucs
 
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
-import Split.display, ucs.Normalization
-import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.*, Keyword.{`as`, `=>`}
-import scala.collection.mutable.{Buffer, Set as MutSet}
+import Split.display, Desugarer.unapply, extractors.*
+import syntax.{Fun, Keyword, Tree}, Tree.*, Keyword.{`as`, `=>`}
+import scala.collection.mutable.Buffer
 import Elaborator.{Ctx, State, ctx}
-import Desugarer.unapply
 
 object Translator:
   /** String range bounds must be single characters. */
   def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
     val ds = Buffer.empty[(Message, Option[Loc])]
     if lo.value.length != 1 then
-      ds += msg"String range bounds must have only one character." -> lo.toLoc
+      ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
     if hi.value.length != 1 then
-      ds += msg"String range bounds must have only one character." -> hi.toLoc
+      ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
     if ds.nonEmpty then error(ds.toSeq*)
     ds.nonEmpty
   
@@ -79,7 +78,7 @@ import Translator.*
  *  perform pattern matching on terms described by the pattern.
  */
 class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends DesugaringBase:
-  import elaborator.term, elaborator.tl.*, HelperExtractors.*, FlatPattern.MatchMode
+  import elaborator.term, elaborator.tl.*, FlatPattern.MatchMode
   import Pattern.*
   
   private type CaptureMap = Map[Param, Term.Ref]
@@ -170,7 +169,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends De
                     argumentOutput, // TODO: Combine `outerOutput` and `argumentOutput`
                     outerBindings ++ argumentBindings),
                   Split.End)
-              val theArgument = FlatPattern.Argument(subScrutinee, Tree.Empty().withLocOf(argument), N, N)
+              val theArgument = FlatPattern.Argument(subScrutinee, Tree.Empty().withLocOf(argument), N)
               (theArgument :: theArguments, makeThisSplit)
           .mapFirst(S(_))
         // For pattern arguments for higher-order patterns, we generate the
@@ -178,7 +177,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends De
         val arguments0 = patternArguments.iterator.zipWithIndex.map: (pattern, index) =>
           val patternSymbol = TempSymbol(N, s"patternArgument$index$$")
           val patternObject = translateAnonymousPattern(Nil, Nil, pattern)
-          FlatPattern.Argument(patternSymbol, Tree.Empty().withLocOf(pattern), N, S(patternObject))
+          FlatPattern.Argument(patternSymbol, Tree.Empty().withLocOf(pattern), S((pattern, patternObject)))
         .toList
         val theArguments = arguments1.fold(if arguments0.isEmpty then N else S(arguments0)):
           case arguments => S(arguments0 ::: arguments)
@@ -554,7 +553,7 @@ class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends De
         Split.Else(makeMatchResult(Term.Tup(head :: fields)(Tup(Nil))))
   
   /** Failed matctching result. */
-  private def failure: Split = Split.Else(makeMatchFailure)
+  private def failure: Split = Split.Else(makeMatchFailure())
   
   private def errorSplit: Split = Split.Else(Term.Error)
   

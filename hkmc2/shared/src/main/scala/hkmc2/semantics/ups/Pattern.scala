@@ -3,20 +3,242 @@ package semantics
 package ups
 
 
-import mlscript.utils.AnyOps
-import mlscript.utils.shorthands.*
-
+import mlscript.utils.*, shorthands.*
+import semantics.Pattern as SP
 import syntax.Tree, Tree.Ident
 import Message.MessageContext
+import ucs.{error, warn}
+import Context.*
+import hkmc2.semantics.ups.Pattern.NonCompositional
+import scala.collection.immutable.SeqMap
 
+private[ups] object Kind:
+  sealed trait Specialized extends Expanded
+  sealed trait Expanded extends Complete
+  sealed trait Complete
 
-enum Pattern:
-  import Pattern.{Wildcard, Never, Head}
+/** This class `Pattern` with its case classes are the internal representation
+  * of patterns used in pattern compilation. The most important difference
+  * between these and those in the `semantics` package are as follows.
+  * 
+  * 1. All symbols in this abstract data type are resolved, including bindings
+  *    used in pattern transformations. Ill-formed bindings have been rejected
+  *    during the elaboration stage.
+  * 2. Higher-order patterns have been instantiated. Diverging patterns have
+  *    been rejected during instantiation. Therefore, all symbols in this abstract
+  *    data type are guaranteed to be first-order.
+  */
+sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
+  import Pattern.*
+  
+  infix def and[L >: K <: Kind.Complete](that: Pattern[L]): Pattern[L] = this match
+    case And(patterns) => that match
+      case And(patterns2) => And(patterns ++ patterns2)
+      case _ => And[L](patterns appended that)
+    case _ => that match
+      case And(patterns) => And(this :: patterns)
+      case _ => And[L](this :: that :: Nil)
+  
+  infix def or[L >: K <: Kind.Complete](that: Pattern[L]): Pattern[L] = this match
+    case Or(patterns) => that match
+      case Or(patterns2) => Or(patterns ++ patterns2)
+      case _ => Or[L](patterns appended that)
+    case _ => that match
+      case Or(patterns) => Or[L](this :: patterns)
+      case _ => Or[L](this :: that :: Nil)
+  
+  // TODO: Associate with locations.
+  protected def children: List[Located] = this match
+    case Literal(lit) => lit :: Nil
+    case ClassLike(sym, arguments) => arguments.fold(Nil):
+      _.map((id, p) => p).toList
+    case Record(entries) => entries.values.toList
+    case Tuple(leading, spread, trailing) => leading ++ spread.toList ++ trailing
+    case And(patterns) => patterns
+    case Or(patterns) => patterns
+    case Not(pattern) => pattern :: Nil
+    case Rename(pattern, name) => pattern :: Nil
+    case Extract(pattern, term) => pattern :: term :: Nil
+    case Synonym(pattern) => pattern.symbol :: pattern.arguments
+  
+  lazy val symbols: Ls[VarSymbol] = this match
+    case Literal(lit) => Nil
+    case ClassLike(sym, arguments) =>
+      arguments.fold(Nil)(_.values.flatMap(_.symbols).toList)
+    case Record(entries) => entries.values.flatMap(_.symbols).toList
+    case Tuple(leading, spread, trailing) => leading.flatMap(_.symbols) :::
+      spread.fold(Nil)(_.symbols) ::: trailing.flatMap(_.symbols)
+    case Synonym(_) => Nil
+    case And(patterns) => patterns.flatMap(_.symbols)
+    case Or(patterns) =>
+      // We have checked that bindings are consistent in the elaboration stage.
+      // Inconsistent bindings are not associated with symbols.
+      patterns.find(_ != Never).fold(Nil)(_.symbols)
+    case Not(_) => Nil
+    case Rename(pattern, name) => name :: pattern.symbols
+    case Extract(_, _) => Nil
+  
+  /** Apply a partial function to every node in the pattern tree. Replace each
+   *  node with the result of the partial function. If the partial function is
+   *  not defined at a node, the node is left unchanged.
+   *  @param f The partial function to apply to each node.
+   */
+  def map[L <: Kind.Complete](f: NonCompositional[K] => Pattern[L]): Pattern[L] = this match
+    case p: NonCompositional[K] => f(p)
+    case And(patterns) => And[L](patterns.map(_.map(f)))
+    case Or(patterns) => Or[L](patterns.map(_.map(f)))
+    case Not(pattern) => Not[L](pattern.map(f))
+    case Rename(pattern, name) => Rename[L](pattern.map(f), name)
+    case Extract(pattern, term) => Extract[L](pattern.map(f), term)
+  
+  /** A simplified reduce for ``Pattern``.
+    * It is designed to be used when we want to
+    * compute a single value, starting from the leaves.
+    * It silently goes through ``Not``, ``Extract``, ``Rename`` and ``Synonym``.
+    * The function must provide all the other base cases, and how
+    * a list is merged (for ``And`` and ``Or`` nodes)
+    */
+  def reduce[A](merge: List[A] => A)(f: PartialFunction[Pattern[K], A]): A = this match
+    case p: NonCompositional[K] =>
+      if f.isDefinedAt(p) then f(p) else merge(Nil)
+    case And(patterns) => merge(patterns.map(_.reduce(merge)(f)))
+    case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
+    case Not(pattern) => pattern.reduce(merge)(f)
+    case Rename(pattern, _) => pattern.reduce(merge)(f)
+    case Extract(pattern, _) => pattern.reduce(merge)(f)
 
-  case Lit(lit: Term.Lit)
+  def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
+    case Literal(lit) => Set(lit)
+    case ClassLike(sym, _) => Set(sym)
 
-  /** Represents a constructor or a class,
-    * possibly with arguments.
+  def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
+    case Record(entries) => entries.keys.toSet[Ident | Int]
+    case Tuple(leading, spread, trailing) =>
+      val n = leading.size + trailing.size
+      val subfields = Range(0, n).toSet[Ident | Int]
+      // if this is strict, then a condition is imposed on field n
+      if spread.isEmpty then subfields + n else subfields
+
+  def collectSubPatterns(field: Ident | Int): Set[Pat] = field match
+    case id: Ident => this.reduce[Set[Pat]](_.toSet.flatten):
+        // TODO: raise a warning
+      case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
+        case None => Set()
+        case Some(arguments) =>
+          arguments.find((id1, _) => id === id).map((_, p) => p).toSet
+      case Record(entries) => entries.get(id).toSet
+      case Tuple(leading, spread, trailing) => Set()
+    case n : Int => this.reduce[Set[Pat]](_.toSet.flatten):
+      case Tuple(leading, spread, trailing) => trailing.lift(n).toSet
+  
+  /** Simplify the pattern by removing `Never` patterns. */
+  def simplify: Pattern[K] = this match
+    case _: Literal => this
+    case ClassLike(sym, arguments) =>
+      ClassLike(sym, arguments.map(_.map((id, p) => (id, p.simplify))))
+    case Record(entries) =>
+      val simplify = entries.map((id, p) => (id, p.simplify))
+      if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
+    case Tuple(leading, spread, trailing) =>
+      val leading2 = leading.map(_.simplify)
+      val spread2 = spread.map(_.simplify)
+      val trailing2 = trailing.map(_.simplify)
+      if leading2.contains(Never) || spread2.contains(Never) || trailing2.contains(Never)
+      then Never else Tuple(leading2, spread2, trailing2)
+    case And(patterns) =>
+      // TODO: Complete the simplification logic here.
+      val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
+        case (p, acc) => p.simplify match
+          case `Wildcard` => acc match
+            case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
+            case acc => Wildcard :: acc
+          case simplified => simplified :: acc
+      if simplified contains Never then Never else simplified.foldSingleton(And.apply)(identity)
+    case Or(patterns) =>
+      patterns.foldRight(Nil: Ls[Pattern[K]]):
+        case (p, acc) => p.simplify match
+          case Never => acc match
+            // The list should be a list of non-`Never` patterns or a singleton
+            // list of `Never` pattern.
+            case Nil => Never :: Nil
+            case Never :: Nil | _ => acc
+          // Should we discard the accumulated patterns?
+          // case `Wildcard` => Wildcard :: Nil // Discard the following patterns.
+          case `Wildcard` => acc match
+            case `Never` :: Nil => Wildcard :: Nil
+            case `Wildcard` :: _ => acc // One consecutive wildcard is enough.
+            case acc => Wildcard :: acc
+          case pat => acc match
+            case Nil | Never :: Nil => pat :: Nil
+            case _ => pat :: acc
+      .foldSingleton(Or.apply)(identity)
+    case Not(pattern) => Not(pattern.simplify)
+    case Rename(pattern, name) => Rename(pattern.simplify, name)
+    case Extract(pattern, term) => pattern.simplify match
+      case `Never` => Never // Lift up `Never`. Let the caller reduce it.
+      case simplified => Extract(simplified, term)
+    case Synonym(sym) => this
+  
+  /** Expand the pattern by replacing any top-level synonym with its body.
+   *  @return the expanded pattern named "ExPat" in the paper. */
+  def expand(alreadyExpanded: Set[Instantiation] = Set())(using Context, Raise): ExPat = map:
+    case Synonym(instantiation) =>
+      if alreadyExpanded contains instantiation then
+        error(msg"Expanding this pattern leads to an infinite loop." -> instantiation.toLoc)
+        Never // Infinite recursive patterns are considered as never patterns.
+      else
+        // Otherwise, we expand the instantiated pattern definition's body.
+        instantiation.body.expand(alreadyExpanded + instantiation)
+    // I don't know how to make the GADT type checking work here.
+    // case pattern: NonCompositional[K] => pattern // Noop.
+    // case pattern: ExPat => pattern // Noop.
+    case pattern: ClassLike => pattern
+    case pattern: Record => pattern
+    case pattern: Tuple => pattern
+    case pattern: Literal => pattern
+  
+  /** Unwrap `Rename` patterns until we reach a non-`Rename` pattern. Collect
+   *  the symbols on the way. Maybe we can make `Rename` a property of each
+   *  pattern. */
+  def aliases: Ls[VarSymbol] = this match
+    case Rename(pattern, name) => name :: pattern.aliases
+    case _: Pattern[K] => Nil
+  
+  def showDbg: Str = this match
+    case Literal(lit) => lit.idStr
+    case ClassLike(sym, arguments) =>
+      val argumentsText = arguments.fold(""):
+        _.iterator.map((id, p) => s"${id.name}: ${p.showDbg}").mkString(" { ", ", ", " }")
+      s"${sym.nme}$argumentsText"
+    case Record(entries) =>
+      if entries.isEmpty then "{}" else entries.iterator.map:
+        case (id, p) => s"${id.name}: ${p.showDbg}"
+      .mkString("{ ", ", ", " }")
+    case Tuple(leading, spread, trailing) =>
+      val leadingText = leading.map(_.showDbg).mkString(", ")
+      val spreadText = spread.map(_.showDbg).mkString(", ")
+      val trailingText = trailing.map(_.showDbg).mkString(", ")
+      List(leadingText, spreadText, trailingText).mkString("[", ", ", "]")
+    case And(Nil) => "\u22A5"
+    case And(pattern :: Nil) => pattern.showDbg
+    case And(patterns) =>
+      patterns.map(_.showDbg).mkString("(", " \u2227 ", ")")
+    case Or(Nil) => "\u22A4"
+    case Or(pattern :: Nil) => pattern.showDbg
+    case Or(patterns) =>
+      patterns.map(_.showDbg).mkString("(", " \u2228 ", ")")
+    case Not(pattern) => s"!${pattern.showDbg}"
+    case Rename(Or(Nil), name) => name.name
+    case Rename(pattern, name) => s"${pattern.showDbg} as $name"
+    case Extract(pattern, term) => s"${pattern.showDbg} => ${term.showDbg}"
+    case Synonym(sym) => sym.showDbg
+
+object Pattern:
+  sealed trait NonCompositional[+K <: Kind.Complete] extends Pattern[K]
+  
+  final case class Literal(lit: syntax.Literal) extends NonCompositional[Kind.Expanded]
+
+  /** Represents a constructor or a class, possibly with arguments.
     * @param sym the class symbol corresponding to the class or the constructor
     * @param arguments is None if no arguments were provided (as
     * in ``Foo``, and is Some if there were arguments provided, even if
@@ -26,14 +248,16 @@ enum Pattern:
     * along with the corresponding identifier, even if it was not present before.
     * e.g. if we have a class defintion ``class L = Nil | Cons(hd: Int, tl: L)``
     * then the pattern ``Cons(foo, bar)`` is expected to be
-    * ``ClassLike(sym=Cons, arguments=Som(List((hd, foo), tl, bar)))``
+    * ``ClassLike(sym=Cons, arguments=Some(List((hd, foo), tl, bar)))``
     */
-  case ClassLike(
-    sym: ClassSymbol,
-    arguments: Opt[Ls[(Ident, Pattern)]]
-  )
+  final case class ClassLike(
+      sym: ClassLikeSymbol,
+      arguments: Opt[SeqMap[Ident, Pat]]
+  ) extends NonCompositional[Kind.Expanded]
 
-  case Record(entries: Map[Ident, Pattern])
+  final case class Record(
+      entries: SeqMap[Ident, Pat]
+  ) extends NonCompositional[Kind.Specialized]
 
   /** @param entries is the ordered list of patterns, from left to right
     * @param strict is true if we matchexactly these fields, and no more,
@@ -42,247 +266,74 @@ enum Pattern:
     * Tuple([p0, ..., p(n-1)], true) <~> {0:p0, ..., n-1: p(n-1)} & Not({n:_})
     * Tuple([p0, ..., p(n-1)], false) <~> {0:p0, ..., n-1: p(n-1)}
     */
-  case Tuple(entries: List[Pattern], strict: Bool)
-
-  case And(patterns: List[Pattern])
-
-  case Or(patterns: List[Pattern])
-
-  case Not(pattern: Pattern)
-
-  case Rename(pattern: Pattern, name: VarSymbol)
-
-  case Extract(pattern: Pattern, term: Term)
-
-  /** Represents a pattern Synonym,
-    * possibly with arguments.
-    * @param sym the pattern symbol corresponding to the class or the constructor
-    * @param arguments is None if no arguments were provided (as
-    * in ``Foo``, and is Some if there were arguments provided, even if
-    *  it is an empty argument list, e.g. ``Bar()``)
+  final case class Tuple(
+      leading: List[Pat],
+      spread: Opt[Pat],
+      trailing: List[Pat]
+  ) extends NonCompositional[Kind.Specialized]
+  
+  /** Represents a pattern synonym.
+    * @param sym the pattern symbol corresponding
     */
-  case Synonym(sym: PatternSymbol, params: Opt[Ls[Pattern]])
-
-  /** A simplified reduce for ``Pattern``.
-    * It is designed to be used when we want to
-    * compute a single value, starting from the leaves.
-    * It silently goes through ``Not``, ``Extract``, ``Rename`` and ``Synonym``.
-    * The function must provide all the other base cases, and how
-    * a list is merged (for ``And`` and ``Or`` nodes)
-    */
-  def reduce[A](f: (Lit | ClassLike | Record | Tuple | List[A]) => A): A = this match
-    case p: (Lit | ClassLike | Record | Tuple) => f(p)
-    case And(patterns) => f(patterns.map(_.reduce(f)))
-    case Or(patterns) => f(patterns.map(_.reduce(f)))
-    case Not(pattern) => pattern.reduce(f)
-    case Rename(pattern, _) => pattern.reduce(f)
-    case Extract(pattern, _) => pattern.reduce(f)
-    case Synonym(_, params) => ??? // TODO call on the body
-
-  def heads: Set[Head] = this.reduce:
-    case Lit(lit) => Set(lit)
-    case ClassLike(sym, _) => Set(sym)
-    case _: (Record | Tuple) => Set()
-    case ls: List[Set[Head]] => ls.toSet.flatten
-
-  def fields: Set[Ident | Int] = this.reduce:
-    case _: (Lit | ClassLike) => Set()
-    case Record(entries) => entries.keys.toSet[Ident | Int]
-    case Tuple(entries, strict) =>
-      val n = entries.size
-      val subfields = Range(0, n).toSet[Ident | Int]
-      // if this is strict, then a condition is imposed on field n
-      if strict then subfields + n else subfields
-    case ls: List[Set[Ident | Int]] => ls.toSet.flatten
-
-  def collectSubPatterns(field: Ident | Int): Set[Pattern] = field match
-    case id: Ident => this.reduce:
-      case Lit(_) => Set()
-        // TODO: raise a warning
-      case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
-        case None => Set()
-        case Some(arguments) =>
-          arguments.find((id1, _) => id === id).map((_, p) => p).toSet
-      case Record(entries) => entries.get(id).toSet
-      case Tuple(entries, strict) => Set()
-      case ls: List[Set[Pattern]] => ls.toSet.flatten
-    case n : Int => this.reduce:
-      case _: (Lit | ClassLike) => /* TODO : riase a warning */ Set()
-      case Record(_) => Set()
-      case Tuple(entries, strict) => entries.lift(n).toSet
-      case ls: List[Set[Pattern]] => ls.toSet.flatten
-
-  // old versions without reduce
-
-  // def heads: Set[Term.Lit | ClassSymbol] = this match
-  //   case _: (Record | Tuple) => Set()
-  //   case Lit(lit) => Set(lit)
-  //   case ClassLike(sym, _) => Set(sym)
-  //   case And(patterns) => patterns.toSet.flatMap(_.heads)
-  //   case Or(patterns) => patterns.toSet.flatMap(_.heads)
-  //   case Not(pattern) => pattern.heads
-  //   case Rename(pattern, _) => pattern.heads
-  //   case Extract(pattern, _) => pattern.heads
-  //   case Synonym(sym, params) => ??? // TODO : raise a warning
-
-  // def fields: Set[Ident | Int] = this match
-  //   case _: (Lit | ClassLike) => Set()
-  //     // TODO : raise a warning
-  //   case Record(entries) => entries.keys.toSet[Ident | Int]
-  //   case Tuple(entries, strict) =>
-  //     val n = entries.size
-  //     val subfields = Range(0, n).toSet[Ident | Int]
-  //     // if this is strict, then a condition is imposed on field n
-  //     if strict then subfields + n else subfields
-  //   case And(patterns) => patterns.toSet.flatMap(_.fields)
-  //   case Or(patterns) => patterns.toSet.flatMap(_.fields)
-  //   case Not(pattern) => pattern.fields
-  //   case Rename(pattern, _) => pattern.fields
-  //   case Extract(pattern, _) => pattern.fields
-  //   case Synonym(sym, params) => ??? // TODO : raise a warning
-
-  // def collectSubPatterns(id: Ident): Set[Pattern] = this match
-  //   case Lit(_) => Set()
-  //     // TODO: raise a warning
-  //   case ClassLike(sym, arguments) => /* TODO:raise a warning */ arguments match
-  //     case None => Set()
-  //     case Some(arguments) =>
-  //       arguments.find((id1, _) => id === id).map((_, p) => p) match
-  //         case None => Set()
-  //         case Some(value) => Set(value)
-  //   case Record(entries) => entries.get(id).toSet
-  //   case Tuple(entries, strict) => Set()
-  //   case And(patterns) => patterns.toSet.flatMap(_.collectSubPatterns(id))
-  //   case Or(patterns) => patterns.toSet.flatMap(_.collectSubPatterns(id))
-  //   case Not(pattern) => pattern.collectSubPatterns(id)
-  //   case Rename(pattern, _) => pattern.collectSubPatterns(id)
-  //   case Extract(pattern, _) => pattern.collectSubPatterns(id)
-  //   case Synonym(sym, params) => ???
-
-  // def collectSubPatterns(n: Int): Set[Pattern] = this match
-  //   case _: (Lit | ClassLike) => /* TODO : riase a warning */ Set()
-  //   case Record(_) => Set()
-  //   case Tuple(entries, strict) => entries.lift(n).toSet
-  //   case And(patterns) => patterns.toSet.flatMap(_.collectSubPatterns(n))
-  //   case Or(patterns) => patterns.toSet.flatMap(_.collectSubPatterns(n))
-  //   case Not(pattern) => pattern.collectSubPatterns(n)
-  //   case Rename(pattern, _) => pattern.collectSubPatterns(n)
-  //   case Extract(pattern, _) => pattern.collectSubPatterns(n)
-  //   case Synonym(sym, params) => ???
-
-  def simplify: Pattern = this match
-    case _: Lit => this
-    case ClassLike(sym, arguments) =>
-      ClassLike(sym, arguments.map(_.map((id, p) => (id, p.simplify))))
-    case Record(entries) =>
-      val simplify = entries.map((id, p) => (id, p.simplify))
-      if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
-    case Tuple(entries, strict) =>
-      val simplify = entries.map(_.simplify)
-      if simplify.contains(Never) then Never else Tuple(simplify, strict)
-    case And(patterns) =>
-      val simplify = patterns.map(_.simplify)
-      // we cannot simplify wildcard, because we still return the scrutinee
-      if simplify.contains(Never) then Never else And(simplify)
-    case Or(patterns) =>
-      def simplifyOr(patterns: List[Pattern]): List[Pattern] = patterns match
-        case Nil => Nil
-        case p :: tl => p.simplify match
-          case Never => simplifyOr(tl)
-          case Wildcard => Wildcard :: Nil
-          case pat => pat :: simplifyOr(tl)
-      Or(simplifyOr(patterns))
-    case Not(pattern) => Not(pattern.simplify)
-    case Rename(pattern, name) => Rename(pattern.simplify, name)
-    case Extract(pattern, term) => Extract(pattern.simplify, term)
-    case Synonym(sym, params) => ???
-
-  def map(f: (Lit | ClassLike | Record | Tuple | Synonym) => Pattern): Pattern = this match
-    case p :(Lit | ClassLike | Record | Tuple | Synonym) => f(p)
-    case And(patterns) => And(patterns.map(_.map(f)))
-    case Or(patterns) => Or(patterns.map(_.map(f)))
-    case Not(pattern) => Not(pattern.map(f))
-    case Rename(pattern, name) => Rename(pattern.map(f), name)
-    case Extract(pattern, term) => Extract(pattern.map(f), term)
-
-  def specialize(lit: Term.Lit): Pattern = this.map:
-    case Lit(lit1) =>
-      if lit1 === lit then Wildcard else Never
-    case ClassLike(_, _) => Never
-    case Record(_) => Never
-      // TODO : are we sure that a literal can't have fields?
-    case Tuple(Nil, false) => ???
-    case Tuple(_, _) => Never
-    case Synonym(sym, params) => ???
-
-  def specialize(cons: ClassSymbol): Pattern = this.map:
-    case Lit(_) => Never
-    case ClassLike(sym, arguments) =>
-      if sym === cons then Wildcard else Never
-    case Record(_) => this
-    case Tuple(Nil, false) => ???
-    case Tuple(_, _) => Never
-    case Synonym(sym, params) => ???
-
-  def specialize(head: Option[Head]): Pattern = head match
-    case Some(h: Term.Lit) => this.specialize(h)
-    case Some(h: ClassSymbol) => this.specialize(h)
-    case None => this.map:
-      case _: (Lit | ClassLike) => Never
-      case _: (Record | Tuple) => this
-      case Synonym(sym, params) => ???
-
-  def expand(alreadyExpanded: Set[PatternSymbol] = Set())(using Raise): Pattern = this.map:
-    case _: (Lit | ClassLike | Record | Tuple) => this
-    case Synonym(sym, params) if sym in alreadyExpanded =>
-      raise(ErrorReport(msg"expanding ${sym.nme} leads to an infinite loop." -> sym.toLoc :: Nil))
-      this
-    case Synonym(sym, params) => params match
-      case None => sym.defn match
-        case None =>
-          raise(ErrorReport(msg"No definition found for pattern synonym ${sym.nme}" -> sym.toLoc :: Nil))
-          this
-        case Some(defn) => ???
-          // TODO : transform the body into what we want
-      case Some(_) =>
-        raise(ErrorReport(msg"Higher order patterns are not supported yet." -> sym.toLoc :: Nil))
-        this
-
-  // old version without map
-
-  // def specialize(lit: Term.Lit): Pattern = this match
-  //   case Lit(lit1) =>
-  //     if lit1 === lit then Wildcard else Never
-  //   case ClassLike(_, _) => Never
-  //   case Record(_) => Never
-  //     // TODO : are we sure that a literal can't have fields?
-  //   case Tuple(Nil, false) => ???
-  //   case Tuple(_, _) => Never
-  //   case And(patterns) => And(patterns.map(_.specialize(lit)))
-  //   case Or(patterns) => Or(patterns.map(_.specialize(lit)))
-  //   case Not(pattern) => Not(pattern.specialize(lit))
-  //   case Rename(pattern, name) => Rename(pattern.specialize(lit), name)
-  //   case Extract(pattern, term) => Extract(pattern.specialize(lit), term)
-  //   case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(lit))))
-
-  // def specialize(cons: ClassSymbol): Pattern = this match
-  //   case Lit(_) => Never
-  //   case ClassLike(sym, arguments) =>
-  //     if sym === cons then Wildcard else Never
-  //   case Record(_) => this
-  //   case Tuple(Nil, false) => ???
-  //   case Tuple(_, _) => Never
-  //   case And(patterns) => And(patterns.map(_.specialize(cons)))
-  //   case Or(patterns) => Or(patterns.map(_.specialize(cons)))
-  //   case Not(pattern) => Not(pattern.specialize(cons))
-  //   case Rename(pattern, name) => Rename(pattern.specialize(cons), name)
-  //   case Extract(pattern, term) => Extract(pattern.specialize(cons), term)
-  //   case Synonym(sym, params) => Synonym(sym, params.map(_.map(_.specialize(cons))))
-
-object Pattern:
-
+  final case class Synonym(pattern: Instantiation) extends NonCompositional[Kind.Complete]
+  
+  // * Pattern kinds propagate through the following cases.
+  final case class And[+K <: Kind.Complete](patterns: List[Pattern[K]]) extends Pattern[K]
+  final case class Or[+K <: Kind.Complete](patterns: List[Pattern[K]]) extends Pattern[K]
+  final case class Not[+K <: Kind.Complete](pattern: Pattern[K]) extends Pattern[K]
+  final case class Rename[+K <: Kind.Complete](pattern: Pattern[K], name: VarSymbol) extends Pattern[K]
+  final case class Extract[+K <: Kind.Complete](pattern: Pattern[K], term: Term) extends Pattern[K]
+  
   val Wildcard = Or(Nil)
-
+  
   val Never = And(Nil)
+  
+  type Head = syntax.Literal | ClassLikeSymbol
+  
+  /** A representation of fully instantiated first-order patterns. */
+  final case class Instantiation(
+      symbol: PatternSymbol,
+      arguments: Ls[Pat]
+  )(val toLoc: Opt[Loc]) extends Located:
+    def showDbg: Str =
+      val argumentsText = if arguments.isEmpty then "" else
+        arguments.iterator.map(_.showDbg).mkString("[", ", ", "]")
+      s"${symbol.nme}$argumentsText"
 
-  type Head = Term.Lit | ClassSymbol
+type Pat = Pattern[Kind.Complete]
+
+type ExPat = Pattern[Kind.Expanded]
+
+type SpPat = Pattern[Kind.Specialized]
+
+import Pattern.*
+
+extension (pattern: ExPat)
+  /** Modifies the pattern under the assumption that the scrutinee matches the
+   *  given literal. We decide to not care about literals with fields. (For
+   *  example, wrapped primitives with properties in JavaScript.) */
+  def specialize(lit: syntax.Literal): SpPat = pattern.map:
+    case Literal(`lit`) => Wildcard
+    case _: (Literal | ClassLike) => Never
+    case pattern: (Record | Tuple) => pattern
+  
+  /** Modifies the pattern under the assumption that the scrutinee matches the
+   *  given class. */
+  def specialize(symbol: ClassLikeSymbol): SpPat = pattern.map:
+    case Literal(_) => Never
+    /** Note that `ClassLike` corresponds the syntax sugar of class patterns
+     *  intersected with record patterns. So, we need to leave the arguments
+     *  part unchanged. If there's no arguments, we return `Wildcard`. */
+    case ClassLike(`symbol`, arguments) =>
+      arguments.fold(Wildcard)(_ |> Record.apply)
+    case ClassLike(_, _) => Never
+    case pattern: (Record | Tuple) => pattern
+  
+  /** Modifies the pattern under the assumption that the scrutinee matches the
+   *  given literal or class. */
+  def specialize(head: Option[Head]): SpPat = head match
+    case Some(h: syntax.Literal) => pattern.specialize(h)
+    case Some(h: ClassLikeSymbol) => pattern.specialize(h)
+    case None => pattern.map:
+      case _: (Literal | ClassLike) => Never
+      case pattern: (Record | Tuple) => pattern

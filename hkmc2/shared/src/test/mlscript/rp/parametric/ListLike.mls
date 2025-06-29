@@ -1,5 +1,7 @@
 :js
 
+open annotations
+
 import "../../../mlscript-compile/Stack.mls"
 
 open Stack
@@ -22,3 +24,7 @@ isOddIntList of 1 :: 71 :: "bruh" :: Nil
 
 isOddIntList of "hello" :: "world" :: Nil
 //│ = false
+
+pattern Nullable(pattern T) = null | T
+
+fun isNullableIntList(xs) = xs is @compile ListLike(pattern Nullable(pattern Int))

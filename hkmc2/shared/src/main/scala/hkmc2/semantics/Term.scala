@@ -304,7 +304,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
     case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
-    case Lam(params, body) => s"λ${params.paramSyms.map(_.id).mkString(", ")}. ${body.showDbg}"
+    case Lam(params, body) => s"λ${params.paramSyms.map(_.id.name).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
       .mkString("( ", "", ")")

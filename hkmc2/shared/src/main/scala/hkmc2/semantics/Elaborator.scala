@@ -212,10 +212,13 @@ object Elaborator:
       BlockMemberSymbol(id.name, Nil, true)
     val matchResultClsSymbol =
       val id = new Ident("MatchResult")
-      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("captures") :: Nil)), N, N)
+      val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N, N)
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(value = true)
-      val ps = PlainParamList(Param(flag, VarSymbol(Ident("captures")), N, Modulefulness(N)(false)) :: Nil)
+      val ps = PlainParamList(
+        Param(flag, VarSymbol(Ident("output")), N, Modulefulness(N)(false)) ::
+        Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
+        Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
         Nil, ps, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
       cs
@@ -1144,29 +1147,11 @@ extends Importer:
                 case N => raise(WarningReport(msg"Useless pattern binding: $name." -> aliases.head.toLoc :: Nil))
             scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
-            
-            // *** BEGIN OBSOLETE CODE ***
-            td.rhs match
-              case N => raise(ErrorReport(msg"Pattern definitions must have a body." -> td.toLoc :: Nil))
-              case S(tree) =>
-                // // TODO: Implement extraction parameters.
-                // if extractionParams.nonEmpty then
-                //   raise(ErrorReport(msg"Pattern extraction parameters are not yet supported." ->
-                //     Loc(extractionParams.iterator.map(_.sym)) :: Nil))
-                log(s"pattern parameters: ${patternParams.mkString("{ ", ", ", " }")}")
-                patSym.patternParams = patternParams
-                val split = ucs.DeBrujinSplit.elaborate(patternParams, tree, this)
-                scoped("ucs:rp:elaborated"):
-                  log(s"elaborated ${patSym.nme}:\n${split.display}")
-                patSym.split = split
-            log(s"pattern body is ${td.rhs}")
-            // *** END OBSOLETE CODE ***
-            
             // Translate the pattern directly into methods that perform matching
             // using backtracking.
             val bod = new ucs.Translator(this)(
-              patSym.patternParams,
-              Nil, // ps.map(_.params).getOrElse(Nil), // TODO[Luyu]: remove pattern parameters
+              patternParams, Nil, // TODO: Remove this parameter after we finish
+              // the pattern translation for string concatenation.
               td.rhs.getOrElse(die), pat)
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
@@ -1311,7 +1296,7 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ucs.Translator.isInvalidStringBounds, ucs.HelperExtractors.to
+    import ucs.Translator.isInvalidStringBounds, ucs.extractors.to
     given TraceLogger = tl
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */

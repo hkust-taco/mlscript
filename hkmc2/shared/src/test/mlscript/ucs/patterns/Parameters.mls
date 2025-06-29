@@ -79,14 +79,16 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 
 :e
 fun test(x) = if x is Test(_, _, _) then "ok"
-//│ ═══[ERROR] mismatched arity: expect 6, found 3
+//│ ╔══[ERROR] Expected six arguments, but found only three arguments.
+//│ ║  l.81: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ╙──      	                      ^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.87: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║  l.89: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
 //│ ║  l.25: 	class Test(a, b, c, d, e, f)
@@ -112,19 +114,19 @@ object A
 :e
 fun foo(x) = if x is A() then 0
 //│ ╔══[ERROR] `A` is an object.
-//│ ║  l.110: 	object A
+//│ ║  l.112: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
-//│ ║  l.113: 	fun foo(x) = if x is A() then 0
+//│ ║  l.115: 	fun foo(x) = if x is A() then 0
 //│ ╙──       	                     ^^^
 
 :e
 fun foo(x) = if x is A(y) then y
 //│ ╔══[ERROR] `A` is an object.
-//│ ║  l.110: 	object A
+//│ ║  l.112: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have arguments.
-//│ ║  l.122: 	fun foo(x) = if x is A(y) then y
+//│ ║  l.124: 	fun foo(x) = if x is A(y) then y
 //│ ╙──       	                     ^^^^
 
 0 is Foo

@@ -5,7 +5,6 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.*, Tree.Ident
 import Elaborator.{Ctx, ctx, State}
-import DeBrujinSplit.*
 import collection.mutable.Buffer
 
 import FlatPattern.*
@@ -33,7 +32,7 @@ enum FlatPattern extends AutoLocated:
   def subTerms: Ls[Term] = this match
     case p: ClassLike => p.constructor :: (p.mode match
       case MatchMode.Default => p.arguments.fold(Nil):
-        _.iterator.flatMap(_.pattern).toList
+        _.iterator.flatMap(_.pattern.map(_.term)).toList
       case _: MatchMode.StringPrefix => Nil
       case MatchMode.Annotated(annotation) => annotation :: Nil)
     case _: (Lit | Tuple | Record) => Nil
@@ -78,16 +77,15 @@ object FlatPattern:
   final case class Argument(
       scrutinee: BlockLocalSymbol,
       tree: Tree,
-      split: Opt[DeBrujinSplit],
-      pattern: Opt[Term.Rcd]
+      pattern: Opt[(pattern: Pattern, term: Term.Rcd)]
   ) extends Located:
     override def toLoc: Opt[Loc] = tree.toLoc
   
   object Argument:
     def apply(scrutinee: BlockLocalSymbol, tree: Tree): Argument =
-      Argument(scrutinee, tree, N, N)
+      Argument(scrutinee, tree, N)
     def apply(scrutinee: BlockLocalSymbol): Argument =
-      Argument(scrutinee, Tree.Dummy, N, N)
+      Argument(scrutinee, Tree.Dummy, N)
   
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:

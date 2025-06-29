@@ -3,7 +3,7 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.Tree.*, Elaborator.{Ctx, ctx}, Elaborator.State
+import syntax.Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** Contains some helpers that makes UCS desugaring easier. */
 trait DesugaringBase(using Ctx, State):
@@ -15,11 +15,19 @@ trait DesugaringBase(using Ctx, State):
   protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
   protected final def str(s: Str) = Term.Lit(StrLit(s))
+  protected final def `null` = Term.Lit(UnitLit(true))
   protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
+  protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(fields.toList)
+  
+  protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
+    Split.Let(sym, term, inner)
+  
+  protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
+  protected final def paramList(params: Param*) = PlainParamList(params.toList)
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().withIArgs(Nil)
 
@@ -82,11 +90,17 @@ trait DesugaringBase(using Ctx, State):
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.ref(), inner) ~: Split.End)
   
-  protected final def makeMatchResult(captures: Term) =
-    app(matchResultClass, tup(fld(captures)), "result of `MatchResult`")
+  protected final def makeMatchResult(output: Term) =
+    app(matchResultClass, tup(fld(output), fld(rcd())), "result of `MatchResult`")
+  
+  protected final def makeMatchResult(output: Term, bindings: Term) =
+    app(matchResultClass, tup(fld(output), fld(bindings)), "result of `MatchResult`")
+  
+  protected final def makeMatchResult(output: Term, fields: Ls[RcdField | RcdSpread]) =
+    app(matchResultClass, tup(fld(output), fld(Term.Rcd(fields))), "result of `MatchResult`")
     
-  protected final def makeMatchFailure =
-    app(matchFailureClass, tup(), "result of `MatchFailure`")
+  protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
+    app(matchFailureClass, tup(fld(errors)), "result of `MatchFailure`")
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(
@@ -144,9 +158,10 @@ trait DesugaringBase(using Ctx, State):
     tempLet("matchResult", call): resultSymbol =>
       // let `matchResult` be the return value
       val argSym = TempSymbol(N, "arg")
+      val bindingsSymbol = TempSymbol(N, "bindings")
       // let `arg` be the first element of `matchResult`
       Branch(
         resultSymbol.ref().withIArgs(Nil),
-        matchResultPattern(S(argSym :: Nil)),
+        matchResultPattern(S(argSym :: bindingsSymbol :: Nil)),
         Split.Let(postfixSymbol, callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"), inner)
       ) ~: fallback

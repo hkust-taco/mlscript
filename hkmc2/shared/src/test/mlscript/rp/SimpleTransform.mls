@@ -1,5 +1,11 @@
 :js
 
+import "../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+open annotations
+
 data class Pair[A, B](first: A, second: B)
 
 pattern SumPair = Pair(a, b) => a + b
@@ -30,6 +36,21 @@ get_output_using_as of false
 get_output_using_as of 0
 get_output_using_as of 1
 get_output_using_as of 2
+//│ > true is equivalent to true
+//│ > false is equivalent to false
+//│ > 0 is equivalent to false
+//│ > 1 is equivalent to true
+//│ > 2 is equivalent to true
+
+fun get_output_using_as'(value) = if value is
+  (@compile BoolLike) as b then print("" + value + " is equivalent to " + b)
+  else print("the input " + value + " is not a boolean")
+
+get_output_using_as' of true
+get_output_using_as' of false
+get_output_using_as' of 0
+get_output_using_as' of 1
+get_output_using_as' of 2
 //│ > true is equivalent to true
 //│ > false is equivalent to false
 //│ > 0 is equivalent to false
@@ -106,6 +127,31 @@ Prefix("-", 10 +:+ 2 *:* 3) is EvaluatedTerm(-16)
 Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
 //│ = false
 
+fun evaluate(term) = if term is
+  (@compile EvaluatedTerm) as v then Some(v)
+  else None
+
+evaluate of Literal(1)
+//│ = Some(1)
+
+evaluate of Literal(1)
+//│ = Some(1)
+
+evaluate of 2 *:* 3 +:+ 1
+//│ = Some(7)
+
+evaluate of (4 +:+ 5) *:* (6 -:- 2)
+//│ = Some(36)
+
+evaluate of Prefix("-", 10 +:+ 2 *:* 3)
+//│ = Some(-16)
+
+evaluate of (8 /:/ 2) +:+ (3 *:* 4) -:- 5
+//│ = Some(11)
+
+evaluate of Infix("**", Literal(1), Literal(2))
+//│ = None
+
 pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 
 (x: 1, y: 2, z: 3) is DropZ((x: 1, y: 2))
@@ -144,7 +190,6 @@ pattern PairLike = [_, _] | Pair(_, _)
 Pair(1, 2) is PairLike
 //│ = true
 
-:todo
 pattern TransformTwice = (((Int as x) => x + 4) as y) => y * 2
 
 2 is TransformTwice(12)
@@ -155,6 +200,18 @@ pattern TransformTwice = (((Int as x) => x + 4) as y) => y * 2
 
 17 is TransformTwice(42)
 //│ = true
+
+fun testTransformTwice(x) =
+  if x is (@compile TransformTwice) as v then Some(v) else None
+
+testTransformTwice of 100
+//│ = Some(208)
+
+testTransformTwice of 2
+//│ = Some(12)
+
+testTransformTwice of 17
+//│ = Some(42)
 
 // We can easily define predicative patterns using `as true`.
 pattern Positive = ((Int as x) => x > 0) as true
@@ -168,10 +225,10 @@ print of 8080 is Positive
 
 // Hmm, but how to make the pattern return the input value?
 Positive.unapply(100)
-//│ = MatchResult(true)
+//│ = MatchResult(true, {})
 
 // Just use conjunction patterns.
 pattern Positive = (x & (((Int as x) => x > 0) as true)) => x
 
 Positive.unapply(100)
-//│ = MatchResult(100)
+//│ = MatchResult(100, {})

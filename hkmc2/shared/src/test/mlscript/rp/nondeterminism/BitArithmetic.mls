@@ -56,10 +56,8 @@ isTruthy of true || true
 isTruthy' of true || true
 //│ = true
 
-:re
 isTruthy of true || false
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 isTruthy' of true || false
 //│ = true
@@ -85,11 +83,9 @@ isFalsy of false
 isFalsy of false && false
 //│ = true
 
-:re
-// The compilation scheme does not handle non-determinism at all at the moment.
+// This example requires the ability to handle non-determinism.
 isFalsy of false && true
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ = true
 
 isFalsy' of false && true
 //│ = true

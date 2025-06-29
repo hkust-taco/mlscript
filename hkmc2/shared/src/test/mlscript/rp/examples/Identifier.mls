@@ -1,5 +1,11 @@
 :js
 
+open annotations
+
+fun check(pred, what) = Array.from(length: 10).forEach of (_, i, _) =>
+  let n = i.toString()
+  print of n, (if pred(n) then "is" else "is not"), what
+
 pattern Zero = "0"
 
 :expect true
@@ -7,6 +13,21 @@ pattern Zero = "0"
 //│ = true
 
 pattern Binary = "0" | "1"
+
+// Currently, we expand range patterns into disjunction.
+fun isBinary(x) = x is @compile Binary
+
+check of isBinary, "binary"
+//│ > 0 is binary
+//│ > 1 is binary
+//│ > 2 is not binary
+//│ > 3 is not binary
+//│ > 4 is not binary
+//│ > 5 is not binary
+//│ > 6 is not binary
+//│ > 7 is not binary
+//│ > 8 is not binary
+//│ > 9 is not binary
 
 :expect false
 "2" is Binary
@@ -25,6 +46,20 @@ pattern Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 :expect false
 "a" is Digit
 //│ = false
+
+fun isDigit(x) = x is @compile Digit
+
+check of isDigit, "digit"
+//│ > 0 is digit
+//│ > 1 is digit
+//│ > 2 is digit
+//│ > 3 is digit
+//│ > 4 is digit
+//│ > 5 is digit
+//│ > 6 is digit
+//│ > 7 is digit
+//│ > 8 is digit
+//│ > 9 is digit
 
 pattern Lower = "a"..="z"
 
@@ -72,6 +107,16 @@ pattern Letter = Lower | Upper
 "9" is Letter
 //│ = false
 
+// Inspect the generated code. The use of `Map` makes the expanded disjunction
+// out of order. I wonder if we should use a `SeqMap` for literals.
+fun isLetter(x) = x is @compile Letter
+
+isLetter of "a"
+//│ = true
+
+isLetter of "0"
+//│ = false
+
 pattern Word = Letter ~ (Word | "")
 
 :expect false
@@ -88,6 +133,16 @@ pattern Word = Letter ~ (Word | "")
 
 :expect false
 "b0rked" is Word
+//│ = false
+
+:e
+fun isWord(x) = x is @compile Word
+//│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.120: 	pattern Word = Letter ~ (Word | "")
+//│ ╙──       	               ^^^^^^^^^^^^^^^^^^^
+
+// Unsupported patterns are equivalent to `Never`.
+isWord of "pattern"
 //│ = false
 
 pattern ManyDigits = ("0" ..= "9") ~ (ManyDigits | "")

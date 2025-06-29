@@ -12,12 +12,6 @@ pattern Foo(val T) = null | T
 //│ ╔══[ERROR] Name not found: T
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                            ^
-//│ ╔══[ERROR] Name not found: T
-//│ ║  l.4: 	pattern Foo(val T) = null | T
-//│ ╙──     	                            ^
-//│ ╔══[ERROR] Name not found: T
-//│ ║  l.4: 	pattern Foo(val T) = null | T
-//│ ╙──     	                            ^
 
 pattern Foo(pattern T) = null | T
 

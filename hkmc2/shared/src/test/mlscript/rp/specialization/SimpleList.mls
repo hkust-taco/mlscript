@@ -148,12 +148,6 @@ pattern List(a) = null | Pair(a, List)
 //│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
 //│ ╙── The variable is missing from this sub-pattern.
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
-//│ ╙──       	                              ^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
-//│ ╙──       	                              ^
 
 null is @compile List
 //│ = true

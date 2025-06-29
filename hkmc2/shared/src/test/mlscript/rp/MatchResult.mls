@@ -5,10 +5,10 @@ import "../../mlscript-compile/Runtime.mls"
 open Runtime { MatchResult, MatchFailure }
 
 
-MatchResult(0)
-//│ = MatchResult(0)
+MatchResult(0, ())
+//│ = MatchResult(0, ())
 
-if MatchResult(0) is MatchResult(x) then x
+if MatchResult(0) is MatchResult(x, _) then x
 //│ = 0
 
 MatchFailure("oops")
@@ -25,10 +25,10 @@ MatchResult(0)
 pattern Cross = "X"
 
 Cross.unapply("X")
-//│ = MatchResult("X")
+//│ = MatchResult("X", {})
 
 Cross.unapply("0")
-//│ = MatchFailure(undefined)
+//│ = MatchFailure(null)
 
 :sjs
 fun foo(x) = x is Cross

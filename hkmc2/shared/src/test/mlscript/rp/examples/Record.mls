@@ -1,5 +1,7 @@
 :js
 
+open annotations
+
 import "../../../mlscript-compile/Option.mls"
 
 open Option { Some, None }
@@ -13,7 +15,7 @@ pattern Rounded = (Num as value) => Math.round(value)
 // Note: This needs refactoring the desugarer.
 (weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
 //│ ╔══[ERROR] Unrecognized pattern (infix operator)
-//│ ║  l.14: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+//│ ║  l.16: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -33,6 +35,13 @@ bmi of weight: 70
 pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
 
 fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then value
+
+:e
+// alternatively?
+fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╔══[ERROR] Unrecognized pattern (application)
+//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 bmi of weight: 70, height: 1.75
 //│ = Some(23)
@@ -64,6 +73,20 @@ area of (radius: 10, height: 20)
 area of (width: 10, height: 20, base: 10)
 //│ = Some(200)
 
+fun area__compiled(shape) = if shape is (@compile ShapeArea) as a then Some(a) else None
+
+area__compiled of (radius: 10)
+//│ = Some(314.1592653589793)
+
+area__compiled of (width: 10, height: 20)
+//│ = Some(200)
+
+area__compiled of (base: 10, height: 20)
+//│ = Some(100)
+
+area__compiled of (width: 10, height: 20, base: 10)
+//│ = Some(200)
+
 // Convert between different number systems
 pattern NumberSystem = 
   (((:digits, radix: "x")) => parseInt(digits, 16)) |
@@ -76,7 +99,7 @@ fun parseIntegerLiteral(value) = if
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
 //│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.75: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+//│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
 //│ ╙──      	                                              ^
 
 // The workaround we can use currently is to use a pattern declaration.
