@@ -54,6 +54,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val typeCheck = FlagCommand(false, "typeCheck")
   val supremeF = FlagCommand(false, "supreme-f")
   val showTypeAsTree = DebugTreeCommand("tt")
+  val showTypeLatex = FlagCommand(false, "tylatex")
   
   
   // * Compiler configuration
@@ -330,6 +331,13 @@ abstract class MLsDiffMaker extends DiffMaker:
             output(s"  -> ${value.showAsType}")
         output(s"Remaining: ${solver.unresolved.size}")
 
+      val lBounds = solver.lowerBounds.toList.flatMap:
+        case (v, lb) => lb.toList.map(Constraint(_, NegType.Var(v), Nil))
+      val uBounds = solver.upperBounds.toList.flatMap:
+        case (v, ub) => ub.toList.map(Constraint(QuantType.fromVar(v), _, Nil))
+      val finalType = typer.wrap((ty, lBounds ++ uBounds))
+
+
       if iter == fuel then
         output(s"====== Remaining ======")
         for elem <- solver.unresolved do elem match
@@ -338,4 +346,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       else
         output(s"====== Final ======")
         printBounds
+
+      if showTypeLatex.isSet then
+        output(s"====== Latex Type ======")
+        output(s"${finalType.showAsTypeLatex}")
 
