@@ -116,26 +116,36 @@ extension (n: Int)
     case 6 => "six"   case 7 => "seven"     case 8 => "eight"
     case 9 => "nine"  case _ => n.toString
 
+object English:
+  // These lists are not complete (nor are they intended to be). Please add
+  // necessary words as needed.
+  val irregularPlurals = Map("datum" -> "data", "index" -> "indices")
+  val ves = Set("proof")
+  val o = Set("zero")
+
 extension (str: String)
   /** Converts a singular noun to its plural form using English pluralization
    *  rules. The rules should be updated as needed. */
-  def pluralize: String =
-    // This is not a complete list (nor is it intended to be).
-    val irregularPlurals = Map("datum" -> "data", "index" -> "indices")
-    val ves = Set("proof") // Add more as needed.
-    val o = Set("zero") // Add more as needed.
-    irregularPlurals.get(str).getOrElse:
-      // -s, -sh, -ch, -x, -z -> +es
-      if str.matches(".*[sxz]$") || str.endsWith("sh") || str.endsWith("ch") then str + "es"
-      // -[^aeiou]y -> -ies
-      else if str.matches(".*[^aeiou]y$") then str.dropRight(1) + "ies"
-      // -f -> -ves (with some exceptions)
-      else if str.endsWith("f") && !ves.contains(str) then str.dropRight(1) + "ves"
-      // -fe -> -ves
-      else if str.endsWith("fe") then str.dropRight(2) + "ves"
-      // -o -> -es (with some exceptions)
-      else if str.endsWith("o") && !o.contains(str) then str.dropRight(1) + "es"
-      else str + "s"
+  def pluralize: String = English.irregularPlurals.get(str).getOrElse:
+    str.lift(str.size - 1) match
+      // -s, -sh, -ch, -x, -z -> +es; e.g., bus -> buses, box -> boxes
+      case S('s' | 'x' | 'z') => str + "es"
+      // -sh, -ch -> +es; e.g., brush -> brushes, church -> churches
+      case S('h') if str.lift(str.size - 2).exists(c => (c is 's') || (c is 'c')) =>
+        str + "es"
+      // -o -> +es (with some exceptions); e.g., potato -> potatoes
+      case S('o') if !English.o.contains(str) => str + "es"
+      // -[^aeiou]y -> -ies; e.g., city -> cities, but not toy -> toys
+      case S('y') => str.lift(str.size - 2) match
+        case S('a' | 'e' | 'i' | 'o' | 'u') => str + "s" // Vowel before 'y'
+        case S(_) | N => str.dropRight(1) + "ies" // Consonant before 'y'
+      // -f -> -ves (with exceptions); e.g., leaf -> leaves
+      case S('f') if !English.ves.contains(str) => str.dropRight(1) + "ves"
+      case S('e') => str.lift(str.size - 2) match
+        // -fe -> -ves; e.g., knife -> knives
+        case S('f') => str.dropRight(2) + "ves" 
+        case S(_) | N => str + "s" // Default case: just add 's'
+      case S(_) | N => str + "s" // Default case: just add 's'
   
   /** Formats a number and a noun as a human-readable string. */
   infix def countBy(n: Int): String =
