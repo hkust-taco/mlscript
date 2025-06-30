@@ -1109,7 +1109,6 @@ extends Importer:
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
           val owner = ctx.outer.inner
-          // OK. It seems that the context after `nestInner` already have all parameters.
           newCtx.nestInner(patSym).givenIn:
             // Pattern definition should not have a body like class definition.
             assert(body.isEmpty)
