@@ -681,7 +681,6 @@ x => x
 :re
 // (x => x)(1(2))
 
-// TODO not fully reduced 
 (x => x)((y => y)(()))
 //│ Parsed Core: (λx. x) ((λy. y) ())
 //│ Inferred: α

@@ -123,7 +123,7 @@ sealed trait Type:
       case NegType.Var(al) => al.showLatex
       case NegType.App(sigma, al) =>
         doc"${sigma.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ ${al.showLatex}"
-      case _:NegType.Force.type => doc"!"
+      case _:NegType.Force.type => doc"$$\bullet$$"
 
   def showAsTerm(using ctx: NamingCtx) = showAsTermImpl(TopPrec)
   def showAsTermImpl(prec: Int)(using ctx: NamingCtx): Document =
