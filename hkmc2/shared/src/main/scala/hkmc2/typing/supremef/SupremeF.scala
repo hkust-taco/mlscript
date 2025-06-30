@@ -105,18 +105,18 @@ sealed trait Type:
         val rest = ty match
           case _: (QuantType.Base | QuantType.Forall) => ty.showAsTypeLatexImpl(ForallPrec, indent)
           case _: QuantType.Constr =>
-            doc"\n${" "*(indent+1)}${ty.showAsTypeLatexImpl(ForallPrec, indent+1)}"
+            doc"\n${"  "*(indent+1)}${ty.showAsTypeLatexImpl(ForallPrec, indent+1)}"
         doc"$$\forall^{${mrk.uid}}$$${al.showLatex}.$rest"
       case QuantType.Constr(c, ty) =>
         val rest = ty.showAsTypeLatexImpl(ForallPrec, indent)
-        doc"${c.showLatex(indent)} $$\implies$$\n${" "*indent}$rest"
+        doc"${c.showLatex(indent)} $$\implies$$\n${"  "*indent}$rest"
       case PosType.Unit() => doc"$$\tyUnit$$"
       case PosType.Var(al) => al.showLatex
       case PosType.Lam(al, sigma) =>
         val rhs = sigma match
           case _: (QuantType.Base | QuantType.Forall) => sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent)
           case _: QuantType.Constr =>
-            doc"\n${" "*(indent+1)}${sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent+1)}"
+            doc"\n${"  "*(indent+1)}${sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent+1)}"
         doc"${al.showLatex} $$\rightarrow$$ $rhs"
       case PosType.Mrked(al, m) =>
         if ctx.showMarks then doc"${al.showLatex}$$^{${m.uid}}$$" else al.showLatex
@@ -186,11 +186,11 @@ class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
       case (QuantType.Base(_:(PosType.Mrked | PosType.Var)), _) =>
         val lhs = lb.showAsTypeLatexImpl(TopPrec, indent)
         val rhs = ub.showAsTypeLatexImpl(TopPrec, indent+1)
-        doc"${lhs} $$\leq^{${s}}$$ ${rhs}"
+        doc"${lhs} $$\leq^{${s}}$$ (${rhs})"
       case (_, _) =>
         val lhs = lb.showAsTypeLatexImpl(TopPrec, indent)
         val rhs = ub.showAsTypeLatexImpl(TopPrec, indent+1)
-        doc"${lhs} $$\leq^{${s}}$$ ${rhs}"
+        doc"(${lhs}) $$\leq^{${s}}$$ (${rhs})"
 
   def showAsTerm(using ctx: NamingCtx) = 
     def parens(p: Int)(d: Document): Document =
