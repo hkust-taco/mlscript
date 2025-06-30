@@ -126,26 +126,25 @@ object English:
 extension (str: String)
   /** Converts a singular noun to its plural form using English pluralization
    *  rules. The rules should be updated as needed. */
-  def pluralize: String = English.irregularPlurals.get(str).getOrElse:
-    str.lift(str.size - 1) match
+  def pluralize: String = English.irregularPlurals.getOrElse(str,
+    if str.isEmpty then str else str(str.size - 1) match
       // -s, -sh, -ch, -x, -z -> +es; e.g., bus -> buses, box -> boxes
-      case S('s' | 'x' | 'z') => str + "es"
+      case 's' | 'x' | 'z' => str + "es"
       // -sh, -ch -> +es; e.g., brush -> brushes, church -> churches
-      case S('h') if str.lift(str.size - 2).exists(c => (c is 's') || (c is 'c')) =>
+      case 'h' if str.size > 1 && (str(str.size - 2) === 's' || str(str.size - 2) === 'c') =>
         str + "es"
       // -o -> +es (with some exceptions); e.g., potato -> potatoes
-      case S('o') if !English.o.contains(str) => str + "es"
+      case 'o' if !English.o.contains(str) => str + "es"
       // -[^aeiou]y -> -ies; e.g., city -> cities, but not toy -> toys
-      case S('y') => str.lift(str.size - 2) match
-        case S('a' | 'e' | 'i' | 'o' | 'u') => str + "s" // Vowel before 'y'
-        case S(_) | N => str.dropRight(1) + "ies" // Consonant before 'y'
+      case 'y' if str.size > 1 => str(str.size - 2) match
+        case 'a' | 'e' | 'i' | 'o' | 'u' => str + "s" // Vowel before 'y'
+        case _ => str.dropRight(1) + "ies" // Consonant before 'y'
       // -f -> -ves (with exceptions); e.g., leaf -> leaves
-      case S('f') if !English.ves.contains(str) => str.dropRight(1) + "ves"
-      case S('e') => str.lift(str.size - 2) match
-        // -fe -> -ves; e.g., knife -> knives
-        case S('f') => str.dropRight(2) + "ves" 
-        case S(_) | N => str + "s" // Default case: just add 's'
-      case S(_) | N => str + "s" // Default case: just add 's'
+      case 'f' if !English.ves.contains(str) => str.dropRight(1) + "ves"
+      // -fe -> -ves; e.g., knife -> knives
+      case 'e' if str.size > 1 && str(str.size - 2) === 'f' => str.dropRight(2) + "ves"
+      // Default case: just add 's'
+      case _ => str + "s")
   
   /** Formats a number and a noun as a human-readable string. */
   infix def countBy(n: Int): String =
