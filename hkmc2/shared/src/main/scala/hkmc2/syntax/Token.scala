@@ -52,18 +52,6 @@ final case class COMMENT(text: String) extends Token with Stroken
 final case class SUSPENSION(dotDotDot: Bool) extends Token with Stroken
 final case class ESC_IDENT(name: String) extends Token with Stroken
 
-/*
-
-
-(foo
-  bar)
-
-(foo INDENT bar) DEINDENT
-
-Bracket[Round]{foo Bracket[INDENT]{bar}}
-
-
-*/
 
 sealed abstract class BracketKind:
   import BracketKind._
