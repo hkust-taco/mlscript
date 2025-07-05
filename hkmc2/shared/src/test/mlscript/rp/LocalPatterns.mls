@@ -6,64 +6,365 @@ module Playground with
   pattern Zero = "0"
   pattern DoubleZero = Zero ~ Zero
   pattern ZeroOne = Zero ~ One
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(SynthSel(Ref(module:Playground),Ident(Zero)),Ident(unapplyStringPrefix)),Tup(List(Fld(‹›,Ref(scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:539)
+//│ 	at: hkmc2.codegen.Lowering.returnedTerm(Lowering.scala:70)
+//│ 	at: hkmc2.codegen.Lowering.setupFunctionDef(Lowering.scala:880)
 
 Playground
-//│ = Playground
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL11:1:7
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 // Pattern defined in a module can be used with qualified name.
 // ============================================================
 
 Playground.Zero
-//│ = Zero
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL14:1:18
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 Playground.Zero.unapply("0")
-//│ = MatchResult([])
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL17:1:19
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 :expect true
 "0" is Playground.Zero
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Sel(Ref(member:Playground),Ident(Zero)),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 // Patterns defined in a module can refer to other patterns in the same module.
 // ============================================================================
 
 Playground.DoubleZero
-//│ = DoubleZero
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL20:1:19
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 Playground.DoubleZero.unapply("00")
-//│ = MatchResult([])
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL23:1:19
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 :expect true
 "00" is Playground.DoubleZero
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Sel(Ref(member:Playground),Ident(DoubleZero)),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 // Patterns defined in a module can refer to patterns in the global scope.
 // =======================================================================
 
 Playground.ZeroOne
-//│ = ZeroOne
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL26:1:19
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 Playground.ZeroOne.unapply("01")
-//│ = MatchResult([])
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:Playground
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'Playground'
+//│ ║  l.5: 	module Playground with
+//│ ║       	       ^^^^^^^^^^^^^^^
+//│ ║  l.6: 	  pattern Zero = "0"
+//│ ║       	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.7: 	  pattern DoubleZero = Zero ~ Zero
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  pattern ZeroOne = Zero ~ One
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: Playground is not defined
+//│     at REPL29:1:19
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 :expect true
 "01" is Playground.ZeroOne
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Sel(Ref(member:Playground),Ident(ZeroOne)),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 // Patterns defined in the global scope can refer to patterns in a module.
 // =======================================================================
 
 pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Sel(Ref(member:Playground),Ident(DoubleZero)),Ident(unapplyStringPrefix)),Tup(List(Fld(‹›,Ref(scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:539)
+//│ 	at: hkmc2.codegen.Lowering.returnedTerm(Lowering.scala:70)
+//│ 	at: hkmc2.codegen.Lowering.setupFunctionDef(Lowering.scala:880)
 
 TripleZero
-//│ = TripleZero
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:TripleZero
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'TripleZero'
+//│ ║  l.282: 	pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
+//│ ╙──       	        ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: TripleZero is not defined
+//│     at REPL32:1:7
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 TripleZero.unapply("000")
-//│ = MatchResult([])
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:TripleZero
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'TripleZero'
+//│ ║  l.282: 	pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
+//│ ╙──       	        ^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: TripleZero is not defined
+//│     at REPL35:1:38
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 :expect true
 "000" is TripleZero
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:TripleZero),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "001" is TripleZero
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:TripleZero),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)

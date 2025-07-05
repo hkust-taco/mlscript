@@ -1,174 +1,652 @@
 :js
 
 pattern Digits = ("0"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($tail),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 pattern Integer = "0" | ("1"..="9") ~ (Digits | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($tail),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 pattern FractionalPart = "." ~ Digits
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($sliced),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.conclude$1$$anonfun$1(Lowering.scala:328)
+//│ 	at: hkmc2.codegen.Lowering.args(Lowering.scala:810)
 
 ".1" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:FractionalPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 pattern ExponentPart = ("e" | "E") ~ ("+" | "-" | "") ~ Integer
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapply)),Tup(List(Fld(‹›,Ref($sliced),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.conclude$1$$anonfun$1(Lowering.scala:328)
+//│ 	at: hkmc2.codegen.Lowering.args(Lowering.scala:810)
 
 "e10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "e100" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 pattern Number = Integer ~ (FractionalPart | "") ~ (ExponentPart | "")
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapplyStringPrefix)),Tup(List(Fld(‹›,Ref(scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:539)
+//│ 	at: hkmc2.codegen.Lowering.returnedTerm(Lowering.scala:70)
+//│ 	at: hkmc2.codegen.Lowering.setupFunctionDef(Lowering.scala:880)
 
 // Test cases for Digits pattern
 // =============================
 :expect true
 "123" is Digits
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "0" is Digits
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "9" is Digits
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "a" is Digits
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Digits),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 
 // Test cases for Integer pattern
 // ==============================
 :expect true
 "0" is Integer
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "123" is Integer
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "001" is Integer
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "a" is Integer
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Integer),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 
 // Test cases for FractionalPart pattern
 // =====================================
 :expect true
 ".123" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:FractionalPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 ".0" is FractionalPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:FractionalPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "." is FractionalPart
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:FractionalPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "0.1" is FractionalPart
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:FractionalPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 
 // Test cases for ExponentPart pattern
 // ===================================
 :expect true
 "e10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "E-10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "e+10" is ExponentPart
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "e" is ExponentPart
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "e1a" is ExponentPart
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ExponentPart),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 
 // Test cases for Number pattern
 // =============================
 :expect true
 "3.14" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "42" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "3.14e10" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "1e100" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "1234e-789" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "0.0314E+2" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "0.0314E-2" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "." is Number
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "e10" is Number
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect false
 "3.14e" is Number
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "3.14" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "42" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "3.14e10" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "1e100" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "1234e-789" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "0.0314E+2" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "0.0314E-2" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :expect true
 "1.7976931348623158e+308" is Number
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Number),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)

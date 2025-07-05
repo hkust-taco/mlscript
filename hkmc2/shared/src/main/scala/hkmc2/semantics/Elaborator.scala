@@ -203,7 +203,7 @@ object Elaborator:
     val runtimeSymbol = TempSymbol(N, "runtime")
     val termSymbol = TempSymbol(N, "Term")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
-    val nonLocalRetHandlerTrm =
+    def nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       Term.Sel(runtimeSymbol.ref(), id)(S(sym))
@@ -349,7 +349,7 @@ extends Importer:
       // * Backtracking assignment
       lhs match
       case id: Ident =>
-        val lt = subterm(lhs)
+        def lt = subterm(lhs)
         val sym = TempSymbol(S(lt), "old")
         Blk(
           LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(

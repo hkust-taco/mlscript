@@ -38,26 +38,92 @@ data class Pair[A, B](val first: A, val second: B)
 pattern Stack(pattern T) = null | Pair(T, Stack(T))
 
 null is @compile Stack(pattern A)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 fun (#:) pair(a, b) = Pair(a, b)
 
 A #: null is @compile Stack(pattern A)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 A #: A #: null is @compile Stack(pattern A)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 A #: A #: A #: null is @compile Stack(pattern A)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 object B
 
 A #: B #: A #: null is @compile Stack(pattern A)
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 A #: B #: A #: null is @compile Stack(pattern B)
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 let zeroOne = 0 #: 1 #: null
 let oneZero = 1 #: 0 #: null
@@ -68,31 +134,141 @@ let oneZero = 1 #: 0 #: null
 :expect true
 
 A #: B #: A #: null is @compile Stack(pattern A | B)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 A #: B #: A #: null is @compile Stack(pattern B | A)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 zeroOne is @compile Stack(pattern 0 | 1)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 oneZero is @compile Stack(pattern 0 | 1)
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 null #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 zeroOne #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 null #: (1 #: null) #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 zeroOne #: oneZero #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 zeroOne #: null #: oneZero #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 null #: zeroOne #: zeroOne #: null is @compile Stack(pattern Stack(pattern 0 | 1))
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)

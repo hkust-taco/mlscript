@@ -7,7 +7,18 @@ data class Box[A](val value: A)
 pattern Sign = -1 | 0 | 1
 
 [-1 is Sign, 0 is Sign, 1 is Sign]
-//│ = [true, true, true]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Sign),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.$anonfun$10(Lowering.scala:303)
+//│ 	at: hkmc2.codegen.Lowering.term$$anonfun$9(Lowering.scala:830)
 
 pattern SignBox = Box(Sign | SignBox)
 
@@ -16,21 +27,54 @@ pattern SignBox = Box(Sign | SignBox)
   Box(0) is @compile SignBox,
   Box(1) is @compile SignBox
 ]
-//│ = [true, true, true]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 [
   Box(Box(-1)) is @compile SignBox,
   Box(Box(0)) is @compile SignBox,
   Box(Box(1)) is @compile SignBox
 ]
-//│ = [true, true, true]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 [
   Box(Box(Box(-1))) is @compile SignBox,
   Box(Box(Box(0))) is @compile SignBox,
   Box(Box(Box(1))) is @compile SignBox
 ]
-//│ = [true, true, true]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 :expect [false, false, false]
 [
@@ -38,4 +82,15 @@ pattern SignBox = Box(Sign | SignBox)
   Box(Box(Box(null))) is @compile SignBox,
   -1 is SignBox
 ]
-//│ = [false, false, false]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)

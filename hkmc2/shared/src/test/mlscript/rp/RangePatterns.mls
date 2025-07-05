@@ -3,86 +3,240 @@
 pattern Lower = "a"..="z"
 
 "a" is Lower
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Lower),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "z" is Lower
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Lower),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "0" is Lower
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Lower),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 pattern Upper = "A"..="Z"
 
 "A" is Upper
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Upper),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "Q" is Upper
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Upper),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "b" is Upper
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:Upper),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 pattern UnsignedShort = 0 ..< 65536
 
 0 is UnsignedShort
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 -1 is UnsignedShort
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.$anonfun$10(Lowering.scala:303)
+//│ 	at: hkmc2.codegen.Lowering.term$$anonfun$9(Lowering.scala:830)
 
 65535 is UnsignedShort
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 65536 is UnsignedShort
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 2147483647 is UnsignedShort
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 "b" is UnsignedShort
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 [] is UnsignedShort
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:UnsignedShort),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term$$anonfun$2(Lowering.scala:228)
+//│ 	at: hkmc2.codegen.Lowering.args(Lowering.scala:810)
 
 :pe
 :e
 // Don't forget to add a space between numbers and the range operator.
 pattern UnsignedByte = 0..< 256
 //│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^
+//│ ║  l.194: 	pattern UnsignedByte = 0..< 256
+//│ ╙──       	                         ^
 //│ ╔══[ERROR] Name not found: .<
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
+//│ ║  l.194: 	pattern UnsignedByte = 0..< 256
+//│ ╙──       	                         ^^
 //│ ╔══[ERROR] Name not found: .<
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                         ^^
+//│ ║  l.194: 	pattern UnsignedByte = 0..< 256
+//│ ╙──       	                         ^^
 //│ ╔══[ERROR] Unrecognized pattern (operator application)
-//│ ║  l.51: 	pattern UnsignedByte = 0..< 256
-//│ ╙──      	                       ^^^^^^^^
+//│ ║  l.194: 	pattern UnsignedByte = 0..< 256
+//│ ╙──       	                       ^^^^^^^^
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[ERROR] Incompatible range types: string literal to integer literal
-//│ ║  l.66: 	pattern BadRange = "s"..=0
-//│ ╙──      	                   ^^^^^^^
+//│ ║  l.209: 	pattern BadRange = "s"..=0
+//│ ╙──       	                   ^^^^^^^
 
 // It becomes an absurd pattern.
 0 is BadRange
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:BadRange),Ident(unapply)),Tup(List(Fld(‹›,Ref($scrut),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:220)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
 
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[ERROR] Incompatible range types: integer literal to string literal
-//│ ║  l.76: 	pattern BadRange = 0 ..= "s"
-//│ ╙──      	                   ^^^^^^^^^
+//│ ║  l.230: 	pattern BadRange = 0 ..= "s"
+//│ ╙──       	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] String range bounds must have only one character.
-//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
-//│ ║        	                   ^^^^^^
+//│ ║  l.236: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║         	                   ^^^^^^
 //│ ╟── String range bounds must have only one character.
-//│ ║  l.82: 	pattern BadRange = "yolo" ..= "swag"
-//│ ╙──      	                              ^^^^^^
+//│ ║  l.236: 	pattern BadRange = "yolo" ..= "swag"
+//│ ╙──       	                              ^^^^^^

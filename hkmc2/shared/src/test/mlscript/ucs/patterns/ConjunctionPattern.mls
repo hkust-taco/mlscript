@@ -13,14 +13,36 @@ if A is
   B & A & B then 1
   A & A & A then 2
   else 3
-//│ = 2
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: The implicit arguments List() for term Ref($scrut) cannot be redefined.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs(Term.scala:73)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$Ref.withIArgs(Term.scala:86)
+//│ 	at: hkmc2.semantics.Resolver.resolve$$anonfun$3(Resolver.scala:687)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.Resolver.resolve(Resolver.scala:688)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$1(Resolver.scala:352)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$adapted$1(Resolver.scala:355)
+//│ 	at: scala.Function0.apply$mcV$sp(Function0.scala:42)
 
 if A is
   A & A & B then 0
   B & A & B then 1
   A & A & A then 2
   else 3
-//│ = 2
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: The implicit arguments List() for term Ref($scrut) cannot be redefined.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs(Term.scala:73)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$Ref.withIArgs(Term.scala:86)
+//│ 	at: hkmc2.semantics.Resolver.resolve$$anonfun$3(Resolver.scala:687)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.Resolver.resolve(Resolver.scala:688)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$1(Resolver.scala:352)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$adapted$1(Resolver.scala:355)
+//│ 	at: scala.Function0.apply$mcV$sp(Function0.scala:42)
 
 :sjs
 fun foo(v) =

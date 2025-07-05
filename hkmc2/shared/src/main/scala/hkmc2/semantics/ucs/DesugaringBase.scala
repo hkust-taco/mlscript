@@ -8,9 +8,9 @@ import syntax.Tree.*, Elaborator.{Ctx, ctx}, Elaborator.State
 /** Contains some helpers that makes UCS desugaring easier. */
 trait DesugaringBase(using Ctx, State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
-    (Term.SynthSel(p, k)(N): Term.SynthSel).withIArgs(Nil)
+    (Term.SynthSel(p, k)(N): Term.SynthSel)
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
-    (Term.SynthSel(p, k)(S(s)): Term.SynthSel).withIArgs(Nil)
+    (Term.SynthSel(p, k)(S(s)): Term.SynthSel)
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
   protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
@@ -19,12 +19,12 @@ trait DesugaringBase(using Ctx, State):
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
-    (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
+    (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App)
     
-  private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().withIArgs(Nil)
+  private def runtimeRef: Term.Ref = State.runtimeSymbol.ref()
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
-  protected lazy val matchResultClass =
+  protected def matchResultClass =
     sel(runtimeRef, "MatchResult", State.matchResultClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
@@ -32,18 +32,18 @@ trait DesugaringBase(using Ctx, State):
     Pattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
-  protected lazy val matchFailureClass =
+  protected def matchFailureClass =
     sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): Pattern.ClassLike =
     Pattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)
 
-  protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
-  protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
-  protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
-  protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")
-  protected lazy val stringDrop = sel(sel(runtimeRef, "Str"), "drop")
+  protected def tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
+  protected def tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
+  protected def stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
+  protected def stringGet = sel(sel(runtimeRef, "Str"), "get")
+  protected def stringDrop = sel(sel(runtimeRef, "Str"), "drop")
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =

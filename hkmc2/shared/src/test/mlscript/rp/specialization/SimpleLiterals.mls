@@ -44,6 +44,18 @@ fun checkSomeZeroOneTwo(x) = if x is
 //│ >    else ()
 
 pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref(member:ManyZero),Ident(unapply)),Tup(List(Fld(‹›,Ref($sliced),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$1(Lowering.scala:468)
+//│ 	at: hkmc2.codegen.Lowering.conclude$1$$anonfun$1(Lowering.scala:328)
+//│ 	at: hkmc2.codegen.Lowering.args(Lowering.scala:810)
 
 let res = "1" is @compile ManyZero
 //│ res = false

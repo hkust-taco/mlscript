@@ -24,16 +24,60 @@ pattern BitSeq = null | Pair(Bit, BitSeq)
 :expect true
 
 null is @compile BitSeq
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 Pair(0, null) is @compile BitSeq
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 Pair(1, Pair(0, null)) is @compile BitSeq
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 :global
 :expect false
 
 Pair(2, null) is @compile BitSeq
-//│ = false
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)

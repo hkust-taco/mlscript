@@ -133,18 +133,40 @@ fun (::) cons(head, tail) = Pair(head, tail)
   1 is @compile BinSeq,
   0 :: 1 :: 2 :: null is @compile BinSeq,
 ]
-//│ = [true, true, true, true, false, false, false]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 0 :: 1 :: 0 :: null is @compile BinSeq
-//│ = true
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 :todo
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Pattern extraction parameters are not yet supported.
-//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.164: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.164: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                              ^
 
 null is @compile List

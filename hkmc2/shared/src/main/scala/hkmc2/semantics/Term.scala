@@ -65,11 +65,12 @@ sealed trait ResolvableImpl:
     case _ => N
   
   def withIArgs(iargsLs: Ls[Term.Tup]): this.type = 
-    if !(this.iargsLs.isEmpty || this.iargsLs.get == iargsLs) then
+    if this.iargsLs.isDefined then
+      // If a resolvable term is used in different places, usually due
+      // to mistakenly assuming that the term is immutable, the resolver
+      // will resolve the term multiple times, leading to this error.
       lastWords:
-        s"the implicit arguments for term ${t.showDbg} " +
-        s"are already set to ${this.iargsLs.get}; " +
-        s"they cannot be set to some different terms ${iargsLs}"
+        s"The implicit arguments ${this.iargsLs.get} for term ${t} cannot be redefined."
     this.iargsLs = S(iargsLs)
     this
   

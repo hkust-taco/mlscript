@@ -22,11 +22,46 @@ pattern Falsy =
   true is @compile Falsy,
   false is @compile Falsy
 ]
-//│ = [true, false, false, true]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 fun isTruthy(value) = value is @compile Truthy
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 fun isFalsy(value) = value is @compile Falsy
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: missing implicit arguments for term App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Tup(List()),None))))
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate(Term.scala:48)
+//│ 	at: hkmc2.semantics.ResolvableImpl.instantiate$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$App.instantiate(Term.scala:87)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:214)
+//│ 	at: hkmc2.codegen.Lowering.term_nonTail(Lowering.scala:84)
+//│ 	at: hkmc2.codegen.Lowering.go$1(Lowering.scala:522)
+//│ 	at: hkmc2.codegen.Lowering.go$1$$anonfun$2(Lowering.scala:478)
+//│ 	at: hkmc2.codegen.Lowering.subTerm_nonTail$$anonfun$1(Lowering.scala:830)
+//│ 	at: hkmc2.codegen.Lowering.term(Lowering.scala:288)
 
 :global
 :expect true
@@ -34,44 +69,290 @@ fun isFalsy(value) = value is @compile Falsy
 // Test each case of `Truthy`.
 
 isTruthy of true
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│     at REPL17:1:28
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isTruthy of true && true
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│     at REPL20:1:79
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isTruthy of true || true
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│     at REPL23:1:80
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :re
 isTruthy of true || false
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isTruthy of false || true
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│     at REPL29:1:81
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isTruthy of Not of false
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isTruthy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isTruthy'
+//│ ║  l.38: 	fun isTruthy(value) = value is @compile Truthy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isTruthy is not defined
+//│     at REPL32:1:76
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 // Test each case of `Falsy`.
 
 isFalsy of false
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│     at REPL35:1:29
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isFalsy of false && false
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│     at REPL38:1:84
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 :re
 // The compilation scheme does not handle non-determinism at all at the moment.
 isFalsy of false && true
-//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'false'
-//│ = false
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isFalsy of true && false
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│     at REPL44:1:83
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isFalsy of false || false
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│     at REPL47:1:83
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'
 
 isFalsy of Not of true
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:isFalsy
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'isFalsy'
+//│ ║  l.52: 	fun isFalsy(value) = value is @compile Falsy
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: isFalsy is not defined
+//│     at REPL50:1:76
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:196)
+//│ ═══[RUNTIME ERROR] Expected: 'true', got: 'undefined'

@@ -257,7 +257,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       post = (res: Split) => s"termSplit: after op >>> $res"
     ):
       // Resolve the operator.
-      val opRef = term(opIdent)
+      def opRef = term(opIdent)
       // Elaborate and finish the LHS. Nominate the LHS if necessary.
       nominate(ctx, finish(term(lhs)(using ctx))): lhsSymbol =>
         // Compose a function that takes the RHS and finishes the application.

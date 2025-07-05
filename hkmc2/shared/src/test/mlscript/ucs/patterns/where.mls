@@ -38,23 +38,101 @@ foo(Pair(4, 0))
 
 fun bar(p) = p is
   (Pair(a, b) where a > b) | Int
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: The implicit arguments List() for term Ref(p) cannot be redefined.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs(Term.scala:73)
+//│ 	at: hkmc2.semantics.ResolvableImpl.withIArgs$(Term.scala:33)
+//│ 	at: hkmc2.semantics.Term$Ref.withIArgs(Term.scala:86)
+//│ 	at: hkmc2.semantics.Resolver.resolve$$anonfun$3(Resolver.scala:687)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.Resolver.resolve(Resolver.scala:688)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$1(Resolver.scala:352)
+//│ 	at: hkmc2.semantics.Resolver.traverse$$anonfun$2$$anonfun$adapted$1(Resolver.scala:355)
+//│ 	at: scala.Function0.apply$mcV$sp(Function0.scala:42)
 
 bar(4)
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:bar
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'bar'
+//│ ║  l.39: 	fun bar(p) = p is
+//│ ║        	    ^^^^^^^^^^^^^
+//│ ║  l.40: 	  (Pair(a, b) where a > b) | Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: bar is not defined
+//│     at REPL41:1:29
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 bar(Pair(4, 5))
-//│ = false
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:bar
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'bar'
+//│ ║  l.39: 	fun bar(p) = p is
+//│ ║        	    ^^^^^^^^^^^^^
+//│ ║  l.40: 	  (Pair(a, b) where a > b) | Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: bar is not defined
+//│     at REPL44:1:77
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 bar(Pair(4, 3))
-//│ = true
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:99)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = member:bar
+//│   _2 = class hkmc2.semantics.BlockMemberSymbol
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'bar'
+//│ ║  l.39: 	fun bar(p) = p is
+//│ ║        	    ^^^^^^^^^^^^^
+//│ ║  l.40: 	  (Pair(a, b) where a > b) | Int
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
+//│ ═══[RUNTIME ERROR] ReferenceError: bar is not defined
+//│     at REPL47:1:77
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
 
 :e
 fun baz(p) = p is
   (Pair(a, b) | Int) where a > b
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
-//│ ╙──      	                           ^
+//│ ║  l.131: 	  (Pair(a, b) | Int) where a > b
+//│ ╙──       	                           ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
-//│ ╙──      	                               ^
+//│ ║  l.131: 	  (Pair(a, b) | Int) where a > b
+//│ ╙──       	                               ^
 
