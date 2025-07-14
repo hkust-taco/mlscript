@@ -424,6 +424,11 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
     case (c: Constraint) :: _ => c.show
     case _ => ""
 
+  def showFrontLatex(using NamingCtx) = unresolved match
+    case (al: TypeVar, _) :: _ => al.showLatex
+    case (c: Constraint) :: _ => c.showLatex(0)
+    case _ => ""
+
   def step = unresolved match
     case (al: TypeVar, m) :: cons =>
       resolved = (al, m) :: resolved
