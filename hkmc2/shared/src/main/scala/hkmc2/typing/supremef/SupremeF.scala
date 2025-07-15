@@ -10,6 +10,7 @@ import hkmc2.syntax.Tree
 import hkmc2.semantics.*
 import hkmc2.document.*
 import Message.MessageContext
+import hkmc2.syntax.Keyword
 
 private val TopPrec = 0
 
@@ -73,8 +74,11 @@ sealed trait Type:
           |> parens(ForallPrec)
       case PosType.Unit() => "()"
       case PosType.Var(al) => al.show
-      case PosType.Lam(al, sigma) => 
+      case PosType.Lam(al: TypeVar, sigma) => 
         doc"${al.show} -> ${sigma.showAsTypeImpl(ArrowRhsPrec)}"
+          |> parens(ArrowLhsPrec)
+      case PosType.Lam(al: NegType.Force.type, sigma) => 
+        doc"${al.showAsTypeImpl(ArrowLhsPrec)} -> ${sigma.showAsTypeImpl(ArrowRhsPrec)}"
           |> parens(ArrowLhsPrec)
       case PosType.Mrked(al, m) =>
         if ctx.showMarks then doc"(${al.show})^m${m.uid}" else al.show
@@ -119,7 +123,9 @@ sealed trait Type:
           case _: (QuantType.Base | QuantType.Forall) => sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent)
           case _: QuantType.Constr =>
             doc"\n${"  "*(indent+1)}${sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent+1)}"
-        doc"${al.showLatex} $$\rightarrow$$ $rhs"
+        al match
+          case a: TypeVar => doc"${a.showLatex} $$\rightarrow$$ $rhs"
+          case a: NegType.Force.type => doc"${a.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ $rhs"
       case PosType.Mrked(al, m) =>
         if ctx.showMarks then doc"${al.showLatex}$$^{${m.uid}}$$" else al.showLatex
       case NegType.Var(al) => al.showLatex
@@ -151,8 +157,11 @@ sealed trait Type:
 
       case PosType.Unit() => "()"
       case PosType.Var(al) => al.show
-      case PosType.Lam(al, sigma) =>
+      case PosType.Lam(al: TypeVar, sigma) =>
         doc"λ${al.show} -> ${sigma.showAsTermImpl(LamPrec)}"
+          |> parens(LamPrec)
+      case PosType.Lam(al: NegType.Force.type, sigma) =>
+        doc"λ${al.showAsTermImpl(LamPrec)} -> ${sigma.showAsTermImpl(LamPrec)}"
           |> parens(LamPrec)
       case PosType.Mrked(al, m) => al.show
       case _ => "???"
@@ -250,19 +259,21 @@ enum QuantType extends Type derives CanEqual:
 enum PosType extends Type derives CanEqual:
   case Unit()
   case Var(al: TypeVar)
-  case Lam(al: TypeVar, sigma: QuantType)
+  case Lam(al: TypeVar | NegType.Force.type, sigma: QuantType)
   case Mrked(al: TypeVar, m: Mark)
 
   def canonicalize(using ctx: CanonicalizeCtx): PosType = this match
     case Unit() => Unit()
     case Var(al) => Var(al.canonicalize)
-    case Lam(al, sigma) => Lam(al.canonicalize, sigma.canonicalize)
+    case Lam(al: TypeVar, sigma) => Lam(al.canonicalize, sigma.canonicalize)
+    case Lam(al: NegType.Force.type, sigma) => Lam(al, sigma.canonicalize)
     case Mrked(al, m) => Var(al.canonicalize)
 
   def refresh(using InferenceCtx, Map[Int, TypeVar]): PosType = this match
     case Unit() => Unit()
     case Var(al) => Var(al.refresh)
-    case Lam(al, sigma) => Lam(al.refresh, sigma.refresh)
+    case Lam(al: TypeVar, sigma) => Lam(al.refresh, sigma.refresh)
+    case Lam(al: NegType.Force.type, sigma) => Lam(al, sigma.refresh)
     case Mrked(al, m) => Mrked(al.refresh, m)
 
 // τ^-
@@ -307,6 +318,8 @@ class Typer(using Raise):
           case CoreTerm.Let(bindings, body) =>
             CoreTerm.Let(getBindings(stats) ++ bindings, body)
           case x => CoreTerm.Let(getBindings(stats), x)
+      case Term.IfLike(_: Keyword.`if`.type, Split.Let(s, cond, Split.Cons(Branch(_, _, Split.Else(t1)), Split.Else(t2)))) =>
+        CoreTerm.App(CoreTerm.App(CoreTerm.App(CoreTerm.Cond, fromTerm(cond)), fromTerm(t1)), fromTerm(t2))
       case Term.Lit(Tree.UnitLit(_)) => CoreTerm.Unit
       case Term.UnitVal() => CoreTerm.Unit
       case Term.Lam(ParamList(flags, p :: ps, rest), body) =>
@@ -357,7 +370,10 @@ class Typer(using Raise):
   def inferType(term: CoreTerm)
     (using ctx: InferenceCtx): (PosType, List[CtxElem]) = term match
     case CoreTerm.Unit => (PosType.Unit(), Nil)
-    // case CoreTerm.Cond => (PosType.Lam())
+    case CoreTerm.Cond => 
+      val al = ctx.getFreshTv("α")
+      (PosType.Lam(NegType.Force, QuantType.Base(PosType.Lam(al, QuantType.Base(PosType.Lam(al, QuantType.fromVar(al)))))),
+        (al, ctx.getFreshMrk) :: Nil)
     case CoreTerm.Var(x) =>
       (PosType.Mrked(ctx.mappings(x), ctx.getFreshMrk), Nil)
     case CoreTerm.Lam(x, body) =>
@@ -478,7 +494,10 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
           .map((key, ub) => Constraint(sigma, ub.refresh, c.mrks ++ key._2)).toList)
 
     case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
-      val c1 = Constraint(sigma1, NegType.Var(al), c.mrks)
+      val a = al match
+        case alpha: TypeVar => NegType.Var(alpha)
+        case bullet: NegType.Force.type => bullet
+      val c1 = Constraint(sigma1, a, c.mrks)
       val c2 = Constraint(sigma, NegType.Var(beta), c.mrks)
       ("C-Fun", None, List(c1, c2))
 
