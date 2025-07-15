@@ -25,6 +25,7 @@ private val FunPrec = 10
 
 enum CoreTerm derives CanEqual:
   case Unit
+  case Cond
   case Var(x: String)
   case Lam(x: String, body: CoreTerm)
   case App(t1: CoreTerm, t2: CoreTerm)
@@ -36,6 +37,7 @@ enum CoreTerm derives CanEqual:
       if p < prec then doc"(${d})" else d
     this match
       case Unit => "()"
+      case Cond => "cond"
       case Var(x) => x
       case Lam(x, body) =>
         doc"λ${x}. ${body.showImpl(LamPrec)}" |> parens(LamPrec)
@@ -123,7 +125,7 @@ sealed trait Type:
       case NegType.Var(al) => al.showLatex
       case NegType.App(sigma, al) =>
         doc"${sigma.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ ${al.showLatex}"
-      case _:NegType.Force.type => doc"!"
+      case _:NegType.Force.type => doc"$$\bullet$$"
 
   def showAsTerm(using ctx: NamingCtx) = showAsTermImpl(TopPrec)
   def showAsTermImpl(prec: Int)(using ctx: NamingCtx): Document =
@@ -192,7 +194,7 @@ class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
         val rhs = ub.showAsTypeLatexImpl(TopPrec, indent+1)
         doc"(${lhs}) $$\leq^{${s}}$$ (${rhs})"
 
-  def showAsTerm(using ctx: NamingCtx) = 
+  def showAsTerm(using ctx: NamingCtx): Document = 
     def parens(p: Int)(d: Document): Document =
       if p < BindingPrec then doc"(${d})" else d
     val (beta, rhs) = ub match
@@ -200,6 +202,7 @@ class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
       case NegType.App(sigma, al) => (al,
         doc"${lb.showAsTermImpl(FunPrec)} ${sigma.showAsTermImpl(ArgPrec)}"
           |> parens(BindingPrec))
+      case NegType.Force => return doc"•"
     doc"${beta.show} = ${rhs}"
 
 // α, β
@@ -324,6 +327,7 @@ class Typer(using Raise):
   def checkWellFormedImpl(term: CoreTerm)(using ctx: Set[String])
     : Unit = term match
     case CoreTerm.Unit => ()
+    case CoreTerm.Cond => ()
     case CoreTerm.Var(x) => if !ctx.contains(x) then
       raise(ErrorReport( msg"invalid scope ${x}" -> None :: Nil))
     case CoreTerm.Lam(x, body) =>
@@ -353,6 +357,7 @@ class Typer(using Raise):
   def inferType(term: CoreTerm)
     (using ctx: InferenceCtx): (PosType, List[CtxElem]) = term match
     case CoreTerm.Unit => (PosType.Unit(), Nil)
+    // case CoreTerm.Cond => (PosType.Lam())
     case CoreTerm.Var(x) =>
       (PosType.Mrked(ctx.mappings(x), ctx.getFreshMrk), Nil)
     case CoreTerm.Lam(x, body) =>
@@ -376,23 +381,19 @@ class Typer(using Raise):
 
 
 def unify(ty1: Type, ty2: Type)
-  (using bv: Set[TypeVar], naming: NamingCtx, rai: Raise): List[Constraint] =
+  (using bv: Set[Int], naming: NamingCtx, rai: Raise): List[Constraint] =
   (ty1, ty2) match
   case (al: TypeVar, be: TypeVar) =>
+    val alBounded = bv.contains(al.uid)
+    val beBounded = bv.contains(be.uid)
     if al.uid == be.uid then List.empty
-    val alBounded = bv.contains(al)
-    val beBounded = bv.contains(be)
-    // the forall type should be the same?
-    if alBounded && beBounded then List.empty
-    // should not happen
-    if alBounded || beBounded then
-      raise(ErrorReport(msg"attempt to unify bounded tvs" -> None::Nil))
-      List.empty
-    Constraint(QuantType.fromVar(al), NegType.Var(be), Nil) :: 
+    else if alBounded && beBounded then List.empty
+    else
+      Constraint(QuantType.fromVar(al), NegType.Var(be), Nil) :: 
       Constraint(QuantType.fromVar(be), NegType.Var(al), Nil) :: Nil
   case (QuantType.Base(a), QuantType.Base(b)) => unify(a, b)
   case (QuantType.Forall(a, _, s1), QuantType.Forall(b, _, s2)) =>
-    unify(s1, s2)(using bv + a + b)
+    unify(s1, s2)(using (bv + a.uid + b.uid))
   case (QuantType.Constr(c1, s1), QuantType.Constr(c2, s2)) =>
     unifyConstr(c1, c2) ++ unify(s1, s2)
   case (PosType.Unit(), PosType.Unit()) => List.empty
@@ -408,16 +409,16 @@ def unify(ty1: Type, ty2: Type)
     List.empty
 
 def unifyConstr(c1: Constraint, c2: Constraint)
-  (using bv: Set[TypeVar], naming: NamingCtx, rai: Raise): List[Constraint] =
+  (using bv: Set[Int], naming: NamingCtx, rai: Raise): List[Constraint] =
   unify(c1.lb, c2.lb) ++ unify(c1.ub, c2.ub)
 
 class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingCtx, ctx: InferenceCtx):
-  var upperBounds = MutMap.empty[TypeVar, MutSet[NegType]]
-  var lowerBounds = MutMap.empty[TypeVar, MutSet[QuantType]]
+  var upperBounds = MutMap.empty[TypeVar, MutMap[(NegType, Set[Mark]), NegType]]
+  var lowerBounds = MutMap.empty[TypeVar, MutMap[(QuantType, Set[Mark]), QuantType]]
   // note: resolved is stored in reversed order
   type ResolvedElem = CtxElem | (List[Mark], TypeVar, QuantType)
   var resolved = List.empty[ResolvedElem]
-  var quantCache = MutMap.empty[Set[Mark], QuantType]
+  var quantCache = MutMap.empty[Set[Mark], QuantType.Forall]
 
   def showFront(using NamingCtx) = unresolved match
     case (al: TypeVar, _) :: _ => al.show
@@ -447,57 +448,57 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
       ("C-Constr", None, List(c1.withMrks(c.mrks),
                               Constraint(sigma, pi, c.mrks)))
     case (QuantType.Base(PosType.Var(al)), ty) =>
+      val canonical = ty.canonicalize(using CanonicalizeCtx(0, MutMap.empty))
       // check if we can skip
-      if upperBounds.getOrElseUpdate(al, MutSet.empty).contains(ty) then
+      if upperBounds.getOrElseUpdate(al, MutMap.empty)
+          .contains((canonical, c.mrks.toSet)) then
         ("C-Skip", None, List.empty)
       else
-        val lbs = lowerBounds.getOrElseUpdate(al, MutSet.empty)
+        val lbs = lowerBounds.getOrElseUpdate(al, MutMap.empty)
         // if ty is a type var, install lower bounds
-        ty.asVar.map(ub => lowerBounds.getOrElseUpdate(ub, MutSet.empty)
-          .addAll(lbs).add(QuantType.fromVar(al)))
-        // install transitive upper bound for our lower bounds (including al)
-        for lb <- lbs.flatMap(_.asVar).concat(Some(al)) do
-          upperBounds.getOrElseUpdate(lb, MutSet.empty).add(ty)
+        ty.asVar.map(ub => lowerBounds.getOrElseUpdate(ub, MutMap.empty)
+          .addOne((QuantType.fromVar(al), c.mrks.toSet), QuantType.fromVar(al)))
+        upperBounds.getOrElseUpdate(al, MutMap.empty).addOne((ty, c.mrks.toSet), canonical)
         given Map[Int, TypeVar] = Map.empty
-        // note that we avoid cases where lb = al, which may happen?
-        ("C-App", Some(c), lbs.iterator.filter(_ != QuantType.fromVar(al))
-          .map(lb => Constraint(lb.refresh, ty, c.mrks)).toList)
+        ("C-Var1", Some(c), lbs.iterator
+          .map((key, lb) => Constraint(lb.refresh, ty, key._2.toList ++ c.mrks)).toList)
     case (sigma, NegType.Var(al)) =>
-      if lowerBounds.getOrElseUpdate(al, MutSet.empty).contains(sigma) then
+      val canonical = sigma.canonicalize(using CanonicalizeCtx(0, MutMap.empty))
+      if lowerBounds.getOrElseUpdate(al, MutMap.empty).contains((canonical, c.mrks.toSet)) then
         ("C-Skip", None, List.empty)
       else
-        val ubs = upperBounds.getOrElseUpdate(al, MutSet.empty)
+        val ubs = upperBounds.getOrElseUpdate(al, MutMap.empty)
         // if sigma is a type var, install upper bounds
-        sigma.asVar.map(lb => upperBounds.getOrElseUpdate(lb, MutSet.empty)
-          .addAll(ubs).add(NegType.Var(al)))
-        // install transitive lower bound for our upper bounds (including al)
-        for ub <- ubs.flatMap(_.asVar).concat(Some(al)) do
-          lowerBounds.getOrElseUpdate(ub, MutSet.empty).add(sigma)
+        sigma.asVar.map(lb => upperBounds.getOrElseUpdate(lb, MutMap.empty)
+          .addOne((NegType.Var(al), c.mrks.toSet), NegType.Var(al)))
+        lowerBounds.getOrElseUpdate(al, MutMap.empty).addOne((canonical, c.mrks.toSet), sigma)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where ub = al, which may happen?
-        ("C-App2", Some(c),  ubs.iterator.filter(_ != NegType.Var(al))
-          .map(ub => Constraint(sigma, ub.refresh, c.mrks)).toList)
+        ("C-Var2", Some(c),  ubs.iterator
+          .map((key, ub) => Constraint(sigma, ub.refresh, c.mrks ++ key._2)).toList)
+
     case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
       val c1 = Constraint(sigma1, NegType.Var(al), c.mrks)
       val c2 = Constraint(sigma, NegType.Var(beta), c.mrks)
       ("C-Fun", None, List(c1, c2))
 
-    case (QuantType.Base(PosType.Mrked(al, m)), pi: NegType.App) =>
+    case (QuantType.Base(PosType.Mrked(al, m)), _: NegType.App | NegType.Force) =>
       ("C-Unwrap", None,
-        List(Constraint(QuantType.fromVar(al), pi, m :: c.mrks)))
+        List(Constraint(QuantType.fromVar(al), c.ub, m :: c.mrks)))
 
-    case (QuantType.Forall(al, m, sigma), pi: NegType.App) =>
+    case (QuantType.Forall(al, m, sigma), pi: (NegType.App | NegType.Force.type)) =>
       val marks = Set.from(c.mrks.iterator.concat(Some(m)))
       quantCache.get(marks) match
       case None =>
-        quantCache += marks -> sigma
+        quantCache += marks -> QuantType.Forall(al, m, sigma)
         ("C-Forall1", Some((al, m)), List(Constraint(sigma, pi, c.mrks)))
-      case Some(sigma1) =>
-        val eqConstr = unify(sigma, sigma1)(using Set.empty[TypeVar])
-        ("C-Forall2", None, eqConstr ++ List(Constraint(sigma1, pi, c.mrks)))
-    
-    case (QuantType.Base(_: (PosType.Lam | PosType.Unit)) | QuantType.Forall(_, _, _), NegType.Force) => ("C-Top", None, Nil)
-    
+      case Some(old) =>
+        val eqConstr = unify(c.lb, old)(using Set.empty[Int])
+        ("C-Forall2", None, eqConstr ++ List(Constraint(old.ty, pi, c.mrks)))
+
+    case (QuantType.Base(_: PosType.Lam), NegType.Force) => ("C-FunForce", None, Nil)
+    case (QuantType.Base(_: PosType.Unit), NegType.Force) => ("C-UnitForce", None, Nil)
+
     // e.g. application where lhs is a unit
     case _ => ("C-Err", None, Nil)
 

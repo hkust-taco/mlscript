@@ -282,7 +282,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output("Parsed Core: " + ctrm.show)
       typer.checkWellFormed(ctrm)
       val (ty, cons_) = typer.inferType(ctrm)
-      val cons = Constraint(QuantType.Base(ty), NegType.Force, Nil) :: cons_
+      val cons = cons_ ++ (Constraint(QuantType.Base(ty), NegType.Force, Nil) :: Nil)
       output("Inferred: " + (if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType))
       output("As term: " + ty.showAsTerm)
 
@@ -298,7 +298,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         ).mkString(", "))
 
       var solver = CtxSolver(cons)
-      var fuel = 50
+      var fuel = 100
       var iter = 0
       def printBounds = 
         // print bounds
@@ -308,19 +308,21 @@ abstract class MLsDiffMaker extends DiffMaker:
         if ubs > 0 then
           output("-------- UBS --------")
         for al <- bounded do
-          for ty <- solver.upperBounds.getOrElse(al, Set.empty[NegType]) do
+          for ((_, s), ty) <- solver.upperBounds.getOrElse(al, Map.empty[(NegType, Set[Mark]), NegType]) do
+            val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
             if showTypeLatex.isSet then
               output(s"${al.showLatex} $$\\leq$$ ${ty.showAsTypeLatex}")
             else
-              output(s"${al.show} ≤ ${ty.showAsType}")
+              output(s"${al.show} ≤^${ss} ${ty.showAsType}")
         if lbs > 0 then
           output("-------- LBS --------")
         for al <- bounded do
-          for ty <- solver.lowerBounds.getOrElse(al, Set.empty[QuantType]) do
+          for ((_, s), ty) <- solver.lowerBounds.getOrElse(al, Map.empty[(QuantType, Set[Mark]), QuantType]) do
+            val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
             if showTypeLatex.isSet then
               output(s"${al.showLatex} $$\\geq$$ ${ty.showAsTypeLatex}")
             else
-              output(s"${al.show} ≥ ${ty.showAsType}")
+              output(s"${al.show} ≥^${ss} ${ty.showAsType}")
         if ubs + lbs > 0 then
           output("---------------------")
       while iter < fuel && !solver.unresolved.isEmpty do
@@ -350,9 +352,9 @@ abstract class MLsDiffMaker extends DiffMaker:
         output(s"Remaining: ${solver.unresolved.size}")
 
       val lBounds = solver.lowerBounds.toList.flatMap:
-        case (v, lb) => lb.toList.map(Constraint(_, NegType.Var(v), Nil))
+        case (v, lb) => lb.toList.map((k, l) => Constraint(l, NegType.Var(v), Nil))
       val uBounds = solver.upperBounds.toList.flatMap:
-        case (v, ub) => ub.toList.map(Constraint(QuantType.fromVar(v), _, Nil))
+        case (v, ub) => ub.toList.map((k, u) => Constraint(QuantType.fromVar(v), u, Nil))
       val finalType = typer.wrap((ty, lBounds ++ uBounds))
 
       if iter == fuel then
