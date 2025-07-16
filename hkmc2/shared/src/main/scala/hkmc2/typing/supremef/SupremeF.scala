@@ -3,6 +3,7 @@ package typing.supremef
 
 import scala.language.strictEquality
 import scala.collection.mutable.{LinkedHashMap => MutMap, LinkedHashSet => MutSet}
+import scala.collection.immutable.ListSet
 
 import mlscript.utils.GenHelper
 import mlscript.utils.shorthands.*
@@ -86,7 +87,7 @@ sealed trait Type:
       case NegType.App(sigma, al) => 
         doc"${sigma.showAsTypeImpl(ArrowLhsPrec)} -> ${al.show}"
           |> parens(ArrowLhsPrec)
-      case _: NegType.Force => "!"
+      case _: NegType.Force => "•"
 
   def showAsTypeLatex(using NamingCtx): Document = showAsTypeLatexImpl(TopPrec, 0)
   // newline is Some(indent) if we need to have anewline with indent level of indentation
@@ -429,12 +430,12 @@ def unifyConstr(c1: Constraint, c2: Constraint)
   unify(c1.lb, c2.lb) ++ unify(c1.ub, c2.ub)
 
 class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingCtx, ctx: InferenceCtx):
-  var upperBounds = MutMap.empty[TypeVar, MutMap[(NegType, Set[Mark]), NegType]]
-  var lowerBounds = MutMap.empty[TypeVar, MutMap[(QuantType, Set[Mark]), QuantType]]
+  var upperBounds = MutMap.empty[TypeVar, MutMap[(NegType, ListSet[Mark]), NegType]]
+  var lowerBounds = MutMap.empty[TypeVar, MutMap[(QuantType, ListSet[Mark]), QuantType]]
   // note: resolved is stored in reversed order
   type ResolvedElem = CtxElem | (List[Mark], TypeVar, QuantType)
   var resolved = List.empty[ResolvedElem]
-  var quantCache = MutMap.empty[Set[Mark], QuantType.Forall]
+  var quantCache = MutMap.empty[ListSet[Mark], QuantType.Forall]
   var results = MutSet.empty[PosType]
 
   def showFront(using NamingCtx) = unresolved match
@@ -468,27 +469,27 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
       val canonical = ty.canonicalize(using CanonicalizeCtx(0, MutMap.empty))
       // check if we can skip
       if upperBounds.getOrElseUpdate(al, MutMap.empty)
-          .contains((canonical, c.mrks.toSet)) then
+          .contains((canonical, c.mrks.to(ListSet))) then
         ("C-Skip", None, List.empty)
       else
         val lbs = lowerBounds.getOrElseUpdate(al, MutMap.empty)
         // if ty is a type var, install lower bounds
         ty.asVar.map(ub => lowerBounds.getOrElseUpdate(ub, MutMap.empty)
-          .addOne((QuantType.fromVar(al), c.mrks.toSet), QuantType.fromVar(al)))
-        upperBounds.getOrElseUpdate(al, MutMap.empty).addOne((ty, c.mrks.toSet), canonical)
+          .addOne((QuantType.fromVar(al), c.mrks.to(ListSet)), QuantType.fromVar(al)))
+        upperBounds.getOrElseUpdate(al, MutMap.empty).addOne((ty, c.mrks.to(ListSet)), canonical)
         given Map[Int, TypeVar] = Map.empty
         ("C-Var1", Some(c), lbs.iterator
           .map((key, lb) => Constraint(lb.refresh, ty, key._2.toList ++ c.mrks)).toList)
     case (sigma, NegType.Var(al)) =>
       val canonical = sigma.canonicalize(using CanonicalizeCtx(0, MutMap.empty))
-      if lowerBounds.getOrElseUpdate(al, MutMap.empty).contains((canonical, c.mrks.toSet)) then
+      if lowerBounds.getOrElseUpdate(al, MutMap.empty).contains((canonical, c.mrks.to(ListSet))) then
         ("C-Skip", None, List.empty)
       else
         val ubs = upperBounds.getOrElseUpdate(al, MutMap.empty)
         // if sigma is a type var, install upper bounds
         sigma.asVar.map(lb => upperBounds.getOrElseUpdate(lb, MutMap.empty)
-          .addOne((NegType.Var(al), c.mrks.toSet), NegType.Var(al)))
-        lowerBounds.getOrElseUpdate(al, MutMap.empty).addOne((canonical, c.mrks.toSet), sigma)
+          .addOne((NegType.Var(al), c.mrks.to(ListSet)), NegType.Var(al)))
+        lowerBounds.getOrElseUpdate(al, MutMap.empty).addOne((canonical, c.mrks.to(ListSet)), sigma)
         given Map[Int, TypeVar] = Map.empty
         // note that we avoid cases where ub = al, which may happen?
         ("C-Var2", Some(c),  ubs.iterator
@@ -507,7 +508,7 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
         List(Constraint(QuantType.fromVar(al), c.ub, m :: c.mrks)))
 
     case (QuantType.Forall(al, m, sigma), pi: (NegType.App | NegType.Force)) =>
-      val marks = Set.from(c.mrks.iterator.concat(Some(m)))
+      val marks = ListSet.from(c.mrks.iterator.concat(Some(m)))
       quantCache.get(marks) match
       case None =>
         quantCache += marks -> QuantType.Forall(al, m, sigma)
