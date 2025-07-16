@@ -77,7 +77,7 @@ sealed trait Type:
       case PosType.Lam(al: TypeVar, sigma) => 
         doc"${al.show} -> ${sigma.showAsTypeImpl(ArrowRhsPrec)}"
           |> parens(ArrowLhsPrec)
-      case PosType.Lam(al: NegType.Force.type, sigma) => 
+      case PosType.Lam(al: NegType.Force, sigma) => 
         doc"${al.showAsTypeImpl(ArrowLhsPrec)} -> ${sigma.showAsTypeImpl(ArrowRhsPrec)}"
           |> parens(ArrowLhsPrec)
       case PosType.Mrked(al, m) =>
@@ -86,7 +86,7 @@ sealed trait Type:
       case NegType.App(sigma, al) => 
         doc"${sigma.showAsTypeImpl(ArrowLhsPrec)} -> ${al.show}"
           |> parens(ArrowLhsPrec)
-      case _: NegType.Force.type => "!"
+      case _: NegType.Force => "!"
 
   def showAsTypeLatex(using NamingCtx): Document = showAsTypeLatexImpl(TopPrec, 0)
   // newline is Some(indent) if we need to have anewline with indent level of indentation
@@ -125,13 +125,13 @@ sealed trait Type:
             doc"\n${"  "*(indent+1)}${sigma.showAsTypeLatexImpl(ArrowRhsPrec, indent+1)}"
         al match
           case a: TypeVar => doc"${a.showLatex} $$\rightarrow$$ $rhs"
-          case a: NegType.Force.type => doc"${a.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ $rhs"
+          case a: NegType.Force => doc"${a.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ $rhs"
       case PosType.Mrked(al, m) =>
         if ctx.showMarks then doc"${al.showLatex}$$^{${m.uid}}$$" else al.showLatex
       case NegType.Var(al) => al.showLatex
       case NegType.App(sigma, al) =>
         doc"${sigma.showAsTypeLatexImpl(ArrowLhsPrec, indent)} $$\rightarrow$$ ${al.showLatex}"
-      case _:NegType.Force.type => doc"$$\bullet$$"
+      case _:NegType.Force => doc"$$\bullet$$"
 
   def showAsTerm(using ctx: NamingCtx) = showAsTermImpl(TopPrec)
   def showAsTermImpl(prec: Int)(using ctx: NamingCtx): Document =
@@ -160,7 +160,7 @@ sealed trait Type:
       case PosType.Lam(al: TypeVar, sigma) =>
         doc"λ${al.show} -> ${sigma.showAsTermImpl(LamPrec)}"
           |> parens(LamPrec)
-      case PosType.Lam(al: NegType.Force.type, sigma) =>
+      case PosType.Lam(al: NegType.Force, sigma) =>
         doc"λ${al.showAsTermImpl(LamPrec)} -> ${sigma.showAsTermImpl(LamPrec)}"
           |> parens(LamPrec)
       case PosType.Mrked(al, m) => al.show
@@ -211,7 +211,7 @@ class Constraint(val lb: QuantType, val ub: NegType, val mrks: List[Mark])
       case NegType.App(sigma, al) => (al,
         doc"${lb.showAsTermImpl(FunPrec)} ${sigma.showAsTermImpl(ArgPrec)}"
           |> parens(BindingPrec))
-      case NegType.Force => return doc"•"
+      case NegType.Force(_) => return doc"•"
     doc"${beta.show} = ${rhs}"
 
 // α, β
@@ -259,39 +259,39 @@ enum QuantType extends Type derives CanEqual:
 enum PosType extends Type derives CanEqual:
   case Unit()
   case Var(al: TypeVar)
-  case Lam(al: TypeVar | NegType.Force.type, sigma: QuantType)
+  case Lam(al: TypeVar | NegType.Force, sigma: QuantType)
   case Mrked(al: TypeVar, m: Mark)
 
   def canonicalize(using ctx: CanonicalizeCtx): PosType = this match
     case Unit() => Unit()
     case Var(al) => Var(al.canonicalize)
     case Lam(al: TypeVar, sigma) => Lam(al.canonicalize, sigma.canonicalize)
-    case Lam(al: NegType.Force.type, sigma) => Lam(al, sigma.canonicalize)
+    case Lam(al: NegType.Force, sigma) => Lam(al, sigma.canonicalize)
     case Mrked(al, m) => Var(al.canonicalize)
 
   def refresh(using InferenceCtx, Map[Int, TypeVar]): PosType = this match
     case Unit() => Unit()
     case Var(al) => Var(al.refresh)
     case Lam(al: TypeVar, sigma) => Lam(al.refresh, sigma.refresh)
-    case Lam(al: NegType.Force.type, sigma) => Lam(al, sigma.refresh)
+    case Lam(al: NegType.Force, sigma) => Lam(al, sigma.refresh)
     case Mrked(al, m) => Mrked(al.refresh, m)
 
 // τ^-
 enum NegType extends Type derives CanEqual:
   case Var(al: TypeVar)
   case App(sigma: QuantType, al: TypeVar)
-  case Force
+  case Force(toplevel: Boolean)
 
   def canonicalize(using ctx: CanonicalizeCtx): NegType = this match
     case Var(al) => Var(al.canonicalize)
     case App(sigma, al) => App(sigma.canonicalize, al.canonicalize)
-    case Force => Force
+    case x => x
 
 
   def refresh(using InferenceCtx, Map[Int, TypeVar]): NegType = this match
     case Var(al) => Var(al.refresh)
     case App(sigma, al) => App(sigma.refresh, al.refresh)
-    case Force => Force
+    case x => x
 
 object QuantType:
   def fromVar(al: TypeVar) = QuantType.Base(PosType.Var(al))
@@ -372,7 +372,7 @@ class Typer(using Raise):
     case CoreTerm.Unit => (PosType.Unit(), Nil)
     case CoreTerm.Cond => 
       val al = ctx.getFreshTv("α")
-      (PosType.Lam(NegType.Force, QuantType.Base(PosType.Lam(al, QuantType.Base(PosType.Lam(al, QuantType.fromVar(al)))))),
+      (PosType.Lam(NegType.Force(false), QuantType.Base(PosType.Lam(al, QuantType.Base(PosType.Lam(al, QuantType.fromVar(al)))))),
         (al, ctx.getFreshMrk) :: Nil)
     case CoreTerm.Var(x) =>
       (PosType.Mrked(ctx.mappings(x), ctx.getFreshMrk), Nil)
@@ -435,6 +435,7 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
   type ResolvedElem = CtxElem | (List[Mark], TypeVar, QuantType)
   var resolved = List.empty[ResolvedElem]
   var quantCache = MutMap.empty[Set[Mark], QuantType.Forall]
+  var results = MutSet.empty[PosType]
 
   def showFront(using NamingCtx) = unresolved match
     case (al: TypeVar, _) :: _ => al.show
@@ -460,7 +461,7 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
 
   def handleCon(c: Constraint)
     : (String, Option[ResolvedElem], List[Constraint]) = (c.lb, c.ub) match
-    case (QuantType.Constr(c1, sigma), pi: (NegType.App | NegType.Force.type)) =>
+    case (QuantType.Constr(c1, sigma), pi: (NegType.App | NegType.Force)) =>
       ("C-Constr", None, List(c1.withMrks(c.mrks),
                               Constraint(sigma, pi, c.mrks)))
     case (QuantType.Base(PosType.Var(al)), ty) =>
@@ -496,16 +497,16 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
     case (QuantType.Base(PosType.Lam(al, sigma)), NegType.App(sigma1, beta)) =>
       val a = al match
         case alpha: TypeVar => NegType.Var(alpha)
-        case bullet: NegType.Force.type => bullet
+        case bullet: NegType.Force => bullet
       val c1 = Constraint(sigma1, a, c.mrks)
       val c2 = Constraint(sigma, NegType.Var(beta), c.mrks)
       ("C-Fun", None, List(c1, c2))
 
-    case (QuantType.Base(PosType.Mrked(al, m)), _: NegType.App | NegType.Force) =>
+    case (QuantType.Base(PosType.Mrked(al, m)), _: (NegType.App | NegType.Force)) =>
       ("C-Unwrap", None,
         List(Constraint(QuantType.fromVar(al), c.ub, m :: c.mrks)))
 
-    case (QuantType.Forall(al, m, sigma), pi: (NegType.App | NegType.Force.type)) =>
+    case (QuantType.Forall(al, m, sigma), pi: (NegType.App | NegType.Force)) =>
       val marks = Set.from(c.mrks.iterator.concat(Some(m)))
       quantCache.get(marks) match
       case None =>
@@ -515,8 +516,12 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
         val eqConstr = unify(c.lb, old)(using Set.empty[Int])
         ("C-Forall2", None, eqConstr ++ List(Constraint(old.ty, pi, c.mrks)))
 
-    case (QuantType.Base(_: PosType.Lam), NegType.Force) => ("C-FunForce", None, Nil)
-    case (QuantType.Base(_: PosType.Unit), NegType.Force) => ("C-UnitForce", None, Nil)
+    case (QuantType.Base(x: PosType.Lam), NegType.Force(top)) => 
+      if top then results += x
+      ("C-FunForce", None, Nil)
+    case (QuantType.Base(x: PosType.Unit), NegType.Force(top)) =>
+      if top then results += x
+      ("C-UnitForce", None, Nil)
 
     // e.g. application where lhs is a unit
     case _ => ("C-Err", None, Nil)

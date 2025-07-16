@@ -276,13 +276,13 @@ abstract class MLsDiffMaker extends DiffMaker:
       import typing.*
       import typing.supremef.*
       val typer = Typer()
-      given NamingCtx = NamingCtx(true)
+      given NamingCtx = NamingCtx(false)
       given InferenceCtx = InferenceCtx(None, Map.empty)
       val ctrm = typer.fromTerm(trm)
       output("Parsed Core: " + ctrm.show)
       typer.checkWellFormed(ctrm)
       val (ty, cons_) = typer.inferType(ctrm)
-      val cons = cons_ ++ (Constraint(QuantType.Base(ty), NegType.Force, Nil) :: Nil)
+      val cons = cons_ ++ (Constraint(QuantType.Base(ty), NegType.Force(true), Nil) :: Nil)
       output("Inferred: " + (if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType))
       output("As term: " + ty.showAsTerm)
 
@@ -365,7 +365,8 @@ abstract class MLsDiffMaker extends DiffMaker:
       else
         output(s"====== Final ======")
         output(s"------ base type ------")
-        output(s"${(if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType)}")
+        for ty <- solver.results do
+          output(s"${(if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType)}")
         printBounds
 
 
