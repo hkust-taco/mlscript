@@ -282,17 +282,23 @@ abstract class MLsDiffMaker extends DiffMaker:
       output("Parsed Core: " + ctrm.show)
       typer.checkWellFormed(ctrm)
       val (ty, cons_) = typer.inferType(ctrm)
-      val cons = Constraint(QuantType.Base(ty), NegType.Force, Nil) :: cons_
-      output("Inferred: " + ty.showAsType)
+      val cons = cons_ ++ (Constraint(QuantType.Base(ty), NegType.Force, Nil) :: Nil)
+      output("Inferred: " + (if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType))
       output("As term: " + ty.showAsTerm)
 
-      output("|> " + cons.map(s => s match
-        case c: Constraint => c.show
-        case (al: TypeVar, _) => al.show
-      ).mkString(", "))
+      if showTypeLatex.isSet then
+        output("|>\n" + cons.map(s => s match
+          case c: Constraint => c.showLatex(0)
+          case (al: TypeVar, _) => al.showLatex
+        ).mkString("\n"))
+      else
+        output("|> " + cons.map(s => s match
+          case c: Constraint => c.show
+          case (al: TypeVar, _) => al.show
+        ).mkString(", "))
 
       var solver = CtxSolver(cons)
-      var fuel = 50
+      var fuel = 100
       var iter = 0
       def printBounds = 
         // print bounds
@@ -302,24 +308,38 @@ abstract class MLsDiffMaker extends DiffMaker:
         if ubs > 0 then
           output("-------- UBS --------")
         for al <- bounded do
-          for ty <- solver.upperBounds.getOrElse(al, Set.empty[NegType]) do
-            output(s"${al.show} ≤ ${ty.showAsType}")
+          for ((_, s), ty) <- solver.upperBounds.getOrElse(al, Map.empty[(NegType, Set[Mark]), NegType]) do
+            val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
+            if showTypeLatex.isSet then
+              output(s"${al.showLatex} $$\\leq$$ ${ty.showAsTypeLatex}")
+            else
+              output(s"${al.show} ≤^${ss} ${ty.showAsType}")
         if lbs > 0 then
           output("-------- LBS --------")
         for al <- bounded do
-          for ty <- solver.lowerBounds.getOrElse(al, Set.empty[QuantType]) do
-            output(s"${al.show} ≥ ${ty.showAsType}")
+          for ((_, s), ty) <- solver.lowerBounds.getOrElse(al, Map.empty[(QuantType, Set[Mark]), QuantType]) do
+            val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
+            if showTypeLatex.isSet then
+              output(s"${al.showLatex} $$\\geq$$ ${ty.showAsTypeLatex}")
+            else
+              output(s"${al.show} ≥^${ss} ${ty.showAsType}")
         if ubs + lbs > 0 then
           output("---------------------")
       while iter < fuel && !solver.unresolved.isEmpty do
         iter += 1
         output(s"====== (${iter}) ======")
         printBounds
-        output(s"Front: ${solver.showFront}")
+        if showTypeLatex.isSet then
+          output(s"Front:\n${solver.showFrontLatex}")
+        else
+          output(s"Front: ${solver.showFront}")
         val (rule, newResolved, newCons) = solver.step
         output(s"Rule: ${rule}")
         for con <- newCons do
-          output(s"|> ${con.show}")
+          if showTypeLatex.isSet then
+            output(s"|>\n${con.showLatex(0)}")
+          else
+            output(s"|> ${con.show}")
         if iter == fuel then
           output(s"==== Out of fuel ====")
         if rule == "C-Err" then
@@ -332,22 +352,20 @@ abstract class MLsDiffMaker extends DiffMaker:
         output(s"Remaining: ${solver.unresolved.size}")
 
       val lBounds = solver.lowerBounds.toList.flatMap:
-        case (v, lb) => lb.toList.map(Constraint(_, NegType.Var(v), Nil))
+        case (v, lb) => lb.toList.map((k, l) => Constraint(l, NegType.Var(v), Nil))
       val uBounds = solver.upperBounds.toList.flatMap:
-        case (v, ub) => ub.toList.map(Constraint(QuantType.fromVar(v), _, Nil))
+        case (v, ub) => ub.toList.map((k, u) => Constraint(QuantType.fromVar(v), u, Nil))
       val finalType = typer.wrap((ty, lBounds ++ uBounds))
-
 
       if iter == fuel then
         output(s"====== Remaining ======")
         for elem <- solver.unresolved do elem match
-          case (al: TypeVar, _) => output(s"${al.show}")
-          case c : Constraint => output(s"${c.show}")
+          case (al: TypeVar, _) => output(s"${if showTypeLatex.isSet then al.showLatex else al.show}")
+          case c : Constraint => output(s"${if showTypeLatex.isSet then c.showLatex(0) else c.show}")
       else
         output(s"====== Final ======")
+        output(s"------ base type ------")
+        output(s"${(if showTypeLatex.isSet then ty.showAsTypeLatex else ty.showAsType)}")
         printBounds
 
-      if showTypeLatex.isSet then
-        output(s"====== Latex Type ======")
-        output(s"${finalType.showAsTypeLatex}")
 
