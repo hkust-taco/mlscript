@@ -69,7 +69,7 @@ sealed trait Type:
         doc"∀^m${m.uid} ${al.show}. ${ty.showAsTypeImpl(ForallPrec)}"
           |> parens(ForallPrec)
       case QuantType.Constr(c, ty) => 
-        val cons = doc"${c.show}" |> parens(ConstrPrec)
+        val cons = doc"${c.show}" |> parens(-1)
         doc"${cons} => ${ty.showAsTypeImpl(ForallPrec)}"
           |> parens(ForallPrec)
       case PosType.Unit() => "()"
@@ -460,7 +460,7 @@ class CtxSolver(var unresolved: List[CtxElem])(using rai: Raise, naming: NamingC
 
   def handleCon(c: Constraint)
     : (String, Option[ResolvedElem], List[Constraint]) = (c.lb, c.ub) match
-    case (QuantType.Constr(c1, sigma), pi: NegType.App) =>
+    case (QuantType.Constr(c1, sigma), pi: (NegType.App | NegType.Force.type)) =>
       ("C-Constr", None, List(c1.withMrks(c.mrks),
                               Constraint(sigma, pi, c.mrks)))
     case (QuantType.Base(PosType.Var(al)), ty) =>
