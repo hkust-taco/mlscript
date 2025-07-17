@@ -305,10 +305,13 @@ abstract class MLsDiffMaker extends DiffMaker:
         val ubs = solver.upperBounds.valuesIterator.map(_.size).sum
         val lbs = solver.lowerBounds.valuesIterator.map(_.size).sum
         val bounded = solver.upperBounds.keySet ++ solver.lowerBounds.keySet
+        // output("-------- CACHE --------")
+        // solver.quantCache.foreach: (k, v) =>
+        //   output(k.map(m => f"m${m.uid}").mkString("[", ",","]"))
         if ubs > 0 then
           output("-------- UBS --------")
         for al <- bounded do
-          for ((_, s), ty) <- solver.upperBounds.getOrElse(al, Map.empty[(NegType, Set[Mark]), NegType]) do
+          for ((_, s), ty) <- solver.upperBounds.getOrElse(al, Map.empty[(NegType, List[Mark]), NegType]) do
             val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
             if showTypeLatex.isSet then
               output(s"${al.showLatex} $$\\leq$$ ${ty.showAsTypeLatex}")
@@ -317,7 +320,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         if lbs > 0 then
           output("-------- LBS --------")
         for al <- bounded do
-          for ((_, s), ty) <- solver.lowerBounds.getOrElse(al, Map.empty[(QuantType, Set[Mark]), QuantType]) do
+          for ((_, s), ty) <- solver.lowerBounds.getOrElse(al, Map.empty[(QuantType, List[Mark]), QuantType]) do
             val ss = (if !s.isEmpty then s.map(m => f"m${m.uid}").mkString("[", ",","]") else "")
             if showTypeLatex.isSet then
               output(s"${al.showLatex} $$\\geq$$ ${ty.showAsTypeLatex}")
