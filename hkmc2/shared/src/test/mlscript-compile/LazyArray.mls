@@ -8,7 +8,7 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-// Assume all underlying `IterableBase`s are constant-time random access
+// Assume that the underlying iterable of LazyArr is constant-time access
 class LazyArr extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
@@ -65,7 +65,7 @@ class Splice(val bits, val len) extends LazyArr with
       else Result.Done
     Iterator of nextf
 
-  fun reify = //  [...this]
+  fun reify = 
     let counter = 0
     let arr = new Array(len)
     let add = x => 
@@ -104,7 +104,7 @@ class Splice(val bits, val len) extends LazyArr with
     let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
     let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, bits)
     Splice of a, l
-  
+
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
 
