@@ -185,7 +185,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if verbose then
         output(s"Imported ${resBlk.definedSymbols.size} member(s)")
       curCtx = ctxWithImports
-      processTerm(e, inImport = true)
+      processTerm(e, inImport = true, Ls.empty)
     catch
       case err: Throwable =>
         uncaught(err)
@@ -195,7 +195,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     override def emitDbg(str: String): Unit = output(str)
   
   
-  def processOrigin(origin: Origin)(using Raise): Unit =
+  def processOrigin(origin: Origin, statefulComments: List[String])(using Raise): Unit =
     val oldCtx = curCtx
     
     given Config = mkConfig
@@ -223,7 +223,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   output(s"AST: $res")
     
     if parseOnly.isUnset then
-      processTrees(res)(using summon, raise)
+      processTrees(res, statefulComments)(using summon, raise)
     
     if showContext.isSet then
       output("Env:")
@@ -234,7 +234,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   private var blockNum = 0
   
-  def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
+  def processTrees(trees: Ls[syntax.Tree], statefulComments: Ls[String] = Ls.empty)(using Config, Raise): Unit =
     val elab = Elaborator(etl, file / os.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
@@ -251,11 +251,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Elaborated tree:")
       output(e.showAsTree(using post))
       
-    processTerm(e, inImport = false)
+    processTerm(e, inImport = false, statefulComments)
       
   
   
-  def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+  def processTerm(trm: semantics.Term.Blk, inImport: Bool, statefulComments: Ls[String])(using Config, Raise): Unit =
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     

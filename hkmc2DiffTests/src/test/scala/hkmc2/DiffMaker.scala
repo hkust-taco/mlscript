@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import scala.collection.mutable.ListBuffer
 
 
 
@@ -17,6 +18,8 @@ class Outputter(val out: java.io.PrintWriter):
 
   val exitMarker = "=" * 100
   val blockSeparator = "—" * 80
+
+  val statefulMarker = "//+ "
   
   val fullBlockSeparator = outputMarker + blockSeparator
   
@@ -24,6 +27,8 @@ class Outputter(val out: java.io.PrintWriter):
     // out.println(outputMarker + str)
     str.splitSane('\n').foreach(l => out.println(outputMarker + l))
 
+  def stateful(str: String) =
+    str.splitSane('\n').foreach(l => out.println(statefulMarker + l))
 
 
 abstract class DiffMaker:
@@ -31,7 +36,7 @@ abstract class DiffMaker:
   val file: os.Path
   val relativeName: Str
   
-  def processOrigin(origin: Origin)(using Raise): Unit
+  def processOrigin(origin: Origin, statefulComments: List[String])(using Raise): Unit
   
   
   
@@ -162,7 +167,7 @@ abstract class DiffMaker:
       ).map("\n" + "\tat: " + _).mkString)
   
   
-  def processBlock(origin: Origin): Unit =
+  def processBlock(origin: Origin, statefulComments: List[String]): Unit =
     val globalStartLineNum = origin.startLineNum
     val blockLineNum = origin.startLineNum
     // * ^ In previous DiffTest versions, these two could be different due to relative line numbers
@@ -212,7 +217,7 @@ abstract class DiffMaker:
         throw d
       report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
     
-    processOrigin(origin)(using raise)
+    processOrigin(origin, statefulComments)(using raise)
     
     // Note: when `todo` is set, we allow the lack of errors.
     // Use `todo` when the errors are expected but not yet implemented.
@@ -270,8 +275,8 @@ abstract class DiffMaker:
           output("/!\\ Unrecognized command: " + cmd)
       
       rec(ls)
-    case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
-      => rec(ls)
+    case line :: ls if line.startsWith(output.outputMarker) || line.startsWith(output.statefulMarker)
+      => rec(ls)                                          //|| line.startsWith(oldOutputMarker)
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
@@ -301,21 +306,32 @@ abstract class DiffMaker:
       
       val blockLineNum = allLines.size - lines.size + 1
       
-      val block = (l :: ls.takeWhile(l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
+      val (blockU, rest) = takeWhileAndRest(l :: ls, (l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
         l.startsWith(output.outputMarker)
         || l.startsWith(output.diffBegMarker)
+        || l.startsWith(output.statefulMarker)
         // || l.startsWith(oldOutputMarker)
-      ))).toIndexedSeq
+      )))
+      val block = blockU.toIndexedSeq
       block.foreach(out.println)
       val processedBlock = block
       val processedBlockStr = processedBlock.mkString
       val fph = new FastParseHelpers(block)
       
       val origin = Origin(file, blockLineNum, fph)
-      
+      val statefulComments = rest.takeWhile(l => l.nonEmpty && (
+        l.startsWith(output.statefulMarker)
+        || l.startsWith(output.outputMarker)
+        || l.startsWith(output.diffBegMarker)
+        || l.startsWith(output.diffMidMarker)
+        || l.startsWith(output.diff3MidMarker)
+        || l.startsWith(output.diffEndMarker)
+      )).filter(l => l.startsWith(output.statefulMarker))
+        .map(l => l.stripPrefix(output.statefulMarker).trim)
+
       try
         
-        processBlock(origin)
+        processBlock(origin, statefulComments)
         
       catch
         case oh_noes: ThreadDeath => throw oh_noes
@@ -348,6 +364,16 @@ abstract class DiffMaker:
   // * and every time a further command block with `:init` finishes
   def init(): Unit =
     ()
+
+  @inline final def takeWhileAndRest[A](xs: List[A], p: A => Boolean): (List[A], List[A]) = {
+    val b = new ListBuffer[A]
+    var ys = xs
+    while (!ys.isEmpty && p(ys.head)) {
+      b += ys.head
+      ys = ys.tail
+    }
+    (b.toList, ys)
+  }
   
   
 end DiffMaker

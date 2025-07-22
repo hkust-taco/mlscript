@@ -32,8 +32,8 @@ abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   var bbmlTyper: Opt[BBTyper] = None
   
   
-  override def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
-    super.processTerm(trm, inImport)
+  override def processTerm(trm: semantics.Term.Blk, inImport: Bool, statefulComments: Ls[String])(using Config, Raise): Unit =
+    super.processTerm(trm, inImport, statefulComments)
     if bbmlOpt.isSet then
       given Scope = Scope.empty
       if bbmlTyper.isEmpty then
