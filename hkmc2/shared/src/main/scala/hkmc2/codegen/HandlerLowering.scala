@@ -112,7 +112,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case Call(fun, args) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
             arg match
-              case Arg(false, p) => S(p :: acc)
+              case Arg(false, p, _) => S(p :: acc)
               case _ => N
         .map((fun, _))
       case _ => N

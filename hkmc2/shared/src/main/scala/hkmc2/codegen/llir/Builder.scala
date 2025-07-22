@@ -155,7 +155,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     trace[Node](s"bArgs begin", x => s"bArgs end: ${x.show}"):
       e match
       case Nil => k(Nil)
-      case Arg(spread, x) :: xs => bPath(x):
+      case Arg(spread, x, _) :: xs => bPath(x):
         case r: TrivialExpr => bArgs(xs):
           case rs: Ls[TrivialExpr] => k(r :: rs)
   

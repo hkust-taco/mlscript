@@ -489,14 +489,14 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         // 1. A fixed number of leading patterns.
         // 2. A variable number of middle patterns indicated by `..`.
         // 3. A fixed number of trailing patterns.
-        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
-          case ((lead, N), Spread(_, _, patOpt)) => (lead, S((patOpt, Nil)))
+        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Keyword.Ellipsis, Opt[Tree], Ls[Tree])])]((Nil, N)):
+          case ((lead, N), Spread(kw, _, patOpt)) => (lead, S((kw, patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
-          case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
+          case ((lead, S((kw: Keyword.Ellipsis, rest, last))), pat) => (lead, S((kw, rest, last :+ pat)))
         // `wrap`: add let bindings for tuple elements
         // `matches`: pairs of patterns and symbols to be elaborated
         val (wrapRest, restMatches) = rest match
-          case S((rest, last)) =>
+          case S((kw, rest, last)) =>
             val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
               .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
                 case ((wrapInner, matches), (pat, lastIndex)) =>
@@ -505,22 +505,25 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
+            val sliceFn = if kw.isInstanceOf[Keyword.`..`.type] then tupleLazySlice else tupleSlice
             rest match
               case N => (wrapLast, lastMatches)
               case S(pat) =>
                 val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
-                  Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                  Split.Let(sym, app(sliceFn, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
                 (wrap, (sym, pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
           case ((pat, i), (wrapInner, matches)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
-            val wrap = (split: Split) => Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
+            val wrap = (split: Split) =>
+              // Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
+              Split.Let(sym, callTupleGet(ref, i, sym), wrapInner(split))
             (wrap, (sym, pat) :: matches)
         Branch(
           ref,
-          Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
+          Pattern.Tuple(lead.length + rest.fold(0)(_._3.length), rest.isDefined),
           // The outermost is a tuple, so pattern arguments are not possible.
           wrap(subMatches(matches.map { case (s, t) => (s, t, N) }, sequel)(Split.End)(ctx))
         ) ~: fallback

@@ -27,6 +27,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val expect = Command("expect"): ln =>
     ln.trim
   
+  val runtimeOverride = Command("runtime")(ln => os.RelPath(ln.trim))
   private val baseScp: utils.Scope =
     utils.Scope.empty
   
@@ -51,7 +52,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       case ReplHost.Result(msg) =>
         if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
       case r => output(s"Failed to load $name: $r")
-    importRuntimeModule(runtimeNme, runtimeFile)
+
+    if runtimeOverride.isSet then
+      val relativeRuntimeFile = runtimeOverride.get.get
+      output(s"Overriding runtime: ${relativeRuntimeFile}")
+      importRuntimeModule(runtimeNme, wd / relativeRuntimeFile)
+    else
+      importRuntimeModule(runtimeNme, runtimeFile)
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   

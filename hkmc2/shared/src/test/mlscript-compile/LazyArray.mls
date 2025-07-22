@@ -1,0 +1,137 @@
+
+import "./Iter.mls"
+
+open Iter
+open LazyArray
+
+fun normIdx(i, len) =
+  if i < 0 then len + i
+  else i
+
+// Assume all underlying `IterableBase`s are constant-time random access
+class LazyArr extends IterableBase with
+
+  fun toString() = "[" + this joined(", ") + "]"
+  fun concat(...args) =
+    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
+    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, [SpliceMarker, this])
+    Splice of a, l
+
+class View(val underlying: IterableBase, val start, val end) extends LazyArr with
+
+  fun iterator() =
+    let idx = start
+    let until = underlying.length - end
+    Iterator of () =>
+      if idx < until then
+        let next = underlying.at(idx)
+        set idx = idx + 1
+        Result.Next of next
+      else Result.Done
+
+  fun materialize() = underlying.slice(start, underlying.length - end)
+  fun at(i) = underlying.at(normIdx(i, length) + start)
+  // called on eager spreads in matches
+  fun slice(beg, fin) = underlying.slice(start + beg, fin - end)
+
+  fun length = underlying.length - start - end
+  fun toString() = "[" + this joined(", ") + "]"
+
+object SpliceMarker
+class Splice(val bits, val len) extends LazyArr with
+  let materialized = null
+
+  fun iterator() =
+    let idx = 0
+    let uitr = null
+    
+    fun nextf() =
+      if idx < bits.length and
+        bits.[idx] is 
+          SpliceMarker then
+            if uitr == null do 
+              set uitr = bits.[idx + 1].(Symbol.iterator)()
+            let n = uitr.next()
+            if n.done then
+              set uitr = null
+              set idx += 2
+              nextf()
+            else
+              n
+          else
+            let value = bits.[idx]
+            set idx += 1
+            Result.Next of value
+      else Result.Done
+    Iterator of nextf
+
+  fun reify = //  [...this]
+    let counter = 0
+    let arr = new Array(len)
+    let add = x => 
+      set arr.[counter] = x
+      set counter += 1
+    let stack = []
+    stack.push([0, bits])
+    while stack.length > 0 do
+      let e = stack.pop()
+      let idx = e.[0]
+      let vals = e.[1]
+
+      if vals is Splice do
+        set vals = vals.bits
+
+      while (idx < vals.length and
+          (vals.at(idx) is SpliceMarker) is false) do
+        add(vals.at(idx))
+        set idx += 1
+      
+      if (idx < vals.length and vals.at(idx) is SpliceMarker) do
+        stack.push([idx + 2, vals])
+        stack.push([0, vals.at(idx + 1)])
+    arr
+
+  fun materialize() =
+    if materialized == null then
+      set materialized = reify
+    else ()
+    materialized
+
+  fun at(i) = materialize().at(i)
+  // called on eager spreads in matches
+  fun slice(beg, fin) = materialize().slice(beg, fin)
+  fun concat(...args) =
+    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
+    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, bits)
+    Splice of a, l
+  
+  fun length = len
+  fun toString() = "[" + materialize() joined(", ") + "]"
+
+
+module LazyArray with...
+
+
+fun mk(...args) = args
+
+fun concat(...args) =
+  val len = case
+    [SpliceMarker, e, ...rest] then e.length + len(rest)
+    [a, ...rest] then 1 + len(rest)
+    [] then 0
+  Splice of args, len(args)
+
+fun materialize = case
+  Array as a then a
+  _ as itr then itr.materialize()
+
+fun slice(beg, fin) = case
+  View(itr, start, end) then View of itr, start + beg, end + fin
+  Splice(bits, l) as s then View of s.materialize(), beg, fin
+  _ as itr then View of itr, beg, fin // assume itr has O(1) at()
+
+val split = SpliceMarker
+
+fun isLazyArray = case
+  LazyArr then true
+  else false

@@ -495,7 +495,7 @@ enum Value extends Path:
   case Arr(elems: Ls[Arg])
   case Rcd(elems: Ls[RcdArg])
 
-case class Arg(spread: Bool, value: Path)
+case class Arg(spread: Bool, value: Path, eager: Bool = true)
 
 // * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`

@@ -1,12 +1,12 @@
-import "./RuntimeJS.mjs"
-import "./Rendering.mls"
-import "./LazyArray.mjs"
-import "./Iter.mjs"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/RuntimeJS.mjs"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Rendering.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/LazyArray.mjs"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Iter.mjs"
 
 let lar = LazyArray
 
 
-module Runtime with ...
+module RuntimeLazyArray with ...
 
 
 val LazyArr = lar
@@ -48,7 +48,7 @@ val try_catch = RuntimeJS.try_catch
 class EffectHandle(_reified) with
   val reified = _reified
   fun resumeWith(value) =
-    Runtime.try(() => resume(reified.contTrace)(value))
+    RuntimeLazyArray.try(() => resume(reified.contTrace)(value))
   fun raise() =
     topLevelEffect(reified, false)
 

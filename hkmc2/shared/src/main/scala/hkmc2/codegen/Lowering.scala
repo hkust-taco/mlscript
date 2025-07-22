@@ -325,6 +325,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
+          if fs.exists(e => e match
+            case Spd(false, _) => true // is lazy spread
+            case _ => false)
+          then
+            raise(ErrorReport(
+              msg"Lazy spreads are not supported in call arguments" -> arg.toLoc :: Nil, S(arg),
+              source = Diagnostic.Source.Compilation))
           args(fs)(as => k(Call(fr, as)(isMlsFun, true).withLocOf(t)))
         case _ =>
           // Application arguments that are not tuples represent spreads, as in `f(...arg)`
@@ -776,10 +783,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
     val as = elems.map:
-      case sem.Fld(sem.FldFlags.benign(), value, N) => R(false -> value)
+      case sem.Fld(sem.FldFlags.benign(), value, N) => R(N -> value)
       case sem.Fld(sem.FldFlags.benign(), idx, S(rhs)) => L(idx -> rhs)
       case arg @ sem.Fld(flags, value, asc) => TODO(s"Other argument forms: $arg")
-      case spd: Spd => R(true -> spd.term)
+      case spd: Spd => R(S(spd.eager) -> spd.term)
     // * The straightforward way to lower arguments creates too much recursion depth
     // * and makes Lowering stack overflow when lowering functions with lots of arguments.
     /* 
@@ -792,11 +799,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     */
     var asr: Ls[Arg] = Nil
     var fsr: Ls[RcdArg] = Nil
-    def rec(as: Ls[(Term -> Term) \/ (Bool -> st)]): Block = as match
+    def rec(as: Ls[(Term -> Term) \/ (Opt[Bool] -> st)]): Block = as match
       case Nil => End()
       case R((spd, a)) :: as =>
         subTerm_nonTail(a): ar =>
-          asr ::= Arg(spd, ar)
+          asr ::= Arg(spd.isDefined, ar, !spd.isDefined || spd.get)
           rec(as)
       case L((idx, t)) :: as =>
         subTerm_nonTail(idx): ir =>

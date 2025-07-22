@@ -56,6 +56,7 @@ print("Hi")
 //│         Arg:
 //│           spread = false
 //│           value = Lit of StrLit of "Hi"
+//│           eager = true
 //│     rest = Assign: \
 //│     lhs = $block$res
 //│     rhs = Lit of IntLit of 2

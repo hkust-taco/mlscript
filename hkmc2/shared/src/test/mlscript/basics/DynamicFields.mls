@@ -53,12 +53,13 @@ foo.(0)
 :todo
 :re
 foo.[0]
+//│ ═══[RUNTIME ERROR] TypeError: foo.at is not a function
 
 // TODO sanitize
 :todo
 // * Array indexing syntax is only for numeric indices – this should throw
 :re
 foo.["x"]
-//│ = 123
+//│ ═══[RUNTIME ERROR] TypeError: foo.at is not a function
 
 

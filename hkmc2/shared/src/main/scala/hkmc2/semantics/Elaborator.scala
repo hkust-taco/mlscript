@@ -1272,7 +1272,8 @@ extends Importer:
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
             isSpd match
-            case S(spdKnd) =>
+            case S(eagerSpd) =>
+              if !eagerSpd then raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.nonEmpty then
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
               (ParamList(flags, acc.reverse, S(p)), newCtx)
