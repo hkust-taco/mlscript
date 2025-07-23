@@ -130,7 +130,9 @@ fun slice(beg, fin) = case
   Splice(bits, l) as s then View of s.materialize(), beg, fin
   _ as itr then View of itr, beg, fin // assume itr has O(1) at()
 
-val split = SpliceMarker
+// This is not meant for users; it's referred to by Runtime.mls
+// TODO: use `LazyArray.internals.split` when this is implemented
+val __split = SpliceMarker
 
 fun isLazyArray = case
   LazyArr then true
