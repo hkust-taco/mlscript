@@ -2,7 +2,7 @@
 
 
 let rcd = { x: 0, y: undefined, z: null}
-//│ rcd = {x: 0, y: (), z: null}
+//│ rcd = {x: 0, y: undefined, z: null}
 
 rcd.constructor
 //│ = function Object() { [native code] }

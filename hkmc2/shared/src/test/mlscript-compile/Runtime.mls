@@ -68,10 +68,11 @@ module Tuple with
   fun lazyConcat(...args) = LazyArray.concat(...args)
 
   fun get(xs, i) =
-    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-    if i >= xs.length then
+    if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
-    else xs.at(i)
+    if i < -xs.length do
+      throw RangeError("Tuple.get: negative index out of bounds")
+    xs.[i]
 
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
   val split = LazyArray.__split

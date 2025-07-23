@@ -50,7 +50,7 @@ class Splice(val bits, val len) extends LazyArr with
       if idx < bits.length and
         bits.[idx] is 
           SpliceMarker then
-            if uitr == null do 
+            if uitr === null do 
               set uitr = bits.[idx + 1].(Symbol.iterator)()
             let n = uitr.next()
             if n.done then
@@ -93,9 +93,8 @@ class Splice(val bits, val len) extends LazyArr with
     arr
 
   fun materialize() =
-    if materialized == null then
+    if materialized === null do
       set materialized = reify
-    else ()
     materialized
 
   fun at(i) = materialize().at(i)
