@@ -80,13 +80,21 @@ lar = LazyArray;
         return runtime.safeCall(Runtime.LazyArr.concat(...args))
       } 
       static get(xs2, i2) {
-        let scrut;
+        let scrut, scrut1, tmp, tmp1, tmp2;
         scrut = i2 >= xs2.length;
         if (scrut === true) {
           throw globalThis.RangeError("Tuple.get: index out of bounds");
         } else {
-          return runtime.safeCall(xs2.at(i2))
+          tmp = runtime.Unit;
         }
+        tmp1 = - xs2.length;
+        scrut1 = i2 < tmp1;
+        if (scrut1 === true) {
+          throw globalThis.RangeError("Tuple.get: negative index out of bounds");
+        } else {
+          tmp2 = runtime.Unit;
+        }
+        return xs2.at(i2)
       } 
       static isArrayLike(xs3) {
         return runtime.safeCall(Iter.isArrayLike(xs3))
