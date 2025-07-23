@@ -9,124 +9,11 @@ open Benchmark
 open Runtime
 
 set Runtime.Tuple.lazySlice = (xs, i, j) => LazyArray.slice(i, j)(xs)
-set Runtime.Tuple.lazyConcat = (...args) => LazyArray.concat(...args)
+set Runtime.Tuple.lazyConcat = (...args) => LazyArray.__concat(...args)
 set Runtime.Tuple.split = LazyArray.__split
 
 let suite = mkSuite()
 //│ suite = [object Object]
-
-let xs = mk(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-//│ xs = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-let ys1 = [..[0]].concat([1, 2, 3, 4], [5, 6, 7], [8, 9])
-//│ ys1 = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-ys1.materialize()
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-[...ys1]
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-ys1.length
-//│ = 10
-
-let ys2 = LazyArray.slice(2, 2)(ys1)
-//│ ys2 = [2, 3, 4, 5, 6, 7]
-
-ys2.concat(xs, ys1)
-//│ = [2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-let ys2 = LazyArray.slice(0, 2)(ys2)
-//│ ys2 = [2, 3, 4, 5]
-
-ys1.concat(xs, ys2)
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 2, 3, 4, 5]
-
-let ls = if [1,2,3,4,5] is
-    [a, ..ls] then ls
-//│ ls = [2, 3, 4, 5]
-
-:expect 2
-ls.at(0)
-//│ = 2
-
-:sjs
-[0, ..xs]
-//│ JS (unsanitized):
-//│ runtime.Tuple.lazyConcat(0, runtime.Tuple.split, xs)
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-:elt
-:lot
-:sjs
-[0, ..xs, ...xs]
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Nil
-//│   res = Tup of Ls of 
-//│     Fld:
-//│       flags = ()
-//│       term = Lit of IntLit of 0
-//│       asc = N
-//│     Spd:
-//│       eager = false
-//│       term = Ref:
-//│         sym = xs
-//│         iargsLs = N
-//│     Spd:
-//│       eager = true
-//│       term = Ref:
-//│         sym = xs
-//│         iargsLs = N
-//│ JS (unsanitized):
-//│ runtime.Tuple.lazyConcat(0, runtime.Tuple.split, xs, ...xs)
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Assign:
-//│     lhs = $block$res
-//│     rhs = Arr of Ls of 
-//│       Arg:
-//│         spread = N
-//│         value = Lit of IntLit of 0
-//│       Arg:
-//│         spread = S of false
-//│         value = Ref of xs
-//│       Arg:
-//│         spread = S of true
-//│         value = Ref of xs
-//│     rest = Return: \
-//│     res = Lit of UnitLit of false
-//│     implct = true
-//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-
-ls
-//│ = [2, 3, 4, 5]
-
-ls.length
-//│ = 4
-
-:sjs
-if ls is
-  [a, ..ls] then [a, ls]
-//│ JS (unsanitized):
-//│ let rest1, first01, a1, ls2;
-//│ if (runtime.Tuple.isArrayLike(ls) && ls.length >= 1) {
-//│   first01 = runtime.Tuple.get(ls, 0);
-//│   rest1 = runtime.safeCall(runtime.Tuple.lazySlice(ls, 1, 0));
-//│   a1 = first01;
-//│   ls2 = rest1;
-//│   [
-//│     a1,
-//│     ls2
-//│   ]
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
-//│ = [2, [3, 4, 5]]
-
-mk(1,2).slice(0,1)
-//│ = [1]
 
 :sjs
 fun buildLazy(i) =
@@ -134,13 +21,13 @@ fun buildLazy(i) =
 //│ JS (unsanitized):
 //│ let buildLazy;
 //│ buildLazy = function buildLazy(i) {
-//│   let scrut1, tmp9, tmp10, tmp11;
-//│   scrut1 = i > 0;
-//│   if (scrut1 === true) {
-//│     tmp9 = i - 1;
-//│     tmp10 = buildLazy(tmp9);
-//│     tmp11 = - i;
-//│     return runtime.Tuple.lazyConcat(i, runtime.Tuple.split, tmp10, tmp11)
+//│   let scrut, tmp1, tmp2, tmp3;
+//│   scrut = i > 0;
+//│   if (scrut === true) {
+//│     tmp1 = i - 1;
+//│     tmp2 = buildLazy(tmp1);
+//│     tmp3 = - i;
+//│     return runtime.Tuple.lazyConcat(i, runtime.Tuple.split, tmp2, tmp3)
 //│   } else {
 //│     return []
 //│   }
@@ -152,16 +39,16 @@ fun buildEager(i) =
 //│ JS (unsanitized):
 //│ let buildEager;
 //│ buildEager = function buildEager(i) {
-//│   let scrut1, tmp9, tmp10, tmp11;
-//│   scrut1 = i > 0;
-//│   if (scrut1 === true) {
-//│     tmp9 = i - 1;
-//│     tmp10 = buildEager(tmp9);
-//│     tmp11 = - i;
+//│   let scrut, tmp1, tmp2, tmp3;
+//│   scrut = i > 0;
+//│   if (scrut === true) {
+//│     tmp1 = i - 1;
+//│     tmp2 = buildEager(tmp1);
+//│     tmp3 = - i;
 //│     return [
 //│       i,
-//│       ...tmp10,
-//│       tmp11
+//│       ...tmp2,
+//│       tmp3
 //│     ]
 //│   } else {
 //│     return []
@@ -175,19 +62,19 @@ fun funnySum(xs) = if xs is
   [] then 0
 //│ JS (unsanitized):
 //│ let funnySum;
-//│ funnySum = function funnySum(xs1) {
-//│   let last0, rest2, first02, a2, ls3, b, tmp9, tmp10;
-//│   if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 2) {
-//│     first02 = runtime.Tuple.get(xs1, 0);
-//│     rest2 = runtime.safeCall(runtime.Tuple.lazySlice(xs1, 1, 1));
-//│     last0 = runtime.Tuple.get(xs1, -1);
-//│     a2 = first02;
-//│     ls3 = rest2;
+//│ funnySum = function funnySum(xs) {
+//│   let last0, rest, first0, a, ls, b, tmp1, tmp2;
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     first0 = runtime.Tuple.get(xs, 0);
+//│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 1, 1));
+//│     last0 = runtime.Tuple.get(xs, -1);
+//│     a = first0;
+//│     ls = rest;
 //│     b = last0;
-//│     tmp9 = funnySum(ls3);
-//│     tmp10 = a2 + tmp9;
-//│     return tmp10 - b
-//│   } else if (runtime.Tuple.isArrayLike(xs1) && xs1.length === 0) {
+//│     tmp1 = funnySum(ls);
+//│     tmp2 = a + tmp1;
+//│     return tmp2 - b
+//│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
 //│     throw new globalThis.Error("match error");
@@ -201,19 +88,19 @@ fun funnySumEager(xs) = if xs is
   [] then 0
 //│ JS (unsanitized):
 //│ let funnySumEager;
-//│ funnySumEager = function funnySumEager(xs1) {
-//│   let last0, rest2, first02, a2, ls3, b, tmp9, tmp10;
-//│   if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 2) {
-//│     first02 = runtime.Tuple.get(xs1, 0);
-//│     rest2 = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 1));
-//│     last0 = runtime.Tuple.get(xs1, -1);
-//│     a2 = first02;
-//│     ls3 = rest2;
+//│ funnySumEager = function funnySumEager(xs) {
+//│   let last0, rest, first0, a, ls, b, tmp1, tmp2;
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     first0 = runtime.Tuple.get(xs, 0);
+//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│     last0 = runtime.Tuple.get(xs, -1);
+//│     a = first0;
+//│     ls = rest;
 //│     b = last0;
-//│     tmp9 = funnySumEager(ls3);
-//│     tmp10 = a2 + tmp9;
-//│     return tmp10 - b
-//│   } else if (runtime.Tuple.isArrayLike(xs1) && xs1.length === 0) {
+//│     tmp1 = funnySumEager(ls);
+//│     tmp2 = a + tmp1;
+//│     return tmp2 - b
+//│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
 //│     throw new globalThis.Error("match error");
@@ -297,16 +184,16 @@ fun map(f) = case
 //│ map = function map(f) {
 //│   let lambda20;
 //│   lambda20 = (undefined, function (caseScrut) {
-//│     let rest2, first02, a2, rest3, tmp30, tmp31, tmp32;
+//│     let rest, first0, a, rest1, tmp22, tmp23, tmp24;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
-//│       first02 = runtime.Tuple.get(caseScrut, 0);
-//│       rest2 = runtime.safeCall(runtime.Tuple.lazySlice(caseScrut, 1, 0));
-//│       a2 = first02;
-//│       rest3 = rest2;
-//│       tmp30 = runtime.safeCall(f(a2));
-//│       tmp31 = map(f);
-//│       tmp32 = runtime.safeCall(tmp31(rest3));
-//│       return runtime.Tuple.lazyConcat(tmp30, runtime.Tuple.split, tmp32)
+//│       first0 = runtime.Tuple.get(caseScrut, 0);
+//│       rest = runtime.safeCall(runtime.Tuple.lazySlice(caseScrut, 1, 0));
+//│       a = first0;
+//│       rest1 = rest;
+//│       tmp22 = runtime.safeCall(f(a));
+//│       tmp23 = map(f);
+//│       tmp24 = runtime.safeCall(tmp23(rest1));
+//│       return runtime.Tuple.lazyConcat(tmp22, runtime.Tuple.split, tmp24)
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return []
 //│     } else {
@@ -326,18 +213,18 @@ fun mapEager(f) = case
 //│ mapEager = function mapEager(f) {
 //│   let lambda20;
 //│   lambda20 = (undefined, function (caseScrut) {
-//│     let rest2, first02, a2, rest3, tmp30, tmp31, tmp32;
+//│     let rest, first0, a, rest1, tmp22, tmp23, tmp24;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 1) {
-//│       first02 = runtime.Tuple.get(caseScrut, 0);
-//│       rest2 = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 0));
-//│       a2 = first02;
-//│       rest3 = rest2;
-//│       tmp30 = runtime.safeCall(f(a2));
-//│       tmp31 = mapEager(f);
-//│       tmp32 = runtime.safeCall(tmp31(rest3));
+//│       first0 = runtime.Tuple.get(caseScrut, 0);
+//│       rest = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 0));
+//│       a = first0;
+//│       rest1 = rest;
+//│       tmp22 = runtime.safeCall(f(a));
+//│       tmp23 = mapEager(f);
+//│       tmp24 = runtime.safeCall(tmp23(rest1));
 //│       return [
-//│         tmp30,
-//│         ...tmp32
+//│         tmp22,
+//│         ...tmp24
 //│       ]
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return []
@@ -408,14 +295,14 @@ suite.add("eagerListMap2Eager15", () =>
 :ge
 mapEager(..[[1]])
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.409: 	mapEager(..[[1]])
+//│ ║  l.345: 	mapEager(..[[1]])
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'mapEager' expected 1 argument but got 2
 
 :e
 fun what(..args) = args
 //│ ╔══[ERROR] Lazy spread parameters not allowed.
-//│ ║  l.416: 	fun what(..args) = args
+//│ ║  l.352: 	fun what(..args) = args
 //│ ╙──       	           ^^^^
 
 fun silly = case
@@ -460,5 +347,5 @@ suite.add("sillyEager15", () =>
 //│ = [object Object]
 
 :silent
-// suite |> runSuite
-// writeResults(suite, "src/test/bench/LazySpreads/LazyArrayTest.json")
+suite |> runSuite
+writeResults(suite, "src/test/bench/LazySpreads/LazyArrayTest.json")

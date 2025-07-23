@@ -4,18 +4,52 @@ import "./Iter.mls"
 open Iter
 open LazyArray
 
+// Helper Methods
 fun normIdx(i, len) =
   if i < 0 then len + i
   else i
+
+fun concatH(a, l, ...args) =
+  let idx = 0
+  let init_len = a.length
+  set a.length = init_len + args.length * 2
+  while (idx < args.length) do
+    let x = args.[idx]
+
+    set a.[init_len + idx * 2] = SpliceMarker
+    set a.[init_len + idx * 2 + 1] = x
+    set l += x.length
+    set idx += 1
+  Splice of a, l
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+fun normIdxSlice(i, len) =
+  if i < 0 and
+    i >= -len
+    then len + i
+    else 0
+  else i
+
+fun sliceH(beg, fin, arr) =
+  set beg = normIdxSlice(beg, arr.length)
+  set fin = normIdxSlice(fin, arr.length)
+  if beg >= arr.length do
+    return View of [], 0, 0
+  if fin >= arr.length do
+    set fin = arr.length
+  if fin <= beg do
+    return View of [], 0, 0
+  
+  if arr is
+    View(itr, start, end) then View of itr, start + beg, end + (arr.length - fin)
+    Splice(bits, l) as s then View of s.materialize().slice(beg, fin), 0, 0
+    _ as itr then View of itr, beg, (arr.length - fin)
 
 // Marker base class for View and Splice
 class LazyArr extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
-  fun concat(...args) =
-    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
-    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, [SpliceMarker, this])
-    Splice of a, l
+  fun concat(...args) = concatH([SpliceMarker, this], this.length, ...args)
 
 // Requires that the underlying iterable is constant-time indexable
 class View(val underlying: IterableBase, val start, val end) extends LazyArr with
@@ -31,11 +65,15 @@ class View(val underlying: IterableBase, val start, val end) extends LazyArr wit
       else Result.Done
 
   fun materialize() = underlying.slice(start, underlying.length - end)
-  fun at(i) = underlying.at(normIdx(i, length) + start)
-  // called on eager spreads in matches
-  fun slice(beg, fin) = underlying.slice(start + beg, fin - end)
+  
+  fun at(i) =
+    if i < -length || i >= length do
+      throw RangeError("View.at: Index out of bounds")
+    underlying.at(normIdx(i, length) + start)
+  fun slice(beg, fin) = sliceH(beg, fin, this)
 
-  fun length = underlying.length - start - end
+  val len = underlying.length - start - end
+  fun length = len
   fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
@@ -69,9 +107,6 @@ class Splice(val bits, val len) extends LazyArr with
   fun reify = 
     let counter = 0
     let arr = new Array(len)
-    let add = x => 
-      set arr.[counter] = x
-      set counter += 1
     let stack = []
     stack.push([0, bits])
     while stack.length > 0 do
@@ -84,7 +119,8 @@ class Splice(val bits, val len) extends LazyArr with
 
       while (idx < vals.length and
           (vals.at(idx) is SpliceMarker) is false) do
-        add(vals.at(idx))
+        set arr.[counter] = vals.at(idx)
+        set counter += 1
         set idx += 1
       
       if (idx < vals.length and vals.at(idx) is SpliceMarker) do
@@ -98,12 +134,11 @@ class Splice(val bits, val len) extends LazyArr with
     materialized
 
   fun at(i) = materialize().at(i)
-  // called on eager spreads in matches
-  fun slice(beg, fin) = materialize().slice(beg, fin)
-  fun concat(...args) =
-    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
-    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, bits)
-    Splice of a, l
+  fun slice(beg, fin) = sliceH(beg, fin, this)
+  fun concat(...args) = 
+    if materialized === null 
+    then concatH([SpliceMarker, this], len, ...args)
+    else concatH([SpliceMarker, materialized], len, ...args)
 
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
@@ -112,28 +147,29 @@ class Splice(val bits, val len) extends LazyArr with
 module LazyArray with...
 
 
-fun mk(...args) = args
+fun mk(...args) = View of args, 0, 0
+fun concat(...args) = concatH([], 0, ...args)
+fun slice(beg, fin)(xs) = 
+  if beg < 0 || fin < 0 do
+    throw RangeError("LazyArray.slice: indices must be non-negative")
+  if beg > xs.length || fin > xs.length do
+    throw RangeError("LazyArray.slice: indices out of bounds")
+  sliceH(beg, xs.length - fin, xs)
 
-fun concat(...args) =
-  val len = case
-    [SpliceMarker, e, ...rest] then e.length + len(rest)
-    [a, ...rest] then 1 + len(rest)
-    [] then 0
-  Splice of args, len(args)
-
-fun materialize = case
-  Array as a then a
-  _ as itr then itr.materialize()
-
-fun slice(beg, fin) = case
-  View(itr, start, end) then View of itr, start + beg, end + fin
-  Splice(bits, l) as s then View of s.materialize(), beg, fin
-  _ as itr then View of itr, beg, fin // assume itr has O(1) at()
+// This is not meant for users; it's referred to by Runtime.mls
+// TODO: use `LazyArray.internals.concat` when this is implemented
+fun __concat(...args) =
+  let len = 0
+  let idx = 0
+  while (idx < args.length) do
+    if args.[idx] is SpliceMarker then
+      set len += args.[idx + 1].length
+      set idx += 2
+    else
+      set len += 1
+      set idx += 1
+  Splice of args, len
 
 // This is not meant for users; it's referred to by Runtime.mls
 // TODO: use `LazyArray.internals.split` when this is implemented
 val __split = SpliceMarker
-
-fun isLazyArray = case
-  LazyArr then true
-  else false

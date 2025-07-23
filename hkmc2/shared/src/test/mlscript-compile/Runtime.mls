@@ -59,13 +59,10 @@ data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
-  fun slice(xs, i, j) =
-    // * This is more robust than `xs.slice(i, xs.length - j)`
-    // * as it is not affected by users redefining `slice`
-    xs.slice(i, xs.length - j)
+  fun slice(xs, i, j) = xs.slice(i, xs.length - j)
 
   fun lazySlice(xs, i, j) = LazyArray.slice(i, j)(xs)
-  fun lazyConcat(...args) = LazyArray.concat(...args)
+  fun lazyConcat(...args) = LazyArray.__concat(...args)
 
   fun get(xs, i) =
     if i >= xs.length do

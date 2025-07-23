@@ -75,7 +75,7 @@ let Runtime1;
         return runtime.safeCall(tmp(xs1))
       } 
       static lazyConcat(...args) {
-        return runtime.safeCall(LazyArray.concat(...args))
+        return runtime.safeCall(LazyArray.__concat(...args))
       } 
       static get(xs2, i2) {
         let scrut, scrut1, tmp, tmp1, tmp2;
