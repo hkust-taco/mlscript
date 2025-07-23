@@ -10,5 +10,5 @@ fun mkTup(x, y) = [x, y]
 fun fst(t) = if t is [x, y] then x 
 mkTup(1, 2)
 //│ = [1, 2]
-//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(false,Ref(t),true), Arg(false,Lit(IntLit(0)),true)))
+//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(t)), Arg(None,Lit(IntLit(0)))))
 //│ Stopped due to an error during the Llir generation

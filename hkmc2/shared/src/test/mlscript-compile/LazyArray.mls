@@ -8,7 +8,7 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-// Assume that the underlying iterable of LazyArr is constant-time access
+// Marker base class for View and Splice
 class LazyArr extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
@@ -17,6 +17,7 @@ class LazyArr extends IterableBase with
     let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, [SpliceMarker, this])
     Splice of a, l
 
+// Requires that the underlying iterable is constant-time indexable
 class View(val underlying: IterableBase, val start, val end) extends LazyArr with
 
   fun iterator() =

@@ -155,7 +155,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     trace[Node](s"bArgs begin", x => s"bArgs end: ${x.show}"):
       e match
       case Nil => k(Nil)
-      case Arg(spread, x, _) :: xs => bPath(x):
+      case Arg(spread, x) :: xs => bPath(x):
         case r: TrivialExpr => bArgs(xs):
           case rs: Ls[TrivialExpr] => k(r :: rs)
   
@@ -288,7 +288,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             val paramsList = PlainParamList(
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
-            val app = Call(v, tempSymbols.map(x => Arg(false, Value.Ref(x))).toList)(true, false)
+            val app = Call(v, tempSymbols.map(x => Arg(N, Value.Ref(x))).toList)(true, false)
             bLam(Value.Lam(paramsList, Return(app, false)), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)

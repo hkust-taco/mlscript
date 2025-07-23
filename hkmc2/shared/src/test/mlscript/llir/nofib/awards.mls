@@ -3,7 +3,7 @@
 
 :import NofibPrelude.mls
 //│ Imported 104 member(s)
-//│ Error: hkmc2.ErrorReport: Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(false,Ref(t1),true), Arg(false,Lit(IntLit(0)),true)))
+//│ Error: hkmc2.ErrorReport: Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(t1)), Arg(None,Lit(IntLit(0)))))
 //│ Stopped due to an error during the Llir generation
 
 fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
@@ -57,7 +57,7 @@ fun atleast(threshold, sumscores) =
 
 fun award(name_threshold, sumscores) = if name_threshold is [name, threshold] then
   map(ps => [name, ps], sort(atleast(threshold, sumscores)))
-//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(false,Ref(name_threshold),true), Arg(false,Lit(IntLit(0)),true)))
+//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(name_threshold)), Arg(None,Lit(IntLit(0)))))
 //│ Stopped due to an error during the Llir generation
 
 fun awards(scores) =

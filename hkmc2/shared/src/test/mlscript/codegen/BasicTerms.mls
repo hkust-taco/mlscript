@@ -54,9 +54,8 @@ print("Hi")
 //│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:
-//│           spread = false
+//│           spread = N
 //│           value = Lit of StrLit of "Hi"
-//│           eager = true
 //│     rest = Assign: \
 //│     lhs = $block$res
 //│     rhs = Lit of IntLit of 2

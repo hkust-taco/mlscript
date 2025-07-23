@@ -3,13 +3,9 @@ import "./Rendering.mls"
 import "./LazyArray.mjs"
 import "./Iter.mjs"
 
-let lar = LazyArray
-
 
 module Runtime with ...
 
-
-val LazyArr = lar
 
 object Unit with
   fun toString() = "()"
@@ -68,8 +64,8 @@ module Tuple with
     // * as it is not affected by users redefining `slice`
     xs.slice(i, xs.length - j)
 
-  fun lazySlice(xs, i, j) = LazyArr.slice(i, j)(xs)
-  fun lazyConcat(...args) = LazyArr.concat(...args)
+  fun lazySlice(xs, i, j) = LazyArray.slice(i, j)(xs)
+  fun lazyConcat(...args) = LazyArray.concat(...args)
 
   fun get(xs, i) =
     // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
@@ -78,7 +74,7 @@ module Tuple with
     else xs.at(i)
 
   fun isArrayLike(xs) = Iter.isArrayLike(xs)
-  val split = LazyArr.split
+  val split = LazyArray.__split
 
 module Str with
   fun startsWith(string, prefix) = string.startsWith(prefix)
