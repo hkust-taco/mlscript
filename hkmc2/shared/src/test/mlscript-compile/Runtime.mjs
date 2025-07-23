@@ -4,12 +4,10 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1, lar;
-lar = LazyArray;
+let Runtime1;
 (class Runtime {
   static {
     Runtime1 = Runtime;
-    this.LazyArr = lar;
     const Unit$class = class Unit {
       constructor() {}
       toString() {
@@ -64,7 +62,7 @@ lar = LazyArray;
     (class Tuple {
       static {
         Runtime.Tuple = Tuple;
-        this.split = Runtime.LazyArr.split;
+        this.split = LazyArray.__split;
       }
       static slice(xs, i, j) {
         let tmp;
@@ -73,11 +71,11 @@ lar = LazyArray;
       } 
       static lazySlice(xs1, i1, j1) {
         let tmp;
-        tmp = Runtime.LazyArr.slice(i1, j1);
+        tmp = LazyArray.slice(i1, j1);
         return runtime.safeCall(tmp(xs1))
       } 
       static lazyConcat(...args) {
-        return runtime.safeCall(Runtime.LazyArr.concat(...args))
+        return runtime.safeCall(LazyArray.concat(...args))
       } 
       static get(xs2, i2) {
         let scrut, scrut1, tmp, tmp1, tmp2;
