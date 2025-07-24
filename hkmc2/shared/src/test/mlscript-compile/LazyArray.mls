@@ -26,8 +26,7 @@ fun concatHelper(a, l, ...args) =
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
 fun normIdxSlice(i, len) =
   if i < 0 and
-    i >= -len
-    then len + i
+    i >= -len then len + i
     else 0
   else i
 

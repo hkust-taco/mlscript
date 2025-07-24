@@ -5,9 +5,7 @@ import "../../mlscript-compile/LazyArray.mls"
 open LazyArray
 
 fun equals(a, b) =
-  if a.length != b.length 
-  then false
-  else
+  a.length === b.length &&
     let idx = 0
     while (idx < a.length) do
       if a.at(idx) != b.at(idx) do return false
