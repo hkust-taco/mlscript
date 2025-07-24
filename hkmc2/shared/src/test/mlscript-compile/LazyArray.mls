@@ -31,17 +31,18 @@ fun normIdxSlice(i, len) =
   else i
 
 fun sliceHelper(beg, fin, arr) =
-  set beg = normIdxSlice(beg, arr.length)
-  set fin = normIdxSlice(fin, arr.length)
-  if beg >= arr.length do
+  let len = arr.length
+  set beg = normIdxSlice(beg, len)
+  set fin = normIdxSlice(fin, len)
+  if beg >= len do
     return View of [], 0, 0
-  if fin >= arr.length do
-    set fin = arr.length
+  if fin >= len do
+    set fin = len
   if fin <= beg do
     return View of [], 0, 0
   
   if arr is
-    View(itr, start, end) then View of itr, start + beg, end + (arr.length - fin)
+    View(itr, start, end) then View of itr, start + beg, end + (len - fin)
     Splice(bits, l) as s then View of s.materialize().slice(beg, fin), 0, 0
     _ as itr then View of itr, beg, (arr.length - fin)
 
