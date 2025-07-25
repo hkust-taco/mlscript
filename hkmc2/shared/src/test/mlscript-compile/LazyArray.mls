@@ -157,6 +157,14 @@ fun slice(beg, fin)(xs) =
     throw RangeError("LazyArray.slice: indices out of bounds")
   sliceHelper(beg, xs.length - fin, xs)
 
+fun equals(xs, ys) =
+  xs.length === ys.length &&
+    let idx = 0
+    while (idx < xs.length) do
+      if xs.at(idx) !== ys.at(idx) do return false
+      set idx += 1
+    true
+
 // This is not meant for users; it's referred to by Runtime.mls
 // TODO: use `LazyArray.internals.concat` when this is implemented
 fun __concat(...args) =
