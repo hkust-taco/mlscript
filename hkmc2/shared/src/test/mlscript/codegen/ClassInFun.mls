@@ -39,13 +39,15 @@ fun test(x) =
 //│   Foo2 = function Foo(a1, b1) {
 //│     return new Foo.class(a1, b1);
 //│   };
-//│   Foo2.class = class Foo1 {
-//│     constructor(a, b) {
-//│       this.a = a;
-//│       this.b = b;
+//│   Object.defineProperty(Foo2, 'class', {
+//│   value: class Foo1 {
+//│       constructor(a, b) {
+//│         this.a = a;
+//│         this.b = b;
+//│       }
+//│       toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
-//│   };
+//│   });
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)
 //│ };
@@ -60,7 +62,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.61: 	test()
+//│ ║  l.63: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

@@ -10,7 +10,7 @@ module None
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = None
+//│ = [class None]
 
 :sjs
 :re
@@ -23,7 +23,7 @@ None()
 new None
 //│ JS (unsanitized):
 //│ new None1()
-//│ = [object Object]
+//│ = None {}
 
 
 :sjs
@@ -45,10 +45,12 @@ module M with
 //│     this.D = function D() {
 //│       return new D.class();
 //│     };
-//│     this.D.class = class D {
-//│       constructor() {}
-//│       toString() { return "D(" + "" + ")"; }
-//│     };
+//│     Object.defineProperty(this.D, 'class', {
+//│     value: class D {
+//│         constructor() {}
+//│         toString() { return "D(" + "" + ")"; }
+//│       }
+//│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
@@ -57,7 +59,7 @@ module M with
 //│ });
 
 M.C
-//│ = class C {       constructor() {}       toString() { return "C"; }     }
+//│ = [class C]
 
 new M.C
 //│ = C
@@ -75,7 +77,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.76: 	M.oops
+//│ ║  l.78: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -93,7 +95,7 @@ module M with
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = M
+//│ = <ref *1> [class M2] { m: [Circular *1] }
 
 
 

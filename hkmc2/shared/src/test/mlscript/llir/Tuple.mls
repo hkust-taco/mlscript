@@ -8,7 +8,7 @@
 fun mkTup(x, y) = [x, y]
 fun fst(t) = if t is [x, y] then x 
 mkTup(1, 2)
-//│ = [1, 2]
+//│ = [ 1, 2 ]
 //│ LLIR:
 //│   
 //│   def mkTup(x,y) =

@@ -10,11 +10,14 @@ declare class Object
 declare class Array[T]
 declare class JSON
 declare class Number
+declare class BigInt
 declare class Function
 declare class String
 declare class RegExp
 declare class Set
 declare class Map
+declare class WeakSet
+declare class WeakMap
 declare class Error
 declare class TypeError
 declare class RangeError

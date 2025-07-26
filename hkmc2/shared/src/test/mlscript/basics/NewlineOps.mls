@@ -58,8 +58,8 @@
 let xs = [1, 2, 3]
 let ys = [4, 5, 6]
 fun len(xs) = xs.length
-//│ xs = [1, 2, 3]
-//│ ys = [4, 5, 6]
+//│ xs = [ 1, 2, 3 ]
+//│ ys = [ 4, 5, 6 ]
 
 xs |> len
 +
@@ -254,7 +254,7 @@ let x
 //│ > 3
 
 let incr = _ + 1
-//│ incr = [function incr]
+//│ incr = [Function incr]
 
 // :dp
 2
@@ -317,7 +317,7 @@ let incr = _ + 1
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.313: 	2, * 3
 //│ ╙──       	^
-//│ = [function]
+//│ = [Function]
 
 2,* 3
 //│ = 6
@@ -344,8 +344,8 @@ module Arr with
 let
   xs = [1, 2]
   ys = [3, 4, 5]
-//│ xs = [1, 2]
-//│ ys = [3, 4, 5]
+//│ xs = [ 1, 2 ]
+//│ ys = [ 3, 4, 5 ]
 
 xs |> Arr.len
 +

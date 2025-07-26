@@ -10,12 +10,14 @@ data class Foo(arguments)
 //│ Foo1 = function Foo(arguments2) {
 //│   return new Foo.class(arguments2);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(arguments1) {
-//│     this.arguments = arguments1;
+//│ Object.defineProperty(Foo1, 'class', {
+//│   value: class Foo {
+//│     constructor(arguments1) {
+//│       this.arguments = arguments1;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.arguments) + ")"; }
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.arguments) + ")"; }
-//│ };
+//│ });
 
 
 data class Foo(eval)
@@ -24,12 +26,14 @@ data class Foo(eval)
 //│ Foo3 = function Foo(eval2) {
 //│   return new Foo.class(eval2);
 //│ };
-//│ Foo3.class = class Foo2 {
-//│   constructor(eval1) {
-//│     this.eval = eval1;
+//│ Object.defineProperty(Foo3, 'class', {
+//│   value: class Foo2 {
+//│     constructor(eval1) {
+//│       this.eval = eval1;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.eval) + ")"; }
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.eval) + ")"; }
-//│ };
+//│ });
 
 
 data class Foo(static)
@@ -38,12 +42,14 @@ data class Foo(static)
 //│ Foo5 = function Foo(static2) {
 //│   return new Foo.class(static2);
 //│ };
-//│ Foo5.class = class Foo4 {
-//│   constructor(static1) {
-//│     this.static = static1;
+//│ Object.defineProperty(Foo5, 'class', {
+//│   value: class Foo4 {
+//│     constructor(static1) {
+//│       this.static = static1;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.static) + ")"; }
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.static) + ")"; }
-//│ };
+//│ });
 
 
 data class Foo(v')
@@ -52,11 +58,13 @@ data class Foo(v')
 //│ Foo7 = function Foo(v$_1) {
 //│   return new Foo.class(v$_1);
 //│ };
-//│ Foo7.class = class Foo6 {
-//│   constructor(v$_) {
-//│     this["v'"] = v$_;
+//│ Object.defineProperty(Foo7, 'class', {
+//│   value: class Foo6 {
+//│     constructor(v$_) {
+//│       this["v'"] = v$_;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this["v'"]) + ")"; }
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this["v'"]) + ")"; }
-//│ };
+//│ });
 
 

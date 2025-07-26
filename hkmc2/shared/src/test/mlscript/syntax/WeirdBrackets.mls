@@ -5,7 +5,7 @@
 //│ = 123
 
 {({( a: 1, b: 2 )})}
-//│ = {a: 1, b: 2}
+//│ = { a: 1, b: 2 }
 
 
 :e
@@ -13,14 +13,14 @@
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.12: 	\{ Int }
 //│ ╙──      	   ^^^
-//│ = [function passTo2]
+//│ = [Function passTo2]
 
 :e
 \(0)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.19: 	\(0)
 //│ ╙──      	 ^^^
-//│ = [function]
+//│ = [Function]
 
 fun (\) huh(x) = x
 

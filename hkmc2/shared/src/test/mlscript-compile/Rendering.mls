@@ -35,27 +35,124 @@ fun interleave(sep)(...args) =
     if i < len do set res.[idx + 1] = sep
   res
 
-fun render(arg) = if
-  arg is
-    undefined then "undefined"
-    null      then "null"
-    Array     then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
-    Str       then JSON.stringify(arg)
-    Set       then fold(+)("Set{", ...interleave(", ")(...map(render)(...arg)), "}")
-    Map       then fold(+)("Map{", ...interleave(", ")(...map(render)(...arg)), "}")
-    Function  and
-      let p = Object.getOwnPropertyDescriptor(arg, "prototype")
-      (p is Object and p.("writable")) || (p is undefined) then
-        "[function" + (if arg.name is
-          ""  then ""
-          nme then " " + nme
-        ) + "]"
-    Object then
-      if arg.constructor.name is "Object"
-      then
-        let es = Object.entries(arg)
-        fold(+)("{", ...interleave(", ")(...map(case [k, v] then k + ": " + render(v))(...es)), "}")
-      else String(arg)
-  let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
-  ts is undefined then "[" + typeof(arg) + "]"
-  else ts.call(arg)
+// * Apply `f` to `xs` and build a string from non-null results using the given
+// * separator and starting/ending symbols. If there is no non-null results,
+// * return `empty` instead.
+fun mkString(xs, f, start, sep, end, empty) =
+  let
+    it = xs.(Symbol.iterator)()
+    res = it.next()
+    buffer = null
+  // Consume the iterator until we find the first non-null value.
+  while res.done is false and buffer is null do
+    if f(res.value) is
+      Str as str do set buffer = start + str
+    set res = it.next()
+  // If the buffer is still null, this means we have drained the iterator.
+  if buffer is null then empty else...
+  while res.done is false do
+    let value = f(res.value)
+    if value is Str as s do
+      set { buffer += sep, buffer += s }
+    set res = it.next()
+  set buffer += end
+  buffer
+
+// Do not wrap property names in quotes if they match the following pattern.
+let identifierPattern = new RegExp of
+  """^[\p{ID_Start}_$][\p{ID_Continue}_$]*$""", "u"
+
+fun render(target) =
+  let
+    circularCounter = 1
+    visitingObjects = new WeakMap // Object -> null | Int
+    visitedObjects = new WeakMap // Object -> Str
+  fun props(obj, empty) = mkString of
+    Object.entries(Object.getOwnPropertyDescriptors(obj))
+    case
+      [key, desc] and desc.enumerable is true and desc is
+        let keyStr = if
+          key is Str and identifierPattern.test(key) then key
+          else go(key)
+        (:value) then keyStr + ": " + go(value)
+        // We should not evaluate getters because they may have side effects.
+        // If setters are provided, we should display them as well.
+        (get: getter, "set": setter) and
+          setter is undefined then keyStr + ": " + "[Getter]"
+          getter is undefined then keyStr + ": " + "[Setter]"
+          else keyStr + ": " + "[Getter/Setter]"
+      else null
+    "{ ", ", ", " }", empty
+  fun go(arg) = if
+    arg is // primitive values
+      undefined then "undefined"
+      null      then "null"
+      Str       then JSON.stringify(arg)
+      BigInt    then arg.toString() + "n"
+      Symbol    and
+        arg.description is undefined then "Symbol()"
+        else "Symbol(" + arg.description + ")"
+      Num       then arg.toString()
+      true      then "true"
+      false     then "false"
+    visitedObjects.has(arg) then visitedObjects.get(arg)
+    visitingObjects.has(arg) and
+      visitingObjects.get(arg) is
+        // We have already found this circular reference before
+        Int as index then "[Circular *" + index + "]"
+        // The first time we find a circular reference
+        else
+          let index = circularCounter
+          set circularCounter += 1
+          visitingObjects.set(arg, index)
+          "[Circular *" + index + "]"
+    else...
+    // Otherwise, add this object to the visited objects
+    // `null` is a marker for visited objects
+    visitingObjects.set(arg, null)
+    let rendered = if
+      arg is
+        Unit then "()"
+        Array then mkString of arg, go, "[ ", ", ", " ]", "[]"
+        Set then "Set(" + arg.size + ") " +
+          mkString of arg, go, "{ ", ", ", " }", "{}"
+        Map then "Map(" + arg.size + ") " + mkString of
+          arg
+          case [k, v] then go(k) + " => " + go(v)
+          "{ ", ", ", " }", "{}"
+        WeakSet then "WeakSet { <items unknown> }"
+        WeakMap then "WeakMap { <items unknown> }"
+        Error then arg.name + ": " + arg.message
+        Function then
+          let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
+          let head = if
+            // ES 2015 classes: `desc.writable` is false
+            desc is Object and desc.writable is false then
+              "[class " + (if arg.name is "" then "(anonymous)" else arg.name) + "]"
+            else
+              "[Function" + (if arg.name is "" then "" else " " + arg.name) + "]"
+          head + if // Add a space if the function do not have enumerable properties
+            let ps = props(arg, "")
+            ps is "" then ""
+            else " " + ps
+      // The case for objects.
+      Reflect.getPrototypeOf(arg) is
+        // Objects with `null` as the prototype.
+        null then "[Object: null prototype] " + props(arg, "{}")
+        proto and
+          // For object literals, show its properties without the constructor.
+          proto === Object.prototype then props(arg, "{}")
+          // If the prototype has its own implementation of `toString`, use the
+          // result and do not show properties.
+          proto.hasOwnProperty("toString") then arg.toString()
+          else proto.constructor.name + " " + props(arg, "{}")
+    // We have finished visiting this object
+    let prefix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
+      Int as index then "<ref *" + index + "> "
+      else ""
+    let result = prefix + rendered
+    // Add to the visited objects if the object is a circular reference
+    if prefix.length > 0 do visitedObjects.set(arg, result)
+    visitingObjects.delete(arg)
+    result
+  go(target)

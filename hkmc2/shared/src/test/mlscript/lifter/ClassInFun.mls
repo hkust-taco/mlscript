@@ -55,74 +55,76 @@ f() + f() + f()
 //│     return new Cont$handleBlock$h$.class(pc1)(h$01, tmp$11, tmp$21, tmp$31, tmp$41);
 //│   }
 //│ };
-//│ Cont$handleBlock$h$1.class = class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.h$0 = h$0;
-//│       this.tmp$1 = tmp$1;
-//│       this.tmp$2 = tmp$2;
-//│       this.tmp$3 = tmp$3;
-//│       this.tmp$4 = tmp$4;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 2) {
-//│       this.tmp$1 = value$;
-//│     } else if (this.pc === 3) {
-//│       this.tmp$2 = value$;
-//│     } else if (this.pc === 4) {
-//│       this.tmp$4 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 7) {
-//│         this.tmp$1 = f$(this.h$0);
-//│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 2;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
-//│         }
-//│         this.pc = 2;
-//│         continue contLoop;
-//│       } else if (this.pc === 2) {
-//│         this.pc = 6;
-//│         continue contLoop;
-//│       } else if (this.pc === 6) {
-//│         this.tmp$2 = f$(this.h$0);
-//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           this.pc = 3;
-//│           this.tmp$2.contTrace.last.next = this;
-//│           this.tmp$2.contTrace.last = this;
-//│           return this.tmp$2
-//│         }
-//│         this.pc = 3;
-//│         continue contLoop;
-//│       } else if (this.pc === 3) {
-//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.pc = 5;
-//│         continue contLoop;
-//│       } else if (this.pc === 5) {
-//│         this.tmp$4 = f$(this.h$0);
-//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
-//│           this.pc = 4;
-//│           this.tmp$4.contTrace.last.next = this;
-//│           this.tmp$4.contTrace.last = this;
-//│           return this.tmp$4
-//│         }
-//│         this.pc = 4;
-//│         continue contLoop;
-//│       } else if (this.pc === 4) {
-//│         return this.tmp$3 + this.tmp$4
+//│ Object.defineProperty(Cont$handleBlock$h$1, 'class', {
+//│   value: class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
+//│         let tmp1;
+//│         tmp1 = super(null);
+//│         this.h$0 = h$0;
+//│         this.tmp$1 = tmp$1;
+//│         this.tmp$2 = tmp$2;
+//│         this.tmp$3 = tmp$3;
+//│         this.tmp$4 = tmp$4;
+//│         this.pc = pc;
+//│         return this;
 //│       }
-//│       break;
 //│     }
+//│     resume(value$) {
+//│       if (this.pc === 2) {
+//│         this.tmp$1 = value$;
+//│       } else if (this.pc === 3) {
+//│         this.tmp$2 = value$;
+//│       } else if (this.pc === 4) {
+//│         this.tmp$4 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 7) {
+//│           this.tmp$1 = f$(this.h$0);
+//│           if (this.tmp$1 instanceof runtime.EffectSig.class) {
+//│             this.pc = 2;
+//│             this.tmp$1.contTrace.last.next = this;
+//│             this.tmp$1.contTrace.last = this;
+//│             return this.tmp$1
+//│           }
+//│           this.pc = 2;
+//│           continue contLoop;
+//│         } else if (this.pc === 2) {
+//│           this.pc = 6;
+//│           continue contLoop;
+//│         } else if (this.pc === 6) {
+//│           this.tmp$2 = f$(this.h$0);
+//│           if (this.tmp$2 instanceof runtime.EffectSig.class) {
+//│             this.pc = 3;
+//│             this.tmp$2.contTrace.last.next = this;
+//│             this.tmp$2.contTrace.last = this;
+//│             return this.tmp$2
+//│           }
+//│           this.pc = 3;
+//│           continue contLoop;
+//│         } else if (this.pc === 3) {
+//│           this.tmp$3 = this.tmp$1 + this.tmp$2;
+//│           this.pc = 5;
+//│           continue contLoop;
+//│         } else if (this.pc === 5) {
+//│           this.tmp$4 = f$(this.h$0);
+//│           if (this.tmp$4 instanceof runtime.EffectSig.class) {
+//│             this.pc = 4;
+//│             this.tmp$4.contTrace.last.next = this;
+//│             this.tmp$4.contTrace.last = this;
+//│             return this.tmp$4
+//│           }
+//│           this.pc = 4;
+//│           continue contLoop;
+//│         } else if (this.pc === 4) {
+//│           return this.tmp$3 + this.tmp$4
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
 //│   }
-//│   toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
-//│ };
+//│ });
 //│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
 //│   let tmp1;
 //│   tmp1 = new Cont$func$f$1.class(pc);
@@ -140,40 +142,42 @@ f() + f() + f()
 //│     return new Cont$func$f$.class(pc1)(h$01, tmp$11);
 //│   }
 //│ };
-//│ Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
-//│   constructor(pc) {
-//│     return (h$0, tmp$1) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.h$0 = h$0;
-//│       this.tmp$1 = tmp$1;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   resume(value$) {
-//│     if (this.pc === 0) {
-//│       this.tmp$1 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 1) {
-//│         this.tmp$1 = runtime.safeCall(this.h$0.perform());
-//│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 0;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
-//│         }
-//│         this.pc = 0;
-//│         continue contLoop;
-//│       } else if (this.pc === 0) {
-//│         return 1
+//│ Object.defineProperty(Cont$func$f$1, 'class', {
+//│   value: class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│     constructor(pc) {
+//│       return (h$0, tmp$1) => {
+//│         let tmp1;
+//│         tmp1 = super(null);
+//│         this.h$0 = h$0;
+//│         this.tmp$1 = tmp$1;
+//│         this.pc = pc;
+//│         return this;
 //│       }
-//│       break;
 //│     }
+//│     resume(value$) {
+//│       if (this.pc === 0) {
+//│         this.tmp$1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 1) {
+//│           this.tmp$1 = runtime.safeCall(this.h$0.perform());
+//│           if (this.tmp$1 instanceof runtime.EffectSig.class) {
+//│             this.pc = 0;
+//│             this.tmp$1.contTrace.last.next = this;
+//│             this.tmp$1.contTrace.last = this;
+//│             return this.tmp$1
+//│           }
+//│           this.pc = 0;
+//│           continue contLoop;
+//│         } else if (this.pc === 0) {
+//│           return 1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
 //│   }
-//│   toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
-//│ };
+//│ });
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
@@ -243,18 +247,20 @@ f(1).get()
 //│     return new Test.class()(x$01);
 //│   }
 //│ };
-//│ Test1.class = class Test {
-//│   constructor() {
-//│     return (x$0) => {
-//│       this.x$0 = x$0;
-//│       return this;
+//│ Object.defineProperty(Test1, 'class', {
+//│   value: class Test {
+//│     constructor() {
+//│       return (x$0) => {
+//│         this.x$0 = x$0;
+//│         return this;
+//│       }
 //│     }
+//│     get() {
+//│       return this.x$0
+//│     }
+//│     toString() { return "Test(" + "" + ")"; }
 //│   }
-//│   get() {
-//│     return this.x$0
-//│   }
-//│   toString() { return "Test(" + "" + ")"; }
-//│ };
+//│ });
 //│ f1 = function f(x) {
 //│   return Test$(x)
 //│ };
@@ -312,19 +318,21 @@ f(1, 2).get()
 //│     return new Test.class(a1)(used1$01);
 //│   }
 //│ };
-//│ Test3.class = class Test2 {
-//│   constructor(a) {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
-//│       this.a = a;
-//│       return this;
+//│ Object.defineProperty(Test3, 'class', {
+//│   value: class Test2 {
+//│     constructor(a) {
+//│       return (used1$0) => {
+//│         this.used1$0 = used1$0;
+//│         this.a = a;
+//│         return this;
+//│       }
 //│     }
+//│     get() {
+//│       return this.used1$0
+//│     }
+//│     toString() { return "Test(" + runtime.render(this.a) + ")"; }
 //│   }
-//│   get() {
-//│     return this.used1$0
-//│   }
-//│   toString() { return "Test(" + runtime.render(this.a) + ")"; }
-//│ };
+//│ });
 //│ f2 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
@@ -395,18 +403,20 @@ f(1, 2).get()
 //│ Test7 = function Test(used1$01) {
 //│   return new Test.class()(used1$01);
 //│ };
-//│ Test7.class = class Test6 {
-//│   constructor() {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
-//│       return this;
+//│ Object.defineProperty(Test7, 'class', {
+//│   value: class Test6 {
+//│     constructor() {
+//│       return (used1$0) => {
+//│         this.used1$0 = used1$0;
+//│         return this;
+//│       }
 //│     }
+//│     get() {
+//│       return this.used1$0
+//│     }
+//│     toString() { return "Test"; }
 //│   }
-//│   get() {
-//│     return this.used1$0
-//│   }
-//│   toString() { return "Test"; }
-//│ };
+//│ });
 //│ f4 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
@@ -443,28 +453,32 @@ f(1)
 //│     return new A.class()(f$capture$01);
 //│   }
 //│ };
-//│ A1.class = class A {
-//│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
+//│ Object.defineProperty(A1, 'class', {
+//│   value: class A {
+//│     constructor() {
+//│       return (f$capture$0) => {
+//│         this.f$capture$0 = f$capture$0;
+//│         return this;
+//│       }
 //│     }
+//│     f() {
+//│       this.f$capture$0.x0$ = 2;
+//│       return runtime.Unit
+//│     }
+//│     toString() { return "A(" + "" + ")"; }
 //│   }
-//│   f() {
-//│     this.f$capture$0.x0$ = 2;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return "A(" + "" + ")"; }
-//│ };
+//│ });
 //│ f$capture1 = function f$capture(x0$1) {
 //│   return new f$capture.class(x0$1);
 //│ };
-//│ f$capture1.class = class f$capture {
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
+//│ Object.defineProperty(f$capture1, 'class', {
+//│   value: class f$capture {
+//│     constructor(x0$) {
+//│       this.x0$ = x0$;
+//│     }
+//│     toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
-//│ };
+//│ });
 //│ f5 = function f(x) {
 //│   let tmp5, tmp6, capture;
 //│   capture = new f$capture1(x);
@@ -512,25 +526,27 @@ f().foo()
 //│     return new Good.class()(x$11, y$21, z$31, f$capture$01);
 //│   }
 //│ };
-//│ Good1.class = class Good {
-//│   constructor() {
-//│     return (x$1, y$2, z$3, f$capture$0) => {
-//│       this.x$1 = x$1;
-//│       this.y$2 = y$2;
-//│       this.z$3 = z$3;
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
+//│ Object.defineProperty(Good1, 'class', {
+//│   value: class Good {
+//│     constructor() {
+//│       return (x$1, y$2, z$3, f$capture$0) => {
+//│         this.x$1 = x$1;
+//│         this.y$2 = y$2;
+//│         this.z$3 = z$3;
+//│         this.f$capture$0 = f$capture$0;
+//│         return this;
+//│       }
 //│     }
+//│     foo() {
+//│       let tmp6, tmp7;
+//│       this.z$3 = 100;
+//│       tmp6 = this.x$1 + this.y$2;
+//│       tmp7 = tmp6 + this.z$3;
+//│       return tmp7 + this.f$capture$0.w0$
+//│     }
+//│     toString() { return "Good(" + "" + ")"; }
 //│   }
-//│   foo() {
-//│     let tmp6, tmp7;
-//│     this.z$3 = 100;
-//│     tmp6 = this.x$1 + this.y$2;
-//│     tmp7 = tmp6 + this.z$3;
-//│     return tmp7 + this.f$capture$0.w0$
-//│   }
-//│   toString() { return "Good(" + "" + ")"; }
-//│ };
+//│ });
 //│ Bad$ = function Bad$(f$capture$0) {
 //│   let tmp6;
 //│   tmp6 = new Bad1.class();
@@ -548,28 +564,32 @@ f().foo()
 //│     return new Bad.class()(f$capture$01);
 //│   }
 //│ };
-//│ Bad1.class = class Bad {
-//│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
+//│ Object.defineProperty(Bad1, 'class', {
+//│   value: class Bad {
+//│     constructor() {
+//│       return (f$capture$0) => {
+//│         this.f$capture$0 = f$capture$0;
+//│         return this;
+//│       }
 //│     }
+//│     foo() {
+//│       this.f$capture$0.w0$ = 10000;
+//│       return runtime.Unit
+//│     }
+//│     toString() { return "Bad(" + "" + ")"; }
 //│   }
-//│   foo() {
-//│     this.f$capture$0.w0$ = 10000;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return "Bad(" + "" + ")"; }
-//│ };
+//│ });
 //│ f$capture3 = function f$capture(w0$1) {
 //│   return new f$capture.class(w0$1);
 //│ };
-//│ f$capture3.class = class f$capture2 {
-//│   constructor(w0$) {
-//│     this.w0$ = w0$;
+//│ Object.defineProperty(f$capture3, 'class', {
+//│   value: class f$capture2 {
+//│     constructor(w0$) {
+//│       this.w0$ = w0$;
+//│     }
+//│     toString() { return "f$capture(" + runtime.render(this.w0$) + ")"; }
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.w0$) + ")"; }
-//│ };
+//│ });
 //│ f6 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;
 //│   capture = new f$capture3(null);
@@ -653,13 +673,15 @@ f(2).get()
 //│   Test10 = function Test() {
 //│     return new Test.class();
 //│   };
-//│   Test10.class = class Test9 {
-//│     constructor() {}
-//│     get() {
-//│       return h$3(this, x)
+//│   Object.defineProperty(Test10, 'class', {
+//│   value: class Test9 {
+//│       constructor() {}
+//│       get() {
+//│         return h$3(this, x)
+//│       }
+//│       toString() { return "Test(" + "" + ")"; }
 //│     }
-//│     toString() { return "Test(" + "" + ")"; }
-//│   };
+//│   });
 //│   foo1 = Test10;
 //│   return runtime.safeCall(foo1())
 //│ };

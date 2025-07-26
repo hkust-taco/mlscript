@@ -182,12 +182,14 @@ x + y
 //│ f$capture1 = function f$capture(a0$1) {
 //│   return new f$capture.class(a0$1);
 //│ };
-//│ f$capture1.class = class f$capture {
-//│   constructor(a0$) {
-//│     this.a0$ = a0$;
+//│ Object.defineProperty(f$capture1, 'class', {
+//│   value: class f$capture {
+//│     constructor(a0$) {
+//│       this.a0$ = a0$;
+//│     }
+//│     toString() { return "f$capture(" + runtime.render(this.a0$) + ")"; }
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.a0$) + ")"; }
-//│ };
+//│ });
 //│ f5 = function f() {
 //│   let capture, g$this, h$this;
 //│   capture = new f$capture1(null);
@@ -199,13 +201,15 @@ x + y
 //│ Tuple1 = function Tuple(a1, b1) {
 //│   return new Tuple.class(a1, b1);
 //│ };
-//│ Tuple1.class = class Tuple {
-//│   constructor(a, b) {
-//│     this.a = a;
-//│     this.b = b;
+//│ Object.defineProperty(Tuple1, 'class', {
+//│   value: class Tuple {
+//│     constructor(a, b) {
+//│       this.a = a;
+//│       this.b = b;
+//│     }
+//│     toString() { return "Tuple(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
 //│   }
-//│   toString() { return "Tuple(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
-//│ };
+//│ });
 //│ tmp = f5();
 //│ ret = tmp;
 //│ f11 = ret.a;
@@ -219,9 +223,9 @@ x + y
 //│ y = tmp5;
 //│ x + y
 //│ = "01"
-//│ f1 = [function]
-//│ f2 = [function]
-//│ ret = Tuple([function], [function])
+//│ f1 = [Function]
+//│ f2 = [Function]
+//│ ret = Tuple([Function], [Function])
 //│ x = "0"
 //│ y = "1"
 
@@ -276,11 +280,11 @@ a.toString() + b + c + d
 //│ b = 1
 //│ c = 10
 //│ d = 110
-//│ g2 = [function]
-//│ gRet = Tuple([function], [function])
-//│ hFun = [function]
-//│ iFun = [function]
-//│ ret = Tuple(Tuple([function], [function]), [function])
+//│ g2 = [Function]
+//│ gRet = Tuple([Function], [Function])
+//│ hFun = [Function]
+//│ iFun = [Function]
+//│ ret = Tuple(Tuple([Function], [Function]), [Function])
 
 // some variables mutated, some not
 :sjs
@@ -315,12 +319,14 @@ f(1, 2, 1000)
 //│ f$capture5 = function f$capture(mutated0$1) {
 //│   return new f$capture.class(mutated0$1);
 //│ };
-//│ f$capture5.class = class f$capture4 {
-//│   constructor(mutated0$) {
-//│     this.mutated0$ = mutated0$;
+//│ Object.defineProperty(f$capture5, 'class', {
+//│   value: class f$capture4 {
+//│     constructor(mutated0$) {
+//│       this.mutated0$ = mutated0$;
+//│     }
+//│     toString() { return "f$capture(" + runtime.render(this.mutated0$) + ")"; }
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.mutated0$) + ")"; }
-//│ };
+//│ });
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp15, tmp16, tmp17, capture;
 //│   capture = new f$capture5(mutated);
@@ -468,12 +474,14 @@ g()(1)
 //│ g$capture1 = function g$capture(y0$1) {
 //│   return new g$capture.class(y0$1);
 //│ };
-//│ g$capture1.class = class g$capture {
-//│   constructor(y0$) {
-//│     this.y0$ = y0$;
+//│ Object.defineProperty(g$capture1, 'class', {
+//│   value: class g$capture {
+//│     constructor(y0$) {
+//│       this.y0$ = y0$;
+//│     }
+//│     toString() { return "g$capture(" + runtime.render(this.y0$) + ")"; }
 //│   }
-//│   toString() { return "g$capture(" + runtime.render(this.y0$) + ")"; }
-//│ };
+//│ });
 //│ g13 = function g() {
 //│   let capture;
 //│   capture = new g$capture1(null);
@@ -495,7 +503,7 @@ let ret = f()
 ret()
 ret()
 //│ = 2
-//│ ret = [function]
+//│ ret = [Function]
 
 :expect 6
 :lift
@@ -577,12 +585,14 @@ f()
 //│ f$capture15 = function f$capture(x0$1) {
 //│   return new f$capture.class(x0$1);
 //│ };
-//│ f$capture15.class = class f$capture14 {
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
+//│ Object.defineProperty(f$capture15, 'class', {
+//│   value: class f$capture14 {
+//│     constructor(x0$) {
+//│       this.x0$ = x0$;
+//│     }
+//│     toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
-//│ };
+//│ });
 //│ f20 = function f() {
 //│   let tmp19, capture;
 //│   capture = new f$capture15(null);
@@ -627,16 +637,18 @@ fun f(es, vs) =
 //│ A1 = function A(v$_$01) {
 //│   return new A.class()(v$_$01);
 //│ };
-//│ A1.class = class A {
-//│   constructor() {
-//│     return (v$_$0) => {
-//│       this["v'$0"] = v$_$0;
-//│       this.fld = this["v'$0"];
-//│       return this;
+//│ Object.defineProperty(A1, 'class', {
+//│   value: class A {
+//│     constructor() {
+//│       return (v$_$0) => {
+//│         this["v'$0"] = v$_$0;
+//│         this.fld = this["v'$0"];
+//│         return this;
+//│       }
 //│     }
+//│     toString() { return "A"; }
 //│   }
-//│   toString() { return "A"; }
-//│ };
+//│ });
 //│ f23 = function f(es, vs) {
 //│   let v$_;
 //│   v$_ = es;

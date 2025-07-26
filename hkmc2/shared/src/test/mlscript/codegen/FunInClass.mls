@@ -25,34 +25,36 @@ fun test(a) =
 //│   Inner1 = function Inner(b1) {
 //│     return new Inner.class(b1);
 //│   };
-//│   Inner1.class = class Inner {
-//│     constructor(b) {
-//│       let tmp;
-//│       this.b = b;
-//│       tmp = Predef.print(a);
-//│     }
-//│     f(c) {
-//│       return [
-//│         a,
-//│         this.b,
-//│         c
-//│       ]
-//│     } 
-//│     g(d) {
-//│       let h;
-//│       const this$Inner = this;
-//│       h = function h(e) {
+//│   Object.defineProperty(Inner1, 'class', {
+//│   value: class Inner {
+//│       constructor(b) {
+//│         let tmp;
+//│         this.b = b;
+//│         tmp = Predef.print(a);
+//│       }
+//│       f(c) {
 //│         return [
 //│           a,
-//│           this$Inner.b,
-//│           d,
-//│           e
+//│           this.b,
+//│           c
 //│         ]
-//│       };
-//│       return h(d)
+//│       } 
+//│       g(d) {
+//│         let h;
+//│         const this$Inner = this;
+//│         h = function h(e) {
+//│           return [
+//│             a,
+//│             this$Inner.b,
+//│             d,
+//│             e
+//│           ]
+//│         };
+//│         return h(d)
+//│       }
+//│       toString() { return "Inner(" + runtime.render(this.b) + ")"; }
 //│     }
-//│     toString() { return "Inner(" + runtime.render(this.b) + ")"; }
-//│   };
+//│   });
 //│   return Inner1(42)
 //│ };
 
@@ -61,10 +63,10 @@ let i = test(100)
 //│ i = Inner(42)
 
 i.f(200)
-//│ = [100, 42, 200]
+//│ = [ 100, 42, 200 ]
 
 i.g(200)
-//│ = [100, 42, 200, 200]
+//│ = [ 100, 42, 200, 200 ]
 
 
 :sjs
@@ -81,29 +83,33 @@ fun test(a) =
 //│   C11 = function C1(b1) {
 //│     return new C1.class(b1);
 //│   };
-//│   C11.class = class C1 {
-//│     constructor(b) {
-//│       this.b = b;
-//│       Predef.print([
-//│         a,
-//│         this.b
-//│       ])
+//│   Object.defineProperty(C11, 'class', {
+//│   value: class C1 {
+//│       constructor(b) {
+//│         this.b = b;
+//│         Predef.print([
+//│           a,
+//│           this.b
+//│         ])
+//│       }
+//│       toString() { return "C1(" + runtime.render(this.b) + ")"; }
 //│     }
-//│     toString() { return "C1(" + runtime.render(this.b) + ")"; }
-//│   };
+//│   });
 //│   C21 = function C2(b1) {
 //│     return new C2.class(b1);
 //│   };
-//│   C21.class = class C2 {
-//│     constructor(b) {
-//│       this.b = b;
-//│       Predef.print([
-//│         a,
-//│         this.b
-//│       ])
+//│   Object.defineProperty(C21, 'class', {
+//│   value: class C2 {
+//│       constructor(b) {
+//│         this.b = b;
+//│         Predef.print([
+//│           a,
+//│           this.b
+//│         ])
+//│       }
+//│       toString() { return "C2(" + runtime.render(this.b) + ")"; }
 //│     }
-//│     toString() { return "C2(" + runtime.render(this.b) + ")"; }
-//│   };
+//│   });
 //│   tmp1 = C11(1);
 //│   tmp2 = C21(2);
 //│   return [
@@ -113,9 +119,9 @@ fun test(a) =
 //│ };
 
 test(123)
-//│ > [123, 1]
-//│ > [123, 2]
-//│ = [C1(1), C2(2)]
+//│ > [ 123, 1 ]
+//│ > [ 123, 2 ]
+//│ = [ C1(1), C2(2) ]
 
 
 :sjs
@@ -132,25 +138,27 @@ Foo(123)
 //│ Foo1 = function Foo(a1) {
 //│   return new Foo.class(a1);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(a) {
-//│     this.a = a;
-//│     this.foo()
+//│ Object.defineProperty(Foo1, 'class', {
+//│   value: class Foo {
+//│     constructor(a) {
+//│       this.a = a;
+//│       this.foo()
+//│     }
+//│     foo() {
+//│       let bar, baz, tmp1;
+//│       const this$Foo = this;
+//│       bar = function bar() {
+//│         return this$Foo.a
+//│       };
+//│       baz = function baz() {
+//│         return this$Foo.a
+//│       };
+//│       tmp1 = bar();
+//│       return baz()
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.a) + ")"; }
 //│   }
-//│   foo() {
-//│     let bar, baz, tmp1;
-//│     const this$Foo = this;
-//│     bar = function bar() {
-//│       return this$Foo.a
-//│     };
-//│     baz = function baz() {
-//│       return this$Foo.a
-//│     };
-//│     tmp1 = bar();
-//│     return baz()
-//│   }
-//│   toString() { return "Foo(" + runtime.render(this.a) + ")"; }
-//│ };
+//│ });
 //│ Foo1(123)
 //│ = Foo(123)
 
@@ -167,24 +175,26 @@ Bar(1)
 //│ Bar1 = function Bar(x1) {
 //│   return new Bar.class(x1);
 //│ };
-//│ Bar1.class = class Bar {
-//│   constructor(x) {
-//│     let tmp1;
-//│     this.x = x;
-//│     tmp1 = this.foo();
-//│     runtime.safeCall(tmp1())
-//│   }
-//│   foo() {
-//│     return () => {
-//│       let bar;
-//│       const this$Bar = this;
-//│       bar = function bar() {
-//│         return this$Bar.x
-//│       };
-//│       return bar()
+//│ Object.defineProperty(Bar1, 'class', {
+//│   value: class Bar {
+//│     constructor(x) {
+//│       let tmp1;
+//│       this.x = x;
+//│       tmp1 = this.foo();
+//│       runtime.safeCall(tmp1())
 //│     }
+//│     foo() {
+//│       return () => {
+//│         let bar;
+//│         const this$Bar = this;
+//│         bar = function bar() {
+//│           return this$Bar.x
+//│         };
+//│         return bar()
+//│       }
+//│     }
+//│     toString() { return "Bar(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   toString() { return "Bar(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 //│ Bar1(1)
 //│ = Bar(1)

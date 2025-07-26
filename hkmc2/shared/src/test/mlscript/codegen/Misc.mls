@@ -27,6 +27,6 @@ set [].0 = 1
 
 let arr = []
 set arr.0 = 1
-//│ arr = [1]
+//│ arr = [ 1 ]
 
 

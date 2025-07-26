@@ -173,7 +173,7 @@
 
 
 let f = x => x * 2
-//│ f = [function f]
+//│ f = [Function f]
 
 2
   + 1
@@ -212,14 +212,14 @@ f of
       1
       2
   of 3
-//│ = [[1, 2], 3]
+//│ = [ [ 1, 2 ], 3 ]
 
 (f of
   g of
     1
     2
 ) of 3
-//│ = [[1, 2], 3]
+//│ = [ [ 1, 2 ], 3 ]
 
 
 fun f(x) = x
@@ -377,12 +377,12 @@ if 0
 
 x => if x
   is 0 then "a"
-//│ = [function]
+//│ = [Function]
 
 x => if x
   is 0 then "a"
   is 1 then "b"
-//│ = [function]
+//│ = [Function]
 
 
 fun f(x) = if x

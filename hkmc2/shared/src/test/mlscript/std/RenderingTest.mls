@@ -26,58 +26,58 @@ render([])
 //│ = "[]"
 
 render([1])
-//│ = "[1]"
+//│ = "[ 1 ]"
 
 render([1, 2])
-//│ = "[1, 2]"
+//│ = "[ 1, 2 ]"
 
 render([1,2,3])
-//│ = "[1, 2, 3]"
+//│ = "[ 1, 2, 3 ]"
 
 render([1,2,3,4])
-//│ = "[1, 2, 3, 4]"
+//│ = "[ 1, 2, 3, 4 ]"
 
 render(1)
 //│ = "1"
 
 render(Object.create(null))
-//│ = "[object]"
+//│ = "[Object: null prototype] {}"
 
 render(x => x)
-//│ = "[function]"
+//│ = "[Function]"
 
 class Foo
 
 render(Foo)
-//│ = "class Foo { constructor() {} toString() { return \"Foo\"; } }"
+//│ = "[class Foo]"
 
 render(new Foo)
 //│ = "Foo"
 
 
 interleave(0) of 1, 2, 3
-//│ = [1, 0, 2, 0, 3]
+//│ = [ 1, 0, 2, 0, 3 ]
 
 let arg = [1, 2]
-//│ arg = [1, 2]
+//│ arg = [ 1, 2 ]
 
 map(render)(...arg)
-//│ = ["1", "2"]
+//│ = [ "1", "2" ]
 
 fold(+)("[", ...interleave("|")(...map(render)(...arg)), "]")
 //│ = "[1|2]"
 
 interleave(", ") of 1, 2
-//│ = [1, ", ", 2]
+//│ = [ 1, ", ", 2 ]
 
 
 data class Foo(val xs)
 
 render(Foo([1, 2, 3]))
-//│ = "Foo([1, 2, 3])"
+//│ = "Foo([ 1, 2, 3 ])"
 
 render([Foo([1]), Foo([2])])
-//│ = "[Foo([1]), Foo([2])]"
+//│ = "[ Foo([ 1 ]), Foo([ 2 ]) ]"
 
 
 renderAsStr("1")
@@ -87,15 +87,184 @@ renderAsStr(1)
 //│ = "1"
 
 let xs = [1, 2]
-//│ xs = [1, 2]
+//│ xs = [ 1, 2 ]
 
 map(renderAsStr)(xs)
-//│ = ["[1, 2]"]
+//│ = [ "[ 1, 2 ]" ]
 
 map(renderAsStr(_))(xs)
-//│ = ["[1, 2]"]
+//│ = [ "[ 1, 2 ]" ]
 
 map(_ + 1)(...xs)
-//│ = [2, 3]
+//│ = [ 2, 3 ]
 
+renderAsStr of new RegExp("test")
+//│ = "/test/"
 
+renderAsStr of Symbol.for("mlscript")
+//│ = "Symbol(mlscript)"
+
+renderAsStr of BigInt("2" + "0".repeat(30))
+//│ = "2000000000000000000000000000000n"
+
+renderAsStr of new Set of [1, 2, 3]
+//│ = "Set(3) { 1, 2, 3 }"
+
+renderAsStr of new Map of []
+//│ = "Map(0) {}"
+
+renderAsStr of new Map of [[1, 2], [3, 4]]
+//│ = "Map(2) { 1 => 2, 3 => 4 }"
+
+renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
+//│ = "Map(2) { [Function Foo] => 2, [class Symbol] => 1 }"
+
+renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
+//│ = "Map(1) { { a: 0 } => { b: 0 } }"
+
+renderAsStr of new Error("hello")
+//│ = "Error: hello"
+
+renderAsStr of new TypeError("hello")
+//│ = "TypeError: hello"
+
+renderAsStr of Object.create(null)
+//│ = "[Object: null prototype] {}"
+
+renderAsStr of hello: "world"
+//│ = "{ hello: \"world\" }"
+
+renderAsStr of Object.assign(Object.create(null), hello: "world")
+//│ = "[Object: null prototype] { hello: \"world\" }"
+
+renderAsStr of new WeakMap
+//│ = "WeakMap { <items unknown> }"
+
+renderAsStr of new WeakSet
+//│ = "WeakSet { <items unknown> }"
+
+//  _____                 _   _
+// |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
+// | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+// |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+// |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+//
+// =============================================
+
+class Foo
+
+renderAsStr of Foo
+//│ = "[class Foo4]"
+
+set Foo.bar = (direction: "vertical")
+
+renderAsStr of Foo
+//│ = "[class Foo4] { bar: { direction: \"vertical\" } }"
+
+fun test() = ()
+
+renderAsStr of test
+//│ = "[Function test]"
+
+renderAsStr of [42, 100, test]
+//│ = "[ 42, 100, [Function test] ]"
+
+set test.test = test
+
+renderAsStr of test
+//│ = "<ref *1> [Function test] { test: [Circular *1] }"
+
+let greetings = () => "hello"
+//│ greetings = [Function greetings]
+
+renderAsStr of greetings
+//│ = "[Function greetings]"
+
+renderAsStr of x => x * 2
+//│ = "[Function]"
+
+renderAsStr of Object.assign(x => x * 2, { a: 2 })
+//│ = "[Function] { a: 2 }"
+
+renderAsStr of globalThis.setImmediate
+//│ = "[Function setImmediate]"
+
+//   ____ _                _
+//  / ___(_)_ __ ___ _   _| | __ _ _ __
+// | |   | | '__/ __| | | | |/ _` | '__|
+// | |___| | | | (__| |_| | | (_| | |
+//  \____|_|_|  \___|\__,_|_|\__,_|_|
+//
+// =====================================
+
+// Test: simple circular reference.
+
+let a =
+  x: 0
+  y: 1
+//│ a = { x: 0, y: 1 }
+
+set a.x = a
+
+a
+//│ = <ref *1> { x: [Circular *1], y: 1 }
+
+// Test: an object is referenced multiple times in a circular way.
+
+let tree =
+  left:
+    left: null
+    right: null
+  right:
+    left: null
+    right: null
+//│ tree = { left: { left: null, right: null }, right: { left: null, right: null } }
+
+set tree.left.left = tree
+set tree.right.left = tree
+
+tree
+//│ = <ref *1> { left: { left: [Circular *1], right: null }, right: { left: [Circular *1], right: null } }
+
+// Test: nested circular reference.
+
+// If the same circular object appears multiple times, it should be rendered as
+// the same reference.
+let b = [a, a]
+//│ b = [ <ref *1> { x: [Circular *1], y: 1 }, <ref *1> { x: [Circular *1], y: 1 } ]
+
+b.push(b)
+//│ = 3
+
+b
+//│ = <ref *2> [ <ref *1> { x: [Circular *1], y: 1 }, <ref *1> { x: [Circular *1], y: 1 }, [Circular *2] ]
+
+let functionWithProperties = Object.assign(x => x, "kind": "Callable")
+//│ functionWithProperties = [Function] { kind: "Callable" }
+
+functionWithProperties
+//│ = [Function] { kind: "Callable" }
+
+functionWithProperties.kind
+//│ = "Callable"
+
+//   ___  _     _           _
+//  / _ \| |__ (_) ___  ___| |_
+// | | | | '_ \| |/ _ \/ __| __|
+// | |_| | |_) | |  __/ (__| |_
+//  \___/|_.__// |\___|\___|\__|
+//           |__/
+// =============================
+
+let something = (x: 0)
+//│ something = { x: 0 }
+
+Object.defineProperty(something, "y", enumerable: true, get: () => 42)
+//│ = { x: 0, y: [Getter] }
+
+Object.defineProperty of
+  something, "z"
+  enumerable: true
+  get: () => 42
+  "set": (value) => print("The user tries to set the value to " + value)
+//│ = { x: 0, y: [Getter], z: [Getter/Setter] }

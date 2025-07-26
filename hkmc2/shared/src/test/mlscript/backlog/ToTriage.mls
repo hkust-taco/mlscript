@@ -191,7 +191,7 @@ data object Cls(x) with
 //│   }
 //│   toString() { return "Cls(" + runtime.render(this.x) + ")"; }
 //│ }; Cls1 = new Cls$class;
-//│ Cls1.class = Cls$class;
+//│ Object.defineProperty(Cls1, 'class', { value: Cls$class });
 
 :e
 Cls.x

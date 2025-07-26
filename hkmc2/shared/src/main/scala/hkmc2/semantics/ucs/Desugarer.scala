@@ -561,6 +561,14 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       case Jux(Ident(".."), Ident(_)) => fallback => _ =>
         raise(ErrorReport(msg"Illegal rest pattern." -> pattern.toLoc :: Nil))
         fallback
+      case InfixApp(StrLit(fieldName), Keyword.`:`, pat) => fallback => ctx =>
+        val fieldIdent = (Ident(fieldName): Ident).withLocOf(pattern)
+        val symbol = scrutSymbol.getFieldScrutinee(fieldIdent)
+        Branch(
+          ref,
+          Pattern.Record((fieldIdent, symbol) :: Nil),
+          subMatches((symbol, pat, N) :: Nil, sequel)(Split.End)(ctx)
+        ) ~: fallback
       case InfixApp(fieldName: Ident, Keyword.`:`, pat) => fallback => ctx =>
         val symbol = scrutSymbol.getFieldScrutinee(fieldName)
         Branch(
@@ -583,6 +591,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           // to a record field
           case (_, N) => N // we only need to fail once to return N
           case (p, S(tl)) => p match
+            case InfixApp(StrLit(fieldName), Keyword.`:`, pat) =>
+              val fieldIdent = (Ident(fieldName): Ident).withLocOf(p)
+              S((fieldIdent, scrutSymbol.getFieldScrutinee(fieldIdent), pat) :: tl)
             case InfixApp(fieldName: Ident, Keyword.`:`, pat) =>
               S((fieldName, scrutSymbol.getFieldScrutinee(fieldName), pat) :: tl)
             case Pun(false, fieldName) =>

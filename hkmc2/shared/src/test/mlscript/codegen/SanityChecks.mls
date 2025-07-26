@@ -92,7 +92,7 @@ f(2)
 //│ block$res6 = runtime.safeCall(f5(2));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
-//│ f = [function f]
+//│ f = [Function f]
 
 
 :expect NaN
@@ -105,19 +105,21 @@ Cls(1, 2).f(3)
 //│ Cls1 = function Cls(x1, y1) {
 //│   return new Cls.class(x1, y1);
 //│ };
-//│ Cls1.class = class Cls {
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
+//│ Object.defineProperty(Cls1, 'class', {
+//│   value: class Cls {
+//│     constructor(x, y) {
+//│       this.x = x;
+//│       this.y = y;
+//│     }
+//│     f(z, p) {
+//│       let tmp2, tmp3;
+//│       tmp2 = this.x + this.y;
+//│       tmp3 = tmp2 + z;
+//│       return tmp3 + p
+//│     }
+//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│   }
-//│   f(z, p) {
-//│     let tmp2, tmp3;
-//│     tmp2 = this.x + this.y;
-//│     tmp3 = tmp2 + z;
-//│     return tmp3 + p
-//│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│ });
 //│ tmp1 = Cls1(1, 2);
 //│ block$res7 = runtime.safeCall(tmp1.f(3));
 //│ undefined
@@ -132,23 +134,25 @@ Cls(1, 2).f(3)
 //│ Cls3 = function Cls(...args1) {
 //│   return new Cls.class(...args1);
 //│ };
-//│ Cls3.class = class Cls2 {
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
+//│ Object.defineProperty(Cls3, 'class', {
+//│   value: class Cls2 {
+//│     constructor(x, y) {
+//│       this.x = x;
+//│       this.y = y;
+//│     }
+//│     get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
+//│     f(...args) {
+//│       runtime.checkArgs("f", 2, true, args.length);
+//│       let z = args[0];
+//│       let p = args[1];
+//│       let tmp3, tmp4;
+//│       tmp3 = this.x + this.y;
+//│       tmp4 = tmp3 + z;
+//│       return tmp4 + p
+//│     }
+//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│   }
-//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let z = args[0];
-//│     let p = args[1];
-//│     let tmp3, tmp4;
-//│     tmp3 = this.x + this.y;
-//│     tmp4 = tmp3 + z;
-//│     return tmp4 + p
-//│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│ });
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
 //│ block$res8 = runtime.safeCall(tmp2.f(3));
 //│ undefined
@@ -164,30 +168,32 @@ Cls(1, 2).f(3, 4)(5)
 //│ Cls5 = function Cls(...args1) {
 //│   return new Cls.class(...args1);
 //│ };
-//│ Cls5.class = class Cls4 {
-//│   constructor(x, y) {
-//│     this.x = x;
-//│     this.y = y;
-//│   }
-//│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let z = args[0];
-//│     let p = args[1];
-//│     return (...args1) => {
-//│       runtime.checkArgs("", 2, true, args1.length);
-//│       let q = args1[0];
-//│       let s = args1[1];
-//│       let tmp5, tmp6, tmp7, tmp8;
-//│       tmp5 = this.x + this.y;
-//│       tmp6 = tmp5 + z;
-//│       tmp7 = tmp6 + p;
-//│       tmp8 = tmp7 + q;
-//│       return tmp8 + s
+//│ Object.defineProperty(Cls5, 'class', {
+//│   value: class Cls4 {
+//│     constructor(x, y) {
+//│       this.x = x;
+//│       this.y = y;
 //│     }
+//│     get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
+//│     f(...args) {
+//│       runtime.checkArgs("f", 2, true, args.length);
+//│       let z = args[0];
+//│       let p = args[1];
+//│       return (...args1) => {
+//│         runtime.checkArgs("", 2, true, args1.length);
+//│         let q = args1[0];
+//│         let s = args1[1];
+//│         let tmp5, tmp6, tmp7, tmp8;
+//│         tmp5 = this.x + this.y;
+//│         tmp6 = tmp5 + z;
+//│         tmp7 = tmp6 + p;
+//│         tmp8 = tmp7 + q;
+//│         return tmp8 + s
+//│       }
+//│     }
+//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
 //│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│ });
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
 //│ tmp4 = tmp3.f(3, 4);
 //│ block$res9 = runtime.safeCall(tmp4(5));
@@ -245,18 +251,20 @@ if M.A(1).y is
 //│     this.A = function A(...args1) {
 //│       return new A.class(...args1);
 //│     };
-//│     this.A.class = class A {
-//│       constructor(x1) {
-//│         this.x = x1;
+//│     Object.defineProperty(this.A, 'class', {
+//│     value: class A {
+//│         constructor(x1) {
+//│           this.x = x1;
+//│         }
+//│         get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
+//│         f(...args) {
+//│           runtime.checkArgs("f", 1, true, args.length);
+//│           let y = args[0];
+//│           return this.x + y
+//│         }
+//│         toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│       }
-//│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
-//│       f(...args) {
-//│         runtime.checkArgs("f", 1, true, args.length);
-//│         let y = args[0];
-//│         return this.x + y
-//│       }
-//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
-//│     };
+//│     });
 //│   }
 //│   static toString() { return "M"; }
 //│ });

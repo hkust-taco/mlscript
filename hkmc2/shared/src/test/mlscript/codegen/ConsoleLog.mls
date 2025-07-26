@@ -27,7 +27,7 @@ l(123)
 //│ JS (unsanitized):
 //│ let l; l = this.console.log; runtime.safeCall(l(123))
 //│ > 123
-//│ l = [function log]
+//│ l = [Function log]
 
 42
 //│ JS (unsanitized):

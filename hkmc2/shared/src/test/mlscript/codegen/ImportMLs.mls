@@ -24,10 +24,10 @@ None isDefined()
 //│ = false
 
 case Some(x) then x
-//│ = [function]
+//│ = [Function]
 
 case { Some(x) then x }
-//│ = [function]
+//│ = [Function]
 
 Some(1) isDefined()
 //│ = true

@@ -20,19 +20,19 @@ zip of Nil
 //│ = Nil
 
 zip of s1
-//│ = Cons([1], Cons([2], Cons([3], Nil)))
+//│ = Cons([ 1 ], Cons([ 2 ], Cons([ 3 ], Nil)))
 
 zip of s1, s2
-//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
+//│ = Cons([ 1, "a" ], Cons([ 2, "b" ], Cons([ 3, "c" ], Nil)))
 
 zip of s1, s3
-//│ = Cons([1, true], Cons([2, false], Cons([3], Nil)))
+//│ = Cons([ 1, true ], Cons([ 2, false ], Cons([ 3 ], Nil)))
 
 s1 zip(s2)
-//│ = Cons([1, "a"], Cons([2, "b"], Cons([3, "c"], Nil)))
+//│ = Cons([ 1, "a" ], Cons([ 2, "b" ], Cons([ 3, "c" ], Nil)))
 
 print of ...
 s1 zip of s2, s3
-//│ > Cons([1, "a", true], Cons([2, "b", false], Cons([3, "c"], Nil)))
+//│ > Cons([ 1, "a", true ], Cons([ 2, "b", false ], Cons([ 3, "c" ], Nil)))
 
 

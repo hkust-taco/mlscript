@@ -20,7 +20,7 @@
 //│ = 2
 
 +
-//│ = [function]
+//│ = [Function]
 
 // * A bit confusing... but at least there's a warning!
 :w
@@ -42,7 +42,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 (+)
-//│ = [function]
+//│ = [Function]
 
 (+)(2, 3)
 //│ = 5
@@ -59,7 +59,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 id(+)
-//│ = [function]
+//│ = [Function]
 
 id(+)(1, 2)
 //│ = 3
@@ -89,7 +89,7 @@ fun (+) lol(a, b) = [a, b]
 1 + 2
 //│ JS (unsanitized):
 //│ lol(1, 2)
-//│ = [1, 2]
+//│ = [ 1, 2 ]
 
 
 :sjs
@@ -108,7 +108,7 @@ id(~)(2)
 
 
 typeof
-//│ = [function]
+//│ = [Function]
 
 typeof(1)
 //│ = "number"

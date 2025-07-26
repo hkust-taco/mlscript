@@ -2,7 +2,7 @@
 
 
 let arr = [true, false]
-//│ arr = [true, false]
+//│ arr = [ true, false ]
 
 
 // * Array methods annoyingly supply extra arguments, such as the index and the array itself
@@ -15,14 +15,14 @@ arr.map((e, ...) => e === false)
 //│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(12,15,Arrays.mls:+14)),None) (of class hkmc2.syntax.Tree$Spread)
 
 arr.map(pass1(_ === false))
-//│ = [false, true]
+//│ = [ false, true ]
 
 
 [1,3,2].map((x, _, _) => x + 1).sort()
-//│ = [2, 3, 4]
+//│ = [ 2, 3, 4 ]
 
 [1,3,2].map((x, _, _) => x + 1)
   .sort()
-//│ = [2, 3, 4]
+//│ = [ 2, 3, 4 ]
 
 

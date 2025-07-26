@@ -107,7 +107,7 @@ fun or2(x, y) = if x === T || y === T then T else F
 fun xor(x, y) = if x === y then T else F
 
 let emptyPacket = [-1, -1, F, false, 0, false, 0, 1]
-//│ emptyPacket = [-1, -1, F, false, 0, false, 0, 1]
+//│ emptyPacket = [ -1, -1, F, false, 0, false, 0, 1 ]
 
 fun send_right(a, b) = if a is [ia, sa, ma, qla, dla, qra, dra, ea] and b is [ib, sb, mb, qlb, dlb, qrb, drb, eb] and
   qra and (dra > eb) then [ia, sa, ma, qla, dla, qra, dra - eb, ea + eb]

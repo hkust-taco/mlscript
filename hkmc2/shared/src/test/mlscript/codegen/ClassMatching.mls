@@ -69,7 +69,7 @@ x => if x is Some(x) then x
 //│   }
 //│ });
 //│ lambda
-//│ = [function]
+//│ = [Function]
 
 
 data class C(a)
@@ -96,7 +96,7 @@ M.d
 fun f(x) = if x is M.D then 1 else 0
 
 M.D.class
-//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + runtime.render(this.a) + ")"; }     }
+//│ = [class D]
 
 M is M.D
 //│ = false

@@ -2,13 +2,13 @@
 
 
 case x then x
-//│ = [function]
+//│ = [Function]
 
 :sjs
 case { x then x }
 //│ JS (unsanitized):
 //│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
-//│ = [function]
+//│ = [Function]
 
 :sjs
 x => if x is
@@ -23,7 +23,7 @@ x => if x is
 //│   }
 //│ });
 //│ lambda2
-//│ = [function]
+//│ = [Function]
 
 :sjs
 case 0 then true
@@ -37,7 +37,7 @@ case 0 then true
 //│   }
 //│ });
 //│ lambda3
-//│ = [function]
+//│ = [Function]
 
 (case x then x) of 1
 //│ = 1
@@ -52,7 +52,7 @@ case 0 then true
 //│ = 1
 
 1 |> (2 |> case x then case y then [x, y]) |> case [a, b] then [b, a]
-//│ = [1, 2]
+//│ = [ 1, 2 ]
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
@@ -77,7 +77,7 @@ case
 //│   }
 //│ });
 //│ lambda11
-//│ = [function]
+//│ = [Function]
 
 data class Some(value)
 object None
@@ -99,5 +99,5 @@ val isDefined = case
 //│ });
 //│ tmp6 = lambda12;
 //│ isDefined = tmp6;
-//│ isDefined = [function]
+//│ isDefined = [Function]
 

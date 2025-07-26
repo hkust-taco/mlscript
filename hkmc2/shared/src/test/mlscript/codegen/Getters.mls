@@ -85,10 +85,10 @@ module T with
 
 
 T.a
-//│ = [function t]
+//│ = [Function t]
 
 T.b
-//│ = [function t]
+//│ = [Function t]
 
 T.c
 //│ = 2
@@ -290,15 +290,17 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x1) {
 //│   return new Foo.class(x1);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(x) {
-//│     this.x = x;
+//│ Object.defineProperty(Foo1, 'class', {
+//│   value: class Foo {
+//│     constructor(x) {
+//│       this.x = x;
+//│     }
+//│     get oops() {
+//│       return this.x;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   get oops() {
-//│     return this.x;
-//│   }
-//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 
 fun foo(f) =

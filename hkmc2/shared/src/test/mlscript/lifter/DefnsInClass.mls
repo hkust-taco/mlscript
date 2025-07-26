@@ -25,33 +25,37 @@ data class A(x) with
 //│     return new B.class(y1)(A$instance$01);
 //│   }
 //│ };
-//│ B1.class = class B {
-//│   constructor(y) {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
-//│       this.y = y;
-//│       return this;
+//│ Object.defineProperty(B1, 'class', {
+//│   value: class B {
+//│     constructor(y) {
+//│       return (A$instance$0) => {
+//│         this.A$instance$0 = A$instance$0;
+//│         this.y = y;
+//│         return this;
+//│       }
 //│     }
+//│     getB() {
+//│       return this.A$instance$0.x + this.y
+//│     }
+//│     toString() { return "B(" + runtime.render(this.y) + ")"; }
 //│   }
-//│   getB() {
-//│     return this.A$instance$0.x + this.y
-//│   }
-//│   toString() { return "B(" + runtime.render(this.y) + ")"; }
-//│ };
+//│ });
 //│ A1 = function A(x1) {
 //│   return new A.class(x1);
 //│ };
-//│ A1.class = class A {
-//│   constructor(x) {
-//│     this.x = x;
+//│ Object.defineProperty(A1, 'class', {
+//│   value: class A {
+//│     constructor(x) {
+//│       this.x = x;
+//│     }
+//│     getA() {
+//│       let tmp;
+//│       tmp = B$(this, 2);
+//│       return runtime.safeCall(tmp.getB())
+//│     }
+//│     toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   getA() {
-//│     let tmp;
-//│     tmp = B$(this, 2);
-//│     return runtime.safeCall(tmp.getB())
-//│   }
-//│   toString() { return "A(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 :expect 3
 A(1).getA()

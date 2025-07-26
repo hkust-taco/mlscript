@@ -134,6 +134,8 @@ object Elaborator:
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
+      val BigInt = assumeBuiltinCls("BigInt")
+      val Symbol = assumeBuiltinCls("Symbol")
       val Function = assumeBuiltinCls("Function")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")

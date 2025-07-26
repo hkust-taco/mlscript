@@ -63,7 +63,7 @@ f(1,2)(3)
 f(1,2)(-3)
 //│ REPL> Sending: runtime.TraceLogger.enabled = true; runtime.TraceLogger.resetIndent(0)
 //│ REPL> Collected:
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Sending: block$res9 = undefined
 //│ REPL> Collected:
 //│ >  undefined
@@ -96,10 +96,10 @@ f(1,2)(-3)
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  45
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ = 45
 
 :showRepl
@@ -115,8 +115,8 @@ f(1,2)(-4)
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  45
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  45
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ = 45

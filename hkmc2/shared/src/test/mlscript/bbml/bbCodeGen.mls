@@ -54,7 +54,7 @@ false
 (x => x) as [T] -> T -> T
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
-//│ = [function]
+//│ = [Function]
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
@@ -65,12 +65,14 @@ data class Foo(x: Int)
 //│ Foo1 = function Foo(x2) {
 //│   return new Foo.class(x2);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(x1) {
-//│     this.x = x1;
+//│ Object.defineProperty(Foo1, 'class', {
+//│   value: class Foo {
+//│     constructor(x1) {
+//│       this.x = x1;
+//│     }
+//│     toString() { return "Foo(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 //│ Type: ⊤
 
 

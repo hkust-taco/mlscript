@@ -15,7 +15,7 @@
 //│   return runtime.safeCall(self.x(...args))
 //│ });
 //│ lambda
-//│ = [function]
+//│ = [Function]
 
 :ssjs
 :e
@@ -44,10 +44,10 @@ let x = 1
 //│ x = 1
 
 "A" :: x
-//│ = ["A", 1]
+//│ = [ "A", 1 ]
 
 "A":: x
-//│ = ["A", 1]
+//│ = [ "A", 1 ]
 
 :e
 "A"::x
@@ -56,7 +56,7 @@ let x = 1
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ = [Function]
 
 :e
 "A" ::x
@@ -65,6 +65,6 @@ let x = 1
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ = [Function]
 
 

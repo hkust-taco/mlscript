@@ -16,10 +16,10 @@ object Bar extends Foo
 //│ ╔══[ERROR] Object 'Bar' does not contain member 'foo'
 //│ ║  l.12: 	[Bar.x, Bar.foo]
 //│ ╙──      	           ^^^^
-//│ = [10, 11]
+//│ = [ 10, 11 ]
 
 let b = id(Bar) in [b.x, b.foo]
-//│ = [10, 11]
+//│ = [ 10, 11 ]
 
 Bar is Foo
 //│ = true
@@ -44,7 +44,7 @@ b is String
 //│ = false
 
 [b.x, b.foo]
-//│ = [10, 11]
+//│ = [ 10, 11 ]
 
 
 :sjs
@@ -55,18 +55,20 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z1) {
 //│   return new Baz.class(z1);
 //│ };
-//│ Baz1.class = class Baz extends Bar3.class {
-//│   constructor(z) {
-//│     let tmp2;
-//│     tmp2 = z * 1;
-//│     super(tmp2);
-//│     this.z = z;
+//│ Object.defineProperty(Baz1, 'class', {
+//│   value: class Baz extends Bar3.class {
+//│     constructor(z) {
+//│       let tmp2;
+//│       tmp2 = z * 1;
+//│       super(tmp2);
+//│       this.z = z;
+//│     }
+//│     get baz() {
+//│       return this.bar * 2;
+//│     }
+//│     toString() { return "Baz(" + runtime.render(this.z) + ")"; }
 //│   }
-//│   get baz() {
-//│     return this.bar * 2;
-//│   }
-//│   toString() { return "Baz(" + runtime.render(this.z) + ")"; }
-//│ };
+//│ });
 
 let b = Baz(42)
 //│ b = Baz(42)
@@ -78,7 +80,7 @@ b is String
 //│ = false
 
 [b.x, b.foo]
-//│ = [10, 11]
+//│ = [ 10, 11 ]
 
 
 
@@ -86,7 +88,7 @@ abstract class Option[out T]: Some[T] | None
 object None extends Option[Nothing]
 data class Some[out T](x: T) extends Option[T]
 [Some(123) is Option, None is Option, Some(123) is String, None is String]
-//│ = [true, true, false, false]
+//│ = [ true, true, false, false ]
 
 
 data class Barr(x: Int)(y: Int) with
@@ -96,7 +98,7 @@ data class Barr(x: Int)(y: Int) with
 data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
   fun g = z
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.96: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+//│ ║  l.98: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -107,8 +109,8 @@ Bazz(42).f
 new Barr(40)(2) with
   fun f = 43
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.107: 	new Barr(40)(2) with
+//│ ║  l.109: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^
-//│ = [function]
+//│ = [Function]
 
 

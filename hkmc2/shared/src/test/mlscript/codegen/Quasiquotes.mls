@@ -1,7 +1,7 @@
 :js
 :qq
 
-//│ Term = Term
+//│ Term = [class Term] { Symbol: [Function Symbol], ConstructorLike: [class ConstructorLike], SymbolCons: [Function SymbolCons], StringJoin: [class StringJoin], TupleCapacity: [Function TupleCapacity], Instantiation: [Function Instantiation], LocalPattern: [Function LocalPattern], Parameter: [Function Parameter], Nested: [Function Nested], PatternStub: [class PatternStub], LiteralStub: [Function LiteralStub], CharClass: [Function CharClass], ClassLikeStub: [Function ClassLikeStub], Wildcard: [class Wildcard], DebrujinSplit: [class DebrujinSplit], Binder: [Function Binder], DebrujinBranch: [Function DebrujinBranch], Accept: [Function Accept], Reject: [class Reject], Pattern: [class Pattern], LitPattern: [Function LitPattern], Var: [Function Var], ClassLike: [Function ClassLike], Synonym: [Function Synonym], Tuple: [Function Tuple], Record: [Function Record], Branch: [Function Branch], Split: [class Split], Cons: [Function Cons], Let: [Function Let], Else: [Function Else], End: [class End], Keyword: [class Keyword] { If: If, While: While }, Statement: [class Statement], LetDecl: [Function LetDecl], DefineVar: [Function DefineVar], Term: [class Term1], Lit: [Function Lit], Builtin: [Function Builtin], Ref: [Function Ref], CSRef: [Function CSRef], App: [Function App], Sel: [Function Sel], DynSel: [Function DynSel], Tup: [Function Tup], IfLike: [Function IfLike], Lam: [Function Lam], Blk: [Function Blk], New: [Function New], Region: [Function Region], RegRef: [Function RegRef], Assgn: [Function Assgn], Deref: [Function Deref], SetRef: [Function SetRef], Ret: [Function Ret], Throw: [Function Throw], Try: [Function Try], Context: [Function Context] }
 
 `42
 //│ = Lit(42)
@@ -24,11 +24,11 @@
 
 
 `1 `+ `2
-//│ = App(Builtin("+"), Tup([Lit(1), Lit(2)]))
+//│ = App(Builtin("+"), Tup([ Lit(1), Lit(2) ]))
 
 
 x `=> x
-//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+//│ = Lam([ Symbol("x") ], Ref(Symbol("x")))
 
 
 :sjs
@@ -45,24 +45,24 @@ x `=>
 //│   tmp6
 //│ ], tmp8)
 //│ > Ref(Symbol("x"))
-//│ = Lam([Symbol("x")], Ref(Symbol("x")))
+//│ = Lam([ Symbol("x") ], Ref(Symbol("x")))
 
 
 let f = x `=> x `+ `1
-//│ f = Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)])))
+//│ f = Lam([ Symbol("x") ], App(Builtin("+"), Tup([ Ref(Symbol("x")), Lit(1) ])))
 
 
 f`(`0)
-//│ = App(Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)]))), Tup([Lit(0)]))
+//│ = App(Lam([ Symbol("x") ], App(Builtin("+"), Tup([ Ref(Symbol("x")), Lit(1) ]))), Tup([ Lit(0) ]))
 
 
 `let x = `42 `in x
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ = Blk([ LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42)) ], Ref(Symbol("x")))
 
 
 `let x = `42 `in print(x); x
 //│ > Ref(Symbol("x"))
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ = Blk([ LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42)) ], Ref(Symbol("x")))
 
 
 :sjs
@@ -86,5 +86,5 @@ f`(`0)
 
 
 x `=> `if x `== `0.0 then `1.0 else x
-//│ = Lam([Symbol("x")], IfLike(If, Let(Symbol("scrut"), App(Builtin("=="), Tup([Ref(Symbol("x")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
+//│ = Lam([ Symbol("x") ], IfLike(If, Let(Symbol("scrut"), App(Builtin("=="), Tup([ Ref(Symbol("x")), Lit(0) ])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
 

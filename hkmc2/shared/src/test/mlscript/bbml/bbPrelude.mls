@@ -12,6 +12,9 @@ declare class Bool
 declare class Int
 declare class Num
 
+declare class BigInt
+declare class Symbol
+
 data
   class
     CodeBase[T, C, S]

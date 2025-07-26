@@ -2,7 +2,7 @@
 
 
 import "../../mlscript-compile/Option.mjs"
-//│ Option = Option
+//│ Option = [class Option] { Some: [Function Some], None: None, Both: [Function Both], unsafe: [class unsafe] }
 
 
 Option.isDefined(new Option.Some(1))

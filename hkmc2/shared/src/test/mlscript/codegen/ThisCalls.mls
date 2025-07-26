@@ -9,7 +9,7 @@ val ex = new Example
 //│ ex = Example
 
 let s = ex.("f")
-//│ s = [function f]
+//│ s = [Function f]
 
 :todo
 :e
@@ -20,7 +20,7 @@ s(123)
 ex |>. s(123)
 //│ JS (unsanitized):
 //│ let tmp1; tmp1 = Predef.call(ex, s); runtime.safeCall(tmp1(123))
-//│ = [123, 456]
+//│ = [ 123, 456 ]
 
 
 // * Modules on the other hand, do not suffer from method debinding,
@@ -34,14 +34,14 @@ module Example with
 let
   f = Example.f
   g = Example.g
-//│ f = [function f]
-//│ g = [function g]
+//│ f = [Function f]
+//│ g = [Function g]
 
 f(123)
-//│ = [123, 456]
+//│ = [ 123, 456 ]
 
 g(123)
-//│ = [123, 456, [123, 456]]
+//│ = [ 123, 456, [ 123, 456 ] ]
 
 :e
 Example |>. g(123)
@@ -49,10 +49,10 @@ Example |>. g(123)
 //│ ║  l.47: 	Example |>. g(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = [123, 456, [123, 456]]
+//│ = [ 123, 456, [ 123, 456 ] ]
 
 // * Passing `ex` as `this` has no effect
 ex |>. g(123)
-//│ = [123, 456, [123, 456]]
+//│ = [ 123, 456, [ 123, 456 ] ]
 
 

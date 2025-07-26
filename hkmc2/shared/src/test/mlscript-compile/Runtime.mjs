@@ -13,50 +13,56 @@ let Runtime1;
       }
     };
     this.Unit = new Unit$class;
-    this.Unit.class = Unit$class;
+    Object.defineProperty(this.Unit, 'class', { value: Unit$class });
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
       return new EffectHandle.class(_reified1);
     };
-    this.EffectHandle.class = class EffectHandle {
-      #_reified;
-      constructor(_reified) {
-        this.#_reified = _reified;
-        this.reified = this.#_reified;
+    Object.defineProperty(this.EffectHandle, 'class', {
+    value: class EffectHandle {
+        #_reified;
+        constructor(_reified) {
+          this.#_reified = _reified;
+          this.reified = this.#_reified;
+        }
+        resumeWith(value) {
+          let lambda;
+          const this$EffectHandle = this;
+          lambda = (undefined, function () {
+            let tmp;
+            tmp = Runtime.resume(this$EffectHandle.reified.contTrace);
+            return runtime.safeCall(tmp(value))
+          });
+          return Runtime1.try(lambda)
+        } 
+        raise() {
+          return Runtime.topLevelEffect(this.reified, false)
+        }
+        toString() { return "EffectHandle(" + "" + ")"; }
       }
-      resumeWith(value) {
-        let lambda;
-        const this$EffectHandle = this;
-        lambda = (undefined, function () {
-          let tmp;
-          tmp = Runtime.resume(this$EffectHandle.reified.contTrace);
-          return runtime.safeCall(tmp(value))
-        });
-        return Runtime1.try(lambda)
-      } 
-      raise() {
-        return Runtime.topLevelEffect(this.reified, false)
-      }
-      toString() { return "EffectHandle(" + "" + ")"; }
-    };
+    });
     this.MatchResult = function MatchResult(captures1) {
       return new MatchResult.class(captures1);
     };
-    this.MatchResult.class = class MatchResult {
-      constructor(captures) {
-        this.captures = captures;
+    Object.defineProperty(this.MatchResult, 'class', {
+    value: class MatchResult {
+        constructor(captures) {
+          this.captures = captures;
+        }
+        toString() { return "MatchResult(" + runtime.render(this.captures) + ")"; }
       }
-      toString() { return "MatchResult(" + runtime.render(this.captures) + ")"; }
-    };
+    });
     this.MatchFailure = function MatchFailure(errors1) {
       return new MatchFailure.class(errors1);
     };
-    this.MatchFailure.class = class MatchFailure {
-      constructor(errors) {
-        this.errors = errors;
+    Object.defineProperty(this.MatchFailure, 'class', {
+    value: class MatchFailure {
+        constructor(errors) {
+          this.errors = errors;
+        }
+        toString() { return "MatchFailure(" + runtime.render(this.errors) + ")"; }
       }
-      toString() { return "MatchFailure(" + runtime.render(this.errors) + ")"; }
-    };
+    });
     (class Tuple {
       static {
         Runtime.Tuple = Tuple;
@@ -148,57 +154,65 @@ let Runtime1;
       toString() { return "FatalEffect"; }
     };
     this.FatalEffect = new FatalEffect$class;
-    this.FatalEffect.class = FatalEffect$class;
+    Object.defineProperty(this.FatalEffect, 'class', { value: FatalEffect$class });
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {}
       toString() { return "PrintStackEffect"; }
     };
     this.PrintStackEffect = new PrintStackEffect$class;
-    this.PrintStackEffect.class = PrintStackEffect$class;
+    Object.defineProperty(this.PrintStackEffect, 'class', { value: PrintStackEffect$class });
     this.FunctionContFrame = function FunctionContFrame(next1) {
       return new FunctionContFrame.class(next1);
     };
-    this.FunctionContFrame.class = class FunctionContFrame {
-      constructor(next) {
-        this.next = next;
+    Object.defineProperty(this.FunctionContFrame, 'class', {
+    value: class FunctionContFrame {
+        constructor(next) {
+          this.next = next;
+        }
+        toString() { return "FunctionContFrame(" + runtime.render(this.next) + ")"; }
       }
-      toString() { return "FunctionContFrame(" + runtime.render(this.next) + ")"; }
-    };
+    });
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
       return new HandlerContFrame.class(next1, nextHandler1, handler1);
     };
-    this.HandlerContFrame.class = class HandlerContFrame {
-      constructor(next, nextHandler, handler) {
-        this.next = next;
-        this.nextHandler = nextHandler;
-        this.handler = handler;
+    Object.defineProperty(this.HandlerContFrame, 'class', {
+    value: class HandlerContFrame {
+        constructor(next, nextHandler, handler) {
+          this.next = next;
+          this.nextHandler = nextHandler;
+          this.handler = handler;
+        }
+        toString() { return "HandlerContFrame(" + runtime.render(this.next) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.handler) + ")"; }
       }
-      toString() { return "HandlerContFrame(" + runtime.render(this.next) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.handler) + ")"; }
-    };
+    });
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
       return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1);
     };
-    this.ContTrace.class = class ContTrace {
-      constructor(next, last, nextHandler, lastHandler, resumed) {
-        this.next = next;
-        this.last = last;
-        this.nextHandler = nextHandler;
-        this.lastHandler = lastHandler;
-        this.resumed = resumed;
+    Object.defineProperty(this.ContTrace, 'class', {
+    value: class ContTrace {
+        constructor(next, last, nextHandler, lastHandler, resumed) {
+          this.next = next;
+          this.last = last;
+          this.nextHandler = nextHandler;
+          this.lastHandler = lastHandler;
+          this.resumed = resumed;
+        }
+        toString() { return "ContTrace(" + runtime.render(this.next) + ", " + runtime.render(this.last) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.lastHandler) + ", " + runtime.render(this.resumed) + ")"; }
       }
-      toString() { return "ContTrace(" + runtime.render(this.next) + ", " + runtime.render(this.last) + ", " + runtime.render(this.nextHandler) + ", " + runtime.render(this.lastHandler) + ", " + runtime.render(this.resumed) + ")"; }
-    };
+    });
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
       return new EffectSig.class(contTrace1, handler1, handlerFun1);
     };
-    this.EffectSig.class = class EffectSig {
-      constructor(contTrace, handler, handlerFun) {
-        this.contTrace = contTrace;
-        this.handler = handler;
-        this.handlerFun = handlerFun;
+    Object.defineProperty(this.EffectSig, 'class', {
+    value: class EffectSig {
+        constructor(contTrace, handler, handlerFun) {
+          this.contTrace = contTrace;
+          this.handler = handler;
+          this.handlerFun = handlerFun;
+        }
+        toString() { return "EffectSig(" + runtime.render(this.contTrace) + ", " + runtime.render(this.handler) + ", " + runtime.render(this.handlerFun) + ")"; }
       }
-      toString() { return "EffectSig(" + runtime.render(this.contTrace) + ", " + runtime.render(this.handler) + ", " + runtime.render(this.handlerFun) + ")"; }
-    };
+    });
     this.NonLocalReturn = class NonLocalReturn {
       constructor() {}
       toString() { return "NonLocalReturn"; }
@@ -206,23 +220,27 @@ let Runtime1;
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
       return new FnLocalsInfo.class(fnName1, locals1);
     };
-    this.FnLocalsInfo.class = class FnLocalsInfo {
-      constructor(fnName, locals) {
-        this.fnName = fnName;
-        this.locals = locals;
+    Object.defineProperty(this.FnLocalsInfo, 'class', {
+    value: class FnLocalsInfo {
+        constructor(fnName, locals) {
+          this.fnName = fnName;
+          this.locals = locals;
+        }
+        toString() { return "FnLocalsInfo(" + runtime.render(this.fnName) + ", " + runtime.render(this.locals) + ")"; }
       }
-      toString() { return "FnLocalsInfo(" + runtime.render(this.fnName) + ", " + runtime.render(this.locals) + ")"; }
-    };
+    });
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
       return new LocalVarInfo.class(localName1, value1);
     };
-    this.LocalVarInfo.class = class LocalVarInfo {
-      constructor(localName, value) {
-        this.localName = localName;
-        this.value = value;
+    Object.defineProperty(this.LocalVarInfo, 'class', {
+    value: class LocalVarInfo {
+        constructor(localName, value) {
+          this.localName = localName;
+          this.value = value;
+        }
+        toString() { return "LocalVarInfo(" + runtime.render(this.localName) + ", " + runtime.render(this.value) + ")"; }
       }
-      toString() { return "LocalVarInfo(" + runtime.render(this.localName) + ", " + runtime.render(this.value) + ")"; }
-    };
+    });
     this.stackLimit = 0;
     this.stackDepth = 0;
     this.stackOffset = 0;
@@ -241,7 +259,7 @@ let Runtime1;
       toString() { return "StackDelayHandler"; }
     };
     this.StackDelayHandler = new StackDelayHandler$class;
-    this.StackDelayHandler.class = StackDelayHandler$class;
+    Object.defineProperty(this.StackDelayHandler, 'class', { value: StackDelayHandler$class });
   }
   static get unreachable() {
     throw globalThis.Error("unreachable");

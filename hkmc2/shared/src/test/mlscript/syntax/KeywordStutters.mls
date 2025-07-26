@@ -12,7 +12,7 @@ set
   y += 2
 
 [x, y]
-//│ = [1, 2]
+//│ = [ 1, 2 ]
 
 
 :p
@@ -52,8 +52,8 @@ object \$ extends Foo
 //│ ╔══[PARSE ERROR] Expected end of input; found error instead
 //│ ║  l.46: 	object \$ extends Foo
 //│ ╙──      	        ^
-//│ > let $_1;try { const $_$class = class $_ {   constructor() {}   toString() { return "\"; } }; $_1 = new $_$class; $_1.class = $_$class; block$res7 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let $_1;try { const $_$class = class $_ {   constructor() {}   toString() { return "\"; } }; $_1 = new $_$class; Object.defineProperty($_1, 'class', { value: $_$class }); block$res7 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 

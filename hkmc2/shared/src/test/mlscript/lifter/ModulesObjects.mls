@@ -34,29 +34,33 @@ fun foo(x, y) =
 //│ M3 = function M(x$11, foo$capture$01) {
 //│   return new M.class()(x$11, foo$capture$01);
 //│ };
-//│ M3.class = class M2 {
-//│   constructor() {
-//│     return (x$1, foo$capture$0) => {
-//│       this.x$1 = x$1;
-//│       this.foo$capture$0 = foo$capture$0;
-//│       return this;
+//│ Object.defineProperty(M3, 'class', {
+//│   value: class M2 {
+//│     constructor() {
+//│       return (x$1, foo$capture$0) => {
+//│         this.x$1 = x$1;
+//│         this.foo$capture$0 = foo$capture$0;
+//│         return this;
+//│       }
 //│     }
+//│     foo2() {
+//│       this.foo$capture$0.y0$ = 2;
+//│       return this.x$1 + this.foo$capture$0.y0$
+//│     }
+//│     toString() { return "M"; }
 //│   }
-//│   foo2() {
-//│     this.foo$capture$0.y0$ = 2;
-//│     return this.x$1 + this.foo$capture$0.y0$
-//│   }
-//│   toString() { return "M"; }
-//│ };
+//│ });
 //│ foo$capture1 = function foo$capture(y0$1) {
 //│   return new foo$capture.class(y0$1);
 //│ };
-//│ foo$capture1.class = class foo$capture {
-//│   constructor(y0$) {
-//│     this.y0$ = y0$;
+//│ Object.defineProperty(foo$capture1, 'class', {
+//│   value: class foo$capture {
+//│     constructor(y0$) {
+//│       this.y0$ = y0$;
+//│     }
+//│     toString() { return "foo$capture(" + runtime.render(this.y0$) + ")"; }
 //│   }
-//│   toString() { return "foo$capture(" + runtime.render(this.y0$) + ")"; }
-//│ };
+//│ });
 //│ foo1 = function foo(x, y) {
 //│   let tmp, M$, capture;
 //│   capture = new foo$capture1(y);
@@ -80,31 +84,35 @@ data class A(x) with
 //│ M5 = function M(A$instance$01) {
 //│   return new M.class()(A$instance$01);
 //│ };
-//│ M5.class = class M4 {
-//│   constructor() {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
-//│       return this;
+//│ Object.defineProperty(M5, 'class', {
+//│   value: class M4 {
+//│     constructor() {
+//│       return (A$instance$0) => {
+//│         this.A$instance$0 = A$instance$0;
+//│         return this;
+//│       }
 //│     }
+//│     getB() {
+//│       return this.A$instance$0.x
+//│     }
+//│     toString() { return "M"; }
 //│   }
-//│   getB() {
-//│     return this.A$instance$0.x
-//│   }
-//│   toString() { return "M"; }
-//│ };
+//│ });
 //│ A1 = function A(x1) {
 //│   return new A.class(x1);
 //│ };
-//│ A1.class = class A {
-//│   constructor(x) {
-//│     this.x = x;
-//│     this.M$ = M5(this);
+//│ Object.defineProperty(A1, 'class', {
+//│   value: class A {
+//│     constructor(x) {
+//│       this.x = x;
+//│       this.M$ = M5(this);
+//│     }
+//│     getA() {
+//│       return this.M$.getB()
+//│     }
+//│     toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   getA() {
-//│     return this.M$.getB()
-//│   }
-//│   toString() { return "A(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 :expect 2
 A(2).getA()
@@ -163,13 +171,15 @@ M.A().get
 //│     this.A = function A() {
 //│       return new A.class();
 //│     };
-//│     this.A.class = class A5 {
-//│       constructor() {}
-//│       get get() {
-//│         return M15.x + M14.x;
+//│     Object.defineProperty(this.A, 'class', {
+//│     value: class A5 {
+//│         constructor() {}
+//│         get get() {
+//│           return M15.x + M14.x;
+//│         }
+//│         toString() { return "A(" + "" + ")"; }
 //│       }
-//│       toString() { return "A(" + "" + ")"; }
-//│     };
+//│     });
 //│     scrut = runtime.safeCall(M14.A());
 //│     if (scrut instanceof M14.A.class) {
 //│       tmp4 = 2;
@@ -226,21 +236,23 @@ M.A(2).newB.newA_B(3).newB.get
 //│     return new B.class()(A$instance$01);
 //│   }
 //│ };
-//│ B2.class = class B1 {
-//│   constructor() {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
-//│       return this;
+//│ Object.defineProperty(B2, 'class', {
+//│   value: class B1 {
+//│     constructor() {
+//│       return (A$instance$0) => {
+//│         this.A$instance$0 = A$instance$0;
+//│         return this;
+//│       }
 //│     }
+//│     get get() {
+//│       return this.A$instance$0.x;
+//│     } 
+//│     newA_B(y) {
+//│       return runtime.safeCall(M19.A(y))
+//│     }
+//│     toString() { return "B(" + "" + ")"; }
 //│   }
-//│   get get() {
-//│     return this.A$instance$0.x;
-//│   } 
-//│   newA_B(y) {
-//│     return runtime.safeCall(M19.A(y))
-//│   }
-//│   toString() { return "B(" + "" + ")"; }
-//│ };
+//│ });
 //│ (class M18 {
 //│   static {
 //│     M19 = M18;
@@ -248,18 +260,20 @@ M.A(2).newB.newA_B(3).newB.get
 //│     this.A = function A(x1) {
 //│       return new A.class(x1);
 //│     };
-//│     this.A.class = class A7 {
-//│       constructor(x) {
-//│         this.x = x;
+//│     Object.defineProperty(this.A, 'class', {
+//│     value: class A7 {
+//│         constructor(x) {
+//│           this.x = x;
+//│         }
+//│         get newA() {
+//│           return runtime.safeCall(M18.A(42));
+//│         } 
+//│         get newB() {
+//│           return B$(this);
+//│         }
+//│         toString() { return "A(" + runtime.render(this.x) + ")"; }
 //│       }
-//│       get newA() {
-//│         return runtime.safeCall(M18.A(42));
-//│       } 
-//│       get newB() {
-//│         return B$(this);
-//│       }
-//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
-//│     };
+//│     });
 //│     scrut = 0;
 //│     if (scrut instanceof M18.A.class) {
 //│       true
@@ -287,7 +301,7 @@ fun foo(x) =
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 
 foo(123)
-//│ = [true, [true, false], true]
+//│ = [ true, [ true, false ], true ]
 
 :sjs
 module A with

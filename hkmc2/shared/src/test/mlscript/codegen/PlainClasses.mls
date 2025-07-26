@@ -31,7 +31,7 @@ new Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = class Foo { constructor() {} toString() { return "Foo"; } }
+//│ = [class Foo]
 
 :re
 Foo()
@@ -75,7 +75,7 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = class Foo4 {     constructor() {       runtime.checkCall(Predef.print("hi"))     }     toString() { return "Foo"; }   }
+//│ t = [class Foo4]
 
 new t
 //│ JS (unsanitized):

@@ -15,7 +15,7 @@ foo()
 
 let x = 1
 let f = () => x
-//│ f = [function f]
+//│ f = [Function f]
 //│ x = 1
 
 f()

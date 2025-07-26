@@ -11,7 +11,7 @@ open Stack { Cons, Nil }
   filtering of x => x % 2 is 0
   mapping of x => x * 2
   toArray()
-//│ = [4, 8, 12, 16, 20]
+//│ = [ 4, 8, 12, 16, 20 ]
 
 ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
   filtering of x => x % 2 is 0
@@ -37,18 +37,18 @@ open Stack { Cons, Nil }
   dropping(2)
   taking(5)
   toArray()
-//│ = [3, 4, 5, 6, 7]
+//│ = [ 3, 4, 5, 6, 7 ]
 
 ["foo", "bar", "baz"]
   zippingWithIndex()
   toArray()
-//│ = [["foo", 0], ["bar", 1], ["baz", 2]]
+//│ = [ [ "foo", 0 ], [ "bar", 1 ], [ "baz", 2 ] ]
 
 ["foo", "bar", "baz"]
   zippingWithIndex()
   mapping of case [x, y] then [y, x]
   toArray()
-//│ = [[0, "foo"], [1, "bar"], [2, "baz"]]
+//│ = [ [ 0, "foo" ], [ 1, "bar" ], [ 2, "baz" ] ]
 
 [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] joined(" <> ")
 //│ = "1 <> 2 <> 3 <> 4 <> 5 <> 6 <> 7 <> 8 <> 9 <> 10"
@@ -56,13 +56,13 @@ open Stack { Cons, Nil }
 ["foo", "bar", "", "", "baz"]
   flattening()
   toArray()
-//│ = ["f", "o", "o", "b", "a", "r", "b", "a", "z"]
+//│ = [ "f", "o", "o", "b", "a", "r", "b", "a", "z" ]
 
 ["", "foo", "", "bar", "", "", "baz"]
   mapping of str => Array.from(str).reverse()
   flattening()
   toArray()
-//│ = ["o", "o", "f", "r", "a", "b", "z", "a", "b"]
+//│ = [ "o", "o", "f", "r", "a", "b", "z", "a", "b" ]
 
 ["", "", "", "", ""]
   flattening()
@@ -72,28 +72,28 @@ open Stack { Cons, Nil }
 ["foo", "bar", [], ["qax"], "", "baz"]
   flattening()
   toArray()
-//│ = ["f", "o", "o", "b", "a", "r", "qax", "b", "a", "z"]
+//│ = [ "f", "o", "o", "b", "a", "r", "qax", "b", "a", "z" ]
 
 [1, 3, 5, 7, 9]
   mapping of x => x * 2
   appended of [2, 4, 6, 8, 10]
   mapping of x => x / 2
   toArray()
-//│ = [1, 3, 5, 7, 9, 1, 2, 3, 4, 5]
+//│ = [ 1, 3, 5, 7, 9, 1, 2, 3, 4, 5 ]
 
 [7, 8, 9, 10]
   filtering of x => x % 2 is 0
   mapping of x => x * 2
   appended of []
   toArray()
-//│ = [16, 20]
+//│ = [ 16, 20 ]
 
 [["foo", 1]]
   MutMap.toMap()
   mapping of case [k, v] then [k + "!", v * 2]
   appended of MutMap.toMap([["bar", 2]])
   toArray()
-//│ = [["foo!", 2], ["bar", 2]]
+//│ = [ [ "foo!", 2 ], [ "bar", 2 ] ]
 
 [1, 2, 3, 4, 5, 6]
   Iter.some of x => x % 3 == 0

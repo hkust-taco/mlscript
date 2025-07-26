@@ -307,13 +307,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 if isModule
                 then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
-                  }; # ${mkThis(owner)}.${sym.nme}.class = $clsTmp;"
+                  }; # Object.defineProperty(${mkThis(owner)}.${sym.nme}, 'class', { value: ${clsTmp} });"
               case N =>
                 val v = getVar(sym)
                 if isModule
                 then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
-                  }; # ${v}.class = $clsTmp;"
+                  }; # Object.defineProperty(${v}, 'class', { value: ${clsTmp} });"
             else
               val paramsAll = paramsOpt match
                 case None => auxParams
@@ -339,12 +339,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # ${ths}.${sym.nme}.class = ${clsJS};"
+                  doc"${ths}.${sym.nme} = ${f}; # Object.defineProperty(${ths}.${sym.nme}, 'class', { #  #{ value: ${clsJS} #}  # });"
                 case N =>
                   doc"${ths}.${sym.nme} = ${clsJS};"
               case N =>
                 fun match
-                case S(f) => doc"${getVar(sym)} = ${f}; # ${getVar(sym)}.class = ${clsJS};"
+                case S(f) => doc"${getVar(sym)} = ${f}; # Object.defineProperty(${getVar(sym)}, 'class', { #  #{ value: ${clsJS} #}  # });"
                 case N => doc"${getVar(sym)} = ${clsJS};"
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
@@ -369,10 +369,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
           // [invariant:0] If the class represented by `cls` does not exist at
           // runtime, then `pth` is a dummy value and should be discarded.
+          case Elaborator.ctx.builtins.Unit => doc"$sd === runtime.Unit"
           case Elaborator.ctx.builtins.Str => doc"typeof $sd === 'string'"
           case Elaborator.ctx.builtins.Num => doc"typeof $sd === 'number'"
           case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
+          case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
+          case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(n, safe = false) =>

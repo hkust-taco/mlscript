@@ -22,7 +22,7 @@ object Test with
 //│   }
 //│   toString() { return "Test"; }
 //│ }; Test1 = new Test$class;
-//│ Test1.class = Test$class;
+//│ Object.defineProperty(Test1, 'class', { value: Test$class });
 
 Test
 //│ = Test
@@ -56,7 +56,7 @@ f()
 //│ JS (unsanitized):
 //│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
-//│ f = [function f]
+//│ f = [Function f]
 //│ x = 2
 
 
@@ -107,26 +107,28 @@ data class Cls(x) with
 //│ Cls1 = function Cls(x3) {
 //│   return new Cls.class(x3);
 //│ };
-//│ Cls1.class = class Cls {
-//│   #x;
-//│   #x1;
-//│   constructor(x2) {
-//│     let tmp, tmp1;
-//│     this.x = x2;
-//│     tmp = this.x + 1;
-//│     this.#x = tmp;
-//│     tmp1 = this.#x * 2;
-//│     this.#x1 = tmp1;
-//│     Predef.print(this.x, this.#x1)
+//│ Object.defineProperty(Cls1, 'class', {
+//│   value: class Cls {
+//│     #x;
+//│     #x1;
+//│     constructor(x2) {
+//│       let tmp, tmp1;
+//│       this.x = x2;
+//│       tmp = this.x + 1;
+//│       this.#x = tmp;
+//│       tmp1 = this.#x * 2;
+//│       this.#x1 = tmp1;
+//│       Predef.print(this.x, this.#x1)
+//│     }
+//│     get foo() {
+//│       return this.#x;
+//│     } 
+//│     get bar() {
+//│       return this.#x1;
+//│     }
+//│     toString() { return "Cls(" + runtime.render(this.x) + ")"; }
 //│   }
-//│   get foo() {
-//│     return this.#x;
-//│   } 
-//│   get bar() {
-//│     return this.#x1;
-//│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 let cls = Cls(10)
 //│ > 10 22
@@ -155,7 +157,7 @@ fun foo(): module M =
     A
 
 foo()
-//│ = A
+//│ = [class A1]
 
 
 :sjs
@@ -192,7 +194,7 @@ Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = Whoops
+//│ = <ref *1> [class Whoops1] { w: [Circular *1] }
 
 Whoops.Whoops.g()
 //│ = "Hello"
@@ -201,7 +203,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.202: 	Runtime
+//│ ║  l.204: 	Runtime
 //│ ╙──       	^^^^^^^
 
 
