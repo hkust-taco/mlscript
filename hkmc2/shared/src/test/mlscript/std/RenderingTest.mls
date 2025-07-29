@@ -161,6 +161,14 @@ set Foo.bar = (direction: "vertical")
 renderAsStr of Foo
 //│ = "[class Foo4] { bar: { direction: \"vertical\" } }"
 
+class Bar extends Foo
+
+renderAsStr of Bar
+//│ = "[class Bar]"
+
+renderAsStr of new Bar
+//│ = "Bar"
+
 fun test() = ()
 
 renderAsStr of test
@@ -268,3 +276,12 @@ Object.defineProperty of
   get: () => 42
   "set": (value) => print("The user tries to set the value to " + value)
 //│ = { x: 0, y: [Getter], z: [Getter/Setter] }
+
+renderAsStr of
+  "\u6d4b\u8bd5": "Test"
+  "\u4f60\u597d": "Hello"
+//│ = "{ 测试: \"Test\", 你好: \"Hello\" }"
+
+renderAsStr of
+  "a property name with spaces": true
+//│ = "{ \"a property name with spaces\": true }"
