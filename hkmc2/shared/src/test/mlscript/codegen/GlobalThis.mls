@@ -8,12 +8,12 @@ let g = globalThis
 // FIXME prevent rebinding of this name
 :re
 let globalThis = "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
 
 :re
 globalThis
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
 
 
 // * This one uses `this.Error` so it's fine
@@ -23,7 +23,7 @@ if false then 0
 //│ JS (unsanitized):
 //│ let scrut; scrut = false; if (scrut === true) { 0 } else { throw new this.Error("match error"); }
 //│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
 
 // * This one uses `globalThis.Error`
 // * Notice the failed exception throw
@@ -45,6 +45,6 @@ foo()
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
 
 

@@ -458,3 +458,48 @@ class Hello with
 
 show of x: y: z: new Hello
 //│ > Object { x: Object { y: Object { z: Hi there. How's going? } } }          ┊
+
+//   ___        _   _
+//  / _ \ _ __ | |_(_) ___  _ __  ___
+// | | | | '_ \| __| |/ _ \| '_ \/ __|
+// | |_| | |_) | |_| | (_) | | | \__ \
+//  \___/| .__/ \__|_|\___/|_| |_|___/
+//       |_|
+
+:silent
+let testObject =
+  x: x: x: x: x: 42
+  y: shortText
+
+render of testObject
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, breakLength: null
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, breakLength: undefined
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, breakLength: ()
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, breakLength: "bad options"
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, breakLength: -10
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, indent: null
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, indent: undefined
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, indent: ()
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, indent: "bad options"
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, indent: -10
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"

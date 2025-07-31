@@ -56,7 +56,10 @@ let identifierPattern = new RegExp of
 // Return `true` if the identifier needs to be enclosed in quotes.
 let noNeedForQuotes(id) = identifierPattern.test(id)
 
-let MIN_BREAK_LENGTH = 60
+// Use this object instead when no options object is given.
+let emptyOptions = new Object
+
+let DEFAULT_BREAK_LENGTH = 80
 
 let OBJ_PROTO = "Object "
 
@@ -77,17 +80,22 @@ let symbolsForMap(n: Int) =
 
 fun render(target, ...args) =
   let
-    options = if args is Array and args.length > 0 then args.[0] else new Object
-    indent = if options.indent is
-      Int as value and value > 0 then " ".repeat(value)
-      true then "  ", else null
+    options = if args is [options, ...] then options else emptyOptions
+    indent = if
+      options is (:indent) and indent is
+        true then "  " // The default indentation is of two spaces.
+        // A positive integer will be interpreted as the number of spaces for a
+        // single level of indentation.
+        Int and indent > 0 then " ".repeat(indent)
+        // `null` to indicate no indentation and put all the content on a single line.
+      else null
     // If the joined string is less than or equal `breakLength`, it stays on one
     // line; otherwise it becomes multiline and each item is prefixed with `\n`
     // plus `indent`.
     breakLength = if
-      options.breakLength is Int as value then Math.max(MIN_BREAK_LENGTH, value)
       indent is null then Number.POSITIVE_INFINITY
-      else MIN_BREAK_LENGTH
+      options is (:breakLength) and breakLength is Int and breakLength > 0 then breakLength
+      else DEFAULT_BREAK_LENGTH
     circularCounter = 1
     visitingObjects = new WeakMap // Object -> null | Int
     visitedObjects = new WeakMap // Object -> Str
