@@ -58,11 +58,26 @@ fun mkString(xs, f, start, sep, end, empty) =
   set buffer += end
   buffer
 
-// Do not wrap property names in quotes if they match the following pattern.
+// The following regular expression matches non-empty strings that look like a
+// Unicode identifier accepted by ECMAScript. 
 let identifierPattern = new RegExp of
-  """^[\p{ID_Start}_$][\p{ID_Continue}_$]*$""", "u"
+  // A breakdown of the regular expression:
+  // 1. `\p{...}` is a Unicode character class escape. It matches a set of
+  //    characters specified by a Unicode property. 
+  // 2. `ID_Start` includes letters and a few letter-like characters; but it
+  //    does not include `_` or `$`, hence they’re added explicitly.
+  // 3. `ID_Continue` includes `ID_Start` plus combining marks, decimal digits,
+  //    connector punctuation (which covers `_`), etc. But it does not include
+  //    `$`, hence `$` is added explicitly.
+  // 4. `^` and `$` assert that the current position is the start or the end of
+  //    input respectively. Hence, they make sure the entire string matches.
+  // The regular expression follows the production of identifiers defined in
+  // ECMA-262: https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#prod-IdentifierName.
+  """^[\p{ID_Start}_$][\p{ID_Continue}$]*$"""
+  "u" // The Unicode flag is required for `\p{...}` Unicode property escapes.
 
-fun noNeedForQuotes(id) = identifierPattern.test(id)
+// Return `true` if the identifier needs to be enclosed in quotes.
+let noNeedForQuotes(id) = identifierPattern.test(id)
 
 let MIN_BREAK_LENGTH = 60
 
