@@ -35,29 +35,6 @@ fun interleave(sep)(...args) =
     if i < len do set res.[idx + 1] = sep
   res
 
-// * Apply `f` to `xs` and build a string from non-null results using the given
-// * separator and starting/ending symbols. If there is no non-null results,
-// * return `empty` instead.
-fun mkString(xs, f, start, sep, end, empty) =
-  let
-    it = xs.(Symbol.iterator)()
-    res = it.next()
-    buffer = null
-  // Consume the iterator until we find the first non-null value.
-  while res.done is false and buffer is null do
-    if f(res.value) is
-      Str as str do set buffer = start + str
-    set res = it.next()
-  // If the buffer is still null, this means we have drained the iterator.
-  if buffer is null then empty else...
-  while res.done is false do
-    let value = f(res.value)
-    if value is Str as s do
-      set { buffer += sep, buffer += s }
-    set res = it.next()
-  set buffer += end
-  buffer
-
 // The following regular expression matches non-empty strings that look like a
 // Unicode identifier accepted by ECMAScript. 
 let identifierPattern = new RegExp of
