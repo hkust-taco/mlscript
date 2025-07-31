@@ -127,7 +127,7 @@ fun render(target, ...args) =
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
-    fun done() =
+    let done() =
       let isDone = null
       while isDone is null do
         if...
