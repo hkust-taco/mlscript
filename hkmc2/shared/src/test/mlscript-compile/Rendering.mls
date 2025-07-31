@@ -66,7 +66,7 @@ fun noNeedForQuotes(id) = identifierPattern.test(id)
 
 let MIN_BREAK_LENGTH = 60
 
-let NULL_PROTO = ""
+let OBJ_PROTO = "Object "
 
 let symbolsForArray =
   singleLineStart: "[ ", singleLineEnd: " ]"
@@ -361,11 +361,12 @@ fun render(target, ...args) =
             else " " + properties
       // The case for objects.
       Reflect.getPrototypeOf(arg) is
-        // Objects with `null` as the prototype.
-        null then NULL_PROTO + renderObject(arg, level, 0, startPos + NULL_PROTO.length)
+        // Objects with `null` as the prototype does not have prefix.
+        null then renderObject(arg, level, keyLength, startPos)
         proto and
           // For object literals, show its properties without the constructor.
-          proto === Object.prototype then renderObject(arg, level, keyLength, startPos)
+          proto === Object.prototype then
+            OBJ_PROTO + renderObject(arg, level, keyLength, startPos + OBJ_PROTO.length)
           // If the prototype has its own implementation of `toString`, use the
           // result and do not show properties.
           proto.hasOwnProperty("toString") then arg.toString() indentText(level)

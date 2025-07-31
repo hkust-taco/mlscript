@@ -4,10 +4,10 @@
 let rcd =
   a: 0
   b: 1
-//│ rcd = { a: 0, b: 1 }
+//│ rcd = Object { a: 0, b: 1 }
 
 ...rcd
-//│ = { a: 0, b: 1 }
+//│ = Object { a: 0, b: 1 }
 
 :e
 (...rcd)
@@ -17,17 +17,17 @@ let rcd =
 
 ...rcd
 c: 123
-//│ = { a: 0, b: 1, c: 123 }
+//│ = Object { a: 0, b: 1, c: 123 }
 //│ c = 123
 
 let rcd =
   a: 0
   ...(c: 2, d: 3)
   b: 1
-//│ rcd = { a: 0, c: 2, d: 3, b: 1 }
+//│ rcd = Object { a: 0, c: 2, d: 3, b: 1 }
 
 ...rcd
 ...rcd
-//│ = { a: 0, c: 2, d: 3, b: 1 }
+//│ = Object { a: 0, c: 2, d: 3, b: 1 }
 
 
