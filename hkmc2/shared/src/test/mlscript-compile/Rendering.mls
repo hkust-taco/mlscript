@@ -67,11 +67,9 @@ let symbolsForArray =
 
 let symbolsForSet(n: Int) =
   let headline = "Set(" + n + ")"
-  (
-    singleLineStart: headline + " { ", singleLineEnd: " }"
-    multiLineStart: headline + " {", multiLineEnd: "}"
-    singleLineSeparator: ", ", multiLineSeparator: ",", empty: headline + " {}"
-  )
+  singleLineStart: headline + " { ", singleLineEnd: " }"
+  multiLineStart: headline + " {", multiLineEnd: "}"
+  singleLineSeparator: ", ", multiLineSeparator: ",", empty: headline + " {}"
 
 let symbolsForObject =
   start: "{", end: "}", entrySeparator: ",", keyValueSeparator: ": ", empty: "{}"
