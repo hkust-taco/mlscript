@@ -61,15 +61,11 @@ let MIN_BREAK_LENGTH = 60
 let OBJ_PROTO = "Object "
 
 let symbolsForArray =
-  singleLineStart: "[ ", singleLineEnd: " ]"
-  multiLineStart: "[", multiLineEnd: "]"
-  singleLineSeparator: ", ", multiLineSeparator: ",", empty: "[]"
+  start: "[", end: "]", separator: ",", empty: "[]"
 
 let symbolsForSet(n: Int) =
-  let headline = "Set(" + n + ")"
-  singleLineStart: headline + " { ", singleLineEnd: " }"
-  multiLineStart: headline + " {", multiLineEnd: "}"
-  singleLineSeparator: ", ", multiLineSeparator: ",", empty: headline + " {}"
+  let headline = "Set(" + n + ") "
+  start: headline + "{", end: "}", separator: ",", empty: headline + "{}"
 
 let symbolsForObject =
   start: "{", end: "}", entrySeparator: ",", keyValueSeparator: ": ", empty: "{}"
@@ -170,13 +166,13 @@ fun render(target, ...args) =
       hasMultiline = false
       // Try calculating the length needed to place all items in one line. The
       // brackets and spaces around items are excluded from the length.
-      singleLineLength = startPos + symbols.singleLineStart.length // "[ "
+      singleLineLength = startPos + symbols.start.length + 1 // "[ "
       // Append a new item and update needed variables.
       push = (item: Str) =>
         if item.length > longestItem do set longestItem = item.length
         if item.indexOf("\n") >= 0 do set hasMultiline = true
         set singleLineLength +=
-          if items.length is 0 then 0 else symbols.singleLineSeparator.length
+          if items.length is 0 then 0 else symbols.separator.length + 1
         set singleLineLength += item.length
         items.push of item
       parentIndent = if indent is null then null else indent.repeat(level)
@@ -184,14 +180,13 @@ fun render(target, ...args) =
     // Iterate through and render all items.
     while done() is false do
       push of next(items.length is 0, singleLineLength)
-    set singleLineLength += symbols.singleLineEnd.length // "]"
+    set singleLineLength += symbols.end.length + 1
     let
-      layoutMultiLine = () =>
-        symbols.multiLineStart + "\n" + itemIdent +
-        items.join(symbols.multiLineSeparator + "\n" + itemIdent) +
-        "\n" + parentIndent + symbols.multiLineEnd
-      layoutSingleLine = () => symbols.singleLineStart +
-        items.join(symbols.singleLineSeparator) + symbols.singleLineEnd
+      layoutMultiLine() =
+        symbols.start + "\n" + itemIdent + items.join(symbols.separator +
+        "\n" + itemIdent) + "\n" + parentIndent + symbols.end
+      layoutSingleLine() =
+        symbols.start + " " + items.join(symbols.separator + " ") + " " + symbols.end
     if
       items.length is 0 then symbols.empty
       indent is null then layoutSingleLine()
