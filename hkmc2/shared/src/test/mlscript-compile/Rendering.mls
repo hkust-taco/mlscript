@@ -128,7 +128,7 @@ fun render(target, ...args) =
         else
           set { emptyItemCount += 1, i += 1 }
       (emptyItemCount === 0) && (if isDone is null then true else isDone)
-    fun next(isFirst: Bool, prefixLength: Int): Str = if
+    let next(isFirst: Bool, prefixLength: Int) = if
       emptyItemCount > 0 then
         let emptyItemCount' = emptyItemCount
         set emptyItemCount = 0
@@ -153,8 +153,8 @@ fun render(target, ...args) =
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
-    fun done() = peek.done
-    fun next(isFirst: Bool, prefixLength: Int): Str =
+    let done() = peek.done
+    let next(isFirst: Bool, prefixLength: Int) =
       let result = if peek is (done: false, :value) then 
         let
           // The starting column if the current item is placed on the same line.
@@ -211,10 +211,10 @@ fun render(target, ...args) =
       i = 0
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
-    fun skipNonEnumerable() =
+    let skipNonEnumerable() =
       while i < length and entries.[i].1.enumerable is false then set i += 1 else ()
-    fun done() = i >= length
-    fun next(isFirst: Bool, prefixLength: Int): Str =
+    let done() = i >= length
+    let next(isFirst: Bool, prefixLength: Int) =
       let
         key = entries.[i].0
         desc = entries.[i].1
@@ -248,8 +248,8 @@ fun render(target, ...args) =
       itemIndentationLength =
         if indent is null then 0 else (level + 1) * indent.length
     // Return `true` if the array has no remaining elements.
-    fun done() = peek.done
-    fun next(isFirst: Bool, prefixLength: Int): Str =
+    let done() = peek.done
+    let next(isFirst: Bool, prefixLength: Int) =
       let last = peek
       set peek = iterator.next()
       if last is (done: false, value: [key, value]) then 
