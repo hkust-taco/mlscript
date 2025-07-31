@@ -76,9 +76,8 @@ let symbolsForObject =
 
 let symbolsForMap(n: Int) =
   let headline = "Map(" + n + ")"
-  (
-    start: headline + " {", end: "}",
-    entrySeparator: ",", keyValueSeparator: " => ", empty: headline + " {}")
+  start: headline + " {", end: "}",
+  entrySeparator: ",", keyValueSeparator: " => ", empty: headline + " {}"
 
 fun render(target, ...args) =
   let
