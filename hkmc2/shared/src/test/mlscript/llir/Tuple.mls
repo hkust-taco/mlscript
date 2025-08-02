@@ -1,12 +1,11 @@
 :js
 :llir
 :cpp
+:todo // Started failing after the addition of lazy spreads (#318)
 
 :intl
 :sllir
 :scpp
-:todo // Started failing after the addition of lazy spreads (#318)
-
 fun mkTup(x, y) = [x, y]
 fun fst(t) = if t is [x, y] then x 
 mkTup(1, 2)
