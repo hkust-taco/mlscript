@@ -21,8 +21,10 @@ class CompileTestRunner
   val pwd = os.pwd
   val workingDir = pwd
 
-  val testDir = workingDir/"hkmc2"/"shared"/"src"/"test"  
-  val dirs = testDir :: workingDir/"hkmc2Benchmarks"/"src"/"test" :: Nil
+  val mainTestDir = workingDir/"hkmc2"/"shared"/"src"/"test"  
+  
+  // The compilation tests currently include compiling the benchmark instrumentation code.
+  val dirs = mainTestDir :: workingDir/"hkmc2Benchmarks"/"src"/"test" :: Nil
   
   val validExt = Set("mls")
     
