@@ -11,7 +11,7 @@ let rcd =
   let y = a + 1
   b: y
 //│ > 0
-//│ rcd = Object { a: 0, b: 1 }
+//│ rcd = { a: 0, b: 1 }
 
 let rcd =
   a: 1
@@ -22,7 +22,7 @@ let rcd =
   print("Done!")
 //│ > 1
 //│ > Done!
-//│ rcd = Object { a: 1, b: 2, c: 3 }
+//│ rcd = { a: 1, b: 2, c: 3 }
 
 
 fun foo(x) =
@@ -41,7 +41,7 @@ let rcd =
     y: 1
     z: 2
   c: b.z
-//│ rcd = Object { a: 0, b: Object { y: 1, z: 2 }, c: 2 }
+//│ rcd = { a: 0, b: { y: 1, z: 2 }, c: 2 }
 
 [rcd.b.y, rcd.c]
 //│ = [ 1, 2 ]
@@ -57,10 +57,10 @@ let config(useModules) =
 //│ config = [Function]
 
 config(true)
-//│ = Object { ext: "mjs", base: "main", full: "main.mjs" }
+//│ = { ext: "mjs", base: "main", full: "main.mjs" }
 
 config(false)
-//│ = Object { ext: "js", base: "main", full: "main.js" }
+//│ = { ext: "js", base: "main", full: "main.js" }
 
 
 // * When any statement is a record field, the whole block is a record.
@@ -74,6 +74,6 @@ let rcd =
 //│ ║  l.72: 	  42
 //│ ╙──      	  ^^
 //│ > Hello!
-//│ rcd = Object { a: 0 }
+//│ rcd = { a: 0 }
 
 

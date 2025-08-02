@@ -9,16 +9,16 @@ let src =
   k2: 2
   k3: 3
   k4: 4
-//│ src = Object { k0: 0, k1: 1, k2: 2, k3: 3, k4: 4 }
+//│ src = { k0: 0, k1: 1, k2: 2, k3: 3, k4: 4 }
 
 src Record.steal("k1", "k2", "k3")
-//│ = Object { k1: 1, k2: 2, k3: 3 }
+//│ = { k1: 1, k2: 2, k3: 3 }
 
 let dst =
   k0: "0"
   ...src Record.steal("k1", "k2", "k3")
   k4: "4"
-//│ dst = Object { k0: "0", k1: 1, k2: 2, k3: 3, k4: "4" }
+//│ dst = { k0: "0", k1: 1, k2: 2, k3: 3, k4: "4" }
 
 
 // * Alternative 'cute' API
@@ -38,15 +38,15 @@ let src =
   k2: 2
   k3: 3
   k4: 4
-//│ src = Object { k0: 0, k1: 1, k2: 2, k3: 3, k4: 4 }
+//│ src = { k0: 0, k1: 1, k2: 2, k3: 3, k4: 4 }
 
 steal("k1", "k2", "k3", from: src)
-//│ = Object { k1: 1, k2: 2, k3: 3 }
+//│ = { k1: 1, k2: 2, k3: 3 }
 
 let dst =
   k0: "0"
   ...steal("k1", "k2", "k3", from: src)
   k4: "4"
-//│ dst = Object { k0: "0", k1: 1, k2: 2, k3: 3, k4: "4" }
+//│ dst = { k0: "0", k1: 1, k2: 2, k3: 3, k4: "4" }
 
 

@@ -120,7 +120,7 @@ renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
 //│ = "Map(2) { [Function Foo] => 2, [class Symbol] => 1 }"
 
 renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
-//│ = "Map(1) { Object { a: 0 } => Object { b: 0 } }"
+//│ = "Map(1) { { a: 0 } => { b: 0 } }"
 
 renderAsStr of new Error("hello")
 //│ = "Error: hello"
@@ -136,7 +136,7 @@ renderAsStr of Object.prototype
 //│ = "{}"
 
 renderAsStr of hello: "world"
-//│ = "Object { hello: \"world\" }"
+//│ = "{ hello: \"world\" }"
 
 renderAsStr of Object.assign(Object.create(null), hello: "world")
 //│ = "{ hello: \"world\" }"
@@ -163,7 +163,7 @@ renderAsStr of Foo
 set Foo.bar = (direction: "vertical")
 
 renderAsStr of Foo
-//│ = "[class Foo4] { bar: Object { direction: \"vertical\" } }"
+//│ = "[class Foo4] { bar: { direction: \"vertical\" } }"
 
 class Bar extends Foo
 
@@ -214,12 +214,12 @@ renderAsStr of globalThis.setImmediate
 let a =
   x: 0
   y: 1
-//│ a = Object { x: 0, y: 1 }
+//│ a = { x: 0, y: 1 }
 
 set a.x = a
 
 a
-//│ = <ref *1> Object { x: [Circular *1], y: 1 }
+//│ = <ref *1> { x: [Circular *1], y: 1 }
 
 // Test: an object is referenced multiple times in a circular way.
 
@@ -230,26 +230,26 @@ let tree =
   right:
     left: null
     right: null
-//│ tree = Object { left: Object { left: null, right: null }, right: Object { left: null, right: null } }
+//│ tree = { left: { left: null, right: null }, right: { left: null, right: null } }
 
 set tree.left.left = tree
 set tree.right.left = tree
 
 tree
-//│ = <ref *1> Object { left: Object { left: [Circular *1], right: null }, right: Object { left: [Circular *1], right: null } }
+//│ = <ref *1> { left: { left: [Circular *1], right: null }, right: { left: [Circular *1], right: null } }
 
 // Test: nested circular reference.
 
 // If the same circular object appears multiple times, it should be rendered as
 // the same reference.
 let b = [a, a]
-//│ b = [ <ref *1> Object { x: [Circular *1], y: 1 }, <ref *1> Object { x: [Circular *1], y: 1 } ]
+//│ b = [ <ref *1> { x: [Circular *1], y: 1 }, <ref *1> { x: [Circular *1], y: 1 } ]
 
 b.push(b)
 //│ = 3
 
 b
-//│ = <ref *2> [ <ref *1> Object { x: [Circular *1], y: 1 }, <ref *1> Object { x: [Circular *1], y: 1 }, [Circular *2] ]
+//│ = <ref *2> [ <ref *1> { x: [Circular *1], y: 1 }, <ref *1> { x: [Circular *1], y: 1 }, [Circular *2] ]
 
 let functionWithProperties = Object.assign(x => x, "kind": "Callable")
 //│ functionWithProperties = [Function] { kind: "Callable" }
@@ -269,26 +269,26 @@ functionWithProperties.kind
 // =============================
 
 let something = (x: 0)
-//│ something = Object { x: 0 }
+//│ something = { x: 0 }
 
 Object.defineProperty(something, "y", enumerable: true, get: () => 42)
-//│ = Object { x: 0, y: [Getter] }
+//│ = { x: 0, y: [Getter] }
 
 Object.defineProperty of
   something, "z"
   enumerable: true
   get: () => 42
   "set": (value) => print("The user tries to set the value to " + value)
-//│ = Object { x: 0, y: [Getter], z: [Getter/Setter] }
+//│ = { x: 0, y: [Getter], z: [Getter/Setter] }
 
 renderAsStr of
   "\u6d4b\u8bd5": "Test"
   "\u4f60\u597d": "Hello"
-//│ = "Object { 测试: \"Test\", 你好: \"Hello\" }"
+//│ = "{ 测试: \"Test\", 你好: \"Hello\" }"
 
 renderAsStr of
   "a property name with spaces": true
-//│ = "Object { \"a property name with spaces\": true }"
+//│ = "{ \"a property name with spaces\": true }"
 
 //   ____ _
 //  / ___| | __ _ ___ ___  ___  ___

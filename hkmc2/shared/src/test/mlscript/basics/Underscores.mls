@@ -80,16 +80,16 @@ test({f: print}, 1)
 //│ > 0 1 2
 
 {f: print}
-//│ = Object { f: [Function print] }
+//│ = { f: [Function print] }
 
 ({f: print})
-//│ = Object { f: [Function print] }
+//│ = { f: [Function print] }
 
 [{f: print}]
-//│ = [ Object { f: [Function print] } ]
+//│ = [ { f: [Function print] } ]
 
 [{f: print}, 1]
-//│ = [ Object { f: [Function print] }, 1 ]
+//│ = [ { f: [Function print] }, 1 ]
 
 
 print(inc(_))
@@ -125,14 +125,14 @@ let x_to = x: _
 //│ x_to = [Function x_to]
 
 x_to(42)
-//│ = Object { x: 42 }
+//│ = { x: 42 }
 
 
 let mkObj = (x: _, y: _, z: 3)
 //│ mkObj = [Function mkObj]
 
 mkObj(1, 2)
-//│ = Object { x: 1, y: 2, z: 3 }
+//│ = { x: 1, y: 2, z: 3 }
 
 
 // * Note: this is parsed as `{let mkObj = x: _}, y: _, z: 3`
@@ -160,11 +160,11 @@ let mkObj =
 //│ mkObj = [Function mkObj]
 
 mkObj(1, 2)
-//│ = Object { x: 1, y: 2, z: 3 }
+//│ = { x: 1, y: 2, z: 3 }
 
 
 let obj = f: _ + 1
-//│ obj = Object { f: [Function f] }
+//│ obj = { f: [Function f] }
 
 obj.f(123)
 //│ = 124

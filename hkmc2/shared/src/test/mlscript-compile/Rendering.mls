@@ -60,7 +60,6 @@ let noNeedForQuotes(id) = identifierPattern.test(id)
 let emptyOptions = new Object
 
 let DEFAULT_BREAK_LENGTH = 80
-let OBJ_PROTO = "Object "
 
 let symbolsForArray =
   start: "[", end: "]", separator: ",", empty: "[]", padding: " "
@@ -385,7 +384,7 @@ fun render(target, ...args) =
         proto and
           // For object literals, show its properties without the constructor.
           proto === Object.prototype then
-            OBJ_PROTO + renderObject(arg, level, keyLength, startPos + OBJ_PROTO.length)
+            renderObject(arg, level, keyLength, startPos)
           // The `constructor` field refers to the class.
           proto.constructor is Function and
             // If the prototype has its own implementation of `toString`, call it.

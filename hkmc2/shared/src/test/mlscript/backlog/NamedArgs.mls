@@ -5,26 +5,26 @@
 // * Named tuple
 
 [a: 0]
-//│ = [ Object { a: 0 } ]
+//│ = [ { a: 0 } ]
 
 [1, 2, a: "a", 3, b: "b", 4, 5]
-//│ = [ 1, 2, 3, 4, 5, Object { a: "a", b: "b" } ]
+//│ = [ 1, 2, 3, 4, 5, { a: "a", b: "b" } ]
 
 let r = [4, 5, c: "c"]
-//│ r = [ 4, 5, Object { c: "c" } ]
+//│ r = [ 4, 5, { c: "c" } ]
 
 [1, 2, a: "a", 3, b: "b", ...r]
-//│ = [ 1, 2, 3, 4, 5, Object { c: "c" }, Object { a: "a", b: "b" } ]
+//│ = [ 1, 2, 3, 4, 5, { c: "c" }, { a: "a", b: "b" } ]
 
 
 let aa = 123
 //│ aa = 123
 
 [aa: 0]
-//│ = [ Object { aa: 0 } ]
+//│ = [ { aa: 0 } ]
 
 [aa: aa]
-//│ = [ Object { aa: 123 } ]
+//│ = [ { aa: 123 } ]
 
 
 // * Named arguments
@@ -48,17 +48,17 @@ id(a: 0)
 //│         term = Lit of StrLit of "a"
 //│         asc = S of Lit of IntLit of 0
 //│     iargsLs = N
-//│ = Object { a: 0 }
+//│ = { a: 0 }
 
 id of a: 0
-//│ = Object { a: 0 }
+//│ = { a: 0 }
 
 
 print of
   foo: 1
   bar:
     "..."
-//│ > Object { foo: 1, bar: "..." }
+//│ > { foo: 1, bar: "..." }
 
 print of
   "Hello"
@@ -66,6 +66,6 @@ print of
   bar:
     "..."
   "World"
-//│ > Hello World Object { foo: 1, bar: "..." }
+//│ > Hello World { foo: 1, bar: "..." }
 
 
