@@ -1,5 +1,5 @@
 :llir
-:todo
+:todo // Started failing after the addition of lazy spreads (#318)
 
 :import NofibPrelude.mls
 //│ Imported 104 member(s)

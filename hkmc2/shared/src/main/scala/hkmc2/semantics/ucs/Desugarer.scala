@@ -520,6 +520,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           case ((pat, i), (wrapInner, matches)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
             val wrap = (split: Split) =>
+              // TODO: Changing from the following line in #318 breaks some LLIR difftests (marked :todo)
               // Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
               Split.Let(sym, callTupleGet(ref, i, sym), wrapInner(split))
             (wrap, (sym, pat) :: matches)

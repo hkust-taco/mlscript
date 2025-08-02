@@ -14,8 +14,8 @@ if [1, ..[2, 3]] is [..a, b] then [a, b]
 
 :sjs
 fun buildPalindrome = case
-    0 then []
-    n then [n, ..buildPalindrome(n - 1), n]
+  0 then []
+  n then [n, ..buildPalindrome(n - 1), n]
 //│ JS (unsanitized):
 //│ let buildPalindrome;
 //│ buildPalindrome = function buildPalindrome() {
@@ -45,8 +45,8 @@ arr
 
 :sjs
 fun sum2 = case
-    [] then 0
-    [x, ..xs, y] then x + y + sum2(xs)
+  [] then 0
+  [x, ..xs, y] then x + y + sum2(xs)
 //│ JS (unsanitized):
 //│ let sum2;
 //│ sum2 = function sum2() {
@@ -92,8 +92,8 @@ sum2(..arr)
 
 
 fun map2(f) = case
-    [] then []
-    [x, ..xs, y] then [f(x), ..map2(f)(xs), f(y)]
+  [] then []
+  [x, ..xs, y] then [f(x), ..map2(f)(xs), f(y)]
 
 :expect [10, 8, 6, 4, 2, 2, 4, 6, 8, 10]
 map2(x => x * 2)(arr)
