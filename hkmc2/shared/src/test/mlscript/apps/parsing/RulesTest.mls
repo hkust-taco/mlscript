@@ -16,19 +16,19 @@ Keywords.maxOperatorPrec
 //│ = 26
 
 opPrec("|>")
-//│ = [ 14, 20 ]
+//│ = [14, 20]
 
 opPrec("<:")
-//│ = [ 20, 12 ]
+//│ = [20, 12]
 
 opPrec("::")
-//│ = [ 13, 12 ]
+//│ = [13, 12]
 
 opPrec of "+"
-//│ = [ 21, 21 ]
+//│ = [21, 21]
 
 opPrecOpt of "=="
-//│ = Some([ 16, 16 ])
+//│ = Some([16, 16])
 
 print of Keywords.all |> MutMap.valuesIterator |. Iter.joined("\n")
 //│ > Keyword(`;;`, 0, 0)

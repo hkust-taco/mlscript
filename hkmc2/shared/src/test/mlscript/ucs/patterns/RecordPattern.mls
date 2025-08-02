@@ -28,7 +28,7 @@ take_1({x:"a", y:"b"})
 let r = {z:4}
 take_1(r)
 //│ = 0
-//│ r = { z: 4 }
+//│ r = {z: 4}
 
 let f = case
   { a: 1 as a } then a
@@ -51,7 +51,7 @@ let f = case
 let rcd =
   a: 1
   b: a + 1
-//│ rcd = { a: 1, b: 2 }
+//│ rcd = {a: 1, b: 2}
 
 // * As that will make sense when we have dependent types,
 // * as in: `{ n: Int, v: Vec[Int, n] }`
@@ -61,14 +61,14 @@ let r = {x: 2, y : 4}
 if r is
   {x:a, y:a} then a
 //│ = 4
-//│ r = { x: 2, y: 4 }
+//│ r = {x: 2, y: 4}
 
 
 let rr = {x: {y:10, z:100}, t:1000}
 if rr is
   {x : {:y, z:t}} then y+t
 //│ = 110
-//│ rr = { x: { y: 10, z: 100 }, t: 1000 }
+//│ rr = {x: {y: 10, z: 100}, t: 1000}
 
 
 
@@ -113,10 +113,10 @@ pairwise(49)
 //│ = Nil
 
 pairwise("hello" :: "world" :: "bonjour" :: "le monde" :: Nil)
-//│ = Cons([ "hello", "world" ], Cons([ "bonjour", "le monde" ], Nil))
+//│ = Cons(["hello", "world"], Cons(["bonjour", "le monde"], Nil))
 
 pairwise(1 :: 2 :: 3 :: Nil)
-//│ = Cons([ 1, 2 ], Nil)
+//│ = Cons([1, 2], Nil)
 
 fun foo(xs) = if xs is
   { tail: { tail: { tail: _ } } } then "at least three of them"

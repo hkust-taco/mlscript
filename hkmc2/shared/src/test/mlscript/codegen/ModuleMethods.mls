@@ -9,7 +9,7 @@ module Example with
 Example.f(123)
 //│ JS:
 //│ block$res2 = runtime.checkCall(Example1.f(123)); undefined
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 :ssjs
 let s = Example.f
@@ -23,7 +23,7 @@ let s = Example.f
 //│ s = [Function f]
 
 s(123)
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 :e
 Example |>. s(123)
@@ -31,7 +31,7 @@ Example |>. s(123)
 //│ ║  l.29: 	Example |>. s(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = [ 123, 456 ]
+//│ = [123, 456]
 
 
 :sjs

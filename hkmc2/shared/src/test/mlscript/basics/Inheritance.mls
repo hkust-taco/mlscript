@@ -16,10 +16,10 @@ object Bar extends Foo
 //│ ╔══[ERROR] Object 'Bar' does not contain member 'foo'
 //│ ║  l.12: 	[Bar.x, Bar.foo]
 //│ ╙──      	           ^^^^
-//│ = [ 10, 11 ]
+//│ = [10, 11]
 
 let b = id(Bar) in [b.x, b.foo]
-//│ = [ 10, 11 ]
+//│ = [10, 11]
 
 Bar is Foo
 //│ = true
@@ -44,7 +44,7 @@ b is String
 //│ = false
 
 [b.x, b.foo]
-//│ = [ 10, 11 ]
+//│ = [10, 11]
 
 
 :sjs
@@ -81,7 +81,7 @@ b is String
 //│ = false
 
 [b.x, b.foo]
-//│ = [ 10, 11 ]
+//│ = [10, 11]
 
 
 
@@ -89,7 +89,7 @@ abstract class Option[out T]: Some[T] | None
 object None extends Option[Nothing]
 data class Some[out T](x: T) extends Option[T]
 [Some(123) is Option, None is Option, Some(123) is String, None is String]
-//│ = [ true, true, false, false ]
+//│ = [true, true, false, false]
 
 
 data class Barr(x: Int)(y: Int) with

@@ -13,7 +13,7 @@ fun int(n) = if n is
   Box(x) then 1 + int(x)
 
 [nat(0), nat(1), nat(2), nat(3)]
-//│ = [ null, Box(null), Box(Box(null)), Box(Box(Box(null))) ]
+//│ = [null, Box(null), Box(Box(null)), Box(Box(Box(null)))]
 
 int(nat(42))
 //│ = 42

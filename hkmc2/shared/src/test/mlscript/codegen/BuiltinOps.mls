@@ -89,7 +89,7 @@ fun (+) lol(a, b) = [a, b]
 1 + 2
 //│ JS (unsanitized):
 //│ lol(1, 2)
-//│ = [ 1, 2 ]
+//│ = [1, 2]
 
 
 :sjs

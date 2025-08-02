@@ -30,7 +30,7 @@ test(123)
 set globalThis.a = 2
 
 test(123)
-//│ = [ 2, 123 ]
+//│ = [2, 123]
 
 :sjs
 module Test with
@@ -60,9 +60,9 @@ module Test with
 
 
 Test.test1(123)
-//│ = [ 2, 123 ]
+//│ = [2, 123]
 
 Test.test2(123)
-//│ = [ 3, 123 ]
+//│ = [3, 123]
 
 

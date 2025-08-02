@@ -195,7 +195,7 @@ Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = <ref *1> [class Whoops1] { w: [Circular *1] }
+//│ = <ref *1> [class Whoops1] {w: [Circular *1]}
 
 Whoops.Whoops.g()
 //│ = "Hello"

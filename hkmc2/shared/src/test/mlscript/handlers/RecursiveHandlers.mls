@@ -14,7 +14,7 @@ h1.perform("hi")
 h1.perform("hello")
 //│ > performing hi
 //│ > performing hello
-//│ = [ [ "ok" ] ]
+//│ = [["ok"]]
 
 :e
 h1
@@ -44,9 +44,9 @@ handle h = Object with
     [x, k(())]
 h.write(1)
 h.write(2)
-//│ > [ 10, () ]
-//│ > [ 10, () ]
-//│ = [ 1, [ 2, () ] ]
+//│ > [10, ()]
+//│ > [10, ()]
+//│ = [1, [2, ()]]
 
 handle h = Object with
   fun write(x)(k) = enterHandleBlock of this, () =>
@@ -54,7 +54,7 @@ handle h = Object with
     [x, k(())]
 h.write(1)
 h.write(2)
-//│ = [ 10, [ 1, [ 10, [ 2, () ] ] ] ]
+//│ = [10, [1, [10, [2, ()]]]]
 
 // deep handler
 :todo

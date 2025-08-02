@@ -179,14 +179,14 @@ let testlights =
   Nil      
 let lookfrom   = [2.1, 1.3, 1.7]
 let background = [0.078, 0.361, 0.753]
-//│ background = [ 0.078, 0.361, 0.753 ]
+//│ background = [0.078, 0.361, 0.753]
 //│ fov = 45
-//│ lookat = [ 0, 0, 0 ]
-//│ lookfrom = [ 2.1, 1.3, 1.7 ]
-//│ s2 = [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]
-//│ testlights = [Point([ 4, 3, 2 ], [ 0.288675, 0.288675, 0.288675 ]),Point([ 1, -4, 4 ], [ 0.288675, 0.288675, 0.288675 ]),Point([ -3, 1, 5 ], [ 0.288675, 0.288675, 0.288675 ])]
-//│ testspheres = [Sphere([ 0, 0, 0 ], 0.5, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ 0.272166, 0.272166, 0.544331 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ 0.643951, 0.172546, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ 0.172546, 0.643951, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ -0.371785, 0.0996195, 0.544331 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ -0.471405, 0.471405, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ -0.643951, -0.172546, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ 0.0996195, -0.371785, 0.544331 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ -0.172546, -0.643951, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)]),Sphere([ 0.471405, -0.471405, 0 ], 0.166667, [Ambient([ 0.035, 0.0325, 0.025 ]),Diffuse([ 0.5, 0.45, 0.35 ]),Specular([ 0.8, 0.8, 0.8 ]),Specpow(3),Reflect(0.5)])]
-//│ vup = [ 0, 0, 1 ]
+//│ lookat = [0, 0, 0]
+//│ lookfrom = [2.1, 1.3, 1.7]
+//│ s2 = [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]
+//│ testlights = [Point([4, 3, 2], [0.288675, 0.288675, 0.288675]),Point([1, -4, 4], [0.288675, 0.288675, 0.288675]),Point([-3, 1, 5], [0.288675, 0.288675, 0.288675])]
+//│ testspheres = [Sphere([0, 0, 0], 0.5, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([0.272166, 0.272166, 0.544331], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([0.643951, 0.172546, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([0.172546, 0.643951, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([-0.371785, 0.0996195, 0.544331], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([-0.471405, 0.471405, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([-0.643951, -0.172546, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([0.0996195, -0.371785, 0.544331], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([-0.172546, -0.643951, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)]),Sphere([0.471405, -0.471405, 0], 0.166667, [Ambient([0.035, 0.0325, 0.025]),Diffuse([0.5, 0.45, 0.35]),Specular([0.8, 0.8, 0.8]),Specpow(3),Reflect(0.5)])]
+//│ vup = [0, 0, 1]
 
 fun spherenormal(pos, sp) = if sp is Sphere(spos, rad, _) then
   vecscale(vecsub(pos, spos), 1 / rad)

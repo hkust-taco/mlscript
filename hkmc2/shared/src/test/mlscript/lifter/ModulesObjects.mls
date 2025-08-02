@@ -306,7 +306,7 @@ fun foo(x) =
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 
 foo(123)
-//│ = [ true, [ true, false ], true ]
+//│ = [true, [true, false], true]
 
 :sjs
 module A with

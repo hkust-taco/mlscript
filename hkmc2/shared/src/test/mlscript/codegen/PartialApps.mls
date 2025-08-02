@@ -7,7 +7,7 @@ let f = foo(1, _, 3)
 //│ f = [Function f]
 
 f(2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 :sjs
 let f = foo(1, _, _)
@@ -16,50 +16,50 @@ let f = foo(1, _, _)
 //│ f = [Function f]
 
 f(2, 3)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 let g = f(_, 3)
 //│ g = [Function g]
 
 g(2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 foo(_, _, 3) of 1, 2
 //│ = [Function]
 
 {foo(_, _, 3)} of 1, 2
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 {foo(_, _, 3)}(1, 2)
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 
 fun foo2(x, y, z)(a, b) = [x, y, z, a, b]
 
 {foo2(_, _, 3)(4, _)}(1, 2, 5)
-//│ = [ 1, 2, 3, 4, 5 ]
+//│ = [1, 2, 3, 4, 5]
 
 
 // :sjs
 let f = [_]
 f(27)
-//│ = [ 27 ]
+//│ = [27]
 //│ f = [Function f]
 
 // :sjs
 let f = [_ + 1]
 f.0(27)
 //│ = 28
-//│ f = [ [Function] ]
+//│ f = [[Function]]
 
 let f = foo(..._)
 f([1, 2, 3])
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 //│ f = [Function f]
 
 let f = [..._]
 f([1, 2, 3])
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 //│ f = [Function f]
 
 // :sjs
@@ -137,15 +137,15 @@ let j = _.x(123) in j(x: print)
 
 
 let j = _.x(1, _) in j((x: tuple), 0)
-//│ = [ 1, 0 ]
+//│ = [1, 0]
 
 // ie
 let j = (obj, arg) => obj.x(1, arg) in j((x: tuple), 0)
-//│ = [ 1, 0 ]
+//│ = [1, 0]
 
 // TODO: really support this?
 let j = _.x.y(1, _) in j((x: y: tuple), 0)
-//│ = [ 1, 0 ]
+//│ = [1, 0]
 
 
 data class C(a, b, c)

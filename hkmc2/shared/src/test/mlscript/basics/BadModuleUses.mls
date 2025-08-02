@@ -78,7 +78,7 @@ M + 1
 //│ ║  l.76: 	M + 1
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = [ [class M], 1 ]
+//│ = [[class M], 1]
 
 :e
 let m = M

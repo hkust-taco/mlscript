@@ -21,14 +21,14 @@ let r = {}
 //│ = 2
 
 {foo: 1}
-//│ = { foo: 1 }
+//│ = {foo: 1}
 
 
 let rcd = { foo: 1, bar: "..." }
-//│ rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
 
 [rcd.foo, rcd.bar]
-//│ = [ 1, "..." ]
+//│ = [1, "..."]
 
 typeof(rcd)
 //│ = "object"
@@ -37,31 +37,31 @@ typeof(rcd)
 // * Should we allow this syntax?
 
 let rcd = (foo: 1, bar: "...")
-//│ rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
 
 [rcd.foo, rcd.bar]
-//│ = [ 1, "..." ]
+//│ = [1, "..."]
 
 let rcd = (
   foo: 1
   bar: "..."
 )
-//│ rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
 
 let rcd =
   foo: 1
   bar:
     "..."
-//│ rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
 
 [rcd.foo, rcd.bar]
-//│ = [ 1, "..." ]
+//│ = [1, "..."]
 
 print <|
   foo: 1
   bar:
     "..."
-//│ > { foo: 1, bar: "..." }
+//│ > {foo: 1, bar: "..."}
 
 
 // * But not this syntax...
@@ -81,7 +81,7 @@ let rcd =
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'rcd'
 //│ ║  l.71: 	let rcd =
 //│ ╙──      	    ^^^
-//│ rcd = { foo: 1, bar: "..." }
+//│ rcd = {foo: 1, bar: "..."}
 
 
 // * How about this syntax?
@@ -101,23 +101,23 @@ let rcd = new with
 
 
 id of (x: 1)
-//│ = { x: 1 }
+//│ = {x: 1}
 
 id of { x: 1 }
-//│ = { x: 1 }
+//│ = {x: 1}
 
 id of ({ x: 1 })
-//│ = { x: 1 }
+//│ = {x: 1}
 
 
 id of ({ x: 1, y: 2 })
-//│ = { x: 1, y: 2 }
+//│ = {x: 1, y: 2}
 
 id of (x: 1, y: 2)
-//│ = { x: 1, y: 2 }
+//│ = {x: 1, y: 2}
 
 id of { x: 1, y: 2 }
-//│ = { x: 1, y: 2 }
+//│ = {x: 1, y: 2}
 
 
 

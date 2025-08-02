@@ -21,7 +21,7 @@ nonsense([])
 //│ = []
 
 nonsense([1, 2, 3, 4])
-//│ = [ 1, 2, 3, 4 ]
+//│ = [1, 2, 3, 4]
 
 :sjs
 fun lead_and_last(xs) = if xs is

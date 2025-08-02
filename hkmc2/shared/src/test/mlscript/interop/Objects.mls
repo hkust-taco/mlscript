@@ -2,7 +2,7 @@
 
 
 let rcd = { x: 0, y: undefined, z: null}
-//│ rcd = { x: 0, y: undefined, z: null }
+//│ rcd = {x: 0, y: undefined, z: null}
 
 rcd.constructor
 //│ = [class Object]
@@ -11,7 +11,7 @@ typeof(rcd.constructor)
 //│ = "function"
 
 Object.entries of rcd
-//│ = [ [ "x", 0 ], [ "y", undefined ], [ "z", null ] ]
+//│ = [["x", 0], ["y", undefined], ["z", null]]
 
 
 class Foo(val x, val y) with
@@ -28,7 +28,7 @@ Object.entries of Foo
 //│ = []
 
 Object.entries of foo
-//│ = [ [ "x", 1 ], [ "y", 2 ], [ "a", 3 ] ]
+//│ = [["x", 1], ["y", 2], ["a", 3]]
 
 Foo.name
 //│ = "Foo"

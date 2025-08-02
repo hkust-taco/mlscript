@@ -58,8 +58,8 @@
 let xs = [1, 2, 3]
 let ys = [4, 5, 6]
 fun len(xs) = xs.length
-//│ xs = [ 1, 2, 3 ]
-//│ ys = [ 4, 5, 6 ]
+//│ xs = [1, 2, 3]
+//│ ys = [4, 5, 6]
 
 xs |> len
 +
@@ -344,8 +344,8 @@ module Arr with
 let
   xs = [1, 2]
   ys = [3, 4, 5]
-//│ xs = [ 1, 2 ]
-//│ ys = [ 3, 4, 5 ]
+//│ xs = [1, 2]
+//│ ys = [3, 4, 5]
 
 xs |> Arr.len
 +

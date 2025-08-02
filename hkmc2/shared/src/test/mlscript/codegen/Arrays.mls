@@ -12,7 +12,7 @@ empty.0
 let single = [1]
 //│ JS (unsanitized):
 //│ let single; single = [ 1 ];
-//│ single = [ 1 ]
+//│ single = [1]
 
 single.0
 //│ = 1
@@ -22,13 +22,13 @@ single.0
 val single = [1]
 //│ JS (unsanitized):
 //│ let single1; single1 = [ 1 ];
-//│ single = [ 1 ]
+//│ single = [1]
 
 single.0
 //│ = 1
 
 val pair = [1, 2]
-//│ pair = [ 1, 2 ]
+//│ pair = [1, 2]
 
 pair.0
 //│ = 1
@@ -37,7 +37,7 @@ pair.1
 //│ = 2
 
 val triple = [1, 2, 3]
-//│ triple = [ 1, 2, 3 ]
+//│ triple = [1, 2, 3]
 
 triple.2
 //│ = 3
@@ -57,10 +57,10 @@ set Array.prototype.toString =
   globalThis.eval("(function() { return '(' + Array.prototype.join.call(this, ',') + ')'; })")
 
 [1, 2, 3]
-//│ = [ 1, 2, 3 ]
+//│ = [1, 2, 3]
 
 new Array(4)
-//│ = [ <4 empty items> ]
+//│ = [<4 empty items>]
 
 
 // TODO also sanity-check these accesses

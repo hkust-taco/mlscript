@@ -96,7 +96,7 @@ module M with
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = <ref *1> [class M2] { m: [Circular *1] }
+//│ = <ref *1> [class M2] {m: [Circular *1]}
 
 
 

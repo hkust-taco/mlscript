@@ -6,7 +6,7 @@ object Example with
   fun f(x) = [x, a]
 
 Example.f(2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 let oops = Example.("f")
 //│ oops = [Function f]
@@ -18,7 +18,7 @@ oops(2)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 oops.call(Example, 2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 
 // * We could use that syntax as a shorthand:
@@ -41,10 +41,10 @@ Example . oops(2)
 //│     IntLit of 2
 //│ JS (unsanitized):
 //│ let tmp; tmp = call(Example1, oops); runtime.safeCall(tmp(2))
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 Example. oops(2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 // * This one is a normal method call; there is no `oops` in `Example`
 :e
@@ -57,7 +57,7 @@ Example .oops(2)
 
 
 id(Example) . oops(2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 
 data class Example2(val a) with
@@ -115,14 +115,14 @@ oops(2)
 
 // * Note:
 (Example .> oops)(2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 
 // * Another alternative syntax – currently adopted in Predef
 fun (|>.) call(receiver, f)(arg) = f.call(receiver, arg)
 
 Example |>. oops(2)
-//│ = [ 2, 1 ]
+//│ = [2, 1]
 
 Example2(1) |>. oops2(2) |>. oops2(2)
 //│ = Example2(1)
