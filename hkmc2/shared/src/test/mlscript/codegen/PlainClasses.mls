@@ -6,7 +6,7 @@
 
 class Foo
 //│ JS (unsanitized):
-//│ let Foo1; Foo1 = class Foo { constructor() {} static constructorName() { return "Foo"; } };
+//│ let Foo1; Foo1 = class Foo { constructor() {} static [constructorName]() { return "Foo"; } };
 
 Foo is Foo
 //│ JS (unsanitized):
@@ -48,7 +48,7 @@ print("ok")
 //│   constructor() {
 //│     Predef.print("hi")
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 //│ Predef.print("ok")
 //│ > ok
@@ -65,7 +65,7 @@ fun test() =
 //│     constructor() {
 //│       Predef.print("hi")
 //│     }
-//│     static constructorName() { return "Foo"; }
+//│     static [constructorName]() { return "Foo"; }
 //│   };
 //│   tmp = Predef.print("ok");
 //│   return Foo5
@@ -107,7 +107,7 @@ class Foo with
 //│   z() {
 //│     return this.#y + this.x
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 
 
@@ -137,7 +137,7 @@ class Foo with
 //│   z2() {
 //│     return 6
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 
 
@@ -159,7 +159,7 @@ class Foo with
 //│     tmp1 = this.foo(z);
 //│     return tmp1 + 1
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 
 let a = new Foo
@@ -200,7 +200,7 @@ class Foo with
 //│     this.x = 1;
 //│     this.x = 2;
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 
 :e
@@ -221,7 +221,7 @@ class Foo with
 //│     this.x = 1;
 //│     this.#x = 2;
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ };
 
 
@@ -237,6 +237,6 @@ class Foo with val x = 1
 //│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
-//│ let Foo16; Foo16 = class Foo15 { constructor() {} static constructorName() { return "Foo"; } };
+//│ let Foo16; Foo16 = class Foo15 { constructor() {} static [constructorName]() { return "Foo"; } };
 
 

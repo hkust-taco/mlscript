@@ -55,7 +55,7 @@ module Test with
 //│       x1
 //│     ]
 //│   }
-//│   static constructorName() { return "Test"; }
+//│   static [constructorName]() { return "Test"; }
 //│ });
 
 

@@ -15,6 +15,7 @@ import hkmc2.syntax.Tree.Ident
 import hkmc2.codegen.Path
 import hkmc2.Diagnostic.Source
 import hkmc2.Message.MessageContext
+import collection.immutable.SeqMap
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
@@ -32,6 +33,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
+  val internalSymbols = JSBuilder.createInternalSymbols(using Elaborator.State, baseScp)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -52,6 +54,9 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
       case r => output(s"Failed to load $name: $r")
     importRuntimeModule(runtimeNme, runtimeFile)
+    internalSymbols.foreach:
+      case (key, (_, name)) =>
+        h.execute(s"const $name = Symbol.for(\"mlscript.$key\");")
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   
@@ -75,7 +80,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val jsb = ltl.givenIn:
-        new JSBuilder
+        new JSBuilder(S(internalSymbols))
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
@@ -95,7 +100,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       val jsb = ltl.givenIn:
-          new JSBuilder
+          new JSBuilder(S(internalSymbols))
             with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)

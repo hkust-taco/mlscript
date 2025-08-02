@@ -14,6 +14,7 @@ import hkmc2.codegen.Value.Lam
 
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
+import collection.immutable.SeqMap
 
 
 // TODO factor some logic for other codegen backends
@@ -22,7 +23,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
+class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]] = N)(using TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
   
   def checkMLsCalls: Bool = false
@@ -288,13 +289,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               }${
                 // Generate constructor name for classes, objects, and modules.
                 if (kind is syntax.Cls) || (kind is syntax.Obj) || (kind is syntax.Mod) then
-                  doc""" # static constructorName() { return ${makeStringLiteral(sym.nme)}; }"""
+                  doc""" # static [${lookupInternalSymbol("constructorName")}]() { return ${makeStringLiteral(sym.nme)}; }"""
                 else doc""
               }${
                 // Generate field names for classes with parameter lists, even
                 // if no parameters are marked as `val`.
                 if (kind is syntax.Cls) && paramsOpt.isDefined then
-                  doc""" # static fieldNames() { return [${
+                  doc""" # static [${lookupInternalSymbol("fieldNames")}]() { return [${
                     (ctorFields.map: f =>
                       doc"${f._1.name.escaped}")
                     .mkDocument(", ")
@@ -462,6 +463,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
+  /** Look up the variable name at runtime for a JavaScript `Symbol`. */
+  def lookupInternalSymbol(key: Str): Str =
+    internalSymbols.flatMap(_.get(key)) match
+      case S(m) => m._2
+      case N => lastWords(s"Internal symbol '$key' not found")
+
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
     reserveNames(p)
     p.imports.foreach: i =>
@@ -472,7 +479,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1)} from "${relPath}";"""
-    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+    val syms = internalSymbols match
+      // If the internal symbols were already created, the generated JavaScript
+      // code does not need to declare them.
+      case S(_) => Nil
+      case N =>
+        // Otherwise, we need to create them and declare them.
+        val symbols = createInternalSymbols
+        internalSymbols = S(symbols)
+        symbols.map:
+          case (key, (_, name)) =>
+            doc"const $name = Symbol.for(${s"mlscript.$key".escaped});"
+        .toList
+    (imps ::: syms).mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym)}; export default ${sym.nme};\n"
         case N => doc""
@@ -610,6 +629,14 @@ object JSBuilder:
         else f"\\u${c.toInt}%04X"
     }.mkString
   
+  val internalSymbolNames = List("constructorName", "fieldNames")
+  
+  def createInternalSymbols(using State, Scope): SeqMap[Str, (Symbol, Str)] =
+    internalSymbolNames.iterator.map: key =>
+      val sym = TempSymbol(N, key)
+      key -> (sym, scope.allocateName(sym))
+    .to(SeqMap)
+    
 end JSBuilder
 
 

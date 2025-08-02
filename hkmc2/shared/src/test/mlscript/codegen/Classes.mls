@@ -15,8 +15,8 @@ data class Foo(arguments)
 //│     constructor(arguments1) {
 //│       this.arguments = arguments1;
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["arguments"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["arguments"]; }
 //│   }
 //│ });
 
@@ -32,8 +32,8 @@ data class Foo(eval)
 //│     constructor(eval1) {
 //│       this.eval = eval1;
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["eval"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["eval"]; }
 //│   }
 //│ });
 
@@ -49,8 +49,8 @@ data class Foo(static)
 //│     constructor(static1) {
 //│       this.static = static1;
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["static"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["static"]; }
 //│   }
 //│ });
 
@@ -66,8 +66,8 @@ data class Foo(v')
 //│     constructor(v$_) {
 //│       this["v'"] = v$_;
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["v'"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["v'"]; }
 //│   }
 //│ });
 

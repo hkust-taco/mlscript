@@ -19,6 +19,6 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static constructorName() { return "A"; }
+//│   static [constructorName]() { return "A"; }
 //│ });
 

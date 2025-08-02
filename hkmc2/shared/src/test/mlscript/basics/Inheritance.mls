@@ -66,8 +66,8 @@ data class Baz(z) extends Bar(z * 1) with
 //│     get baz() {
 //│       return this.bar * 2;
 //│     }
-//│     static constructorName() { return "Baz"; }
-//│     static fieldNames() { return ["z"]; }
+//│     static [constructorName]() { return "Baz"; }
+//│     static [fieldNames]() { return ["z"]; }
 //│   }
 //│ });
 

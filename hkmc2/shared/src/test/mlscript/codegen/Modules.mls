@@ -4,7 +4,7 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; (class None { static { None1 = None; } static constructorName() { return "None"; } });
+//│ let None1; (class None { static { None1 = None; } static [constructorName]() { return "None"; } });
 
 :sjs
 None
@@ -40,7 +40,7 @@ module M with
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
-//│       static constructorName() { return "C"; }
+//│       static [constructorName]() { return "C"; }
 //│     };
 //│     this.D = function D() {
 //│       return new D.class();
@@ -48,15 +48,15 @@ module M with
 //│     Object.defineProperty(this.D, 'class', {
 //│     value: class D {
 //│         constructor() {}
-//│         static constructorName() { return "D"; }
-//│         static fieldNames() { return []; }
+//│         static [constructorName]() { return "D"; }
+//│         static [fieldNames]() { return []; }
 //│       }
 //│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static constructorName() { return "M"; }
+//│   static [constructorName]() { return "M"; }
 //│ });
 
 M.C
@@ -90,7 +90,7 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static constructorName() { return "M"; } });
+//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static [constructorName]() { return "M"; } });
 
 :sjs
 M.m

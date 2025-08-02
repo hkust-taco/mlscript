@@ -56,7 +56,7 @@ module Test with
 //│   static bar() {
 //│     return Test.foo()
 //│   }
-//│   static constructorName() { return "Test"; }
+//│   static [constructorName]() { return "Test"; }
 //│ });
 //│ > 1
 

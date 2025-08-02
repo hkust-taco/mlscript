@@ -2,6 +2,8 @@ import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
+const constructorName = Symbol.for("mlscript.constructorName");
+const fieldNames = Symbol.for("mlscript.fieldNames");
 let Runtime1;
 (class Runtime {
   static {
@@ -11,7 +13,7 @@ let Runtime1;
       toString() {
         return "()"
       }
-      static constructorName() { return "Unit"; }
+      static [constructorName]() { return "Unit"; }
     };
     this.Unit = new Unit$class;
     Object.defineProperty(this.Unit, 'class', { value: Unit$class });
@@ -39,8 +41,8 @@ let Runtime1;
         raise() {
           return Runtime.topLevelEffect(this.reified, false)
         }
-        static constructorName() { return "EffectHandle"; }
-        static fieldNames() { return []; }
+        static [constructorName]() { return "EffectHandle"; }
+        static [fieldNames]() { return []; }
       }
     });
     this.MatchResult = function MatchResult(captures1) {
@@ -51,8 +53,8 @@ let Runtime1;
         constructor(captures) {
           this.captures = captures;
         }
-        static constructorName() { return "MatchResult"; }
-        static fieldNames() { return ["captures"]; }
+        static [constructorName]() { return "MatchResult"; }
+        static [fieldNames]() { return ["captures"]; }
       }
     });
     this.MatchFailure = function MatchFailure(errors1) {
@@ -63,8 +65,8 @@ let Runtime1;
         constructor(errors) {
           this.errors = errors;
         }
-        static constructorName() { return "MatchFailure"; }
-        static fieldNames() { return ["errors"]; }
+        static [constructorName]() { return "MatchFailure"; }
+        static [fieldNames]() { return ["errors"]; }
       }
     });
     (class Tuple {
@@ -85,7 +87,7 @@ let Runtime1;
           return globalThis.Array.prototype.at.call(xs1, i1)
         }
       }
-      static constructorName() { return "Tuple"; }
+      static [constructorName]() { return "Tuple"; }
     });
     (class Str {
       static {
@@ -106,7 +108,7 @@ let Runtime1;
       static drop(string2, n) {
         return runtime.safeCall(string2.slice(n))
       }
-      static constructorName() { return "Str"; }
+      static [constructorName]() { return "Str"; }
     });
     this.render = Rendering.render;
     (class TraceLogger {
@@ -151,17 +153,17 @@ let Runtime1;
           return runtime.Unit
         }
       }
-      static constructorName() { return "TraceLogger"; }
+      static [constructorName]() { return "TraceLogger"; }
     });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
-      static constructorName() { return "FatalEffect"; }
+      static [constructorName]() { return "FatalEffect"; }
     };
     this.FatalEffect = new FatalEffect$class;
     Object.defineProperty(this.FatalEffect, 'class', { value: FatalEffect$class });
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {}
-      static constructorName() { return "PrintStackEffect"; }
+      static [constructorName]() { return "PrintStackEffect"; }
     };
     this.PrintStackEffect = new PrintStackEffect$class;
     Object.defineProperty(this.PrintStackEffect, 'class', { value: PrintStackEffect$class });
@@ -173,8 +175,8 @@ let Runtime1;
         constructor(next) {
           this.next = next;
         }
-        static constructorName() { return "FunctionContFrame"; }
-        static fieldNames() { return ["next"]; }
+        static [constructorName]() { return "FunctionContFrame"; }
+        static [fieldNames]() { return ["next"]; }
       }
     });
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
@@ -187,8 +189,8 @@ let Runtime1;
           this.nextHandler = nextHandler;
           this.handler = handler;
         }
-        static constructorName() { return "HandlerContFrame"; }
-        static fieldNames() { return ["next", "nextHandler", "handler"]; }
+        static [constructorName]() { return "HandlerContFrame"; }
+        static [fieldNames]() { return ["next", "nextHandler", "handler"]; }
       }
     });
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
@@ -203,8 +205,8 @@ let Runtime1;
           this.lastHandler = lastHandler;
           this.resumed = resumed;
         }
-        static constructorName() { return "ContTrace"; }
-        static fieldNames() { return ["next", "last", "nextHandler", "lastHandler", "resumed"]; }
+        static [constructorName]() { return "ContTrace"; }
+        static [fieldNames]() { return ["next", "last", "nextHandler", "lastHandler", "resumed"]; }
       }
     });
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
@@ -217,13 +219,13 @@ let Runtime1;
           this.handler = handler;
           this.handlerFun = handlerFun;
         }
-        static constructorName() { return "EffectSig"; }
-        static fieldNames() { return ["contTrace", "handler", "handlerFun"]; }
+        static [constructorName]() { return "EffectSig"; }
+        static [fieldNames]() { return ["contTrace", "handler", "handlerFun"]; }
       }
     });
     this.NonLocalReturn = class NonLocalReturn {
       constructor() {}
-      static constructorName() { return "NonLocalReturn"; }
+      static [constructorName]() { return "NonLocalReturn"; }
     };
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
       return new FnLocalsInfo.class(fnName1, locals1);
@@ -234,8 +236,8 @@ let Runtime1;
           this.fnName = fnName;
           this.locals = locals;
         }
-        static constructorName() { return "FnLocalsInfo"; }
-        static fieldNames() { return ["fnName", "locals"]; }
+        static [constructorName]() { return "FnLocalsInfo"; }
+        static [fieldNames]() { return ["fnName", "locals"]; }
       }
     });
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
@@ -247,8 +249,8 @@ let Runtime1;
           this.localName = localName;
           this.value = value;
         }
-        static constructorName() { return "LocalVarInfo"; }
-        static fieldNames() { return ["localName", "value"]; }
+        static [constructorName]() { return "LocalVarInfo"; }
+        static [fieldNames]() { return ["localName", "value"]; }
       }
     });
     this.stackLimit = 0;
@@ -266,7 +268,7 @@ let Runtime1;
         });
         return Runtime.mkEffect(this, lambda)
       }
-      static constructorName() { return "StackDelayHandler"; }
+      static [constructorName]() { return "StackDelayHandler"; }
     };
     this.StackDelayHandler = new StackDelayHandler$class;
     Object.defineProperty(this.StackDelayHandler, 'class', { value: StackDelayHandler$class });
@@ -858,6 +860,6 @@ let Runtime1;
     Runtime.stackHandler = null;
     return result
   }
-  static constructorName() { return "Runtime"; }
+  static [constructorName]() { return "Runtime"; }
 });
 let Runtime = Runtime1; export default Runtime;

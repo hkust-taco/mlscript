@@ -200,8 +200,8 @@ str
 //│                   break;
 //│                 }
 //│               }
-//│               static constructorName() { return "Cont$handler$h1$perform$"; }
-//│               static fieldNames() { return ["pc"]; }
+//│               static [constructorName]() { return "Cont$handler$h1$perform$"; }
+//│               static [fieldNames]() { return ["pc"]; }
 //│             }
 //│           });
 //│           tmp12 = str + "A";
@@ -217,7 +217,7 @@ str
 //│           return runtime.Unit
 //│         })
 //│       }
-//│       static constructorName() { return "Handler$h1$"; }
+//│       static [constructorName]() { return "Handler$h1$"; }
 //│     };
 //│     h1 = new Handler$h1$2();
 //│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) {
@@ -241,8 +241,8 @@ str
 //│             break;
 //│           }
 //│         }
-//│         static constructorName() { return "Cont$handleBlock$h1$"; }
-//│         static fieldNames() { return ["pc"]; }
+//│         static [constructorName]() { return "Cont$handleBlock$h1$"; }
+//│         static [fieldNames]() { return ["pc"]; }
 //│       }
 //│     });
 //│     handleBlock$8 = function handleBlock$() {
@@ -289,8 +289,8 @@ str
 //│                     break;
 //│                   }
 //│                 }
-//│                 static constructorName() { return "Cont$handler$h2$perform$"; }
-//│                 static fieldNames() { return ["pc"]; }
+//│                 static [constructorName]() { return "Cont$handler$h2$perform$"; }
+//│                 static [fieldNames]() { return ["pc"]; }
 //│               }
 //│             });
 //│             tmp13 = str + "B";
@@ -308,7 +308,7 @@ str
 //│             return runtime.Unit
 //│           })
 //│         }
-//│         static constructorName() { return "Handler$h2$"; }
+//│         static [constructorName]() { return "Handler$h2$"; }
 //│       };
 //│       h2 = new Handler$h2$2();
 //│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) {
@@ -357,8 +357,8 @@ str
 //│               break;
 //│             }
 //│           }
-//│           static constructorName() { return "Cont$handleBlock$h2$"; }
-//│           static fieldNames() { return ["pc"]; }
+//│           static [constructorName]() { return "Cont$handleBlock$h2$"; }
+//│           static [fieldNames]() { return ["pc"]; }
 //│         }
 //│       });
 //│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));

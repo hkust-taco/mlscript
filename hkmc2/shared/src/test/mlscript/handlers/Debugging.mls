@@ -100,8 +100,8 @@ fun f() =
 //│           return "Debugging.mls:17:5"
 //│         }
 //│       }
-//│       static constructorName() { return "Cont$func$f$"; }
-//│       static fieldNames() { return ["pc"]; }
+//│       static [constructorName]() { return "Cont$func$f$"; }
+//│       static [fieldNames]() { return ["pc"]; }
 //│     }
 //│   });
 //│   i = 0;

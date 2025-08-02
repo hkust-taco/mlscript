@@ -189,7 +189,7 @@ data object Cls(x) with
 //│   get huh() {
 //│     return this.x;
 //│   }
-//│   static constructorName() { return "Cls"; }
+//│   static [constructorName]() { return "Cls"; }
 //│ }; Cls1 = new Cls$class;
 //│ Object.defineProperty(Cls1, 'class', { value: Cls$class });
 
@@ -214,8 +214,8 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       static constructorName() { return "Bar'"; }     };   }   static constructorName() { return "Foo'"; } }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       static [constructorName]() { return "Bar'"; }     };   }   static [constructorName]() { return "Foo'"; } }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
 // ——— ——— ———
@@ -278,7 +278,7 @@ class D extends id(C)
 //│   constructor() {
 //│     super(C1);
 //│   }
-//│   static constructorName() { return "D"; }
+//│   static [constructorName]() { return "D"; }
 //│ };
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
@@ -391,7 +391,7 @@ if Foo(1, 2, 3) is Foo(arg) then arg
 
 module M with
   val name = "Student"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static constructorName() { return "M"; } }'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static [constructorName]() { return "M"; } }'
 
 // ——— ——— ———
 

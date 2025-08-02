@@ -11,7 +11,7 @@ module Foo with
 //│     Foo1 = Foo;
 //│     this.self = Foo1;
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ });
 
 Foo.self
@@ -52,7 +52,7 @@ object Foo with
 //│   constructor() {
 //│     this.self = Foo9;
 //│   }
-//│   static constructorName() { return "Foo"; }
+//│   static [constructorName]() { return "Foo"; }
 //│ }; Foo9 = new Foo$class1;
 //│ Object.defineProperty(Foo9, 'class', { value: Foo$class1 });
 

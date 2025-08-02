@@ -1,4 +1,4 @@
-
+import "./RuntimeJS.mjs"
 
 module Rendering with ...
 
@@ -391,14 +391,14 @@ fun render(target, ...args) =
             proto.hasOwnProperty("toString") then arg.toString() indentText(level)
             // If the symbol %constructorName is defined on the constructor, we
             // render the function using the provided field names.
-            proto.constructor.hasOwnProperty("constructorName") and
-              proto.constructor.constructorName is Function and
-                let constructorName = proto.constructor.constructorName()
+            proto.constructor.hasOwnProperty(RuntimeJS.symbols.constructorName) and
+              proto.constructor.(RuntimeJS.symbols.constructorName) is Function and
+                let constructorName = proto.constructor.(RuntimeJS.symbols.constructorName)()
                 // Check if field names are provided. Note that static members
                 // can be also inherited from base classes.
-                proto.constructor.hasOwnProperty("fieldNames") and
-                  proto.constructor.fieldNames is Function then
-                    let fieldNames = proto.constructor.fieldNames()
+                proto.constructor.hasOwnProperty(RuntimeJS.symbols.fieldNames) and
+                  proto.constructor.(RuntimeJS.symbols.fieldNames) is Function then
+                    let fieldNames = proto.constructor.(RuntimeJS.symbols.fieldNames)()
                     renderClassInstance of
                       constructorName, fieldNames, arg, level, keyLength, startPos
                 // If no field names are provided, return the constructor name only.

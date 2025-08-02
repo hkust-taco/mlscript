@@ -52,8 +52,8 @@ fun test(a) =
 //│         };
 //│         return h(d)
 //│       }
-//│       static constructorName() { return "Inner"; }
-//│       static fieldNames() { return ["b"]; }
+//│       static [constructorName]() { return "Inner"; }
+//│       static [fieldNames]() { return ["b"]; }
 //│     }
 //│   });
 //│   return Inner1(42)
@@ -93,8 +93,8 @@ fun test(a) =
 //│           this.b
 //│         ])
 //│       }
-//│       static constructorName() { return "C1"; }
-//│       static fieldNames() { return ["b"]; }
+//│       static [constructorName]() { return "C1"; }
+//│       static [fieldNames]() { return ["b"]; }
 //│     }
 //│   });
 //│   C21 = function C2(b1) {
@@ -109,8 +109,8 @@ fun test(a) =
 //│           this.b
 //│         ])
 //│       }
-//│       static constructorName() { return "C2"; }
-//│       static fieldNames() { return ["b"]; }
+//│       static [constructorName]() { return "C2"; }
+//│       static [fieldNames]() { return ["b"]; }
 //│     }
 //│   });
 //│   tmp1 = C11(1);
@@ -159,8 +159,8 @@ Foo(123)
 //│       tmp1 = bar();
 //│       return baz()
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["a"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["a"]; }
 //│   }
 //│ });
 //│ Foo1(123)
@@ -197,8 +197,8 @@ Bar(1)
 //│         return bar()
 //│       }
 //│     }
-//│     static constructorName() { return "Bar"; }
-//│     static fieldNames() { return ["x"]; }
+//│     static [constructorName]() { return "Bar"; }
+//│     static [fieldNames]() { return ["x"]; }
 //│   }
 //│ });
 //│ Bar1(1)

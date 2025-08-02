@@ -68,8 +68,8 @@ data class Lol(h) with
 //│               break;
 //│             }
 //│           }
-//│           static constructorName() { return "Cont$ctor$Lol$"; }
-//│           static fieldNames() { return ["pc"]; }
+//│           static [constructorName]() { return "Cont$ctor$Lol$"; }
+//│           static [fieldNames]() { return ["pc"]; }
 //│         }
 //│       });
 //│       this.h = h;
@@ -87,8 +87,8 @@ data class Lol(h) with
 //│       }
 //│       res
 //│     }
-//│     static constructorName() { return "Lol"; }
-//│     static fieldNames() { return ["h"]; }
+//│     static [constructorName]() { return "Lol"; }
+//│     static [fieldNames]() { return ["h"]; }
 //│   }
 //│ });
 

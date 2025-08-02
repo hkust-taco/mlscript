@@ -78,8 +78,8 @@ hi(0)
 //│         break;
 //│       }
 //│     }
-//│     static constructorName() { return "Cont$func$hi$"; }
-//│     static fieldNames() { return ["pc"]; }
+//│     static [constructorName]() { return "Cont$func$hi$"; }
+//│     static [fieldNames]() { return ["pc"]; }
 //│   }
 //│ });
 //│ hi = function hi(n) {
@@ -191,8 +191,8 @@ sum(10000)
 //│         break;
 //│       }
 //│     }
-//│     static constructorName() { return "Cont$func$sum$"; }
-//│     static fieldNames() { return ["pc"]; }
+//│     static [constructorName]() { return "Cont$func$sum$"; }
+//│     static [fieldNames]() { return ["pc"]; }
 //│   }
 //│ });
 //│ sum1 = function sum(n) {

@@ -157,9 +157,9 @@ fun testFish_nofib(n) =
     i => let n = min(0, i) in (pseudolimit([0, 0], [640 + n, 0], [0, 640 + n])),
     enumFromTo(0, n)
 
-:silent
+:fixme
+// This is caused by the implementation of `+:` in `NofibPrelude.mls`. Replacing
+// `+:` with a non-recursive implementation can fix the stack overflow error.
+// However, it will cause the file size to increase by ~390 KiB.
 let ls = testFish_nofib(1)
-
-:fixme // FIXME handle cycle
-ls
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

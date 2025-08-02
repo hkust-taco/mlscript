@@ -70,8 +70,8 @@ data class Foo(x: Int)
 //│     constructor(x1) {
 //│       this.x = x1;
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["x"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["x"]; }
 //│   }
 //│ });
 //│ Type: ⊤

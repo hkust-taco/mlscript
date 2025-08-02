@@ -187,8 +187,8 @@ x + y
 //│     constructor(a0$) {
 //│       this.a0$ = a0$;
 //│     }
-//│     static constructorName() { return "f$capture"; }
-//│     static fieldNames() { return ["a0$"]; }
+//│     static [constructorName]() { return "f$capture"; }
+//│     static [fieldNames]() { return ["a0$"]; }
 //│   }
 //│ });
 //│ f5 = function f() {
@@ -208,8 +208,8 @@ x + y
 //│       this.a = a;
 //│       this.b = b;
 //│     }
-//│     static constructorName() { return "Tuple"; }
-//│     static fieldNames() { return ["a", "b"]; }
+//│     static [constructorName]() { return "Tuple"; }
+//│     static [fieldNames]() { return ["a", "b"]; }
 //│   }
 //│ });
 //│ tmp = f5();
@@ -326,8 +326,8 @@ f(1, 2, 1000)
 //│     constructor(mutated0$) {
 //│       this.mutated0$ = mutated0$;
 //│     }
-//│     static constructorName() { return "f$capture"; }
-//│     static fieldNames() { return ["mutated0$"]; }
+//│     static [constructorName]() { return "f$capture"; }
+//│     static [fieldNames]() { return ["mutated0$"]; }
 //│   }
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
@@ -482,8 +482,8 @@ g()(1)
 //│     constructor(y0$) {
 //│       this.y0$ = y0$;
 //│     }
-//│     static constructorName() { return "g$capture"; }
-//│     static fieldNames() { return ["y0$"]; }
+//│     static [constructorName]() { return "g$capture"; }
+//│     static [fieldNames]() { return ["y0$"]; }
 //│   }
 //│ });
 //│ g13 = function g() {
@@ -594,8 +594,8 @@ f()
 //│     constructor(x0$) {
 //│       this.x0$ = x0$;
 //│     }
-//│     static constructorName() { return "f$capture"; }
-//│     static fieldNames() { return ["x0$"]; }
+//│     static [constructorName]() { return "f$capture"; }
+//│     static [fieldNames]() { return ["x0$"]; }
 //│   }
 //│ });
 //│ f20 = function f() {
@@ -651,7 +651,7 @@ fun f(es, vs) =
 //│         return this;
 //│       }
 //│     }
-//│     static constructorName() { return "A"; }
+//│     static [constructorName]() { return "A"; }
 //│   }
 //│ });
 //│ f23 = function f(es, vs) {

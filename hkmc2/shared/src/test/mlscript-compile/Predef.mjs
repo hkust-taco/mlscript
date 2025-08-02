@@ -2,6 +2,8 @@ import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
+const constructorName = Symbol.for("mlscript.constructorName");
+const fieldNames = Symbol.for("mlscript.fieldNames");
 let Predef1;
 (class Predef {
   static {
@@ -167,6 +169,6 @@ let Predef1;
   static use(instance) {
     return instance
   }
-  static constructorName() { return "Predef"; }
+  static [constructorName]() { return "Predef"; }
 });
 let Predef = Predef1; export default Predef;

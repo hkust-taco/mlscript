@@ -20,7 +20,7 @@ class Test with
 //│     tmp = foo();
 //│     Predef.print(tmp)
 //│   }
-//│   static constructorName() { return "Test"; }
+//│   static [constructorName]() { return "Test"; }
 //│ };
 
 new Test

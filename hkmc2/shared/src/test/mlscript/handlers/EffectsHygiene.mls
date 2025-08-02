@@ -20,13 +20,13 @@ fun foo(h): module M =
 //│     static {
 //│       A2 = A;
 //│     }
-//│     static constructorName() { return "A"; }
+//│     static [constructorName]() { return "A"; }
 //│   });
 //│   (class A1 {
 //│     static {
 //│       A3 = A1;
 //│     }
-//│     static constructorName() { return "A"; }
+//│     static [constructorName]() { return "A"; }
 //│   });
 //│   scrut = false;
 //│   if (scrut === true) {

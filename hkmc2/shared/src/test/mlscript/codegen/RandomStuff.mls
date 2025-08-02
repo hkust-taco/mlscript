@@ -39,11 +39,11 @@ data class Foo(x) with
 //│         constructor() {
 //│           this.y = this$Foo.x;
 //│         }
-//│         static constructorName() { return "Bar"; }
+//│         static [constructorName]() { return "Bar"; }
 //│       };
 //│     }
-//│     static constructorName() { return "Foo"; }
-//│     static fieldNames() { return ["x"]; }
+//│     static [constructorName]() { return "Foo"; }
+//│     static [fieldNames]() { return ["x"]; }
 //│   }
 //│ });
 
