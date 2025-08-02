@@ -46,7 +46,7 @@ class CompileTestRunner
         
         println(s"Compiling: $relativeName")
         
-        val preludePath = testDir/"mlscript"/"decls"/"Prelude.mls"
+        val preludePath = mainTestDir/"mlscript"/"decls"/"Prelude.mls"
         
         given Config = Config.default
         
