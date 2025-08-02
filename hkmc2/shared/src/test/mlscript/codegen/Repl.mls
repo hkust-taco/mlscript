@@ -54,12 +54,12 @@ res
 //│ >  undefined
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res5)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
-//│ >  [Function res]
+//│ >  [function res]
 //│ >  Unit {}
 //│ REPL> Parsed:
-//│ >  [Function res]
+//│ >  [function res]
 //│ >  Unit {}
-//│ = [Function res]
+//│ = [function res]
 
 
 :showRepl

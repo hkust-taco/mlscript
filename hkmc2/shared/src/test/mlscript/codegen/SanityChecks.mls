@@ -92,7 +92,7 @@ f(2)
 //│ block$res6 = runtime.safeCall(f5(2));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
-//│ f = [Function f]
+//│ f = [function f]
 
 
 :expect NaN

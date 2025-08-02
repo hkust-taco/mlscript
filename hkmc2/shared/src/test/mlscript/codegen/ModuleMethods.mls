@@ -20,7 +20,7 @@ let s = Example.f
 //│ }
 //│ s = selRes;
 //│ block$res3 = undefined;
-//│ s = [Function f]
+//│ s = [function f]
 
 s(123)
 //│ = [123, 456]
@@ -62,7 +62,7 @@ module Test with
 //│ > 1
 
 let f = Test.foo
-//│ f = [Function foo]
+//│ f = [function foo]
 
 // :fixme
 f()

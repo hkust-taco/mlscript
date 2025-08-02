@@ -141,7 +141,7 @@ id
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (integer literal).
 //│ ║  l.137: 	  1
 //│ ╙──       	  ^
-//│ = [Function id]
+//│ = [function id]
 
 :e
 :re

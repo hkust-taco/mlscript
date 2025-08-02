@@ -9,7 +9,7 @@ val ex = new Example
 //│ ex = Example
 
 let s = ex.("f")
-//│ s = [Function f]
+//│ s = [function f]
 
 :todo
 :e
@@ -34,8 +34,8 @@ module Example with
 let
   f = Example.f
   g = Example.g
-//│ f = [Function f]
-//│ g = [Function g]
+//│ f = [function f]
+//│ g = [function g]
 
 f(123)
 //│ = [123, 456]

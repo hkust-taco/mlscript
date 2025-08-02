@@ -73,7 +73,7 @@ open Option
 Some
 //│ JS (unsanitized):
 //│ Option.Some
-//│ = [Function Some]
+//│ = [function Some]
 
 :sjs
 None

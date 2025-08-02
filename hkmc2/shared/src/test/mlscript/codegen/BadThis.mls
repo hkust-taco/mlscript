@@ -2,7 +2,7 @@
 
 
 globalThis.clearInterval
-//│ = [Function clearInterval]
+//│ = [function clearInterval]
 
 class A
 

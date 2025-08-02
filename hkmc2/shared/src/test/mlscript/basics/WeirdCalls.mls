@@ -20,7 +20,7 @@ print
 //│ ║        	^^^^^^^
 //│ ║  l.15: 	  )
 //│ ╙──      	^^^
-//│ = [Function print]
+//│ = [function print]
 
 :w
 print of

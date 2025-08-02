@@ -227,9 +227,9 @@ x + y
 //│ y = tmp5;
 //│ x + y
 //│ = "01"
-//│ f1 = [Function]
-//│ f2 = [Function]
-//│ ret = Tuple([Function], [Function])
+//│ f1 = [function]
+//│ f2 = [function]
+//│ ret = Tuple([function], [function])
 //│ x = "0"
 //│ y = "1"
 
@@ -284,11 +284,11 @@ a.toString() + b + c + d
 //│ b = 1
 //│ c = 10
 //│ d = 110
-//│ g2 = [Function]
-//│ gRet = Tuple([Function], [Function])
-//│ hFun = [Function]
-//│ iFun = [Function]
-//│ ret = Tuple(Tuple([Function], [Function]), [Function])
+//│ g2 = [function]
+//│ gRet = Tuple([function], [function])
+//│ hFun = [function]
+//│ iFun = [function]
+//│ ret = Tuple(Tuple([function], [function]), [function])
 
 // some variables mutated, some not
 :sjs
@@ -511,7 +511,7 @@ let ret = f()
 ret()
 ret()
 //│ = 2
-//│ ret = [Function]
+//│ ret = [function]
 
 :expect 6
 :lift

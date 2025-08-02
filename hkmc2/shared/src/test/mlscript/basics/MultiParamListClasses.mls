@@ -4,17 +4,17 @@
 data class Foo(x, y)(z)
 
 Foo
-//│ = [Function Foo]
+//│ = [function Foo]
 
 Foo(1, 2)
-//│ = [Function]
+//│ = [function]
 
 Foo(1, 2)(3)
 //│ = Foo(1, 2)
 
 
 new Foo(1, 2)
-//│ = [Function]
+//│ = [function]
 
 new Foo(1, 2)(3)
 //│ = Foo(1, 2)
@@ -78,10 +78,10 @@ Foo(1, 2)
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ JS (unsanitized):
 //│ let f; f = Foo7;
-//│ f = [Function Foo]
+//│ f = [function Foo]
 
 // FIXME: unsoundness
 f(1, 2)
-//│ = [Function]
+//│ = [function]
 
 

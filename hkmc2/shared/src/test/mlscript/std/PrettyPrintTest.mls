@@ -118,7 +118,7 @@ show of Object.assign of
   x: 0
   y: [...Array(8)]
   z: 512
-//│ > [Function] {                                                              ┊
+//│ > [function] {                                                              ┊
 //│ >   x: 0,                                                                   ┊
 //│ >   y: [                                                                    ┊
 //│ >     undefined,                                                            ┊

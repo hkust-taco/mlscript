@@ -198,10 +198,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.187: 	  val x = 1
+//│ ║  l.197: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.188: 	  val x = 2
+//│ ║  l.198: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -219,10 +219,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.209: 	  let x = 2
+//│ ║  l.220: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.208: 	  val x = 1
+//│ ║  l.219: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -246,7 +246,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.235: 	class Foo with val x = 1
+//│ ║  l.247: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;

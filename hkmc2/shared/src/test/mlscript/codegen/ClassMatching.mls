@@ -69,7 +69,7 @@ x => if x is Some(x) then x
 //│   }
 //│ });
 //│ lambda
-//│ = [Function]
+//│ = [function]
 
 
 data class C(a)

@@ -28,7 +28,7 @@ foo(...a)
 
 
 let f = (...xs) => xs
-//│ f = [Function f]
+//│ f = [function f]
 
 f(a)
 //│ = [[1, 2, 3]]

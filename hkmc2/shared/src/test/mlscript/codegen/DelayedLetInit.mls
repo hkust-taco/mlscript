@@ -50,14 +50,14 @@ fun f() = 1
 f
 //│ JS (unsanitized):
 //│ f
-//│ = [Function f]
+//│ = [function f]
 
 
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
 //│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
-//│ f = [Function f]
+//│ f = [function f]
 
 f(1)
 //│ JS (unsanitized):

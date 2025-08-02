@@ -383,7 +383,7 @@ fun render(target, ...args) =
                 else "class"
               "[" + kind + " " + (if arg.name is "" then "(anonymous)" else arg.name) + "]"
             else
-              "[Function" + (if arg.name is "" then "" else " " + arg.name) + "]"
+              "[function" + (if arg.name is "" then "" else " " + arg.name) + "]"
           head + if // Add a space if the function do not have enumerable properties
             let properties = renderObject(arg, level, keyLength, startPos + head.length)
             properties is "{}" then ""

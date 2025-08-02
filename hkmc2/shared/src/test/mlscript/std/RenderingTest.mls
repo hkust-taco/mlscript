@@ -44,7 +44,7 @@ render(Object.create(null))
 //│ = "{}"
 
 render(x => x)
-//│ = "[Function]"
+//│ = "[function]"
 
 class Foo
 
@@ -117,7 +117,7 @@ renderAsStr of new Map of [[1, 2], [3, 4]]
 //│ = "Map(2) {1 => 2, 3 => 4}"
 
 renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
-//│ = "Map(2) {[Function Foo] => 2, [class Symbol] => 1}"
+//│ = "Map(2) {[function Foo] => 2, [class Symbol] => 1}"
 
 renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
 //│ = "Map(1) {{a: 0} => {b: 0}}"
@@ -176,30 +176,30 @@ renderAsStr of new Bar
 fun test() = ()
 
 renderAsStr of test
-//│ = "[Function test]"
+//│ = "[function test]"
 
 renderAsStr of [42, 100, test]
-//│ = "[42, 100, [Function test]]"
+//│ = "[42, 100, [function test]]"
 
 set test.test = test
 
 renderAsStr of test
-//│ = "<ref *1> [Function test] {test: [Circular *1]}"
+//│ = "<ref *1> [function test] {test: [Circular *1]}"
 
 let greetings = () => "hello"
-//│ greetings = [Function greetings]
+//│ greetings = [function greetings]
 
 renderAsStr of greetings
-//│ = "[Function greetings]"
+//│ = "[function greetings]"
 
 renderAsStr of x => x * 2
-//│ = "[Function]"
+//│ = "[function]"
 
 renderAsStr of Object.assign(x => x * 2, { a: 2 })
-//│ = "[Function] {a: 2}"
+//│ = "[function] {a: 2}"
 
 renderAsStr of globalThis.setImmediate
-//│ = "[Function setImmediate]"
+//│ = "[function setImmediate]"
 
 //   ____ _                _
 //  / ___(_)_ __ ___ _   _| | __ _ _ __
@@ -252,10 +252,10 @@ b
 //│ = <ref *2> [<ref *1> {x: [Circular *1], y: 1}, <ref *1> {x: [Circular *1], y: 1}, [Circular *2]]
 
 let functionWithProperties = Object.assign(x => x, "kind": "Callable")
-//│ functionWithProperties = [Function] {kind: "Callable"}
+//│ functionWithProperties = [function] {kind: "Callable"}
 
 functionWithProperties
-//│ = [Function] {kind: "Callable"}
+//│ = [function] {kind: "Callable"}
 
 functionWithProperties.kind
 //│ = "Callable"

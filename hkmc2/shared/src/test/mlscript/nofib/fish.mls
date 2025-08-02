@@ -163,4 +163,3 @@ fun testFish_nofib(n) =
 // However, it will cause the file size to increase by ~390 KiB.
 let ls = testFish_nofib(1)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│ ls = undefined
