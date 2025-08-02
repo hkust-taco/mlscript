@@ -45,7 +45,8 @@ data class Outer(a, b) with
 //│               d
 //│             ]
 //│           }
-//│           toString() { return "Inner(" + runtime.render(this.c) + ")"; }
+//│           static constructorName() { return "Inner"; }
+//│           static fieldNames() { return ["c"]; }
 //│         }
 //│       });
 //│       tmp = this.Inner(this.a);
@@ -62,7 +63,8 @@ data class Outer(a, b) with
 //│       tmp = this.Inner(c1);
 //│       return runtime.safeCall(tmp.i1(d))
 //│     }
-//│     toString() { return "Outer(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
+//│     static constructorName() { return "Outer"; }
+//│     static fieldNames() { return ["a", "b"]; }
 //│   }
 //│ });
 

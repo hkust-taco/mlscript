@@ -109,7 +109,7 @@ fun display(token) = (if token is
   Comment then "comment"
   Identifier(name, _) then "identifier `" + name + "`"
   Literal(kind, value) then mkStr of
-    kind.toString().toLowerCase()
+    Predef.render(kind).toLowerCase()
     " "
     JSON.stringify(value)
   ) + " at " + token.displayLocation

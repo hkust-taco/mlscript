@@ -4,7 +4,7 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; (class None { static { None1 = None; } static toString() { return "None"; } });
+//│ let None1; (class None { static { None1 = None; } static constructorName() { return "None"; } });
 
 :sjs
 None
@@ -23,7 +23,7 @@ None()
 new None
 //│ JS (unsanitized):
 //│ new None1()
-//│ = None {}
+//│ = None
 
 
 :sjs
@@ -40,7 +40,7 @@ module M with
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
-//│       toString() { return "C"; }
+//│       static constructorName() { return "C"; }
 //│     };
 //│     this.D = function D() {
 //│       return new D.class();
@@ -48,14 +48,15 @@ module M with
 //│     Object.defineProperty(this.D, 'class', {
 //│     value: class D {
 //│         constructor() {}
-//│         toString() { return "D(" + "" + ")"; }
+//│         static constructorName() { return "D"; }
+//│         static fieldNames() { return []; }
 //│       }
 //│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static toString() { return "M"; }
+//│   static constructorName() { return "M"; }
 //│ });
 
 M.C
@@ -77,7 +78,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.78: 	M.oops
+//│ ║  l.79: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -89,7 +90,7 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static toString() { return "M"; } });
+//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static constructorName() { return "M"; } });
 
 :sjs
 M.m

@@ -117,7 +117,8 @@ Cls(1, 2).f(3)
 //│       tmp3 = tmp2 + z;
 //│       return tmp3 + p
 //│     }
-//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
+//│     static constructorName() { return "Cls"; }
+//│     static fieldNames() { return ["x", "y"]; }
 //│   }
 //│ });
 //│ tmp1 = Cls1(1, 2);
@@ -150,7 +151,8 @@ Cls(1, 2).f(3)
 //│       tmp4 = tmp3 + z;
 //│       return tmp4 + p
 //│     }
-//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
+//│     static constructorName() { return "Cls"; }
+//│     static fieldNames() { return ["x", "y"]; }
 //│   }
 //│ });
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
@@ -191,7 +193,8 @@ Cls(1, 2).f(3, 4)(5)
 //│         return tmp8 + s
 //│       }
 //│     }
-//│     toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
+//│     static constructorName() { return "Cls"; }
+//│     static fieldNames() { return ["x", "y"]; }
 //│   }
 //│ });
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
@@ -262,11 +265,12 @@ if M.A(1).y is
 //│           let y = args[0];
 //│           return this.x + y
 //│         }
-//│         toString() { return "A(" + runtime.render(this.x) + ")"; }
+//│         static constructorName() { return "A"; }
+//│         static fieldNames() { return ["x"]; }
 //│       }
 //│     });
 //│   }
-//│   static toString() { return "M"; }
+//│   static constructorName() { return "M"; }
 //│ });
 //│ tmp5 = runtime.safeCall(M1.A(1));
 //│ selRes2 = tmp5.y;

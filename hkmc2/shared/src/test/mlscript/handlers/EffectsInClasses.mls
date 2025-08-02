@@ -68,7 +68,8 @@ data class Lol(h) with
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$ctor$Lol$(" + runtime.render(this.pc) + ")"; }
+//│           static constructorName() { return "Cont$ctor$Lol$"; }
+//│           static fieldNames() { return ["pc"]; }
 //│         }
 //│       });
 //│       this.h = h;
@@ -86,7 +87,8 @@ data class Lol(h) with
 //│       }
 //│       res
 //│     }
-//│     toString() { return "Lol(" + runtime.render(this.h) + ")"; }
+//│     static constructorName() { return "Lol"; }
+//│     static fieldNames() { return ["h"]; }
 //│   }
 //│ });
 

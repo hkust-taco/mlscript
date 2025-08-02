@@ -19,6 +19,6 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static toString() { return "A"; }
+//│   static constructorName() { return "A"; }
 //│ });
 

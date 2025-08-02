@@ -37,7 +37,8 @@ data class A(x) with
 //│     getB() {
 //│       return this.A$instance$0.x + this.y
 //│     }
-//│     toString() { return "B(" + runtime.render(this.y) + ")"; }
+//│     static constructorName() { return "B"; }
+//│     static fieldNames() { return ["y"]; }
 //│   }
 //│ });
 //│ A1 = function A(x1) {
@@ -53,7 +54,8 @@ data class A(x) with
 //│       tmp = B$(this, 2);
 //│       return runtime.safeCall(tmp.getB())
 //│     }
-//│     toString() { return "A(" + runtime.render(this.x) + ")"; }
+//│     static constructorName() { return "A"; }
+//│     static fieldNames() { return ["x"]; }
 //│   }
 //│ });
 
@@ -83,7 +85,7 @@ class A with
 //│     g$this = runtime.safeCall(g(this));
 //│     this.x = g$this;
 //│   }
-//│   toString() { return "A"; }
+//│   static constructorName() { return "A"; }
 //│ };
 //│ tmp1 = new A3();
 //│ runtime.safeCall(tmp1.x())

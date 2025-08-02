@@ -58,7 +58,8 @@ hi(0)
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
+//│       static constructorName() { return "Cont$func$hi$"; }
+//│       static fieldNames() { return ["pc"]; }
 //│     }
 //│   });
 //│   stackDelayRes = runtime.checkDepth();
@@ -147,7 +148,8 @@ sum(10000)
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
+//│       static constructorName() { return "Cont$func$sum$"; }
+//│       static fieldNames() { return ["pc"]; }
 //│     }
 //│   });
 //│   curDepth = runtime.stackDepth;

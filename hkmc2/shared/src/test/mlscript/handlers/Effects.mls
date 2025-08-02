@@ -169,7 +169,7 @@ if true do
 //│         return arg
 //│       })
 //│     }
-//│     toString() { return "Handler$h$"; }
+//│     static constructorName() { return "Handler$h$"; }
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
@@ -205,7 +205,8 @@ if true do
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
+//│       static constructorName() { return "Cont$handleBlock$h$"; }
+//│       static fieldNames() { return ["pc"]; }
 //│     }
 //│   });
 //│   f = function f() {

@@ -20,7 +20,7 @@ object Test with
 //│     tmp = Predef.print(Test1);
 //│     return Test1.x
 //│   }
-//│   toString() { return "Test"; }
+//│   static constructorName() { return "Test"; }
 //│ }; Test1 = new Test$class;
 //│ Object.defineProperty(Test1, 'class', { value: Test$class });
 
@@ -79,7 +79,7 @@ module Test with
 //│     this.x = 1;
 //│     Test3.#x = 2;
 //│   }
-//│   static toString() { return "Test"; }
+//│   static constructorName() { return "Test"; }
 //│ });
 //│ block$res8 = undefined;
 
@@ -126,7 +126,8 @@ data class Cls(x) with
 //│     get bar() {
 //│       return this.#x1;
 //│     }
-//│     toString() { return "Cls(" + runtime.render(this.x) + ")"; }
+//│     static constructorName() { return "Cls"; }
+//│     static fieldNames() { return ["x"]; }
 //│   }
 //│ });
 
@@ -181,13 +182,13 @@ module Whoops with
 //│       static g() {
 //│         return Whoops.f()
 //│       }
-//│       static toString() { return "Whoops"; }
+//│       static constructorName() { return "Whoops"; }
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
-//│   static toString() { return "Whoops"; }
+//│   static constructorName() { return "Whoops"; }
 //│ });
 
 Whoops.f()
@@ -203,7 +204,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.204: 	Runtime
+//│ ║  l.205: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

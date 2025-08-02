@@ -289,3 +289,30 @@ renderAsStr of
 renderAsStr of
   "a property name with spaces": true
 //│ = "Object { \"a property name with spaces\": true }"
+
+//   ____ _
+//  / ___| | __ _ ___ ___  ___  ___
+// | |   | |/ _` / __/ __|/ _ \/ __|
+// | |___| | (_| \__ \__ \  __/\__ \
+//  \____|_|\__,_|___/___/\___||___/
+//
+
+object Singleton
+
+renderAsStr of Singleton
+//│ = "Singleton"
+
+data class Point(x: Num, y: Num)
+
+renderAsStr of Point(1, 2)
+//│ = "Point(1, 2)"
+
+renderAsStr of Point(1, 2)
+//│ = "Point(1, 2)"
+
+import "../../mlscript-compile/Stack.mls"
+
+open Stack
+
+renderAsStr of 1 :: 2 :: 3 :: 4
+//│ = "Cons(1, Cons(2, Cons(3, 4)))"

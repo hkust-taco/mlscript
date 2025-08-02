@@ -13,7 +13,7 @@ fun test(a) =
 //│     constructor() {
 //│       this.x = a;
 //│     }
-//│     toString() { return "C"; }
+//│     static constructorName() { return "C"; }
 //│   };
 //│   return new C1()
 //│ };
@@ -23,10 +23,10 @@ test(12)
 
 fun test(x) =
   data class Foo(x)
-  Foo(x).toString()
+  Foo(x)
 
 test(3)
-//│ = "Foo(3)"
+//│ = Foo(3)
 
 :sjs
 fun test(x) =
@@ -45,7 +45,8 @@ fun test(x) =
 //│         this.a = a;
 //│         this.b = b;
 //│       }
-//│       toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
+//│       static constructorName() { return "Foo"; }
+//│       static fieldNames() { return ["a", "b"]; }
 //│     }
 //│   });
 //│   tmp = x + 1;
@@ -62,7 +63,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.63: 	test()
+//│ ║  l.64: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

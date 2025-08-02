@@ -39,7 +39,7 @@ fun showAsTree(thing) =
     Tree.Error(t, m) then tuple of "Error", [["tree", go(t)], ["message", go(m)]]
     Tree.Ident(n, _) then tuple of "Ident", [["name", go(n)]]
     Tree.Bracketed(k, items) then tuple of
-      "Bracketed#" + k, [["items", go(items)]]
+      "Bracketed#" + render(k), [["items", go(items)]]
     Tree.Underscore() then tuple of "Underscore", []
     Tree.Modified(m, s) then
       tuple of "Modified", [["modifier", go(m)], ["subject", go(s)]]
@@ -51,7 +51,7 @@ fun showAsTree(thing) =
     Tree.App(c, a) then tuple of "App", [["callee", go(c)], ["argument", go(a)]]
     Tree.Infix(op, lhs, rhs) then tuple of
       "Infix", [["op", go(op)], ["lhs", go(lhs)], ["rhs", go(rhs)]]
-    Tree.Define(k, i) then tuple of "Define", [["kind", k.toString()], ["items", go(i)]]
+    Tree.Define(k, i) then tuple of "Define", [["kind", render(k)], ["items", go(i)]]
     Tree.LetIn(bds, b) then tuple of "LetIn", [["bindings", go(bds)], ["body", go(b)]]
     Tree.While(c, b) then tuple of "While", [["condition", go(c)], ["body", go(b)]]
     Tree.For(h, s, e, b) then tuple of
@@ -59,7 +59,7 @@ fun showAsTree(thing) =
     Tree.Ternary(n, l, r, b) then tuple of
       "Ternary", [["name", go(n)], ["lhs", go(l)], ["rhs", go(r)], ["body", go(b)]]
     Tree.Lambda(p, b) then tuple of "Lambda", [["params", go(p)], ["body", go(b)]]
-    Keywords.Keyword as keyword then [keyword.toString(), []]
+    Keywords.Keyword as keyword then [render(keyword), []]
     LiteralKind.Integer then tuple of "Integer", []
     LiteralKind.Decimal then tuple of "Decimal", []
     LiteralKind.String then tuple of "String", []

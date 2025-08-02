@@ -80,7 +80,7 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
-//│   static toString() { return "T"; }
+//│   static constructorName() { return "T"; }
 //│ });
 
 
@@ -109,7 +109,7 @@ module M with
 //│   static get t() {
 //│     return 0;
 //│   }
-//│   static toString() { return "M"; }
+//│   static constructorName() { return "M"; }
 //│ });
 
 
@@ -298,7 +298,8 @@ data class Foo(x) with
 //│     get oops() {
 //│       return this.x;
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.x) + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return ["x"]; }
 //│   }
 //│ });
 

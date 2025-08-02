@@ -60,15 +60,18 @@ let noNeedForQuotes(id) = identifierPattern.test(id)
 let emptyOptions = new Object
 
 let DEFAULT_BREAK_LENGTH = 80
-
 let OBJ_PROTO = "Object "
 
 let symbolsForArray =
-  start: "[", end: "]", separator: ",", empty: "[]"
+  start: "[", end: "]", separator: ",", empty: "[]", padding: " "
 
 let symbolsForSet(n: Int) =
   let headline = "Set(" + n + ") "
-  start: headline + "{", end: "}", separator: ",", empty: headline + "{}"
+  start: headline + "{", end: "}", separator: ",",
+  empty: headline + "{}", padding: " "
+
+let symbolsForClass(name: Str) =
+  start: name + "(", end: ")", separator: ",", empty: name + "()", padding: ""
 
 let symbolsForObject =
   start: "{", end: "}", entrySeparator: ",", keyValueSeparator: ": ", empty: "{}"
@@ -96,6 +99,8 @@ fun render(target, ...args) =
       indent is null then Number.POSITIVE_INFINITY
       options is (:breakLength) and breakLength is Int and breakLength > 0 then breakLength
       else DEFAULT_BREAK_LENGTH
+    // padding = if options is (padding: true) then " " else ""
+    padding = " "
     circularCounter = 1
     visitingObjects = new WeakMap // Object -> null | Int
     visitedObjects = new WeakMap // Object -> Str
@@ -167,6 +172,24 @@ fun render(target, ...args) =
       result
     renderSequence of
       done, next, level, keyLength, startPos, symbolsForSet(theSet.size)
+  // Render instances of MLscript classes.
+  fun renderClassInstance(constructorName, fieldNames, instance, level, keyLength, startPos) =
+    let
+      length = fieldNames.length
+      i = 0
+      itemIndentationLength = if indent is null then 0 else (level + 1) * indent.length
+    let done() = i >= length
+    let next(isFirst: Bool, prefixLength: Int) =
+      let
+        key = fieldNames.[i]
+        value = instance.(key)
+      set i += 1
+      let
+        prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+        valueStartLength = if prefixLengthIfSameLine > breakLength
+          then itemIndentationLength else prefixLengthIfSameLine
+      renderValue(value, level + 1, 0, valueStartLength)
+    renderSequence of done, next, level, keyLength, startPos, symbolsForClass(constructorName)
   fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
     let
       items = []
@@ -174,7 +197,7 @@ fun render(target, ...args) =
       hasMultiline = false
       // Try calculating the length needed to place all items in one line. The
       // brackets and spaces around items are excluded from the length.
-      singleLineLength = startPos + symbols.start.length + 1 // "[ "
+      singleLineLength = startPos + symbols.start.length + symbols.padding.length
       // Append a new item and update needed variables.
       push = (item: Str) =>
         if item.length > longestItem do set longestItem = item.length
@@ -188,13 +211,15 @@ fun render(target, ...args) =
     // Iterate through and render all items.
     while done() is false do
       push of next(items.length is 0, singleLineLength)
-    set singleLineLength += symbols.end.length + 1
+    set singleLineLength += symbols.end.length + symbols.padding.length
     let
       layoutMultiLine() =
         symbols.start + "\n" + itemIdent + items.join(symbols.separator +
         "\n" + itemIdent) + "\n" + parentIndent + symbols.end
       layoutSingleLine() =
-        symbols.start + " " + items.join(symbols.separator + " ") + " " + symbols.end
+        symbols.start + symbols.padding +
+        items.join(symbols.separator + " ") +
+        symbols.padding + symbols.end
     if
       items.length is 0 then symbols.empty
       indent is null then layoutSingleLine()
@@ -204,6 +229,7 @@ fun render(target, ...args) =
       parentIndent.length + (singleLineLength - startPos + keyLength) <= breakLength then
         layoutSingleLine()
       else layoutMultiLine()
+  // Render enumerable properties of the given object.
   fun renderObject(subject, level, keyLength, startPos) =
     let
       entries = Object.entries(Object.getOwnPropertyDescriptors(subject))
@@ -273,7 +299,7 @@ fun render(target, ...args) =
     let
       items = []
       hasMultiline = false
-      singleLineLength = startPos + symbols.start.length + 1
+      singleLineLength = startPos + symbols.start.length + padding.length
       parentIndent = if indent is null then null else indent.repeat(level)
       itemIdent = if indent is null then null else indent.repeat(level + 1)
       push = (key: Str, value: Str) =>
@@ -288,11 +314,11 @@ fun render(target, ...args) =
     while done() is false do
       push of ...next(items.length is 0, singleLineLength)
     // Complete the single line length.
-    set singleLineLength += 2 // " }"
+    set singleLineLength += padding.length + symbols.end.length // " }"
     let
       layoutMultiLine = () => symbols.start + "\n" + itemIdent + items.join(",\n" + itemIdent)
         + "\n" + parentIndent + symbols.end
-      layoutSingleLine = () => symbols.start + " " + items.join(", ") + " " + symbols.end
+      layoutSingleLine = () => symbols.start + padding + items.join(", ") + padding + symbols.end
     if
       items.length is 0 then symbols.empty
       indent is null then layoutSingleLine()
@@ -355,16 +381,37 @@ fun render(target, ...args) =
       Reflect.getPrototypeOf(arg) is
         // Objects with `null` as the prototype does not have prefix.
         null then renderObject(arg, level, keyLength, startPos)
+        // The result of `getPrototypeOf` is either `null` or `Object`.
         proto and
           // For object literals, show its properties without the constructor.
           proto === Object.prototype then
             OBJ_PROTO + renderObject(arg, level, keyLength, startPos + OBJ_PROTO.length)
-          // If the prototype has its own implementation of `toString`, use the
-          // result and do not show properties.
+          // The `constructor` field refers to the class.
+          proto.constructor is Function and
+            // If the prototype has its own implementation of `toString`, call it.
+            proto.hasOwnProperty("toString") then arg.toString() indentText(level)
+            // If the symbol %constructorName is defined on the constructor, we
+            // render the function using the provided field names.
+            proto.constructor.hasOwnProperty("constructorName") and
+              proto.constructor.constructorName is Function and
+                let constructorName = proto.constructor.constructorName()
+                // Check if field names are provided. Note that static members
+                // can be also inherited from base classes.
+                proto.constructor.hasOwnProperty("fieldNames") and
+                  proto.constructor.fieldNames is Function then
+                    let fieldNames = proto.constructor.fieldNames()
+                    renderClassInstance of
+                      constructorName, fieldNames, arg, level, keyLength, startPos
+                // If no field names are provided, return the constructor name only.
+                else constructorName
+            // Otherwise, we print the name of the constructor and the properties.
+            let head = proto.constructor.name
+            else head + renderObject(arg, level, keyLength, startPos + head.length)
+          // Otherwise, the prototype is not a function.
+          // If the prototype has its own implementation of `toString`, call it.
           proto.hasOwnProperty("toString") then arg.toString() indentText(level)
-          else
-            let head = proto.constructor.name + " "
-            head + renderObject(arg, level, keyLength, startPos + head.length)
+          // Otherwise, treat the input as normal object.
+          else renderObject(arg, level, keyLength, startPos)
     // We have finished visiting this object
     let prefix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
       Int as index then "<ref *" + index + "> "

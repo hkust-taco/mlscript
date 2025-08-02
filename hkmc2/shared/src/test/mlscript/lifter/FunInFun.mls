@@ -187,7 +187,8 @@ x + y
 //│     constructor(a0$) {
 //│       this.a0$ = a0$;
 //│     }
-//│     toString() { return "f$capture(" + runtime.render(this.a0$) + ")"; }
+//│     static constructorName() { return "f$capture"; }
+//│     static fieldNames() { return ["a0$"]; }
 //│   }
 //│ });
 //│ f5 = function f() {
@@ -207,7 +208,8 @@ x + y
 //│       this.a = a;
 //│       this.b = b;
 //│     }
-//│     toString() { return "Tuple(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
+//│     static constructorName() { return "Tuple"; }
+//│     static fieldNames() { return ["a", "b"]; }
 //│   }
 //│ });
 //│ tmp = f5();
@@ -324,7 +326,8 @@ f(1, 2, 1000)
 //│     constructor(mutated0$) {
 //│       this.mutated0$ = mutated0$;
 //│     }
-//│     toString() { return "f$capture(" + runtime.render(this.mutated0$) + ")"; }
+//│     static constructorName() { return "f$capture"; }
+//│     static fieldNames() { return ["mutated0$"]; }
 //│   }
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
@@ -479,7 +482,8 @@ g()(1)
 //│     constructor(y0$) {
 //│       this.y0$ = y0$;
 //│     }
-//│     toString() { return "g$capture(" + runtime.render(this.y0$) + ")"; }
+//│     static constructorName() { return "g$capture"; }
+//│     static fieldNames() { return ["y0$"]; }
 //│   }
 //│ });
 //│ g13 = function g() {
@@ -590,7 +594,8 @@ f()
 //│     constructor(x0$) {
 //│       this.x0$ = x0$;
 //│     }
-//│     toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
+//│     static constructorName() { return "f$capture"; }
+//│     static fieldNames() { return ["x0$"]; }
 //│   }
 //│ });
 //│ f20 = function f() {
@@ -646,7 +651,7 @@ fun f(es, vs) =
 //│         return this;
 //│       }
 //│     }
-//│     toString() { return "A"; }
+//│     static constructorName() { return "A"; }
 //│   }
 //│ });
 //│ f23 = function f(es, vs) {

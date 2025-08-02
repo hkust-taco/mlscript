@@ -503,3 +503,18 @@ render of testObject, indent: "bad options"
 
 render of testObject, indent: -10
 //│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: true
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: null
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: undefined
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: ()
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: "bad value"
+//│ = "Object { x: Object { x: Object { x: Object { x: Object { x: 42 } } } }, y: \"Hello, world!\" }"

@@ -286,17 +286,20 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                     doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
                 .mkDocument(" ")
               }${
-                if mtds.exists(_.sym.nme == "toString")
-                then doc""
-                else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
-                  if paramsOpt.isEmpty then doc"""""""
-                  else doc"""(" + ${
-                      ctorFields.headOption.fold("\"\"")(f => "runtime.render(this" + fieldSelect(f._1.name) + ")")
-                    }${
-                      ctorFields.tailOption.fold("")(_.map(f =>
-                        """ + ", " + runtime.render(this""" + fieldSelect(f._1.name) + ")").mkString)
-                    } + ")""""
-                }; }"""
+                // Generate constructor name for classes, objects, and modules.
+                if (kind is syntax.Cls) || (kind is syntax.Obj) || (kind is syntax.Mod) then
+                  doc""" # static constructorName() { return ${makeStringLiteral(sym.nme)}; }"""
+                else doc""
+              }${
+                // Generate field names for classes with parameter lists, even
+                // if no parameters are marked as `val`.
+                if (kind is syntax.Cls) && paramsOpt.isDefined then
+                  doc""" # static fieldNames() { return [${
+                    (ctorFields.map: f =>
+                      doc"${f._1.name.escaped}")
+                    .mkDocument(", ")
+                  }]; }"""
+                else doc""
               } #}  # }"
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
               lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))

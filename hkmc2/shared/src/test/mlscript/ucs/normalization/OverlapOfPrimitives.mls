@@ -96,12 +96,12 @@ fun f(arg) = if
   arg is
     undefined then "undefined"
     null      then "null"
-    Object    then String(arg)
+    Object    then Predef.render(arg)
 //│ Normalized:
 //│ >  if
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
-//│ >    arg is Object then member:String#666(arg#666)
+//│ >    arg is Object then member:Predef#666.render‹member:render›(arg#666)
 
 f of undefined
 //│ = "undefined"
@@ -114,12 +114,12 @@ f of Foo
 
 fun f(arg) = if
   arg is
-    Object    then String(arg)
+    Object    then Predef.render(arg)
     undefined then "undefined"
     null      then "null"
 //│ Normalized:
 //│ >  if
-//│ >    arg is Object then member:String#666(arg#666)
+//│ >    arg is Object then member:Predef#666.render‹member:render›(arg#666)
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
 

@@ -9,7 +9,7 @@ MyClass
 //│ = [class MyClass]
 
 new MyClass("Bob")
-//│ = MyClass { name: "Bob" }
+//│ = MyClass{ name: "Bob" }
 
 let C = MyClass
 //│ C = [class MyClass]
@@ -19,7 +19,7 @@ let c = C
 
 :todo
 new c("Bob")
-//│ = MyClass { name: "Bob" }
+//│ = MyClass{ name: "Bob" }
 
 :re
 globalThis.MyClass

@@ -167,6 +167,6 @@ let Predef1;
   static use(instance) {
     return instance
   }
-  static toString() { return "Predef"; }
+  static constructorName() { return "Predef"; }
 });
 let Predef = Predef1; export default Predef;

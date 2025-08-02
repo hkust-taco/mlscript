@@ -12,7 +12,7 @@ fun example(input) =
   let tokens = lex of input, false
   print of "Tokens: " + TokenHelpers.panorama(tokens)
   let expr = parse of tokens
-  print of "Parsed: " + expr.toString()
+  print of "Parsed: " + Predef.render(expr)
   print of "Pretty-printed: " + expr Expr.prettyPrint()
 
 example of "x + y - 3 * (a / b) ** 2"

@@ -13,7 +13,8 @@ data class Foo()
 //│ Object.defineProperty(Foo1, 'class', {
 //│   value: class Foo {
 //│     constructor() {}
-//│     toString() { return "Foo(" + "" + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return []; }
 //│   }
 //│ });
 
@@ -44,7 +45,8 @@ data class Foo(a)
 //│     constructor(a) {
 //│       this.a = a;
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.a) + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return ["a"]; }
 //│   }
 //│ });
 
@@ -82,7 +84,8 @@ data class Foo(a, b)
 //│       this.a = a;
 //│       this.b = b;
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return ["a", "b"]; }
 //│   }
 //│ });
 
@@ -151,7 +154,8 @@ data class Inner(c) with
 //│     i1(d) {
 //│       return this.c + d
 //│     }
-//│     toString() { return "Inner(" + runtime.render(this.c) + ")"; }
+//│     static constructorName() { return "Inner"; }
+//│     static fieldNames() { return ["c"]; }
 //│   }
 //│ });
 
@@ -209,7 +213,8 @@ class Foo(x, val y, z, val z, z) with
 //│       tmp16 = "this.z = " + this.z;
 //│       Predef.print(tmp16)
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.y) + ", " + runtime.render(this.z) + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return ["y", "z"]; }
 //│   }
 //│ });
 
@@ -238,7 +243,8 @@ class Foo(val z, val z)
 //│       this.z = z;
 //│       this.z = z1;
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.z) + ", " + runtime.render(this.z) + ")"; }
+//│     static constructorName() { return "Foo"; }
+//│     static fieldNames() { return ["z", "z"]; }
 //│   }
 //│ });
 
