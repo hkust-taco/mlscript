@@ -27,15 +27,6 @@
 
 // ——— ——— ———
 
-true or true
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(true),keyword 'or',BoolLit(true)) (of class hkmc2.syntax.Tree$InfixApp)
-
-:fixme
-while false or false do print("ok")
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(false),keyword 'or',BoolLit(false)) (of class hkmc2.syntax.Tree$InfixApp)
-
-// ——— ——— ———
-
 :e
 fun (**) f1(a, b) = "[" + a + " * " + b + "]"
 fun (**) f2(a, b) = "(" + a + " + " + b + ")"
@@ -49,24 +40,24 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[ERROR] Multiple definitions of symbol '**'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol '++'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
 
 // ——— ——— ———
@@ -75,7 +66,7 @@ fun (++) t() = 1
 :re
 id(1, 2)
 //│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.76: 	id(1, 2)
+//│ ║  l.67: 	id(1, 2)
 //│ ╙──      	  ^^^^^^
 //│ = 1
 
@@ -130,7 +121,7 @@ fun p: Int
 
 p
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'p'
-//│ ║  l.129: 	fun p: Int
+//│ ║  l.120: 	fun p: Int
 //│ ╙──       	    ^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: p is not defined
 
@@ -143,14 +134,14 @@ fun (++) test: (Int, Int) -> Int
 
 test(1, 2)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
-//│ ║  l.139: 	fun (++) test: (Int, Int) -> Int
+//│ ║  l.130: 	fun (++) test: (Int, Int) -> Int
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 :sjs
 1 ++ 1
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
-//│ ║  l.139: 	fun (++) test: (Int, Int) -> Int
+//│ ║  l.130: 	fun (++) test: (Int, Int) -> Int
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let tmp4; tmp4 = test(); runtime.safeCall(tmp4(1, 1))
@@ -196,7 +187,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.197: 	Cls.x
+//│ ║  l.188: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -224,25 +215,25 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.223: 	module Example with
+//│ ║  l.214: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.224: 	// whoops
+//│ ║  l.215: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.225: 	  val a = this
+//│ ║  l.216: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.225: 	  val a = this
+//│ ║  l.216: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.240: 	let xs = new Oopsie
+//│ ║  l.231: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'xs'
-//│ ║  l.240: 	let xs = new Oopsie
+//│ ║  l.231: 	let xs = new Oopsie
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
@@ -317,13 +308,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.318: 	open Stack { ::, Nil }
+//│ ║  l.309: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.324: 	open Stack { (::), Nil }
+//│ ║  l.315: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -331,7 +322,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.332: 	1 :: Nil
+//│ ║  l.323: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -342,9 +333,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.342: 	mkStr of ... // hello
+//│ ║  l.333: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.343: 	"oops"
+//│ ║  l.334: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -367,22 +358,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.359: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.359: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.377: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.383: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.374: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 

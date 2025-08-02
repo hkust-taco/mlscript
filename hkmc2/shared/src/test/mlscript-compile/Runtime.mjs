@@ -16,6 +16,8 @@ let Runtime1;
     };
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
+    this.short_and = RuntimeJS.short_and;
+    this.short_or = RuntimeJS.short_or;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
       return new EffectHandle.class(_reified1);
@@ -269,40 +271,45 @@ let Runtime1;
     throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, lambda;
     tmp = got < expected;
-    tmp1 = got > expected;
-    tmp2 = isUB && tmp1;
-    scrut = tmp || tmp2;
+    lambda = (undefined, function () {
+      let lambda1;
+      lambda1 = (undefined, function () {
+        return got > expected
+      });
+      return runtime.short_and(isUB, lambda1)
+    });
+    scrut = runtime.short_or(tmp, lambda);
     if (scrut === true) {
       scrut1 = functionName.length > 0;
       if (scrut1 === true) {
-        tmp3 = " '" + functionName;
-        tmp4 = tmp3 + "'";
+        tmp1 = " '" + functionName;
+        tmp2 = tmp1 + "'";
       } else {
-        tmp4 = "";
+        tmp2 = "";
       }
-      name = tmp4;
-      tmp5 = "Function" + name;
-      tmp6 = tmp5 + " expected ";
+      name = tmp2;
+      tmp3 = "Function" + name;
+      tmp4 = tmp3 + " expected ";
       if (isUB === true) {
-        tmp7 = "";
+        tmp5 = "";
       } else {
-        tmp7 = "at least ";
+        tmp5 = "at least ";
       }
-      tmp8 = tmp6 + tmp7;
-      tmp9 = tmp8 + expected;
-      tmp10 = tmp9 + " argument";
+      tmp6 = tmp4 + tmp5;
+      tmp7 = tmp6 + expected;
+      tmp8 = tmp7 + " argument";
       scrut2 = expected === 1;
       if (scrut2 === true) {
-        tmp11 = "";
+        tmp9 = "";
       } else {
-        tmp11 = "s";
+        tmp9 = "s";
       }
-      tmp12 = tmp10 + tmp11;
-      tmp13 = tmp12 + " but got ";
-      tmp14 = tmp13 + got;
-      throw globalThis.Error(tmp14);
+      tmp10 = tmp8 + tmp9;
+      tmp11 = tmp10 + " but got ";
+      tmp12 = tmp11 + got;
+      throw globalThis.Error(tmp12);
     } else {
       return runtime.Unit
     }
@@ -800,11 +807,13 @@ let Runtime1;
     return tmp4
   } 
   static checkDepth() {
-    let scrut, tmp, tmp1, tmp2;
+    let scrut, tmp, tmp1, lambda;
     tmp = Runtime.stackDepth - Runtime.stackOffset;
     tmp1 = tmp >= Runtime.stackLimit;
-    tmp2 = Runtime.stackHandler !== null;
-    scrut = tmp1 && tmp2;
+    lambda = (undefined, function () {
+      return Runtime.stackHandler !== null
+    });
+    scrut = runtime.short_and(tmp1, lambda);
     if (scrut === true) {
       return runtime.safeCall(Runtime.stackHandler.delay())
     } else {

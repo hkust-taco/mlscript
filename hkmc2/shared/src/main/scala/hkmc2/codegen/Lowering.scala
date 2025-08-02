@@ -17,6 +17,7 @@ import semantics.Term.{Throw => _, *}
 import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree}
+import hkmc2.syntax.Fun
 
 
 abstract class TailOp extends (Result => Block)
@@ -63,6 +64,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def unit: Path =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(summon[Ctx].builtins.Unit))
+  
+  
+  def fail(err: ErrorReport): Block =
+    raise(err)
+    End("error")
   
   
   type Rcd = List[RcdArg]
@@ -168,6 +174,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             subTerm(bod)(r =>
               Define(ValDefn(td.owner, syntax.ImmutVal, td.sym, r),
                 blockImpl(stats, res)(k)))
+          case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
+            ErrorReport(
+              msg"Unexpected declaration kind '${td.k.str}' in lowering" -> td.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
       case cls: ClassLikeDef if cls.sym.defn.exists(_.isDeclare.isDefined) =>
         // * Declarations have no lowering
         blockImpl(stats, res)(k)
@@ -231,11 +241,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case ref @ st.Ref(sym) =>
       sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
-        raise:
+        return fail:
           ErrorReport(
             msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> t.toLoc ::
             Nil, S(t), source = Diagnostic.Source.Compilation)
-        return End("error")
       case sym: BuiltinSymbol =>
         warnStmt
         if sym.binary then
@@ -307,14 +316,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             msg"Expected two arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg1): ar1 =>
-          subTerm_nonTail(arg2): ar2 =>
-            k(Call(Value.Ref(sym), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
-      case _ =>
-        raise:
-          ErrorReport(
-            msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
-            source = Diagnostic.Source.Compilation)
-        End("error")
+          val isAnd = sym is State.andSymbol
+          val isOr = sym is State.orSymbol
+          if isAnd || isOr then
+            val ar2 = Value.Lam(PlainParamList(Nil), returnedTerm(arg2))
+            k(Call(
+              Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
+              Arg(N, ar1) :: Arg(N, ar2) :: Nil
+            )(true, false))
+          else
+            subTerm_nonTail(arg2): ar2 =>
+              k(Call(Value.Ref(sym), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
+      case _ => fail:
+        ErrorReport(
+          msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
+          source = Diagnostic.Source.Compilation)
     case st.TyApp(f, ts) => term(f)(k) // * Type arguments are erased
     case st.App(f, arg) =>
       val isMlsFun = f.resolvedSymbol.fold(f.isInstanceOf[st.Lam]):
@@ -342,19 +358,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
-          raise(ErrorReport(
-            msg"Debugging functions are not enabled" ->
-            t.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-          return End("error")
+          return fail:
+            ErrorReport(
+              msg"Debugging functions are not enabled" ->
+              t.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.getLocals) =>
         if !config.effectHandlers.exists(_.debug) then
-          raise(ErrorReport(
-            msg"Debugging functions are not enabled" ->
-            t.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-          return End("error")
+          return fail:
+            ErrorReport(
+              msg"Debugging functions are not enabled" ->
+              t.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(ctx.builtins.debug.getLocals).withLocOf(f))
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
@@ -367,11 +383,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case _ => subTerm(f)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if !lowerHandlers then
-        raise(ErrorReport(
-          msg"Effect handlers are not enabled" ->
-          h.toLoc :: Nil,
-          source = Diagnostic.Source.Compilation))
-        return End("error")
+        return fail:
+          ErrorReport(
+            msg"Effect handlers are not enabled" ->
+            h.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
       val handlers = defs.map {
         case HandlerTermDefinition(resumeSym, td) => td.body match
           case None => 
@@ -406,6 +422,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(fld): f =>
             subTerm_nonTail(rhs): r =>
               AssignDynField(p, f, ai, r, k(unit))
+      case _ => fail:
+        ErrorReport(
+          msg"Unexpected left-hand side in assignment (${lhs.describe})" -> lhs.toLoc :: Nil, S(lhs),
+          source = Diagnostic.Source.Compilation)
       
     case st.Lam(params, body) =>
       warnStmt
@@ -623,12 +643,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case Rcd(stats) =>
       block(stats, L(Nil))(k)
     
-    case Neg(_) =>
-      raise(ErrorReport(
-        msg"Unexpected type annotations ${t.show}" ->
-        t.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation))
-      End("error")
     case Annotated(Annot.Untyped, receiver) =>
       term(receiver)(k)
     case Annotated(ann, receiver) =>
@@ -636,6 +650,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"This annotation has no effect." -> ann.toLoc ::
         msg"Such annotations are not supported on ${receiver.describe} terms." -> receiver.toLoc :: Nil))
       term(receiver)(k)
+    case Missing => fail:
+      ErrorReport(
+        msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
+          t.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation)
+    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted
+    => fail:
+      ErrorReport(
+        msg"Unexpected term form in expression position (${t.describe})" ->
+          t.toLoc :: Nil,
+        source = Diagnostic.Source.Compilation)
     case Error => End("error")
     
     // case _ =>
@@ -653,14 +678,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def quotePattern(p: Pattern)(k: Result => Block)(using Subst): Block = p match
     case Pattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
     case _ => // TODO
-      raise(ErrorReport(
-        msg"Unsupported quasiquote pattern type ${p.showDbg}" ->
-        p.toLoc :: Nil,
-        source = Diagnostic.Source.Compilation
-      ))
-      End("error")
-
-
+      fail:
+        ErrorReport(
+          msg"Unsupported quasiquote pattern type" ->
+          p.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation
+        )
+  
   def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
       val l1, l2, l3, l4, l5 = new TempSymbol(N)
@@ -710,13 +734,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.StrLit(relPath)) :: Nil)(r2 =>
             Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
           ))
-        case _ =>
-          raise(ErrorReport(
+        case _ => fail:
+          ErrorReport(
             msg"Cannot refer to imported module ${sym.nme} due to the lack of path." ->
             t.toLoc :: Nil,
             source = Diagnostic.Source.Compilation
-          ))
-          End("error")
+          )
     case Lam(params, body) =>
       def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
         case Nil => quote(body): r =>
@@ -736,6 +759,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = new TempSymbol(N)
           Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
+        case Spd(eager, term) :: rest =>
+          fail:
+            ErrorReport(
+              msg"Unsupported spread in quasiquote application" ->
+              term.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            )
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
@@ -753,14 +783,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       val l = new TempSymbol(N)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
-    case _ =>
-      raise(ErrorReport(
+    case _ => fail:
+      ErrorReport(
         msg"Unsupported quasiquote type ${t.describe}" ->
         t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation
-      ))
-      End("error")
-
+      )
+  
   
   def gatherMembers(clsBody: ObjBody)(using Subst): (Ls[FunDefn], Ls[BlockMemberSymbol], Ls[TermSymbol], Block) =
     val mtds = clsBody.methods

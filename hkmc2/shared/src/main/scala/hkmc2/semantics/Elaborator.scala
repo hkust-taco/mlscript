@@ -239,7 +239,8 @@ object Elaborator:
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
-    val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
+    val andSymbol = builtinOpsMap("&&")
+    val orSymbol = builtinOpsMap("||")
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
     ))
@@ -470,7 +471,7 @@ extends Importer:
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       block(tree :: Nil, hasResult = false)._1
-    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
+    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")

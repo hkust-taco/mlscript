@@ -34,14 +34,14 @@ concat of
 
 :ge
 ~"a"
-//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~"a"
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ║  l.36: 	~"a"
 //│ ╙──      	 ^^^
 
 
 :ge
 ~("a", "b")
-//│ ╔══[COMPILATION ERROR] Unexpected type annotations ~( "a"; "b" )
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 //│ ║  l.43: 	~("a", "b")
 //│ ╙──      	       ^^^
 
@@ -55,7 +55,7 @@ concat of
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.51: 	~ of "a", "b"
 //│ ╙──      	     ^^^
-//│ ═══[COMPILATION ERROR] Unexpected type annotations ~<error>
+//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 
 (~) of "a", "b"
 //│ = "ab"

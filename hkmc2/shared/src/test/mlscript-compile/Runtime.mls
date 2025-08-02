@@ -11,6 +11,9 @@ object Unit with
   fun toString() = "()"
 
 
+val short_and = RuntimeJS.short_and
+val short_or = RuntimeJS.short_or
+
 fun unreachable = throw Error("unreachable")
 
 fun checkArgs(functionName, expected, isUB, got) =
