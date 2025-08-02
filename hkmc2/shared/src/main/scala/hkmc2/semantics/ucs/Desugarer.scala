@@ -505,7 +505,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
-            val sliceFn = if kw.isInstanceOf[Keyword.`..`.type] then tupleLazySlice else tupleSlice
+            val sliceFn = kw match
+              case Keyword.`..` => tupleLazySlice
+              case Keyword.`...` => tupleSlice
             rest match
               case N => (wrapLast, lastMatches)
               case S(pat) =>
