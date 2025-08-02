@@ -21,12 +21,14 @@ fun foo(h): module M =
 //│       A2 = A;
 //│     }
 //│     static [constructorName]() { return "A"; }
+//│     static [definitionKind]() { return "module"; }
 //│   });
 //│   (class A1 {
 //│     static {
 //│       A3 = A1;
 //│     }
 //│     static [constructorName]() { return "A"; }
+//│     static [definitionKind]() { return "module"; }
 //│   });
 //│   scrut = false;
 //│   if (scrut === true) {

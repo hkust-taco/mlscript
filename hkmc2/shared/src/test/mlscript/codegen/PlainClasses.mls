@@ -6,7 +6,12 @@
 
 class Foo
 //│ JS (unsanitized):
-//│ let Foo1; Foo1 = class Foo { constructor() {} static [constructorName]() { return "Foo"; } };
+//│ let Foo1;
+//│ Foo1 = class Foo {
+//│   constructor() {}
+//│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
+//│ };
 
 Foo is Foo
 //│ JS (unsanitized):
@@ -49,6 +54,7 @@ print("ok")
 //│     Predef.print("hi")
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 //│ Predef.print("ok")
 //│ > ok
@@ -66,6 +72,7 @@ fun test() =
 //│       Predef.print("hi")
 //│     }
 //│     static [constructorName]() { return "Foo"; }
+//│     static [definitionKind]() { return "class"; }
 //│   };
 //│   tmp = Predef.print("ok");
 //│   return Foo5
@@ -108,6 +115,7 @@ class Foo with
 //│     return this.#y + this.x
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 
 
@@ -138,6 +146,7 @@ class Foo with
 //│     return 6
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 
 
@@ -160,6 +169,7 @@ class Foo with
 //│     return tmp1 + 1
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 
 let a = new Foo
@@ -201,6 +211,7 @@ class Foo with
 //│     this.x = 2;
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 
 :e
@@ -222,6 +233,7 @@ class Foo with
 //│     this.#x = 2;
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 
 
@@ -237,6 +249,11 @@ class Foo with val x = 1
 //│ ║  l.235: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
-//│ let Foo16; Foo16 = class Foo15 { constructor() {} static [constructorName]() { return "Foo"; } };
+//│ let Foo16;
+//│ Foo16 = class Foo15 {
+//│   constructor() {}
+//│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "class"; }
+//│ };
 
 

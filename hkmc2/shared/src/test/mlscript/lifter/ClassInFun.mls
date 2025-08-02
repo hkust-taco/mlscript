@@ -17,6 +17,7 @@ f() + f() + f()
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   static [constructorName]() { return "Effect"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 //│ lambda$ = function lambda$(Handler$h$$instance, k) {
 //│   return runtime.safeCall(k())
@@ -37,6 +38,7 @@ f() + f() + f()
 //│     return runtime.mkEffect(this, lambda$this)
 //│   }
 //│   static [constructorName]() { return "Handler$h$"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 //│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
 //│   let tmp1;
@@ -124,6 +126,7 @@ f() + f() + f()
 //│     }
 //│     static [constructorName]() { return "Cont$handleBlock$h$"; }
 //│     static [fieldNames]() { return ["pc"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
@@ -178,6 +181,7 @@ f() + f() + f()
 //│     }
 //│     static [constructorName]() { return "Cont$func$f$"; }
 //│     static [fieldNames]() { return ["pc"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f$ = function f$(h) {
@@ -262,6 +266,7 @@ f(1).get()
 //│     }
 //│     static [constructorName]() { return "Test"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f1 = function f(x) {
@@ -335,6 +340,7 @@ f(1, 2).get()
 //│     }
 //│     static [constructorName]() { return "Test"; }
 //│     static [fieldNames]() { return ["a"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f2 = function f(used1, unused1) {
@@ -419,6 +425,7 @@ f(1, 2).get()
 //│       return this.used1$0
 //│     }
 //│     static [constructorName]() { return "Test"; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f4 = function f(used1, unused1) {
@@ -471,6 +478,7 @@ f(1)
 //│     }
 //│     static [constructorName]() { return "A"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f$capture1 = function f$capture(x0$1) {
@@ -483,6 +491,7 @@ f(1)
 //│     }
 //│     static [constructorName]() { return "f$capture"; }
 //│     static [fieldNames]() { return ["x0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f5 = function f(x) {
@@ -552,6 +561,7 @@ f().foo()
 //│     }
 //│     static [constructorName]() { return "Good"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ Bad$ = function Bad$(f$capture$0) {
@@ -585,6 +595,7 @@ f().foo()
 //│     }
 //│     static [constructorName]() { return "Bad"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f$capture3 = function f$capture(w0$1) {
@@ -597,6 +608,7 @@ f().foo()
 //│     }
 //│     static [constructorName]() { return "f$capture"; }
 //│     static [fieldNames]() { return ["w0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f6 = function f() {
@@ -690,6 +702,7 @@ f(2).get()
 //│       }
 //│       static [constructorName]() { return "Test"; }
 //│       static [fieldNames]() { return []; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   foo1 = Test10;

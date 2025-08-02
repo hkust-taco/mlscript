@@ -54,6 +54,7 @@ fun test(a) =
 //│       }
 //│       static [constructorName]() { return "Inner"; }
 //│       static [fieldNames]() { return ["b"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   return Inner1(42)
@@ -95,6 +96,7 @@ fun test(a) =
 //│       }
 //│       static [constructorName]() { return "C1"; }
 //│       static [fieldNames]() { return ["b"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   C21 = function C2(b1) {
@@ -111,6 +113,7 @@ fun test(a) =
 //│       }
 //│       static [constructorName]() { return "C2"; }
 //│       static [fieldNames]() { return ["b"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   tmp1 = C11(1);
@@ -161,6 +164,7 @@ Foo(123)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["a"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ Foo1(123)
@@ -199,6 +203,7 @@ Bar(1)
 //│     }
 //│     static [constructorName]() { return "Bar"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ Bar1(1)

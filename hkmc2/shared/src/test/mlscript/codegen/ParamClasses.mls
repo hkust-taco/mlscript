@@ -15,6 +15,7 @@ data class Foo()
 //│     constructor() {}
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -47,6 +48,7 @@ data class Foo(a)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["a"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -86,6 +88,7 @@ data class Foo(a, b)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["a", "b"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -156,6 +159,7 @@ data class Inner(c) with
 //│     }
 //│     static [constructorName]() { return "Inner"; }
 //│     static [fieldNames]() { return ["c"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -215,6 +219,7 @@ class Foo(x, val y, z, val z, z) with
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["y", "z"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -245,6 +250,7 @@ class Foo(val z, val z)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["z", "z"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 

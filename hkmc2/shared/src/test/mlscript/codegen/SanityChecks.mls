@@ -119,6 +119,7 @@ Cls(1, 2).f(3)
 //│     }
 //│     static [constructorName]() { return "Cls"; }
 //│     static [fieldNames]() { return ["x", "y"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ tmp1 = Cls1(1, 2);
@@ -153,6 +154,7 @@ Cls(1, 2).f(3)
 //│     }
 //│     static [constructorName]() { return "Cls"; }
 //│     static [fieldNames]() { return ["x", "y"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
@@ -195,6 +197,7 @@ Cls(1, 2).f(3, 4)(5)
 //│     }
 //│     static [constructorName]() { return "Cls"; }
 //│     static [fieldNames]() { return ["x", "y"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
@@ -267,10 +270,12 @@ if M.A(1).y is
 //│         }
 //│         static [constructorName]() { return "A"; }
 //│         static [fieldNames]() { return ["x"]; }
+//│         static [definitionKind]() { return "class"; }
 //│       }
 //│     });
 //│   }
 //│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ tmp5 = runtime.safeCall(M1.A(1));
 //│ selRes2 = tmp5.y;

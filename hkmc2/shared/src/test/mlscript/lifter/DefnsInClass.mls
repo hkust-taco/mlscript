@@ -39,6 +39,7 @@ data class A(x) with
 //│     }
 //│     static [constructorName]() { return "B"; }
 //│     static [fieldNames]() { return ["y"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ A1 = function A(x1) {
@@ -56,6 +57,7 @@ data class A(x) with
 //│     }
 //│     static [constructorName]() { return "A"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -86,6 +88,7 @@ class A with
 //│     this.x = g$this;
 //│   }
 //│   static [constructorName]() { return "A"; }
+//│   static [definitionKind]() { return "class"; }
 //│ };
 //│ tmp1 = new A3();
 //│ runtime.safeCall(tmp1.x())

@@ -81,6 +81,7 @@ module T with
 //│     return 2;
 //│   }
 //│   static [constructorName]() { return "T"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 
@@ -110,6 +111,7 @@ module M with
 //│     return 0;
 //│   }
 //│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 
@@ -300,6 +302,7 @@ data class Foo(x) with
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 

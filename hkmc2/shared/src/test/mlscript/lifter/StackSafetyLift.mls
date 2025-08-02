@@ -80,6 +80,7 @@ hi(0)
 //│     }
 //│     static [constructorName]() { return "Cont$func$hi$"; }
 //│     static [fieldNames]() { return ["pc"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ hi = function hi(n) {
@@ -193,6 +194,7 @@ sum(10000)
 //│     }
 //│     static [constructorName]() { return "Cont$func$sum$"; }
 //│     static [fieldNames]() { return ["pc"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ sum1 = function sum(n) {

@@ -48,6 +48,7 @@ fun foo(x, y) =
 //│       return this.x$1 + this.foo$capture$0.y0$
 //│     }
 //│     static [constructorName]() { return "M"; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ foo$capture1 = function foo$capture(y0$1) {
@@ -60,6 +61,7 @@ fun foo(x, y) =
 //│     }
 //│     static [constructorName]() { return "foo$capture"; }
 //│     static [fieldNames]() { return ["y0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ foo1 = function foo(x, y) {
@@ -97,6 +99,7 @@ data class A(x) with
 //│       return this.A$instance$0.x
 //│     }
 //│     static [constructorName]() { return "M"; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ A1 = function A(x1) {
@@ -113,6 +116,7 @@ data class A(x) with
 //│     }
 //│     static [constructorName]() { return "A"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -181,6 +185,7 @@ M.A().get
 //│         }
 //│         static [constructorName]() { return "A"; }
 //│         static [fieldNames]() { return []; }
+//│         static [definitionKind]() { return "class"; }
 //│       }
 //│     });
 //│     scrut = runtime.safeCall(M14.A());
@@ -192,6 +197,7 @@ M.A().get
 //│     this.x = tmp4;
 //│   }
 //│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ tmp3 = runtime.safeCall(M15.A());
 //│ tmp3.get
@@ -255,6 +261,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│     }
 //│     static [constructorName]() { return "B"; }
 //│     static [fieldNames]() { return []; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ (class M18 {
@@ -277,6 +284,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│         }
 //│         static [constructorName]() { return "A"; }
 //│         static [fieldNames]() { return ["x"]; }
+//│         static [definitionKind]() { return "class"; }
 //│       }
 //│     });
 //│     scrut = 0;
@@ -287,6 +295,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│     }
 //│   }
 //│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ tmp5 = runtime.safeCall(M19.A(2));
 //│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
@@ -330,6 +339,7 @@ module A with
 //│     return lambda;
 //│   }
 //│   static [constructorName]() { return "A"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 module A with
@@ -376,6 +386,7 @@ A.x
 //│     this.x = tmp9;
 //│   }
 //│   static [constructorName]() { return "A"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ A16.x
 //│ = 2

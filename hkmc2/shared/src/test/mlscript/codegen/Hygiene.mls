@@ -21,6 +21,7 @@ object Test with
 //│     return Test1.x
 //│   }
 //│   static [constructorName]() { return "Test"; }
+//│   static [definitionKind]() { return "object"; }
 //│ }; Test1 = new Test$class;
 //│ Object.defineProperty(Test1, 'class', { value: Test$class });
 
@@ -80,6 +81,7 @@ module Test with
 //│     Test3.#x = 2;
 //│   }
 //│   static [constructorName]() { return "Test"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ block$res8 = undefined;
 
@@ -128,6 +130,7 @@ data class Cls(x) with
 //│     }
 //│     static [constructorName]() { return "Cls"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -158,7 +161,7 @@ fun foo(): module M =
     A
 
 foo()
-//│ = [class A1]
+//│ = [module A1]
 
 
 :sjs
@@ -183,19 +186,21 @@ module Whoops with
 //│         return Whoops.f()
 //│       }
 //│       static [constructorName]() { return "Whoops"; }
+//│       static [definitionKind]() { return "module"; }
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
 //│   static [constructorName]() { return "Whoops"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = <ref *1> [class Whoops1] {w: [Circular *1]}
+//│ = <ref *1> [module Whoops1] {w: [Circular *1]}
 
 Whoops.Whoops.g()
 //│ = "Hello"

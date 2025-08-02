@@ -57,6 +57,7 @@ module Test with
 //│     return Test.foo()
 //│   }
 //│   static [constructorName]() { return "Test"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 //│ > 1
 

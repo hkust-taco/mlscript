@@ -4,13 +4,20 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; (class None { static { None1 = None; } static [constructorName]() { return "None"; } });
+//│ let None1;
+//│ (class None {
+//│   static {
+//│     None1 = None;
+//│   }
+//│   static [constructorName]() { return "None"; }
+//│   static [definitionKind]() { return "module"; }
+//│ });
 
 :sjs
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = [class None]
+//│ = [module None]
 
 :sjs
 :re
@@ -41,6 +48,7 @@ module M with
 //│     this.C = class C {
 //│       constructor() {}
 //│       static [constructorName]() { return "C"; }
+//│       static [definitionKind]() { return "class"; }
 //│     };
 //│     this.D = function D() {
 //│       return new D.class();
@@ -50,6 +58,7 @@ module M with
 //│         constructor() {}
 //│         static [constructorName]() { return "D"; }
 //│         static [fieldNames]() { return []; }
+//│         static [definitionKind]() { return "class"; }
 //│       }
 //│     });
 //│     this.x = 1;
@@ -57,6 +66,7 @@ module M with
 //│     this.y = tmp;
 //│   }
 //│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 M.C
@@ -90,13 +100,21 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static [constructorName]() { return "M"; } });
+//│ let M3;
+//│ (class M2 {
+//│   static {
+//│     M3 = M2;
+//│     this.m = M3;
+//│   }
+//│   static [constructorName]() { return "M"; }
+//│   static [definitionKind]() { return "module"; }
+//│ });
 
 :sjs
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = <ref *1> [class M2] {m: [Circular *1]}
+//│ = <ref *1> [module M2] {m: [Circular *1]}
 
 
 

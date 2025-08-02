@@ -8,6 +8,7 @@ const RuntimeJS = {
   symbols: {
     constructorName: Symbol.for("mlscript.constructorName"),
     fieldNames: Symbol.for("mlscript.fieldNames"),
+    definitionKind: Symbol.for("mlscript.definitionKind"),
   }
 }
 

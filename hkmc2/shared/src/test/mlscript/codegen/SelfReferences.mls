@@ -12,17 +12,18 @@ module Foo with
 //│     this.self = Foo1;
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 
 Foo.self
-//│ = <ref *1> [class Foo] {self: [Circular *1]}
+//│ = <ref *1> [module Foo] {self: [Circular *1]}
 
 
 module Foo with
   val self: module Foo = this
 
 Foo.self
-//│ = <ref *1> [class Foo2] {self: [Circular *1]}
+//│ = <ref *1> [module Foo2] {self: [Circular *1]}
 
 
 :e
@@ -32,7 +33,7 @@ module Foo with
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
 Foo.self
-//│ = <ref *1> [class Foo4] {self: [Circular *1]}
+//│ = <ref *1> [module Foo4] {self: [Circular *1]}
 
 
 object Foo with
@@ -53,6 +54,7 @@ object Foo with
 //│     this.self = Foo9;
 //│   }
 //│   static [constructorName]() { return "Foo"; }
+//│   static [definitionKind]() { return "object"; }
 //│ }; Foo9 = new Foo$class1;
 //│ Object.defineProperty(Foo9, 'class', { value: Foo$class1 });
 

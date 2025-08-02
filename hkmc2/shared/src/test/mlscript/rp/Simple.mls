@@ -5,6 +5,9 @@ import "../../mlscript-compile/Runtime.mls"
 
 pattern Zero = "0"
 
+Zero
+//│ = [pattern Zero]
+
 :expect true
 Zero.unapply("0") is Runtime.MatchResult
 //│ = true

@@ -102,6 +102,7 @@ fun f() =
 //│       }
 //│       static [constructorName]() { return "Cont$func$f$"; }
 //│       static [fieldNames]() { return ["pc"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   i = 0;

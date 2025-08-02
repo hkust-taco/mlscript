@@ -4,6 +4,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 const constructorName = Symbol.for("mlscript.constructorName");
 const fieldNames = Symbol.for("mlscript.fieldNames");
+const definitionKind = Symbol.for("mlscript.definitionKind");
 let Runtime1;
 (class Runtime {
   static {
@@ -14,6 +15,7 @@ let Runtime1;
         return "()"
       }
       static [constructorName]() { return "Unit"; }
+      static [definitionKind]() { return "object"; }
     };
     this.Unit = new Unit$class;
     Object.defineProperty(this.Unit, 'class', { value: Unit$class });
@@ -43,6 +45,7 @@ let Runtime1;
         }
         static [constructorName]() { return "EffectHandle"; }
         static [fieldNames]() { return []; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.MatchResult = function MatchResult(captures1) {
@@ -55,6 +58,7 @@ let Runtime1;
         }
         static [constructorName]() { return "MatchResult"; }
         static [fieldNames]() { return ["captures"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.MatchFailure = function MatchFailure(errors1) {
@@ -67,6 +71,7 @@ let Runtime1;
         }
         static [constructorName]() { return "MatchFailure"; }
         static [fieldNames]() { return ["errors"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     (class Tuple {
@@ -88,6 +93,7 @@ let Runtime1;
         }
       }
       static [constructorName]() { return "Tuple"; }
+      static [definitionKind]() { return "module"; }
     });
     (class Str {
       static {
@@ -109,6 +115,7 @@ let Runtime1;
         return runtime.safeCall(string2.slice(n))
       }
       static [constructorName]() { return "Str"; }
+      static [definitionKind]() { return "module"; }
     });
     this.render = Rendering.render;
     (class TraceLogger {
@@ -154,16 +161,19 @@ let Runtime1;
         }
       }
       static [constructorName]() { return "TraceLogger"; }
+      static [definitionKind]() { return "module"; }
     });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
       static [constructorName]() { return "FatalEffect"; }
+      static [definitionKind]() { return "object"; }
     };
     this.FatalEffect = new FatalEffect$class;
     Object.defineProperty(this.FatalEffect, 'class', { value: FatalEffect$class });
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {}
       static [constructorName]() { return "PrintStackEffect"; }
+      static [definitionKind]() { return "object"; }
     };
     this.PrintStackEffect = new PrintStackEffect$class;
     Object.defineProperty(this.PrintStackEffect, 'class', { value: PrintStackEffect$class });
@@ -177,6 +187,7 @@ let Runtime1;
         }
         static [constructorName]() { return "FunctionContFrame"; }
         static [fieldNames]() { return ["next"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
@@ -191,6 +202,7 @@ let Runtime1;
         }
         static [constructorName]() { return "HandlerContFrame"; }
         static [fieldNames]() { return ["next", "nextHandler", "handler"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
@@ -207,6 +219,7 @@ let Runtime1;
         }
         static [constructorName]() { return "ContTrace"; }
         static [fieldNames]() { return ["next", "last", "nextHandler", "lastHandler", "resumed"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
@@ -221,11 +234,13 @@ let Runtime1;
         }
         static [constructorName]() { return "EffectSig"; }
         static [fieldNames]() { return ["contTrace", "handler", "handlerFun"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.NonLocalReturn = class NonLocalReturn {
       constructor() {}
       static [constructorName]() { return "NonLocalReturn"; }
+      static [definitionKind]() { return "class"; }
     };
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
       return new FnLocalsInfo.class(fnName1, locals1);
@@ -238,6 +253,7 @@ let Runtime1;
         }
         static [constructorName]() { return "FnLocalsInfo"; }
         static [fieldNames]() { return ["fnName", "locals"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
@@ -251,6 +267,7 @@ let Runtime1;
         }
         static [constructorName]() { return "LocalVarInfo"; }
         static [fieldNames]() { return ["localName", "value"]; }
+        static [definitionKind]() { return "class"; }
       }
     });
     this.stackLimit = 0;
@@ -269,6 +286,7 @@ let Runtime1;
         return Runtime.mkEffect(this, lambda)
       }
       static [constructorName]() { return "StackDelayHandler"; }
+      static [definitionKind]() { return "object"; }
     };
     this.StackDelayHandler = new StackDelayHandler$class;
     Object.defineProperty(this.StackDelayHandler, 'class', { value: StackDelayHandler$class });
@@ -861,5 +879,6 @@ let Runtime1;
     return result
   }
   static [constructorName]() { return "Runtime"; }
+  static [definitionKind]() { return "module"; }
 });
 let Runtime = Runtime1; export default Runtime;

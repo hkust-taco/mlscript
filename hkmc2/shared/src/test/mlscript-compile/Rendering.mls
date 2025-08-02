@@ -376,7 +376,12 @@ fun render(target, ...args) =
           let head = if
             // ES 2015 classes: `desc.writable` is false
             desc is Object and desc.writable is false then
-              "[class " + (if arg.name is "" then "(anonymous)" else arg.name) + "]"
+              let kind = if
+                desc.value.constructor.hasOwnProperty(RuntimeJS.symbols.definitionKind) and
+                  desc.value.constructor.(RuntimeJS.symbols.definitionKind) is Function then
+                    desc.value.constructor.(RuntimeJS.symbols.definitionKind)()
+                else "class"
+              "[" + kind + " " + (if arg.name is "" then "(anonymous)" else arg.name) + "]"
             else
               "[Function" + (if arg.name is "" then "" else " " + arg.name) + "]"
           head + if // Add a space if the function do not have enumerable properties
@@ -410,8 +415,14 @@ fun render(target, ...args) =
                       constructorName, fieldNames, arg, level, keyLength, startPos
                 // If no field names are provided, return the constructor name only.
                 else constructorName
+            proto.constructor.hasOwnProperty(RuntimeJS.symbols.definitionKind) and
+              proto.constructor.(RuntimeJS.symbols.definitionKind) is Function then
+                let definitionKind = proto.constructor.(RuntimeJS.symbols.definitionKind)()
+                let head = "[" + definitionKind + " " + proto.constructor.name + "]"
+                let body = renderObject(arg, level, keyLength, startPos + head.length)
+                head + (if body is "{}" then "" else " " + body)
             // Otherwise, we print the name of the constructor and the properties.
-            let head = proto.constructor.name
+            let head = proto.constructor.name + " "
             else head + renderObject(arg, level, keyLength, startPos + head.length)
           // Otherwise, the prototype is not a function.
           // If the prototype has its own implementation of `toString`, call it.

@@ -68,6 +68,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│     }
 //│     static [constructorName]() { return "Baz"; }
 //│     static [fieldNames]() { return ["z"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 

@@ -20,5 +20,6 @@ module A with
 //│     }
 //│   }
 //│   static [constructorName]() { return "A"; }
+//│   static [definitionKind]() { return "module"; }
 //│ });
 

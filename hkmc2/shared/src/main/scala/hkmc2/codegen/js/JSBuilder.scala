@@ -301,6 +301,8 @@ class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]] = N)(using 
                     .mkDocument(", ")
                   }]; }"""
                 else doc""
+              }${
+                doc" # static [${lookupInternalSymbol("definitionKind")}]() { return ${kind.desc.escaped}; }"
               } #}  # }"
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
               lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
@@ -629,7 +631,7 @@ object JSBuilder:
         else f"\\u${c.toInt}%04X"
     }.mkString
   
-  val internalSymbolNames = List("constructorName", "fieldNames")
+  val internalSymbolNames = List("constructorName", "fieldNames", "definitionKind")
   
   def createInternalSymbols(using State, Scope): SeqMap[Str, (Symbol, Str)] =
     internalSymbolNames.iterator.map: key =>

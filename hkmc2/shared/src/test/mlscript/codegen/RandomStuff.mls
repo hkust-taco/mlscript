@@ -40,10 +40,12 @@ data class Foo(x) with
 //│           this.y = this$Foo.x;
 //│         }
 //│         static [constructorName]() { return "Bar"; }
+//│         static [definitionKind]() { return "class"; }
 //│       };
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["x"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 

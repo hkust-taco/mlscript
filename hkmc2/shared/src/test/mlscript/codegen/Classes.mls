@@ -17,6 +17,7 @@ data class Foo(arguments)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["arguments"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -34,6 +35,7 @@ data class Foo(eval)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["eval"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -51,6 +53,7 @@ data class Foo(static)
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["static"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 
@@ -68,6 +71,7 @@ data class Foo(v')
 //│     }
 //│     static [constructorName]() { return "Foo"; }
 //│     static [fieldNames]() { return ["v'"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 

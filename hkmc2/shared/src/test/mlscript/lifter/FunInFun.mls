@@ -189,6 +189,7 @@ x + y
 //│     }
 //│     static [constructorName]() { return "f$capture"; }
 //│     static [fieldNames]() { return ["a0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f5 = function f() {
@@ -210,6 +211,7 @@ x + y
 //│     }
 //│     static [constructorName]() { return "Tuple"; }
 //│     static [fieldNames]() { return ["a", "b"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ tmp = f5();
@@ -328,6 +330,7 @@ f(1, 2, 1000)
 //│     }
 //│     static [constructorName]() { return "f$capture"; }
 //│     static [fieldNames]() { return ["mutated0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
@@ -484,6 +487,7 @@ g()(1)
 //│     }
 //│     static [constructorName]() { return "g$capture"; }
 //│     static [fieldNames]() { return ["y0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ g13 = function g() {
@@ -596,6 +600,7 @@ f()
 //│     }
 //│     static [constructorName]() { return "f$capture"; }
 //│     static [fieldNames]() { return ["x0$"]; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f20 = function f() {
@@ -652,6 +657,7 @@ fun f(es, vs) =
 //│       }
 //│     }
 //│     static [constructorName]() { return "A"; }
+//│     static [definitionKind]() { return "class"; }
 //│   }
 //│ });
 //│ f23 = function f(es, vs) {

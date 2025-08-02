@@ -60,6 +60,7 @@ hi(0)
 //│       }
 //│       static [constructorName]() { return "Cont$func$hi$"; }
 //│       static [fieldNames]() { return ["pc"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   stackDelayRes = runtime.checkDepth();
@@ -150,6 +151,7 @@ sum(10000)
 //│       }
 //│       static [constructorName]() { return "Cont$func$sum$"; }
 //│       static [fieldNames]() { return ["pc"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   curDepth = runtime.stackDepth;

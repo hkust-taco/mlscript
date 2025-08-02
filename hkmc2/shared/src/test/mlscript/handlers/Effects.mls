@@ -170,6 +170,7 @@ if true do
 //│       })
 //│     }
 //│     static [constructorName]() { return "Handler$h$"; }
+//│     static [definitionKind]() { return "class"; }
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
@@ -207,6 +208,7 @@ if true do
 //│       }
 //│       static [constructorName]() { return "Cont$handleBlock$h$"; }
 //│       static [fieldNames]() { return ["pc"]; }
+//│       static [definitionKind]() { return "class"; }
 //│     }
 //│   });
 //│   f = function f() {
