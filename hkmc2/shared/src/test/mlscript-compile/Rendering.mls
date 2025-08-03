@@ -192,31 +192,29 @@ fun render(target, ...args) =
   fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
     let
       items = []
-      longestItem = 0
       hasMultiline = false
       // Try calculating the length needed to place all items in one line. The
       // brackets and spaces around items are excluded from the length.
       singleLineLength = startPos + symbols.start.length +
         (if symbols.padding then padding.length else 0)
-      // Append a new item and update needed variables.
-      push = (item: Str) =>
-        if item.length > longestItem do set longestItem = item.length
-        if item.indexOf("\n") >= 0 do set hasMultiline = true
-        set singleLineLength +=
-          if items.length is 0 then 0 else symbols.separator.length + 1
-        set singleLineLength += item.length
-        items.push of item
       parentIndent = if indent is null then null else indent.repeat(level)
       itemIdent = if indent is null then null else indent.repeat(level + 1)
     // Iterate through and render all items.
     while done() is false do
-      push of next(items.length is 0, singleLineLength)
+      let item = next(items.length is 0, singleLineLength)
+      // Append a new item and update needed variables.
+      if item.indexOf("\n") >= 0 do set hasMultiline = true
+      set singleLineLength +=
+        if items.length is 0 then 0 else symbols.separator.length + 1
+      set singleLineLength += item.length
+      items.push of item
     set singleLineLength += symbols.end.length +
       (if symbols.padding then padding.length else 0)
     let
       layoutMultiLine() =
-        symbols.start + "\n" + itemIdent + items.join(symbols.separator +
-        "\n" + itemIdent) + "\n" + parentIndent + symbols.end
+        symbols.start + "\n" + itemIdent +
+        items.join(symbols.separator + "\n" + itemIdent) +
+        "\n" + parentIndent + symbols.end
       layoutSingleLine() =
         symbols.start + (if symbols.padding then padding else "") +
         items.join(symbols.separator + " ") +
@@ -304,23 +302,25 @@ fun render(target, ...args) =
         (if symbols.padding then padding.length else 0)
       parentIndent = if indent is null then null else indent.repeat(level)
       itemIdent = if indent is null then null else indent.repeat(level + 1)
-      push = (key: Str, value: Str) =>
-        let length = key.length + 2 + value.length // "a: b"
-        if value.indexOf("\n") >= 0 do set hasMultiline = true
-        set singleLineLength +=
-          if items.length is 0 then 0 else symbols.entrySeparator.length
-        set singleLineLength += length // the item
-        items.push of key + symbols.keyValueSeparator + value
-      parentIndent = if indent is null then null else indent.repeat(level)
-      itemIdent = if indent is null then null else indent.repeat(level + 1)
     while done() is false do
-      push of ...next(items.length is 0, singleLineLength)
+      let
+        keyValue = next(items.length is 0, singleLineLength)
+        key = keyValue.0
+        value = keyValue.1
+        length = key.length + 2 + value.length // "a: b"
+      if value.indexOf("\n") >= 0 do set hasMultiline = true
+      set singleLineLength +=
+        if items.length is 0 then 0 else symbols.entrySeparator.length
+      set singleLineLength += length // the item
+      items.push of key + symbols.keyValueSeparator + value
     // Complete the single line length.
     set singleLineLength += symbols.end.length +
       (if symbols.padding then padding.length else 0)
     let
-      layoutMultiLine = () => symbols.start + "\n" + itemIdent + items.join(",\n" + itemIdent)
-        + "\n" + parentIndent + symbols.end
+      layoutMultiLine() =
+        symbols.start + "\n" + itemIdent +
+        items.join(",\n" + itemIdent) +
+        "\n" + parentIndent + symbols.end
       layoutSingleLine() =
         symbols.start + (if symbols.padding then padding else "") +
         items.join(", ") +
@@ -335,7 +335,7 @@ fun render(target, ...args) =
       lengthIfBreakParent <= breakLength then layoutSingleLine()
       else layoutMultiLine()
   fun renderValue(arg, level, keyLength, startPos) = if
-    arg is // primitive values
+    arg is // Primitive values
       undefined then "undefined"
       null      then "null"
       Str       then JSON.stringify(arg)
@@ -346,25 +346,23 @@ fun render(target, ...args) =
       Num       then arg.toString()
       true      then "true"
       false     then "false"
-    // Exclude all 
-    visitedObjects.has(arg) then visitedObjects.get(arg)
-    visitingObjects.has(arg) and
-      visitingObjects.get(arg) is
-        // We have already found this circular reference before
-        Int as index then "ref'" + index
-        // The first time we find a circular reference
-        else
-          let index = circularCounter
-          set circularCounter += 1
-          visitingObjects.set(arg, index)
-          "ref'" + index
+    // Reuse the cached result if the display mode is inline.
+    visitedObjects.has(arg) and indent is null then visitedObjects.get(arg)
+    visitingObjects.has(arg) and visitingObjects.get(arg) is
+      // We have already found this circular reference before
+      Int as index then "ref'" + index
+      // The first time we find a circular reference
+      else
+        let index = circularCounter
+        set circularCounter += 1
+        visitingObjects.set(arg, index)
+        "ref'" + index
     else...
     // Otherwise, add this object to the visited objects
     // `null` is a marker for visited objects
     visitingObjects.set(arg, null)
     let rendered = if
       arg is
-        Unit then "()"
         Array then renderArray of arg, level, keyLength, startPos
         Set then renderSet of arg, level, keyLength, startPos
         Map then renderMap of arg, level, keyLength, startPos
