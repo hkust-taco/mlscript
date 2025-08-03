@@ -182,7 +182,7 @@ fun popBack(ft) = if safeInput(ft) is
 // amortized O(log n)
 fun (++) concat(ft1, ft2) = concatMiddle(safeInput(ft1), [], safeInput(ft2))
 
-fun markerConcat(...arr) =
+fun __markerConcat(...arr) =
   let acc = FingerTreeList.mk()
   let idx = 0
   while idx < arr.length do
@@ -195,7 +195,7 @@ fun markerConcat(...arr) =
       set idx = idx + 1
   acc
 
-val split = SpliceMarker
+val __split = SpliceMarker
 
 // amortized O(log n)
 fun ith(idx) = case

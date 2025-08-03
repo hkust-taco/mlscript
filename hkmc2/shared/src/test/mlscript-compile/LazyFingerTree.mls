@@ -85,13 +85,13 @@ class Splice(val bits, val len) extends LazyFT with
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
 
-
+  
 module LazyFingerTree with...
 
 
 fun mk = FingerTreeList.mk
 
-fun concat(...args) = 
+fun __concat(...args) = 
   val len = case
     [SpliceMarker, e, ...rest] then e.length + len(rest)
     [a, ...rest] then 1 + len(rest)
@@ -119,8 +119,4 @@ fun slice(beg, fin) = case
       then FingerTreeList.slice(beg, fin)(itr)
       else View of itr, beg, fin // assume itr has O(1) at()
 
-val split = SpliceMarker
-
-fun isLazyFT = case
-  LazyFT then true
-  else false
+val __split = SpliceMarker
