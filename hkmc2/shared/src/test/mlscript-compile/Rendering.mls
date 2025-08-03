@@ -321,7 +321,7 @@ fun render(target, ...args) =
     let
       layoutMultiLine = () => symbols.start + "\n" + itemIdent + items.join(",\n" + itemIdent)
         + "\n" + parentIndent + symbols.end
-      layoutSingleLine = () =>
+      layoutSingleLine() =
         symbols.start + (if symbols.padding then padding else "") +
         items.join(", ") +
         (if symbols.padding then padding else "") + symbols.end
