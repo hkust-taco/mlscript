@@ -13,37 +13,11 @@ module Term with...
 class Symbol(val name: Str)
 type Literal = null | undefined | Str | Int | Num | Bool
 
-
-class ConstructorLike with
-  constructor
-    SymbolCons(val symbol: Symbol)
-    StringJoin
-    TupleCapacity(val size: Int, val inf: Bool)
-    Instantiation(val symbol: Symbol, val args: Array[DebrujinSplit])
-    LocalPattern(val id: Int)
-    Parameter(val symbol: Symbol)
-    Nested(val split: DebrujinSplit)
-
-class PatternStub with
-  constructor
-    LiteralStub(val value: Literal)
-    CharClass(val start: Str, val end: Str, val inclusive: Bool)
-    ClassLikeStub(val cons: ConstructorLike)
-    Wildcard
-
-class DebrujinSplit with
-  constructor
-    Binder(val body: DebrujinSplit)
-    DebrujinBranch(val scrutinee: Int, val ptrn, val consequent: DebrujinSplit, val alternative: DebrujinSplit)
-    Accept(val outcome: Int)
-    Reject
-
 class Pattern with
   constructor
     LitPattern(val lit: Literal)
     Var(val sym: Symbol)
     ClassLike(val sym: Symbol, val trm: Term, val parameters: Array[Symbol] | null)
-    Synonym(val symbol: Symbol, val patternArguments: Array[DebrujinSplit])
     Tuple(val size: Int, val inf: Bool)
     Record(val entities: Array[[Str, Symbol]])
 
