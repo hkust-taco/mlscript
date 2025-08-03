@@ -1,0 +1,280 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+import "../../mlscript-compile/FingerTreeList.mls"
+
+open FingerTreeList
+
+fun equal(xs, ys) =
+  if xs is
+    [x, ..xs] then
+      if ys is
+        [b, ..bs] then x == b && equal(xs, bs)
+        [] then false
+    [] then ys is []
+
+let xs = FingerTreeList.mk(1,2,3)
+//│ xs = [1, 2, 3]
+
+let ys = concat(xs, xs) concat(xs)
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+ys |> ith(-1)
+//│ = None
+ys |> ith(0)
+//│ = Some(1)
+ys |> ith(1)
+//│ = Some(2)
+ys |> ith(2)
+//│ = Some(3)
+ys |> ith(3)
+//│ = Some(1)
+ys |> ith(4)
+//│ = Some(2)
+ys |> ith(5)
+//│ = Some(3)
+ys |> ith(6)
+//│ = Some(1)
+ys |> ith(7)
+//│ = Some(2)
+ys |> ith(8)
+//│ = Some(3)
+ys |> ith(9)
+//│ = None
+
+let ys = (ys |> popFront).rest
+//│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3, 1, 2]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3, 1]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [3, 1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [2, 3]
+
+let ys = xs ++ xs ++ xs
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+ys |> slice(3, 3)
+//│ = [1, 2, 3]
+
+let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+:expect true
+equal(ys, [...ys])
+//│ = true
+
+:expect true
+(ys ++ ys).length == ys.length + ys.length
+//│ = true
+
+:silent
+let zs = ys ++ ys
+
+:expect true
+zs FingerTreeList.isFingerTree()
+//│ = true
+
+:expect true
+[...zs] Array.isArray()
+//│ = true
+
+fun mkRange(start, end) =
+  if start < end then
+    mkRange(start + 1, end) :+ start
+  else
+    mk()
+
+fun repeat(xs, n) = 
+  if n == 0 then mk()
+  else xs ++ repeat(xs, n - 1)
+
+:expect true
+repeat(xs, 512).length == xs.length * 512
+//│ = true
+
+let xs = FingerTreeList.mk(1, 2, 3)
+//│ xs = [1, 2, 3]
+
+:expect true
+equal([0, ..xs], [0, ...xs])
+//│ = true
+
+:expect [1, [2, 3]]
+:elt
+:sjs
+if xs is
+  [a, ...ls] then [a, ls]
+//│ Elaborated tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = IfLike:
+//│     kw = keyword 'if'
+//│     desugared = Cons:
+//│       head = Branch:
+//│         scrutinee = Ref:
+//│           sym = xs
+//│           iargsLs = N
+//│         pattern = Tuple:
+//│           size = 1
+//│           inf = true
+//│         continuation = Let:
+//│           sym = $first0
+//│           term = App:
+//│             lhs = SynthSel:
+//│               prefix = SynthSel:
+//│                 prefix = Ref of $runtime
+//│                 nme = Ident of "Tuple"
+//│               nme = Ident of "get"
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 term = Ref:
+//│                   sym = xs
+//│                   iargsLs = N
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 term = Lit of IntLit of 0
+//│                 asc = N
+//│           tail = Let: \
+//│           sym = $rest
+//│           term = App:
+//│             lhs = SynthSel:
+//│               prefix = SynthSel:
+//│                 prefix = Ref of $runtime
+//│                 nme = Ident of "Tuple"
+//│               nme = Ident of "slice"
+//│             rhs = Tup of Ls of 
+//│               Fld:
+//│                 flags = ()
+//│                 term = Ref:
+//│                   sym = xs
+//│                   iargsLs = N
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 term = Lit of IntLit of 1
+//│                 asc = N
+//│               Fld:
+//│                 flags = ()
+//│                 term = Lit of IntLit of 0
+//│                 asc = N
+//│           tail = Let: \
+//│           sym = a
+//│           term = Ref:
+//│             sym = $first0
+//│             iargsLs = N
+//│           tail = Let: \
+//│           sym = ls
+//│           term = Ref:
+//│             sym = $rest
+//│             iargsLs = N
+//│           tail = Else of Tup of Ls of 
+//│             Fld:
+//│               flags = ()
+//│               term = Ref:
+//│                 sym = a
+//│                 iargsLs = N
+//│               asc = N
+//│             Fld:
+//│               flags = ()
+//│               term = Ref:
+//│                 sym = ls
+//│                 iargsLs = N
+//│               asc = N
+//│       tail = End
+//│ JS (unsanitized):
+//│ let rest, first0, a, ls;
+//│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
+//│   first0 = runtime.Tuple.get(xs1, 0);
+//│   rest = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
+//│   a = first0;
+//│   ls = rest;
+//│   [
+//│     a,
+//│     ls
+//│   ]
+//│ } else {
+//│   throw new this.Error("match error");
+//│ }
+//│ = [1, [2, 3]]
+
+fun addUntilN(xs, n) =
+  if n <= 0 then xs
+  else addUntilN([n] ++ xs, n - 1)
+
+:silent
+let zs = addUntilN(mk(), 1000)
+
+zs.length
+//│ = 1000
+
+fun popUntilEmpty(lft, acc) =
+  if lft is
+    [a, ..ls] then popUntilEmpty(ls, [...acc, a])
+    [] then acc
+
+:sjs
+fun popByIndex(start, end, acc, lft) =
+  if start >= end then acc
+  else popByIndex(start + 1, end, [...acc, lft.at(start)], lft)
+//│ JS (unsanitized):
+//│ let popByIndex;
+//│ popByIndex = function popByIndex(start, end, acc, lft) {
+//│   let scrut, tmp39, tmp40;
+//│   scrut = start >= end;
+//│   if (scrut === true) {
+//│     return acc
+//│   } else {
+//│     tmp39 = start + 1;
+//│     tmp40 = runtime.safeCall(lft.at(start));
+//│     return popByIndex(tmp39, end, [
+//│       ...acc,
+//│       tmp40
+//│     ], lft)
+//│   }
+//│ };
+
+let start = 0
+//│ start = 0
+
+[1,2,3].at(start)
+//│ = 1
+
+:silent
+let zs1 = popUntilEmpty(zs, [])
+
+:silent
+let zs2 = popByIndex(0, zs.length, [], zs)
+
+zs1 |> isFingerTree
+//│ = false
+
+zs2 |> isFingerTree
+//│ = false
+
+zs |> isFingerTree
+//│ = true
+
+equal(zs1, zs)
+//│ = true
+
+equal(zs2, zs)
+//│ = true
+
+(if FingerTreeList.mk(1,2,3) is
+  [a, ...ls, b] then ls) |> FingerTreeList.isFingerTree
+//│ = true
+
+zs.[0]
+//│ = 1

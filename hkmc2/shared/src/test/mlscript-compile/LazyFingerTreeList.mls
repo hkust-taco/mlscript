@@ -1,0 +1,126 @@
+
+import "./Iter.mls"
+import "./FingerTreeList.mls"
+
+open Iter
+open LazyFingerTree
+open FingerTreeList
+
+fun normIdx(i, len) =
+  if i < 0 then len + i
+  else i
+
+class LazyFT extends IterableBase with
+
+  fun toString() = "[" + this joined(", ") + "]"
+  fun concat(...args) =
+    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
+    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, [SpliceMarker, this])
+    Splice of a, l
+
+class View(val underlying: IterableBase, val start, val end) extends LazyFT with
+
+  fun iterator() =
+    let idx = start
+    let until = underlying.length - end
+    Iterator of () =>
+      if idx < until then
+        let next = underlying.at(idx)
+        set idx = idx + 1
+        Result.Next of next
+      else Result.Done
+
+  fun materialize() = underlying.slice(start, underlying.length - end)
+  fun at(i) = underlying.at(normIdx(i, length) + start)
+  // called on eager spreads in matches
+  fun slice(beg, fin) = underlying.slice(start + beg, fin - end) // TODO: fin + end? (verify)
+
+  fun length = underlying.length - start - end
+  fun toString() = "[" + this joined(", ") + "]"
+
+object SpliceMarker
+class Splice(val bits, val len) extends LazyFT with
+  let materialized = null
+
+  fun iterator() = materialize().iterator()
+
+  fun reify =
+    let acc = FingerTreeList.mk()
+    let stack = []
+    stack.push([0, bits])
+    while stack.length > 0 do
+      let e = stack.pop()
+      let idx = e.[0]
+      let vals = e.[1]
+
+      if vals is Splice do
+        set vals = vals.bits
+
+      while (idx < vals.length and
+          (vals.at(idx) is SpliceMarker) is false) do
+        set acc = acc :+ vals.at(idx)
+        set idx += 1
+
+      if (idx < vals.length and vals.at(idx) is SpliceMarker) do
+        stack.push([idx + 2, vals])
+        let next = vals.at(idx + 1)
+        if FingerTreeList.isFingerTree(next)
+          then set acc = acc ++ next
+          else stack.push([0, next])
+    acc
+
+  fun materialize() =
+    if materialized == null do
+      set materialized = reify
+    materialized
+
+  fun at(i) = materialize().at(i)
+  // called on eager spreads in matches
+  fun slice(beg, fin) = materialize().slice(beg, fin)
+  fun concat(...args) =
+    let l = this.length + args.reduce((acc, x) => acc + x.length, 0)
+    let a = args.reduce((acc, x) => acc.push(SpliceMarker, x); acc, bits)
+    Splice of a, l
+  
+  fun length = len
+  fun toString() = "[" + materialize() joined(", ") + "]"
+
+
+module LazyFingerTree with...
+
+
+fun mk = FingerTreeList.mk
+
+fun concat(...args) = 
+  val len = case
+    [SpliceMarker, e, ...rest] then e.length + len(rest)
+    [a, ...rest] then 1 + len(rest)
+    [] then 0
+  Splice of args, len(args)
+
+fun materialize = case
+  LazyFT as lft then lft.materialize()
+  _ as itr and
+    FingerTreeList.isFingerTree(itr) 
+      then itr
+      else FingerTreeList.mk(...itr)
+
+fun safe = case
+  _ as itr and
+    FingerTreeList.isFingerTree(itr) 
+      then itr
+      else FingerTreeList.mk(...itr)
+
+fun slice(beg, fin) = case
+  Splice(bits, l) as s then FingerTreeList.slice(beg, fin)(s.materialize())
+  View(itr, s, e) then View of itr, s + beg, e + fin
+  _ as itr and
+    FingerTreeList.isFingerTree(itr)
+      then FingerTreeList.slice(beg, fin)(itr)
+      else View of itr, beg, fin // assume itr has O(1) at()
+
+val split = SpliceMarker
+
+fun isLazyFT = case
+  LazyFT then true
+  else false
