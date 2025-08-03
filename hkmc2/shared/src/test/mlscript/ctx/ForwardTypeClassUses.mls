@@ -36,7 +36,7 @@ test
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.29: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
-//│ ╙── Missing instance: Expected: Int; Available: (Str)
+//│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
@@ -54,7 +54,7 @@ test
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.47: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
-//│ ╙── Missing instance: Expected: Int; Available: (Str)
+//│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 

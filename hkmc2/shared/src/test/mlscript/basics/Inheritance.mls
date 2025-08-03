@@ -89,3 +89,26 @@ data class Some[out T](x: T) extends Option[T]
 //│ = [true, true, false, false]
 
 
+data class Barr(x: Int)(y: Int) with
+  fun f = x + y
+
+:todo
+data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+  fun g = z
+//│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
+//│ ║  l.96: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^
+
+:todo
+Bazz(42).f
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'f' yielded 'undefined'
+
+:todo
+new Barr(40)(2) with
+  fun f = 43
+//│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
+//│ ║  l.107: 	new Barr(40)(2) with
+//│ ╙──       	    ^^^^^^^^^^
+//│ = [function]
+
+

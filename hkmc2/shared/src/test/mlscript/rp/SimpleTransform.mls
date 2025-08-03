@@ -86,11 +86,11 @@ true is TrueLike
 42 is TrueLike
 //│ = true
 
-data class Term with
+class Term with
   constructor
-    Literal(value: Int)
-    Infix(op: Str, left: Term, right: Term)
-    Prefix(op: Str, right: Term)
+    Literal(val value: Int)
+    Infix(val op: Str, val left: Term, val right: Term)
+    Prefix(val op: Str, val right: Term)
 
 // The following pattern generates a lot of code.
 pattern EvaluatedTerm =

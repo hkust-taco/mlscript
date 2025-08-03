@@ -5,23 +5,23 @@
 //│ Type: ⊤
 data class Foo
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,Ident(Foo),None,None))
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,Ident(Foo),None))
 
 data class Bar(x: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None))
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None))
 
 data class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None))
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None))
 
 data class Baz[A]
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None,None))
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None))
 
 data class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None))
+//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None))
 
 Baz[Int]
 //│ Parsed:
@@ -77,19 +77,19 @@ f of false
 
 let bar = new Bar(42)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(New(Some(App(Ident(Bar),Tup(List(IntLit(42))))),None)),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(42))))),None)
 
 let bar = new Bar2(1, 1)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(New(Some(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1))))),None)),None)
+//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(1), IntLit(1))))),None)
 
 new Bar(0)
 //│ Parsed:
-//│ 	New(Some(App(Ident(Bar),Tup(List(IntLit(0))))),None)
+//│ 	App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(0))))
 
 new Bar2(114, 514)
 //│ Parsed:
-//│ 	New(Some(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514))))),None)
+//│ 	App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(114), IntLit(514))))
 
 fun inc: Int -> Int
 //│ Parsed:

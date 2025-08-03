@@ -114,19 +114,18 @@ pattern BadNegated = ~(Int as x) => x
 //│             rhs = Ident of "x"
 //│         kw = keyword '=>'
 //│         rhs = Ident of "x"
-//│   body = N
 
 :ucs ups
 :e
 pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[ERROR] This pattern cannot be bound.
-//│ ║  l.121: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~(Int as x)) => x
 //│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.121: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.121: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.120: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(member:Int as x) => <error>
 
@@ -134,13 +133,13 @@ pattern BadNegated = (~(Int as x)) => x
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[ERROR] This variable cannot be accessed.
-//│ ║  l.135: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.134: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.135: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.134: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.135: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.134: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬member:Pair(member:Int, x) => <error>
 

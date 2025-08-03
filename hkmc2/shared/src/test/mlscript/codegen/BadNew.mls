@@ -15,8 +15,8 @@ new 2
 :re
 new 2 + 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = 2 + 2; new tmp()
-//│ ═══[RUNTIME ERROR] TypeError: tmp is not a constructor
+//│ let tmp; tmp = new 2(); tmp + 2
+//│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
 :re
 new()
@@ -34,7 +34,7 @@ new {}
 :todo
 new { x = 1 }
 //│ Parsed tree:
-//│ New:
+//│ LexicalNew:
 //│   body = S of Block of Ls of 
 //│     Def:
 //│       lhs = Ident of "x"

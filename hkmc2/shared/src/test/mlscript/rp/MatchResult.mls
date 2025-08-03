@@ -5,10 +5,10 @@ import "../../mlscript-compile/Runtime.mls"
 open Runtime { MatchResult, MatchFailure }
 
 
-MatchResult(0, ())
-//│ = MatchResult(0, ())
+MatchResult(0, new Object)
+//│ = MatchResult(0, {})
 
-if MatchResult(0) is MatchResult(x, _) then x
+if MatchResult(0, new Object) is MatchResult(x, _) then x
 //│ = 0
 
 MatchFailure("oops")
@@ -17,10 +17,10 @@ MatchFailure("oops")
 if MatchFailure("oops") is MatchFailure(x) then x
 //│ = "oops"
 
-data class MatchResult(x, y, z)
+data class MatchResult(x)
 
 MatchResult(0)
-//│ = MatchResult(0, undefined, undefined)
+//│ = MatchResult(0)
 
 pattern Cross = "X"
 

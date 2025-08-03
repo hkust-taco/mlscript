@@ -20,45 +20,50 @@ class CompileTestRunner
   
   val pwd = os.pwd
   val workingDir = pwd
+
+  val mainTestDir = workingDir/"hkmc2"/"shared"/"src"/"test"  
   
-  val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
+  // The compilation tests currently include compiling the benchmark instrumentation code.
+  val dirs = mainTestDir :: workingDir/"hkmc2Benchmarks"/"src"/"test" :: Nil
   
   val validExt = Set("mls")
-  
-  val allFiles = os.walk(dir)
-    .filter(_.toIO.isFile)
-    .filter(_.ext in validExt)
     
-  protected lazy val compileTestFiles = allFiles.filter: file =>
-      file.segments.contains("mlscript-compile")
-  
-  // TODO dedup path stuff with DiffTestRunner?
-  compileTestFiles.foreach: file =>
+  for dir <- dirs do {
+    val allFiles = os.walk(dir)
+      .filter(_.toIO.isFile)
+      .filter(_.ext in validExt)
+      
+    lazy val compileTestFiles = allFiles.filter: file =>
+        file.segments.contains("mlscript-compile")
     
-    val basePath = file.segments.drop(dir.segmentCount).toList.init
-    val relativeName = basePath.map(_ + "/").mkString + file.baseName
-    
-    test(relativeName):
+    // TODO dedup path stuff with DiffTestRunner?
+    compileTestFiles.foreach: file =>
       
-      println(s"Compiling: $relativeName")
+      val basePath = file.segments.drop(dir.segmentCount).toList.init
+      val relativeName = basePath.map(_ + "/").mkString + file.baseName
       
-      val preludePath = dir/"mlscript"/"decls"/"Prelude.mls"
-      
-      given Config = Config.default
-      
-      val compiler = MLsCompiler(
-        preludePath,
-        mkOutput =>
-          // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
-          CompileTestRunner.synchronized:
-            mkOutput(System.out.println)
-      )
-      compiler.compileModule(file)
-      
-      if compiler.report.badLines.nonEmpty then
-        fail(s"Unexpected diagnostic at: " +
-          compiler.report.badLines.distinct.sorted
-            .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
+      test(relativeName):
+        
+        println(s"Compiling: $relativeName")
+        
+        val preludePath = mainTestDir/"mlscript"/"decls"/"Prelude.mls"
+        
+        given Config = Config.default
+        
+        val compiler = MLsCompiler(
+          preludePath,
+          mkOutput =>
+            // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
+            CompileTestRunner.synchronized:
+              mkOutput(System.out.println)
+        )
+        compiler.compileModule(file)
+        
+        if compiler.report.badLines.nonEmpty then
+          fail(s"Unexpected diagnostic at: " +
+            compiler.report.badLines.distinct.sorted
+              .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
+  }
       
 end CompileTestRunner
 

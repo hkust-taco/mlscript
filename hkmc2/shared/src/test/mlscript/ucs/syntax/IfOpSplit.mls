@@ -38,7 +38,7 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.27: 	  * 3 then 0
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.26: 	if 1 + 2
 //│ ║        	       ^
 //│ ║  l.27: 	  * 3 then 0
@@ -75,7 +75,7 @@ if 1 + 2
 //│ ╟── Note: the operator split starts here
 //│ ║  l.70: 	  * 3 then 0
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Unexpected infix use of 'then' keyword here
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.69: 	if 1 + 2
 //│ ║        	       ^
 //│ ║  l.70: 	  * 3 then 0

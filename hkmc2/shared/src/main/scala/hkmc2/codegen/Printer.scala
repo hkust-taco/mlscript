@@ -83,7 +83,7 @@ object Printer:
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
     val doc = mkDocument(arg.value)
-    if arg.spread
+    if arg.spread.nonEmpty
       then doc"...${doc}"
       else doc
 

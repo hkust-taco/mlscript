@@ -1,5 +1,7 @@
 import "./RuntimeJS.mjs"
 import "./Rendering.mls"
+import "./LazyArray.mjs"
+import "./Iter.mjs"
 
 
 module Runtime with ...
@@ -8,6 +10,9 @@ module Runtime with ...
 object Unit with
   fun toString() = "()"
 
+
+val short_and = RuntimeJS.short_and
+val short_or = RuntimeJS.short_or
 
 fun unreachable = throw Error("unreachable")
 
@@ -57,16 +62,20 @@ data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
-  fun slice(xs, i, j) =
-    // * This is more robust than `xs.slice(i, xs.length - j)`
-    // * as it is not affected by users redefining `slice`
-    globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+  fun slice(xs, i, j) = xs.slice(i, xs.length - j)
+
+  fun lazySlice(xs, i, j) = LazyArray.slice(i, j)(xs)
+  fun lazyConcat(...args) = LazyArray.__concat(...args)
 
   fun get(xs, i) =
-    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-    if i >= xs.length then
+    if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
-    else globalThis.Array.prototype.at.call(xs, i)
+    if i < -xs.length do
+      throw RangeError("Tuple.get: negative index out of bounds")
+    xs.[i]
+
+  fun isArrayLike(xs) = Iter.isArrayLike(xs)
+  val split = LazyArray.__split
 
 module Str with
   fun startsWith(string, prefix) = string.startsWith(prefix)

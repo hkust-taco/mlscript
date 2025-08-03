@@ -13,11 +13,16 @@ use[Str]
 //│ = "42"
 
 :e
+:re
 use[Num]
-//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
-//│ ║  l.16: 	use[Num]
-//│ ║        	    ^^^
-//│ ╙── Missing instance: Expected: Num; Available: (Int, Str)
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ║  l.17: 	use[Num]
+//│ ║        	^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :expect 42
 let x = use[Int]
@@ -29,12 +34,14 @@ x
 :todo
 using Int -> Int = id
 use[Int -> Int](123)
-//│ ╔══[ERROR] Expected a type symbol, got function type
-//│ ║  l.30: 	using Int -> Int = id
-//│ ╙──      	      ^^^^^^^^^^
-//│ ╔══[ERROR] Expected a type symbol, got function type
-//│ ║  l.31: 	use[Int -> Int](123)
-//│ ╙──      	    ^^^^^^^^^^
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.36: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: ‹unspecified› (type parameter T); Available: Int, Str
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 :expect -42
@@ -51,10 +58,13 @@ f
 
 :e
 fun f(using Int) = use[Num]
-//│ ╔══[ERROR] Cannot query instance for use-expression of type Num
-//│ ║  l.53: 	fun f(using Int) = use[Num]
-//│ ║        	                       ^^^
-//│ ╙── Missing instance: Expected: Num; Available: (Int, Int, Int, Str, Str)
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ║  l.60: 	fun f(using Int) = use[Num]
+//│ ║        	                   ^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 
 
 data class Some[T](value: T)
@@ -66,17 +76,32 @@ using Some[Int] = Some(42)
 f
 //│ = 42
 
-:pe
 :e
+:re
 use{[Some[Int]].value}
-//│ ╔══[PARSE ERROR] Unexpected square bracket section here
-//│ ║  l.71: 	use{[Some[Int]].value}
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
+//│ ║  l.81: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ═══[ERROR] Unexpected keyword 'use' in this position.
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.81: 	use{[Some[Int]].value}
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 :e
+:re
 use([Some[Int]].value)
-//│ ═══[ERROR] Unexpected keyword 'use' in this position.
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.96: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
 :expect 42
@@ -88,12 +113,12 @@ f[Int]
 :e
 :re
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (T) for call: 
-//│ ║  l.90: 	f
-//│ ║        	^
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.115: 	f
+//│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.83: 	fun f[T](using T) = use[T]
-//│ ║        	               ^
+//│ ║  l.108: 	fun f[T](using T) = use[T]
+//│ ║         	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 

@@ -160,7 +160,13 @@ fun foo(x, y) =
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
 //│ ║  l.154: 	  module M with
-//│ ╙──       	         ^
+//│ ║         	         ^^^^^^
+//│ ║  l.155: 	    fun foo() =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.156: 	      set y = 2
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.157: 	      x + y
+//│ ╙──       	^^^^^^^^^^^
 
 :expect 12
 foo(10, 0)
@@ -199,5 +205,11 @@ fun f =
   M.g
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
-//│ ║  l.195: 	  module M with
-//│ ╙──       	         ^
+//│ ║  l.201: 	  module M with
+//│ ║         	         ^^^^^^
+//│ ║  l.202: 	    fun g =
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.203: 	      fun h = M.g
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	      h
+//│ ╙──       	^^^^^^^

@@ -5,9 +5,7 @@ class Foo[A]
 class Bar[B]
 
 
-:fixme
 fun foo[A](using Foo[A], Bar[A])
-//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(Bar),TyTup(List(Ident(A)))) (of class hkmc2.syntax.Tree$App)
 
 
 fun foo[A](using f: Foo[A], b: Bar[A]): A
@@ -24,7 +22,7 @@ using Bar[Str] = new Bar
 :fixme
 foo
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'foo'
-//│ ║  l.13: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
+//│ ║  l.11: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 

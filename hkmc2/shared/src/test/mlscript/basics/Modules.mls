@@ -5,21 +5,21 @@ module Foo
 
 :pe
 module Foo with
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.7: 	module Foo with
 //│ ╙──     	               ^
 
-:fixme
+:e
 module Foo with val x = 1
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
+//│ ╔══[ERROR] Illegal body of module definition (should be a block; found term definition).
 //│ ║  l.13: 	module Foo with val x = 1
-//│ ╙──      	                ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.13: 	module Foo with val x = 1
-//│ ╙──      	                      ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.13: 	module Foo with val x = 1
-//│ ╙──      	                    ^
+//│ ╙──      	                    ^^^^^
+
+:e
+Foo.x
+//│ ╔══[ERROR] Module 'Foo' does not contain member 'x'
+//│ ║  l.19: 	Foo.x
+//│ ╙──      	   ^^
 
 module Foo with
   val x = 1

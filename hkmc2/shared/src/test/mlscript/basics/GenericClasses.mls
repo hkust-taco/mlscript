@@ -31,12 +31,18 @@ class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
 //│ ║  l.30: 	class Foo[A](x: Foo[A, A])
 //│ ╙──      	                ^^^^^^^^
+//│ ╔══[ERROR] Expected 1 type arguments, got 2
+//│ ║  l.30: 	class Foo[A](x: Foo[A, A])
+//│ ╙──      	                ^^^^^^^^
 
 :e
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ║  l.36: 	class Foo[A](x: Bar[A])
+//│ ║  l.39: 	class Foo[A](x: Bar[A])
+//│ ╙──      	                ^^^^^
+//│ ╔══[ERROR] Expected 0 type arguments, got 1
+//│ ║  l.39: 	class Foo[A](x: Bar[A])
 //│ ╙──      	                ^^^^^
 
 

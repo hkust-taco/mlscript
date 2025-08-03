@@ -1,0 +1,87 @@
+:js
+
+fun f(using i: Int): Int = i
+
+:expect 42
+f(using 42)
+//│ = 42
+
+
+fun f(using i: Int, j: Num): Num = i + j
+
+:e
+:re
+f(using 42)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.14: 	f(using 42)
+//│ ╙──      	        ^^
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+
+:expect 45.14
+f(using 42, 3.14)
+//│ = 45.14
+
+
+fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+
+:e
+:re
+f(using 32)
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
+//│ ║  l.29: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║        	                          ^^^^^^
+//│ ╙── Missing instance: Expected: Int; Available: ‹none available›
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
+//│ ║  l.29: 	f(using 32)
+//│ ║        	^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║        	                                        ^^^^^^
+//│ ╙── Missing instance: Expected: Int; Available: ‹none available›
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+
+:e
+:re
+f(using 32)(using 8)
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
+//│ ║  l.48: 	f(using 32)(using 8)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.25: 	fun f(using i: Int)(using j: Int)(using k: Int): Int = i + j + k
+//│ ║        	                                        ^^^^^^
+//│ ╙── Missing instance: Expected: Int; Available: ‹none available›
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+
+:expect 42
+f(using 32)(using 8)(using 2)
+//│ = 42
+
+
+fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+
+:expect [function]
+f(using 32)
+//│ = [function]
+
+:e
+:re
+f(using 32)(8)
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
+//│ ║  l.71: 	f(using 32)(8)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
+//│ ║        	                                  ^^^^^^
+//│ ╙── Missing instance: Expected: Int; Available: ‹none available›
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+
+:expect [function]
+f(using 32)(8)(using 2)
+//│ = [function]
+
+:expect 45.14
+f(using 32)(8)(using 2)(3.14)
+//│ = 45.14

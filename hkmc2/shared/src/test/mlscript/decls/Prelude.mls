@@ -7,7 +7,7 @@ declare type Nothing
 declare type untyped
 
 declare class Object
-declare class Array
+declare class Array[T]
 declare class JSON
 declare class Number
 declare class Function

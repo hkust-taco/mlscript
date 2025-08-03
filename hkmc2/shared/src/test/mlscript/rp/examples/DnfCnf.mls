@@ -2,12 +2,12 @@
 
 open annotations
 
-data class Formula with
+class Formula with
   constructor
-    Var(name: Str)
-    Pred(name: Str, arg: Formula)
-    And(left: Formula, right: Formula)
-    Or(left: Formula, right: Formula)
+    Var(val name: Str)
+    Pred(val name: Str, val arg: Formula)
+    And(val left: Formula, val right: Formula)
+    Or(val left: Formula, val right: Formula)
 
 pattern Dnf = Or(Dnf, Dnf) | Atoms
 pattern Atoms = And(Atoms, Atoms) | Atom
