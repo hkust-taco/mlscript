@@ -130,7 +130,6 @@ object Elaborator:
       private def assumeBuiltinMod(nme: Str): ModuleSymbol =
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
-      val Unit = assumeBuiltinCls("Unit")
       val Int = assumeBuiltinCls("Int")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
@@ -168,22 +167,22 @@ object Elaborator:
   object Ctx:
     abstract class Elem:
       def nme: Str
-      def ref(id: Tree.Ident)(using Elaborator.State): Term
+      def ref(id: Ident)(using Elaborator.State): Term
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Tree.Ident)(using Elaborator.State): Term =
+      def ref(id: Ident)(using Elaborator.State): Term =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
-      def ref(id: Tree.Ident)(using Elaborator.State): Term =
+      def ref(id: Ident)(using Elaborator.State): Term =
         // * Same remark as in RefElem#ref
         Term.SynthSel(base.ref(Ident(base.nme)),
-          new Tree.Ident(nme).withLocOf(id))(symOpt)
+          new Ident(nme).withLocOf(id))(symOpt)
       def symbol = symOpt
     given Conversion[Symbol, Elem] = RefElem(_)
     val empty: Ctx = Ctx(OuterCtx.LocalScope, N, Map.empty, Mode.Full)
@@ -200,8 +199,9 @@ object Elaborator:
     val suid = new Uid.Symbol.State
     given State = this
     val globalThisSymbol = TopLevelSymbol("globalThis")
+    val unitSymbol = ModuleSymbol(DummyTypeDef(syntax.Obj), Ident("Unit"))
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
-    val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
+    val importSymbol = new VarSymbol(Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
     val termSymbol = TempSymbol(N, "Term")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
@@ -500,11 +500,11 @@ extends Importer:
           raise(ErrorReport(msg"Identifier `${idn.name}` does not name a known class symbol." -> idn.toLoc :: Nil))
           N
       Term.SelProj(subterm(pre), c, idp)(f)
-    case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
-      subterm(App(App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
-    case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
+    case App(Ident("#"), Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
+      subterm(App(App(Ident("#"), Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
+    case App(Ident("!"), Tup(rhs :: Nil)) =>
       Term.Deref(subterm(rhs))
-    case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
+    case App(Ident("~"), Tup(rhs :: Nil)) =>
       Term.Neg(subterm(rhs))
     case tree @ OpSplit(lhs, rhss) =>
       val tree = rhss.foldLeft(lhs):
@@ -521,8 +521,8 @@ extends Importer:
       val lt = subterm(lhs, inAppPrefix = true)
       val ot = subterm(op, inAppPrefix = true)
       val rts = rhss.map(r => PlainFld(subterm(r)))
-      Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(Tree.DummyTup))(
-        Tree.DummyApp, N, sym)
+      Term.App(ot, Term.Tup(PlainFld(lt) :: rts)(DummyTup))(
+        DummyApp, N, sym)
     case SynthSel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -541,12 +541,12 @@ extends Importer:
       if sym.contains(ctx.builtins.source.line) then
         val loc = tree.toLoc.getOrElse(???)
         val (line, _, _) = loc.origin.fph.getLineColAt(loc.spanStart)
-        Term.Lit(Tree.IntLit(loc.origin.startLineNum + line))
+        Term.Lit(IntLit(loc.origin.startLineNum + line))
       else if sym.contains(ctx.builtins.source.name) then
-        Term.Lit(Tree.StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
+        Term.Lit(StrLit(ctx.getOuter.map(_.nme).getOrElse("")))
       else if sym.contains(ctx.builtins.source.file) then
         val loc = tree.toLoc.getOrElse(???)
-        Term.Lit(Tree.StrLit(loc.origin.fileName.toString))
+        Term.Lit(StrLit(loc.origin.fileName.toString))
       else
         Term.Sel(preTrm, nme)(sym)
     case MemberProj(ct, nme) =>
@@ -576,7 +576,7 @@ extends Importer:
       val rs = FlowSymbol("‹app-res›")
       Term.Lam(ps,
         Term.App(Term.SelProj(self.ref(), c, nme)(f), args.ref())(
-          Tree.App(nme, Tree.Tup(Nil)) // FIXME
+          App(nme, Tup(Nil)) // FIXME
           , N, rs)
       )
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
@@ -588,7 +588,7 @@ extends Importer:
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
     case ProperNew(body, rfto) => // TODO handle Under
       lazy val bodo = rfto.map: rft =>
-        val clsSym = new ClassSymbol(Tree.DummyTypeDef(syntax.Cls), Tree.Ident("$anon"))
+        val clsSym = new ClassSymbol(DummyTypeDef(syntax.Cls), Ident("$anon"))
         ctx.nestInner(clsSym).givenIn:
           clsSym ->
             // TODO integrate context inherited from cls
@@ -610,14 +610,14 @@ extends Importer:
           Nil, bodo).withLocOf(tree)
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
-    case tree @ Tree.IfLike(kw, _, split) =>
+    case tree @ IfLike(kw, _, split) =>
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(desugared)}")
       Term.IfLike(kw, desugared)
-    case Tree.Quoted(body) => Term.Quoted(subterm(body))
-    case Tree.Unquoted(body) => Term.Unquoted(subterm(body))
-    case tree @ Tree.Case(_, branches) =>
+    case Quoted(body) => Term.Quoted(subterm(body))
+    case Unquoted(body) => Term.Unquoted(subterm(body))
+    case tree @ Case(_, branches) =>
       val scrut = VarSymbol(Ident("caseScrut"))
       val des = new ucs.Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
@@ -630,13 +630,13 @@ extends Importer:
       case ReturnHandler.Required(sym) =>
         tl.log(s"Non-local return: $sym")
         val rs = FlowSymbol("‹app-res›")
-        val retMtdTree = new Tree.Ident("ret")
-        val argTree = new Tree.Tup(body :: Nil)
-        val dummyIdent = new Tree.Ident("return").withLoc(kwLoc)
+        val retMtdTree = new Ident("ret")
+        val argTree = new Tup(body :: Nil)
+        val dummyIdent = new Ident("return").withLoc(kwLoc)
         Term.App(
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
-        )(Tree.App(Tree.Sel(dummyIdent, retMtdTree), argTree), N, rs)
+        )(App(Sel(dummyIdent, retMtdTree), argTree), N, rs)
       case ReturnHandler.NotInFunction =>
         raise:
           ErrorReport(msg"Return statements are not allowed outside of a function." -> tree.toLoc :: Nil)
@@ -653,16 +653,16 @@ extends Importer:
       Blk(subterm(body) :: Nil, unit)
     case TypeDef(Mod, head, N) =>
       subterm(head)
-    case Tree.Region(id: Tree.Ident, body) =>
+    case Region(id: Ident, body) =>
       val sym = VarSymbol(id)
       given Ctx = ctx + (id.name -> sym)
       Term.Region(sym, subterm(body))
-    case Tree.RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
+    case RegRef(reg, value) => Term.RegRef(subterm(reg), subterm(value))
     case Outer(S(_)) =>
       raise(ErrorReport(msg"Illegal outer binding." -> tree.toLoc :: Nil))
       Term.Error
     case Outer(N) => ctx.get("outer") match
-      case S(sym) => sym.ref(Tree.Ident("outer"))
+      case S(sym) => sym.ref(Ident("outer"))
       case N =>
         raise(ErrorReport(msg"Illegal outer reference." -> tree.toLoc :: Nil))
         Term.Error
@@ -759,19 +759,19 @@ extends Importer:
   
   
   def block(sts: Ls[Tree], hasResult: Bool)(using c: Ctx)(using UnderCtx): (Blk, Ctx) =
-    block(new Tree.Block(sts), hasResult)
+    block(new Block(sts), hasResult)
   
-  def block(blk: Tree.Block, hasResult: Bool)(using c: Ctx)(using UnderCtx): (Blk, Ctx) =
+  def block(blk: Block, hasResult: Bool)(using c: Ctx)(using UnderCtx): (Blk, Ctx) =
     blockOrRcd(blk, hasResult) match
-      case (blk: Blk, ctx) => (blk, ctx)
-      case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
+    case (blk: Blk, ctx) => (blk, ctx)
+    case (rcd: Rcd, ctx) => (Blk(Nil, rcd), ctx)
   
   // * Some blocks do not have a meaningful result,
   // * e.g., constructor blocks or top-level blocks (in MLscript files and diff-tests);
   // * for these, elaborate with `hasResult = false`, which uses `undefined` as the result
   // * when there is no other result available. This is fine since the value is never used.
   // * These useless trailing `undefined`s are then removed by `Lowering`.
-  def blockOrRcd(blk: Tree.Block, hasResult: Bool)(using c: Ctx)(using UnderCtx)
+  def blockOrRcd(blk: Block, hasResult: Bool)(using c: Ctx)(using UnderCtx)
     : (Blk | Rcd, Ctx)
     = trace[(Blk | Rcd, Ctx)](
         pre = s"Elab block ${blk.desugStmts.toString.truncate(100, "[...]")} ${ctx.outer}", r => s"~> ${r._1}"
@@ -873,7 +873,7 @@ extends Importer:
       case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
         reportUnusedAnnotations
         val (newCtx, newAcc) = arg match
-          case Tree.StrLit(path) =>
+          case StrLit(path) =>
             val stmt = importPath(path)
             (ctx + (stmt.sym.nme -> stmt.sym),
             stmt.withLocOf(m) :: acc)
@@ -924,7 +924,7 @@ extends Importer:
         val newAcc = rhso match
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
-              Tree.InfixApp(_, Keyword.`=>`, _)
+              InfixApp(_, Keyword.`=>`, _)
             mkLetBinding(sym, term(rrhs), annotations) reverse_::: acc
           case N =>
             if tups.nonEmpty then
@@ -985,7 +985,7 @@ extends Importer:
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
               val nb: Opt[Term] = if nonLocalRetHandler.directRefs.isEmpty then b else b.map: inner =>
-                val clsSym = ClassSymbol(Tree.DummyTypeDef(Cls), Tree.Ident("‹non-local return effect›"))
+                val clsSym = ClassSymbol(DummyTypeDef(Cls), Ident("‹non-local return effect›"))
                 val valueSym = VarSymbol(Ident("value"))
                 val resumeSym = VarSymbol(Ident("resume"))
                 val mtdSym = BlockMemberSymbol("ret", Nil, true)
@@ -1114,7 +1114,7 @@ extends Importer:
         def mkBody(using Ctx) = withFields:
           body match
           case N | S(Error()) => (new Blk(Nil, Term.Lit(UnitLit(false))), ctx)
-          case S(b: Tree.Block) => block(b, hasResult = false)
+          case S(b: Block) => block(b, hasResult = false)
           case S(t) =>
             raise(ErrorReport(
               msg"Illegal body of ${k.desc} definition (should be a block; found ${t.describe})." -> t.toLoc :: Nil))
@@ -1292,13 +1292,13 @@ extends Importer:
           Param(FldFlags.empty, sym, N, Modulefulness.none)
       (vs, ctx ++ vs.map(p => p.sym.name -> p.sym))
   
-  def importFrom(sts: Tree.Block)(using c: Ctx): (Blk, Ctx) =
+  def importFrom(sts: Block)(using c: Ctx): (Blk, Ctx) =
     given UnderCtx = new UnderCtx(N)
     val (res, newCtx) = block(sts, hasResult = false)
     // TODO handle name clashes
     (res, newCtx)
   
-  def topLevel(sts: Tree.Block)(using c: Ctx): (Blk, Ctx) =
+  def topLevel(sts: Block)(using c: Ctx): (Blk, Ctx) =
     given UnderCtx = new UnderCtx(N)
     val (res, ctx) = block(sts, hasResult = false)
     computeVariances(res)
