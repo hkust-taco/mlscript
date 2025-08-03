@@ -418,10 +418,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.417: 	  let bar(x: Str): Str = x + x
+//│ ║  l.418: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.418: 	  bar("test")
+//│ ║  l.419: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
