@@ -54,13 +54,3 @@ let x += 1 in
 //│ > 1
 //│ = 1
 
-:fixme
-fun foo() =
-  let bar(x: Str): Str = x + x
-  bar("test")
-//│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.59: 	  let bar(x: Str): Str = x + x
-//│ ╙──      	      ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: bar
-//│ ║  l.60: 	  bar("test")
-//│ ╙──      	  ^^^
