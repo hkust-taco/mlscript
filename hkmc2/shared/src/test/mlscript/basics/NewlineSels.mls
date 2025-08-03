@@ -51,7 +51,7 @@ rcd
 
 let rcd =
   a: x => b: y => c: x + y
-//│ rcd = {a: [function a]}
+//│ rcd = {a: fun a}
 
 rcd.a(1).b(2).c
 //│ = 3
@@ -84,7 +84,7 @@ rcd
   .c !> print
   + 1 !> print
   + 1
-//│ > {b: [function b]}
+//│ > {b: fun b}
 //│ > {c: 3}
 //│ > 3
 //│ > 4

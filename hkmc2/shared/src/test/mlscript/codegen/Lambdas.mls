@@ -9,13 +9,13 @@ x =>
   y
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (x) { let y; y = x; return y }); lambda
-//│ = [function]
+//│ = fun
 
 
 :todo
 (acc, _) => acc
 //│ JS (unsanitized):
 //│ let lambda1; lambda1 = (undefined, function (acc, _) { return acc }); lambda1
-//│ = [function]
+//│ = fun
 
 

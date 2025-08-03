@@ -13,14 +13,14 @@
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.12: 	\{ Int }
 //│ ╙──      	   ^^^
-//│ = [function passTo2]
+//│ = fun passTo2
 
 :e
 \(0)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.19: 	\(0)
 //│ ╙──      	 ^^^
-//│ = [function]
+//│ = fun
 
 fun (\) huh(x) = x
 

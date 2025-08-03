@@ -32,7 +32,7 @@ while xs.pop() is
 //│ > B b
 //│ > ?
 //│ count = 1
-//│ xs = [[function]]
+//│ xs = [fun]
 
 
 // g is non-resumptive, which means g.perform("a") does not resume

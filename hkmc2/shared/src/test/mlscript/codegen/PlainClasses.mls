@@ -36,7 +36,7 @@ new Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = [class Foo]
+//│ = class Foo
 
 :re
 Foo()
@@ -82,7 +82,7 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = [class Foo4]
+//│ t = class Foo4
 
 new t
 //│ JS (unsanitized):

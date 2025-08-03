@@ -9,6 +9,6 @@ let foo = Foo(null)
 set foo.x = foo
 
 foo
-//│ = <ref *1> Foo([Circular *1])
+//│ = (val ref'1 = Foo(ref'1))
 
 

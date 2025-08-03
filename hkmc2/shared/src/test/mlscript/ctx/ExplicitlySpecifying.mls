@@ -62,15 +62,15 @@ f(using 32)(using 8)(using 2)
 
 fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 
-:expect [function]
+:expect fun
 f(using 32)
-//│ = [function]
+//│ = fun
 
 :e
 :re
 f(using 32)(8)
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.74: 	f(using 32)(8)
+//│ ║  l.71: 	f(using 32)(8)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
@@ -78,9 +78,9 @@ f(using 32)(8)
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
-:expect [function]
+:expect fun
 f(using 32)(8)(using 2)
-//│ = [function]
+//│ = fun
 
 :expect 45.14
 f(using 32)(8)(using 2)(3.14)

@@ -54,14 +54,14 @@ fun test2() =
 //│ Type: ⊤
 
 test2
-//│ = [function test2]
+//│ = fun test2
 //│ Type: () -> (Int -> Int)
 
 :sjs
 test2()
 //│ JS (unsanitized):
 //│ test21()
-//│ = [function]
+//│ = fun
 //│ Type: Int -> Int
 
 :ssjs

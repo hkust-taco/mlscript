@@ -5,7 +5,7 @@ fun foo() =
   1 + 2
 
 foo
-//│ = [function foo]
+//│ = fun foo
 
 foo()
 //│ = 3
@@ -67,13 +67,13 @@ let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
-//│ f = [function nested]
+//│ f = fun nested
 
 // f(200)
 
 outerfun(100)
 //│ > 301
-//│ = [function nested]
+//│ = fun nested
 
 outerfun(100)(200)
 //│ > 301

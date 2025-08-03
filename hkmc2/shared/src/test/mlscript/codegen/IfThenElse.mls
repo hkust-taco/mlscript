@@ -19,7 +19,7 @@ let f = x => if x then print("ok") else print("ko")
 //│ });
 //│ tmp = lambda;
 //│ f = tmp;
-//│ f = [function]
+//│ f = fun
 
 f(true)
 //│ > ok
@@ -44,7 +44,7 @@ let f = x => print((if x then "ok" else "ko") + "!")
 //│ });
 //│ tmp1 = lambda1;
 //│ f1 = tmp1;
-//│ f = [function]
+//│ f = fun
 
 :sjs
 let f = x => print((if x and x then "ok" else "ko") + "!")
@@ -62,7 +62,7 @@ let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ });
 //│ tmp2 = lambda2;
 //│ f2 = tmp2;
-//│ f = [function]
+//│ f = fun
 // --- TODO: What we want ---
 // this.f = (x) => {
 //   let tmp, tmp1, flag;
@@ -92,18 +92,18 @@ f(false)
 
 
 x => if x > 0 then print("Hi") else print("Bye")
-//│ = [function]
+//│ = fun
 
 x => print(if true then "Hi" else "Bye")
-//│ = [function]
+//│ = fun
 
 x => print(if x + 1 > 0 then "Hi" else "Bye")
-//│ = [function]
+//│ = fun
 
 x =>
   let str = (+)(if x + 1 > 0 then "Hello" else "Bye", "World")
   print(str)
-//│ = [function]
+//│ = fun
 
 
 fun f(x, y) =

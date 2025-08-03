@@ -53,7 +53,7 @@ fun update(f) = s => [f(s), s]
 fun set_(s_) = s => [s_, s]
 
 let incr = update(x => x + 1)
-//│ incr = [function]
+//│ incr = fun
 
 data class Node[T](a: T, b: List[Node[T]])
 

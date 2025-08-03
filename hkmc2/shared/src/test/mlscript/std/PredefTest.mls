@@ -114,8 +114,8 @@ tuple passing(1, 2, 3) of 4, 5, 6
 let
   f = ((_ + 1) >> (_ * 2)) >> (_ - 1)
   g = (_ + 1) >> ((_ * 2) >> (_ - 1))
-//│ f = [function]
-//│ g = [function]
+//│ f = fun
+//│ g = fun
 
 [f(123), g(123)]
 //│ = [247, 247]
@@ -209,7 +209,7 @@ Iter.joined(_, "") of [
   "2"
   "3"
 ]
-//│ = [function]
+//│ = fun
 
 
 mkStr of

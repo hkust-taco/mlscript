@@ -13,13 +13,13 @@ open Mod
 //│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
 pipee
-//│ = [function pipee]
+//│ = fun pipee
 
 (|>>)
-//│ = [function pipee]
+//│ = fun pipee
 
 |>>
-//│ = [function pipee]
+//│ = fun pipee
 
 :pe
 :e

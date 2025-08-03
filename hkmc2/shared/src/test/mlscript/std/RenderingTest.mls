@@ -44,12 +44,12 @@ render(Object.create(null))
 //│ = "{}"
 
 render(x => x)
-//│ = "[function]"
+//│ = "fun"
 
 class Foo
 
 render(Foo)
-//│ = "[class Foo]"
+//│ = "class Foo"
 
 render(new Foo)
 //│ = "Foo"
@@ -117,7 +117,7 @@ renderAsStr of new Map of [[1, 2], [3, 4]]
 //│ = "Map(2) {1 => 2, 3 => 4}"
 
 renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
-//│ = "Map(2) {[function Foo] => 2, [class Symbol] => 1}"
+//│ = "Map(2) {fun Foo => 2, class Symbol => 1}"
 
 renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
 //│ = "Map(1) {{a: 0} => {b: 0}}"
@@ -158,17 +158,17 @@ renderAsStr of new WeakSet
 class Foo
 
 renderAsStr of Foo
-//│ = "[class Foo4]"
+//│ = "class Foo4"
 
 set Foo.bar = (direction: "vertical")
 
 renderAsStr of Foo
-//│ = "[class Foo4] {bar: {direction: \"vertical\"}}"
+//│ = "class Foo4 {bar: {direction: \"vertical\"}}"
 
 class Bar extends Foo
 
 renderAsStr of Bar
-//│ = "[class Bar]"
+//│ = "class Bar"
 
 renderAsStr of new Bar
 //│ = "Bar"
@@ -176,30 +176,30 @@ renderAsStr of new Bar
 fun test() = ()
 
 renderAsStr of test
-//│ = "[function test]"
+//│ = "fun test"
 
 renderAsStr of [42, 100, test]
-//│ = "[42, 100, [function test]]"
+//│ = "[42, 100, fun test]"
 
 set test.test = test
 
 renderAsStr of test
-//│ = "<ref *1> [function test] {test: [Circular *1]}"
+//│ = "(val ref'1 = fun test {test: ref'1})"
 
 let greetings = () => "hello"
-//│ greetings = [function greetings]
+//│ greetings = fun greetings
 
 renderAsStr of greetings
-//│ = "[function greetings]"
+//│ = "fun greetings"
 
 renderAsStr of x => x * 2
-//│ = "[function]"
+//│ = "fun"
 
 renderAsStr of Object.assign(x => x * 2, { a: 2 })
-//│ = "[function] {a: 2}"
+//│ = "fun {a: 2}"
 
 renderAsStr of globalThis.setImmediate
-//│ = "[function setImmediate]"
+//│ = "fun setImmediate"
 
 //   ____ _                _
 //  / ___(_)_ __ ___ _   _| | __ _ _ __
@@ -219,7 +219,7 @@ let a =
 set a.x = a
 
 a
-//│ = <ref *1> {x: [Circular *1], y: 1}
+//│ = (val ref'1 = {x: ref'1, y: 1})
 
 // Test: an object is referenced multiple times in a circular way.
 
@@ -236,26 +236,26 @@ set tree.left.left = tree
 set tree.right.left = tree
 
 tree
-//│ = <ref *1> {left: {left: [Circular *1], right: null}, right: {left: [Circular *1], right: null}}
+//│ = (val ref'1 = {left: {left: ref'1, right: null}, right: {left: ref'1, right: null}})
 
 // Test: nested circular reference.
 
 // If the same circular object appears multiple times, it should be rendered as
 // the same reference.
 let b = [a, a]
-//│ b = [<ref *1> {x: [Circular *1], y: 1}, <ref *1> {x: [Circular *1], y: 1}]
+//│ b = [(val ref'1 = {x: ref'1, y: 1}), (val ref'1 = {x: ref'1, y: 1})]
 
 b.push(b)
 //│ = 3
 
 b
-//│ = <ref *2> [<ref *1> {x: [Circular *1], y: 1}, <ref *1> {x: [Circular *1], y: 1}, [Circular *2]]
+//│ = (val ref'2 = [(val ref'1 = {x: ref'1, y: 1}), (val ref'1 = {x: ref'1, y: 1}), ref'2])
 
 let functionWithProperties = Object.assign(x => x, "kind": "Callable")
-//│ functionWithProperties = [function] {kind: "Callable"}
+//│ functionWithProperties = fun {kind: "Callable"}
 
 functionWithProperties
-//│ = [function] {kind: "Callable"}
+//│ = fun {kind: "Callable"}
 
 functionWithProperties.kind
 //│ = "Callable"

@@ -113,6 +113,6 @@ new Barr(40)(2) with
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
 //│ ║  l.111: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^
-//│ = [function]
+//│ = fun
 
 

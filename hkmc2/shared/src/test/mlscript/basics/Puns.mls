@@ -64,7 +64,7 @@ let foo = case
   (a: 0) then false
   (a: 1) then true
   (:a) then a
-//│ foo = [function]
+//│ foo = fun
 
 foo(r)
 //│ = true

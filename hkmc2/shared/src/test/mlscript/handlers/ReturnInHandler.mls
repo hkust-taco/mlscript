@@ -41,7 +41,7 @@ let l = () =>
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
 //│ ║  l.39: 	  return 3
 //│ ╙──      	         ^
-//│ l = [function l]
+//│ l = fun l
 
 :re
 l()

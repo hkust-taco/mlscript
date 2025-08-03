@@ -37,7 +37,7 @@ add@1@2
 
 
 @
-//│ = [function apply]
+//│ = fun apply
 
 @(id, 123)
 
@@ -73,7 +73,7 @@ test @
 
 // * Note: this lambda shorthand includes the whole term, as `_ + 1` is not delimited/parenthesized
 test @ _ + 1
-//│ = [function]
+//│ = fun
 
 
 pipeInto of 1, inc
@@ -84,7 +84,7 @@ pipeInto @ 1, inc
 //│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
 
 pipeInto(1, _) @ inc
-//│ = [function]
+//│ = fun
 
 (pipeInto(1, _)) @ inc
 //│ = 2

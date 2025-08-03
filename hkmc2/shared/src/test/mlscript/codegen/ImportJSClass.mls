@@ -3,19 +3,19 @@
 
 
 import "../../js/MyClass.mjs"
-//│ MyClass = [class MyClass]
+//│ MyClass = class MyClass
 
 MyClass
-//│ = [class MyClass]
+//│ = class MyClass
 
 new MyClass("Bob")
 //│ = MyClass {name: "Bob"}
 
 let C = MyClass
-//│ C = [class MyClass]
+//│ C = class MyClass
 
 let c = C
-//│ c = [class MyClass]
+//│ c = class MyClass
 
 :todo
 new c("Bob")

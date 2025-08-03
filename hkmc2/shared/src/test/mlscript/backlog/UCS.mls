@@ -186,7 +186,7 @@ let foo =
 //│ ╔══[ERROR] mismatched arity: expect 3, found 1
 //│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
-//│ foo = [function foo]
+//│ foo = fun foo
 
 foo(Tuple(1, 2, 3))
 //│ ═══[RUNTIME ERROR] Error: match error

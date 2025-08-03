@@ -4,7 +4,7 @@
 fun foo(x, y, z) = [x, y, z]
 
 let f = foo(1, _, 3)
-//│ f = [function f]
+//│ f = fun f
 
 f(2)
 //│ = [1, 2, 3]
@@ -13,19 +13,19 @@ f(2)
 let f = foo(1, _, _)
 //│ JS (unsanitized):
 //│ let f2, f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
-//│ f = [function f]
+//│ f = fun f
 
 f(2, 3)
 //│ = [1, 2, 3]
 
 let g = f(_, 3)
-//│ g = [function g]
+//│ g = fun g
 
 g(2)
 //│ = [1, 2, 3]
 
 foo(_, _, 3) of 1, 2
-//│ = [function]
+//│ = fun
 
 {foo(_, _, 3)} of 1, 2
 //│ = [1, 2, 3]
@@ -44,33 +44,33 @@ fun foo2(x, y, z)(a, b) = [x, y, z, a, b]
 let f = [_]
 f(27)
 //│ = [27]
-//│ f = [function f]
+//│ f = fun f
 
 // :sjs
 let f = [_ + 1]
 f.0(27)
 //│ = 28
-//│ f = [[function]]
+//│ f = [fun]
 
 let f = foo(..._)
 f([1, 2, 3])
 //│ = [1, 2, 3]
-//│ f = [function f]
+//│ f = fun f
 
 let f = [..._]
 f([1, 2, 3])
 //│ = [1, 2, 3]
-//│ f = [function f]
+//│ f = fun f
 
 // :sjs
 let f = [..._]
 f([])
 //│ = []
-//│ f = [function f]
+//│ f = fun f
 
 
 let h = _ - 2
-//│ h = [function h]
+//│ h = fun h
 
 h(1)
 //│ = -1
@@ -80,7 +80,7 @@ h(1)
 let i = _(0, 1, _)
 //│ JS (unsanitized):
 //│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
-//│ i = [function i]
+//│ i = fun i
 
 i(print, 2)
 //│ > 0 1 2
@@ -95,7 +95,7 @@ i((x, y, z) => x + y + z, 2)
 
 // :re
 i((...args) => [...args], _)(2)
-//│ = [function]
+//│ = fun
 
 
 123 |> (_ + 1)
@@ -103,7 +103,7 @@ i((...args) => [...args], _)(2)
 
 // * Note: missing parens
 123 |> _ + 1
-//│ = [function]
+//│ = fun
 
 123 |> ((_ + 1) >> (_ * 2))
 //│ = 248
@@ -151,7 +151,7 @@ let j = _.x.y(1, _) in j((x: y: tuple), 0)
 data class C(a, b, c)
 
 2 |> C(1, _, 3) |> print
-//│ = [function]
+//│ = fun
 
 2 |> (C(1, _, 3)) |> print
 //│ > C(1, 2, 3)
@@ -183,7 +183,7 @@ data class C(a, b, c)
 
 // * Note: missing parens
 _ - _ of 1, 2
-//│ = [function]
+//│ = fun
 
 
 (_ - 2) <| 1
@@ -201,7 +201,7 @@ _ - _ of 1, 2
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.200: 	|> 1
 //│ ╙──       	   ^
-//│ = [function pipeInto]
+//│ = fun pipeInto
 
 :e
 :re
@@ -226,7 +226,7 @@ _ - _ of 1, 2
 1 . (_ - 2)
 //│ JS (unsanitized):
 //│ let lambda38; lambda38 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda38)
-//│ = [function]
+//│ = fun
 
 :sjs
 1 . (_ - 2)()

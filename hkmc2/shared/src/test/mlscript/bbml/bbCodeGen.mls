@@ -54,7 +54,7 @@ false
 (x => x) as [T] -> T -> T
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
-//│ = [function]
+//│ = fun
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 

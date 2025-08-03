@@ -57,7 +57,7 @@ f()
 //│ JS (unsanitized):
 //│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
-//│ f = [function f]
+//│ f = fun f
 //│ x = 2
 
 
@@ -161,7 +161,7 @@ fun foo(): module M =
     A
 
 foo()
-//│ = [module A1]
+//│ = module A1
 
 
 :sjs
@@ -200,7 +200,7 @@ Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = <ref *1> [module Whoops1] {w: [Circular *1]}
+//│ = (val ref'1 = module Whoops1 {w: ref'1})
 
 Whoops.Whoops.g()
 //│ = "Hello"

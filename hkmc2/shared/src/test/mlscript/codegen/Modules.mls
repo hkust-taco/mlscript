@@ -17,7 +17,7 @@ module None
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = [module None]
+//│ = module None
 
 :sjs
 :re
@@ -70,7 +70,7 @@ module M with
 //│ });
 
 M.C
-//│ = [class C]
+//│ = class C
 
 new M.C
 //│ = C
@@ -114,7 +114,7 @@ module M with
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = <ref *1> [module M2] {m: [Circular *1]}
+//│ = (val ref'1 = module M2 {m: ref'1})
 
 
 

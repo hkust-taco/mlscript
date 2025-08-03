@@ -17,7 +17,7 @@ fun myBind(m, f) = MyState(s => if myRunState(m, s) is [s_, a] then myRunState(f
 fun myReturn(a) = MyState(s => [s, a])
 
 let myGet = MyState(s => [s, s])
-//│ myGet = MyState([function])
+//│ myGet = MyState(fun)
 
 fun myEvalState(m, s) = if myRunState(m, s) is [s_, a] then a
 
@@ -62,7 +62,7 @@ fun eqTerm(a, b) = if a is
 fun myMaybe(d, f, x) = if x is Some(x) then f(x)
 
 let incr = myReturn(Unit)
-//│ incr = MyState([function])
+//│ incr = MyState(fun)
 
 fun lookupVar(v) =
   fun lookup2(env) = myMaybe(dummy => throw Error("undefined"), x => x, lookup(v, env))

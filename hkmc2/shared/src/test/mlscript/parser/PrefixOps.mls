@@ -49,10 +49,10 @@
 +
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (arg1, arg2) { return arg1 + arg2 }); lambda
-//│ = [function]
+//│ = fun
 
 *
-//│ = [function]
+//│ = fun
 
 :pe
 1
@@ -65,10 +65,10 @@
 fun (??) foo(x, y) = x + y
 
 ??
-//│ = [function foo]
+//│ = fun foo
 
 (??)
-//│ = [function foo]
+//│ = fun foo
 
 ??(1, 2)
 //│ = 3
@@ -88,7 +88,7 @@ fun (??) foo(x, y) = x + y
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.87: 	?? 1
 //│ ╙──      	   ^
-//│ = [function foo]
+//│ = fun foo
 
 1
 ?? 2

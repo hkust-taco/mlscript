@@ -21,7 +21,7 @@ case x then x
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.19: 	case x then x
 //│ ╙──      	     ^^^^^^^^
-//│ = [function]
+//│ = fun
 
 
 :w

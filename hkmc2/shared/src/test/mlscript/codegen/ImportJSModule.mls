@@ -1,10 +1,10 @@
 :js
 
 import "../../js/Test.mjs"
-//│ Test = {greet: [function greet]}
+//│ Test = {greet: fun greet}
 
 Test
-//│ = {greet: [function greet]}
+//│ = {greet: fun greet}
 
 Test.greet()
 //│ > Hello from Test.mjs!

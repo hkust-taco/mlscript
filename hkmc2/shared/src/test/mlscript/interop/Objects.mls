@@ -5,7 +5,7 @@ let rcd = { x: 0, y: undefined, z: null}
 //│ rcd = {x: 0, y: undefined, z: null}
 
 rcd.constructor
-//│ = [class Object]
+//│ = class Object
 
 typeof(rcd.constructor)
 //│ = "function"
@@ -37,7 +37,7 @@ Foo.class.name
 //│ = "Foo"
 
 foo.constructor
-//│ = [class Foo]
+//│ = class Foo
 
 // ! will be changed by minification
 foo.constructor.name

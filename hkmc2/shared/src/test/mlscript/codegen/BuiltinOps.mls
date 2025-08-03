@@ -20,7 +20,7 @@
 //│ = 2
 
 +
-//│ = [function]
+//│ = fun
 
 // * A bit confusing... but at least there's a warning!
 :w
@@ -42,7 +42,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 (+)
-//│ = [function]
+//│ = fun
 
 (+)(2, 3)
 //│ = 5
@@ -59,7 +59,7 @@
 //│ ═══[RUNTIME ERROR] Error: Cannot call non-unary builtin symbol '*'
 
 id(+)
-//│ = [function]
+//│ = fun
 
 id(+)(1, 2)
 //│ = 3
@@ -108,7 +108,7 @@ id(~)(2)
 
 
 typeof
-//│ = [function]
+//│ = fun
 
 typeof(1)
 //│ = "number"

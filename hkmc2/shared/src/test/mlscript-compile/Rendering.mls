@@ -351,13 +351,13 @@ fun render(target, ...args) =
     visitingObjects.has(arg) and
       visitingObjects.get(arg) is
         // We have already found this circular reference before
-        Int as index then "[Circular *" + index + "]"
+        Int as index then "ref'" + index
         // The first time we find a circular reference
         else
           let index = circularCounter
           set circularCounter += 1
           visitingObjects.set(arg, index)
-          "[Circular *" + index + "]"
+          "ref'" + index
     else...
     // Otherwise, add this object to the visited objects
     // `null` is a marker for visited objects
@@ -381,9 +381,9 @@ fun render(target, ...args) =
                   desc.value.constructor.(RuntimeJS.symbols.definitionKind) is Function then
                     desc.value.constructor.(RuntimeJS.symbols.definitionKind)()
                 else "class"
-              "[" + kind + " " + (if arg.name is "" then "(anonymous)" else arg.name) + "]"
+              kind + " " + (if arg.name is "" then "(anonymous)" else arg.name)
             else
-              "[function" + (if arg.name is "" then "" else " " + arg.name) + "]"
+              "fun" + (if arg.name is "" then "" else " " + arg.name)
           head + if // Add a space if the function do not have enumerable properties
             let properties = renderObject(arg, level, keyLength, startPos + head.length)
             properties is "{}" then ""
@@ -418,7 +418,7 @@ fun render(target, ...args) =
             proto.constructor.hasOwnProperty(RuntimeJS.symbols.definitionKind) and
               proto.constructor.(RuntimeJS.symbols.definitionKind) is Function then
                 let definitionKind = proto.constructor.(RuntimeJS.symbols.definitionKind)()
-                let head = "[" + definitionKind + " " + proto.constructor.name + "]"
+                let head = definitionKind + " " + proto.constructor.name
                 let body = renderObject(arg, level, keyLength, startPos + head.length)
                 head + (if body is "{}" then "" else " " + body)
             // Otherwise, we print the name of the constructor and the properties.
@@ -431,9 +431,9 @@ fun render(target, ...args) =
           else renderObject(arg, level, keyLength, startPos)
     // We have finished visiting this object
     let prefix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
-      Int as index then "<ref *" + index + "> "
+      Int as index then "(val ref'" + index + " = "
       else ""
-    let result = prefix + rendered
+    let result = if prefix.length === 0 then rendered else prefix + rendered + ")"
     // Add to the visited objects if the object is a circular reference
     if prefix.length > 0 do visitedObjects.set(arg, result)
     visitingObjects.delete(arg)

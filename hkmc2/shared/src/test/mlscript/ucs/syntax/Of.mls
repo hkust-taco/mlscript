@@ -28,7 +28,7 @@ Some(0) getOrElse(42)
 let getOr42 = case
   Some of value then value
   None then 42
-//│ getOr42 = [function]
+//│ getOr42 = fun
 
 None getOr42()
 //│ = 42
