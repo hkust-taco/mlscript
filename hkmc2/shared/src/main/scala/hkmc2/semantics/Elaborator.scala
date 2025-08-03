@@ -1174,7 +1174,7 @@ extends Importer:
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // Translate the pattern directly into methods that perform matching
             // using backtracking.
-            val bod = new ucs.Translator(this)(
+            val bod = new ucs.NaiveCompiler(this)(
               patternParams, Nil, // TODO: Remove this parameter after we finish
               // the pattern translation for string concatenation.
               td.rhs.getOrElse(die), pat)
@@ -1314,7 +1314,7 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ucs.Translator.isInvalidStringBounds, ucs.extractors.to
+    import ucs.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
     given TraceLogger = tl
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */

@@ -170,14 +170,14 @@ isDoubleTripleList__compiled of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
 isDoubleTripleList__compiled of Nil
 //│ = true
 
-fun isDoubleTripleList__translated(xs) =
+fun isDoubleTripleList__naive(xs) =
   set doLog = true
   let result = xs is DoubleTripleList
   set doLog = false
   result
 
 // It does not backtracking because the `DoubleList` is tested first.
-isDoubleTripleList__translated of list(1, 2, 3, 4)
+isDoubleTripleList__naive of list(1, 2, 3, 4)
 //│ > access the `head` of [1, 2, 3, 4]
 //│ > access the `tail` of [1, 2, 3, 4]
 //│ > access the `head` of [2, 3, 4]
@@ -189,7 +189,7 @@ isDoubleTripleList__translated of list(1, 2, 3, 4)
 //│ = true
 
 // It does backtracking when `DoubleList` does not match.
-isDoubleTripleList__translated of list(1, 2, 3)
+isDoubleTripleList__naive of list(1, 2, 3)
 //│ > access the `head` of [1, 2, 3]
 //│ > access the `tail` of [1, 2, 3]
 //│ > access the `head` of [2, 3]
@@ -204,7 +204,7 @@ isDoubleTripleList__translated of list(1, 2, 3)
 //│ > access the `tail` of [3]
 //│ = true
 
-isDoubleTripleList__translated of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
+isDoubleTripleList__naive of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
 //│ > access the `head` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
 //│ > access the `tail` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
 //│ > access the `head` of [2, 3, 4, 5, 6, 7, 8, 9]
@@ -245,10 +245,10 @@ isDoubleTripleList__translated of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
 
 pattern DoubleAndTripleList = DoubleList & TripleList
 
-fun isDoubleAndTriple__translated(xs) = withLog of
+fun isDoubleAndTriple__naive(xs) = withLog of
   () => xs is DoubleAndTripleList
 
-isDoubleAndTriple__translated of list(8, 9)
+isDoubleAndTriple__naive of list(8, 9)
 //│ > access the `head` of [8, 9]
 //│ > access the `tail` of [8, 9]
 //│ > access the `head` of [9]
@@ -259,7 +259,7 @@ isDoubleAndTriple__translated of list(8, 9)
 //│ > access the `tail` of [9]
 //│ = false
 
-isDoubleAndTriple__translated of list(1, 2, 3)
+isDoubleAndTriple__naive of list(1, 2, 3)
 //│ > access the `head` of [1, 2, 3]
 //│ > access the `tail` of [1, 2, 3]
 //│ > access the `head` of [2, 3]
@@ -268,7 +268,7 @@ isDoubleAndTriple__translated of list(1, 2, 3)
 //│ > access the `tail` of [3]
 //│ = false
 
-isDoubleAndTriple__translated of list(4, 3, 2, 1)
+isDoubleAndTriple__naive of list(4, 3, 2, 1)
 //│ > access the `head` of [4, 3, 2, 1]
 //│ > access the `tail` of [4, 3, 2, 1]
 //│ > access the `head` of [3, 2, 1]
@@ -287,7 +287,7 @@ isDoubleAndTriple__translated of list(4, 3, 2, 1)
 //│ > access the `tail` of [1]
 //│ = false
 
-isDoubleAndTriple__translated of list(1, 2, 3, 4, 5, 6)
+isDoubleAndTriple__naive of list(1, 2, 3, 4, 5, 6)
 //│ > access the `head` of [1, 2, 3, 4, 5, 6]
 //│ > access the `tail` of [1, 2, 3, 4, 5, 6]
 //│ > access the `head` of [2, 3, 4, 5, 6]

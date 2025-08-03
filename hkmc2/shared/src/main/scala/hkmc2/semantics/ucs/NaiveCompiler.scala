@@ -9,7 +9,7 @@ import syntax.{Fun, Keyword, Tree}, Tree.*, Keyword.{`as`, `=>`}
 import scala.collection.mutable.Buffer
 import Elaborator.{Ctx, State, ctx}
 
-object Translator:
+object NaiveCompiler:
   /** String range bounds must be single characters. */
   def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
     val ds = Buffer.empty[(Message, Option[Loc])]
@@ -72,12 +72,12 @@ object Translator:
   
   val rejectPrefixSplit: MakePrefixSplit = (_, alternative) => alternative
 
-import Translator.*
+import NaiveCompiler.*
 
 /** This class translates a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern.
  */
-class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends DesugaringBase:
+class NaiveCompiler(val elaborator: Elaborator)(using State, Ctx, Raise) extends DesugaringBase:
   import elaborator.term, elaborator.tl.*, FlatPattern.MatchMode
   import Pattern.*
   
@@ -586,8 +586,8 @@ class Translator(val elaborator: Elaborator)(using State, Ctx, Raise) extends De
    *                 old `body` parameter are mixed.
    */
   def apply(patternParams: Ls[Param], params: Ls[Param], body: Tree, pattern: Pattern): Ls[TermDefinition] = trace(
-    pre = s"Translator <<< ${params.mkString(", ")} $body", 
-    post = (blk: Ls[TermDefinition]) => s"Translator >>> $blk"
+    pre = s"NaiveCompiler <<< ${params.mkString(", ")} $body", 
+    post = (blk: Ls[TermDefinition]) => s"NaiveCompiler >>> $blk"
   ):
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))

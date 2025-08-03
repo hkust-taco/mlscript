@@ -465,7 +465,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           val pattern = tree match
             case TypeDef(syntax.Pat, body, N) =>
               val pattern = elaborator.pattern(body)
-              val term = new Translator(elaborator).translateAnonymousPattern(Nil, Nil, pattern)
+              val term = new NaiveCompiler(elaborator).translateAnonymousPattern(Nil, Nil, pattern)
               S((pattern, term))
             case td @ TypeDef(k = syntax.Pat) =>
               error(msg"Ill-formed pattern argument" -> td.toLoc); N

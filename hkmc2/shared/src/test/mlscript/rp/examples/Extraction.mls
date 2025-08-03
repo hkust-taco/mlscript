@@ -59,18 +59,18 @@ pattern BiasedOr2 = Some(Some(x) => x + 1) | Some(x => x + 2)
 
 fun biasedOr2__compiled(x) = if x is (@compile BiasedOr2) as output then output
 
-fun biasedOr2__translated(x) = if x is BiasedOr2(output) then output
+fun biasedOr2__naive(x) = if x is BiasedOr2(output) then output
 
 biasedOr2__compiled of Some(1)
 //│ = {value: 3}
 
-biasedOr2__translated of Some(1)
+biasedOr2__naive of Some(1)
 //│ = 3
 
 biasedOr2__compiled of Some(Some(1))
 //│ = {value: 2}
 
-biasedOr2__translated of Some(Some(1))
+biasedOr2__naive of Some(Some(1))
 //│ = 2
 
 // Comments: I think the output from the compiled pattern is semantically
@@ -102,7 +102,7 @@ pattern ExactlyOneNone =
 fun exactlyOneNone(x) =
   if x is (@compile ExactlyOneNone) as output then output else "failed"
 
-fun exactlyOneNone__translated(x) =
+fun exactlyOneNone__naive(x) =
   if x is ExactlyOneNone(output) then output else "failed"
 
 exactlyOneNone of Triplet(None, Some(1), Some(2))
@@ -116,13 +116,13 @@ exactlyOneNone of Triplet(Some(1), Some(2), None)
 
 // It seems that the return value of the translation is not correct.
 
-exactlyOneNone__translated of Triplet(None, Some(1), Some(100))
+exactlyOneNone__naive of Triplet(None, Some(1), Some(100))
 //│ = 100
 
-exactlyOneNone__translated of Triplet(Some(1), None, Some(400))
+exactlyOneNone__naive of Triplet(Some(1), None, Some(400))
 //│ = 400
 
-exactlyOneNone__translated of Triplet(Some(1), Some(2), None)
+exactlyOneNone__naive of Triplet(Some(1), Some(2), None)
 //│ = None
 
 :expect "failed"

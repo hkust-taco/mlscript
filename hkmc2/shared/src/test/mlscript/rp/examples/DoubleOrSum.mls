@@ -88,16 +88,16 @@ sum of Nil
 
 pattern SumOrDouble = SumList | DoubleList
 
-fun isSumOrDouble__translated(xs) = if xs is SumOrDouble as output then output else "noop"
+fun isSumOrDouble__naive(xs) = if xs is SumOrDouble as output then output else "noop"
 
-isSumOrDouble__translated of _1234
+isSumOrDouble__naive of _1234
 //│ > 4 + 0 = 4
 //│ > 3 + 4 = 7
 //│ > 2 + 7 = 9
 //│ > 1 + 9 = 10
 //│ = 10
 
-isSumOrDouble__translated of _1234567
+isSumOrDouble__naive of _1234567
 //│ > 7 + 0 = 7
 //│ > 6 + 7 = 13
 //│ > 5 + 13 = 18
@@ -107,7 +107,7 @@ isSumOrDouble__translated of _1234567
 //│ > 1 + 27 = 28
 //│ = 28
 
-isSumOrDouble__translated of Nil
+isSumOrDouble__naive of Nil
 //│ = 0
 
 fun isSumOrDouble__compiled(xs) = if xs is (@compile SumOrDouble) as output then output else "noop"
@@ -136,13 +136,13 @@ isSumOrDouble__compiled of Nil
 
 pattern DoubleOrSum = DoubleList | SumList
 
-fun isDoubleOrSum__translated(xs) = if xs is DoubleOrSum as output then output else "noop"
+fun isDoubleOrSum__naive(xs) = if xs is DoubleOrSum as output then output else "noop"
 
 :todo // Fix the return value of the translation.
-isDoubleOrSum__translated of _1234
+isDoubleOrSum__naive of _1234
 //│ = Nil
 
-isDoubleOrSum__translated of list(1, 2, 3)
+isDoubleOrSum__naive of list(1, 2, 3)
 //│ > 3 + 0 = 3
 //│ > 2 + 3 = 5
 //│ > 1 + 5 = 6
