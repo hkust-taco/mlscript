@@ -35,8 +35,8 @@ fun interleave(sep)(...args) =
     if i < len do set res.[idx + 1] = sep
   res
 
-// The following regular expression matches non-empty strings that look like a
-// Unicode identifier accepted by ECMAScript. 
+// The following regular expression matches non-empty strings that qualify as
+// Unicode identifiers accepted by ECMAScript. 
 let identifierPattern = new RegExp of
   // A breakdown of the regular expression:
   // 1. `\p{...}` is a Unicode character class escape. It matches a set of
