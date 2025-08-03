@@ -413,6 +413,7 @@ w("whoops")
 
 // ——— ——— ———
 
+// To add to `mlscript/basics/LetBindings.mls`
 fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
