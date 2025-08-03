@@ -93,7 +93,7 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
         new codegen.Lowering()
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
-        codegen.js.JSBuilder()
+        codegen.js.JSBuilder(N)
       val le = low.program(blk)
       val baseScp: utils.Scope =
         utils.Scope.empty

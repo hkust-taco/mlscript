@@ -23,7 +23,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]] = N)(using TL, State, Ctx) extends CodeBuilder:
+class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
   
   def checkMLsCalls: Bool = false
