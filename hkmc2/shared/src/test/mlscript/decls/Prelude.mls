@@ -21,6 +21,21 @@ declare class RangeError
 declare class Symbol
 declare class Date
 
+declare class ArrayBuffer
+declare class TypedArray
+declare class Int8Array
+declare class Uint8Array
+declare class Uint8ClampedArray
+declare class Int16Array
+declare class Uint16Array
+declare class Int32Array
+declare class Uint32Array
+declare class Float16Array
+declare class Float32Array
+declare class Float64Array
+declare class BigInt64Array
+declare class BigUint64Array
+
 // MLscript-specific types
 declare class Unit
 declare class Bool

@@ -88,7 +88,7 @@ fun competitors(i) =
 
 fun testAwards_nofib(n) =
   map(x => print(findallawards(competitors(intMod(x, 100)))), enumFromTo(1, n))
-//│ ═══[COMPILATION ERROR] Name not found: member:findallawards
+//│ ═══[COMPILATION ERROR] Name not found: member:print
 //│ Stopped due to an error during the Llir generation
 
 testAwards_nofib(100)
