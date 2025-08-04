@@ -7,18 +7,12 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
-//│ let B1, A1, B$ctor, B$;
+//│ let B1, A1, B$;
 //│ B$ = function B$(A$instance$0, y) {
-//│   let tmp;
+//│   let tmp, tmp1;
 //│   tmp = new B1.class(y);
-//│   return tmp(A$instance$0)
-//│ };
-//│ B$ctor = function B$ctor(A$instance$0) {
-//│   return (y) => {
-//│     let tmp;
-//│     tmp = new B1.class(y);
-//│     return tmp(A$instance$0)
-//│   }
+//│   tmp1 = tmp(A$instance$0);
+//│   return tmp1
 //│ };
 //│ B1 = function B(y1) {
 //│   return (A$instance$01) => {

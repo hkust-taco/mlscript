@@ -21,18 +21,12 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, $_stack$_safe$_body$_, Cont$func$hi$1, Cont$func$hi$$ctor, Cont$func$hi$$;
+//│ let hi, res, $_stack$_safe$_body$_, Cont$func$hi$1, Cont$func$hi$$;
 //│ Cont$func$hi$$ = function Cont$func$hi$$(n$0, scrut$1, tmp$2, stackDelayRes$3, pc) {
-//│   let tmp;
+//│   let tmp, tmp1;
 //│   tmp = new Cont$func$hi$1.class(pc);
-//│   return tmp(n$0, scrut$1, tmp$2, stackDelayRes$3)
-//│ };
-//│ Cont$func$hi$$ctor = function Cont$func$hi$$ctor(n$0, scrut$1, tmp$2, stackDelayRes$3) {
-//│   return (pc) => {
-//│     let tmp;
-//│     tmp = new Cont$func$hi$1.class(pc);
-//│     return tmp(n$0, scrut$1, tmp$2, stackDelayRes$3)
-//│   }
+//│   tmp1 = tmp(n$0, scrut$1, tmp$2, stackDelayRes$3);
+//│   return tmp1
 //│ };
 //│ Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│   return (n$01, scrut$11, tmp$21, stackDelayRes$31) => {
@@ -116,18 +110,12 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, $_stack$_safe$_body$_1, Cont$func$sum$1, Cont$func$sum$$ctor, Cont$func$sum$$;
+//│ let sum1, res1, $_stack$_safe$_body$_1, Cont$func$sum$1, Cont$func$sum$$;
 //│ Cont$func$sum$$ = function Cont$func$sum$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
-//│   let tmp;
+//│   let tmp, tmp1;
 //│   tmp = new Cont$func$sum$1.class(pc);
-//│   return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
-//│ };
-//│ Cont$func$sum$$ctor = function Cont$func$sum$$ctor(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
-//│   return (pc) => {
-//│     let tmp;
-//│     tmp = new Cont$func$sum$1.class(pc);
-//│     return tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5)
-//│   }
+//│   tmp1 = tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5);
+//│   return tmp1
 //│ };
 //│ Cont$func$sum$1 = function Cont$func$sum$(pc1) {
 //│   return (n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51) => {

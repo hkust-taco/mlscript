@@ -31,16 +31,10 @@ fun foo(x, y) =
 //│     return foo3$(M4, x, foo$capture2)
 //│   }
 //│ };
-//│ M3 = function M(x$11, foo$capture$01) {
-//│   return new M.class()(x$11, foo$capture$01);
-//│ };
-//│ M3.class = class M2 {
-//│   constructor() {
-//│     return (x$1, foo$capture$0) => {
-//│       this.x$1 = x$1;
-//│       this.foo$capture$0 = foo$capture$0;
-//│       return this;
-//│     }
+//│ M3 = class M2 {
+//│   constructor(x$1, foo$capture$0) {
+//│     this.x$1 = x$1;
+//│     this.foo$capture$0 = foo$capture$0;
 //│   }
 //│   foo2() {
 //│     this.foo$capture$0.y0$ = 2;
@@ -48,19 +42,16 @@ fun foo(x, y) =
 //│   }
 //│   toString() { return "M"; }
 //│ };
-//│ foo$capture1 = function foo$capture(y0$1) {
-//│   return new foo$capture.class(y0$1);
-//│ };
-//│ foo$capture1.class = class foo$capture {
+//│ foo$capture1 = class foo$capture {
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
-//│   toString() { return "foo$capture(" + runtime.render(this.y0$) + ")"; }
+//│   toString() { return "foo$capture"; }
 //│ };
 //│ foo1 = function foo(x, y) {
 //│   let tmp, M$, capture;
 //│   capture = new foo$capture1(y);
-//│   M$ = M3(x, capture);
+//│   M$ = new M3(x, capture);
 //│   tmp = foo3$(M$, x, capture);
 //│   return tmp
 //│ };
@@ -77,15 +68,9 @@ data class A(x) with
   fun getA() = M.getB()
 //│ JS (unsanitized):
 //│ let M5, A1;
-//│ M5 = function M(A$instance$01) {
-//│   return new M.class()(A$instance$01);
-//│ };
-//│ M5.class = class M4 {
-//│   constructor() {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
-//│       return this;
-//│     }
+//│ M5 = class M4 {
+//│   constructor(A$instance$0) {
+//│     this.A$instance$0 = A$instance$0;
 //│   }
 //│   getB() {
 //│     return this.A$instance$0.x
@@ -98,7 +83,7 @@ data class A(x) with
 //│ A1.class = class A {
 //│   constructor(x) {
 //│     this.x = x;
-//│     this.M$ = M5(this);
+//│     this.M$ = new M5(this);
 //│   }
 //│   getA() {
 //│     return this.M$.getB()
@@ -208,18 +193,12 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ JS (unsanitized):
-//│ let B2, M19, tmp5, tmp6, B$ctor, B$;
+//│ let B2, M19, tmp5, tmp6, B$;
 //│ B$ = function B$(A$instance$0) {
-//│   let tmp7;
+//│   let tmp7, tmp8;
 //│   tmp7 = new B2.class();
-//│   return tmp7(A$instance$0)
-//│ };
-//│ B$ctor = function B$ctor(A$instance$0) {
-//│   return () => {
-//│     let tmp7;
-//│     tmp7 = new B2.class();
-//│     return tmp7(A$instance$0)
-//│   }
+//│   tmp8 = tmp7(A$instance$0);
+//│   return tmp8
 //│ };
 //│ B2 = function B() {
 //│   return (A$instance$01) => {

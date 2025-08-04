@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$ctor, Cont$func$f$$, Cont$handleBlock$h$$ctor, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$, Cont$handleBlock$h$$, lambda$;
 //│ Effect1 = class Effect {
 //│   constructor() {}
 //│   toString() { return "Effect"; }
@@ -39,16 +39,10 @@ f() + f() + f()
 //│   toString() { return "Handler$h$"; }
 //│ };
 //│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
-//│   let tmp1;
+//│   let tmp1, tmp2;
 //│   tmp1 = new Cont$handleBlock$h$1.class(pc);
-//│   return tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4)
-//│ };
-//│ Cont$handleBlock$h$$ctor = function Cont$handleBlock$h$$ctor(h$0, tmp$1, tmp$2, tmp$3, tmp$4) {
-//│   return (pc) => {
-//│     let tmp1;
-//│     tmp1 = new Cont$handleBlock$h$1.class(pc);
-//│     return tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4)
-//│   }
+//│   tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
+//│   return tmp2
 //│ };
 //│ Cont$handleBlock$h$1 = function Cont$handleBlock$h$(pc1) {
 //│   return (h$01, tmp$11, tmp$21, tmp$31, tmp$41) => {
@@ -124,16 +118,10 @@ f() + f() + f()
 //│   toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
 //│ };
 //│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1, pc) {
-//│   let tmp1;
+//│   let tmp1, tmp2;
 //│   tmp1 = new Cont$func$f$1.class(pc);
-//│   return tmp1(h$0, tmp$1)
-//│ };
-//│ Cont$func$f$$ctor = function Cont$func$f$$ctor(h$0, tmp$1) {
-//│   return (pc) => {
-//│     let tmp1;
-//│     tmp1 = new Cont$func$f$1.class(pc);
-//│     return tmp1(h$0, tmp$1)
-//│   }
+//│   tmp2 = tmp1(h$0, tmp$1);
+//│   return tmp2
 //│ };
 //│ Cont$func$f$1 = function Cont$func$f$(pc1) {
 //│   return (h$01, tmp$11) => {
@@ -225,18 +213,12 @@ fun f(x) =
   Test()
 f(1).get()
 //│ JS (unsanitized):
-//│ let Test1, f1, tmp1, Test$ctor, Test$;
+//│ let Test1, f1, tmp1, Test$;
 //│ Test$ = function Test$(x$0) {
-//│   let tmp2;
+//│   let tmp2, tmp3;
 //│   tmp2 = new Test1.class();
-//│   return tmp2(x$0)
-//│ };
-//│ Test$ctor = function Test$ctor(x$0) {
-//│   return () => {
-//│     let tmp2;
-//│     tmp2 = new Test1.class();
-//│     return tmp2(x$0)
-//│   }
+//│   tmp3 = tmp2(x$0);
+//│   return tmp3
 //│ };
 //│ Test1 = function Test() {
 //│   return (x$01) => {
@@ -275,7 +257,7 @@ fun f(used1, unused1) =
   Test(unused1)
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h, Test3, g, f2, tmp2, Test$ctor1, Test$1, g$, h$;
+//│ let h, Test3, g, f2, tmp2, Test$1, g$, h$;
 //│ h$ = function h$(used3) {
 //│   return used3
 //│ };
@@ -296,16 +278,10 @@ f(1, 2).get()
 //│   }
 //│ };
 //│ Test$1 = function Test$(used1$0, a) {
-//│   let tmp3;
+//│   let tmp3, tmp4;
 //│   tmp3 = new Test3.class(a);
-//│   return tmp3(used1$0)
-//│ };
-//│ Test$ctor1 = function Test$ctor(used1$0) {
-//│   return (a) => {
-//│     let tmp3;
-//│     tmp3 = new Test3.class(a);
-//│     return tmp3(used1$0)
-//│   }
+//│   tmp4 = tmp3(used1$0);
+//│   return tmp4
 //│ };
 //│ Test3 = function Test(a1) {
 //│   return (used1$01) => {
@@ -360,7 +336,7 @@ fun f(used1, unused1) =
   new Test
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h2, Test7, g2, f4, tmp4, Test$ctor3, Test$3, g$2, h$2;
+//│ let h2, Test7, g2, f4, tmp4, Test$3, g$2, h$2;
 //│ h$2 = function h$(used3) {
 //│   return used3
 //│ };
@@ -382,25 +358,12 @@ f(1, 2).get()
 //│ };
 //│ Test$3 = function Test$(used1$0) {
 //│   let tmp5;
-//│   tmp5 = new Test7.class();
-//│   return tmp5(used1$0)
+//│   tmp5 = new Test7(used1$0);
+//│   return tmp5
 //│ };
-//│ Test$ctor3 = function Test$ctor(used1$0) {
-//│   return () => {
-//│     let tmp5;
-//│     tmp5 = new Test7.class();
-//│     return tmp5(used1$0)
-//│   }
-//│ };
-//│ Test7 = function Test(used1$01) {
-//│   return new Test.class()(used1$01);
-//│ };
-//│ Test7.class = class Test6 {
-//│   constructor() {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
-//│       return this;
-//│     }
+//│ Test7 = class Test6 {
+//│   constructor(used1$0) {
+//│     this.used1$0 = used1$0;
 //│   }
 //│   get() {
 //│     return this.used1$0
@@ -425,18 +388,12 @@ fun f(x) =
   x
 f(1)
 //│ JS (unsanitized):
-//│ let A1, f5, A$ctor, A$, f$capture1;
+//│ let A1, f5, A$, f$capture1;
 //│ A$ = function A$(f$capture$0) {
-//│   let tmp5;
+//│   let tmp5, tmp6;
 //│   tmp5 = new A1.class();
-//│   return tmp5(f$capture$0)
-//│ };
-//│ A$ctor = function A$ctor(f$capture$0) {
-//│   return () => {
-//│     let tmp5;
-//│     tmp5 = new A1.class();
-//│     return tmp5(f$capture$0)
-//│   }
+//│   tmp6 = tmp5(f$capture$0);
+//│   return tmp6
 //│ };
 //│ A1 = function A() {
 //│   return (f$capture$01) => {
@@ -456,14 +413,11 @@ f(1)
 //│   }
 //│   toString() { return "A(" + "" + ")"; }
 //│ };
-//│ f$capture1 = function f$capture(x0$1) {
-//│   return new f$capture.class(x0$1);
-//│ };
-//│ f$capture1.class = class f$capture {
+//│ f$capture1 = class f$capture {
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
+//│   toString() { return "f$capture"; }
 //│ };
 //│ f5 = function f(x) {
 //│   let tmp5, tmp6, capture;
@@ -494,18 +448,12 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f6, tmp5, Bad$ctor, Bad$, Good$ctor, Good$, f$capture3;
+//│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
-//│   let tmp6;
+//│   let tmp6, tmp7;
 //│   tmp6 = new Good1.class();
-//│   return tmp6(x$1, y$2, z$3, f$capture$0)
-//│ };
-//│ Good$ctor = function Good$ctor(x$1, y$2, z$3, f$capture$0) {
-//│   return () => {
-//│     let tmp6;
-//│     tmp6 = new Good1.class();
-//│     return tmp6(x$1, y$2, z$3, f$capture$0)
-//│   }
+//│   tmp7 = tmp6(x$1, y$2, z$3, f$capture$0);
+//│   return tmp7
 //│ };
 //│ Good1 = function Good() {
 //│   return (x$11, y$21, z$31, f$capture$01) => {
@@ -532,16 +480,10 @@ f().foo()
 //│   toString() { return "Good(" + "" + ")"; }
 //│ };
 //│ Bad$ = function Bad$(f$capture$0) {
-//│   let tmp6;
+//│   let tmp6, tmp7;
 //│   tmp6 = new Bad1.class();
-//│   return tmp6(f$capture$0)
-//│ };
-//│ Bad$ctor = function Bad$ctor(f$capture$0) {
-//│   return () => {
-//│     let tmp6;
-//│     tmp6 = new Bad1.class();
-//│     return tmp6(f$capture$0)
-//│   }
+//│   tmp7 = tmp6(f$capture$0);
+//│   return tmp7
 //│ };
 //│ Bad1 = function Bad() {
 //│   return (f$capture$01) => {
@@ -561,14 +503,11 @@ f().foo()
 //│   }
 //│   toString() { return "Bad(" + "" + ")"; }
 //│ };
-//│ f$capture3 = function f$capture(w0$1) {
-//│   return new f$capture.class(w0$1);
-//│ };
-//│ f$capture3.class = class f$capture2 {
+//│ f$capture3 = class f$capture2 {
 //│   constructor(w0$) {
 //│     this.w0$ = w0$;
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.w0$) + ")"; }
+//│   toString() { return "f$capture"; }
 //│ };
 //│ f6 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;

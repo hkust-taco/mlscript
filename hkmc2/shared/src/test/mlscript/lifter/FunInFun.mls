@@ -179,14 +179,11 @@ x + y
 //│     return h$(f$capture2)
 //│   }
 //│ };
-//│ f$capture1 = function f$capture(a0$1) {
-//│   return new f$capture.class(a0$1);
-//│ };
-//│ f$capture1.class = class f$capture {
+//│ f$capture1 = class f$capture {
 //│   constructor(a0$) {
 //│     this.a0$ = a0$;
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.a0$) + ")"; }
+//│   toString() { return "f$capture"; }
 //│ };
 //│ f5 = function f() {
 //│   let capture, g$this, h$this;
@@ -312,14 +309,11 @@ f(1, 2, 1000)
 //│     return h$2(f$capture6)
 //│   }
 //│ };
-//│ f$capture5 = function f$capture(mutated0$1) {
-//│   return new f$capture.class(mutated0$1);
-//│ };
-//│ f$capture5.class = class f$capture4 {
+//│ f$capture5 = class f$capture4 {
 //│   constructor(mutated0$) {
 //│     this.mutated0$ = mutated0$;
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.mutated0$) + ")"; }
+//│   toString() { return "f$capture"; }
 //│ };
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp15, tmp16, tmp17, capture;
@@ -465,14 +459,11 @@ g()(1)
 //│     return f$1(g$capture2, x1)
 //│   }
 //│ };
-//│ g$capture1 = function g$capture(y0$1) {
-//│   return new g$capture.class(y0$1);
-//│ };
-//│ g$capture1.class = class g$capture {
+//│ g$capture1 = class g$capture {
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
-//│   toString() { return "g$capture(" + runtime.render(this.y0$) + ")"; }
+//│   toString() { return "g$capture"; }
 //│ };
 //│ g13 = function g() {
 //│   let capture;
@@ -574,14 +565,11 @@ f()
 //│     return f$2(f$capture16)
 //│   }
 //│ };
-//│ f$capture15 = function f$capture(x0$1) {
-//│   return new f$capture.class(x0$1);
-//│ };
-//│ f$capture15.class = class f$capture14 {
+//│ f$capture15 = class f$capture14 {
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
-//│   toString() { return "f$capture(" + runtime.render(this.x0$) + ")"; }
+//│   toString() { return "f$capture"; }
 //│ };
 //│ f20 = function f() {
 //│   let tmp19, capture;
@@ -611,29 +599,16 @@ fun f(es, vs) =
     val fld = v'
   new A
 //│ JS (unsanitized):
-//│ let A1, f23, A$ctor, A$;
+//│ let A1, f23, A$;
 //│ A$ = function A$(v$_$0) {
 //│   let tmp19;
-//│   tmp19 = new A1.class();
-//│   return tmp19(v$_$0)
+//│   tmp19 = new A1(v$_$0);
+//│   return tmp19
 //│ };
-//│ A$ctor = function A$ctor(v$_$0) {
-//│   return () => {
-//│     let tmp19;
-//│     tmp19 = new A1.class();
-//│     return tmp19(v$_$0)
-//│   }
-//│ };
-//│ A1 = function A(v$_$01) {
-//│   return new A.class()(v$_$01);
-//│ };
-//│ A1.class = class A {
-//│   constructor() {
-//│     return (v$_$0) => {
-//│       this["v'$0"] = v$_$0;
-//│       this.fld = this["v'$0"];
-//│       return this;
-//│     }
+//│ A1 = class A {
+//│   constructor(v$_$0) {
+//│     this["v'$0"] = v$_$0;
+//│     this.fld = this["v'$0"];
 //│   }
 //│   toString() { return "A"; }
 //│ };
