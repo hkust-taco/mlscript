@@ -8,8 +8,8 @@ fun nonsense(xs) = if xs is
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
 //│   let rest, ys;
-//│   if (globalThis.Array.isArray(xs) && xs.length >= 0) {
-//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
+//│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 0, 0));
 //│     ys = rest;
 //│     return ys
 //│   } else {
@@ -31,15 +31,15 @@ fun lead_and_last(xs) = if xs is
 //│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
 //│   let last0, rest, first0, x, ys, y;
-//│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
-//│     first0 = xs[0];
-//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     first0 = runtime.Tuple.get(xs, 0);
+//│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 1, 1));
 //│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
 //│     ys = rest;
 //│     y = last0;
 //│     return x + y
-//│   } else if (globalThis.Array.isArray(xs) && xs.length === 0) {
+//│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
 //│     throw new globalThis.Error("match error");
@@ -67,14 +67,14 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
 //│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
-//│   if (globalThis.Array.isArray(xs) && xs.length >= 2) {
-//│     first0 = xs[0];
-//│     rest = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
+//│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
+//│     first0 = runtime.Tuple.get(xs, 0);
+//│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 1, 1));
 //│     last0 = runtime.Tuple.get(xs, -1);
 //│     x = first0;
-//│     if (globalThis.Array.isArray(rest) && rest.length === 2) {
-//│       first01 = rest[0];
-//│       first1 = rest[1];
+//│     if (runtime.Tuple.isArrayLike(rest) && rest.length === 2) {
+//│       first01 = runtime.Tuple.get(rest, 0);
+//│       first1 = runtime.Tuple.get(rest, 1);
 //│       y = first01;
 //│       z = first1;
 //│       w = last0;
@@ -84,7 +84,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     } else {
 //│       throw new globalThis.Error("match error");
 //│     }
-//│   } else if (globalThis.Array.isArray(xs) && xs.length === 0) {
+//│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
 //│     throw new globalThis.Error("match error");

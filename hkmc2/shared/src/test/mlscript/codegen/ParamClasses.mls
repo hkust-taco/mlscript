@@ -159,3 +159,80 @@ i.i1(20)
 //│ = 120
 
 
+// * This is strange, but does not need to be an error
+class Foo(x, val y, z, val z, z) with
+  let x = 1
+  let y += 1
+  print("x = " + x)
+  print("y = " + y)
+  print("this.y = " + this.y)
+  print("z = " + z)
+  print("this.z = " + this.z)
+//│ JS (unsanitized):
+//│ let Foo7;
+//│ Foo7 = function Foo(x1, y1, z3, z, z1) {
+//│   return new Foo.class(x1, y1, z3, z, z1);
+//│ };
+//│ Foo7.class = class Foo6 {
+//│   #x;
+//│   #z;
+//│   #z1;
+//│   #x1;
+//│   #y;
+//│   constructor(x, y, z, z1, z2) {
+//│     let tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+//│     this.#x = x;
+//│     this.y = y;
+//│     this.#z = z;
+//│     this.z = z1;
+//│     this.#z1 = z2;
+//│     this.#x1 = 1;
+//│     tmp7 = this.y + 1;
+//│     this.#y = tmp7;
+//│     tmp8 = "x = " + this.#x1;
+//│     tmp9 = Predef.print(tmp8);
+//│     tmp10 = "y = " + this.#y;
+//│     tmp11 = Predef.print(tmp10);
+//│     tmp12 = "this.y = " + this.y;
+//│     tmp13 = Predef.print(tmp12);
+//│     tmp14 = "z = " + this.#z1;
+//│     tmp15 = Predef.print(tmp14);
+//│     tmp16 = "this.z = " + this.z;
+//│     Predef.print(tmp16)
+//│   }
+//│   toString() { return "Foo(" + runtime.render(this.y) + ", " + runtime.render(this.z) + ")"; }
+//│ };
+
+Foo(10, 20, 30, 40, 50)
+//│ JS (unsanitized):
+//│ Foo7(10, 20, 30, 40, 50)
+//│ > x = 1
+//│ > y = 21
+//│ > this.y = 20
+//│ > z = 50
+//│ > this.z = 40
+//│ = Foo(20, 40)
+
+
+:todo // * This should be an error
+:e
+class Foo(val z, val z)
+//│ JS (unsanitized):
+//│ let Foo9;
+//│ Foo9 = function Foo(z2, z) {
+//│   return new Foo.class(z2, z);
+//│ };
+//│ Foo9.class = class Foo8 {
+//│   constructor(z, z1) {
+//│     this.z = z;
+//│     this.z = z1;
+//│   }
+//│   toString() { return "Foo(" + runtime.render(this.z) + ", " + runtime.render(this.z) + ")"; }
+//│ };
+
+Foo(1, 2)
+//│ JS (unsanitized):
+//│ Foo9(1, 2)
+//│ = Foo(2, 2)
+
+

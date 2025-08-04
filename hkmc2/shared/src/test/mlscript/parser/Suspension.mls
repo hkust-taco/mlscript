@@ -43,22 +43,26 @@ module A with
 //│ Parsed tree:
 //│ TypeDef:
 //│   k = Mod
-//│   head = Ident of "A"
+//│   head = InfixApp:
+//│     lhs = Ident of "A"
+//│     kw = keyword 'with'
+//│     rhs = Block of Ls of 
+//│       TypeDef:
+//│         k = Mod
+//│         head = InfixApp:
+//│           lhs = Ident of "B"
+//│           kw = keyword 'with'
+//│           rhs = Block of Ls of 
+//│             TermDef:
+//│               k = ImmutVal
+//│               head = Ident of "a"
+//│               rhs = S of IntLit of 1
+//│             TermDef:
+//│               k = ImmutVal
+//│               head = Ident of "b"
+//│               rhs = S of IntLit of 2
+//│         rhs = N
 //│   rhs = N
-//│   body = S of Block of Ls of 
-//│     TypeDef:
-//│       k = Mod
-//│       head = Ident of "B"
-//│       rhs = N
-//│       body = S of Block of Ls of 
-//│         TermDef:
-//│           k = ImmutVal
-//│           head = Ident of "a"
-//│           rhs = S of IntLit of 1
-//│         TermDef:
-//│           k = ImmutVal
-//│           head = Ident of "b"
-//│           rhs = S of IntLit of 2
 
 
 fun test(x) =
@@ -74,11 +78,11 @@ x =>
   1
 let bar = 1
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.72: 	x =>
+//│ ║  l.76: 	x =>
 //│ ║        	^^^^
-//│ ║  l.73: 	  if false then 0 else...
+//│ ║  l.77: 	  if false then 0 else...
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.74: 	  1
+//│ ║  l.78: 	  1
 //│ ╙──      	^^^
 //│ bar = 1
 
@@ -92,10 +96,10 @@ x => if false then 0 else...
   1
 let foo = 1
 //│ ╔══[ERROR] Illegal position for '...' spread operator.
-//│ ║  l.91: 	x => if false then 0 else...
+//│ ║  l.95: 	x => if false then 0 else...
 //│ ╙──      	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.91: 	x => if false then 0 else...
+//│ ║  l.95: 	x => if false then 0 else...
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ foo = 1
 

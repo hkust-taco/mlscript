@@ -13,9 +13,9 @@ module R with
 
 fun foo[T](using Int)(using Num)(using Str): module M = M
 
-use Int = 42
-use Num = 4.2
-use Str = "42"
+using Int = 42
+using Num = 4.2
+using Str = "42"
 
 :global
 :rt

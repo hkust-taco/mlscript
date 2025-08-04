@@ -1,13 +1,12 @@
 :js
 
 
-// * Note: `||` is currently not shortcircuiting
 :sjs
 let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "shared"
 //│ JS (unsanitized):
-//│ let folderName1, folderName2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+//│ let folderName1, folderName2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, lambda;
 //│ tmp = runtime.safeCall(this.process.env.PWD.split("/"));
 //│ tmp1 = runtime.safeCall(tmp.pop());
 //│ folderName1 = tmp1;
@@ -16,8 +15,10 @@ in folderName2 === folderName1 || folderName2 === "shared"
 //│ tmp4 = runtime.safeCall(tmp3.pop());
 //│ folderName2 = tmp4;
 //│ tmp5 = folderName2 === folderName1;
-//│ tmp6 = folderName2 === "shared";
-//│ tmp5 || tmp6
+//│ lambda = (undefined, function () {
+//│   return folderName2 === "shared"
+//│ });
+//│ runtime.short_or(tmp5, lambda)
 //│ = true
 
 

@@ -420,16 +420,22 @@ enum Case:
   case Lit(lit: Literal)
   case Cls(cls: ClassLikeSymbol, path: Path)
   case Tup(len: Int, inf: Bool)
+  /** checks field existence
+    * @param safe true will omit the instanceof Object check
+  */
+  case Field(name: Tree.Ident, safe: Bool)
 
   lazy val freeVars: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVars
     case Tup(_, _) => Set.empty
+    case Field(_, _) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case Lit(_) => Set.empty
     case Cls(_, path) => path.freeVarsLLIR
     case Tup(_, _) => Set.empty
+    case Field(_, _) => Set.empty
 
 sealed trait TrivialResult extends Result
 
@@ -501,7 +507,7 @@ sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
   def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
-  def asArg = Arg(false, this)
+  def asArg = Arg(N, this)
 
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:
   def extraInfo: Str = symbol.mkString
@@ -516,7 +522,7 @@ enum Value extends Path:
   case Arr(elems: Ls[Arg])
   case Rcd(elems: Ls[RcdArg])
 
-case class Arg(spread: Bool, value: Path)
+case class Arg(spread: Opt[Bool], value: Path)
 
 // * `IndxdArg(S(idx), value)` represents a key-value pair in a record `(idx): value`
 // * `IndxdArg(N, value)` represents a spread element in a record `...value`

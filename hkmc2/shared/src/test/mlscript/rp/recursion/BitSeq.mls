@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 data class Pair[A, B](val first: A, val second: B)
 
 pattern Bit = 0 | 1

@@ -34,7 +34,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
   
   val ltl = new TraceLogger:
-    override def doTrace = debugLowering.isSet
+    override def doTrace = debugLowering.isSet || scope.exists:
+      showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
   
   val replTL = new TraceLogger:
@@ -183,7 +184,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
-                Arg(false, Value.Ref(sym)) :: Nil)(true, false),
+                Arg(N, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

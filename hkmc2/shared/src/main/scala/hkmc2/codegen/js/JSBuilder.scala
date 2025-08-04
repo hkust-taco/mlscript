@@ -80,10 +80,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol)
   
   def argument(a: Arg)(using Raise, Scope): Document =
-    if a.spread then doc"...${result(a.value)}" else result(a.value)
+    val spd = a.spread match
+      case S(true) => "..."
+      case S(false) => s"$runtimeVar.Tuple.split, "
+      case N => ""
+    doc"${spd}${result(a.value)}"
   
   def operand(a: Arg)(using Raise, Scope): Document =
-    if a.spread then die else subexpression(a.value)
+    if a.spread.nonEmpty then die else subexpression(a.value)
   
   def subexpression(r: Result)(using Raise, Scope): Document = r match
     case _: Value.Lam => doc"(${result(r)})"
@@ -147,12 +151,18 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case N => s"[${makeStringLiteral(name)}]"
       }"
     case DynSelect(qual, fld, ai) =>
-      doc"${result(qual)}[${result(fld)}]"
+      if ai
+      then doc"${result(qual)}.at(${result(fld)})"
+      else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(cls, as) =>
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
-      doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
+      val lazyConcat = es.exists(!_.spread.getOrElse(true))
+      if lazyConcat then
+       doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
+      else
+       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
     case Value.Rcd(flds) =>
       doc"{ #  #{ ${
         flds.map:
@@ -299,10 +309,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 else doc""" # ${mtdPrefix}toString() { return "${sym.nme}${
                   if paramsOpt.isEmpty then doc"""""""
                   else doc"""(" + ${
-                      ctorFields.headOption.fold("\"\"")(f => "runtime.render(this" + fieldSelect(f._1.name) + ")")
+                      ctorFields.headOption.fold("\"\"")(f => s"$runtimeVar.render(this" + fieldSelect(f._1.name) + ")")
                     }${
                       ctorFields.tailOption.fold("")(_.map(f =>
-                        """ + ", " + runtime.render(this""" + fieldSelect(f._1.name) + ")").mkString)
+                        s""" + ", " + $runtimeVar.render(this""" + fieldSelect(f._1.name) + ")").mkString)
                     } + ")""""
                 }; }"""
               } #}  # }"
@@ -382,7 +392,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case _ => doc"$sd instanceof ${result(pth)}"
-        case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
+        case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
+        case Case.Field(n, safe = false) =>
+          doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
+        case Case.Field(n, safe = true) =>
+          doc""""${n.name}" in $sd"""
       val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
       val t = tl.foldLeft(h)((acc, arm) =>
         acc :: doc" else if (${ cond(arm._1) }) ${ braced(returningTerm(arm._2, endSemi = false)) }")

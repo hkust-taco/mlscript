@@ -166,10 +166,10 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f5;
 //│ f5 = function f(x3) {
-//│   let param04, param1, a, b, param05, u;
+//│   let param04, param1, a, b, u;
 //│   if (x3 instanceof Some1.class) {
-//│     param05 = x3.value;
-//│     u = param05;
+//│     param04 = x3.value;
+//│     u = param04;
 //│     return u
 //│   } else if (x3 instanceof Pair1.class) {
 //│     param04 = x3.fst;

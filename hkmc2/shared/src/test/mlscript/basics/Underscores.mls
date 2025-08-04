@@ -1,0 +1,188 @@
+:js
+
+
+:sjs
+_
+//│ JS (unsanitized):
+//│ let lambda; lambda = (undefined, function (_0) { return _0 }); lambda
+//│ = [function]
+
+(_)
+//│ = [function]
+
+:e
+:ge
+:re
+y: _
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'y'
+//│ ║  l.16: 	y: _
+//│ ╙──      	^
+//│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
+
+(y: _)
+//│ = [function]
+
+:w
+_, _
+//│ ═══[WARNING] Pure expression in statement position
+//│ = [function]
+
+
+let inc = _ + 1
+//│ inc = [function inc]
+
+inc(2)
+//│ = 3
+
+:sjs
+_ + _
+//│ JS (unsanitized):
+//│ let lambda4; lambda4 = (undefined, function (_0, _1) { return _0 + _1 }); lambda4
+//│ = [function]
+
+let f = _ + _
+//│ f = [function f]
+
+f(2, 3)
+//│ = 5
+
+
+import "../../mlscript-compile/Iter.mls"
+open Iter
+
+filtering of [], _ =>
+  1
+//│ = Iterable()
+
+print(_)
+//│ = [function]
+
+
+:sjs
+let test = _.f(0, _, 2)
+//│ JS (unsanitized):
+//│ let test, test1;
+//│ test1 = function test(_0, _1) {
+//│   return runtime.safeCall(_0.f(0, _1, 2))
+//│ };
+//│ test = test1;
+//│ test = [function test]
+
+:re
+test(f: print)(1)
+//│ ═══[RUNTIME ERROR] Error: Function 'test' expected 2 arguments but got 1
+
+test((f: print), 1)
+//│ > 0 1 2
+
+test({f: print}, 1)
+//│ > 0 1 2
+
+{f: print}
+//│ = {f: [function print]}
+
+({f: print})
+//│ = {f: [function print]}
+
+[{f: print}]
+//│ = [{f: [function print]}]
+
+[{f: print}, 1]
+//│ = [{f: [function print]}, 1]
+
+
+print(inc(_))
+//│ > [function]
+
+:sjs
+_ is Int
+//│ JS (unsanitized):
+//│ let lambda8;
+//│ lambda8 = (undefined, function (_0) {
+//│   if (globalThis.Number.isInteger(_0)) {
+//│     return true
+//│   } else {
+//│     return false
+//│   }
+//│ });
+//│ lambda8
+//│ = [function]
+
+let f = _ is Int
+[f(1), f("1")]
+//│ = [true, false]
+//│ f = [function f]
+
+[1, "a", 3, true] filtering(_ is Int) toArray()
+//│ = [1, 3]
+
+42 is _
+//│ = true
+
+
+let x_to = x: _
+//│ x_to = [function x_to]
+
+x_to(42)
+//│ = {x: 42}
+
+
+let mkObj = (x: _, y: _, z: 3)
+//│ mkObj = [function mkObj]
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+
+// * Note: this is parsed as `{let mkObj = x: _}, y: _, z: 3`
+// * TODO: improve or at least raise a warning
+:e
+:ge
+:re
+let mkObj = x: _, y: _, z: 3
+//│ ═══[ERROR] Illegal position for '_' placeholder.
+//│ mkObj = [function mkObj]
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'y'
+//│ ║  l.143: 	let mkObj = x: _, y: _, z: 3
+//│ ╙──       	                  ^
+//│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'z'
+//│ ║  l.143: 	let mkObj = x: _, y: _, z: 3
+//│ ╙──       	                        ^
+//│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
+
+// mkObj(1, 2)
+
+
+let mkObj =
+  x: _, y: _, z: 3
+//│ mkObj = [function mkObj]
+
+mkObj(1, 2)
+//│ = {x: 1, y: 2, z: 3}
+
+
+let obj = f: _ + 1
+//│ obj = {f: [function f]}
+
+obj.f(123)
+//│ = 124
+
+{f: _ + 1}.f(123)
+//│ = 124
+
+
+let f = _ => 1
+//│ f = [function f]
+
+f(2)
+//│ = 1
+
+let f = x => _
+//│ f = [function f]
+
+f(2)(3)
+//│ = 3
+
+

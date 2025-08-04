@@ -1,81 +1,16 @@
 
 
+:ucs desugared
 // * Note that this always associates to the left
-:elt
 fun f(x) =
   if x ==
     1 +
       2 then 0
       _ then 1
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       owner = N
-//│       k = Fun
-//│       sym = member:f
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ()
-//│           params = Ls of 
-//│             Param:
-//│               flags = ()
-//│               sym = x
-//│               sign = N
-//│               modulefulness = Modulefulness of N
-//│           restParam = N
-//│       tparams = N
-//│       sign = N
-//│       body = S of IfLike:
-//│         kw = keyword 'if'
-//│         desugared = Let:
-//│           sym = $scrut
-//│           term = App:
-//│             lhs = Ref:
-//│               sym = builtin:==
-//│               iargsLs = N
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 term = Ref:
-//│                   sym = x
-//│                   iargsLs = N
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 term = Lit of IntLit of 1
-//│                 asc = N
-//│             iargsLs = N
-//│           tail = Let: \
-//│           sym = $scrut
-//│           term = App:
-//│             lhs = Ref:
-//│               sym = builtin:+
-//│               iargsLs = N
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 term = Ref:
-//│                   sym = $scrut
-//│                   iargsLs = N
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 term = Lit of IntLit of 2
-//│                 asc = N
-//│             iargsLs = N
-//│           tail = Cons: \
-//│           head = Branch:
-//│             scrutinee = Ref:
-//│               sym = $scrut
-//│               iargsLs = N
-//│             pattern = Lit of BoolLit of true
-//│             continuation = Else of Lit of IntLit of 0
-//│           tail = Else of Lit of IntLit of 1
-//│       resSym = ‹result of member:f›
-//│       flags = ()
-//│       modulefulness = Modulefulness of N
-//│       annotations = Nil
-//│   res = Lit of UnitLit of false
-
+//│ Desugared:
+//│ >  if
+//│ >    let $scrut = builtin:==#0(x#0, 1)
+//│ >    let $scrut = builtin:+#0($scrut#0, 2)
+//│ >    $scrut is true then 0
+//│ >    else 1
 

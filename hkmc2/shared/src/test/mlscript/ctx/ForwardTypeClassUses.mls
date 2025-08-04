@@ -1,7 +1,7 @@
 :js
 
 
-use Str = "ok"
+using Str = "ok"
 
 fun bar = M.foo()
 module M with
@@ -30,13 +30,13 @@ module M with
 module Example with
   fun foo(): module M = M
 test
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.27: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.29: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
-//│ ╙── Expected: Int; Available: (Str)
+//│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
@@ -48,17 +48,17 @@ module M with
 module Example with
   fun foo(): module M = M
 test
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `Int` in this call
+//│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.45: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.47: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
-//│ ╙── Expected: Int; Available: (Str)
+//│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
 
 
-use Int = 42
+using Int = 42
 
 fun test = Example.foo().mtd()
 module M with

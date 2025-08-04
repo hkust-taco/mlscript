@@ -2,6 +2,8 @@ import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
+import LazyArray from "./LazyArray.mjs";
+import Iter from "./Iter.mjs";
 let Runtime1;
 (class Runtime {
   static {
@@ -14,6 +16,8 @@ let Runtime1;
     };
     this.Unit = new Unit$class;
     this.Unit.class = Unit$class;
+    this.short_and = RuntimeJS.short_and;
+    this.short_or = RuntimeJS.short_or;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
       return new EffectHandle.class(_reified1);
@@ -60,20 +64,40 @@ let Runtime1;
     (class Tuple {
       static {
         Runtime.Tuple = Tuple;
+        this.split = LazyArray.__split;
       }
       static slice(xs, i, j) {
         let tmp;
         tmp = xs.length - j;
-        return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp))
+        return xs.slice(i, tmp)
       } 
-      static get(xs1, i1) {
-        let scrut;
-        scrut = i1 >= xs1.length;
+      static lazySlice(xs1, i1, j1) {
+        let tmp;
+        tmp = LazyArray.slice(i1, j1);
+        return runtime.safeCall(tmp(xs1))
+      } 
+      static lazyConcat(...args) {
+        return runtime.safeCall(LazyArray.__concat(...args))
+      } 
+      static get(xs2, i2) {
+        let scrut, scrut1, tmp, tmp1, tmp2;
+        scrut = i2 >= xs2.length;
         if (scrut === true) {
           throw globalThis.RangeError("Tuple.get: index out of bounds");
         } else {
-          return globalThis.Array.prototype.at.call(xs1, i1)
+          tmp = runtime.Unit;
         }
+        tmp1 = - xs2.length;
+        scrut1 = i2 < tmp1;
+        if (scrut1 === true) {
+          throw globalThis.RangeError("Tuple.get: negative index out of bounds");
+        } else {
+          tmp2 = runtime.Unit;
+        }
+        return xs2.at(i2)
+      } 
+      static isArrayLike(xs3) {
+        return runtime.safeCall(Iter.isArrayLike(xs3))
       }
       static toString() { return "Tuple"; }
     });
@@ -247,40 +271,45 @@ let Runtime1;
     throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    let scrut, name, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, lambda;
     tmp = got < expected;
-    tmp1 = got > expected;
-    tmp2 = isUB && tmp1;
-    scrut = tmp || tmp2;
+    lambda = (undefined, function () {
+      let lambda1;
+      lambda1 = (undefined, function () {
+        return got > expected
+      });
+      return runtime.short_and(isUB, lambda1)
+    });
+    scrut = runtime.short_or(tmp, lambda);
     if (scrut === true) {
       scrut1 = functionName.length > 0;
       if (scrut1 === true) {
-        tmp3 = " '" + functionName;
-        tmp4 = tmp3 + "'";
+        tmp1 = " '" + functionName;
+        tmp2 = tmp1 + "'";
       } else {
-        tmp4 = "";
+        tmp2 = "";
       }
-      name = tmp4;
-      tmp5 = "Function" + name;
-      tmp6 = tmp5 + " expected ";
+      name = tmp2;
+      tmp3 = "Function" + name;
+      tmp4 = tmp3 + " expected ";
       if (isUB === true) {
-        tmp7 = "";
+        tmp5 = "";
       } else {
-        tmp7 = "at least ";
+        tmp5 = "at least ";
       }
-      tmp8 = tmp6 + tmp7;
-      tmp9 = expected + " argument";
-      tmp10 = tmp8 + tmp9;
+      tmp6 = tmp4 + tmp5;
+      tmp7 = tmp6 + expected;
+      tmp8 = tmp7 + " argument";
       scrut2 = expected === 1;
       if (scrut2 === true) {
-        tmp11 = "";
+        tmp9 = "";
       } else {
-        tmp11 = "s";
+        tmp9 = "s";
       }
-      tmp12 = tmp10 + tmp11;
-      tmp13 = " but got " + got;
-      tmp14 = tmp12 + tmp13;
-      throw globalThis.Error(tmp14);
+      tmp10 = tmp8 + tmp9;
+      tmp11 = tmp10 + " but got ";
+      tmp12 = tmp11 + got;
+      throw globalThis.Error(tmp12);
     } else {
       return runtime.Unit
     }
@@ -778,11 +807,13 @@ let Runtime1;
     return tmp4
   } 
   static checkDepth() {
-    let scrut, tmp, tmp1, tmp2;
+    let scrut, tmp, tmp1, lambda;
     tmp = Runtime.stackDepth - Runtime.stackOffset;
     tmp1 = tmp >= Runtime.stackLimit;
-    tmp2 = Runtime.stackHandler !== null;
-    scrut = tmp1 && tmp2;
+    lambda = (undefined, function () {
+      return Runtime.stackHandler !== null
+    });
+    scrut = runtime.short_and(tmp1, lambda);
     if (scrut === true) {
       return runtime.safeCall(Runtime.stackHandler.delay())
     } else {

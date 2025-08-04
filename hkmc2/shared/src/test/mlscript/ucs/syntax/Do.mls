@@ -4,6 +4,7 @@ import "../../../mlscript-compile/Option.mls"
 
 open Option
 
+
 // Using `do` will not cause match errors.
 
 let x = false
@@ -25,9 +26,9 @@ if not(x) do
 if not of x do
   print("executed")
 //│ ╔══[ERROR] Unrecognized term split (application).
-//│ ║  l.25: 	if not of x do
+//│ ║  l.26: 	if not of x do
 //│ ║        	   ^^^^^^^^^^^
-//│ ║  l.26: 	  print("executed")
+//│ ║  l.27: 	  print("executed")
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -39,8 +40,10 @@ if (not of x) do
 x
 //│ = false
 
+
 // Completely using `do`
 // =====================
+
 
 fun f(y) =
   let x = Some(y)
@@ -59,8 +62,10 @@ f(41)
 //│ = Some(41)
 
 
+
 // Mix using `then` and `do`
 // =========================
+
 
 :e
 fun g(y) =
@@ -71,10 +76,10 @@ fun g(y) =
   x
 //│ ╔══[ERROR] Mixed use of `do` and `then` in the `if` expression.
 //│ ╟── Keyword `then` is used here.
-//│ ║  l.70: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
+//│ ║  l.75: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Keyword `do` is used here.
-//│ ║  l.69: 	    Some(0) do set x = None
+//│ ║  l.74: 	    Some(0) do set x = None
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
 
 g(0)

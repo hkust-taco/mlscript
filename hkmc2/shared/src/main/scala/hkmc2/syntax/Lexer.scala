@@ -91,14 +91,14 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
     def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) =
       takeDigits(i, pred) match
         case (N, j) =>
-          raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
+          raise(ErrorReport(msg"Expected at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
             source = Lexing))
           (zero, j)
         case (S(str), j) => (IntLit(BigInt(str, radix)), j)
     def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
     /** Take a fraction part with an optional exponent part. Call at periods. */
     def decimal(i: Int, integral: Str): (DecLit, Int) =
-      lazy val msgPrefix = "Expect at least one digit after the "
+      lazy val msgPrefix = "Expected at least one digit after the "
       val (fraction, j) =
         if test(i, _ === '.')
         then takeDigits(i + 1, isDigit) match
@@ -134,14 +134,14 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         case '0' => (zero, i + 1)
         case _ => takeDigits(i, isDigit) match
           case (N, j) =>
-            raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
+            raise(ErrorReport(msg"Expected a numeric literal" -> S(loc(i, i + 1)) :: Nil,
               source = Lexing))
             (zero, i)
           case (S(integral), j) =>
             if j < length && isDecimalStart(bytes(j)) then decimal(j, integral)
             else (IntLit(BigInt(integral)), j)
     else
-      raise(ErrorReport(msg"Expect a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
+      raise(ErrorReport(msg"Expected a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
         source = Lexing))
       (zero, i)
 
@@ -233,7 +233,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
               source = Lexing))
             str(i + 1, false, ch :: cur)
       else
-        raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
+        raise(ErrorReport(msg"Expected an escape character" -> S(loc(i, i + 1)) :: Nil,
           source = Lexing))
         (cur.reverseIterator.mkString, i)
     else if triple then
@@ -595,10 +595,11 @@ object Lexer:
     "virtual"
   )
   
+  private val SEP = "┊"
+  
   def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
     case (COMMA, _) => ","
-    case (SEMI, _) => ";"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"
@@ -610,16 +611,15 @@ object Lexer:
     case (SELECT(name: String), _) => "." + name
     case (OPEN_BRACKET(k), _) => k.beg
     case (CLOSE_BRACKET(k), _) => k.end
-    case (BRACKETS(k @ BracketKind.Indent, contents), _) =>
-      k.beg + printTokens(contents) + k.end
     case (BRACKETS(k, contents), _) =>
-      k.beg + printTokens(contents) + k.end
+      k.beg + "⟨" + printTokens(contents) + "⟩" + k.end
     case (COMMENT(text: String), _) => "/*" + text + "*/"
     case (SUSPENSION(true), _) => "..."
     case (SUSPENSION(false), _) => ".."
     case (ESC_IDENT(name), _) => name
+  
   def printTokens(ts: Ls[TokLoc]): Str =
-    ts.iterator.map(printToken).mkString("|", "|", "|")
+    ts.iterator.map(printToken).mkString(SEP, SEP, SEP)
   
   
 

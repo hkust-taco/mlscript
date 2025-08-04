@@ -1,16 +1,14 @@
 :js
 
 
-
 globalThis.Number("0.50")
 //│ = 0.5
 
 
-:fixme
 let num = _ globalThis.Number()
-//│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ num = 0
+//│ num = [function num]
 
-
+num("0.50")
+//│ = 0.5
 
 

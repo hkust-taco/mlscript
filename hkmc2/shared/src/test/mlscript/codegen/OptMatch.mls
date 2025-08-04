@@ -90,29 +90,43 @@ fun keepIfGreaterThan(x, y) =
   console.log()
 //│ > true
 
-:fixme
 1
   . keepIfGreaterThan(0)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.95: 	  . keepIfGreaterThan(0)
-//│ ╙──      	                     ^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
+//│ = Some(1)
 
 
-:fixme // or use an alternative syntax?
 1
   . keepIfGreaterThan(0)
   . isDefined()
   . console.log()
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.104: 	  . keepIfGreaterThan(0)
-//│ ╙──       	                     ^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
+//│ > true
 
 
 1
-  |> keepIfGreaterThan(_, 0)
-  |> isDefined(_)
+  |> (keepIfGreaterThan(_, 0))
+  |> (isDefined(_))
+//│ = true
+
+1
+  |> {keepIfGreaterThan(_, 0)}
+  |> {isDefined(_)}
+//│ = true
+
+1
+  |>
+    keepIfGreaterThan(_, 0)
+  |>
+    isDefined(_)
+//│ = true
+
+
+let isDefined2 = _ is Some
+//│ isDefined2 = [function isDefined2]
+
+Some(1) isDefined2()
+//│ = true
+
+Some(1) |> isDefined2
 //│ = true
 
 

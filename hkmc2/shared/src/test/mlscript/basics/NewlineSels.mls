@@ -1,0 +1,93 @@
+:js
+
+
+let rcd = a: b: c: 1
+//│ rcd = {a: {b: {c: 1}}}
+
+rcd.a.b.c
+//│ = 1
+
+rcd
+  .a
+//│ = {b: {c: 1}}
+
+rcd
+  .a
+  .b
+//│ = {c: 1}
+
+rcd
+  .a.b
+//│ = {c: 1}
+
+rcd
+  .a
+  .b
+  .c
+//│ = 1
+
+rcd
+  .a.b.c
+//│ = 1
+
+rcd
+  .a.b
+  .c
+//│ = 1
+
+:todo
+rcd
+.a
+//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ║  l.40: 	.a
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ║  l.40: 	.a
+//│ ╙──      	^^
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.39: 	rcd
+//│ ╙──      	^^^
+
+
+let rcd =
+  a: x => b: y => c: x + y
+//│ rcd = {a: [function a]}
+
+rcd.a(1).b(2).c
+//│ = 3
+
+rcd
+  .a(1)
+  .b(2)
+  .c
+//│ = 3
+
+rcd
+  .a(1).b(2)
+  .c
+//│ = 3
+
+rcd
+  .a(1)
+  .b(2).c
+//│ = 3
+
+rcd
+  .a(1)
+  .b(2)
+  .c + 1
+//│ = 4
+
+rcd
+  .a(1) !> print
+  .b(2) !> print
+  .c !> print
+  + 1 !> print
+  + 1
+//│ > {b: [function b]}
+//│ > {c: 3}
+//│ > 3
+//│ > 4
+//│ = 5
+
+

@@ -1,0 +1,28 @@
+:js
+
+
+let g = [0]
+//│ g = [0]
+
+set g = g.concat of [1]
+
+set g |>= (_.concat of [2])
+
+g
+//│ = [0, 1, 2]
+
+set g.0 += 1
+
+set g.0 = g.0 + 1
+
+g
+//│ = [2, 1, 2]
+
+set g.0 |>= Math.sign
+
+set g.2 |>= Math.pow(_, 5)
+//│ = [function]
+
+g
+//│ = [1, 1, 2]
+

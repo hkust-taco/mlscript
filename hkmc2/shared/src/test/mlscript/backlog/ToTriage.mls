@@ -19,20 +19,11 @@
 "a" +
 // a
 "b"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
 //│ ║  l.20: 	// a
 //│ ║        	    ^
 //│ ║  l.21: 	"b"
 //│ ╙──      	
-
-// ——— ——— ———
-
-true or true
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(true),keyword 'or',BoolLit(true)) (of class hkmc2.syntax.Tree$InfixApp)
-
-:fixme
-while false or false do print("ok")
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(BoolLit(false),keyword 'or',BoolLit(false)) (of class hkmc2.syntax.Tree$InfixApp)
 
 // ——— ——— ———
 
@@ -49,36 +40,25 @@ fun (**) t() = 0
 fun (++) t() = 1
 //│ ╔══[ERROR] Multiple definitions of symbol '**'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol '++'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ ╔══[ERROR] Multiple definitions of symbol 't'
 //│ ╟── defined here
-//│ ║  l.48: 	fun (**) t() = 0
+//│ ║  l.39: 	fun (**) t() = 0
 //│ ║        	    ^^^^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.49: 	fun (++) t() = 1
+//│ ║  l.40: 	fun (++) t() = 1
 //│ ╙──      	    ^^^^^^^^^^^^
-
-// ——— ——— ———
-
-let g = [0]
-//│ g = [0]
-
-:fixme
-set g.0 += 1 // FIXME
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(+=),Tup(List(Sel(Ident(g),Ident(0)), IntLit(1)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
-
-set g.0 = g.0 + 1
 
 // ——— ——— ———
 
@@ -86,7 +66,7 @@ set g.0 = g.0 + 1
 :re
 id(1, 2)
 //│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.87: 	id(1, 2)
+//│ ║  l.67: 	id(1, 2)
 //│ ╙──      	  ^^^^^^
 //│ = 1
 
@@ -137,35 +117,13 @@ Test.Infinity
 
 // ——— ——— ———
 
-fun f(a)(b) = [a, b]
-fun g(a, b) = [a, b]
-
-// TODO support?
-:pe
-f of
-    g of
-      1
-      2
-  of 3
-//│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.149: 	  of 3
-//│ ╙──       	^^
-//│ = [function]
-
-(f of
-  g of
-    1
-    2
-) of 3
-//│ = [[1, 2], 3]
-
-// ——— ——— ———
-
 fun p: Int
 
-:fixme // make this a proper error
 p
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:p (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'p'
+//│ ║  l.120: 	fun p: Int
+//│ ╙──       	    ^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: p is not defined
 
 
 :ctx
@@ -175,11 +133,19 @@ fun (++) test: (Int, Int) -> Int
 //│   test -> RefElem(member:test)
 
 test(1, 2)
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
+//│ ║  l.130: 	fun (++) test: (Int, Int) -> Int
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 :sjs
 1 ++ 1
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:test (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'test'
+//│ ║  l.130: 	fun (++) test: (Int, Int) -> Int
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^
+//│ JS (unsanitized):
+//│ let tmp4; tmp4 = test(); runtime.safeCall(tmp4(1, 1))
+//│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 // ——— ——— ———
 
@@ -221,7 +187,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.222: 	Cls.x
+//│ ║  l.188: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -239,7 +205,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res32 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return "Bar'"; }     };   }   toString() { return "Foo'"; } }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -248,26 +214,28 @@ class Foo' with
 module Example with
 // whoops
   val a = this
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found new line instead
-//│ ║  l.248: 	module Example with
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.214: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.249: 	// whoops
+//│ ║  l.215: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.250: 	  val a = this
+//│ ║  l.216: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.250: 	  val a = this
+//│ ║  l.216: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
-:fixme // ("Not in scope" error)
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.266: 	let xs = new Oopsie
+//│ ║  l.231: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: xs (class hkmc2.semantics.VarSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'xs'
+//│ ║  l.231: 	let xs = new Oopsie
+//│ ╙──       	    ^^
+//│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
 // ——— ——— ———
 
@@ -311,10 +279,10 @@ let x = 0
 //│ x = 0
 
 set x += 1; ()
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Unt()))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Unt())),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
 [x, set x += 1; x]
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',App(Ident(;),Tup(List(App(Ident(+=),Tup(List(Ident(x), IntLit(1)))), Ident(x)))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Ident(x))),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
 // ——— ——— ———
 
@@ -328,9 +296,9 @@ fun bar() = baz
 //│   return 1
 //│ };
 //│ bar = function bar() {
-//│   let tmp10;
-//│   tmp10 = baz();
-//│   return tmp10
+//│   let tmp7;
+//│   tmp7 = baz();
+//│   return tmp7
 //│ };
 
 // ——— ——— ———
@@ -339,23 +307,14 @@ import "../../mlscript-compile/Stack.mls"
 
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found comma instead
-//│ ║  l.341: 	open Stack { ::, Nil }
-//│ ╙──       	               ^
-//│ ╔══[PARSE ERROR] Unexpected comma in this position
-//│ ║  l.341: 	open Stack { ::, Nil }
-//│ ╙──       	               ^
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.341: 	open Stack { ::, Nil }
-//│ ╙──       	                 ^^^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.341: 	open Stack { ::, Nil }
-//│ ╙──       	     ^^^^^^^^^^^
+//│ ║  l.309: 	open Stack { ::, Nil }
+//│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.356: 	open Stack { (::), Nil }
+//│ ║  l.315: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -363,7 +322,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.364: 	1 :: Nil
+//│ ║  l.323: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -373,10 +332,10 @@ open Stack { Nil, :: }
 
 mkStr of ... // hello
 "oops"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found new line instead
-//│ ║  l.374: 	mkStr of ... // hello
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
+//│ ║  l.333: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.375: 	"oops"
+//│ ║  l.334: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -385,7 +344,8 @@ mkStr of ... // hello
 data class Foo(x, y)
 
 // TODO missing sanity check
-Foo(1)
+:re
+id(Foo)(1)
 //│ = Foo(1, undefined)
 
 // ——— ——— ———
@@ -397,34 +357,48 @@ Foo(1, 2, 3).args
 
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ║  l.359: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.399: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                   ^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: args
-//│ ║  l.399: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                                     ^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ║  l.359: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                          ^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                   ^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                                      ^
-//│ ╔══[ERROR] Name not found: b
-//│ ║  l.408: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╙──       	                                         ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ╙──       	                       ^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╙──       	                   ^^^^^^^^
-//│ ╔══[ERROR] Name not found: arg
-//│ ║  l.420: 	if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╙──       	                                 ^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ║  l.374: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ╙──       	                       ^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// ——— ——— ———
+// [SERIOUS]
+
+module M with
+  val name = "Student"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static toString() { return "M"; } }'
+
+// ——— ——— ———
+
+val outFilePath = "out/test.md"
+//│ outFilePath = "out/test.md"
+
+// FIXME: should wrap in `safeCall`
+:sjs
+fun w(txt) =
+  fs.writeFileSync(outFilePath, txt)
+  // ()
+//│ JS (unsanitized):
+//│ let w; w = function w(txt) { return globalThis.fs.writeFileSync(outFilePath, txt) };
+
+w("whoops")
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 // ——— ——— ———
 

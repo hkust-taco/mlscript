@@ -11,51 +11,28 @@ x => if x is
 //│ ╔══[ERROR] Name not found: refined
 //│ ║  l.10: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.10: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ Normalized:
-//│ >  if
 
 // OK
 x => if x is
   refined(Some) then x
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.22: 	  refined(Some) then x
+//│ ║  l.17: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.22: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
-//│ Normalized:
-//│ >  if
 
 // Should warn about the inconsistent refinement
 x => if x is
   refined(None) then x
   Some then x
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.34: 	  refined(None) then x
+//│ ║  l.24: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.34: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ Normalized:
-//│ >  if x is Some then x#666
 
 x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.47: 	  refined(Some) then x
-//│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.47: 	  refined(Some) then x
+//│ ║  l.32: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.46: 	  refined(None) then x
+//│ ║  l.31: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.46: 	  refined(None) then x
-//│ ╙──      	  ^^^^^^^
-//│ Normalized:
-//│ >  if

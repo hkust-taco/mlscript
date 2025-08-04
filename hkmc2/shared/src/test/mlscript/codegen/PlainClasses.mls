@@ -231,18 +231,12 @@ class Foo with
 // ——— TODO ———
 
 
-:fixme
+:e
 class Foo with val x = 1
-//│ ╔══[PARSE ERROR] Expected block after type declaration body; found 'val' keyword instead
+//│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
 //│ ║  l.235: 	class Foo with val x = 1
-//│ ╙──       	               ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.235: 	class Foo with val x = 1
-//│ ╙──       	                     ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.235: 	class Foo with val x = 1
-//│ ╙──       	                   ^
+//│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
-//│ /* error */
+//│ let Foo16; Foo16 = class Foo15 { constructor() {} toString() { return "Foo"; } };
 
 

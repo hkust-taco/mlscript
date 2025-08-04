@@ -2,6 +2,7 @@
 
 module Rendering with ...
 
+
 fun pass1(f)(...xs) = f(xs.0)
 fun pass2(f)(...xs) = f(xs.0, xs.1)
 fun pass3(f)(...xs) = f(xs.0, xs.1, xs.2)

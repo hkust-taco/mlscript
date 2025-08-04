@@ -50,25 +50,10 @@ fun foo(x) = x is
 //│ ║  l.46: 	  Int
 //│ ╙──      	^^^^^
 
-:todo // support `|`
+
 fun foo(x) = x is Pair(a, b) | Int
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.54: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                             ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.54: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                             ^
 
-:todo
-fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.63: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                         ^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.63: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                         ^
-
-
+fun foo(x) = x is (Pair(a, b) where a > b) | Int
 
 data class A[T](arg: T)
 

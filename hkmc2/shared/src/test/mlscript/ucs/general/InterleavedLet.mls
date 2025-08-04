@@ -1,4 +1,4 @@
-
+:js
 
 abstract class List[out T]
 data class Cons[out T](head: T, tail: List[T]) extends List[T]

@@ -1,5 +1,7 @@
 :js
 
+open annotations { compile }
+
 data
   class
     (&&) And(lhs: Bool, rhs: Bool)

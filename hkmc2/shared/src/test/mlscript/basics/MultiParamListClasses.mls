@@ -1,0 +1,87 @@
+:js
+
+
+data class Foo(x, y)(z)
+
+Foo
+//│ = [function Foo]
+
+Foo(1, 2)
+//│ = [function]
+
+Foo(1, 2)(3)
+//│ = Foo(1, 2)
+
+
+new Foo(1, 2)
+//│ = [function]
+
+new Foo(1, 2)(3)
+//│ = Foo(1, 2)
+
+
+:todo
+data class Foo with
+  constructor(x, y)
+//│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
+//│ ║  l.25: 	  constructor(x, y)
+//│ ╙──      	             ^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.25: 	  constructor(x, y)
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.25: 	  constructor(x, y)
+//│ ╙──      	                 ^
+
+:todo
+data class Foo with
+  constructor(x, y)(z)
+//│ ╔══[PARSE ERROR] Expected block after constructor keyword; found parenthesis section instead
+//│ ║  l.38: 	  constructor(x, y)(z)
+//│ ╙──      	             ^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.38: 	  constructor(x, y)(z)
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.38: 	  constructor(x, y)(z)
+//│ ╙──      	                 ^
+//│ ╔══[ERROR] Name not found: z
+//│ ║  l.38: 	  constructor(x, y)(z)
+//│ ╙──      	                    ^
+
+
+// class Foo(using z: Int)
+// * is to be understood as
+class Foo0
+fun Foo(using z: Int) = new Foo0 !> res =>
+  set res.z = z
+
+using Int = 123
+
+Foo
+//│ = Foo0
+
+// class Foo(x, y)(using z)
+// * is to be understood as
+class Foo0
+fun Foo(x, y)(using z: Int) = new Foo0 !> res =>
+  set
+    res.x = x
+    res.y = y
+    res.z = z
+
+
+Foo(1, 2)
+//│ = Foo0
+
+:sjs
+let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
+//│ JS (unsanitized):
+//│ let f; f = Foo7;
+//│ f = [function Foo]
+
+// FIXME: unsoundness
+f(1, 2)
+//│ = [function]
+
+

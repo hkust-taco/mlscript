@@ -1,0 +1,115 @@
+:js
+
+
+if true then
+  1
+//│ = 1
+
+if true then
+  let x = 1
+  1
+else 2
+//│ = 1
+
+if true then
+  if true then
+    let x = 1
+    1
+  else 2
+//│ = 1
+
+if 0 is
+  0 then 1
+//│ = 1
+
+if 0 is
+  0 then 1
+  1 then 1
+//│ = 1
+
+if 0 is
+  0 and
+    true then
+      1
+//│ = 1
+
+if 0 is
+  0 and
+    false then
+      let x = 1
+      1
+  0 and
+    true then
+      let x = 1
+      1
+//│ = 1
+
+let foo =
+  if true then
+    ""
+  else
+    ""
+//│ foo = ""
+
+if 0 is 0 then
+  1
+//│ = 1
+
+
+if 0 is 0 then
+  let hl = 1
+  hl
+//│ = 1
+
+
+let s = ""
+//│ s = ""
+
+if s is
+  "" then ""
+//│ = ""
+
+if s is
+  ""  then ""
+  ""  then ""
+//│ = ""
+
+(id is
+  "")
+//│ = false
+
+(if s is
+  ""  then "")
+//│ = ""
+
+(if s is
+    ""  then ""
+  )
+//│ = ""
+
+(if s is
+    ""  then ""
+  ) + "]"
+//│ = "]"
+
+(if "" is
+          ""  then ""
+          nme then " " + nme
+        )
+//│ = ""
+
+if "" is
+          ""  then ""
+//│ = ""
+
+(if "" is
+          id  then ""
+  )
+//│ = ""
+
+(if "" is
+          ""  then ""
+  )
+//│ = ""
+
+

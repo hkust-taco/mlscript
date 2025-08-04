@@ -6,7 +6,9 @@ open Predef
 // TODO
 // type Stack[A] = Stack.Cons[A] | Stack.Nil
 
+
 module Stack[T] with ...
+
 
 // See https://github.com/hkust-taco/mlscript/pull/295#discussion_r2029692230
 // TODO support type/module overloading

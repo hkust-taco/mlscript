@@ -116,7 +116,6 @@ fun f(x, a, b) =
     B(bb) and b then bb
     _           then 0
 
-:fixme
 fun f(x, y, b) =
   if x is
     Some(xv) and y
@@ -124,17 +123,7 @@ fun f(x, y, b) =
       is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.124: 	      is None then "bruh"
-//│ ╙──       	      ^^
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.124: 	      is None then "bruh"
-//│ ╙──       	         ^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.124: 	      is None then "bruh"
-//│ ╙──       	         ^^^^
 
-:fixme
 fun g(x, y, b) =
   if x is
     Some(xv) and y
@@ -142,15 +131,6 @@ fun g(x, y, b) =
       is None then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found 'is' keyword instead
-//│ ║  l.142: 	      is None then "bruh"
-//│ ╙──       	      ^^
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.142: 	      is None then "bruh"
-//│ ╙──       	         ^^^^
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.142: 	      is None then "bruh"
-//│ ╙──       	         ^^^^
 
 
 fun foo(x, y, z) =
@@ -211,15 +191,11 @@ fun f(x) =
   if x is
     0 ::
       Nil() then "oh"
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.212: 	    0 ::
-//│ ╙──       	    ^
-//│ ╔══[ERROR] Name not found: ::
-//│ ║  l.212: 	    0 ::
-//│ ╙──       	      ^^
-//│ ╔══[ERROR] Cannot use this identifier as an extractor
-//│ ║  l.212: 	    0 ::
-//│ ╙──       	      ^^
+//│ ╔══[ERROR] Unrecognized pattern split (operator application).
+//│ ║  l.192: 	    0 ::
+//│ ║         	    ^^^^
+//│ ║  l.193: 	      Nil() then "oh"
+//│ ╙──       	^^^^^^
 
 
 fun f(x) =

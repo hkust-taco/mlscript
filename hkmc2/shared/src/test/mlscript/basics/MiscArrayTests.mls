@@ -38,53 +38,58 @@ fun map(xs, f) = xs.map((x, ...bs) => f(x))
 xs. map(x => x * 2). print()
 //│ > [4, 2, 0]
 
-:fixme
-:p
+// * Note: the RHS of `.` is a self-contained block, thus implicitly parenthesized.
+:sjs
+:e
+:re
+xs .
+  map(x => x * 2)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.46: 	  map(x => x * 2)
+//│ ╙──      	     ^^^^^^^^^^^^
+//│ JS (unsanitized):
+//│ let tmp5, lambda4;
+//│ lambda4 = (undefined, function (x) {
+//│   return x * 2
+//│ });
+//│ tmp5 = map(lambda4);
+//│ Predef.passTo(xs, tmp5)
+//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+
+:e
+:re
 xs.
   map(x => x * 2)
-//│ |xs|.|→|map|(|x| |=>| |x| |*| |2|)|←|
-//│ Parsed:
-//│ 	App(Ident(.),Tup(List(Ident(xs), Block(List(App(Ident(map),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(*),Tup(List(Ident(x), IntLit(2)))))))))))))
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.44: 	  map(x => x * 2)
+//│ ║  l.62: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
-:fixme
 :pt
 xs
   . map(f)
 //│ Parsed tree:
 //│ App:
-//│   lhs = Ident of "xs"
-//│   rhs = OpBlock of Ls of 
-//│     Tuple2:
-//│       _1 = Ident of "."
-//│       _2 = App:
-//│         lhs = Ident of "map"
-//│         rhs = Tup of Ls of 
-//│           Ident of "f"
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.56: 	  . map(f)
-//│ ╙──      	       ^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│   lhs = OpApp:
+//│     lhs = Ident of "xs"
+//│     op = Ident of "."
+//│     rhss = Ls of 
+//│       Ident of "map"
+//│   rhs = Tup of Ls of 
+//│     Ident of "f"
+//│ > [2, 1, 0] 2
+//│ > [2, 1, 0] 1
+//│ > [2, 1, 0] 0
+//│ = [(), (), ()]
 
-:fixme
 xs
   . map(x => x * 2)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.74: 	  . map(x => x * 2)
-//│ ╙──      	       ^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ = [4, 2, 0]
 
-:fixme
 xs
   . map(x => x * 2)
   . print()
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.82: 	  . map(x => x * 2)
-//│ ╙──      	       ^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
+//│ > [4, 2, 0]
 
 fun f = print(0)
 

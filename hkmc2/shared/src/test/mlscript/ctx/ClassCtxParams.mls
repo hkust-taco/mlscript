@@ -1,47 +1,92 @@
 :js
-:todo
 
 
-class Foo()(using Int)
-//│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.5: 	class Foo()(using Int)
-//│ ╙──     	      ^^^^^^^^^^^^^^^^
+using Int = 42
+
 
 class Foo(using val n: Int)
-//│ ╔══[ERROR] Illegal definition in term position.
-//│ ║  l.10: 	class Foo(using val n: Int)
-//│ ╙──      	                    ^^^^^^
-//│ ═══[ERROR] Expected a type symbol, got <error>
+
+:expect Foo(42)
+Foo
+//│ = Foo(42)
+
+:expect 42
+Foo.n
+//│ = 42
 
 
-fun summon[A](using a: A) = a
+class Foo(using n: Int) with
+  fun foo = n
 
-class Foo(using Int) with
-  fun foo() = summon[Int]
-//│ ╔══[ERROR] Missing instance for contextual parameter of type `A` in this call
-//│ ║  l.20: 	  fun foo() = summon[Int]
-//│ ║        	              ^^^^^^^^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.17: 	fun summon[A](using a: A) = a
-//│ ║        	                    ^^^^
-//│ ╙── Expected: A; Available: (Int)
-
-
-fun summon(using a: Int) = a
-
-class Foo(using Int) with
-  fun foo() = summon
-
-Foo()
+:expect Foo()
+Foo
 //│ = Foo()
 
-
-fun foo(using Int) = 1
-
-use Int = 1
-
-:re
-foo()
-//│ ═══[RUNTIME ERROR] TypeError: tmp is not a function
+:expect 42
+Foo.foo
+//│ = 42
 
 
+class Bar(using val s: Str)
+
+:e
+Bar
+//│ ╔══[ERROR] Cannot query instance of type Str for call: 
+//│ ║  l.33: 	Bar
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.30: 	class Bar(using val s: Str)
+//│ ║        	                    ^^^^^^
+//│ ╙── Missing instance: Expected: Str; Available: Int
+//│ = Bar(undefined)
+
+class Bar(using s: Str)
+
+:e
+Bar
+//│ ╔══[ERROR] Cannot query instance of type Str for call: 
+//│ ║  l.46: 	Bar
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.43: 	class Bar(using s: Str)
+//│ ║        	                ^^^^^^
+//│ ╙── Missing instance: Expected: Str; Available: Int
+//│ = Bar()
+
+
+
+fun summon(using i: Int) = i
+
+class Foo(using Int) with
+  fun foo = use[Int]
+  fun bar = summon
+
+using Int = 99
+
+:expect Foo()
+Foo
+//│ = Foo()
+
+:expect 99
+Foo.foo
+//│ = 99
+
+:expect 99
+Foo.bar
+//│ = 99
+
+
+class Foo(using Int)(using Str) with
+  fun f = use[Int]
+  fun g = use[Str]
+
+:e
+Foo
+//│ ╔══[ERROR] Cannot query instance of type Str for call: 
+//│ ║  l.84: 	Foo
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.79: 	class Foo(using Int)(using Str) with
+//│ ║        	                           ^^^
+//│ ╙── Missing instance: Expected: Str; Available: Int
+//│ = Foo()

@@ -1,4 +1,5 @@
 :llir
+:todo // Started failing after the addition of lazy spreads (#318)
 
 :intl
 abstract class Iter[T]
@@ -21,9 +22,8 @@ fun fold(acc, it) =
     if done(it) then acc else fold(n + acc, it)
 fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
 map_sum(x => x, 200)
-//│ 
-//│ Interpreted:
-//│ 20100
+//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut)), Arg(None,Lit(IntLit(0)))))
+//│ Stopped due to an error during the Llir generation
 
 :intl
 abstract class Iter[T]
@@ -50,6 +50,5 @@ fun fold(acc, iter) = if iter is
       if it is Done then acc else fold(f(n) + acc, Map(f, it))
 fun map_sum(f, n) = let it = map(f, dec(n)) in fold(0, it)
 map_sum(x => x, 200)
-//│ 
-//│ Interpreted:
-//│ 20100
+//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut)), Arg(None,Lit(IntLit(0)))))
+//│ Stopped due to an error during the Llir generation

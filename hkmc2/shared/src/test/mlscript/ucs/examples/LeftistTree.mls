@@ -1,28 +1,12 @@
+:js
 
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Stack.mls"
 
-fun (++): (Str, Str) -> Str
-fun toString: Any -> Str
+open Option { Some, None }
+open Stack
 
-fun (|>) pipe(x, f) = f(x)
-fun (~~>) toBe(x, y) = if x == y then ()
-fun (<?) min(x, y) = if x < y then x else y
-fun (>?) max(x, y) = if x > y then x else y
-fun abs(x) = if x < 0 then -x else x
-
-
-abstract class Option[out T]: (Some[T] | None)
-data class Some[out T](val value: T) extends Option[T]
-object None extends Option[Nothing]
-
-fun (??) getOrElse(o, v) = if o is
-  Some(v') then v'
-  None then v
-
-abstract class List[out T]: (Cons[T] | Nil)
-data class Cons[out T](val head: T, val tail: List[T]) extends List[T]
-object Nil extends List[Nothing]
-
-fun (::) cons(head, tail) = Cons(head, tail)
+fun (??) getOrElse = Option.getOrElse
 
 abstract class Tree[out A]: (Empty | Node[A])
 data class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
@@ -30,7 +14,7 @@ object Empty extends Tree[Nothing]
 
 fun show(t: Tree[Any]): Str = if t is
   Node(v, l, r, _) then
-    "(" ++ show(l) ++ " " ++ toString(v) ++ " " ++ show(r) ++ ")"
+    "(" + show(l) + " " + String(v) + " " + show(r) + ")"
   Empty then "•"
 
 fun singleton(x) = Node(x, Empty, Empty, 1)
@@ -38,18 +22,20 @@ fun rank(t) = if t is
   Empty then 0
   Node(_, _, _, r) then r
 
-// This can be improved. This can be better.
 fun merge(t1: Tree[Num], t2: Tree[Num]): Tree[Num] =
   if
+    t1 is Empty then t2
+    t2 is Empty then t1
     t1 is Node(v1, l1, r1, _) and t2 is Node(v2, _, _, _) and
-      v1 > v2 then merge(t2, t1)
-      _ and merge(r1, t2) is merged and
-        rank(l1) is rank_left and rank(r1) is rank_right and
-          rank_left >= rank_right then Node(v1, l1, merged, rank_right + 1)
-          else Node(v1, merged, l1, rank_left + 1)
-    t1 is Empty and t2 is Node then t2
-    t1 is Node and t2 is Empty then t1
-    t1 is Empty and t2 is Empty then Empty
+      v1 <= v2 and
+        let merged = merge(r1, t2)
+        let rank_left = rank of l1
+        let rank_right = rank of r1
+        rank_left >= rank_right then
+          Node(v1, l1, merged, rank_right + 1)
+        else
+          Node(v1, merged, l1, rank_left + 1)
+      else merge(t2, t1)
 
 fun insert(t, v) = merge(t, singleton(v))
 
@@ -69,29 +55,54 @@ fun fromList(t, xs) =
     Nil then t
 
 let tree1 = fromList(Empty, 3 :: 4 :: 1 :: 2 :: Nil)
-tree1 |> show
+//│ tree1 = Node(1, Node(2, Empty, Node(3, Empty, Node(4, Empty, Empty, 1), 1), 1), Empty, 1)
 
+tree1 |> show
+//│ = "((• 2 (• 3 (• 4 •))) 1 •)"
+
+:expect 1
 // Remove the smallest element. It should be 1.
 getMin(tree1) ?? "Nothing"
-let tree1' = deleteMin(tree1)
-tree1' |> show
+//│ = 1
 
+let tree1' = deleteMin(tree1)
+//│ tree1' = Node(2, Empty, Node(3, Empty, Node(4, Empty, Empty, 1), 1), 1)
+
+tree1' |> show
+//│ = "(• 2 (• 3 (• 4 •)))"
+
+:expect 2
 // Remove one more element. It should be 2.
 getMin(tree1') ?? "Nothing"
-let tree1'' = deleteMin(tree1')
-tree1'' |> show
+//│ = 2
 
+let tree1'' = deleteMin(tree1')
+//│ tree1'' = Node(3, Empty, Node(4, Empty, Empty, 1), 1)
+
+tree1'' |> show
+//│ = "(• 3 (• 4 •))"
+
+:expect 3
 // Remove one more element. It should be 3.
 getMin(tree1'') ?? "Nothing"
-let tree1''' = deleteMin(tree1'')
-tree1''' |> show
+//│ = 3
 
+let tree1''' = deleteMin(tree1'')
+//│ tree1''' = Node(4, Empty, Empty, 1)
+
+tree1''' |> show
+//│ = "(• 4 •)"
+
+:expect 4
 // Remove the last element. It should be 4.
 getMin(tree1''') ?? "Nothing"
-let tree1'''' = deleteMin(tree1''')
-tree1'''' |> show
+//│ = 4
 
-// ===========================================================================
+let tree1'''' = deleteMin(tree1''')
+//│ tree1'''' = Empty
+
+tree1'''' |> show
+//│ = "•"
 
 fun drain(t) =
   if getMin(t) is
@@ -102,9 +113,12 @@ fun sorted(xs) = fromList(Empty, xs) |> drain
 
 fun showList(xs) =
   if xs is
-    Cons(x, Nil) then toString(x)
-    Cons(x, xs') then toString(x) ++ ", " ++ showList(xs')
+    Cons(x, Nil) then String(x)
+    Cons(x, xs') then String(x) + ", " + showList(xs')
     Nil then ""
 
 sorted(3 :: 4 :: 1 :: 2 :: Nil) |> showList
+//│ = "1, 2, 3, 4"
+
 sorted(42 :: 58 :: 19 :: 37 :: 44 :: 99 :: 68 :: 60 :: 77 :: 61 :: Nil) |> showList
+//│ = "19, 37, 42, 44, 58, 60, 61, 68, 77, 99"

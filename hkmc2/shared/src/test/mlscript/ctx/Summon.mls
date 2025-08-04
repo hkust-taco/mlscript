@@ -1,0 +1,125 @@
+:js
+
+
+using Int = 42
+using Str = "42"
+
+:expect 42
+use[Int]
+//│ = 42
+
+:expect "42"
+use[Str]
+//│ = "42"
+
+:e
+:re
+use[Num]
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ║  l.17: 	use[Num]
+//│ ║        	^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+:expect 42
+let x = use[Int]
+x
+//│ = 42
+//│ x = 42
+
+
+:todo
+using Int -> Int = id
+use[Int -> Int](123)
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.36: 	use[Int -> Int](123)
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: ‹unspecified› (type parameter T); Available: Int, Str
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+
+:expect -42
+fun f(using Int) = use[Int]
+using Int = -42
+f
+//│ = -42
+
+:expect "42"
+fun f(using Int) = use[Str]
+using Str = "-42"
+f
+//│ = "42"
+
+:e
+fun f(using Int) = use[Num]
+//│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
+//│ ║  l.60: 	fun f(using Int) = use[Num]
+//│ ║        	                   ^^^^^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
+
+
+data class Some[T](value: T)
+
+
+:expect 42
+fun f[T](using Some[T]) = use[Some[T]].value
+using Some[Int] = Some(42)
+f
+//│ = 42
+
+:e
+:re
+use{[Some[Int]].value}
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
+//│ ║  l.81: 	use{[Some[Int]].value}
+//│ ╙──      	    ^^^^^^^^^^^
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.81: 	use{[Some[Int]].value}
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+:e
+:re
+use([Some[Int]].value)
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.96: 	use([Some[Int]].value)
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.100: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+
+:expect 42
+fun f[T](using T) = use[T]
+using Int = 42
+f[Int]
+//│ = 42
+
+:e
+:re
+f
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ║  l.115: 	f
+//│ ║         	^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.108: 	fun f[T](using T) = use[T]
+//│ ║         	               ^
+//│ ╙── Illegal query for an unspecified type variable T.
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+
+

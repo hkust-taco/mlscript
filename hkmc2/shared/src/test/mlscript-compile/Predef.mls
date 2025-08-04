@@ -1,8 +1,15 @@
 
-import "./Runtime.mls"
-import "./Rendering.mls"
+// * Importing the mjs for now to avoid reparsing/re-elaborating these files Runtime all the time
+// * TODO: proper caching of parsed/elaborated files
+import "./Runtime.mjs"
+import "./Rendering.mjs"
+// import "./Runtime.mls"
+// import "./Rendering.mls"
+
+
 
 module Predef with ...
+
 
 fun id(x) = x
 
@@ -21,11 +28,14 @@ fun (<.) pipeFromHi(f, x) = f(x)
 fun (!>) tap(x, f) = f(x); x
 fun (<!) pat(f, x) = f(x); x
 
+fun (|!) alsoDo(x, eff) = x
+
 fun (>>) andThen(f, g)(x) = g(f(x))
 fun (<<) compose(f, g)(x) = f(g(x))
 
 // x . foo(a, b, c) == foo(x, a, b, c)
 fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
+fun (\) passTo2(receiver, f)(...args) = f(receiver, ...args)
 
 // Same as above but with low precedence
 fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
@@ -85,3 +95,7 @@ fun enterHandleBlock(handler, body) =
 
 fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
+
+// Return the implicit instance of type T from the current scope.
+// Analogous to the `summon` function in Scala.
+fun use[T](using instance: T) = instance

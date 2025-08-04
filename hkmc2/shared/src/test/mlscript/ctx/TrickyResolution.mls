@@ -5,24 +5,25 @@ class Foo[A]
 class Bar[B]
 
 
-:fixme
 fun foo[A](using Foo[A], Bar[A])
-//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(Bar),TyTup(List(Ident(A)))) (of class hkmc2.syntax.Tree$App)
 
 
 fun foo[A](using f: Foo[A], b: Bar[A]): A
 
-use Foo[Str] = new Foo
-use Foo[Int] = new Foo
+using Foo[Str] = new Foo
+using Foo[Int] = new Foo
 
-use Bar[Int] = new Bar
-use Bar[Str] = new Bar
+using Bar[Int] = new Bar
+using Bar[Str] = new Bar
 
 
 // * Probably picks A = Int due to the Foo constraint, picking up the latest-defined Foo instance,
 // * and thus picks the Bar[Int] instance
 :fixme
 foo
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Not in scope: member:foo (class hkmc2.semantics.BlockMemberSymbol)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for 'foo'
+//│ ║  l.11: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 
 
