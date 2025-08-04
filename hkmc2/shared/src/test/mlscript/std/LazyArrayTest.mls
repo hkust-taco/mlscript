@@ -1,6 +1,7 @@
 :js
 
 import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/MutMap.mls"
 
 open LazyArray
 
@@ -254,3 +255,17 @@ s.slice(0, 0)
 //│ = []
 
 
+// LazyArray on non-arrays
+
+val mm = MutMap.empty
+//│ mm = MutMap(Map{})
+
+mm |> MutMap.insert of "a", 1
+
+:re
+concat([1, 2, 3], mm)
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map{["a", 1]})
+
+:re
+slice(1, 1)("hello")
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: hello
