@@ -11,6 +11,7 @@ declare class Unit
 declare class Bool
 declare class Int
 declare class Num
+declare class TypedArray
 
 data
   class
