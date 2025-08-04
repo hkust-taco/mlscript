@@ -68,9 +68,7 @@ data class Lol(h) with
 //│               break;
 //│             }
 //│           }
-//│           static [constructorName]() { return "Cont$ctor$Lol$"; }
-//│           static [fieldNames]() { return ["pc"]; }
-//│           static [definitionKind]() { return "class"; }
+//│           static [definitionMetadata] = ["class", "Cont$ctor$Lol$", ["pc"]]; 
 //│         }
 //│       });
 //│       this.h = h;
@@ -88,9 +86,7 @@ data class Lol(h) with
 //│       }
 //│       res
 //│     }
-//│     static [constructorName]() { return "Lol"; }
-//│     static [fieldNames]() { return ["h"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│   }
 //│ });
 

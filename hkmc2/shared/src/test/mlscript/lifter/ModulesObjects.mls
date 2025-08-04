@@ -47,8 +47,7 @@ fun foo(x, y) =
 //│       this.foo$capture$0.y0$ = 2;
 //│       return this.x$1 + this.foo$capture$0.y0$
 //│     }
-//│     static [constructorName]() { return "M"; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "M"]; 
 //│   }
 //│ });
 //│ foo$capture1 = function foo$capture(y0$1) {
@@ -59,9 +58,7 @@ fun foo(x, y) =
 //│     constructor(y0$) {
 //│       this.y0$ = y0$;
 //│     }
-//│     static [constructorName]() { return "foo$capture"; }
-//│     static [fieldNames]() { return ["y0$"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "foo$capture", ["y0$"]]; 
 //│   }
 //│ });
 //│ foo1 = function foo(x, y) {
@@ -98,8 +95,7 @@ data class A(x) with
 //│     getB() {
 //│       return this.A$instance$0.x
 //│     }
-//│     static [constructorName]() { return "M"; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "M"]; 
 //│   }
 //│ });
 //│ A1 = function A(x1) {
@@ -114,9 +110,7 @@ data class A(x) with
 //│     getA() {
 //│       return this.M$.getB()
 //│     }
-//│     static [constructorName]() { return "A"; }
-//│     static [fieldNames]() { return ["x"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│   }
 //│ });
 
@@ -183,9 +177,7 @@ M.A().get
 //│         get get() {
 //│           return M15.x + M14.x;
 //│         }
-//│         static [constructorName]() { return "A"; }
-//│         static [fieldNames]() { return []; }
-//│         static [definitionKind]() { return "class"; }
+//│         static [definitionMetadata] = ["class", "A", []]; 
 //│       }
 //│     });
 //│     scrut = runtime.safeCall(M14.A());
@@ -196,8 +188,7 @@ M.A().get
 //│     }
 //│     this.x = tmp4;
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 //│ tmp3 = runtime.safeCall(M15.A());
 //│ tmp3.get
@@ -259,9 +250,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│     newA_B(y) {
 //│       return runtime.safeCall(M19.A(y))
 //│     }
-//│     static [constructorName]() { return "B"; }
-//│     static [fieldNames]() { return []; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "B", []]; 
 //│   }
 //│ });
 //│ (class M18 {
@@ -282,9 +271,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│         get newB() {
 //│           return B$(this);
 //│         }
-//│         static [constructorName]() { return "A"; }
-//│         static [fieldNames]() { return ["x"]; }
-//│         static [definitionKind]() { return "class"; }
+//│         static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│       }
 //│     });
 //│     scrut = 0;
@@ -294,8 +281,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│       false
 //│     }
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 //│ tmp5 = runtime.safeCall(M19.A(2));
 //│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
@@ -338,8 +324,7 @@ module A with
 //│   static get f() {
 //│     return lambda;
 //│   }
-//│   static [constructorName]() { return "A"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "A"]; 
 //│ });
 
 module A with
@@ -385,8 +370,7 @@ A.x
 //│     tmp9 = tmp7 + tmp8;
 //│     this.x = tmp9;
 //│   }
-//│   static [constructorName]() { return "A"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "A"]; 
 //│ });
 //│ A16.x
 //│ = 2

@@ -45,9 +45,7 @@ data class Outer(a, b) with
 //│               d
 //│             ]
 //│           }
-//│           static [constructorName]() { return "Inner"; }
-//│           static [fieldNames]() { return ["c"]; }
-//│           static [definitionKind]() { return "class"; }
+//│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 
 //│         }
 //│       });
 //│       tmp = this.Inner(this.a);
@@ -64,9 +62,7 @@ data class Outer(a, b) with
 //│       tmp = this.Inner(c1);
 //│       return runtime.safeCall(tmp.i1(d))
 //│     }
-//│     static [constructorName]() { return "Outer"; }
-//│     static [fieldNames]() { return ["a", "b"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
 //│   }
 //│ });
 

@@ -20,22 +20,21 @@ object Test with
 //│     tmp = Predef.print(Test1);
 //│     return Test1.x
 //│   }
-//│   static [constructorName]() { return "Test"; }
-//│   static [definitionKind]() { return "object"; }
+//│   static [definitionMetadata] = ["object", "Test"]; 
 //│ }; Test1 = new Test$class;
 //│ Object.defineProperty(Test1, 'class', { value: Test$class });
 
 Test
-//│ = Test
+//│ = Test {x: 12, class: object Test}
 
 print(Test)
-//│ > Test
+//│ > Test {x: 12, class: object Test}
 
 :sjs
 Test.foo()
 //│ JS (unsanitized):
 //│ Test1.foo()
-//│ > Test
+//│ > Test {x: 12, class: object Test}
 //│ = 12
 
 :sjs
@@ -67,10 +66,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.68: 	  let x = 2
+//│ ║  l.67: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.67: 	  val x = 1
+//│ ║  l.66: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
 //│ (class Test3 {
@@ -80,8 +79,7 @@ module Test with
 //│     this.x = 1;
 //│     Test3.#x = 2;
 //│   }
-//│   static [constructorName]() { return "Test"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 //│ block$res8 = undefined;
 
@@ -128,9 +126,7 @@ data class Cls(x) with
 //│     get bar() {
 //│       return this.#x1;
 //│     }
-//│     static [constructorName]() { return "Cls"; }
-//│     static [fieldNames]() { return ["x"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Cls", ["x"]]; 
 //│   }
 //│ });
 
@@ -161,7 +157,7 @@ fun foo(): module M =
     A
 
 foo()
-//│ = module A1
+//│ = module A
 
 
 :sjs
@@ -185,22 +181,20 @@ module Whoops with
 //│       static g() {
 //│         return Whoops.f()
 //│       }
-//│       static [constructorName]() { return "Whoops"; }
-//│       static [definitionKind]() { return "module"; }
+//│       static [definitionMetadata] = ["module", "Whoops"]; 
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
-//│   static [constructorName]() { return "Whoops"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "Whoops"]; 
 //│ });
 
 Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = (val ref'1 = module Whoops1 {w: ref'1})
+//│ = (val ref'1 = module Whoops {w: ref'1})
 
 Whoops.Whoops.g()
 //│ = "Hello"
@@ -209,7 +203,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.210: 	Runtime
+//│ ║  l.204: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

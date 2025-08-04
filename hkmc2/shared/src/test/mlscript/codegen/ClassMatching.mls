@@ -16,7 +16,7 @@ if Some(0) is Some(x) then x
 //│   x = param0;
 //│   x
 //│ } else {
-//│   throw new this.Error("match error");
+//│   throw new globalThis.Error("match error");
 //│ }
 //│ = 0
 
@@ -34,7 +34,7 @@ if s is
 //│   x1 = param01;
 //│   x1
 //│ } else {
-//│   throw new this.Error("match error");
+//│   throw new globalThis.Error("match error");
 //│ }
 //│ = 0
 

@@ -4,7 +4,7 @@ import "../../mlscript-compile/apps/Accounting.mls"
 
 
 val acc = new Accounting
-//│ acc = Accounting
+//│ acc = Accounting {warnings: [], Project: fun Project, Line: fun Line, lines: [], Report: fun Report}
 
 val proj = acc.Project("P1")
 //│ proj = Project("P1")

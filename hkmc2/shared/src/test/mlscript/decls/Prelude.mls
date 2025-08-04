@@ -21,7 +21,6 @@ declare class WeakMap
 declare class Error
 declare class TypeError
 declare class RangeError
-declare class Symbol
 declare class Date
 
 // MLscript-specific types
@@ -30,6 +29,13 @@ declare class Bool
 declare class Int
 declare class Num
 declare class Str
+
+declare object Symbol with
+  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
+  // uninitialized `runtime` in the `Rendering` module.
+  fun for: Str -> Any = ()
+  val iterator: Any
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
 declare module Math with

@@ -21,8 +21,14 @@ globalThis
 :re
 if false then 0
 //│ JS (unsanitized):
-//│ let scrut; scrut = false; if (scrut === true) { 0 } else { throw new this.Error("match error"); }
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ let scrut;
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   0
+//│ } else {
+//│   throw new globalThis.Error("match error");
+//│ }
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
 
 // * This one uses `globalThis.Error`

@@ -2,6 +2,7 @@ import "./RuntimeJS.mjs"
 
 module Rendering with ...
 
+let definitionMetadataSymbol = RuntimeJS.symbols.definitionMetadata
 
 fun pass1(f)(...xs) = f(xs.0)
 fun pass2(f)(...xs) = f(xs.0, xs.1)
@@ -372,16 +373,16 @@ fun render(target, ...args) =
         Function then
           let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
           let head = if
-            // ES 2015 classes: `desc.writable` is false
-            desc is Object and desc.writable is false then
-              let kind = if
-                desc.value.constructor.hasOwnProperty(RuntimeJS.symbols.definitionKind) and
-                  desc.value.constructor.(RuntimeJS.symbols.definitionKind) is Function then
-                    desc.value.constructor.(RuntimeJS.symbols.definitionKind)()
-                else "class"
-              kind + " " + (if arg.name is "" then "(anonymous)" else arg.name)
-            else
-              "fun" + (if arg.name is "" then "" else " " + arg.name)
+            // ES 2015 classes: `desc.writable` is `false`.
+            desc is Object and desc.writable is false and
+              // If it is from MLscript, use the kind written in metadata.
+              desc.value.constructor.hasOwnProperty(definitionMetadataSymbol) and
+                desc.value.constructor.(definitionMetadataSymbol) is [kind, name, ...] then
+                  kind + " " + name
+              arg.name is "" then "class" // Show "class" if there is no name.
+              else "class " + arg.name // Or, we can use the name.
+            // Display as functions if `desc.writable` is not `false`
+            else "fun" + (if arg.name is "" then "" else " " + arg.name)
           head + if // Add a space if the function do not have enumerable properties
             let properties = renderObject(arg, level, keyLength, startPos + head.length)
             properties is "{}" then ""
@@ -399,24 +400,17 @@ fun render(target, ...args) =
           proto.constructor is Function and
             // If the prototype has its own implementation of `toString`, call it.
             proto.hasOwnProperty("toString") then arg.toString() indentText(level)
-            // If the symbol %constructorName is defined on the constructor, we
-            // render the function using the provided field names.
-            proto.constructor.hasOwnProperty(RuntimeJS.symbols.constructorName) and
-              proto.constructor.(RuntimeJS.symbols.constructorName) is Function and
-                let constructorName = proto.constructor.(RuntimeJS.symbols.constructorName)()
-                // Check if field names are provided. Note that static members
-                // can be also inherited from base classes.
-                proto.constructor.hasOwnProperty(RuntimeJS.symbols.fieldNames) and
-                  proto.constructor.(RuntimeJS.symbols.fieldNames) is Function then
-                    let fieldNames = proto.constructor.(RuntimeJS.symbols.fieldNames)()
-                    renderClassInstance of
-                      constructorName, fieldNames, arg, level, keyLength, startPos
-                // If no field names are provided, return the constructor name only.
-                else constructorName
-            proto.constructor.hasOwnProperty(RuntimeJS.symbols.definitionKind) and
-              proto.constructor.(RuntimeJS.symbols.definitionKind) is Function then
-                let definitionKind = proto.constructor.(RuntimeJS.symbols.definitionKind)()
-                let head = definitionKind + " " + proto.constructor.name
+            // If the symbol `definitionMetadata` is defined on the constructor,
+            // we render the function using the provided field names.
+            proto.constructor.hasOwnProperty(definitionMetadataSymbol) and
+              let definitionMetadata = proto.constructor.(definitionMetadataSymbol)
+              definitionMetadata is [kind, name, fields] then
+                renderClassInstance(name, fields, arg, level, keyLength, startPos)
+              // If no field names are provided (the case for modules, objects,
+              // patterns, or parameter-less classes), use the constructor name.
+              definitionMetadata is [kind, name] then
+                // For class instances and objects, do not show the kind.
+                let head = if kind is "class" | "object" then name else kind + " " + name
                 let body = renderObject(arg, level, keyLength, startPos + head.length)
                 head + (if body is "{}" then "" else " " + body)
             // Otherwise, we print the name of the constructor and the properties.

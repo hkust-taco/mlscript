@@ -20,8 +20,7 @@ class Test with
 //│     tmp = foo();
 //│     Predef.print(tmp)
 //│   }
-//│   static [constructorName]() { return "Test"; }
-//│   static [definitionKind]() { return "class"; }
+//│   static [definitionMetadata] = ["class", "Test"]; 
 //│ };
 
 new Test

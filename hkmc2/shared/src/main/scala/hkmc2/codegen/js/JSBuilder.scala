@@ -15,6 +15,7 @@ import hkmc2.codegen.Value.Lam
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import collection.immutable.SeqMap
+import hkmc2.semantics.Elaborator.ctx
 
 
 // TODO factor some logic for other codegen backends
@@ -23,7 +24,7 @@ abstract class CodeBuilder:
   type Context
   
 
-class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, State, Ctx) extends CodeBuilder:
+class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   import JSBuilder.*
   
   def checkMLsCalls: Bool = false
@@ -287,22 +288,12 @@ class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, 
                     doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
                 .mkDocument(" ")
               }${
-                // Generate constructor name for classes, objects, and modules.
-                if (kind is syntax.Cls) || (kind is syntax.Obj) || (kind is syntax.Mod) then
-                  doc""" # static [${lookupInternalSymbol("constructorName")}]() { return ${makeStringLiteral(sym.nme)}; }"""
-                else doc""
-              }${
-                // Generate field names for classes with parameter lists, even
-                // if no parameters are marked as `val`.
-                if (kind is syntax.Cls) && paramsOpt.isDefined then
-                  doc""" # static [${lookupInternalSymbol("fieldNames")}]() { return [${
-                    (ctorFields.map: f =>
-                      doc"${f._1.name.escaped}")
-                    .mkDocument(", ")
-                  }]; }"""
-                else doc""
-              }${
-                doc" # static [${lookupInternalSymbol("definitionKind")}]() { return ${kind.desc.escaped}; }"
+                doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
+                  kind.desc.escaped}, ${sym.nme.escaped}${
+                  if (kind is syntax.Cls) && paramsOpt.isDefined then
+                    doc", [${ctorFields.map(_._1.name.escaped).mkDocument(", ")}]"
+                  else doc""
+                }]; """
               } #}  # }"
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
               lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
@@ -380,7 +371,7 @@ class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, 
           case Elaborator.ctx.builtins.Bool => doc"typeof $sd === 'boolean'"
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
-          case Elaborator.ctx.builtins.Symbol => doc"typeof $sd === 'symbol'"
+          case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(n, safe = false) =>
@@ -464,12 +455,6 @@ class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, 
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
-  /** Look up the variable name at runtime for a JavaScript `Symbol`. */
-  def lookupInternalSymbol(key: Str): Str =
-    internalSymbols.flatMap(_.get(key)) match
-      case S(m) => m._2
-      case N => lastWords(s"Internal symbol '$key' not found")
-
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
     reserveNames(p)
     p.imports.foreach: i =>
@@ -480,19 +465,8 @@ class JSBuilder(var internalSymbols: Opt[SeqMap[Str, (Symbol, Str)]])(using TL, 
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1)} from "${relPath}";"""
-    val syms = internalSymbols match
-      // If the internal symbols were already created, the generated JavaScript
-      // code does not need to declare them.
-      case S(_) => Nil
-      case N =>
-        // Otherwise, we need to create them and declare them.
-        val symbols = createInternalSymbols
-        internalSymbols = S(symbols)
-        symbols.map:
-          case (key, (_, name)) =>
-            doc"const $name = Symbol.for(${s"mlscript.$key".escaped});"
-        .toList
-    (imps ::: syms).mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+    // val syms = doc"""const ${scope.lookup_!(State.definitionMetadataSymbol)} = ${result(Value.Ref(ctx.builtins.Symbol))}.for("mlscript.definitionMetadata");"""
+    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym)}; export default ${sym.nme};\n"
         case N => doc""
@@ -629,14 +603,6 @@ object JSBuilder:
         then c.toString
         else f"\\u${c.toInt}%04X"
     }.mkString
-  
-  val internalSymbolNames = List("constructorName", "fieldNames", "definitionKind")
-  
-  def createInternalSymbols(using State, Scope): SeqMap[Str, (Symbol, Str)] =
-    internalSymbolNames.iterator.map: key =>
-      val sym = TempSymbol(N, key)
-      key -> (sym, scope.allocateName(sym))
-    .to(SeqMap)
     
 end JSBuilder
 

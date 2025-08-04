@@ -8,9 +8,8 @@ import utils.*
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
-import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
-import semantics.Elaborator.State
+import semantics.Elaborator.{Ctx, State, ctx}
 
 
 class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):
@@ -86,14 +85,25 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       val blk = new semantics.Term.Blk(
-        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: semantics.Import(State.termSymbol, termFile.toString) :: blk0.stats,
-        blk0.res
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString) ::
+          semantics.Import(State.termSymbol, termFile.toString) ::
+          // Generate `definitionMetadata = Symbol.for("mlscript.definitionMetadata")`.
+          semantics.LetDecl(State.definitionMetadataSymbol, Nil) ::
+          semantics.DefineVar(State.definitionMetadataSymbol, {
+            import syntax.{Fun, Tree}, Tree.{Dummy, DummyTup, Ident, StrLit}, semantics.{FlowSymbol, Term, PlainFld}
+            val symbolRef = Term.SynthSel(State.globalThisSymbol.ref().withIArgs(Nil), Ident("Symbol"))(N).withIArgs(Nil)
+            Term.App(
+              Term.SynthSel(symbolRef, Ident("for"))(S(ctx.builtins.Symbol.`for`)).withIArgs(Nil),
+              Term.Tup(PlainFld(Term.Lit(StrLit("mlscript.definitionMetadata"))) :: Nil)(DummyTup)
+            )(Tree.App(Dummy, Dummy), S(ctx.builtins.Symbol.`for`), FlowSymbol("definitionMetadata")).withIArgs(Nil)
+          }) :: blk0.stats,
+      blk0.res
       )
       val low = ltl.givenIn:
         new codegen.Lowering()
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
-        codegen.js.JSBuilder(N)
+        new codegen.js.JSBuilder
       val le = low.program(blk)
       val baseScp: utils.Scope =
         utils.Scope.empty

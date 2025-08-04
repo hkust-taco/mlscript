@@ -9,8 +9,7 @@ module None
 //│   static {
 //│     None1 = None;
 //│   }
-//│   static [constructorName]() { return "None"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "None"]; 
 //│ });
 
 :sjs
@@ -30,7 +29,7 @@ None()
 new None
 //│ JS (unsanitized):
 //│ new None1()
-//│ = None
+//│ = module None
 
 
 :sjs
@@ -47,8 +46,7 @@ module M with
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
-//│       static [constructorName]() { return "C"; }
-//│       static [definitionKind]() { return "class"; }
+//│       static [definitionMetadata] = ["class", "C"]; 
 //│     };
 //│     this.D = function D() {
 //│       return new D.class();
@@ -56,17 +54,14 @@ module M with
 //│     Object.defineProperty(this.D, 'class', {
 //│     value: class D {
 //│         constructor() {}
-//│         static [constructorName]() { return "D"; }
-//│         static [fieldNames]() { return []; }
-//│         static [definitionKind]() { return "class"; }
+//│         static [definitionMetadata] = ["class", "D", []]; 
 //│       }
 //│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
 M.C
@@ -88,7 +83,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.89: 	M.oops
+//│ ║  l.84: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -106,15 +101,14 @@ module M with
 //│     M3 = M2;
 //│     this.m = M3;
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
 :sjs
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = (val ref'1 = module M2 {m: ref'1})
+//│ = (val ref'1 = module M {m: ref'1})
 
 
 

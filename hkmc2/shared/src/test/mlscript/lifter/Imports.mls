@@ -19,7 +19,6 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static [constructorName]() { return "A"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "A"]; 
 //│ });
 

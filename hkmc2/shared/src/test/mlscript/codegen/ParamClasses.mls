@@ -13,9 +13,7 @@ data class Foo()
 //│ Object.defineProperty(Foo1, 'class', {
 //│   value: class Foo {
 //│     constructor() {}
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return []; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", []]; 
 //│   }
 //│ });
 
@@ -46,9 +44,7 @@ data class Foo(a)
 //│     constructor(a) {
 //│       this.a = a;
 //│     }
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return ["a"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", ["a"]]; 
 //│   }
 //│ });
 
@@ -86,9 +82,7 @@ data class Foo(a, b)
 //│       this.a = a;
 //│       this.b = b;
 //│     }
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return ["a", "b"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│   }
 //│ });
 
@@ -157,9 +151,7 @@ data class Inner(c) with
 //│     i1(d) {
 //│       return this.c + d
 //│     }
-//│     static [constructorName]() { return "Inner"; }
-//│     static [fieldNames]() { return ["c"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Inner", ["c"]]; 
 //│   }
 //│ });
 
@@ -217,9 +209,7 @@ class Foo(x, val y, z, val z, z) with
 //│       tmp16 = "this.z = " + this.z;
 //│       Predef.print(tmp16)
 //│     }
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return ["y", "z"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", ["y", "z"]]; 
 //│   }
 //│ });
 
@@ -248,9 +238,7 @@ class Foo(val z, val z)
 //│       this.z = z;
 //│       this.z = z1;
 //│     }
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return ["z", "z"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│   }
 //│ });
 

@@ -2,10 +2,9 @@ import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-const constructorName = Symbol.for("mlscript.constructorName");
-const fieldNames = Symbol.for("mlscript.fieldNames");
-const definitionKind = Symbol.for("mlscript.definitionKind");
-let Predef1;
+let definitionMetadata, Predef1, tmp;
+tmp = globalThis.Symbol.for("mlscript.definitionMetadata");
+definitionMetadata = tmp;
 (class Predef {
   static {
     Predef1 = Predef;
@@ -46,27 +45,27 @@ let Predef1;
     return runtime.safeCall(f4(x5))
   } 
   static tap(x6, f5) {
-    let tmp;
-    tmp = runtime.safeCall(f5(x6));
-    return (tmp , x6)
+    let tmp1;
+    tmp1 = runtime.safeCall(f5(x6));
+    return (tmp1 , x6)
   } 
   static pat(f6, x7) {
-    let tmp;
-    tmp = runtime.safeCall(f6(x7));
-    return (tmp , x7)
+    let tmp1;
+    tmp1 = runtime.safeCall(f6(x7));
+    return (tmp1 , x7)
   } 
   static andThen(f7, g) {
     return (x8) => {
-      let tmp;
-      tmp = runtime.safeCall(f7(x8));
-      return runtime.safeCall(g(tmp))
+      let tmp1;
+      tmp1 = runtime.safeCall(f7(x8));
+      return runtime.safeCall(g(tmp1))
     }
   } 
   static compose(f8, g1) {
     return (x8) => {
-      let tmp;
-      tmp = runtime.safeCall(g1(x8));
-      return runtime.safeCall(f8(tmp))
+      let tmp1;
+      tmp1 = runtime.safeCall(g1(x8));
+      return runtime.safeCall(f8(tmp1))
     }
   } 
   static passTo(receiver, f9) {
@@ -90,10 +89,10 @@ let Predef1;
     }
   } 
   static print(...xs) {
-    let tmp, tmp1;
-    tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp1 = runtime.safeCall(tmp(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp1))
+    let tmp1, tmp2;
+    tmp1 = runtime.safeCall(Predef.map(Predef.renderAsStr));
+    tmp2 = runtime.safeCall(tmp1(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp2))
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
@@ -103,9 +102,9 @@ let Predef1;
     }
   } 
   static notImplemented(msg) {
-    let tmp;
-    tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp);
+    let tmp1;
+    tmp1 = "Not implemented: " + msg;
+    throw globalThis.Error(tmp1);
   } 
   static get notImplementedError() {
     throw globalThis.Error("Not implemented");
@@ -115,28 +114,28 @@ let Predef1;
   } 
   static foldr(f13) {
     return (first, ...rest) => {
-      let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+      let len, i, init, scrut, scrut1, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
       len = rest.length;
       scrut1 = len == 0;
       if (scrut1 === true) {
         return first
       } else {
-        tmp = len - 1;
-        i = tmp;
-        tmp1 = runtime.safeCall(rest.at(i));
-        init = tmp1;
-        tmp6: while (true) {
+        tmp1 = len - 1;
+        i = tmp1;
+        tmp2 = runtime.safeCall(rest.at(i));
+        init = tmp2;
+        tmp7: while (true) {
           scrut = i > 0;
           if (scrut === true) {
-            tmp2 = i - 1;
-            i = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f13(tmp3, init));
-            init = tmp4;
-            tmp5 = runtime.Unit;
-            continue tmp6;
+            tmp3 = i - 1;
+            i = tmp3;
+            tmp4 = runtime.safeCall(rest.at(i));
+            tmp5 = runtime.safeCall(f13(tmp4, init));
+            init = tmp5;
+            tmp6 = runtime.Unit;
+            continue tmp7;
           } else {
-            tmp5 = runtime.Unit;
+            tmp6 = runtime.Unit;
           }
           break;
         }
@@ -145,21 +144,21 @@ let Predef1;
     }
   } 
   static mkStr(...xs2) {
-    let tmp, tmp1, lambda;
+    let tmp1, tmp2, lambda;
     lambda = (undefined, function (acc, x8) {
-      let tmp2, tmp3, tmp4;
+      let tmp3, tmp4, tmp5;
       if (typeof x8 === 'string') {
-        tmp2 = true;
+        tmp3 = true;
       } else {
-        tmp2 = false;
+        tmp3 = false;
       }
-      tmp3 = runtime.safeCall(Predef.assert(tmp2));
-      tmp4 = acc + x8;
-      return (tmp3 , tmp4)
+      tmp4 = runtime.safeCall(Predef.assert(tmp3));
+      tmp5 = acc + x8;
+      return (tmp4 , tmp5)
     });
-    tmp = lambda;
-    tmp1 = runtime.safeCall(Predef.fold(tmp));
-    return runtime.safeCall(tmp1(...xs2))
+    tmp1 = lambda;
+    tmp2 = runtime.safeCall(Predef.fold(tmp1));
+    return runtime.safeCall(tmp2(...xs2))
   } 
   static enterHandleBlock(handler, body) {
     return Runtime.enterHandleBlock(handler, body)
@@ -170,7 +169,6 @@ let Predef1;
   static use(instance) {
     return instance
   }
-  static [constructorName]() { return "Predef"; }
-  static [definitionKind]() { return "module"; }
+  static [definitionMetadata] = ["module", "Predef"]; 
 });
 let Predef = Predef1; export default Predef;

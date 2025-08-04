@@ -158,12 +158,12 @@ renderAsStr of new WeakSet
 class Foo
 
 renderAsStr of Foo
-//│ = "class Foo4"
+//│ = "class Foo"
 
 set Foo.bar = (direction: "vertical")
 
 renderAsStr of Foo
-//│ = "class Foo4 {bar: {direction: \"vertical\"}}"
+//│ = "class Foo {bar: {direction: \"vertical\"}}"
 
 class Bar extends Foo
 
@@ -302,7 +302,20 @@ object Singleton
 renderAsStr of Singleton
 //│ = "Singleton"
 
+class Phantom
+
+// Parameter-less classes should be rendered as `class`.
+renderAsStr of Phantom
+//│ = "class Phantom"
+
 data class Point(x: Num, y: Num)
+
+// While classes with parameters should be rendered as `fun`.
+renderAsStr of Point
+//│ = "fun Point"
+
+renderAsStr of Point.class
+//│ = "class Point"
 
 renderAsStr of Point(1, 2)
 //│ = "Point(1, 2)"

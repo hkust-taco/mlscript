@@ -66,9 +66,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│     get baz() {
 //│       return this.bar * 2;
 //│     }
-//│     static [constructorName]() { return "Baz"; }
-//│     static [fieldNames]() { return ["z"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Baz", ["z"]]; 
 //│   }
 //│ });
 
@@ -100,8 +98,8 @@ data class Barr(x: Int)(y: Int) with
 data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
   fun g = z
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.100: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
-//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^
 
 :todo
 Bazz(42).f
@@ -111,7 +109,7 @@ Bazz(42).f
 new Barr(40)(2) with
   fun f = 43
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.111: 	new Barr(40)(2) with
+//│ ║  l.109: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^
 //│ = fun
 

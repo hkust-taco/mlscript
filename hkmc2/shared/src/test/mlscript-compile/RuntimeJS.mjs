@@ -6,9 +6,7 @@ const RuntimeJS = {
     catch (error) { return onError(error) }
   },
   symbols: {
-    constructorName: Symbol.for("mlscript.constructorName"),
-    fieldNames: Symbol.for("mlscript.fieldNames"),
-    definitionKind: Symbol.for("mlscript.definitionKind"),
+    definitionMetadata: Symbol.for("mlscript.definitionMetadata"),
   }
 }
 

@@ -117,9 +117,7 @@ Cls(1, 2).f(3)
 //│       tmp3 = tmp2 + z;
 //│       return tmp3 + p
 //│     }
-//│     static [constructorName]() { return "Cls"; }
-//│     static [fieldNames]() { return ["x", "y"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
 //│ tmp1 = Cls1(1, 2);
@@ -152,9 +150,7 @@ Cls(1, 2).f(3)
 //│       tmp4 = tmp3 + z;
 //│       return tmp4 + p
 //│     }
-//│     static [constructorName]() { return "Cls"; }
-//│     static [fieldNames]() { return ["x", "y"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
@@ -195,9 +191,7 @@ Cls(1, 2).f(3, 4)(5)
 //│         return tmp8 + s
 //│       }
 //│     }
-//│     static [constructorName]() { return "Cls"; }
-//│     static [fieldNames]() { return ["x", "y"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
@@ -210,9 +204,9 @@ Cls(1, 2).f(3, 4)(5)
 :ssjs
 console.log(1)
 //│ JS:
-//│ selRes = this.console;
+//│ selRes = globalThis.console;
 //│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'console' yielded 'undefined'");
 //│ }
 //│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
@@ -223,10 +217,10 @@ console.log(1)
 :ssjs
 globalThis.x
 //│ JS:
-//│ selRes1 = this.x;
-//│ discarded = this.x$__checkNotMethod;
+//│ selRes1 = globalThis.x;
+//│ discarded = globalThis.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
-//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
 //│ }
 //│ block$res11 = selRes1;
 //│ undefined
@@ -236,8 +230,8 @@ globalThis.x
 :ssjs
 globalThis.x()
 //│ JS:
-//│ block$res12 = runtime.safeCall(this.x()); undefined
-//│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
+//│ block$res12 = runtime.safeCall(globalThis.x()); undefined
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.x is not a function
 
 
 
@@ -268,20 +262,17 @@ if M.A(1).y is
 //│           let y = args[0];
 //│           return this.x + y
 //│         }
-//│         static [constructorName]() { return "A"; }
-//│         static [fieldNames]() { return ["x"]; }
-//│         static [definitionKind]() { return "class"; }
+//│         static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│       }
 //│     });
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 //│ tmp5 = runtime.safeCall(M1.A(1));
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
-//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'y' yielded 'undefined'");
 //│ }
 //│ scrut = selRes2;
 //│ x = scrut;
@@ -302,15 +293,15 @@ if M.A(1).y is
 M.A(1).y
   console.log()
 //│ JS:
-//│ selRes3 = this.console;
+//│ selRes3 = globalThis.console;
 //│ if (selRes3 === undefined) {
-//│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'console' yielded 'undefined'");
 //│ }
 //│ tmp6 = runtime.safeCall(M1.A(1));
 //│ selRes4 = tmp6.y;
 //│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
-//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'y' yielded 'undefined'");
 //│ }
 //│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined
@@ -324,7 +315,7 @@ M.A(1).y
   console.log()
 //│ JS:
 //│ tmp7 = runtime.safeCall(M1.A(1));
-//│ block$res15 = runtime.safeCall(this.console.log(tmp7.y));
+//│ block$res15 = runtime.safeCall(globalThis.console.log(tmp7.y));
 //│ undefined
 //│ > undefined
 

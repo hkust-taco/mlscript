@@ -30,7 +30,7 @@ print of foo()
 :sjs
 print of globalThis.console.log("Hello, world!")
 //│ JS (unsanitized):
-//│ let tmp4; tmp4 = runtime.safeCall(this.console.log("Hello, world!")); Predef.print(tmp4)
+//│ let tmp4; tmp4 = runtime.safeCall(globalThis.console.log("Hello, world!")); Predef.print(tmp4)
 //│ > Hello, world!
 //│ > ()
 

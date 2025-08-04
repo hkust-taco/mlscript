@@ -80,8 +80,7 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
-//│   static [constructorName]() { return "T"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "T"]; 
 //│ });
 
 
@@ -110,8 +109,7 @@ module M with
 //│   static get t() {
 //│     return 0;
 //│   }
-//│   static [constructorName]() { return "M"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
 
@@ -300,9 +298,7 @@ data class Foo(x) with
 //│     get oops() {
 //│       return this.x;
 //│     }
-//│     static [constructorName]() { return "Foo"; }
-//│     static [fieldNames]() { return ["x"]; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
 //│ });
 

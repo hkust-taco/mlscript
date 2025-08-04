@@ -16,7 +16,7 @@ let s = Example.f
 //│ JS:
 //│ selRes = Example1.f;
 //│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'f' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'f' yielded 'undefined'");
 //│ }
 //│ s = selRes;
 //│ block$res3 = undefined;
@@ -56,8 +56,7 @@ module Test with
 //│   static bar() {
 //│     return Test.foo()
 //│   }
-//│   static [constructorName]() { return "Test"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 //│ > 1
 

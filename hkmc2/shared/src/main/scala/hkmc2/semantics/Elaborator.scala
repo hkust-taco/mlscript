@@ -127,6 +127,9 @@ object Elaborator:
       private def assumeBuiltinCls(nme: Str): ClassSymbol =
         assumeBuiltin(nme).asCls.getOrElse(throw new NoSuchElementException(
           s"builtin class symbol $nme"))
+      private def assumeBuiltinObj(nme: Str): ModuleSymbol =
+        assumeBuiltin(nme).asObj.getOrElse(throw new NoSuchElementException(
+          s"builtin object symbol $nme"))
       private def assumeBuiltinMod(nme: Str): ModuleSymbol =
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
@@ -135,7 +138,6 @@ object Elaborator:
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
       val BigInt = assumeBuiltinCls("BigInt")
-      val Symbol = assumeBuiltinCls("Symbol")
       val Function = assumeBuiltinCls("Function")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")
@@ -149,6 +151,9 @@ object Elaborator:
           module.tree.definedSymbols.get(nme).getOrElse:
             throw new NoSuchElementException(
               s"builtin module symbol source.$nme")
+      object Symbol extends VirtualModule(assumeBuiltinObj("Symbol")):
+        val `for` = assumeObject("for")
+        val iterator = assumeObject("iterator")
       object source extends VirtualModule(assumeBuiltinMod("source")):
         val line = assumeObject("line")
         val name = assumeObject("name")
@@ -203,6 +208,7 @@ object Elaborator:
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(syntax.Tree.Ident("import"))
     val runtimeSymbol = TempSymbol(N, "runtime")
+    val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val termSymbol = TempSymbol(N, "Term")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =

@@ -10,7 +10,7 @@ declare fun foo: Int
 :sjs
 foo
 //│ JS (unsanitized):
-//│ this.foo
+//│ globalThis.foo
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 

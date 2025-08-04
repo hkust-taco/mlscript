@@ -13,14 +13,13 @@ fun test(a) =
 //│     constructor() {
 //│       this.x = a;
 //│     }
-//│     static [constructorName]() { return "C"; }
-//│     static [definitionKind]() { return "class"; }
+//│     static [definitionMetadata] = ["class", "C"]; 
 //│   };
 //│   return new C1()
 //│ };
 
 test(12)
-//│ = C
+//│ = C {x: 12}
 
 fun test(x) =
   data class Foo(x)
@@ -46,9 +45,7 @@ fun test(x) =
 //│         this.a = a;
 //│         this.b = b;
 //│       }
-//│       static [constructorName]() { return "Foo"; }
-//│       static [fieldNames]() { return ["a", "b"]; }
-//│       static [definitionKind]() { return "class"; }
+//│       static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│     }
 //│   });
 //│   tmp = x + 1;
@@ -65,7 +62,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.66: 	test()
+//│ ║  l.63: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

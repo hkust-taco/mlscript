@@ -55,8 +55,7 @@ module Test with
 //│       x1
 //│     ]
 //│   }
-//│   static [constructorName]() { return "Test"; }
-//│   static [definitionKind]() { return "module"; }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 
 
