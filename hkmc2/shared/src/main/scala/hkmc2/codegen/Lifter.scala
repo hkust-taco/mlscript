@@ -262,7 +262,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       PlainParamList(sortedVars.iterator.map(_._2).toList) :: Nil, None, Nil, Nil, 
       Nil,
       End(),
-      End()
+      sortedVars.iterator.foldLeft[Block](End()):
+        case (acc, (_, _, vd)) => Define(vd, acc)
     )
     
     (defn, sortedVars.iterator.map(_._1).toMap, sortedVars.iterator.map(_._1._1).toList)
@@ -814,98 +815,116 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           
 
           Lifted(mainDefn, auxDefn :: extras)
-        case c: ClsLikeDefn if !modOrObj(c) =>
-          val newDef = c.copy(
-            owner = N, auxParams = c.auxParams.appended(PlainParamList(extraParams))
-          )
-          val Lifted(lifted, extras) = liftDefnsInCls(newDef, newCtx)
-
-          val bms = fakeCtorBms.get
-
-          // create the fake ctor here
-          inline def mapParams(ps: ParamList) = ps.params.map(p => VarSymbol(p.sym.id))
-
-          val paramSyms = c.paramsOpt.map(mapParams) // what is defined in paramsOpt
-          val auxSyms = c.auxParams.map(mapParams) // the original class's aux params
-          val extraSyms = extraParams.map(p => VarSymbol(p.sym.id)) // these will be added to the aux params
+        case c: ClsLikeDefn =>
+          // add aux params, private fields, update preCtor
+          val newAuxParams = c.auxParams.appended(PlainParamList(extraParams))
           
-          // pop one list fromm auxSyms if paramsOpt is empty
-          // these are for creating the body only
-          val (newParamSyms, newAuxSyms) = paramSyms match
-            case None => auxSyms match
-              case head :: next => (S(head), next.appended(extraSyms))
-              case Nil => (S(extraSyms), Nil)
-            case Some(value) => (paramSyms, auxSyms.appended(extraSyms))
+          val privFieldsMap = extraParams.map:
+              case p => p.sym -> TermSymbol(syntax.MutVal, S(c.isym), p.sym.id)
           
-          val paramArgs = newParamSyms.getOrElse(Nil).map(_.asPath)
+          val newPrivFields = c.privateFields ::: privFieldsMap.map(_._2)
+            
+          val newCtor = privFieldsMap.foldRight(c.ctor):
+            case ((sym, ts), blk) => Assign(ts, sym.asPath, blk)
+            
+          if modOrObj(c) then // module or object
+            // force it to be a class
+            val newK = c.k match
+              case syntax.Mod => syntax.Mod
+              case syntax.Obj => syntax.Cls
+              case _ => wat("unreachable", c.k)
+            
+            val newDef = c.copy(
+              k = newK, paramsOpt = N,
+              owner = N, auxParams = PlainParamList(extraParams) :: Nil,
+              privateFields = newPrivFields,
+              ctor = newCtor
+            )
+            liftDefnsInCls(newDef, newCtx)
+          else // normal class
+              
+            val newDef = c.copy(
+              owner = N, 
+              auxParams = newAuxParams,
+              privateFields = newPrivFields,
+              ctor = newCtor
+            )
+            
+            val Lifted(lifted, extras) = liftDefnsInCls(newDef, newCtx)
 
-          inline def toPaths(l: List[Local]) = l.map(_.asPath)
-          
-          var curSym = TempSymbol(None, "tmp")
-          val inst = if c.paramsOpt.isDefined then
-            Instantiate(Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
-          else
-            Instantiate(c.sym.asPath, paramArgs)
-          
-          val initSym = curSym
-          var acc: Block => Block = blk => Assign(initSym, inst, blk)
-          for ps <- newAuxSyms do
-            val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
-            curSym = TempSymbol(None, "tmp")
-            val thisSym = curSym
-            acc = acc.assign(thisSym, call)
-            // acc = blk => acc(Assign(curSym, call, blk))
-          val bod = acc.ret(curSym.asPath)
+            val bms = fakeCtorBms.get
 
-          inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N, Modulefulness.none)))
+            // create the fake ctor here
+            inline def mapParams(ps: ParamList) = ps.params.map(p => VarSymbol(p.sym.id))
 
-          val paramPlist = paramSyms.map(toPlist)
-          val auxPlist = auxSyms.map(toPlist)
-          val extraPlist = toPlist(extraSyms)
+            val paramSyms = c.paramsOpt.map(mapParams) // what is defined in paramsOpt
+            val auxSyms = c.auxParams.map(mapParams) // the original class's aux params
+            val extraSyms = extraParams.map(p => VarSymbol(p.sym.id)) // these will be added to the aux params
+            
+            // pop one list fromm auxSyms if paramsOpt is empty
+            // these are for creating the body only
+            val (newParamSyms, newAuxSyms) = paramSyms match
+              case None => auxSyms match
+                case head :: next => (S(head), next.appended(extraSyms))
+                case Nil => (S(extraSyms), Nil)
+              case Some(value) => (paramSyms, auxSyms.appended(extraSyms))
+            
+            val paramArgs = newParamSyms.getOrElse(Nil).map(_.asPath)
 
-          // NOTE: The fake ctor was to support first-class classes.
-          // These are currently unused.
-          
-          /*
-          val plist = paramPlist match
-            case None => extraPlist :: PlainParamList(Nil) :: auxPlist
-            case Some(value) => extraPlist :: value :: auxPlist
+            inline def toPaths(l: List[Local]) = l.map(_.asPath)
+            
+            var curSym = TempSymbol(None, "tmp")
+            val inst = if c.paramsOpt.isDefined then
+              Instantiate(Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
+            else
+              Instantiate(c.sym.asPath, paramArgs)
+            
+            val initSym = curSym
+            var acc: Block => Block = blk => Assign(initSym, inst, blk)
+            for ps <- newAuxSyms do
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
+              curSym = TempSymbol(None, "tmp")
+              val thisSym = curSym
+              acc = acc.assign(thisSym, call)
+              // acc = blk => acc(Assign(curSym, call, blk))
+            val bod = acc.ret(curSym.asPath)
 
-          val fakeCtorDefn = FunDefn(
-            None, bms, plist, bod
-          )
-          */
+            inline def toPlist(ls: List[VarSymbol]) = PlainParamList(ls.map(s => Param(FldFlags.empty, s, N, Modulefulness.none)))
 
-          val paramSym2 = paramSyms.getOrElse(Nil)
-          val auxSym2 = auxSyms.flatMap(l => l)
-          val allSymsMp = (paramSym2 ++ auxSym2 ++ extraSyms).map(s => s -> VarSymbol(s.id)).toMap
-          val subst = new SymbolSubst():
-            override def mapVarSym(s: VarSymbol): VarSymbol = allSymsMp.get(s) match
-              case None => s
-              case Some(value) => value
+            val paramPlist = paramSyms.map(toPlist)
+            val auxPlist = auxSyms.map(toPlist)
+            val extraPlist = toPlist(extraSyms)
 
-          val headParams = paramPlist match
-            case None => extraPlist
-            case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
+            // NOTE: The fake ctor was to support first-class classes.
+            // These are currently unused.
+            
+            /*
+            val plist = paramPlist match
+              case None => extraPlist :: PlainParamList(Nil) :: auxPlist
+              case Some(value) => extraPlist :: value :: auxPlist
 
-          val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
-          val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
-          
-          // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
-          Lifted(lifted, extras ::: (auxCtorDefn :: Nil))
-        case c: ClsLikeDefn if modOrObj(c) => // module or object
-          // force it to be a class
-          val newK = c.k match
-            case syntax.Mod => syntax.Mod
-            case syntax.Obj => syntax.Cls
-            case _ => wat("unreachable", c.k)
-          
-          val newDef = c.copy(
-            k = newK, paramsOpt = N,
-            owner = N, auxParams = PlainParamList(extraParams) :: Nil
-          )
-          liftDefnsInCls(newDef, newCtx)
+            val fakeCtorDefn = FunDefn(
+              None, bms, plist, bod
+            )
+            */
 
+            val paramSym2 = paramSyms.getOrElse(Nil)
+            val auxSym2 = auxSyms.flatMap(l => l)
+            val allSymsMp = (paramSym2 ++ auxSym2 ++ extraSyms).map(s => s -> VarSymbol(s.id)).toMap
+            val subst = new SymbolSubst():
+              override def mapVarSym(s: VarSymbol): VarSymbol = allSymsMp.get(s) match
+                case None => s
+                case Some(value) => value
+
+            val headParams = paramPlist match
+              case None => extraPlist
+              case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
+
+            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
+            val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
+            
+            // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
+            Lifted(lifted, extras ::: (auxCtorDefn :: Nil))
         case _ => Lifted(d, Nil)
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] =

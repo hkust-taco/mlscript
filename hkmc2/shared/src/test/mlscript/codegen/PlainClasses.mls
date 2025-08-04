@@ -46,7 +46,7 @@ print("ok")
 //│ let Foo3;
 //│ Foo3 = class Foo2 {
 //│   constructor() {
-//│     Predef.print("hi")
+//│     Predef.print("hi");
 //│   }
 //│   toString() { return "Foo"; }
 //│ };
@@ -63,7 +63,7 @@ fun test() =
 //│   let Foo5, tmp;
 //│   Foo5 = class Foo4 {
 //│     constructor() {
-//│       Predef.print("hi")
+//│       Predef.print("hi");
 //│     }
 //│     toString() { return "Foo"; }
 //│   };
@@ -75,7 +75,7 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = class Foo4 {     constructor() {       runtime.checkCall(Predef.print("hi"))     }     toString() { return "Foo"; }   }
+//│ t = class Foo4 {     constructor() {       runtime.checkCall(Predef.print("hi"));     }     toString() { return "Foo"; }   }
 
 new t
 //│ JS (unsanitized):
@@ -129,7 +129,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     Predef.print("hello")
+//│     Predef.print("hello");
 //│   }
 //│   z1() {
 //│     return 5

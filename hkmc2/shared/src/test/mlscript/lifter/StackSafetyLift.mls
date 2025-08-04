@@ -34,6 +34,10 @@ hi(0)
 //│   }
 //│ };
 //│ Cont$func$hi$1.class = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│   #n$0;
+//│   #scrut$1;
+//│   #tmp$2;
+//│   #stackDelayRes$3;
 //│   constructor(pc) {
 //│     return (n$0, scrut$1, tmp$2, stackDelayRes$3) => {
 //│       let tmp;
@@ -123,6 +127,12 @@ sum(10000)
 //│   }
 //│ };
 //│ Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│   #n$0;
+//│   #scrut$1;
+//│   #tmp$2;
+//│   #tmp$3;
+//│   #curDepth$4;
+//│   #stackDelayRes$5;
 //│   constructor(pc) {
 //│     return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {
 //│       let tmp;

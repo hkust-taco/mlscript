@@ -376,14 +376,17 @@ final case class ValDefn(
   using either a function call or `new A.class`. The first parameter list will always be passed to `paramsOpt`,
   if it exists.
   
-  Private and public fields are explicitly defined using `let` and `val` in the class's constructor and are separate
-  from the parameters. For example:
+  Private and public fields are defined by the user using `let` and `val` in the class's constructor. Values in the
+  main parameter list will be automatically converted into fields, and will be public if the parameter is marked
+  `val`, i.e. class `A(val x)`, and private otherwise.
   
-  class A with
-    let privateField = 0
-    val publicField = 1
+  For example:
+  
+  class A(privateField0, val publicField0) with
+    let privateField1 = 0
+    val publicField1 = 0
     
-  In the codegen, `let` and `val` here are represented by an assignment to a member symbol and a term definition
+  In the codegen, private and public fields are initialized by an assignment to a member symbol and a term definition
   respectively. The symbols must match what is defined in `privateFields` and `publicFields`. 
   (An assignment to a flow symbol will be treated as a local symbol to the constructor, not a field assignment.)
 */

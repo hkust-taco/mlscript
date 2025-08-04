@@ -87,7 +87,7 @@ fun test(a) =
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ]);
 //│     }
 //│     toString() { return "C1(" + runtime.render(this.b) + ")"; }
 //│   };
@@ -100,7 +100,7 @@ fun test(a) =
 //│       Predef.print([
 //│         a,
 //│         this.b
-//│       ])
+//│       ]);
 //│     }
 //│     toString() { return "C2(" + runtime.render(this.b) + ")"; }
 //│   };
@@ -135,7 +135,7 @@ Foo(123)
 //│ Foo1.class = class Foo {
 //│   constructor(a) {
 //│     this.a = a;
-//│     this.foo()
+//│     this.foo();
 //│   }
 //│   foo() {
 //│     let bar, baz, tmp1;
@@ -172,7 +172,7 @@ Bar(1)
 //│     let tmp1;
 //│     this.x = x;
 //│     tmp1 = this.foo();
-//│     runtime.safeCall(tmp1())
+//│     runtime.safeCall(tmp1());
 //│   }
 //│   foo() {
 //│     return () => {

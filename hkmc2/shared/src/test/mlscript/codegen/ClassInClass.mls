@@ -34,7 +34,7 @@ data class Outer(a, b) with
 //│         tmp3 = Predef.print(this$Outer.a);
 //│         tmp4 = Predef.print(this.c);
 //│         tmp5 = this.i1(this$Outer.a);
-//│         Predef.print(tmp5)
+//│         Predef.print(tmp5);
 //│       }
 //│       i1(d) {
 //│         return [
@@ -49,7 +49,7 @@ data class Outer(a, b) with
 //│     this.i = tmp;
 //│     tmp1 = Predef.print(this.i.c);
 //│     tmp2 = runtime.safeCall(this.i.i1(1));
-//│     Predef.print(tmp2)
+//│     Predef.print(tmp2);
 //│   }
 //│   o1(c) {
 //│     return this.Inner(c)

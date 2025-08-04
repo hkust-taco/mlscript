@@ -139,7 +139,7 @@ data class Inner(c) with
 //│ Inner1.class = class Inner {
 //│   constructor(c) {
 //│     this.c = c;
-//│     Predef.print(this.c)
+//│     Predef.print(this.c);
 //│   }
 //│   i1(d) {
 //│     return this.c + d
@@ -198,7 +198,7 @@ class Foo(x, val y, z, val z, z) with
 //│     tmp14 = "z = " + this.#z1;
 //│     tmp15 = Predef.print(tmp14);
 //│     tmp16 = "this.z = " + this.z;
-//│     Predef.print(tmp16)
+//│     Predef.print(tmp16);
 //│   }
 //│   toString() { return "Foo(" + runtime.render(this.y) + ", " + runtime.render(this.z) + ")"; }
 //│ };

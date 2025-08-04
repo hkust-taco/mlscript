@@ -606,6 +606,7 @@ fun f(es, vs) =
 //│   return tmp19
 //│ };
 //│ A1 = class A {
+//│   #v$_$0;
 //│   constructor(v$_$0) {
 //│     this["v'$0"] = v$_$0;
 //│     this.fld = this["v'$0"];

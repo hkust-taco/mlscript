@@ -117,7 +117,7 @@ data class Cls(x) with
 //│     this.#x = tmp;
 //│     tmp1 = this.#x * 2;
 //│     this.#x1 = tmp1;
-//│     Predef.print(this.x, this.#x1)
+//│     Predef.print(this.x, this.#x1);
 //│   }
 //│   get foo() {
 //│     return this.#x;

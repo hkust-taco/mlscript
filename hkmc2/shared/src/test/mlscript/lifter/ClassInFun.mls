@@ -50,6 +50,11 @@ f() + f() + f()
 //│   }
 //│ };
 //│ Cont$handleBlock$h$1.class = class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
+//│   #h$0;
+//│   #tmp$1;
+//│   #tmp$2;
+//│   #tmp$3;
+//│   #tmp$4;
 //│   constructor(pc) {
 //│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
 //│       let tmp1;
@@ -129,6 +134,8 @@ f() + f() + f()
 //│   }
 //│ };
 //│ Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│   #h$0;
+//│   #tmp$1;
 //│   constructor(pc) {
 //│     return (h$0, tmp$1) => {
 //│       let tmp1;
@@ -226,6 +233,7 @@ f(1).get()
 //│   }
 //│ };
 //│ Test1.class = class Test {
+//│   #x$0;
 //│   constructor() {
 //│     return (x$0) => {
 //│       this.x$0 = x$0;
@@ -289,6 +297,7 @@ f(1, 2).get()
 //│   }
 //│ };
 //│ Test3.class = class Test2 {
+//│   #used1$0;
 //│   constructor(a) {
 //│     return (used1$0) => {
 //│       this.used1$0 = used1$0;
@@ -362,6 +371,7 @@ f(1, 2).get()
 //│   return tmp5
 //│ };
 //│ Test7 = class Test6 {
+//│   #used1$0;
 //│   constructor(used1$0) {
 //│     this.used1$0 = used1$0;
 //│   }
@@ -401,6 +411,7 @@ f(1)
 //│   }
 //│ };
 //│ A1.class = class A {
+//│   #f$capture$0;
 //│   constructor() {
 //│     return (f$capture$0) => {
 //│       this.f$capture$0 = f$capture$0;
@@ -461,6 +472,10 @@ f().foo()
 //│   }
 //│ };
 //│ Good1.class = class Good {
+//│   #x$1;
+//│   #y$2;
+//│   #z$3;
+//│   #f$capture$0;
 //│   constructor() {
 //│     return (x$1, y$2, z$3, f$capture$0) => {
 //│       this.x$1 = x$1;
@@ -491,6 +506,7 @@ f().foo()
 //│   }
 //│ };
 //│ Bad1.class = class Bad {
+//│   #f$capture$0;
 //│   constructor() {
 //│     return (f$capture$0) => {
 //│       this.f$capture$0 = f$capture$0;
