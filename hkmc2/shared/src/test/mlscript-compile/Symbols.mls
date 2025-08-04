@@ -1,7 +1,0 @@
-
-// Well-known symbols used by MLscript internally.
-object Symbols with ...
-
-// Each class should have a method defined at this symbol. The method should
-// return the class name and the value fields of the class.
-val constructorNames = Symbol()
