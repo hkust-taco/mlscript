@@ -296,6 +296,7 @@ renderAsStr of
 // | |___| | (_| \__ \__ \  __/\__ \
 //  \____|_|\__,_|___/___/\___||___/
 //
+// =================================
 
 object Singleton
 
@@ -329,3 +330,118 @@ open Stack
 
 renderAsStr of 1 :: 2 :: 3 :: 4
 //│ = "Cons(1, Cons(2, Cons(3, 4)))"
+
+class Origin with
+  val x = 0
+  val y = 0
+
+renderAsStr of new Origin
+//│ = "Origin {x: 0, y: 0}"
+
+class Point(x: Num, y: Num) with
+  val x = x
+  val y = y
+
+// Should we display the members?
+renderAsStr of new Point(0, 1)
+//│ = "Point()"
+
+class SelfRef with
+  val a = this
+  val b = 1
+
+renderAsStr of new SelfRef
+//│ = "(val ref'1 = SelfRef {a: ref'1, b: 1})"
+
+renderAsStr of
+  new Object with
+    val x = 0
+    fun y = 0
+//│ = "$anon {x: 0}"
+
+abstract class Shape
+
+data class Rectangle(x: Num, y: Num, w: Num, h: Num)
+
+renderAsStr of Shape
+//│ = "class Shape"
+
+renderAsStr of new Shape with
+  val x = 0
+//│ = "$anon {x: 0}"
+
+renderAsStr of Rectangle
+//│ = "fun Rectangle"
+
+renderAsStr of Rectangle(0, 0, 5, 5)
+//│ = "Rectangle(0, 0, 5, 5)"
+
+pattern Null = null
+
+renderAsStr of Null
+//│ = "pattern Null"
+
+renderAsStr of Null.class
+//│ = "pattern Null"
+
+declare class Iterator
+
+class RangeIterator(val start: Int, val end: Int) extends Iterator with
+  let current = start
+  fun next() =
+    if current < end then
+      let result = (done: false, value: current)
+      set current += 1
+      result
+    else
+      (done: true, value: undefined)
+
+renderAsStr of RangeIterator(0, 1)
+//│ = "RangeIterator(0, 1)"
+
+renderAsStr of RangeIterator(0, 5).toArray()
+//│ = "[0, 1, 2, 3, 4]"
+
+//  __  __ _
+// |  \/  (_)___  ___
+// | |\/| | / __|/ __|
+// | |  | | \__ \ (__
+// |_|  |_|_|___/\___|
+//
+// ===================
+
+renderAsStr of Object
+//│ = "class Object"
+
+renderAsStr of String
+//│ = "class String"
+
+renderAsStr of Symbol
+//│ = "class Symbol"
+
+renderAsStr of BigInt
+//│ = "class BigInt"
+
+renderAsStr of globalThis.FinalizationRegistry
+//│ = "class FinalizationRegistry"
+
+let asyncFun = globalThis.eval("async () => {}")
+//│ asyncFun = fun
+
+renderAsStr of asyncFun
+//│ = "fun"
+
+renderAsStr of Object.getPrototypeOf(asyncFun).constructor
+//│ = "class AsyncFunction"
+
+renderAsStr of renderAsStr
+//│ = "fun renderAsStr"
+
+renderAsStr of JSON
+//│ = "{}"
+
+renderAsStr of new RegExp("")
+//│ = "/(?:)/"
+
+renderAsStr of globalThis.Iterator
+//│ = "class Iterator"
