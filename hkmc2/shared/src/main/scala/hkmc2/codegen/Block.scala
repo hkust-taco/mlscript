@@ -376,9 +376,11 @@ final case class ValDefn(
   using either a function call or `new A.class`. The first parameter list will always be passed to `paramsOpt`,
   if it exists.
   
-  Private and public fields are defined by the user using `let` and `val` in the class's constructor. Values in the
-  main parameter list will be automatically converted into fields, and will be public if the parameter is marked
-  `val`, i.e. class `A(val x)`, and private otherwise.
+  Private and public fields are defined by the user using `let` and `val` in the class's constructor.
+  Each parameter in the main parameter list **defined by the user** will automatically have an asociated
+  public/private field. The field will be public if the parameter is marked `val`, i.e. class `A(val x)`, 
+  and private otherwise. Fields in the main parameter list created after lowering will not automatically
+  have a field created.
   
   For example:
   
