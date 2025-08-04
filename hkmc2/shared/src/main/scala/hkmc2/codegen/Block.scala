@@ -373,7 +373,7 @@ final case class ValDefn(
   
   with the difference being that they are not printed in the class's toString function. If paramsOpt is None,
   the class won't have a `.class` field and must be instantiated using `new`. Otherwise, it can be instantiated
-  using either a function call or `new A.class`. The first parameter list will always be passed to `paramsOpt`,
+  using either a function call or `new A` or even `new A.class` (the latter is the recommended way when done in JS). The first parameter list will always be passed to `paramsOpt`,
   if it exists.
   
   Private and public fields are defined by the user using `let` and `val` in the class's constructor.
