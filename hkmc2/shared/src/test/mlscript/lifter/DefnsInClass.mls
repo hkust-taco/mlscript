@@ -20,7 +20,6 @@ data class A(x) with
 //│   }
 //│ };
 //│ B1.class = class B {
-//│   #A$instance$0;
 //│   constructor(y) {
 //│     return (A$instance$0) => {
 //│       this.A$instance$0 = A$instance$0;

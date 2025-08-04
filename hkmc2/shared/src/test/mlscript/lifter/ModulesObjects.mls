@@ -32,11 +32,9 @@ fun foo(x, y) =
 //│   }
 //│ };
 //│ M3 = class M2 {
-//│   #x$1;
-//│   #foo$capture$0;
 //│   constructor(x$1, foo$capture$0) {
-//│     this.x$1 = x$1;
 //│     this.foo$capture$0 = foo$capture$0;
+//│     this.x$1 = x$1;
 //│   }
 //│   foo2() {
 //│     this.foo$capture$0.y0$ = 2;
@@ -71,7 +69,6 @@ data class A(x) with
 //│ JS (unsanitized):
 //│ let M5, A1;
 //│ M5 = class M4 {
-//│   #A$instance$0;
 //│   constructor(A$instance$0) {
 //│     this.A$instance$0 = A$instance$0;
 //│   }
@@ -209,7 +206,6 @@ M.A(2).newB.newA_B(3).newB.get
 //│   }
 //│ };
 //│ B2.class = class B1 {
-//│   #A$instance$0;
 //│   constructor() {
 //│     return (A$instance$0) => {
 //│       this.A$instance$0 = A$instance$0;

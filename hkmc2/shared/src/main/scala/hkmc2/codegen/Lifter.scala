@@ -158,11 +158,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val prevFnLocals: FreeVars = FreeVars.empty,
     val prevClsDefns: List[ClsLikeDefn] = Nil,
     val curModules: List[ClsLikeDefn] = Nil,
-    val capturePaths: Map[BlockMemberSymbol, Path] = Map.empty,
+    val capturePaths: Map[BlockMemberSymbol, LocalPath] = Map.empty,
     val bmsReqdInfo: Map[BlockMemberSymbol, LiftedInfo] = Map.empty, // required captures
-    val ignoredBmsPaths: Map[BlockMemberSymbol, Path] = Map.empty,
-    val localPaths: Map[Local, Local] = Map.empty,
-    val isymPaths: Map[InnerSymbol, Local] = Map.empty,
+    val ignoredBmsPaths: Map[BlockMemberSymbol, LocalPath] = Map.empty,
+    val localPaths: Map[Local, LocalPath] = Map.empty,
+    val isymPaths: Map[InnerSymbol, LocalPath] = Map.empty,
     val replacedDefns: Map[BlockMemberSymbol, Defn] = Map.empty,
   ):
     // gets the function to which a local belongs
@@ -190,26 +190,41 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def addClsDefn(c: ClsLikeDefn) = copy(prevClsDefns = c :: prevClsDefns)
     def addLocalCaptureSyms(m: Map[Local, VarSymbol]) = copy(localCaptureSyms = localCaptureSyms ++ m)
     def getBmsReqdInfo(sym: BlockMemberSymbol) = bmsReqdInfo.get(sym)
-    def replCapturePaths(paths: Map[BlockMemberSymbol, Path]) = copy(capturePaths = paths)
-    def addCapturePath(src: BlockMemberSymbol, path: Path) = copy(capturePaths = capturePaths + (src -> path))
+    def replCapturePaths(paths: Map[BlockMemberSymbol, LocalPath]) = copy(capturePaths = paths)
+    def addCapturePath(src: BlockMemberSymbol, path: LocalPath) = copy(capturePaths = capturePaths + (src -> path))
     def addBmsReqdInfo(mp: Map[BlockMemberSymbol, LiftedInfo]) = copy(bmsReqdInfo = bmsReqdInfo ++ mp)
-    def replLocalPaths(m: Map[Local, Local]) = copy(localPaths = m)
-    def replIgnoredBmsPaths(m: Map[BlockMemberSymbol, Path]) = copy(ignoredBmsPaths = m)
-    def replIsymPaths(m: Map[InnerSymbol, Local]) = copy(isymPaths = m)
-    def addLocalPaths(m: Map[Local, Local]) = copy(localPaths = localPaths ++ m)
-    def addLocalPath(target: Local, path: Local) = copy(localPaths = localPaths + (target -> path))
-    def addIgnoredBmsPaths(m: Map[BlockMemberSymbol, Path]) = copy(ignoredBmsPaths = ignoredBmsPaths ++ m)
-    def addIsymPath(isym: InnerSymbol, l: Local) = copy(isymPaths = isymPaths + (isym -> l))
-    def addIsymPaths(mp: Map[InnerSymbol, Local]) = copy(isymPaths = isymPaths ++ mp)
+    def replLocalPaths(m: Map[Local, LocalPath]) = copy(localPaths = m)
+    def replIgnoredBmsPaths(m: Map[BlockMemberSymbol, LocalPath]) = copy(ignoredBmsPaths = m)
+    def replIsymPaths(m: Map[InnerSymbol, LocalPath]) = copy(isymPaths = m)
+    def addLocalPaths(m: Map[Local, LocalPath]) = copy(localPaths = localPaths ++ m)
+    def addLocalPath(target: Local, path: LocalPath) = copy(localPaths = localPaths + (target -> path))
+    def addIgnoredBmsPaths(m: Map[BlockMemberSymbol, LocalPath]) = copy(ignoredBmsPaths = ignoredBmsPaths ++ m)
+    def addIsymPath(isym: InnerSymbol, l: LocalPath) = copy(isymPaths = isymPaths + (isym -> l))
+    def addIsymPaths(mp: Map[InnerSymbol, LocalPath]) = copy(isymPaths = isymPaths ++ mp)
     def addreplacedDefns(mp: Map[BlockMemberSymbol, Defn]) = copy(replacedDefns = replacedDefns ++ mp)
     def inModule(defn: ClsLikeDefn) = copy(curModules = defn :: curModules)
     def flushModules = 
       // called when we are lifted out while in some modules, so we need to add the modules' isym paths
-      copy(curModules = Nil).addIsymPaths(curModules.map(d => d.isym -> d.sym).toMap)
+      copy(curModules = Nil).addIsymPaths(curModules.map(d => d.isym -> LocalPath.Sym(d.sym)).toMap)
   
   object LifterCtx:
     def empty = LifterCtx()
     def withLocals(u: UsedLocalsMap) = empty.copy(usedLocals = u)
+    
+  enum LocalPath:
+    case Sym(l: Local)
+    case PubField(isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol, sym: BlockMemberSymbol)
+    
+    def read = this match
+      case Sym(l) => l.asPath
+      case PubField(isym, sym) => Select(isym.asPath, Tree.Ident(sym.nme))(S(sym))
+      
+    def asArg = read.asArg
+    
+    def assign(value: Result, rest: Block) = this match
+      case Sym(l) => Assign(l, value, rest)
+      case PubField(isym, sym) => AssignField(isym.asPath, Tree.Ident(sym.nme), value, rest)(S(sym))
+    
     
   def isHandlerClsPath(p: Path) = handlerPaths match
     case None => false
@@ -609,8 +624,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       
       val remaining = rewritten match
         case Assign(lhs: InnerSymbol, rhs, rest) => ctx.getIsymPath(lhs) match
-          case Some(value) if !belongsToCtor(lhs) => 
-            Assign(value, applyResult(rhs), applyBlock(rest))
+          case Some(value) if !belongsToCtor(lhs) =>
+            value.assign(applyResult(rhs), applyBlock(rest))
           case _ => super.applyBlock(rewritten)
 
         case Assign(t: TermSymbol, rhs, rest) if t.owner.isDefined =>
@@ -622,21 +637,21 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                   msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
                   N, Diagnostic.Source.Compilation
                 ))
-              AssignField(value.asPath, t.id, applyResult(rhs), applyBlock(rest))(N)
+              AssignField(value.read, t.id, applyResult(rhs), applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
         
         case Assign(lhs, rhs, rest) => ctx.getLocalCaptureSym(lhs) match
           case Some(captureSym) => 
-            AssignField(ctx.getLocalClosPath(lhs).get, captureSym.id, applyResult(rhs), applyBlock(rest))(N)
+            AssignField(ctx.getLocalClosPath(lhs).get.read, captureSym.id, applyResult(rhs), applyBlock(rest))(N)
           case None => ctx.getLocalPath(lhs) match
             case None => super.applyBlock(rewritten)
-            case Some(value) => Assign(value, applyResult(rhs), applyBlock(rest))
+            case Some(value) => value.assign(applyResult(rhs), applyBlock(rest))
         
         // rewrite ValDefns (in ctors)
         case Define(d: ValDefn, rest: Block) if d.owner.isDefined =>
           ctx.getIsymPath(d.owner.get) match
             case Some(value) if !belongsToCtor(d.owner.get) =>
-              AssignField(value.asPath, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(S(d.sym))
+              AssignField(value.read, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(S(d.sym))
             case _ => super.applyBlock(rewritten)
         
         // rewrite module/object definitions
@@ -663,7 +678,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       // These two cases rewrites `this.whatever` when referencing an outer class's fields.
       case Value.Ref(l: InnerSymbol) =>
         ctx.getIsymPath(l) match
-        case Some(value) if !belongsToCtor(l) => Value.Ref(value)
+        case Some(value) if !belongsToCtor(l) => value.read
         case _ => super.applyPath(p)
       case Value.Ref(t: TermSymbol) if t.owner.isDefined =>
         ctx.getIsymPath(t.owner.get) match
@@ -674,7 +689,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
-            Select(value.asPath, t.id)(N)
+            Select(value.read, t.id)(N)
           case _ => super.applyPath(p)
       
       // Rewrites this.className.class to reference the top-level definition
@@ -687,30 +702,30 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       // from the objects BlockMemberSymbol to that new symbol.
       case s @ Select(qual, ident) => 
         s.symbol.flatMap(ctx.getLocalPath) match
-        case Some(value: MemberSymbol[?]) => Select(qual, Tree.Ident(value.nme))(S(value))
+        case Some(LocalPath.Sym(value: MemberSymbol[?])) => Select(qual, Tree.Ident(value.nme))(S(value))
         case _ => super.applyPath(p) 
 
       // This is to rewrite references to classes that are not lifted (when their BlockMemberSymbol
       // reference is passed as function parameters).
       case RefOfBms(l) if ctx.ignored(l) && ctx.isRelevant(l) => ctx.getIgnoredBmsPath(l) match
-        case Some(value) => value
+        case Some(value) => value.read
         case None => super.applyPath(p)
       
       // This rewrites naked references to locals. If a function is in a capture, then we select that value
       // from the capture; otherwise, we see if that local is passed directly as a parameter to this defn.
       case Value.Ref(l) => ctx.getLocalCaptureSym(l) match
         case Some(captureSym) => 
-          Select(ctx.getLocalClosPath(l).get, captureSym.id)(N)
+          Select(ctx.getLocalClosPath(l).get.read, captureSym.id)(N)
         case None => ctx.getLocalPath(l) match
-          case Some(value) => Value.Ref(value)
+          case Some(value) => value.read
           case None => super.applyPath(p)
       case _ => super.applyPath(p)
 
   def getCallArgs(sym: BlockMemberSymbol, ctx: LifterCtx) =
     val info = ctx.getBmsReqdInfo(sym).get
-    val localsArgs = info.reqdVars.map(s => ctx.getLocalPath(s).get.asPath.asArg)
+    val localsArgs = info.reqdVars.map(s => ctx.getLocalPath(s).get.asArg)
     val capturesArgs = info.reqdCaptures.map(ctx.getCapturePath(_).get.asArg)
-    val iSymArgs = info.reqdInnerSyms.map(ctx.getIsymPath(_).get.asPath.asArg)
+    val iSymArgs = info.reqdInnerSyms.map(ctx.getIsymPath(_).get.asArg)
     val bmsArgs = info.reqdBms.map(ctx.getIgnoredBmsPath(_).get.asArg)
     bmsArgs ++ iSymArgs ++ localsArgs ++ capturesArgs
   
@@ -728,66 +743,61 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case c: ClsLikeDefn => liftDefnsInCls(c, ctx)
       case _ => Lifted(d, Nil)
     case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms)) =>
-      val createSym = d match
-        case d: ClsLikeDefn =>
-          // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
-          val fresh = FreshInt()
-          (nme: String) =>
-            val id = fresh.make
-            (
-              VarSymbol(Tree.Ident(nme + "$" + id)),
-              TermSymbol(syntax.ParamBind, S(d.isym), Tree.Ident(nme + "$" + id))
-            )
-        case _ => (nme: String) =>
-          val vsym = VarSymbol(Tree.Ident(nme))
-          (vsym, vsym)
-      
-      val capturesSymbols = includedCaptures.map: sym =>
-        (sym, createSym(sym.nme + "$capture"))
+        
+      def createSymbolsUpdateCtx[T <: LocalPath](createSym: String => (VarSymbol, T)) =
+        val capturesSymbols = includedCaptures.map: sym =>
+          (sym, createSym(sym.nme + "$capture"))
 
-      val localsSymbols = includedLocals.map: sym =>
-        (sym, createSym(sym.nme))
+        val localsSymbols = includedLocals.map: sym =>
+          (sym, createSym(sym.nme))
 
-      val isymSymbols = clsCaptures.map: sym =>
-        (sym, createSym(sym.nme + "$instance"))
+        val isymSymbols = clsCaptures.map: sym =>
+          (sym, createSym(sym.nme + "$instance"))
 
-      val bmsSymbols = reqdBms.map: sym =>
-        (sym, createSym(sym.nme + "$member"))
+        val bmsSymbols = reqdBms.map: sym =>
+          (sym, createSym(sym.nme + "$member"))
 
-      val extraParamsCaptures = capturesSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
-      val newCapturePaths = capturesSymbols.map: // mapping from sym to param symbol
-          case (d, (_, sym)) => d -> sym.asPath
-        .toMap
+        val extraParamsCaptures = capturesSymbols.map: // parameter list
+          case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
+        val newCapturePaths = capturesSymbols.map: // mapping from sym to param symbol
+            case (d, (_, lp)) => d -> lp
+          .toMap
 
-      val extraParamsLocals = localsSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
-      val newLocalsPaths = localsSymbols.map: // mapping from sym to param symbol
-          case (d, (_, sym)) => d -> sym
-        .toMap
+        val extraParamsLocals = localsSymbols.map: // parameter list
+          case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
+        val newLocalsPaths = localsSymbols.map: // mapping from sym to param symbol
+            case (d, (_, lp)) => d -> lp
+          .toMap
 
-      val extraParamsIsyms = isymSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
-      val newIsymPaths = isymSymbols.map: // mapping from sym to param symbol
-          case (d, (_, sym)) => d -> sym
-        .toMap
+        val extraParamsIsyms = isymSymbols.map: // parameter list
+          case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
+        val newIsymPaths = isymSymbols.map: // mapping from sym to param symbol
+            case (d, (_, lp)) => d -> lp
+          .toMap
 
-      val extraParamsBms = bmsSymbols.map: // parameter list
-        case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
-      val newBmsPaths = bmsSymbols.map: // mapping from sym to param symbol
-          case (d, (_, sym)) => d -> sym.asPath
-        .toMap
+        val extraParamsBms = bmsSymbols.map: // parameter list
+          case (d, (sym, _)) => Param(FldFlags.empty, sym, N, Modulefulness.none)
+        val newBmsPaths = bmsSymbols.map: // mapping from sym to param symbol
+            case (d, (_, lp)) => d -> lp
+          .toMap
 
-      val extraParams = extraParamsBms ++ extraParamsIsyms ++ extraParamsLocals ++ extraParamsCaptures
+        val extraParams = extraParamsBms ++ extraParamsIsyms ++ extraParamsLocals ++ extraParamsCaptures
 
-      val newCtx = ctx
-        .replCapturePaths(newCapturePaths)
-        .replLocalPaths(newLocalsPaths)
-        .addIsymPaths(newIsymPaths)
-        .replIgnoredBmsPaths(newBmsPaths)
+        val newCtx = ctx
+          .replCapturePaths(newCapturePaths)
+          .replLocalPaths(newLocalsPaths)
+          .addIsymPaths(newIsymPaths)
+          .replIgnoredBmsPaths(newBmsPaths)
+        
+        (extraParams, newCtx, capturesSymbols ++ localsSymbols ++ isymSymbols ++ bmsSymbols)
 
       d match
         case f: FunDefn =>
+          val createSym = (nme: String) =>
+            val vsym = VarSymbol(Tree.Ident(nme))
+            (vsym, LocalPath.Sym(vsym))
+          val (extraParams, newCtx, _) = createSymbolsUpdateCtx(createSym)
+          
           // create second param list with different symbols
           val extraParamsCpy = extraParams.map(p => p.copy(sym = VarSymbol(p.sym.id)))
 
@@ -816,16 +826,27 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
           Lifted(mainDefn, auxDefn :: extras)
         case c: ClsLikeDefn =>
+          val createSym: String => (VarSymbol, LocalPath.PubField) = 
+            // due to the possibility of capturing a TempSymbol in HandlerLowering, it is necessary to generate a discriminator
+            val fresh = FreshInt()
+            (nme: String) =>
+              val id = fresh.make
+              (
+                VarSymbol(Tree.Ident(nme + "$" + id)),
+                LocalPath.PubField(c.isym, BlockMemberSymbol(nme + "$" + id, Nil, true))
+              )
+          val (extraParams, newCtx, flds) = createSymbolsUpdateCtx(createSym)
+          
           // add aux params, private fields, update preCtor
           val newAuxParams = c.auxParams.appended(PlainParamList(extraParams))
           
-          val privFieldsMap = extraParams.map:
-              case p => p.sym -> TermSymbol(syntax.MutVal, S(c.isym), p.sym.id)
+          val pubFieldsPairs = flds.map:
+            case (_, (vs, LocalPath.PubField(isym, sym))) => vs -> sym
           
-          val newPrivFields = c.privateFields ::: privFieldsMap.map(_._2)
+          val newPubFields = c.publicFields ::: pubFieldsPairs.map(_._2)
             
-          val newCtor = privFieldsMap.foldRight(c.ctor):
-            case ((sym, ts), blk) => Assign(ts, sym.asPath, blk)
+          val newCtor = pubFieldsPairs.foldRight(c.ctor):
+            case ((sym, bms), blk) => Define(ValDefn(S(c.isym), syntax.MutVal, bms, sym.asPath), blk)
             
           if modOrObj(c) then // module or object
             // force it to be a class
@@ -837,7 +858,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             val newDef = c.copy(
               k = newK, paramsOpt = N,
               owner = N, auxParams = PlainParamList(extraParams) :: Nil,
-              privateFields = newPrivFields,
+              publicFields = newPubFields,
               ctor = newCtor
             )
             liftDefnsInCls(newDef, newCtx)
@@ -846,7 +867,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             val newDef = c.copy(
               owner = N, 
               auxParams = newAuxParams,
-              privateFields = newPrivFields,
+              publicFields = newPubFields,
               ctor = newCtor
             )
             
@@ -936,10 +957,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val allCtorDefns = preCtorDefns ++ ctorDefns
     val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctxx.ignored(d.sym))
 
-    val nestedClsPaths: Map[Local, Local] = ctorIncluded.map:
+    val nestedClsPaths: Map[Local, LocalPath] = ctorIncluded.map:
         case c: ClsLikeDefn if modOrObj(c) => ctxx.modObjLocals.get(c.sym) match
-          case Some(sym) => S(c.sym -> sym)
-          case _ => S(c.sym -> c.sym)
+          case Some(sym) => S(c.sym -> LocalPath.Sym(sym))
+          case _ => S(c.sym -> LocalPath.Sym(c.sym))
         case _ => None
       .collect:
         case Some(x) => x
@@ -947,12 +968,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     
     val newCtx_ = ctxx
       .addLocalPaths(nestedClsPaths)
-      .addLocalPaths(getVars(c).map(s => s -> s).toMap)
-      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> d.sym.asPath).toMap)
+      .addLocalPaths(getVars(c).map(s => s -> LocalPath.Sym(s)).toMap)
+      .addIgnoredBmsPaths(ctorIgnored.map(d => d.sym -> LocalPath.Sym(d.sym)).toMap)
 
     val newCtx = c.k match
       case syntax.Mod if !ctx.ignored(c.sym) => newCtx_
-      case _ => newCtx_.addIsymPath(c.isym, c.isym)
+      case _ => newCtx_.addIsymPath(c.isym, LocalPath.Sym(c.isym))
     
     val ctorDefnsLifted = ctorIncluded.flatMap: defn =>
       val Lifted(liftedDefn, extraDefns) = liftOutDefnCont(c, defn, newCtx.flushModules)
@@ -1008,10 +1029,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
     val (ignored, included) = nested.partition(d => ctx.ignored(d.sym))
 
-    val modPaths: Map[Local, Local] = nested.map:
+    val modPaths: Map[Local, LocalPath] = nested.map:
         case c: ClsLikeDefn if modOrObj(c) => ctx.modObjLocals.get(c.sym) match
-          case Some(sym) => S(c.sym -> sym)
-          case _ => S(c.sym -> c.sym)
+          case Some(sym) => S(c.sym -> LocalPath.Sym(sym))
+          case _ => S(c.sym -> LocalPath.Sym(c.sym))
         case _ => None
       .collect:
         case Some(x) => x
@@ -1022,10 +1043,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val captureSym = FlowSymbol("capture")
     val captureCtx = ctx
       .addLocalCaptureSyms(varsMap) // how to access locals via the capture class from now on
-      .addCapturePath(f.sym, captureSym.asPath) // the path to this function's capture
-      .addLocalPaths((thisVars.vars.toSet -- thisVars.reqCapture).map(s => s -> s).toMap)
+      .addCapturePath(f.sym, LocalPath.Sym(captureSym)) // the path to this function's capture
+      .addLocalPaths((thisVars.vars.toSet -- thisVars.reqCapture).map(s => s -> LocalPath.Sym(s)).toMap)
       .addLocalPaths(modPaths)
-      .addIgnoredBmsPaths(ignored.map(d => d.sym -> d.sym.asPath).toMap)
+      .addIgnoredBmsPaths(ignored.map(d => d.sym -> LocalPath.Sym(d.sym)).toMap)
     val nestedCtx = captureCtx.addFnLocals(captureCtx.usedLocals(f.sym))
 
     // lift out the nested defns
