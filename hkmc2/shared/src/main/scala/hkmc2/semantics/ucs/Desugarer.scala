@@ -6,7 +6,7 @@ import syntax.{BracketKind, Keyword, Literal, Tree}, Tree.*
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import utils.TraceLogger
-import Keyword.{as, and, `do`, `else`, is, let, `then`, where}
+import Keyword.{`as`, `and`, `or`, `do`, `else`, is, let, `then`, where}
 import collection.mutable.{Buffer, HashMap, SortedSet}
 import Elaborator.{Ctx, Ctxl, State, UnderCtx, ctx}
 import scala.annotation.targetName
@@ -53,7 +53,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
    */
   object `~>`:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case lhs and rhs => S((lhs, L(rhs)))
+      case lhs `and` rhs => S((lhs, L(rhs)))
       case lhs `then` rhs => kwLocSets._2 ++= tree.toLoc; S((lhs, R(rhs)))
       case lhs `do` rhs => kwLocSets._1 ++= tree.toLoc; S((lhs, R(rhs)))
       case _ => N
@@ -156,7 +156,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         ):
           nominate(ctx, finish(term(headCoda)(using ctx))):
             expandMatch(_, headPattern, tailSplit)(fallback)
-
+  
   private def patternSplitShorthands(tree: Tree, scrutSymbol: BlockLocalSymbol): Split => Sequel = tree match
     case blk: Block => blk.desugStmts match
       case Nil => lastWords("encountered empty block")
@@ -183,7 +183,6 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
   def termSplit(trees: Ls[Tree], finish: Term => Term): Split => Sequel =
     trees.foldRight(default): (t, elabFallback) =>
       t match
-      case LetLike(`let`, ident @ Ident(_), N, N) => ???
       case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
         pre = s"termSplit: let ${ident.name} = $termTree",
         post = (res: Split) => s"termSplit: let >>> $res"
@@ -277,7 +276,6 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
             val ident = pat match // TODO handle patterns and rm special cases
               case ident: Ident => ident
               case und: Under => new Ident("_").withLocOf(und)
-              case _ => ???
             termTree match
             case S(termTree) =>
               val sym = VarSymbol(ident)
@@ -346,11 +344,15 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
   ):
     type TT = (Tree, Tree)
     def go(tree: Tree, acc: TT => ::[TT]): () => ::[TT] = tree match
-      case lhs and rhs  => go(lhs, ::(_, go(rhs, acc)()))
-      case scrut is pat => () => acc((scrut, pat))
-      case test         => () => acc((test, Tree.BoolLit(true)))
+      case lhs `and` rhs  => go(lhs, ::(_, go(rhs, acc)()))
+      case lhs `or` rhs   =>
+        raise(ErrorReport(
+          msg"Logical `or` is not yet supported." -> tree.toLoc :: Nil))
+        go(lhs, ::(_, go(rhs, acc)())) // FIXME: this is currently copy-pasted from the `and` case
+      case scrut `is` pat => () => acc((scrut, pat))
+      case test           => () => acc((test, Tree.BoolLit(true)))
     go(tree, ::(_, Nil))()
-
+  
   /** Desugar a _pattern split_ (PS) into a _split_ of core abstract syntax.
    *  The scrutinee has been already elaborated when this method is called.
    *  @param tree the `Tree` representing the pattern split
@@ -377,6 +379,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           val sym = VarSymbol(ident)
           val fallbackCtx = ctx + (ident.name -> sym)
           Split.Let(sym, term(termTree)(using ctx), elabFallback(backup)(fallbackCtx))
+        case N =>
+          raise(ErrorReport(msg"Pattern matching with `let` must have a term." -> branch.toLoc :: Nil))
+          backup
       case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
         pre = s"patternSplit (do) <<< $computation",
         post = (res: Split) => s"patternSplit: else >>> $res"
@@ -468,7 +473,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       // A single wildcard pattern.
       case Under() => fallback => ctx => sequel(ctx) ++ fallback
       // Alias pattern
-      case pat as (alias @ Ident(_)) => fallback =>
+      case pat `as` (alias @ Ident(_)) => fallback =>
         val aliasSymbol = VarSymbol(alias)
         val inner = (ctx: Ctx) =>
           val ctxWithAlias = ctx + (alias.name -> aliasSymbol)
@@ -489,14 +494,14 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         // 1. A fixed number of leading patterns.
         // 2. A variable number of middle patterns indicated by `..`.
         // 3. A fixed number of trailing patterns.
-        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Opt[Tree], Ls[Tree])])]((Nil, N)):
-          case ((lead, N), Spread(_, _, patOpt)) => (lead, S((patOpt, Nil)))
+        val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Keyword.Ellipsis, Opt[Tree], Ls[Tree])])]((Nil, N)):
+          case ((lead, N), Spread(kw, _, patOpt)) => (lead, S((kw, patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
-          case ((lead, S((rest, last))), pat) => (lead, S((rest, last :+ pat)))
+          case ((lead, S((kw: Keyword.Ellipsis, rest, last))), pat) => (lead, S((kw, rest, last :+ pat)))
         // `wrap`: add let bindings for tuple elements
         // `matches`: pairs of patterns and symbols to be elaborated
         val (wrapRest, restMatches) = rest match
-          case S((rest, last)) =>
+          case S((kw, rest, last)) =>
             val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
               .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
                 case ((wrapInner, matches), (pat, lastIndex)) =>
@@ -505,22 +510,28 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
                   (wrap, (sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
+            val sliceFn = kw match
+              case Keyword.`..` => tupleLazySlice
+              case Keyword.`...` => tupleSlice
             rest match
               case N => (wrapLast, lastMatches)
               case S(pat) =>
                 val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
-                  Split.Let(sym, app(tupleSlice, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                  Split.Let(sym, app(sliceFn, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
                 (wrap, (sym, pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
         val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
           case ((pat, i), (wrapInner, matches)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
-            val wrap = (split: Split) => Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
+            val wrap = (split: Split) =>
+              // TODO: Changing from the following line in #318 breaks some LLIR difftests (marked :todo)
+              // Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
+              Split.Let(sym, callTupleGet(ref, i, sym), wrapInner(split))
             (wrap, (sym, pat) :: matches)
         Branch(
           ref,
-          Pattern.Tuple(lead.length + rest.fold(0)(_._2.length), rest.isDefined),
+          Pattern.Tuple(lead.length + rest.fold(0)(_._3.length), rest.isDefined),
           // The outermost is a tuple, so pattern arguments are not possible.
           wrap(subMatches(matches.map { case (s, t) => (s, t, N) }, sequel)(Split.End)(ctx))
         ) ~: fallback
@@ -622,8 +633,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
    *  @param matches a list of pairs consisting of a scrutinee and a pattern
    *  @param sequel the innermost split
    */
-  def subMatches(matches: Ls[(scrutinee : BlockLocalSymbol, pattern : Tree, split : Opt[DeBrujinSplit])],
-                 sequel: Sequel): Split => Sequel = matches match
+  def subMatches
+        (matches: Ls[(scrutinee: BlockLocalSymbol, pattern: Tree, split: Opt[DeBrujinSplit])], sequel: Sequel)
+        : Split => Sequel = matches match
     case Nil => _ => ctx => trace(
       pre = s"subMatches (done) <<< Nil",
       post = (r: Split) => s"subMatches >>> ${r.showDbg}"

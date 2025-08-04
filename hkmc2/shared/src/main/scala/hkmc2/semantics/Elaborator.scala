@@ -140,6 +140,7 @@ object Elaborator:
       val Function = assumeBuiltinCls("Function")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")
+      val TypedArray = assumeBuiltinCls("TypedArray")
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleSymbol):
@@ -167,7 +168,7 @@ object Elaborator:
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
-      val virtualClasses = Set(Int, Num, Str, Bool)
+      val virtualClasses = Set(Int, Num, Str, Bool, TypedArray)
   
   object Ctx:
     abstract class Elem:
@@ -247,7 +248,8 @@ object Elaborator:
         .toMap
       baseBuiltins ++ aliasOps.map:
         case (alias, base) => alias -> baseBuiltins(base)
-    val seqSymbol = TermSymbol(ImmutVal, N, Ident(";"))
+    val andSymbol = builtinOpsMap("&&")
+    val orSymbol = builtinOpsMap("||")
     def init(using State): Ctx = Ctx.empty.copy(env = Map(
       "globalThis" -> globalThisSymbol,
     ))
@@ -478,7 +480,7 @@ extends Importer:
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       block(tree :: Nil, hasResult = false)._1
-    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and`, rhs) =>
+    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${Split.display(des)}")
@@ -1280,7 +1282,8 @@ extends Importer:
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
             isSpd match
-            case S(spdKnd) =>
+            case S(eagerSpd) =>
+              if !eagerSpd then raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.nonEmpty then
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
               (ParamList(flags, acc.reverse, S(p)), newCtx)

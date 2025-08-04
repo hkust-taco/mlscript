@@ -82,10 +82,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol)
   
   def argument(a: Arg)(using Raise, Scope): Document =
-    if a.spread then doc"...${result(a.value)}" else result(a.value)
+    val spd = a.spread match
+      case S(true) => "..."
+      case S(false) => s"$runtimeVar.Tuple.split, "
+      case N => ""
+    doc"${spd}${result(a.value)}"
   
   def operand(a: Arg)(using Raise, Scope): Document =
-    if a.spread then die else subexpression(a.value)
+    if a.spread.nonEmpty then die else subexpression(a.value)
   
   def subexpression(r: Result)(using Raise, Scope): Document = r match
     case _: Value.Lam => doc"(${result(r)})"
@@ -149,12 +153,18 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case N => s"[${makeStringLiteral(name)}]"
       }"
     case DynSelect(qual, fld, ai) =>
-      doc"${result(qual)}[${result(fld)}]"
+      if ai
+      then doc"${result(qual)}.at(${result(fld)})"
+      else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(cls, as) =>
       doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
     case Value.Arr(es) if es.isEmpty => doc"[]"
     case Value.Arr(es) =>
-      doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
+      val lazyConcat = es.exists(!_.spread.getOrElse(true))
+      if lazyConcat then
+       doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
+      else
+       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
     case Value.Rcd(flds) =>
       doc"{ #  #{ ${
         flds.map:
@@ -229,15 +239,21 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   val nme = scp.allocateName(fld)
                   doc" # $mtdPrefix#$nme;"
                 .mkDocument(doc"")
-            val preCtorCode = ctorAuxParams.flatMap(ps => ps).foldLeft(body(preCtor, endSemi = true)):
-              case (acc, (sym, nme)) =>
-                doc"$acc # this${fieldSelect(sym.name)} = $nme;"
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = auxParams.nonEmpty)}"
+            val preCtorCode = body(preCtor, true)
+            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}"
+            
+            // If there are no ctor params, pop one param list off the aux params
+            val (newCtorAuxParams, initialCtorParams) = paramsOpt match
+              case None => ctorAuxParams match
+                case head :: next => (next, head)
+                case Nil => (ctorAuxParams, Nil)
+              
+              case Some(_) => (ctorAuxParams, ctorParams)
 
-            val ctorAux = if auxParams.isEmpty then
+            val ctorAux = if newCtorAuxParams.isEmpty then
               ctorCode
             else
-              val pss = ctorAuxParams.map(_.map(_._2))
+              val pss = newCtorAuxParams.map(_.map(_._2))
               val newCtorCode = doc"$ctorCode # return this;"
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
@@ -257,7 +273,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val ctorOrStatic = if isModule
               then doc"static"
               else doc"constructor(${
-                  ctorParams.unzip._2.mkDocument(", ")
+                  initialCtorParams.unzip._2.mkDocument(", ")
                 })"
             val clsJS = doc"class ${scope.lookup_!(isym)}${
                 par.map(p => s" extends ${result(p)}").getOrElse("")
@@ -317,19 +333,18 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 case Some(value) => value :: auxParams
               
               val fun = paramsAll match
-                case ps_ :: pss_ =>
+                case ps_ :: pss_ if paramsOpt.isDefined =>
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End())
                   val pss = pss_.map(setupFunction(N, _, End())._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val extraBrace = if paramsOpt.isDefined then "" else "()"
-                  val bod = braced(doc" # return new ${sym.nme}.class$extraBrace$paramsDoc;")
+                  val bod = braced(doc" # return new ${sym.nme}.class$paramsDoc;")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
                   val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
                   val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
                   S(doc"function $nme($ps) ${ funBodRet }")
-                case Nil => N
+                case _ => N
               
               ownr match
               case S(owner) =>
@@ -372,8 +387,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.Int => doc"globalThis.Number.isInteger($sd)"
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
           case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
+          case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
           case _ => doc"$sd instanceof ${result(pth)}"
-        case Case.Tup(len, inf) => doc"globalThis.Array.isArray($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
+        case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(n, safe = false) =>
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
         case Case.Field(n, safe = true) =>

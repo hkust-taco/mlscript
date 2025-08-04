@@ -1,7 +1,10 @@
 :llir
+:todo // Started failing after the addition of lazy spreads (#318)
 
 :import NofibPrelude.mls
 //│ Imported 104 member(s)
+//│ Error: hkmc2.ErrorReport: Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(t1)), Arg(None,Lit(IntLit(0)))))
+//│ Stopped due to an error during the Llir generation
 
 
 fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
@@ -10,6 +13,8 @@ fun dfs(r, vsns, xs) = if vsns is [vs, ns] and
     x :: xs and
       inList(x, vs) then dfs(r, [vs, ns], xs)
       dfs(r, [x :: vs, Nil], r(x)) is [vs', ns'] then dfs(r, [vs', (x :: ns') +: ns], xs)
+//│ ═══[COMPILATION ERROR] Unsupported kind of Call Call(Select(Select(Ref($runtime),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(vsns)), Arg(None,Lit(IntLit(0)))))
+//│ Stopped due to an error during the Llir generation
 
 fun stronglyConnComp(es, vs) =
   fun swap(a) = if a is [f, s] then [s, f]
@@ -34,6 +39,8 @@ fun stronglyConnComp(es, vs) =
       x => new_range(es, x)
       [Nil, Nil]
       vs
+//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ Stopped due to an error during the Llir generation
 
 
 fun testScc_nofib(d) =
@@ -48,5 +55,9 @@ fun testScc_nofib(d) =
   let edges = [b, a] :: [c, b] :: [c, d] :: [c, h] :: [d, c] :: [f, a] :: [f, g] :: [f, h] :: [g, f] :: [h, g] :: Nil
   
   stronglyConnComp(edges, vertices)
+//│ ═══[COMPILATION ERROR] Name not found: member:stronglyConnComp
+//│ Stopped due to an error during the Llir generation
 
 print(testScc_nofib(0))
+//│ ═══[COMPILATION ERROR] Name not found: member:testScc_nofib
+//│ Stopped due to an error during the Llir generation

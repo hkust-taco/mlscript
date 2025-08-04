@@ -8,12 +8,12 @@ let g = globalThis
 // FIXME prevent rebinding of this name
 :re
 let globalThis = "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 :re
 globalThis
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 
 // * This one uses `this.Error` so it's fine
@@ -29,7 +29,7 @@ if false then 0
 //│   throw new globalThis.Error("match error");
 //│ }
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 // * This one uses `globalThis.Error`
 // * Notice the failed exception throw
@@ -51,6 +51,6 @@ foo()
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'isArray')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 

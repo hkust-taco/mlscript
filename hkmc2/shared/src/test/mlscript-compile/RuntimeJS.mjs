@@ -7,6 +7,12 @@ const RuntimeJS = {
   },
   symbols: {
     definitionMetadata: Symbol.for("mlscript.definitionMetadata"),
+  },
+  short_and(lhs, rhs) {
+    return lhs && rhs();
+  },
+  short_or(lhs, rhs) {
+    return lhs || rhs();
   }
 }
 

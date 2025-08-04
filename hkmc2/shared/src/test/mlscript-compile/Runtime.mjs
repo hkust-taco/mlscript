@@ -2,6 +2,8 @@ import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
+import LazyArray from "./LazyArray.mjs";
+import Iter from "./Iter.mjs";
 let definitionMetadata, Runtime1, tmp;
 tmp = globalThis.Symbol.for("mlscript.definitionMetadata");
 definitionMetadata = tmp;
@@ -17,6 +19,8 @@ definitionMetadata = tmp;
     };
     this.Unit = new Unit$class;
     Object.defineProperty(this.Unit, 'class', { value: Unit$class });
+    this.short_and = RuntimeJS.short_and;
+    this.short_or = RuntimeJS.short_or;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
       return new EffectHandle.class(_reified1);
@@ -69,20 +73,40 @@ definitionMetadata = tmp;
     (class Tuple {
       static {
         Runtime.Tuple = Tuple;
+        this.split = LazyArray.__split;
       }
       static slice(xs, i, j) {
         let tmp1;
         tmp1 = xs.length - j;
-        return runtime.safeCall(globalThis.Array.prototype.slice.call(xs, i, tmp1))
+        return xs.slice(i, tmp1)
       } 
-      static get(xs1, i1) {
-        let scrut;
-        scrut = i1 >= xs1.length;
+      static lazySlice(xs1, i1, j1) {
+        let tmp1;
+        tmp1 = LazyArray.slice(i1, j1);
+        return runtime.safeCall(tmp1(xs1))
+      } 
+      static lazyConcat(...args) {
+        return runtime.safeCall(LazyArray.__concat(...args))
+      } 
+      static get(xs2, i2) {
+        let scrut, scrut1, tmp1, tmp2, tmp3;
+        scrut = i2 >= xs2.length;
         if (scrut === true) {
           throw globalThis.RangeError("Tuple.get: index out of bounds");
         } else {
-          return globalThis.Array.prototype.at.call(xs1, i1)
+          tmp1 = runtime.Unit;
         }
+        tmp2 = - xs2.length;
+        scrut1 = i2 < tmp2;
+        if (scrut1 === true) {
+          throw globalThis.RangeError("Tuple.get: negative index out of bounds");
+        } else {
+          tmp3 = runtime.Unit;
+        }
+        return xs2.at(i2)
+      } 
+      static isArrayLike(xs3) {
+        return runtime.safeCall(Iter.isArrayLike(xs3))
       }
       static [definitionMetadata] = ["module", "Tuple"]; 
     });
@@ -268,40 +292,45 @@ definitionMetadata = tmp;
     throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15;
+    let scrut, name, scrut1, scrut2, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, lambda;
     tmp1 = got < expected;
-    tmp2 = got > expected;
-    tmp3 = isUB && tmp2;
-    scrut = tmp1 || tmp3;
+    lambda = (undefined, function () {
+      let lambda1;
+      lambda1 = (undefined, function () {
+        return got > expected
+      });
+      return runtime.short_and(isUB, lambda1)
+    });
+    scrut = runtime.short_or(tmp1, lambda);
     if (scrut === true) {
       scrut1 = functionName.length > 0;
       if (scrut1 === true) {
-        tmp4 = " '" + functionName;
-        tmp5 = tmp4 + "'";
+        tmp2 = " '" + functionName;
+        tmp3 = tmp2 + "'";
       } else {
-        tmp5 = "";
+        tmp3 = "";
       }
-      name = tmp5;
-      tmp6 = "Function" + name;
-      tmp7 = tmp6 + " expected ";
+      name = tmp3;
+      tmp4 = "Function" + name;
+      tmp5 = tmp4 + " expected ";
       if (isUB === true) {
-        tmp8 = "";
+        tmp6 = "";
       } else {
-        tmp8 = "at least ";
+        tmp6 = "at least ";
       }
-      tmp9 = tmp7 + tmp8;
-      tmp10 = tmp9 + expected;
-      tmp11 = tmp10 + " argument";
+      tmp7 = tmp5 + tmp6;
+      tmp8 = tmp7 + expected;
+      tmp9 = tmp8 + " argument";
       scrut2 = expected === 1;
       if (scrut2 === true) {
-        tmp12 = "";
+        tmp10 = "";
       } else {
-        tmp12 = "s";
+        tmp10 = "s";
       }
-      tmp13 = tmp11 + tmp12;
-      tmp14 = tmp13 + " but got ";
-      tmp15 = tmp14 + got;
-      throw globalThis.Error(tmp15);
+      tmp11 = tmp9 + tmp10;
+      tmp12 = tmp11 + " but got ";
+      tmp13 = tmp12 + got;
+      throw globalThis.Error(tmp13);
     } else {
       return runtime.Unit
     }
@@ -799,11 +828,13 @@ definitionMetadata = tmp;
     return tmp5
   } 
   static checkDepth() {
-    let scrut, tmp1, tmp2, tmp3;
+    let scrut, tmp1, tmp2, lambda;
     tmp1 = Runtime.stackDepth - Runtime.stackOffset;
     tmp2 = tmp1 >= Runtime.stackLimit;
-    tmp3 = Runtime.stackHandler !== null;
-    scrut = tmp2 && tmp3;
+    lambda = (undefined, function () {
+      return Runtime.stackHandler !== null
+    });
+    scrut = runtime.short_and(tmp2, lambda);
     if (scrut === true) {
       return runtime.safeCall(Runtime.stackHandler.delay())
     } else {

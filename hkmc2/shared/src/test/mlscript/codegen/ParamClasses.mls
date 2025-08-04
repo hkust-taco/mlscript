@@ -146,7 +146,7 @@ data class Inner(c) with
 //│   value: class Inner {
 //│     constructor(c) {
 //│       this.c = c;
-//│       Predef.print(this.c)
+//│       Predef.print(this.c);
 //│     }
 //│     i1(d) {
 //│       return this.c + d
@@ -207,7 +207,7 @@ class Foo(x, val y, z, val z, z) with
 //│       tmp14 = "z = " + this.#z1;
 //│       tmp15 = Predef.print(tmp14);
 //│       tmp16 = "this.z = " + this.z;
-//│       Predef.print(tmp16)
+//│       Predef.print(tmp16);
 //│     }
 //│     static [definitionMetadata] = ["class", "Foo", ["y", "z"]]; 
 //│   }

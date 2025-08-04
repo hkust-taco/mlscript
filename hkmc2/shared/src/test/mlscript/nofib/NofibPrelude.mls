@@ -105,7 +105,7 @@ fun listEq(xs, ys) = if
 
 fun listEqBy(f, a, b) = if a is
   Nil and b is Nil then true
-  x :: xs and b is y :: ys then f(x, y) && listEqBy(f, xs, ys)
+  x :: xs and b is y :: ys then f(x, y) and listEqBy(f, xs, ys)
   else false
 
 fun listNeq(xs, ys) = if

@@ -6,10 +6,73 @@ open Predef
 open Option { Some, None }
 open Stack { Nil, Cons }
 
+
+module Iter with ...
+
+class IterableBase with
+  set this.(Symbol.iterator) = iterator
+  fun iterator() = throw new Error("Not implemented: iterator()")
+
+  // require that subclasses are immutable
+  fun toArray() = [...this]
+  
+  let array = null
+  
+  fun asArray =
+    if array is null then
+      set array = toArray() Object.freeze()
+      array
+    else array
+  
+  // * Functions that create a fresh new result
+  fun at(idx) = asArray.at(idx)
+  fun concat(...xs) = asArray.concat(...xs)
+  fun copyWithin(...args) = asArray.copyWithin(...args)
+  fun entries() = asArray.entries()
+  fun every(...args) = asArray.every(...args)
+  fun filter(...args) = asArray.filter(...args)
+  fun find(...args) = asArray.find(...args)
+  fun findIndex(...args) = asArray.findIndex(...args)
+  fun findLast(...args) = asArray.findLast(...args)
+  fun findLastIndex(...args) = asArray.findLastIndex(...args)
+  fun flat(...args) = asArray.flat(...args)
+  fun flatMap(...args) = asArray.flatMap(...args)
+  fun forEach(...args) = asArray.forEach(...args)
+  fun includes(...args) = asArray.includes(...args)
+  fun indexOf(...args) = asArray.indexOf(...args)
+  fun join(...args) = asArray.join(...args)
+  fun keys() = asArray.keys()
+  fun lastIndexOf(...args) = asArray.lastIndexOf(...args)
+  fun map(...args) = asArray.map(...args)
+  fun reduce(...args) = asArray.reduce(...args)
+  fun reduceRight(...args) = asArray.reduceRight(...args)
+  fun slice(...args) = asArray.slice(...args)
+  fun some(...args) = asArray.some(...args)
+  fun toLocaleString(...args) = asArray.toLocaleString(...args)
+  fun toReversed() = asArray.toReversed()
+  fun toSorted(...args) = asArray.toSorted(...args)
+  fun toSpliced(...args) = asArray.toSpliced(...args)
+  fun toString() = asArray.toString()
+  // `with` is an mls keyword
+  fun id"with"(...args) = asArray.with(...args)
+  
+  // * Functions that modify the array in place
+  fun fill(...args) = toArray().fill(...args)
+  fun pop() = toArray().pop()
+  fun push(...args) = toArray().push(...args)
+  fun reverse() = toArray().reverse()
+  fun shift() = toArray().shift()
+  fun sort(...args) = toArray().sort(...args)
+  fun splice(...args) = toArray().splice(...args)
+  fun unshift(...args) = toArray().unshift(...args)
+  
+  fun length = asArray.length
+  fun values() = iterator()
+
 // * Implements the `Iterable` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterable_protocol
-class Iterable(mk) with
-  set this.(Symbol.iterator) = mk
+class Iterable(mk) extends IterableBase with
+  fun iterator() = mk()
 
 // * Implements the `Iterator` protocol.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol
@@ -21,7 +84,6 @@ module Result with
   object Done with
     val done = true
 
-module Iter with ...
 
 // A helper function to detect if `Symbol.iterator` is on an object, and if not,
 // indicate the object's class in the error message, which is useful for debugging.
@@ -93,18 +155,16 @@ fun filtering(xs, op) =
 fun withFilter(op) = _ filtering(op)
 
 fun taking(xs, n) =
-  let i = 1
   filtering of xs, _ =>
-    i <= n &&
-      set i = i + 1
+    set n -= 1
+    n >= 0
 
 fun withMax(n) = _ taking(n)
 
 fun dropping(xs, n) =
-  let i = 1
   filtering of xs, _ =>
-    i > n &&
-      set i += 1
+    set n -= 1
+    n < 0
 
 fun withoutAtLeast(n) = _ dropping(n)
 
@@ -216,3 +276,5 @@ fun fromStack(stack) = Iterable of () =>
     Nil then Result.Done
 
 fun toStack(xs) = xs rightFolded of Nil, Cons
+
+fun isArrayLike = _ is Array | IterableBase

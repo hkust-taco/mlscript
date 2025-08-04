@@ -84,7 +84,7 @@ data class Lol(h) with
 //│         res.contTrace.last = res.contTrace.last.next;
 //│         return res
 //│       }
-//│       res
+//│       res;
 //│     }
 //│     static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│   }

@@ -54,17 +54,20 @@ definitionMetadata = tmp;
     tmp1 = runtime.safeCall(f6(x7));
     return (tmp1 , x7)
   } 
+  static alsoDo(x8, eff) {
+    return x8
+  } 
   static andThen(f7, g) {
-    return (x8) => {
+    return (x9) => {
       let tmp1;
-      tmp1 = runtime.safeCall(f7(x8));
+      tmp1 = runtime.safeCall(f7(x9));
       return runtime.safeCall(g(tmp1))
     }
   } 
   static compose(f8, g1) {
-    return (x8) => {
+    return (x9) => {
       let tmp1;
-      tmp1 = runtime.safeCall(g1(x8));
+      tmp1 = runtime.safeCall(g1(x9));
       return runtime.safeCall(f8(tmp1))
     }
   } 
@@ -145,15 +148,15 @@ definitionMetadata = tmp;
   } 
   static mkStr(...xs2) {
     let tmp1, tmp2, lambda;
-    lambda = (undefined, function (acc, x8) {
+    lambda = (undefined, function (acc, x9) {
       let tmp3, tmp4, tmp5;
-      if (typeof x8 === 'string') {
+      if (typeof x9 === 'string') {
         tmp3 = true;
       } else {
         tmp3 = false;
       }
       tmp4 = runtime.safeCall(Predef.assert(tmp3));
-      tmp5 = acc + x8;
+      tmp5 = acc + x9;
       return (tmp4 , tmp5)
     });
     tmp1 = lambda;

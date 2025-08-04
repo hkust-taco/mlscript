@@ -40,6 +40,7 @@ trait DesugaringBase(using Ctx, State):
     Pattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
+  protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")
   protected lazy val tupleGet = sel(sel(runtimeRef, "Tuple"), "get")
   protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
   protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")

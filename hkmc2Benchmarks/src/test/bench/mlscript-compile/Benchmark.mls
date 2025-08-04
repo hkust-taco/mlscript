@@ -1,0 +1,18 @@
+import "benchmark"
+
+let bm = benchmark
+
+module Benchmark with...
+
+val benchmark = bm
+
+fun mkSuite() = new bm.Suite()
+
+fun runSuite(suite) =
+  let settings = {}
+  set settings.async = false
+  suite.run(settings)
+
+fun writeResults(suite, path) =
+  let jsonStr = JSON.stringify(suite.map((res, _, _) => res), null, 2)
+  fs.writeFile(path, jsonStr, (err) => err)

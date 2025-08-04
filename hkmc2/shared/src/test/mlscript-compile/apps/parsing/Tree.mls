@@ -176,7 +176,7 @@ module Tree with
       None then "None"
       _ :: _ then tree Iter.fromStack() Iter.mapping(wrap) Iter.joined(" :: ") + " :: Nil"
       Nil then "Nil"
-      [..trees] then "[" + trees.map((tree, _, _) => wrap(tree)).join(", ") + "]"
+      [..trees] then "[" + trees Iter.mapping((tree, _, _) => wrap(tree)) Iter.joined(", ") + "]"
       else "<unexpected:" + tree + ">"
     wrap(tree)
   

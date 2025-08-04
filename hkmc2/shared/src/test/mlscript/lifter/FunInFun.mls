@@ -179,17 +179,12 @@ x + y
 //│     return h$(f$capture2)
 //│   }
 //│ };
-//│ f$capture1 = function f$capture(a0$1) {
-//│   return new f$capture.class(a0$1);
-//│ };
-//│ Object.defineProperty(f$capture1, 'class', {
-//│   value: class f$capture {
-//│     constructor(a0$) {
-//│       this.a0$ = a0$;
-//│     }
-//│     static [definitionMetadata] = ["class", "f$capture", ["a0$"]]; 
+//│ f$capture1 = class f$capture {
+//│   constructor(a0$) {
+//│     this.a0$ = a0$;
 //│   }
-//│ });
+//│   static [definitionMetadata] = ["class", "f$capture"]; 
+//│ };
 //│ f5 = function f() {
 //│   let capture, g$this, h$this;
 //│   capture = new f$capture1(null);
@@ -316,17 +311,12 @@ f(1, 2, 1000)
 //│     return h$2(f$capture6)
 //│   }
 //│ };
-//│ f$capture5 = function f$capture(mutated0$1) {
-//│   return new f$capture.class(mutated0$1);
-//│ };
-//│ Object.defineProperty(f$capture5, 'class', {
-//│   value: class f$capture4 {
-//│     constructor(mutated0$) {
-//│       this.mutated0$ = mutated0$;
-//│     }
-//│     static [definitionMetadata] = ["class", "f$capture", ["mutated0$"]]; 
+//│ f$capture5 = class f$capture4 {
+//│   constructor(mutated0$) {
+//│     this.mutated0$ = mutated0$;
 //│   }
-//│ });
+//│   static [definitionMetadata] = ["class", "f$capture"]; 
+//│ };
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp15, tmp16, tmp17, capture;
 //│   capture = new f$capture5(mutated);
@@ -471,17 +461,12 @@ g()(1)
 //│     return f$1(g$capture2, x1)
 //│   }
 //│ };
-//│ g$capture1 = function g$capture(y0$1) {
-//│   return new g$capture.class(y0$1);
-//│ };
-//│ Object.defineProperty(g$capture1, 'class', {
-//│   value: class g$capture {
-//│     constructor(y0$) {
-//│       this.y0$ = y0$;
-//│     }
-//│     static [definitionMetadata] = ["class", "g$capture", ["y0$"]]; 
+//│ g$capture1 = class g$capture {
+//│   constructor(y0$) {
+//│     this.y0$ = y0$;
 //│   }
-//│ });
+//│   static [definitionMetadata] = ["class", "g$capture"]; 
+//│ };
 //│ g13 = function g() {
 //│   let capture;
 //│   capture = new g$capture1(null);
@@ -582,17 +567,12 @@ f()
 //│     return f$2(f$capture16)
 //│   }
 //│ };
-//│ f$capture15 = function f$capture(x0$1) {
-//│   return new f$capture.class(x0$1);
-//│ };
-//│ Object.defineProperty(f$capture15, 'class', {
-//│   value: class f$capture14 {
-//│     constructor(x0$) {
-//│       this.x0$ = x0$;
-//│     }
-//│     static [definitionMetadata] = ["class", "f$capture", ["x0$"]]; 
+//│ f$capture15 = class f$capture14 {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
 //│   }
-//│ });
+//│   static [definitionMetadata] = ["class", "f$capture"]; 
+//│ };
 //│ f20 = function f() {
 //│   let tmp19, capture;
 //│   capture = new f$capture15(null);
@@ -621,34 +601,19 @@ fun f(es, vs) =
     val fld = v'
   new A
 //│ JS (unsanitized):
-//│ let A1, f23, A$ctor, A$;
+//│ let A1, f23, A$;
 //│ A$ = function A$(v$_$0) {
 //│   let tmp19;
-//│   tmp19 = new A1.class();
-//│   return tmp19(v$_$0)
+//│   tmp19 = new A1(v$_$0);
+//│   return tmp19
 //│ };
-//│ A$ctor = function A$ctor(v$_$0) {
-//│   return () => {
-//│     let tmp19;
-//│     tmp19 = new A1.class();
-//│     return tmp19(v$_$0)
+//│ A1 = class A {
+//│   constructor(v$_$0) {
+//│     this["v'$0"] = v$_$0;
+//│     this.fld = this["v'$0"];
 //│   }
+//│   static [definitionMetadata] = ["class", "A"]; 
 //│ };
-//│ A1 = function A(v$_$01) {
-//│   return new A.class()(v$_$01);
-//│ };
-//│ Object.defineProperty(A1, 'class', {
-//│   value: class A {
-//│     constructor() {
-//│       return (v$_$0) => {
-//│         this["v'$0"] = v$_$0;
-//│         this.fld = this["v'$0"];
-//│         return this;
-//│       }
-//│     }
-//│     static [definitionMetadata] = ["class", "A"]; 
-//│   }
-//│ });
 //│ f23 = function f(es, vs) {
 //│   let v$_;
 //│   v$_ = es;

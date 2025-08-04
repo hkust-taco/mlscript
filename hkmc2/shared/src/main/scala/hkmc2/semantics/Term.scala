@@ -81,7 +81,6 @@ enum Term extends Statement:
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
-  case Builtin(id: Tree.Ident, nme: Str)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[Symbol]) extends Term with ResolvableImpl
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term with ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[Symbol]) extends Term with ResolvableImpl
@@ -207,7 +206,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Blk(stats, res) => stats ::: res :: Nil
     case _ => subTerms
   def subTerms: Ls[Term] = this match
-    case Error | _: Lit | _: Ref | _: Builtin | _: UnitVal => Nil
+    case Error | _: Lit | _: Ref | _: UnitVal => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
     case RcdField(lhs, rhs) => lhs :: rhs :: Nil
     case RcdSpread(bod) => bod :: Nil

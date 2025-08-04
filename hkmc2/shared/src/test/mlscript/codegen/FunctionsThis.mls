@@ -18,7 +18,7 @@ class Test with
 //│   constructor() {
 //│     let tmp;
 //│     tmp = foo();
-//│     Predef.print(tmp)
+//│     Predef.print(tmp);
 //│   }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ };
