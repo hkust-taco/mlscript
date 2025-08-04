@@ -24,7 +24,6 @@ declare class RangeError
 declare class Date
 
 // MLscript-specific types
-declare class Unit
 declare class Bool
 declare class Int
 declare class Num

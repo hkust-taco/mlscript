@@ -261,7 +261,9 @@ oops
 // TODO prevent explicit accesses to Unit, Int etc. from Prelude or elaborate them
 
 Unit
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Unit' yielded 'undefined'
+//│ ╔══[ERROR] Name not found: Unit
+//│ ║  l.263: 	Unit
+//│ ╙──       	^^^^
 
 Int
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
@@ -317,13 +319,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.318: 	open Stack { ::, Nil }
+//│ ║  l.320: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.324: 	open Stack { (::), Nil }
+//│ ║  l.326: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -331,7 +333,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.332: 	1 :: Nil
+//│ ║  l.334: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -342,9 +344,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.342: 	mkStr of ... // hello
+//│ ║  l.344: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.343: 	"oops"
+//│ ║  l.345: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -367,22 +369,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.370: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.368: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.370: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.377: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.379: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.383: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.385: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -416,10 +418,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.416: 	  let bar(x: Str): Str = x + x
+//│ ║  l.418: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.417: 	  bar("test")
+//│ ║  l.419: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
