@@ -137,6 +137,7 @@ object Elaborator:
       val Function = assumeBuiltinCls("Function")
       val Bool = assumeBuiltinCls("Bool")
       val Object = assumeBuiltinCls("Object")
+      val TypedArray = assumeBuiltinCls("TypedArray")
       val untyped = assumeBuiltinTpe("untyped")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleSymbol):
@@ -161,7 +162,7 @@ object Elaborator:
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
-      val virtualClasses = Set(Int, Num, Str, Bool)
+      val virtualClasses = Set(Int, Num, Str, Bool, TypedArray)
   
   object Ctx:
     abstract class Elem:

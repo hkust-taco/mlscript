@@ -9,6 +9,10 @@ fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
+fun enforceArray = case
+  Array | String | Str | TypedArray | LazyArr as a then a
+  ow then throw Error("Expected an Array, got: " + ow.toString())
+
 fun concatHelper(a, l, ...args) =
   let idx = 0
   let init_len = a.length
@@ -17,7 +21,7 @@ fun concatHelper(a, l, ...args) =
     let x = args.[idx]
 
     set a.[init_len + idx * 2] = SpliceMarker
-    set a.[init_len + idx * 2 + 1] = x
+    set a.[init_len + idx * 2 + 1] = enforceArray(x)
     set l += x.length
     set idx += 1
   Splice of a, l
@@ -44,7 +48,7 @@ fun sliceHelper(beg, fin, arr) =
   if arr is
     View(itr, start, end) then View of itr, start + beg, end + (len - fin)
     Splice(bits, l) as s then View of s.materialize().slice(beg, fin), 0, 0
-    _ as itr then View of itr, beg, (arr.length - fin)
+    else View of enforceArray(arr), beg, (arr.length - fin)
 
 // Marker base class for View and Splice
 class LazyArr extends IterableBase with
@@ -172,7 +176,7 @@ fun __concat(...args) =
   let idx = 0
   while (idx < args.length) do
     if args.[idx] is SpliceMarker then
-      set len += args.[idx + 1].length
+      set len += enforceArray(args.[idx + 1]).length
       set idx += 2
     else
       set len += 1

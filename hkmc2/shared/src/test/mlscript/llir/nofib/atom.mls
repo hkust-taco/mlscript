@@ -33,7 +33,7 @@ fun show(s) =
     component :: t then Cons(stringConcat(stringOfFloat(component), "\t"), lscomp(t))
   if s is State(pos, vel) then
     stringListConcat of lscomp(pos)
-//│ ═══[COMPILATION ERROR] Name not found: member:stringConcat
+//│ ═══[COMPILATION ERROR] Name not found: member:stringOfFloat
 //│ Stopped due to an error during the Llir generation
 
 fun propagate(dt, aforce, state) = if state is State(pos, vel) then
