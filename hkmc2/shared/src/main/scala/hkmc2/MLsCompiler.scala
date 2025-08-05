@@ -90,12 +90,12 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
           // Generate `definitionMetadata = Symbol.for("mlscript.definitionMetadata")`.
           semantics.LetDecl(State.definitionMetadataSymbol, Nil) ::
           semantics.DefineVar(State.definitionMetadataSymbol, {
-            import syntax.{Fun, Tree}, Tree.{Dummy, DummyTup, Ident, StrLit}, semantics.{FlowSymbol, Term, PlainFld}
+            import syntax.*, Tree.*, semantics.*
             val symbolRef = Term.SynthSel(State.globalThisSymbol.ref().withIArgs(Nil), Ident("Symbol"))(N).withIArgs(Nil)
             Term.App(
               Term.SynthSel(symbolRef, Ident("for"))(S(ctx.builtins.Symbol.`for`)).withIArgs(Nil),
               Term.Tup(PlainFld(Term.Lit(StrLit("mlscript.definitionMetadata"))) :: Nil)(DummyTup)
-            )(Tree.App(Dummy, Dummy), S(ctx.builtins.Symbol.`for`), FlowSymbol("definitionMetadata")).withIArgs(Nil)
+            )(App(Dummy, Dummy), S(ctx.builtins.Symbol.`for`), FlowSymbol("definitionMetadata")).withIArgs(Nil)
           }) :: blk0.stats,
       blk0.res
       )
