@@ -15,14 +15,14 @@ module Foo with
 //│ });
 
 Foo.self
-//│ = module Foo {self: ref'1} as ref'1
+//│ = module Foo { self: ref'1 } as ref'1
 
 
 module Foo with
   val self: module Foo = this
 
 Foo.self
-//│ = module Foo {self: ref'1} as ref'1
+//│ = module Foo { self: ref'1 } as ref'1
 
 
 :e
@@ -32,14 +32,14 @@ module Foo with
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
 Foo.self
-//│ = module Foo {self: ref'1} as ref'1
+//│ = module Foo { self: ref'1 } as ref'1
 
 
 object Foo with
   val self = this
 
 Foo.self
-//│ = Foo {self: ref'1, class: object Foo} as ref'1
+//│ = Foo { self: ref'1, class: object Foo } as ref'1
 
 
 :todo // * Initialization error

@@ -21,7 +21,7 @@ data class Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = fun Foo {class: class Foo}
+//│ = fun Foo { class: class Foo }
 
 Foo()
 //│ JS (unsanitized):
@@ -53,7 +53,7 @@ data class Foo(a)
 Foo
 //│ JS (unsanitized):
 //│ Foo3
-//│ = fun Foo {class: class Foo}
+//│ = fun Foo { class: class Foo }
 
 Foo(1)
 //│ JS (unsanitized):
@@ -92,7 +92,7 @@ data class Foo(a, b)
 let foo = Foo
 //│ JS (unsanitized):
 //│ let foo1; foo1 = Foo5;
-//│ foo = fun Foo {class: class Foo}
+//│ foo = fun Foo { class: class Foo }
 
 let f = foo(1, 2)
 //│ JS (unsanitized):

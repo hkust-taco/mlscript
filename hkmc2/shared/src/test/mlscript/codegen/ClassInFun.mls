@@ -19,7 +19,7 @@ fun test(a) =
 //│ };
 
 test(12)
-//│ = C {x: 12}
+//│ = C { x: 12 }
 
 fun test(x) =
   data class Foo(x)

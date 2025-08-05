@@ -27,16 +27,16 @@ object Test with
 //│ });
 
 Test
-//│ = Test {x: 12, class: object Test}
+//│ = Test { x: 12, class: object Test }
 
 print(Test)
-//│ > Test {x: 12, class: object Test}
+//│ > Test { x: 12, class: object Test }
 
 :sjs
 Test.foo()
 //│ JS (unsanitized):
 //│ Test1.foo()
-//│ > Test {x: 12, class: object Test}
+//│ > Test { x: 12, class: object Test }
 //│ = 12
 
 :sjs
@@ -197,7 +197,7 @@ Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = module Whoops {w: ref'1} as ref'1
+//│ = module Whoops { w: ref'1 } as ref'1
 
 Whoops.Whoops.g()
 //│ = "Hello"

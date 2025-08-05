@@ -6,7 +6,7 @@ class Example with
   fun f(x) = [x, a]
 
 val ex = new Example
-//│ ex = Example {a: 456}
+//│ ex = Example { a: 456 }
 
 let s = ex.("f")
 //│ s = fun f

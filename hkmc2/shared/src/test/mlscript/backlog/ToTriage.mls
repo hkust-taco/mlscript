@@ -198,7 +198,7 @@ Cls.huh
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'huh' yielded 'undefined'
 
 let c = new Cls(123)
-//│ c = Cls {x: 123}
+//│ c = Cls { x: 123 }
 
 c.x
 //│ = 123

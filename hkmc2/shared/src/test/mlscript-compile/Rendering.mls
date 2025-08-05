@@ -232,7 +232,7 @@ fun render(target, ...args) =
         layoutSingleLine()
       else layoutMultiLine()
   // Render enumerable properties of the given object.
-  fun renderObject(subject, level, keyLength, startPos) =
+  fun renderObject(subject, level, keyLength, startPos, isRefinement) =
     let
       entries = Object.entries(Object.getOwnPropertyDescriptors(subject))
       length = entries.length
@@ -266,7 +266,8 @@ fun render(target, ...args) =
             else "[Getter/Setter]"
           [keyStr, valueStr]
     skipNonEnumerable()
-    renderRecordLike of done, next, level, keyLength, startPos, symbolsForObject
+    renderRecordLike of
+      done, next, level, keyLength, startPos, symbolsForObject, isRefinement
   fun renderMap(map, level, keyLength, startPos) =
     let
       iterator = map.(Symbol.iterator)()
@@ -296,13 +297,21 @@ fun render(target, ...args) =
             then itemIndentationLength else valuePrefixLengthIfSameLine
           valueStr = renderValue(value, level + 1, 0, valuePrefixLengthIfSameLine)
         [keyStr, valueStr]
-    renderRecordLike of done, next, level, keyLength, startPos, symbolsForMap(map.size)
-  fun renderRecordLike(done, next, level, keyLength, startPos, symbols) =
+    renderRecordLike of
+      done, next, level, keyLength, startPos, symbolsForMap(map.size), false
+  fun renderRecordLike(done, next, level, keyLength, startPos, symbols, isRefinement) =
     let
+      startPadding = if
+        isRefinement then " "
+        symbols.padding then padding
+        else ""
+      endPadding = if
+        isRefinement then " "
+        symbols.padding then padding
+        else ""
       items = []
       hasMultiline = false
-      singleLineLength = startPos + symbols.start.length +
-        (if symbols.padding then padding.length else 0)
+      singleLineLength = startPos + symbols.start.length + startPadding.length
       parentIndent = if indent is null then null else indent.repeat(level)
       itemIdent = if indent is null then null else indent.repeat(level + 1)
     while done() is false do
@@ -317,17 +326,16 @@ fun render(target, ...args) =
       set singleLineLength += length // the item
       items.push of key + symbols.keyValueSeparator + value
     // Complete the single line length.
-    set singleLineLength += symbols.end.length +
-      (if symbols.padding then padding.length else 0)
+    set singleLineLength += symbols.end.length + endPadding.length
     let
       layoutMultiLine() =
         symbols.start + "\n" + itemIdent +
         items.join(",\n" + itemIdent) +
         "\n" + parentIndent + symbols.end
       layoutSingleLine() =
-        symbols.start + (if symbols.padding then padding else "") +
+        symbols.start + startPadding +
         items.join(", ") +
-        (if symbols.padding then padding else "") + symbols.end
+        endPadding + symbols.end
     if
       items.length is 0 then symbols.empty
       indent is null then layoutSingleLine()
@@ -386,18 +394,19 @@ fun render(target, ...args) =
             // Display as functions if `desc.writable` is not `false`
             else "fun" + (if arg.name is "" then "" else " " + arg.name)
           head + if // Add a space if the function do not have enumerable properties
-            let properties = renderObject(arg, level, keyLength, startPos + head.length)
+            let properties = renderObject of
+              arg, level, keyLength, startPos + head.length, true
             properties is "{}" then ""
             else " " + properties
       // The case for objects.
       Reflect.getPrototypeOf(arg) is
         // Objects with `null` as the prototype does not have prefix.
-        null then renderObject(arg, level, keyLength, startPos)
+        null then renderObject(arg, level, keyLength, startPos, false)
         // The result of `getPrototypeOf` is either `null` or `Object`.
         proto and
           // For object literals, show its properties without the constructor.
           proto === Object.prototype then
-            renderObject(arg, level, keyLength, startPos)
+            renderObject(arg, level, keyLength, startPos, false)
           // The `constructor` field refers to the class.
           proto.constructor is Function and
             // If the prototype has its own implementation of `toString`, call it.
@@ -413,16 +422,18 @@ fun render(target, ...args) =
               definitionMetadata is [kind, name] then
                 // For class instances and objects, do not show the kind.
                 let head = if kind is "class" | "object" then name else kind + " " + name
-                let body = renderObject(arg, level, keyLength, startPos + head.length)
+                let body = renderObject of
+                  arg, level, keyLength, startPos + head.length, true
                 head + (if body is "{}" then "" else " " + body)
             // Otherwise, we print the name of the constructor and the properties.
             let head = proto.constructor.name + " "
-            else head + renderObject(arg, level, keyLength, startPos + head.length)
+            else head + renderObject of
+              arg, level, keyLength, startPos + head.length, true
           // Otherwise, the prototype is not a function.
           // If the prototype has its own implementation of `toString`, call it.
           proto.hasOwnProperty("toString") then arg.toString() indentText(level)
           // Otherwise, treat the input as normal object.
-          else renderObject(arg, level, keyLength, startPos)
+          else renderObject(arg, level, keyLength, startPos, false)
     // We have finished visiting this object
     let postfix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
       Int as index then " as ref'" + index
