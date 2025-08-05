@@ -14,7 +14,6 @@ import hkmc2.codegen.Value.Lam
 
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
-import collection.immutable.SeqMap
 import hkmc2.semantics.Elaborator.ctx
 
 
