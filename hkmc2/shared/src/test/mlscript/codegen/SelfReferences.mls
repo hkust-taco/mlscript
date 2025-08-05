@@ -54,7 +54,9 @@ object Foo with
 //│   }
 //│   static [definitionMetadata] = ["object", "Foo"]; 
 //│ }; Foo9 = new Foo$class1;
-//│ Object.defineProperty(Foo9, 'class', { value: Foo$class1 });
+//│ Object.defineProperty(Foo9, "class", {
+//│   value: Foo$class1
+//│ });
 
 :re
 Foo.self

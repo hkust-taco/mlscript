@@ -10,7 +10,8 @@ data class Foo()
 //│ Foo1 = function Foo() {
 //│   return new Foo.class();
 //│ };
-//│ Object.defineProperty(Foo1, 'class', {
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
 //│   value: class Foo {
 //│     constructor() {}
 //│     static [definitionMetadata] = ["class", "Foo", []]; 
@@ -20,7 +21,7 @@ data class Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = fun Foo
+//│ = fun Foo {class: class Foo}
 
 Foo()
 //│ JS (unsanitized):
@@ -39,7 +40,8 @@ data class Foo(a)
 //│ Foo3 = function Foo(a1) {
 //│   return new Foo.class(a1);
 //│ };
-//│ Object.defineProperty(Foo3, 'class', {
+//│ Object.defineProperty(Foo3, "class", {
+//│   enumerable: true,
 //│   value: class Foo2 {
 //│     constructor(a) {
 //│       this.a = a;
@@ -51,7 +53,7 @@ data class Foo(a)
 Foo
 //│ JS (unsanitized):
 //│ Foo3
-//│ = fun Foo
+//│ = fun Foo {class: class Foo}
 
 Foo(1)
 //│ JS (unsanitized):
@@ -76,7 +78,8 @@ data class Foo(a, b)
 //│ Foo5 = function Foo(a1, b1) {
 //│   return new Foo.class(a1, b1);
 //│ };
-//│ Object.defineProperty(Foo5, 'class', {
+//│ Object.defineProperty(Foo5, "class", {
+//│   enumerable: true,
 //│   value: class Foo4 {
 //│     constructor(a, b) {
 //│       this.a = a;
@@ -89,7 +92,7 @@ data class Foo(a, b)
 let foo = Foo
 //│ JS (unsanitized):
 //│ let foo1; foo1 = Foo5;
-//│ foo = fun Foo
+//│ foo = fun Foo {class: class Foo}
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
@@ -142,7 +145,8 @@ data class Inner(c) with
 //│ Inner1 = function Inner(c1) {
 //│   return new Inner.class(c1);
 //│ };
-//│ Object.defineProperty(Inner1, 'class', {
+//│ Object.defineProperty(Inner1, "class", {
+//│   enumerable: true,
 //│   value: class Inner {
 //│     constructor(c) {
 //│       this.c = c;
@@ -181,7 +185,8 @@ class Foo(x, val y, z, val z, z) with
 //│ Foo7 = function Foo(x1, y1, z3, z, z1) {
 //│   return new Foo.class(x1, y1, z3, z, z1);
 //│ };
-//│ Object.defineProperty(Foo7, 'class', {
+//│ Object.defineProperty(Foo7, "class", {
+//│   enumerable: true,
 //│   value: class Foo6 {
 //│     #x;
 //│     #z;
@@ -232,7 +237,8 @@ class Foo(val z, val z)
 //│ Foo9 = function Foo(z2, z) {
 //│   return new Foo.class(z2, z);
 //│ };
-//│ Object.defineProperty(Foo9, 'class', {
+//│ Object.defineProperty(Foo9, "class", {
+//│   enumerable: true,
 //│   value: class Foo8 {
 //│     constructor(z, z1) {
 //│       this.z = z;

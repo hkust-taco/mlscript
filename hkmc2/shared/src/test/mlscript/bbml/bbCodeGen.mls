@@ -65,7 +65,8 @@ data class Foo(x: Int)
 //│ Foo1 = function Foo(x2) {
 //│   return new Foo.class(x2);
 //│ };
-//│ Object.defineProperty(Foo1, 'class', {
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
 //│   value: class Foo {
 //│     constructor(x1) {
 //│       this.x = x1;

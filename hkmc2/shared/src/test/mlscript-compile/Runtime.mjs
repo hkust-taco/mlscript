@@ -18,15 +18,18 @@ definitionMetadata = tmp;
       static [definitionMetadata] = ["object", "Unit"]; 
     };
     this.Unit = new Unit$class;
-    Object.defineProperty(this.Unit, 'class', { value: Unit$class });
+    Object.defineProperty(this.Unit, "class", {
+    value: Unit$class
+    });
     this.short_and = RuntimeJS.short_and;
     this.short_or = RuntimeJS.short_or;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
       return new EffectHandle.class(_reified1);
     };
-    Object.defineProperty(this.EffectHandle, 'class', {
-    value: class EffectHandle {
+    Object.defineProperty(this.EffectHandle, "class", {
+    enumerable: true,
+      value: class EffectHandle {
         #_reified;
         constructor(_reified) {
           this.#_reified = _reified;
@@ -51,8 +54,9 @@ definitionMetadata = tmp;
     this.MatchResult = function MatchResult(captures1) {
       return new MatchResult.class(captures1);
     };
-    Object.defineProperty(this.MatchResult, 'class', {
-    value: class MatchResult {
+    Object.defineProperty(this.MatchResult, "class", {
+    enumerable: true,
+      value: class MatchResult {
         constructor(captures) {
           this.captures = captures;
         }
@@ -62,8 +66,9 @@ definitionMetadata = tmp;
     this.MatchFailure = function MatchFailure(errors1) {
       return new MatchFailure.class(errors1);
     };
-    Object.defineProperty(this.MatchFailure, 'class', {
-    value: class MatchFailure {
+    Object.defineProperty(this.MatchFailure, "class", {
+    enumerable: true,
+      value: class MatchFailure {
         constructor(errors) {
           this.errors = errors;
         }
@@ -181,18 +186,23 @@ definitionMetadata = tmp;
       static [definitionMetadata] = ["object", "FatalEffect"]; 
     };
     this.FatalEffect = new FatalEffect$class;
-    Object.defineProperty(this.FatalEffect, 'class', { value: FatalEffect$class });
+    Object.defineProperty(this.FatalEffect, "class", {
+    value: FatalEffect$class
+    });
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {}
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
     };
     this.PrintStackEffect = new PrintStackEffect$class;
-    Object.defineProperty(this.PrintStackEffect, 'class', { value: PrintStackEffect$class });
+    Object.defineProperty(this.PrintStackEffect, "class", {
+    value: PrintStackEffect$class
+    });
     this.FunctionContFrame = function FunctionContFrame(next1) {
       return new FunctionContFrame.class(next1);
     };
-    Object.defineProperty(this.FunctionContFrame, 'class', {
-    value: class FunctionContFrame {
+    Object.defineProperty(this.FunctionContFrame, "class", {
+    enumerable: true,
+      value: class FunctionContFrame {
         constructor(next) {
           this.next = next;
         }
@@ -202,8 +212,9 @@ definitionMetadata = tmp;
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
       return new HandlerContFrame.class(next1, nextHandler1, handler1);
     };
-    Object.defineProperty(this.HandlerContFrame, 'class', {
-    value: class HandlerContFrame {
+    Object.defineProperty(this.HandlerContFrame, "class", {
+    enumerable: true,
+      value: class HandlerContFrame {
         constructor(next, nextHandler, handler) {
           this.next = next;
           this.nextHandler = nextHandler;
@@ -215,8 +226,9 @@ definitionMetadata = tmp;
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
       return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1);
     };
-    Object.defineProperty(this.ContTrace, 'class', {
-    value: class ContTrace {
+    Object.defineProperty(this.ContTrace, "class", {
+    enumerable: true,
+      value: class ContTrace {
         constructor(next, last, nextHandler, lastHandler, resumed) {
           this.next = next;
           this.last = last;
@@ -230,8 +242,9 @@ definitionMetadata = tmp;
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
       return new EffectSig.class(contTrace1, handler1, handlerFun1);
     };
-    Object.defineProperty(this.EffectSig, 'class', {
-    value: class EffectSig {
+    Object.defineProperty(this.EffectSig, "class", {
+    enumerable: true,
+      value: class EffectSig {
         constructor(contTrace, handler, handlerFun) {
           this.contTrace = contTrace;
           this.handler = handler;
@@ -247,8 +260,9 @@ definitionMetadata = tmp;
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
       return new FnLocalsInfo.class(fnName1, locals1);
     };
-    Object.defineProperty(this.FnLocalsInfo, 'class', {
-    value: class FnLocalsInfo {
+    Object.defineProperty(this.FnLocalsInfo, "class", {
+    enumerable: true,
+      value: class FnLocalsInfo {
         constructor(fnName, locals) {
           this.fnName = fnName;
           this.locals = locals;
@@ -259,8 +273,9 @@ definitionMetadata = tmp;
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
       return new LocalVarInfo.class(localName1, value1);
     };
-    Object.defineProperty(this.LocalVarInfo, 'class', {
-    value: class LocalVarInfo {
+    Object.defineProperty(this.LocalVarInfo, "class", {
+    enumerable: true,
+      value: class LocalVarInfo {
         constructor(localName, value) {
           this.localName = localName;
           this.value = value;
@@ -286,7 +301,9 @@ definitionMetadata = tmp;
       static [definitionMetadata] = ["object", "StackDelayHandler"]; 
     };
     this.StackDelayHandler = new StackDelayHandler$class;
-    Object.defineProperty(this.StackDelayHandler, 'class', { value: StackDelayHandler$class });
+    Object.defineProperty(this.StackDelayHandler, "class", {
+    value: StackDelayHandler$class
+    });
   }
   static get unreachable() {
     throw globalThis.Error("unreachable");

@@ -26,8 +26,9 @@ hi(0)
 //│   Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│     return new Cont$func$hi$.class(pc1);
 //│   };
-//│   Object.defineProperty(Cont$func$hi$1, 'class', {
-//│   value: class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│   Object.defineProperty(Cont$func$hi$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null);
@@ -102,8 +103,9 @@ sum(10000)
 //│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
 //│     return new Cont$func$sum$.class(pc1);
 //│   };
-//│   Object.defineProperty(Cont$func$sum$1, 'class', {
-//│   value: class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│   Object.defineProperty(Cont$func$sum$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp2;
 //│         tmp2 = super(null);

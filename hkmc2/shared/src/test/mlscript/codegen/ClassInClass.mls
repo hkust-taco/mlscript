@@ -18,7 +18,8 @@ data class Outer(a, b) with
 //│ Outer1 = function Outer(a1, b1) {
 //│   return new Outer.class(a1, b1);
 //│ };
-//│ Object.defineProperty(Outer1, 'class', {
+//│ Object.defineProperty(Outer1, "class", {
+//│   enumerable: true,
 //│   value: class Outer {
 //│     constructor(a, b) {
 //│       let tmp, tmp1, tmp2;
@@ -28,8 +29,9 @@ data class Outer(a, b) with
 //│       this.Inner = function Inner(c1) {
 //│         return new Inner.class(c1);
 //│       };
-//│       Object.defineProperty(this.Inner, 'class', {
-//│       value: class Inner {
+//│       Object.defineProperty(this.Inner, "class", {
+//│       enumerable: true,
+//│         value: class Inner {
 //│           constructor(c) {
 //│             let tmp3, tmp4, tmp5;
 //│             this.c = c;

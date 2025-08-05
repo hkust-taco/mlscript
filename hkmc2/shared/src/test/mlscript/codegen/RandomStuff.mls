@@ -30,7 +30,8 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x1) {
 //│   return new Foo.class(x1);
 //│ };
-//│ Object.defineProperty(Foo1, 'class', {
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
 //│   value: class Foo {
 //│     constructor(x) {
 //│       this.x = x;

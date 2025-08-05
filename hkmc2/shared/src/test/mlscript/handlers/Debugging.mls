@@ -44,8 +44,9 @@ fun f() =
 //│   Cont$func$f$1 = function Cont$func$f$(pc1) {
 //│     return new Cont$func$f$.class(pc1);
 //│   };
-//│   Object.defineProperty(Cont$func$f$1, 'class', {
-//│   value: class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│   Object.defineProperty(Cont$func$f$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp2;
 //│         tmp2 = super(null);

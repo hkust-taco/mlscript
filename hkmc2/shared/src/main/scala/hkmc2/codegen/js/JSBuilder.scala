@@ -319,13 +319,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 if isModule
                 then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
-                  }; # Object.defineProperty(${mkThis(owner)}.${sym.nme}, 'class', { value: ${clsTmp} });"
+                  }; # ${defineProperty(doc"${mkThis(owner)}.${sym.nme}", "class", clsTmp)};"
               case N =>
                 val v = getVar(sym)
                 if isModule
                 then doc"(${clsJS});"
                 else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
-                  }; # Object.defineProperty(${v}, 'class', { value: ${clsTmp} });"
+                  }; # ${defineProperty(v, "class", clsTmp)};"
             else
               val paramsAll = paramsOpt match
                 case None => auxParams
@@ -350,12 +350,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # Object.defineProperty(${ths}.${sym.nme}, 'class', { #  #{ value: ${clsJS} #}  # });"
+                  // Make the `class` property enumerable so that it can be
+                  // displayed by the `Rendering` module.
+                  doc"${ths}.${sym.nme} = ${f}; # ${defineProperty(
+                    doc"${ths}.${sym.nme}", "class", clsJS, enumerable = true)};"
                 case N =>
                   doc"${ths}.${sym.nme} = ${clsJS};"
               case N =>
                 fun match
-                case S(f) => doc"${getVar(sym)} = ${f}; # Object.defineProperty(${getVar(sym)}, 'class', { #  #{ value: ${clsJS} #}  # });"
+                case S(f) =>
+                  // Make the `class` property enumerable so that it can be
+                  // displayed by the `Rendering` module.
+                  doc"${getVar(sym)} = ${f}; # ${defineProperty(getVar(sym),
+                    "class", clsJS, enumerable = true)};"
                 case N => doc"${getVar(sym)} = ${clsJS};"
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
@@ -514,6 +521,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"{}"
     else
       doc"{ #{ ${t} #}  # }"
+  
+  def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
+    doc"Object.defineProperty(${target}, ${prop.escaped}, { #  #{ ${
+      if enumerable then doc"enumerable: true, # " else doc""
+    }value: ${value} #}  # })"
   
   def setupFunction(name: Option[Str], params: ParamList, body: Block)
       (using Raise, Scope): (Document, Document) =

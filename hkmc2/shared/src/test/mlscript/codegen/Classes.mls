@@ -10,7 +10,8 @@ data class Foo(arguments)
 //│ Foo1 = function Foo(arguments2) {
 //│   return new Foo.class(arguments2);
 //│ };
-//│ Object.defineProperty(Foo1, 'class', {
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
 //│   value: class Foo {
 //│     constructor(arguments1) {
 //│       this.arguments = arguments1;
@@ -26,7 +27,8 @@ data class Foo(eval)
 //│ Foo3 = function Foo(eval2) {
 //│   return new Foo.class(eval2);
 //│ };
-//│ Object.defineProperty(Foo3, 'class', {
+//│ Object.defineProperty(Foo3, "class", {
+//│   enumerable: true,
 //│   value: class Foo2 {
 //│     constructor(eval1) {
 //│       this.eval = eval1;
@@ -42,7 +44,8 @@ data class Foo(static)
 //│ Foo5 = function Foo(static2) {
 //│   return new Foo.class(static2);
 //│ };
-//│ Object.defineProperty(Foo5, 'class', {
+//│ Object.defineProperty(Foo5, "class", {
+//│   enumerable: true,
 //│   value: class Foo4 {
 //│     constructor(static1) {
 //│       this.static = static1;
@@ -58,7 +61,8 @@ data class Foo(v')
 //│ Foo7 = function Foo(v$_1) {
 //│   return new Foo.class(v$_1);
 //│ };
-//│ Object.defineProperty(Foo7, 'class', {
+//│ Object.defineProperty(Foo7, "class", {
+//│   enumerable: true,
 //│   value: class Foo6 {
 //│     constructor(v$_) {
 //│       this["v'"] = v$_;

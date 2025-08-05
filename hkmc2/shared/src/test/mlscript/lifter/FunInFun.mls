@@ -196,7 +196,8 @@ x + y
 //│ Tuple1 = function Tuple(a1, b1) {
 //│   return new Tuple.class(a1, b1);
 //│ };
-//│ Object.defineProperty(Tuple1, 'class', {
+//│ Object.defineProperty(Tuple1, "class", {
+//│   enumerable: true,
 //│   value: class Tuple {
 //│     constructor(a, b) {
 //│       this.a = a;

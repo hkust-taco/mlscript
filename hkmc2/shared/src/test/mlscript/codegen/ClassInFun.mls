@@ -39,8 +39,9 @@ fun test(x) =
 //│   Foo2 = function Foo(a1, b1) {
 //│     return new Foo.class(a1, b1);
 //│   };
-//│   Object.defineProperty(Foo2, 'class', {
-//│   value: class Foo1 {
+//│   Object.defineProperty(Foo2, "class", {
+//│   enumerable: true,
+//│     value: class Foo1 {
 //│       constructor(a, b) {
 //│         this.a = a;
 //│         this.b = b;

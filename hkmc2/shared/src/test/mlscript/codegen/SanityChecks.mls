@@ -105,7 +105,8 @@ Cls(1, 2).f(3)
 //│ Cls1 = function Cls(x1, y1) {
 //│   return new Cls.class(x1, y1);
 //│ };
-//│ Object.defineProperty(Cls1, 'class', {
+//│ Object.defineProperty(Cls1, "class", {
+//│   enumerable: true,
 //│   value: class Cls {
 //│     constructor(x, y) {
 //│       this.x = x;
@@ -134,7 +135,8 @@ Cls(1, 2).f(3)
 //│ Cls3 = function Cls(...args1) {
 //│   return new Cls.class(...args1);
 //│ };
-//│ Object.defineProperty(Cls3, 'class', {
+//│ Object.defineProperty(Cls3, "class", {
+//│   enumerable: true,
 //│   value: class Cls2 {
 //│     constructor(x, y) {
 //│       this.x = x;
@@ -168,7 +170,8 @@ Cls(1, 2).f(3, 4)(5)
 //│ Cls5 = function Cls(...args1) {
 //│   return new Cls.class(...args1);
 //│ };
-//│ Object.defineProperty(Cls5, 'class', {
+//│ Object.defineProperty(Cls5, "class", {
+//│   enumerable: true,
 //│   value: class Cls4 {
 //│     constructor(x, y) {
 //│       this.x = x;
@@ -251,8 +254,9 @@ if M.A(1).y is
 //│     this.A = function A(...args1) {
 //│       return new A.class(...args1);
 //│     };
-//│     Object.defineProperty(this.A, 'class', {
-//│     value: class A {
+//│     Object.defineProperty(this.A, "class", {
+//│     enumerable: true,
+//│       value: class A {
 //│         constructor(x1) {
 //│           this.x = x1;
 //│         }

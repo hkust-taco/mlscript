@@ -14,7 +14,8 @@ data class Lol(h) with
 //│ Lol1 = function Lol(h1) {
 //│   return new Lol.class(h1);
 //│ };
-//│ Object.defineProperty(Lol1, 'class', {
+//│ Object.defineProperty(Lol1, "class", {
+//│   enumerable: true,
 //│   value: class Lol {
 //│     constructor(h) {
 //│       let tmp, res, Cont$ctor$Lol$1;
@@ -22,8 +23,9 @@ data class Lol(h) with
 //│       Cont$ctor$Lol$1 = function Cont$ctor$Lol$(pc1) {
 //│         return new Cont$ctor$Lol$.class(pc1);
 //│       };
-//│       Object.defineProperty(Cont$ctor$Lol$1, 'class', {
-//│       value: class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│       Object.defineProperty(Cont$ctor$Lol$1, "class", {
+//│       enumerable: true,
+//│         value: class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│           constructor(pc) {
 //│             let tmp1;
 //│             tmp1 = super(null);

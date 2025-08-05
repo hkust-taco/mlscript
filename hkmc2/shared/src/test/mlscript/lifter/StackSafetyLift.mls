@@ -33,7 +33,8 @@ hi(0)
 //│     return new Cont$func$hi$.class(pc1)(n$01, scrut$11, tmp$21, stackDelayRes$31);
 //│   }
 //│ };
-//│ Object.defineProperty(Cont$func$hi$1, 'class', {
+//│ Object.defineProperty(Cont$func$hi$1, "class", {
+//│   enumerable: true,
 //│   value: class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       return (n$0, scrut$1, tmp$2, stackDelayRes$3) => {
@@ -124,7 +125,8 @@ sum(10000)
 //│     return new Cont$func$sum$.class(pc1)(n$01, scrut$11, tmp$21, tmp$31, curDepth$41, stackDelayRes$51);
 //│   }
 //│ };
-//│ Object.defineProperty(Cont$func$sum$1, 'class', {
+//│ Object.defineProperty(Cont$func$sum$1, "class", {
+//│   enumerable: true,
 //│   value: class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       return (n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) => {

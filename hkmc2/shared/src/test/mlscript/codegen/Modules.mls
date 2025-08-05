@@ -51,8 +51,9 @@ module M with
 //│     this.D = function D() {
 //│       return new D.class();
 //│     };
-//│     Object.defineProperty(this.D, 'class', {
-//│     value: class D {
+//│     Object.defineProperty(this.D, "class", {
+//│     enumerable: true,
+//│       value: class D {
 //│         constructor() {}
 //│         static [definitionMetadata] = ["class", "D", []]; 
 //│       }

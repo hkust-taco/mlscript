@@ -80,7 +80,8 @@ data class A(x) with
 //│ A1 = function A(x1) {
 //│   return new A.class(x1);
 //│ };
-//│ Object.defineProperty(A1, 'class', {
+//│ Object.defineProperty(A1, "class", {
+//│   enumerable: true,
 //│   value: class A {
 //│     constructor(x) {
 //│       this.x = x;
@@ -150,8 +151,9 @@ M.A().get
 //│     this.A = function A() {
 //│       return new A.class();
 //│     };
-//│     Object.defineProperty(this.A, 'class', {
-//│     value: class A5 {
+//│     Object.defineProperty(this.A, "class", {
+//│     enumerable: true,
+//│       value: class A5 {
 //│         constructor() {}
 //│         get get() {
 //│           return M15.x + M14.x;
@@ -209,7 +211,8 @@ M.A(2).newB.newA_B(3).newB.get
 //│     return new B.class()(A$instance$01);
 //│   }
 //│ };
-//│ Object.defineProperty(B2, 'class', {
+//│ Object.defineProperty(B2, "class", {
+//│   enumerable: true,
 //│   value: class B1 {
 //│     constructor() {
 //│       return (A$instance$0) => {
@@ -233,8 +236,9 @@ M.A(2).newB.newA_B(3).newB.get
 //│     this.A = function A(x1) {
 //│       return new A.class(x1);
 //│     };
-//│     Object.defineProperty(this.A, 'class', {
-//│     value: class A7 {
+//│     Object.defineProperty(this.A, "class", {
+//│     enumerable: true,
+//│       value: class A7 {
 //│         constructor(x) {
 //│           this.x = x;
 //│         }

@@ -170,8 +170,9 @@ str
 //│           Cont$handler$h1$perform$2 = function Cont$handler$h1$perform$(pc1) {
 //│             return new Cont$handler$h1$perform$.class(pc1);
 //│           };
-//│           Object.defineProperty(Cont$handler$h1$perform$2, 'class', {
-//│           value: class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
+//│           Object.defineProperty(Cont$handler$h1$perform$2, "class", {
+//│           enumerable: true,
+//│             value: class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│               constructor(pc) {
 //│                 let tmp15;
 //│                 tmp15 = super(null);
@@ -222,8 +223,9 @@ str
 //│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) {
 //│       return new Cont$handleBlock$h1$.class(pc1);
 //│     };
-//│     Object.defineProperty(Cont$handleBlock$h1$2, 'class', {
-//│     value: class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
+//│     Object.defineProperty(Cont$handleBlock$h1$2, "class", {
+//│     enumerable: true,
+//│       value: class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
 //│         constructor(pc) {
 //│           let tmp12;
 //│           tmp12 = super(null);
@@ -256,8 +258,9 @@ str
 //│             Cont$handler$h2$perform$2 = function Cont$handler$h2$perform$(pc1) {
 //│               return new Cont$handler$h2$perform$.class(pc1);
 //│             };
-//│             Object.defineProperty(Cont$handler$h2$perform$2, 'class', {
-//│             value: class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
+//│             Object.defineProperty(Cont$handler$h2$perform$2, "class", {
+//│             enumerable: true,
+//│               value: class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│                 constructor(pc) {
 //│                   let tmp18;
 //│                   tmp18 = super(null);
@@ -311,8 +314,9 @@ str
 //│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) {
 //│         return new Cont$handleBlock$h2$.class(pc1);
 //│       };
-//│       Object.defineProperty(Cont$handleBlock$h2$2, 'class', {
-//│       value: class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
+//│       Object.defineProperty(Cont$handleBlock$h2$2, "class", {
+//│       enumerable: true,
+//│         value: class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
 //│           constructor(pc) {
 //│             let tmp13;
 //│             tmp13 = super(null);

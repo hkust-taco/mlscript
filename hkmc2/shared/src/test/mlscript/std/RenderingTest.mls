@@ -117,7 +117,7 @@ renderAsStr of new Map of [[1, 2], [3, 4]]
 //│ = "Map(2) {1 => 2, 3 => 4}"
 
 renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
-//│ = "Map(2) {fun Foo => 2, class Symbol => 1}"
+//│ = "Map(2) {fun Foo {class: class Foo} => 2, class Symbol => 1}"
 
 renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
 //│ = "Map(1) {{a: 0} => {b: 0}}"
@@ -313,7 +313,7 @@ data class Point(x: Num, y: Num)
 
 // While classes with parameters should be rendered as `fun`.
 renderAsStr of Point
-//│ = "fun Point"
+//│ = "fun Point {class: class Point}"
 
 renderAsStr of Point.class
 //│ = "class Point"
@@ -372,7 +372,7 @@ renderAsStr of new Shape with
 //│ = "$anon {x: 0}"
 
 renderAsStr of Rectangle
-//│ = "fun Rectangle"
+//│ = "fun Rectangle {class: class Rectangle}"
 
 renderAsStr of Rectangle(0, 0, 5, 5)
 //│ = "Rectangle(0, 0, 5, 5)"

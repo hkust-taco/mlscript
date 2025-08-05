@@ -19,7 +19,8 @@ data class A(x) with
 //│     return new B.class(y1)(A$instance$01);
 //│   }
 //│ };
-//│ Object.defineProperty(B1, 'class', {
+//│ Object.defineProperty(B1, "class", {
+//│   enumerable: true,
 //│   value: class B {
 //│     constructor(y) {
 //│       return (A$instance$0) => {
@@ -37,7 +38,8 @@ data class A(x) with
 //│ A1 = function A(x1) {
 //│   return new A.class(x1);
 //│ };
-//│ Object.defineProperty(A1, 'class', {
+//│ Object.defineProperty(A1, "class", {
+//│   enumerable: true,
 //│   value: class A {
 //│     constructor(x) {
 //│       this.x = x;

@@ -182,7 +182,9 @@ data object Cls(x) with
 //│   }
 //│   static [definitionMetadata] = ["object", "Cls"]; 
 //│ }; Cls1 = new Cls$class;
-//│ Object.defineProperty(Cls1, 'class', { value: Cls$class });
+//│ Object.defineProperty(Cls1, "class", {
+//│   value: Cls$class
+//│ });
 
 :e
 Cls.x

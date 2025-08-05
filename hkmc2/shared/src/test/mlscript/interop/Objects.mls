@@ -25,7 +25,7 @@ let foo = Foo(1,2)
 
 
 Object.entries of Foo
-//│ = []
+//│ = [["class", class Foo]]
 
 Object.entries of foo
 //│ = [["x", 1], ["y", 2], ["a", 3]]

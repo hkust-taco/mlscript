@@ -25,8 +25,9 @@ fun test(a) =
 //│   Inner1 = function Inner(b1) {
 //│     return new Inner.class(b1);
 //│   };
-//│   Object.defineProperty(Inner1, 'class', {
-//│   value: class Inner {
+//│   Object.defineProperty(Inner1, "class", {
+//│   enumerable: true,
+//│     value: class Inner {
 //│       constructor(b) {
 //│         let tmp;
 //│         this.b = b;
@@ -83,8 +84,9 @@ fun test(a) =
 //│   C11 = function C1(b1) {
 //│     return new C1.class(b1);
 //│   };
-//│   Object.defineProperty(C11, 'class', {
-//│   value: class C1 {
+//│   Object.defineProperty(C11, "class", {
+//│   enumerable: true,
+//│     value: class C1 {
 //│       constructor(b) {
 //│         this.b = b;
 //│         Predef.print([
@@ -98,8 +100,9 @@ fun test(a) =
 //│   C21 = function C2(b1) {
 //│     return new C2.class(b1);
 //│   };
-//│   Object.defineProperty(C21, 'class', {
-//│   value: class C2 {
+//│   Object.defineProperty(C21, "class", {
+//│   enumerable: true,
+//│     value: class C2 {
 //│       constructor(b) {
 //│         this.b = b;
 //│         Predef.print([
@@ -138,7 +141,8 @@ Foo(123)
 //│ Foo1 = function Foo(a1) {
 //│   return new Foo.class(a1);
 //│ };
-//│ Object.defineProperty(Foo1, 'class', {
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
 //│   value: class Foo {
 //│     constructor(a) {
 //│       this.a = a;
@@ -175,7 +179,8 @@ Bar(1)
 //│ Bar1 = function Bar(x1) {
 //│   return new Bar.class(x1);
 //│ };
-//│ Object.defineProperty(Bar1, 'class', {
+//│ Object.defineProperty(Bar1, "class", {
+//│   enumerable: true,
 //│   value: class Bar {
 //│     constructor(x) {
 //│       let tmp1;

@@ -55,7 +55,8 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z1) {
 //│   return new Baz.class(z1);
 //│ };
-//│ Object.defineProperty(Baz1, 'class', {
+//│ Object.defineProperty(Baz1, "class", {
+//│   enumerable: true,
 //│   value: class Baz extends Bar3.class {
 //│     constructor(z) {
 //│       let tmp2;

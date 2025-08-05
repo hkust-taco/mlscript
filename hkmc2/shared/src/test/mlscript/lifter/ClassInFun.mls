@@ -49,7 +49,8 @@ f() + f() + f()
 //│     return new Cont$handleBlock$h$.class(pc1)(h$01, tmp$11, tmp$21, tmp$31, tmp$41);
 //│   }
 //│ };
-//│ Object.defineProperty(Cont$handleBlock$h$1, 'class', {
+//│ Object.defineProperty(Cont$handleBlock$h$1, "class", {
+//│   enumerable: true,
 //│   value: class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
@@ -130,7 +131,8 @@ f() + f() + f()
 //│     return new Cont$func$f$.class(pc1)(h$01, tmp$11);
 //│   }
 //│ };
-//│ Object.defineProperty(Cont$func$f$1, 'class', {
+//│ Object.defineProperty(Cont$func$f$1, "class", {
+//│   enumerable: true,
 //│   value: class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│     constructor(pc) {
 //│       return (h$0, tmp$1) => {
@@ -229,7 +231,8 @@ f(1).get()
 //│     return new Test.class()(x$01);
 //│   }
 //│ };
-//│ Object.defineProperty(Test1, 'class', {
+//│ Object.defineProperty(Test1, "class", {
+//│   enumerable: true,
 //│   value: class Test {
 //│     constructor() {
 //│       return (x$0) => {
@@ -294,7 +297,8 @@ f(1, 2).get()
 //│     return new Test.class(a1)(used1$01);
 //│   }
 //│ };
-//│ Object.defineProperty(Test3, 'class', {
+//│ Object.defineProperty(Test3, "class", {
+//│   enumerable: true,
 //│   value: class Test2 {
 //│     constructor(a) {
 //│       return (used1$0) => {
@@ -408,7 +412,8 @@ f(1)
 //│     return new A.class()(f$capture$01);
 //│   }
 //│ };
-//│ Object.defineProperty(A1, 'class', {
+//│ Object.defineProperty(A1, "class", {
+//│   enumerable: true,
 //│   value: class A {
 //│     constructor() {
 //│       return (f$capture$0) => {
@@ -470,7 +475,8 @@ f().foo()
 //│     return new Good.class()(x$11, y$21, z$31, f$capture$01);
 //│   }
 //│ };
-//│ Object.defineProperty(Good1, 'class', {
+//│ Object.defineProperty(Good1, "class", {
+//│   enumerable: true,
 //│   value: class Good {
 //│     constructor() {
 //│       return (x$1, y$2, z$3, f$capture$0) => {
@@ -502,7 +508,8 @@ f().foo()
 //│     return new Bad.class()(f$capture$01);
 //│   }
 //│ };
-//│ Object.defineProperty(Bad1, 'class', {
+//│ Object.defineProperty(Bad1, "class", {
+//│   enumerable: true,
 //│   value: class Bad {
 //│     constructor() {
 //│       return (f$capture$0) => {
@@ -606,8 +613,9 @@ f(2).get()
 //│   Test10 = function Test() {
 //│     return new Test.class();
 //│   };
-//│   Object.defineProperty(Test10, 'class', {
-//│   value: class Test9 {
+//│   Object.defineProperty(Test10, "class", {
+//│   enumerable: true,
+//│     value: class Test9 {
 //│       constructor() {}
 //│       get() {
 //│         return h$3(this, x)

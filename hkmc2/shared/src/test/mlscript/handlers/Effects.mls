@@ -175,8 +175,9 @@ if true do
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
 //│     return new Cont$handleBlock$h$.class(pc1);
 //│   };
-//│   Object.defineProperty(Cont$handleBlock$h$11, 'class', {
-//│   value: class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│   Object.defineProperty(Cont$handleBlock$h$11, "class", {
+//│   enumerable: true,
+//│     value: class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│       constructor(pc) {
 //│         let tmp12;
 //│         tmp12 = super(null);

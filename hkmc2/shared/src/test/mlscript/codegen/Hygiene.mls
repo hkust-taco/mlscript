@@ -22,7 +22,9 @@ object Test with
 //│   }
 //│   static [definitionMetadata] = ["object", "Test"]; 
 //│ }; Test1 = new Test$class;
-//│ Object.defineProperty(Test1, 'class', { value: Test$class });
+//│ Object.defineProperty(Test1, "class", {
+//│   value: Test$class
+//│ });
 
 Test
 //│ = Test {x: 12, class: object Test}
@@ -107,7 +109,8 @@ data class Cls(x) with
 //│ Cls1 = function Cls(x3) {
 //│   return new Cls.class(x3);
 //│ };
-//│ Object.defineProperty(Cls1, 'class', {
+//│ Object.defineProperty(Cls1, "class", {
+//│   enumerable: true,
 //│   value: class Cls {
 //│     #x;
 //│     #x1;
