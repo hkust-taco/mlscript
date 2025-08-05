@@ -15,7 +15,6 @@ import hkmc2.syntax.Tree.Ident
 import hkmc2.codegen.Path
 import hkmc2.Diagnostic.Source
 import hkmc2.Message.MessageContext
-import collection.immutable.SeqMap
 
 abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
@@ -78,7 +77,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val jsb = ltl.givenIn:
-        new JSBuilder
+        JSBuilder()
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
