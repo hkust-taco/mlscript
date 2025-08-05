@@ -618,7 +618,7 @@ object JSBuilder:
         then c.toString
         else f"\\u${c.toInt}%04X"
     }.mkString
-    
+  
 end JSBuilder
 
 
