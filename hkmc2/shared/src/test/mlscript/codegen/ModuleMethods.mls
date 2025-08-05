@@ -56,6 +56,7 @@ module Test with
 //│   static bar() {
 //│     return Test.foo()
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 //│ > 1

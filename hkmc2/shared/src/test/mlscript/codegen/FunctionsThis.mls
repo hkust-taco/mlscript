@@ -20,6 +20,7 @@ class Test with
 //│     tmp = foo();
 //│     Predef.print(tmp);
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ };
 

@@ -7,6 +7,7 @@ const RuntimeJS = {
   },
   symbols: {
     definitionMetadata: Symbol.for("mlscript.definitionMetadata"),
+    prettyPrint: Symbol.for("mlscript.prettyPrint")
   },
   short_and(lhs, rhs) {
     return lhs && rhs();

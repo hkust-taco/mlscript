@@ -1,4 +1,5 @@
 const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
+const prettyPrint = globalThis.Symbol.for("mlscript.prettyPrint");
 import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
@@ -14,6 +15,7 @@ let Runtime1;
       toString() {
         return "()"
       }
+      [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["object", "Unit"]; 
     };
     this.Unit = new Unit$class;
@@ -47,6 +49,7 @@ let Runtime1;
         raise() {
           return Runtime.topLevelEffect(this.reified, false)
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "EffectHandle", [null]]; 
       }
     });
@@ -59,6 +62,7 @@ let Runtime1;
         constructor(captures) {
           this.captures = captures;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "MatchResult", ["captures"]]; 
       }
     });
@@ -71,6 +75,7 @@ let Runtime1;
         constructor(errors) {
           this.errors = errors;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "MatchFailure", ["errors"]]; 
       }
     });
@@ -112,6 +117,7 @@ let Runtime1;
       static isArrayLike(xs3) {
         return runtime.safeCall(Iter.isArrayLike(xs3))
       }
+      static toString() { return runtime.render(this); }
       static [definitionMetadata] = ["module", "Tuple"]; 
     });
     (class Str {
@@ -133,6 +139,7 @@ let Runtime1;
       static drop(string2, n) {
         return runtime.safeCall(string2.slice(n))
       }
+      static toString() { return runtime.render(this); }
       static [definitionMetadata] = ["module", "Str"]; 
     });
     this.render = Rendering.render;
@@ -178,10 +185,12 @@ let Runtime1;
           return runtime.Unit
         }
       }
+      static toString() { return runtime.render(this); }
       static [definitionMetadata] = ["module", "TraceLogger"]; 
     });
     const FatalEffect$class = class FatalEffect {
       constructor() {}
+      toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "FatalEffect"]; 
     };
     this.FatalEffect = new FatalEffect$class;
@@ -190,6 +199,7 @@ let Runtime1;
     });
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {}
+      toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
     };
     this.PrintStackEffect = new PrintStackEffect$class;
@@ -205,6 +215,7 @@ let Runtime1;
         constructor(next) {
           this.next = next;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "FunctionContFrame", ["next"]]; 
       }
     });
@@ -219,6 +230,7 @@ let Runtime1;
           this.nextHandler = nextHandler;
           this.handler = handler;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "HandlerContFrame", ["next", "nextHandler", "handler"]]; 
       }
     });
@@ -235,6 +247,7 @@ let Runtime1;
           this.lastHandler = lastHandler;
           this.resumed = resumed;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "ContTrace", ["next", "last", "nextHandler", "lastHandler", "resumed"]]; 
       }
     });
@@ -249,11 +262,13 @@ let Runtime1;
           this.handler = handler;
           this.handlerFun = handlerFun;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "EffectSig", ["contTrace", "handler", "handlerFun"]]; 
       }
     });
     this.NonLocalReturn = class NonLocalReturn {
       constructor() {}
+      toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "NonLocalReturn"]; 
     };
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
@@ -266,6 +281,7 @@ let Runtime1;
           this.fnName = fnName;
           this.locals = locals;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "FnLocalsInfo", ["fnName", "locals"]]; 
       }
     });
@@ -279,6 +295,7 @@ let Runtime1;
           this.localName = localName;
           this.value = value;
         }
+        toString() { return runtime.render(this); }
         static [definitionMetadata] = ["class", "LocalVarInfo", ["localName", "value"]]; 
       }
     });
@@ -297,6 +314,7 @@ let Runtime1;
         });
         return Runtime.mkEffect(this, lambda)
       }
+      toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "StackDelayHandler"]; 
     };
     this.StackDelayHandler = new StackDelayHandler$class;
@@ -898,6 +916,7 @@ let Runtime1;
     Runtime.stackHandler = null;
     return result
   }
+  static toString() { return runtime.render(this); }
   static [definitionMetadata] = ["module", "Runtime"]; 
 });
 let Runtime = Runtime1; export default Runtime;

@@ -14,6 +14,7 @@ data class Foo()
 //│   enumerable: true,
 //│   value: class Foo {
 //│     constructor() {}
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", []]; 
 //│   }
 //│ });
@@ -46,6 +47,7 @@ data class Foo(a)
 //│     constructor(a) {
 //│       this.a = a;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["a"]]; 
 //│   }
 //│ });
@@ -85,6 +87,7 @@ data class Foo(a, b)
 //│       this.a = a;
 //│       this.b = b;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│   }
 //│ });
@@ -155,6 +158,7 @@ data class Inner(c) with
 //│     i1(d) {
 //│       return this.c + d
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Inner", ["c"]]; 
 //│   }
 //│ });
@@ -214,6 +218,7 @@ class Foo(x, val y, z, val z, z) with
 //│       tmp16 = "this.z = " + this.z;
 //│       Predef.print(tmp16);
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]]; 
 //│   }
 //│ });
@@ -244,6 +249,7 @@ class Foo(val z, val z)
 //│       this.z = z;
 //│       this.z = z1;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│   }
 //│ });

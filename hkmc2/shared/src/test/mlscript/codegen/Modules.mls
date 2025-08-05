@@ -9,6 +9,7 @@ module None
 //│   static {
 //│     None1 = None;
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "None"]; 
 //│ });
 
@@ -46,6 +47,7 @@ module M with
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
+//│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C"]; 
 //│     };
 //│     this.D = function D() {
@@ -55,6 +57,7 @@ module M with
 //│     enumerable: true,
 //│       value: class D {
 //│         constructor() {}
+//│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "D", []]; 
 //│       }
 //│     });
@@ -62,6 +65,7 @@ module M with
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
@@ -84,7 +88,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.85: 	M.oops
+//│ ║  l.89: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -102,6 +106,7 @@ module M with
 //│     M3 = M2;
 //│     this.m = M3;
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 

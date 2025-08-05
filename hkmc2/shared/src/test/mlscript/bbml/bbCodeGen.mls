@@ -71,6 +71,7 @@ data class Foo(x: Int)
 //│     constructor(x1) {
 //│       this.x = x1;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
 //│ });

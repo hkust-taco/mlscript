@@ -303,6 +303,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                     doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
                 .mkDocument(" ")
               }${
+                // If this class has a `toString` implementation, then delegate
+                // `prettyPrint` to `toString`.
+                if mtds.exists(_.sym.nme == "toString") then doc""" # [${
+                  getVar(State.prettyPrintSymbol)
+                }]() { return this.toString(); }"""
+                // Call the `render` function in the default `toString` method.
+                else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
+              }${
                 doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
                   kind.desc.escaped}, ${sym.nme.escaped}${
                   if (kind is syntax.Cls) && paramsOpt.isDefined then
@@ -482,7 +490,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
+    scope.allocateName(State.prettyPrintSymbol)
     doc"""const ${getVar(State.definitionMetadataSymbol)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
+      :/: doc"""const ${getVar(State.prettyPrintSymbol)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
       :/: programBody(p, exprt, wd)
   
   def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =

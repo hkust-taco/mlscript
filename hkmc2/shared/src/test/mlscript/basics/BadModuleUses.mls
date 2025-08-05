@@ -45,14 +45,14 @@ Example.foo() + 1
 //│ ╔══[ERROR] Unexpected moduleful application.
 //│ ║  l.44: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
-//│ = "class M {   static {     M1 = M;   }   static mtd(...args) {     runtime.checkArgs(\"mtd\", 0, true, args.length);     return 42   }   static [definitionMetadata] = [\"module\", \"M\"];  }1"
+//│ = "module M1"
 
 :e
 M + 1
 //│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.51: 	M + 1
 //│ ╙──      	^
-//│ = "class M {   static {     M1 = M;   }   static mtd(...args) {     runtime.checkArgs(\"mtd\", 0, true, args.length);     return 42   }   static [definitionMetadata] = [\"module\", \"M\"];  }1"
+//│ = "module M1"
 
 :e
 M |> id

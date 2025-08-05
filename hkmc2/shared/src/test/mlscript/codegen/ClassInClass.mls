@@ -47,6 +47,7 @@ data class Outer(a, b) with
 //│               d
 //│             ]
 //│           }
+//│           toString() { return runtime.render(this); }
 //│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 
 //│         }
 //│       });
@@ -64,6 +65,7 @@ data class Outer(a, b) with
 //│       tmp = this.Inner(c1);
 //│       return runtime.safeCall(tmp.i1(d))
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
 //│   }
 //│ });

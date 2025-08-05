@@ -273,8 +273,8 @@ slice(1, 1)(uint8Arr)
 
 :re
 concat([1, 2, 3], "hello", uint8Arr, mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: [object Object]
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})
 
 :re
 slice(0, 0)(mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: [object Object]
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})

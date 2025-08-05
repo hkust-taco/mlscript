@@ -32,6 +32,7 @@ data class A(x) with
 //│     getB() {
 //│       return this.A$instance$0.x + this.y
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "B", ["y"]]; 
 //│   }
 //│ });
@@ -49,6 +50,7 @@ data class A(x) with
 //│       tmp = B$(this, 2);
 //│       return runtime.safeCall(tmp.getB())
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│   }
 //│ });
@@ -79,6 +81,7 @@ class A with
 //│     g$this = runtime.safeCall(g(this));
 //│     this.x = g$this;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ };
 //│ tmp1 = new A3();

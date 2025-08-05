@@ -169,6 +169,7 @@ if true do
 //│         return arg
 //│       })
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│   };
 //│   h = new Handler$h$12();
@@ -206,6 +207,7 @@ if true do
 //│           break;
 //│         }
 //│       }
+//│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$handleBlock$h$", ["pc"]]; 
 //│     }
 //│   });

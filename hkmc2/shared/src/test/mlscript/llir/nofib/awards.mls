@@ -40,7 +40,7 @@ fun rqpart(le, x, yss, rle, rgt, r) = if yss is
 //│ ————————————————————————————————————————————————————————————————————————————————
 
 fun sort(l) = qsort((a, b) => ltTup2(a, b, (a, b) => a < b, (a, b) => a > b, (a, b) => ltList(a, b, (a, b) => a < b, (a, b) => a > b)), l, Nil)
-//│ ═══[COMPILATION ERROR] Name not found: member:ltTup2
+//│ ═══[COMPILATION ERROR] Name not found: member:ltList
 //│ Stopped due to an error during the Llir generation
 
 fun perms(m, nns) = if

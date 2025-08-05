@@ -16,6 +16,7 @@ data class Foo(arguments)
 //│     constructor(arguments1) {
 //│       this.arguments = arguments1;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["arguments"]]; 
 //│   }
 //│ });
@@ -33,6 +34,7 @@ data class Foo(eval)
 //│     constructor(eval1) {
 //│       this.eval = eval1;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["eval"]]; 
 //│   }
 //│ });
@@ -50,6 +52,7 @@ data class Foo(static)
 //│     constructor(static1) {
 //│       this.static = static1;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["static"]]; 
 //│   }
 //│ });
@@ -67,6 +70,7 @@ data class Foo(v')
 //│     constructor(v$_) {
 //│       this["v'"] = v$_;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["v'"]]; 
 //│   }
 //│ });

@@ -78,13 +78,13 @@ new Foo(123) with { fun foo = 27 }
 :re
 new (Foo(123)) with { fun foo = 27 }
 //│ > Foo 123 124
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value #<Foo> is not a constructor or null
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // TODO change semantics? Looks error-prone
 :re
 new {Foo(123)} with { fun foo = 27 }
 //│ > Foo 123 124
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value #<Foo> is not a constructor or null
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 new Foo(123) with
   // fun foo = super.foo + 1 // TODO (super)

@@ -59,6 +59,7 @@ hi(0)
 //│           break;
 //│         }
 //│       }
+//│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$func$hi$", ["pc"]]; 
 //│     }
 //│   });
@@ -149,6 +150,7 @@ sum(10000)
 //│           break;
 //│         }
 //│       }
+//│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$func$sum$", ["pc"]]; 
 //│     }
 //│   });

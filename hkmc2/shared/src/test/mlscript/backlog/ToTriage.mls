@@ -180,6 +180,7 @@ data object Cls(x) with
 //│   get huh() {
 //│     return this.x;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Cls"]; 
 //│ }; Cls1 = new Cls$class;
 //│ Object.defineProperty(Cls1, "class", {
@@ -189,7 +190,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.190: 	Cls.x
+//│ ║  l.191: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -207,8 +208,8 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       static [definitionMetadata] = ["class", "Bar'"];      };   }   static [definitionMetadata] = ["class", "Foo'"];  }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let Foo$_1;try { Foo$_1 = class Foo$_ {   constructor() {     this.Bar' = class Bar$_ {       constructor() {}       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Bar'"];      };   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Foo'"];  }; block$res28 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
 // ——— ——— ———
@@ -217,25 +218,25 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.216: 	module Example with
+//│ ║  l.217: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.217: 	// whoops
+//│ ║  l.218: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.218: 	  val a = this
+//│ ║  l.219: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.218: 	  val a = this
+//│ ║  l.219: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.233: 	let xs = new Oopsie
+//│ ║  l.234: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'xs'
-//│ ║  l.233: 	let xs = new Oopsie
+//│ ║  l.234: 	let xs = new Oopsie
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
@@ -255,7 +256,7 @@ oops
 
 Unit
 //│ ╔══[ERROR] Name not found: Unit
-//│ ║  l.256: 	Unit
+//│ ║  l.257: 	Unit
 //│ ╙──       	^^^^
 
 Int
@@ -273,6 +274,7 @@ class D extends id(C)
 //│   constructor() {
 //│     super(C1);
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "D"]; 
 //│ };
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
@@ -312,13 +314,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.313: 	open Stack { ::, Nil }
+//│ ║  l.315: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.319: 	open Stack { (::), Nil }
+//│ ║  l.321: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -326,7 +328,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.327: 	1 :: Nil
+//│ ║  l.329: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -337,9 +339,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.337: 	mkStr of ... // hello
+//│ ║  l.339: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.338: 	"oops"
+//│ ║  l.340: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -362,22 +364,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.363: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.365: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.363: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.365: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.372: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.374: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.378: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.380: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -386,7 +388,7 @@ if Foo(1, 2, 3) is Foo(arg) then arg
 
 module M with
   val name = "Student"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static [definitionMetadata] = ["module", "M"];  }'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = M;     this.name = "Student";   }   static toString() { return runtime.render(thi...<omitted>... }'
 
 // ——— ——— ———
 
@@ -411,10 +413,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.411: 	  let bar(x: Str): Str = x + x
+//│ ║  l.413: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.412: 	  bar("test")
+//│ ║  l.414: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———

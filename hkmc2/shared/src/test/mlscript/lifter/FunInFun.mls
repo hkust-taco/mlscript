@@ -183,6 +183,7 @@ x + y
 //│   constructor(a0$) {
 //│     this.a0$ = a0$;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ };
 //│ f5 = function f() {
@@ -203,6 +204,7 @@ x + y
 //│       this.a = a;
 //│       this.b = b;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Tuple", ["a", "b"]]; 
 //│   }
 //│ });
@@ -316,6 +318,7 @@ f(1, 2, 1000)
 //│   constructor(mutated0$) {
 //│     this.mutated0$ = mutated0$;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ };
 //│ f7 = function f(unused, immutable, mutated) {
@@ -466,6 +469,7 @@ g()(1)
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ };
 //│ g13 = function g() {
@@ -572,6 +576,7 @@ f()
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ };
 //│ f20 = function f() {
@@ -613,6 +618,7 @@ fun f(es, vs) =
 //│     this["v'$0"] = v$_$0;
 //│     this.fld = this["v'$0"];
 //│   }
+//│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ };
 //│ f23 = function f(es, vs) {

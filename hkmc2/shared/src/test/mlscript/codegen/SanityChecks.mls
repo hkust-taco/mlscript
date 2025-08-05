@@ -118,6 +118,7 @@ Cls(1, 2).f(3)
 //│       tmp3 = tmp2 + z;
 //│       return tmp3 + p
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
@@ -152,6 +153,7 @@ Cls(1, 2).f(3)
 //│       tmp4 = tmp3 + z;
 //│       return tmp4 + p
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
@@ -194,6 +196,7 @@ Cls(1, 2).f(3, 4)(5)
 //│         return tmp8 + s
 //│       }
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
 //│   }
 //│ });
@@ -266,10 +269,12 @@ if M.A(1).y is
 //│           let y = args[0];
 //│           return this.x + y
 //│         }
+//│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│       }
 //│     });
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 //│ tmp5 = runtime.safeCall(M1.A(1));

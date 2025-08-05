@@ -5,6 +5,7 @@ module Rendering with ...
 
 
 let definitionMetadataSymbol = RuntimeJS.symbols.definitionMetadata
+let prettyPrintSymbol = RuntimeJS.symbols.prettyPrint
 
 fun pass1(f)(...xs) = f(xs.0)
 fun pass2(f)(...xs) = f(xs.0, xs.1)
@@ -355,8 +356,10 @@ fun render(target, ...args) =
         arg.description is undefined then "Symbol()"
         else "Symbol(" + arg.description + ")"
       Num       then arg.toString()
+      RegExp    then arg.toString()
       true      then "true"
       false     then "false"
+    arg === ()  then "()"
     // Reuse the cached result if the display mode is inline.
     visitedObjects.has(arg) and indent is null then visitedObjects.get(arg)
     visitingObjects.has(arg) and visitingObjects.get(arg) is
@@ -409,8 +412,9 @@ fun render(target, ...args) =
             renderObject(arg, level, keyLength, startPos, false)
           // The `constructor` field refers to the class.
           proto.constructor is Function and
-            // If the prototype has its own implementation of `toString`, call it.
-            proto.hasOwnProperty("toString") then arg.toString() indentText(level)
+            // Call its implementation of `prettyPrint` if defined.
+            proto.hasOwnProperty(prettyPrintSymbol) then
+              arg.(prettyPrintSymbol)() indentText(level)
             // If the symbol `definitionMetadata` is defined on the constructor,
             // we render the function using the provided field names.
             proto.constructor.hasOwnProperty(definitionMetadataSymbol) and
@@ -421,7 +425,9 @@ fun render(target, ...args) =
               // patterns, or parameter-less classes), use the constructor name.
               definitionMetadata is [kind, name] then
                 // For class instances and objects, do not show the kind.
-                let head = if kind is "class" | "object" then name else kind + " " + name
+                let head = if kind is
+                  "class" | "object" then name
+                  else kind + " " + name
                 let body = renderObject of
                   arg, level, keyLength, startPos + head.length, true
                 head + (if body is "{}" then "" else " " + body)
@@ -432,14 +438,14 @@ fun render(target, ...args) =
           // Otherwise, the prototype is not a function.
           // If the prototype has its own implementation of `toString`, call it.
           proto.hasOwnProperty("toString") then arg.toString() indentText(level)
-          // Otherwise, treat the input as normal object.
+          // Otherwise, treat the input as a normal object.
           else renderObject(arg, level, keyLength, startPos, false)
-    // We have finished visiting this object
+    // We have finished visiting this object.
     let postfix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
       Int as index then " as ref'" + index
       else ""
     let result = rendered + postfix
-    // Add to the visited objects if the object is a circular reference
+    // Add to the visited objects if the object is a circular reference.
     if postfix.length > 0 do visitedObjects.set(arg, result)
     visitingObjects.delete(arg)
     result

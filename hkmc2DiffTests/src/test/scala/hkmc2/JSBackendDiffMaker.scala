@@ -33,6 +33,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
   val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)
+  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -54,6 +55,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       case r => output(s"Failed to load $name: $r")
     importRuntimeModule(runtimeNme, runtimeFile)
     h.execute(s"const $definitionMetadataNme = Symbol.for(\"mlscript.definitionMetadata\");")
+    h.execute(s"const $prettyPrintNme = Symbol.for(\"mlscript.prettyPrint\");")
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   

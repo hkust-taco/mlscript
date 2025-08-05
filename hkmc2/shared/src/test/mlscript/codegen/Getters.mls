@@ -80,6 +80,7 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "T"]; 
 //│ });
 
@@ -109,6 +110,7 @@ module M with
 //│   static get t() {
 //│     return 0;
 //│   }
+//│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
@@ -299,6 +301,7 @@ data class Foo(x) with
 //│     get oops() {
 //│       return this.x;
 //│     }
+//│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
 //│ });
