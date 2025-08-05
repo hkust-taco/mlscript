@@ -1,10 +1,9 @@
+const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
 import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-let definitionMetadata, Predef1, tmp;
-tmp = globalThis.Symbol.for("mlscript.definitionMetadata");
-definitionMetadata = tmp;
+let Predef1;
 (class Predef {
   static {
     Predef1 = Predef;
@@ -45,30 +44,30 @@ definitionMetadata = tmp;
     return runtime.safeCall(f4(x5))
   } 
   static tap(x6, f5) {
-    let tmp1;
-    tmp1 = runtime.safeCall(f5(x6));
-    return (tmp1 , x6)
+    let tmp;
+    tmp = runtime.safeCall(f5(x6));
+    return (tmp , x6)
   } 
   static pat(f6, x7) {
-    let tmp1;
-    tmp1 = runtime.safeCall(f6(x7));
-    return (tmp1 , x7)
+    let tmp;
+    tmp = runtime.safeCall(f6(x7));
+    return (tmp , x7)
   } 
   static alsoDo(x8, eff) {
     return x8
   } 
   static andThen(f7, g) {
     return (x9) => {
-      let tmp1;
-      tmp1 = runtime.safeCall(f7(x9));
-      return runtime.safeCall(g(tmp1))
+      let tmp;
+      tmp = runtime.safeCall(f7(x9));
+      return runtime.safeCall(g(tmp))
     }
   } 
   static compose(f8, g1) {
     return (x9) => {
-      let tmp1;
-      tmp1 = runtime.safeCall(g1(x9));
-      return runtime.safeCall(f8(tmp1))
+      let tmp;
+      tmp = runtime.safeCall(g1(x9));
+      return runtime.safeCall(f8(tmp))
     }
   } 
   static passTo(receiver, f9) {
@@ -92,10 +91,10 @@ definitionMetadata = tmp;
     }
   } 
   static print(...xs) {
-    let tmp1, tmp2;
-    tmp1 = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp2 = runtime.safeCall(tmp1(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp2))
+    let tmp, tmp1;
+    tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
+    tmp1 = runtime.safeCall(tmp(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp1))
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
@@ -105,9 +104,9 @@ definitionMetadata = tmp;
     }
   } 
   static notImplemented(msg) {
-    let tmp1;
-    tmp1 = "Not implemented: " + msg;
-    throw globalThis.Error(tmp1);
+    let tmp;
+    tmp = "Not implemented: " + msg;
+    throw globalThis.Error(tmp);
   } 
   static get notImplementedError() {
     throw globalThis.Error("Not implemented");
@@ -117,28 +116,28 @@ definitionMetadata = tmp;
   } 
   static foldr(f13) {
     return (first, ...rest) => {
-      let len, i, init, scrut, scrut1, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+      let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
       scrut1 = len == 0;
       if (scrut1 === true) {
         return first
       } else {
-        tmp1 = len - 1;
-        i = tmp1;
-        tmp2 = runtime.safeCall(rest.at(i));
-        init = tmp2;
-        tmp7: while (true) {
+        tmp = len - 1;
+        i = tmp;
+        tmp1 = runtime.safeCall(rest.at(i));
+        init = tmp1;
+        tmp6: while (true) {
           scrut = i > 0;
           if (scrut === true) {
-            tmp3 = i - 1;
-            i = tmp3;
-            tmp4 = runtime.safeCall(rest.at(i));
-            tmp5 = runtime.safeCall(f13(tmp4, init));
-            init = tmp5;
-            tmp6 = runtime.Unit;
-            continue tmp7;
+            tmp2 = i - 1;
+            i = tmp2;
+            tmp3 = runtime.safeCall(rest.at(i));
+            tmp4 = runtime.safeCall(f13(tmp3, init));
+            init = tmp4;
+            tmp5 = runtime.Unit;
+            continue tmp6;
           } else {
-            tmp6 = runtime.Unit;
+            tmp5 = runtime.Unit;
           }
           break;
         }
@@ -147,21 +146,21 @@ definitionMetadata = tmp;
     }
   } 
   static mkStr(...xs2) {
-    let tmp1, tmp2, lambda;
+    let tmp, tmp1, lambda;
     lambda = (undefined, function (acc, x9) {
-      let tmp3, tmp4, tmp5;
+      let tmp2, tmp3, tmp4;
       if (typeof x9 === 'string') {
-        tmp3 = true;
+        tmp2 = true;
       } else {
-        tmp3 = false;
+        tmp2 = false;
       }
-      tmp4 = runtime.safeCall(Predef.assert(tmp3));
-      tmp5 = acc + x9;
-      return (tmp4 , tmp5)
+      tmp3 = runtime.safeCall(Predef.assert(tmp2));
+      tmp4 = acc + x9;
+      return (tmp3 , tmp4)
     });
-    tmp1 = lambda;
-    tmp2 = runtime.safeCall(Predef.fold(tmp1));
-    return runtime.safeCall(tmp2(...xs2))
+    tmp = lambda;
+    tmp1 = runtime.safeCall(Predef.fold(tmp));
+    return runtime.safeCall(tmp1(...xs2))
   } 
   static enterHandleBlock(handler, body) {
     return Runtime.enterHandleBlock(handler, body)

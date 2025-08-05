@@ -478,9 +478,16 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     go(p.main)
   
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+    scope.allocateName(State.definitionMetadataSymbol)
+    doc"""const ${getVar(State.definitionMetadataSymbol)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
+      :/: programBody(p, exprt, wd)
+  
+  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
     reserveNames(p)
+    // Allocate names for imported modules.
     p.imports.foreach: i =>
       i._1 -> scope.allocateName(i._1)
+    // Generate import statements.
     val imps = p.imports.map: i =>
       val path = i._2
       val relPath = if path.startsWith("/")

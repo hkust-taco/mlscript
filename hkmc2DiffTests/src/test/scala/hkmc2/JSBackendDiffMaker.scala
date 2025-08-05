@@ -82,7 +82,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le, N, wd)
+        jsb.programBody(le, N, wd)
       val jsStr = je.stripBreaks.mkString(100)
       output(s"JS (unsanitized):")
       output(jsStr)

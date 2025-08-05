@@ -9,7 +9,7 @@ import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
 import hkmc2.syntax.Keyword.`override`
-import semantics.Elaborator.{Ctx, State, ctx}
+import semantics.Elaborator.{Ctx, State}
 
 
 class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):
@@ -85,19 +85,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       val blk = new semantics.Term.Blk(
-        semantics.Import(State.runtimeSymbol, runtimeFile.toString) ::
-          semantics.Import(State.termSymbol, termFile.toString) ::
-          // Generate `definitionMetadata = Symbol.for("mlscript.definitionMetadata")`.
-          semantics.LetDecl(State.definitionMetadataSymbol, Nil) ::
-          semantics.DefineVar(State.definitionMetadataSymbol, {
-            import syntax.*, Tree.*, semantics.*
-            val symbolRef = Term.SynthSel(State.globalThisSymbol.ref().withIArgs(Nil), Ident("Symbol"))(N).withIArgs(Nil)
-            Term.App(
-              Term.SynthSel(symbolRef, Ident("for"))(S(ctx.builtins.Symbol.`for`)).withIArgs(Nil),
-              Term.Tup(PlainFld(Term.Lit(StrLit("mlscript.definitionMetadata"))) :: Nil)(DummyTup)
-            )(App(Dummy, Dummy), S(ctx.builtins.Symbol.`for`), FlowSymbol("definitionMetadata")).withIArgs(Nil)
-          }) :: blk0.stats,
-      blk0.res
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: semantics.Import(State.termSymbol, termFile.toString) :: blk0.stats,
+        blk0.res
       )
       val low = ltl.givenIn:
         new codegen.Lowering()
