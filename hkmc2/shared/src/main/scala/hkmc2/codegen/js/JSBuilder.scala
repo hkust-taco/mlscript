@@ -481,7 +481,6 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1)} from "${relPath}";"""
-    // val syms = doc"""const ${scope.lookup_!(State.definitionMetadataSymbol)} = ${result(Value.Ref(ctx.builtins.Symbol))}.for("mlscript.definitionMetadata");"""
     imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym)}; export default ${sym.nme};\n"
