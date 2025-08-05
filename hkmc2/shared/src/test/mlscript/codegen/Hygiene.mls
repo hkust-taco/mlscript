@@ -194,7 +194,7 @@ Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = (val ref'1 = module Whoops {w: ref'1})
+//│ = module Whoops {w: ref'1} as ref'1
 
 Whoops.Whoops.g()
 //│ = "Hello"

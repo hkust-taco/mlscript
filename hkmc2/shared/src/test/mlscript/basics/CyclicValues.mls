@@ -9,6 +9,6 @@ let foo = Foo(null)
 set foo.x = foo
 
 foo
-//│ = (val ref'1 = Foo(ref'1))
+//│ = Foo(ref'1) as ref'1
 
 

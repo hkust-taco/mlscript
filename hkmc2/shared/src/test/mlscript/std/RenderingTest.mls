@@ -184,7 +184,7 @@ renderAsStr of [42, 100, test]
 set test.test = test
 
 renderAsStr of test
-//│ = "(val ref'1 = fun test {test: ref'1})"
+//│ = "fun test {test: ref'1} as ref'1"
 
 let greetings = () => "hello"
 //│ greetings = fun greetings
@@ -219,7 +219,7 @@ let a =
 set a.x = a
 
 a
-//│ = (val ref'1 = {x: ref'1, y: 1})
+//│ = {x: ref'1, y: 1} as ref'1
 
 // Test: an object is referenced multiple times in a circular way.
 
@@ -236,20 +236,20 @@ set tree.left.left = tree
 set tree.right.left = tree
 
 tree
-//│ = (val ref'1 = {left: {left: ref'1, right: null}, right: {left: ref'1, right: null}})
+//│ = {left: {left: ref'1, right: null}, right: {left: ref'1, right: null}} as ref'1
 
 // Test: nested circular reference.
 
 // If the same circular object appears multiple times, it should be rendered as
 // the same reference.
 let b = [a, a]
-//│ b = [(val ref'1 = {x: ref'1, y: 1}), (val ref'1 = {x: ref'1, y: 1})]
+//│ b = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1]
 
 b.push(b)
 //│ = 3
 
 b
-//│ = (val ref'2 = [(val ref'1 = {x: ref'1, y: 1}), (val ref'1 = {x: ref'1, y: 1}), ref'2])
+//│ = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1, ref'2] as ref'2
 
 let functionWithProperties = Object.assign(x => x, "kind": "Callable")
 //│ functionWithProperties = fun {kind: "Callable"}
@@ -352,7 +352,7 @@ class SelfRef with
   val b = 1
 
 renderAsStr of new SelfRef
-//│ = "(val ref'1 = SelfRef {a: ref'1, b: 1})"
+//│ = "SelfRef {a: ref'1, b: 1} as ref'1"
 
 renderAsStr of
   new Object with

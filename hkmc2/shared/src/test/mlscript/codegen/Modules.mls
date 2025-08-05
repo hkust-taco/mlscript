@@ -108,7 +108,7 @@ module M with
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = (val ref'1 = module M {m: ref'1})
+//│ = module M {m: ref'1} as ref'1
 
 
 

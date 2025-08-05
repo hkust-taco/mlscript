@@ -424,12 +424,12 @@ fun render(target, ...args) =
           // Otherwise, treat the input as normal object.
           else renderObject(arg, level, keyLength, startPos)
     // We have finished visiting this object
-    let prefix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
-      Int as index then "(val ref'" + index + " = "
+    let postfix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
+      Int as index then " as ref'" + index
       else ""
-    let result = if prefix.length === 0 then rendered else prefix + rendered + ")"
+    let result = rendered + postfix
     // Add to the visited objects if the object is a circular reference
-    if prefix.length > 0 do visitedObjects.set(arg, result)
+    if postfix.length > 0 do visitedObjects.set(arg, result)
     visitingObjects.delete(arg)
     result
   renderValue(target, 0, 0, 0)
