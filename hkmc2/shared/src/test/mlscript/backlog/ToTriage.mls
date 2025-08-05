@@ -189,7 +189,7 @@ data object Cls(x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.188: 	Cls.x
+//│ ║  l.190: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -217,25 +217,25 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.214: 	module Example with
+//│ ║  l.216: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.215: 	// whoops
+//│ ║  l.217: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.216: 	  val a = this
+//│ ║  l.218: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.216: 	  val a = this
+//│ ║  l.218: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.231: 	let xs = new Oopsie
+//│ ║  l.233: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'xs'
-//│ ║  l.231: 	let xs = new Oopsie
+//│ ║  l.233: 	let xs = new Oopsie
 //│ ╙──       	    ^^
 //│ ═══[RUNTIME ERROR] ReferenceError: xs is not defined
 
@@ -255,7 +255,7 @@ oops
 
 Unit
 //│ ╔══[ERROR] Name not found: Unit
-//│ ║  l.254: 	Unit
+//│ ║  l.256: 	Unit
 //│ ╙──       	^^^^
 
 Int
@@ -312,13 +312,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.311: 	open Stack { ::, Nil }
+//│ ║  l.313: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.317: 	open Stack { (::), Nil }
+//│ ║  l.319: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -326,7 +326,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.325: 	1 :: Nil
+//│ ║  l.327: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -337,9 +337,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.335: 	mkStr of ... // hello
+//│ ║  l.337: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.336: 	"oops"
+//│ ║  l.338: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -362,22 +362,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.361: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.363: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.361: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.363: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.370: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.372: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.376: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.378: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -411,10 +411,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.409: 	  let bar(x: Str): Str = x + x
+//│ ║  l.411: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.410: 	  bar("test")
+//│ ║  l.412: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———

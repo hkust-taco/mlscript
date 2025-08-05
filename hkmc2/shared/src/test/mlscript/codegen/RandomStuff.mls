@@ -70,10 +70,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.69: 	let foo = 1
+//│ ║  l.70: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.70: 	fun foo(x) = foo
+//│ ║  l.71: 	fun foo(x) = foo
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;
