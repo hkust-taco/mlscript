@@ -306,7 +306,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
                   kind.desc.escaped}, ${sym.nme.escaped}${
                   if (kind is syntax.Cls) && paramsOpt.isDefined then
-                    doc", [${ctorFields.map(_._1.name.escaped).mkDocument(", ")}]"
+                    doc", [${ctorParams.map { (p, _) => p.decl match
+                      case S(Param(flags = FldFlags(value = true))) => doc"${p.name.escaped}"
+                      case S(_) | N => doc"null"
+                    }.mkDocument(", ")}]"
                   else doc""
                 }]; """
               } #}  # }"

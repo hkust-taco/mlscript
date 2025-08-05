@@ -214,7 +214,7 @@ class Foo(x, val y, z, val z, z) with
 //│       tmp16 = "this.z = " + this.z;
 //│       Predef.print(tmp16);
 //│     }
-//│     static [definitionMetadata] = ["class", "Foo", ["y", "z"]]; 
+//│     static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]]; 
 //│   }
 //│ });
 
@@ -226,7 +226,7 @@ Foo(10, 20, 30, 40, 50)
 //│ > this.y = 20
 //│ > z = 50
 //│ > this.z = 40
-//│ = Foo(20, 40)
+//│ = Foo(_, 20, _, 40, _)
 
 
 :todo // * This should be an error

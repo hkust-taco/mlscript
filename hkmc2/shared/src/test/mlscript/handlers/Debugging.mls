@@ -185,7 +185,7 @@ let res =
     fun break(payload)(resume) = resume
   using Debugger = h
   Runtime.try(() => Test.main())
-//│ res = EffectHandle()
+//│ res = EffectHandle(_)
 
 :re
 res.raise()

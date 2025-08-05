@@ -324,6 +324,11 @@ renderAsStr of Point(1, 2)
 renderAsStr of Point(1, 2)
 //│ = "Point(1, 2)"
 
+class Bar(x: Int, val a: Int)
+
+renderAsStr of Bar(123, 789)
+//│ = "Bar(_, 789)"
+
 import "../../mlscript-compile/Stack.mls"
 
 open Stack
@@ -345,7 +350,7 @@ class Point(x: Num, y: Num) with
 // Note that we do not display members defined in the body.
 // Some classes define lots of members, so doing so could be problematic.
 renderAsStr of new Point(0, 1)
-//│ = "Point()"
+//│ = "Point(_, _)"
 
 class SelfRef with
   val a = this

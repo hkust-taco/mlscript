@@ -47,7 +47,7 @@ let Runtime1;
         raise() {
           return Runtime.topLevelEffect(this.reified, false)
         }
-        static [definitionMetadata] = ["class", "EffectHandle", []]; 
+        static [definitionMetadata] = ["class", "EffectHandle", [null]]; 
       }
     });
     this.MatchResult = function MatchResult(captures1) {

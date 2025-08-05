@@ -53,7 +53,7 @@ open Iter
 
 filtering of [], _ =>
   1
-//│ = Iterable()
+//│ = Iterable(_)
 
 print(_)
 //│ = fun

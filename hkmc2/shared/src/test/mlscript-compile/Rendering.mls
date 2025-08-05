@@ -181,16 +181,16 @@ fun render(target, ...args) =
       i = 0
       itemIndentationLength = if indent is null then 0 else (level + 1) * indent.length
     let done() = i >= length
-    let next(isFirst: Bool, prefixLength: Int) =
-      let
-        key = fieldNames.[i]
-        value = instance.(key)
-      set i += 1
-      let
-        prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
-        valueStartLength = if prefixLengthIfSameLine > breakLength
-          then itemIndentationLength else prefixLengthIfSameLine
-      renderValue(value, level + 1, 0, valueStartLength)
+    let next(isFirst: Bool, prefixLength: Int) = if fieldNames.[i] is
+      do set i += 1
+      null then "_"
+      Str as key then
+        let
+          value = instance.(key)
+          prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+          valueStartLength = if prefixLengthIfSameLine > breakLength
+            then itemIndentationLength else prefixLengthIfSameLine
+        renderValue(value, level + 1, 0, valueStartLength)
     renderSequence of done, next, level, keyLength, startPos, symbolsForClass(constructorName)
   fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
     let
