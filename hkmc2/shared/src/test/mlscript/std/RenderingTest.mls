@@ -342,7 +342,8 @@ class Point(x: Num, y: Num) with
   val x = x
   val y = y
 
-// Should we display the members?
+// Note that we do not display members defined in the body.
+// Some classes define lots of members, so doing so could be problematic.
 renderAsStr of new Point(0, 1)
 //│ = "Point()"
 
