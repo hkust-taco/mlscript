@@ -28,7 +28,7 @@ type StackT[A] = Stack.Cons[A] | Stack.Nil
 
 module Parser with ...
 
-val tracer = new mut TreeTracer.TreeTracer
+val tracer = new TreeTracer.TreeTracer
 
 let termOptions =
   kind: "term", rule: termRule

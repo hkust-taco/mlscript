@@ -295,7 +295,7 @@ data class ParseRule[A](name: Str, mut val choices: StackT[ChoiceT[A]]) with
 
 // Shorthands for constructing parse rules.
 // Automatically adds an end choice to the rule if no choices are provided.
-fun rule(name, ...choices) = new mut ParseRule of
+fun rule(name, ...choices) = new ParseRule of
   name
   if choices.length == 0 then
     Choice.end(()) :: Nil

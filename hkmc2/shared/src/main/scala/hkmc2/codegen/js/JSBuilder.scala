@@ -96,8 +96,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case _: Value.Lam => doc"(${result(r)})"
     case _ => result(r)
   
-  def fieldSelect(s: Str): Document =
-    if JSBuilder.isValidFieldName(s) then doc".$s"
+  def fieldSelect(s: Str): Document = escapeField(s, ".")
+  def escapeField(s: Str, defaultPrefix: Str): Document =
+    if JSBuilder.isValidFieldName(s) then doc"$defaultPrefix$s"
     else s.toIntOption match
       case S(index) => s"[$index]"
       case N => s"[${JSBuilder.makeStringLiteral(s)}]"
@@ -251,9 +252,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   val nme = scp.allocateName(fld)
                   doc" # $mtdPrefix#$nme;"
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
-                // doc" # /*${valSym.name}*/"
-                doc" # get ${valSym.name}() { return ${getVar(letSym)}; }" ::
-                  doc" # set ${valSym.name}(value) { ${getVar(letSym)} = value; }" ::
+                doc" # get ${escapeField(valSym.name, "")}() { return ${getVar(letSym)}; }" ::
+                  doc" # set ${escapeField(valSym.name, "")}(value) { ${getVar(letSym)} = value; }" ::
                   Nil
               (privDecls ::: accessors).mkDocument(doc"")
             val preCtorCode = body(preCtor, true)

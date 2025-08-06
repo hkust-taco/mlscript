@@ -1,18 +1,64 @@
 :js
 
 
+:sjs
+object Foo with
+  val x' = 0
+//│ JS (unsanitized):
+//│ let Foo1;
+//│ const Foo$class = class Foo {
+//│   constructor() {
+//│     this["x'"] = 0;
+//│     Object.defineProperty(this, "class", {
+//│     value: Foo
+//│     })
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Foo"]; 
+//│ }; Foo1 = globalThis.Object.freeze(new Foo$class);
+
+Foo.x'
+//│ = 0
+
+Foo.("x'")
+//│ = 0
+
+:sjs
+object Foo with
+  mut val x' = 0
+//│ JS (unsanitized):
+//│ let Foo3;
+//│ const Foo$class1 = class Foo2 {
+//│   #x$_;
+//│   get ["x'"]() { return this.#x$_; }
+//│   set ["x'"](value) { this.#x$_ = value; }
+//│   constructor() {
+//│     this["x'"] = 0;
+//│     Object.defineProperty(this, "class", {
+//│     value: Foo2
+//│     })
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Foo"]; 
+//│ }; Foo3 = globalThis.Object.freeze(new Foo$class1);
+
+set Foo.x' += 1
+
+Foo.("x'")
+//│ = 1
+
 
 
 :sjs
 class Foo(x, val y, mut val z)
 //│ JS (unsanitized):
-//│ let Foo1;
-//│ Foo1 = function Foo(x1, y1, z1) {
+//│ let Foo5;
+//│ Foo5 = function Foo(x1, y1, z1) {
 //│   return globalThis.Object.freeze(new Foo.class(x1, y1, z1));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
+//│ Object.defineProperty(Foo5, "class", {
 //│   enumerable: true,
-//│   value: class Foo {
+//│   value: class Foo4 {
 //│     #x;
 //│     #z;
 //│     get z() { return this.#z; }
