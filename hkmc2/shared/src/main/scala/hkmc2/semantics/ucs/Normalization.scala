@@ -354,7 +354,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     // Create a split that binds the pattern arguments.
     def bindPatternArguments(split: Split): Split =
       patternArguments.foldRight(split):
-        case ((sym, (_, rcd)), innerSplit) => Split.Let(sym, rcd, innerSplit)
+        case ((sym, arg), innerSplit) => Split.Let(sym, arg.term, innerSplit)
     val split = bindPatternArguments(tempLet("matchResult", unapplyCall): resultSymbol =>
       extractionArgsOpt match
         case N =>
