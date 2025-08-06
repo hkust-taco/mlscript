@@ -6,6 +6,18 @@ open Option
 open Iter
 open FingerTreeList
 
+fun normIdx(idx, len) =
+  if idx < 0 then idx + len
+  else idx
+
+// Follows the semantics of Array.prototype.slice indices:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+fun normIdxSlice(i, len) =
+  if i < 0 and
+    i >= -len then len + i
+    else 0
+  else i
+
 // Node[T]
 class Branch2(val size, val e1, val e2)
 class Branch3(val size, val e1, val e2, val e3)
@@ -33,7 +45,17 @@ class LFT extends IterableBase with
   fun length = FingerTreeList.length(this)
   fun at(i) = get(i)(this)
   fun concat(other) = FingerTreeList.concat(this, other)
-  fun slice(beg, end) = FingerTreeList.slice(beg, length - end)(this)
+  fun slice(beg, end) = 
+    let len = this.length
+    set beg = normIdxSlice(beg, len)
+    set end = normIdxSlice(end, len)
+    if beg >= len do
+      return Empty
+    if end >= len do
+      set end = len
+    if end <= beg do
+      return Empty
+    FingerTreeList.slice(beg, len - end)(this)
 
 object Empty extends LFT with
   fun toString() = "[" + this joined(", ") + "]"
@@ -107,10 +129,6 @@ fun repeatPopBack(n)(xs) =
     _ then if popBack(xs) is
       Nil then xs
       View(_, rest) then repeatPopBack(n - 1)(rest)
-
-fun normIdx(idx, len) =
-  if idx < 0 then idx + len
-  else idx
 
 object SpliceMarker
 
@@ -186,21 +204,6 @@ fun popBack(ft) = if safeInput(ft) is
 // amortized O(log n)
 fun (++) concat(ft1, ft2) = concatMiddle(safeInput(ft1), [], safeInput(ft2))
 
-fun __markerConcat(...arr) =
-  let acc = FingerTreeList.mk()
-  let idx = 0
-  while idx < arr.length do
-    if arr.[idx] is SpliceMarker then
-      let ftl = arr.[idx + 1]
-      set acc = acc ++ safeInput(ftl)
-      set idx = idx + 2
-    else
-      set acc = acc :+ arr.[idx]
-      set idx = idx + 1
-  acc
-
-val __split = SpliceMarker
-
 // amortized O(log n)
 fun ith(idx) = case
   Empty then None
@@ -231,3 +234,21 @@ fun slice(beg, end)(und) =
 fun isFingerTree(xs) = if xs is
   LFT then true
   else false
+
+// The following functions are not meant for users; it's meant referred to by Runtime.mls
+// TODO: use `FingerTreeList.internals.concat` when this is implemented
+
+fun __markerConcat(...arr) =
+  let acc = FingerTreeList.mk()
+  let idx = 0
+  while idx < arr.length do
+    if arr.[idx] is SpliceMarker then
+      let ftl = arr.[idx + 1]
+      set acc = acc ++ safeInput(ftl)
+      set idx = idx + 2
+    else
+      set acc = acc :+ arr.[idx]
+      set idx = idx + 1
+  acc
+
+val __split = SpliceMarker

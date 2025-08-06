@@ -14,8 +14,12 @@ open LazyFingerTree
 open Benchmark
 open Runtime
 
+:silent
 let suite = mkSuite()
-//│ suite = [object Object]
+
+fun materialize(xs) = if (xs |> FingerTreeList.isFingerTree)
+  then xs
+  else xs.materialize()
 
 :sjs
 fun buildLazy(i) =
@@ -110,19 +114,19 @@ fun funnySumEager(xs) = if xs is
 //│ };
 
 :silent
-suite.add("buildLazy3", () => buildLazy(3))
-suite.add("buildLazy33", () => buildLazy(33))
-suite.add("buildLazy333", () => buildLazy(333))
-suite.add("buildLazy3333", () => buildLazy(3333))
+suite.add("BuildLazy3", () => buildLazy(3))
+suite.add("BuildLazy33", () => buildLazy(33))
+suite.add("BuildLazy333", () => buildLazy(333))
+suite.add("BuildLazy3333", () => buildLazy(3333))
 let res = buildLazy(1000)
 
 res |> funnySumEager
 //│ = 1001000
 
-suite.add("lazyListFunnySumEager", () => 
+:silent
+suite.add("LazyBuiltFunnySumEager1000", () => 
   let res = buildLazy(1000)
   res |> funnySumEager)
-//│ = [object Object]
 
 :silent
 let res = buildLazy(1000)
@@ -132,24 +136,24 @@ let res = buildLazy(1000)
 res |> funnySum
 //│ = 1001000
 
-suite.add("lazyListFunnySum1000", () => 
+:silent
+suite.add("LazyBuiltFunnySum1000", () => 
   let res = buildLazy(1000)
   res |> funnySum)
-suite.add("lazyListFunnySum100", () => 
+suite.add("LazyBuiltFunnySum100", () => 
   let res = buildLazy(100)
   res |> funnySum)
-suite.add("lazyListFunnySum10", () => 
+suite.add("LazyBuiltFunnySum10", () => 
   let res = buildLazy(10)
   res |> funnySum)
-//│ = [object Object]
 
 //=========================================================================
 
 :silent
-suite.add("buildEager3", () => buildEager(3))
-suite.add("buildEager33", () => buildEager(33))
-suite.add("buildEager333", () => buildEager(333))
-suite.add("buildEager3333", () => buildEager(3333))
+suite.add("BuildEager3", () => buildEager(3))
+suite.add("BuildEager33", () => buildEager(33))
+suite.add("BuildEager333", () => buildEager(333))
+suite.add("BuildEager3333", () => buildEager(3333))
 let res = buildEager(1000)
 let res100 = buildEager(100)
 let res10 = buildEager(10)//+ runtime clock time (321984c): 128.79833 ms
@@ -157,18 +161,18 @@ let res10 = buildEager(10)//+ runtime clock time (321984c): 128.79833 ms
 res |> funnySumEager
 //│ = 1001000
 
-suite.add("eagerListFunnySumEager1000", () => res |> funnySumEager)
-suite.add("eagerListFunnySumEager100", () => res100 |> funnySumEager)
-suite.add("eagerListFunnySumEager10", () => res10 |> funnySumEager)
-//│ = [object Object]
+:silent
+suite.add("EagerBuiltFunnySumEager1000", () => res |> funnySumEager)
+suite.add("EagerBuiltFunnySumEager100", () => res100 |> funnySumEager)
+suite.add("EagerBuiltFunnySumEager10", () => res10 |> funnySumEager)
 
 res |> funnySum
 //│ = 1001000
 
-suite.add("eagerListFunnySum1000", () => res |> funnySum)
-suite.add("eagerListFunnySum100", () => res100 |> funnySum)
-suite.add("eagerListFunnySum10", () => res10 |> funnySum)
-//│ = [object Object]
+:silent
+suite.add("EagerBuiltFunnySum1000", () => res |> funnySum)
+suite.add("EagerBuiltFunnySum100", () => res100 |> funnySum)
+suite.add("EagerBuiltFunnySum10", () => res10 |> funnySum)
 
 // ========================================================================
 
@@ -248,18 +252,18 @@ let lm = map(x => x + 1)(res)
 :silent
 mapEager(x => x + 1)(res)
 
-suite.add("eagerListMapLazy1500", () => materialize(map(x => x + 1)(res)))
-suite.add("eagerListMapLazy150", () => materialize(map(x => x + 1)(res150)))
-suite.add("eagerListMapLazy15", () => materialize(map(x => x + 1)(res15)))
-//│ = [object Object]
+:silent
+suite.add("EagerBuiltMapLazy1500", () => materialize(map(x => x + 1)(res)))
+suite.add("EagerBuiltMapLazy150", () => materialize(map(x => x + 1)(res150)))
+suite.add("EagerBuiltMapLazy15", () => materialize(map(x => x + 1)(res15)))
 
-suite.add("eagerListMapEager1500", () => 
+:silent
+suite.add("EagerBuiltMapEager1500", () => 
   mapEager(x => x + 1)(res))
-suite.add("eagerListMapEager150", () =>
+suite.add("EagerBuiltMapEager150", () =>
   mapEager(x => x + 1)(res150))
-suite.add("eagerListMapEager15", () =>
+suite.add("EagerBuiltMapEager15", () =>
   mapEager(x => x + 1)(res15))
-//│ = [object Object]
 
 fun map2(f) = case
   [a, ..rest, b] then 
@@ -271,30 +275,30 @@ fun map2Eager(f) = case
     [f(a), ...map2Eager(f)(rest), f(b)]
   [] then []
 
-suite.add("eagerListMap2Lazy1500", () => materialize(map2(x => x + 1)(res)))
-suite.add("eagerListMap2Lazy150", () => materialize(map2(x => x + 1)(res150)))
-suite.add("eagerListMap2Lazy15", () => materialize(map2(x => x + 1)(res15)))
-//│ = [object Object]
+:silent
+suite.add("EagerBuiltMap2Lazy1500", () => materialize(map2(x => x + 1)(res)))
+suite.add("EagerBuiltMap2Lazy150", () => materialize(map2(x => x + 1)(res150)))
+suite.add("EagerBuiltMap2Lazy15", () => materialize(map2(x => x + 1)(res15)))
 
-suite.add("eagerListMap2Eager1500", () => 
+:silent
+suite.add("EagerBuiltMap2Eager1500", () => 
   map2Eager(x => x + 1)(res))
-suite.add("eagerListMap2Eager150", () =>
+suite.add("EagerBuiltMap2Eager150", () =>
   map2Eager(x => x + 1)(res150))
-suite.add("eagerListMap2Eager15", () =>
+suite.add("EagerBuiltMap2Eager15", () =>
   map2Eager(x => x + 1)(res15))
-//│ = [object Object]
 
 :ge
 mapEager(..[[1]])
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.288: 	mapEager(..[[1]])
+//│ ║  l.292: 	mapEager(..[[1]])
 //│ ╙──       	        ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'mapEager' expected 1 argument but got 2
 
 :e
 fun what(..args) = args
 //│ ╔══[ERROR] Lazy spread parameters not allowed.
-//│ ║  l.295: 	fun what(..args) = args
+//│ ║  l.299: 	fun what(..args) = args
 //│ ╙──       	           ^^^^
 
 fun silly = case
@@ -313,33 +317,30 @@ let xs = buildEager(150)
 :silent
 let ys = silly(xs)
 
-suite.add("sillyLazy1500", () => 
+:silent
+suite.add("EagerBuiltSillyLazy1500", () => 
   let xs = buildEager(1500)
   let ys = silly(xs)
-  materialize(ys)
-)
-suite.add("sillyLazy150", () => 
+  materialize(ys))
+suite.add("EagerBuiltSillyLazy150", () => 
   let xs = buildEager(150)
   let ys = silly(xs)
-  materialize(ys)
-)
-suite.add("sillyLazy15", () => 
+  materialize(ys))
+suite.add("EagerBuiltSillyLazy15", () => 
   let xs = buildEager(15)
   let ys = silly(xs)
-  materialize(ys)
-)
-//│ = [object Object]
+  materialize(ys))
 
 :silent
 sillyEager(xs)
 
-suite.add("sillyEager150", () => 
+:silent
+suite.add("EagerBuiltSillyEager150", () => 
   let xs = buildEager(150)
   sillyEager(xs))
-suite.add("sillyEager15", () =>
+suite.add("EagerBuiltSillyEager15", () =>
   let xs = buildEager(15)
   sillyEager(xs))
-//│ = [object Object]
 
 :silent
 let configs = {
@@ -369,7 +370,7 @@ let i = 0
 while i < names.length do
   let name = names.[i]
   let cfg = configs.(name)
-  // Dirty hack to modify spread behavior
+  // dirty hack to modify lazy spread behavior
   set Runtime.Tuple.lazySlice = (xs, a, b) => cfg.lazySlice(a, b)(xs)
   set Runtime.Tuple.lazyConcat = (...args) => cfg.lazyConcat(...args)
   set Runtime.Tuple.split = cfg.split

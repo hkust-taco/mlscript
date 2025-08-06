@@ -6,17 +6,16 @@ import "./mlscript-compile/Benchmark.mls"
 
 open Benchmark
 
+:silent
 let suite = mkSuite()
-//│ suite = [object Object]
 
 
-
+:silent
 let ftree = FingerTreeList.mk()
 let stack = Stack.Nil
-//│ ftree = []
-//│ stack = Nil
 
 // Push an array of elements
+:silent
 suite.add("FingerTreeList.push100", () =>
   let ft = FingerTreeList.mk()
   let i = 0
@@ -24,8 +23,8 @@ suite.add("FingerTreeList.push100", () =>
     set ft = FingerTreeList.cons(i, ft)
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.push1000", () =>
   let ft = FingerTreeList.mk()
   let i = 0
@@ -33,8 +32,8 @@ suite.add("FingerTreeList.push1000", () =>
     set ft = FingerTreeList.cons(i, ft)
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.push10000", () =>
   let ft = FingerTreeList.mk()
   let i = 0
@@ -42,8 +41,8 @@ suite.add("FingerTreeList.push10000", () =>
     set ft = FingerTreeList.cons(i, ft)
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.push100000", () =>
   let ft = FingerTreeList.mk()
   let i = 0
@@ -52,8 +51,8 @@ suite.add("FingerTreeList.push100000", () =>
     set i = i + 1
   set ftree = ft
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.push100", () =>
   let st = Stack.Nil
   let i = 0
@@ -61,8 +60,8 @@ suite.add("Stack.push100", () =>
     set st = Stack.Cons(i, st)
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.push1000", () =>
   let st = Stack.Nil
   let i = 0
@@ -70,8 +69,9 @@ suite.add("Stack.push1000", () =>
     set st = Stack.Cons(i, st)
     set i = i + 1
 )
-//│ = [object Object]
 
+
+:silent
 suite.add("Stack.push10000", () =>
   let st = Stack.Nil
   let i = 0
@@ -79,8 +79,8 @@ suite.add("Stack.push10000", () =>
     set st = Stack.Cons(i, st)
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.push100000", () =>
   let st = Stack.Nil
   let i = 0
@@ -89,13 +89,13 @@ suite.add("Stack.push100000", () =>
     set i = i + 1
   set stack = st
 )
-//│ = [object Object]
 
 :silent
 let ftElems = new Array(100000)
 let stElems = new Array(100000)
 
 // Pop elements
+:silent
 suite.add("FingerTreeList.pop100", () => 
   let popft = ftree
   let i = 0
@@ -105,8 +105,8 @@ suite.add("FingerTreeList.pop100", () =>
     set popft = FingerTreeList.popFront(popft).rest
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.pop1000", () => 
   let popft = ftree
   let i = 0
@@ -116,8 +116,8 @@ suite.add("FingerTreeList.pop1000", () =>
     set popft = FingerTreeList.popFront(popft).rest
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.pop10000", () => 
   let popft = ftree
   let i = 0
@@ -127,8 +127,8 @@ suite.add("FingerTreeList.pop10000", () =>
     set popft = FingerTreeList.popFront(popft).rest
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("FingerTreeList.pop100000", () => 
   let popft = ftree
   let i = 0
@@ -138,8 +138,8 @@ suite.add("FingerTreeList.pop100000", () =>
     set popft = FingerTreeList.popFront(popft).rest
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.pop100", () =>
   let popStack = stack
   let i = 0
@@ -148,8 +148,8 @@ suite.add("Stack.pop100", () =>
     set popStack = popStack.tail
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.pop1000", () =>
   let popStack = stack
   let i = 0
@@ -158,8 +158,8 @@ suite.add("Stack.pop1000", () =>
     set popStack = popStack.tail
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.pop10000", () =>
   let popStack = stack
   let i = 0
@@ -168,8 +168,8 @@ suite.add("Stack.pop10000", () =>
     set popStack = popStack.tail
     set i = i + 1
 )
-//│ = [object Object]
 
+:silent
 suite.add("Stack.pop100000", () =>
   let popStack = stack
   let i = 0
@@ -178,7 +178,6 @@ suite.add("Stack.pop100000", () =>
     set popStack = popStack.tail
     set i = i + 1
 )
-//│ = [object Object]
 
 :silent
 suite |> runSuite

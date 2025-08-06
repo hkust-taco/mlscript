@@ -5,16 +5,9 @@
 // :elt
 
 import "../../mlscript-compile/FingerTreeList.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
 
 open FingerTreeList
-
-fun equal(xs, ys) =
-  if xs is
-    [x, ..xs] then
-      if ys is
-        [b, ..bs] then x == b && equal(xs, bs)
-        [] then false
-    [] then ys is []
 
 let xs = FingerTreeList.mk(1,2,3)
 //│ xs = [1, 2, 3]
@@ -70,7 +63,7 @@ let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3
 //│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 :expect true
-equal(ys, [...ys])
+LazyFingerTree.equals(ys, [...ys])
 //│ = true
 
 :expect true
@@ -104,10 +97,6 @@ repeat(xs, 512).length == xs.length * 512
 
 let xs = FingerTreeList.mk(1, 2, 3)
 //│ xs = [1, 2, 3]
-
-:expect true
-equal([0, ..xs], [0, ...xs])
-//│ = true
 
 :expect [1, [2, 3]]
 :elt
@@ -205,7 +194,7 @@ if xs is
 //│     ls
 //│   ]
 //│ } else {
-//│   throw new this.Error("match error");
+//│   throw new globalThis.Error("match error");
 //│ }
 //│ = [1, [2, 3]]
 
@@ -216,12 +205,13 @@ fun addUntilN(xs, n) =
 :silent
 let zs = addUntilN(mk(), 1000)
 
+:expect 1000
 zs.length
 //│ = 1000
 
 fun popUntilEmpty(lft, acc) =
   if lft is
-    [a, ..ls] then popUntilEmpty(ls, [...acc, a])
+    [a, ...ls] then popUntilEmpty(ls, [..acc, a])
     [] then acc
 
 :sjs
@@ -245,12 +235,6 @@ fun popByIndex(start, end, acc, lft) =
 //│   }
 //│ };
 
-let start = 0
-//│ start = 0
-
-[1,2,3].at(start)
-//│ = 1
-
 :silent
 let zs1 = popUntilEmpty(zs, [])
 
@@ -266,15 +250,22 @@ zs2 |> isFingerTree
 zs |> isFingerTree
 //│ = true
 
-equal(zs1, zs)
+:expect true
+LazyFingerTree.equals(zs1, zs)
 //│ = true
 
-equal(zs2, zs)
+:expect true
+LazyFingerTree.equals(zs2, zs)
 //│ = true
 
 (if FingerTreeList.mk(1,2,3) is
   [a, ...ls, b] then ls) |> FingerTreeList.isFingerTree
 //│ = true
 
+:expect 1
+zs.at(0)
+//│ = 1
+
+:expect 1
 zs.[0]
 //│ = 1

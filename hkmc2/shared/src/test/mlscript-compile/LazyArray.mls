@@ -10,7 +10,7 @@ fun normIdx(i, len) =
   else i
 
 fun enforceArray = case
-  Array | String | Str | TypedArray | LazyArr as a then a
+  LazyArr | Array | String | Str | TypedArray  as a then a
   ow then throw Error("Expected an Array, got: " + ow.toString())
 
 fun concatHelper(a, l, ...args) =
