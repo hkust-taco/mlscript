@@ -57,11 +57,11 @@ a
 
 :re
 a.at(-4)
-//│ ═══[RUNTIME ERROR] get: index out of bounds
+//│ ═══[RUNTIME ERROR] RangeError: View.at: Index out of bounds
 
 :re
 a.at(3)
-//│ ═══[RUNTIME ERROR] get: index out of bounds
+//│ ═══[RUNTIME ERROR] RangeError: View.at: Index out of bounds
 
 
 // View and Splices that represent the same array should be equal
