@@ -211,7 +211,7 @@ renderAsStr of globalThis.setImmediate
 
 // Test: simple circular reference.
 
-let a =
+let a = mut
   x: 0
   y: 1
 //│ a = {x: 0, y: 1}
@@ -219,15 +219,15 @@ let a =
 set a.x = a
 
 a
-//│ = {x: 0, y: 1}
+//│ = {x: ref'1, y: 1} as ref'1
 
 // Test: an object is referenced multiple times in a circular way.
 
 let tree =
-  left:
+  left: mut
     left: null
     right: null
-  right:
+  right: mut
     left: null
     right: null
 //│ tree = {left: {left: null, right: null}, right: {left: null, right: null}}
@@ -236,20 +236,20 @@ set tree.left.left = tree
 set tree.right.left = tree
 
 tree
-//│ = {left: {left: null, right: null}, right: {left: null, right: null}}
+//│ = {left: {left: ref'1, right: null}, right: {left: ref'1, right: null}} as ref'1
 
 // Test: nested circular reference.
 
 // If the same circular object appears multiple times, it should be rendered as
 // the same reference.
 let b = mut [a, a]
-//│ b = [{x: 0, y: 1}, {x: 0, y: 1}]
+//│ b = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1]
 
 b.push(b)
 //│ = 3
 
 b
-//│ = [{x: 0, y: 1}, {x: 0, y: 1}, ref'1] as ref'1
+//│ = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1, ref'2] as ref'2
 
 let functionWithProperties = Object.assign(x => x, "kind": "Callable")
 //│ functionWithProperties = fun { kind: "Callable" }

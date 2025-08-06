@@ -14,8 +14,6 @@ object Unit with
 val short_and = RuntimeJS.short_and
 val short_or = RuntimeJS.short_or
 
-// val freeze = Object.freeze
-
 
 fun unreachable = throw Error("unreachable")
 

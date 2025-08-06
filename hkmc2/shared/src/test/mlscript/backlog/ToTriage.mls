@@ -415,3 +415,44 @@ fun foo() =
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
+
+:fixme // proper comoilation error
+:sjs
+module Foo(x)
+//│ JS (unsanitized):
+//│ let Foo5;
+//│ (class Foo4 {
+//│   static #x;
+//│   static {
+//│     Foo5 = Foo4;
+//│     Foo4.#x = x2;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Foo"]; 
+//│ });
+//│ ═══[RUNTIME ERROR] ReferenceError: x2 is not defined
+
+:fixme // proper comoilation error
+:sjs
+module Foo(val x)
+//│ JS (unsanitized):
+//│ let Foo7;
+//│ (class Foo6 {
+//│   static {
+//│     Foo7 = Foo6;
+//│     this.x = x2;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Foo"]; 
+//│ });
+//│ ═══[RUNTIME ERROR] ReferenceError: x2 is not defined
+
+// ——— ——— ———
+
+// TODO support syntax?
+data class Foo(mut x)
+//│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
+//│ ║  l.453: 	data class Foo(mut x)
+//│ ╙──       	                   ^
+
+// ——— ——— ———

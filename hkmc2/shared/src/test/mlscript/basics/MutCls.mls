@@ -1,0 +1,63 @@
+:js
+
+
+class C(val x)
+
+let c = C(1)
+//│ c = C(1)
+
+set c.x = 2
+
+c
+//│ = C(1)
+
+
+class Foo(val x)(val y)
+
+let f = Foo(1)(2)
+//│ f = Foo(1)
+
+f.y
+//│ = 2
+
+set f.y = 3
+
+f.y
+//│ = 2
+
+
+class Foo with
+  fun foo() = 1
+  fun bar = 2
+
+
+let f = new mut Foo
+//│ f = Foo
+
+set f.foo = () => 3
+f.foo()
+//│ = 3
+
+set f.bar = 3
+f.bar
+//│ = 2
+
+
+let f = new Foo
+//│ f = Foo
+
+set f.foo = () => 3
+f.foo()
+//│ = 1
+
+set f.bar = 3
+f.bar
+//│ = 2
+
+
+// * TODO: later, we might want to distinguish freezing from sealing;
+// * `new` would freeze and `new mut` would solely seal; `new open` would do neither.
+
+// let o = new open Object
+
+

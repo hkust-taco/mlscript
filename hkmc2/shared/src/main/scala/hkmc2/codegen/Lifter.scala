@@ -460,7 +460,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           auxParams.foreach(applyParamList)
           methods.foreach(applyFunDefn)
           privateFields.foreach(_.traverse)
-          // publicFields.foreach(_.traverse)
           publicFields.foreach: f =>
             f._1.traverse; f._2.traverse
           applyBlock(preCtor)
@@ -665,11 +664,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => // has args
               blockBuilder
-                .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(d.sym, ctx).map(_.value))) // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIXME mut?
+                .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(d.sym, ctx).map(_.value)))
                 .rest(applyBlock(rest))
             case None => // has no args
               blockBuilder
-                .assign(sym, Instantiate(mut = false, d.sym.asPath, Nil)) // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIXME mut?
+                .assign(sym, Instantiate(mut = false, d.sym.asPath, Nil))
                 .rest(applyBlock(rest))
           case _ => ctx.replacedDefns.get(d.sym) match
             case Some(value) => Define(value, applyBlock(rest))
@@ -905,7 +904,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             
             var curSym = TempSymbol(None, "tmp")
             def instInner(isMut: Bool) = if c.paramsOpt.isDefined
-               // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIXME mut?
               then Instantiate(mut = isMut, Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
               else Instantiate(mut = isMut, c.sym.asPath, paramArgs)
             

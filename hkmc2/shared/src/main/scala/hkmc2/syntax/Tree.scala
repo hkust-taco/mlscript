@@ -243,9 +243,7 @@ enum Tree extends AutoLocated:
    * Parameter `inUsing` means the param list is modified by `using`.
    * In the first result, `S(true)` means eager spread, `S(false)` means lazy spread, and `N` means no spread.
    */
-  def asParam(inUsing: Bool): Diagnostic \/ (Opt[Bool], Ident, Opt[Tree]) =
-    object ParamBase
-    this match
+  def asParam(inUsing: Bool): Diagnostic \/ (Opt[Bool], Ident, Opt[Tree]) = this match
     case und: Under => R(N, new Ident("_").withLocOf(und), N)
     // * In `using` clauses, identifiers and type applications are
     // * understood as type names for unnamed contextual parameters:

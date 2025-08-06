@@ -409,7 +409,7 @@ object Modulefulness:
   val none = Modulefulness(N)(false)
 
 final case class TermDefinition(
-    k: TermDefKind,
+    k: TermDefKind, // * The only reason we store it here in addition to tsym.k is for refining patmats
     sym: BlockMemberSymbol,
     tsym: TermSymbol,
     params: Ls[ParamList],

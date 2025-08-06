@@ -1296,9 +1296,7 @@ extends Importer:
     ps_ctx._1.restParam.foreach(checkFlags)
     ps_ctx
   
-  def params(t: Tree, inDataClass: Bool): Ctxl[(ParamList, Ctx)] =
-    // println(s"params? ${t} ")
-    t match
+  def params(t: Tree, inDataClass: Bool): Ctxl[(ParamList, Ctx)] = t match
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
@@ -1313,7 +1311,6 @@ extends Importer:
             val newFlags = if isCtxParam then flags.copy(ctx = true) else flags
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
-            // println(s"param: ${p.sym.name} (${p.sym.uid}) ${isSpd} ${p.flags} ${newFlags}")
             isSpd match
             case S(eagerSpd) =>
               if !eagerSpd then raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))

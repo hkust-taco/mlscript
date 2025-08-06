@@ -1,7 +1,6 @@
 :js
 
 
-
 :e
 (val x) => x
 //│ ╔══[ERROR] Illegal function parameter modifiers: val
@@ -60,5 +59,12 @@ fun f(val x) = x
 (..., ...y) => y
 //│ ═══[ERROR] Spread parameters must be the last in the parameter list.
 //│ = fun
+
+
+:e
+class Foo(class C)
+//│ ╔══[ERROR] Expected a valid parameter, found type definition
+//│ ║  l.27: 	class Foo(class C)
+//│ ╙──      	                ^
 
 

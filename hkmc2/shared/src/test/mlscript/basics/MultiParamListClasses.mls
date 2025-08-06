@@ -53,18 +53,18 @@ data class Foo with
 // class Foo(using z: Int)
 // * is to be understood as
 class Foo0
-fun Foo(using z: Int) = new Foo0 !> res =>
+fun Foo(using z: Int) = new mut Foo0 !> res =>
   set res.z = z
 
 using Int = 123
 
 Foo
-//│ = Foo0
+//│ = Foo0 { z: 123 }
 
 // class Foo(x, y)(using z)
 // * is to be understood as
 class Foo0
-fun Foo(x, y)(using z: Int) = new Foo0 !> res =>
+fun Foo(x, y)(using z: Int) = new mut Foo0 !> res =>
   set
     res.x = x
     res.y = y
@@ -72,7 +72,7 @@ fun Foo(x, y)(using z: Int) = new Foo0 !> res =>
 
 
 Foo(1, 2)
-//│ = Foo0
+//│ = Foo0 { x: 1, y: 2, z: 123 }
 
 :sjs
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`

@@ -174,40 +174,48 @@ show of new Map([[{ x: longText }, shortText]])
 //│ > }                                                                         ┊
 
 :silent
-let testKey = (x: 0, y: 0, z: 0)
+let testKey = mut { x: 0, y: 0, z: 0 }
 let testMap = new Map([[testKey, testKey]])
 
 show of testMap
 //│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
 
 set testKey.w = 0, show of testMap
-//│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
+//│ > Map(1) {{x: 0, y: 0, z: 0, w: 0} => {x: 0, y: 0, z: 0, w: 0}}             ┊
 
 set testKey.a = 42, show of testMap
-//│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
+//│ > Map(1) {{x: 0, y: 0, z: 0, w: 0, a: 42} => {x: 0, y: 0, z: 0, w: 0, a: 42}}
 
 :todo
 set testKey.b = 404, show of testMap
-//│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
+//│ > Map(1) {                                                                  ┊
+//│ >   {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404} => {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404}
+//│ > }                                                                         ┊
 
 :silent
-let testKey = (a: 1, b: a * 10, c: b * 10, d: c * 10, e: d * 10)
+let testKey = mut { a: 1, b: a * 10, c: b * 10, d: c * 10, e: d * 10 }
 let testMap = new Map([[testKey, shortText]])
 
 show of testMap
 //│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
 
 set testKey.x = 42, show of testMap
-//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
+//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42} => "Hello, world!"}
 
 set testKey.y = 100, show of testMap
-//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100} => "Hello, world!"
+//│ > }                                                                         ┊
 
 set testKey.z = shortText, show of testMap
-//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100, z: "Hello, world!"} => "Hello, world!"
+//│ > }                                                                         ┊
 
 testMap.set(testKey, text: shortText), show of testMap
-//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => {text: "Hello, world!"}}
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100, z: "Hello, world!"} => {text: "Hello, world!"}
+//│ > }                                                                         ┊
 
 :silent
 let fakeAddress =

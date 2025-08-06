@@ -55,7 +55,7 @@ fun zip(...xss) =
       else heads toReverseArray() :: go(Nil, Nil) of tails reverse()
   go(Nil, Nil) of fromArray(xss)
 
-// Non-recursive and efficient yet mutable list concatenation.
+// * Non-recursive efficient internally-mutable list concatenation.
 fun (:::) concat(xs, ys) = if
   ys is Nil then xs
   xs is

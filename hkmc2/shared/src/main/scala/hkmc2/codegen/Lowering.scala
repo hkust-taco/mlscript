@@ -71,7 +71,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     End("error")
   
   
-  type Rcd = (mut: Bool, args: List[RcdArg])
+  // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
+  type Rcd = (Bool, List[RcdArg])
   
   def returnedTerm(t: st)(using Subst): Block = term(t)(Ret)
   
@@ -119,7 +120,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       res match
       case R(res) => term(res)(k)
       case L((mut, flds)) =>
-        k(Value.Rcd(mut, flds.reverse)) // TODO mut
+        k(Value.Rcd(mut, flds.reverse))
     case RcdSpread(bod) :: stats =>
       res match
       case R(_) => wat("RcdField in non-Rcd context", res)
