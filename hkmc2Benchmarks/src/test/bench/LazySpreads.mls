@@ -343,33 +343,16 @@ suite.add("EagerBuiltSillyEager15", () =>
   sillyEager(xs))
 
 :silent
-let configs = {
-  LazyArray: {
-    lazySlice: LazyArray.slice,
-    lazyConcat: LazyArray.__concat,
-    split: LazyArray.__split
-  },
-  FingerTreeList: {
-    lazySlice: FingerTreeList.slice,
-    lazyConcat: FingerTreeList.__markerConcat,
-    split: FingerTreeList.__split
-  },
-  LazyFingerTree: {
-    lazySlice: LazyFingerTree.slice,
-    lazyConcat: LazyFingerTree.__concat,
-    split: LazyFingerTree.__split
-  }
-}
-let names = [
-  "LazyArray",
-  "FingerTreeList",
-  "LazyFingerTree"
+let configs = [
+  { name: "LazyArray", lazySlice: LazyArray.slice, lazyConcat: LazyArray.__concat, split: LazyArray.__split },
+  { name: "FingerTreeList", lazySlice: FingerTreeList.slice, lazyConcat: FingerTreeList.__markerConcat, split: FingerTreeList.__split },
+  { name: "LazyFingerTree", lazySlice: LazyFingerTree.slice, lazyConcat: LazyFingerTree.__concat, split: LazyFingerTree.__split }
 ]
 
 let i = 0
-while i < names.length do
-  let name = names.[i]
-  let cfg = configs.(name)
+while i < configs.length do
+  let cfg = configs.[i]
+  let name = cfg.name
   // dirty hack to modify lazy spread behavior
   set Runtime.Tuple.lazySlice = (xs, a, b) => cfg.lazySlice(a, b)(xs)
   set Runtime.Tuple.lazyConcat = (...args) => cfg.lazyConcat(...args)
