@@ -144,7 +144,7 @@ data class Lazy[out A](init: () -> A) with
       set cached = Some(v)
       v
 
-fun lazy(init) = new mut Lazy of init
+fun lazy(init) = new Lazy of init
 
 //  ____                     ____        _
 // |  _ \ __ _ _ __ ___  ___|  _ \ _   _| | ___
@@ -164,7 +164,7 @@ data class ParseRule[A](name: Str, mut val choices: StackT[ChoiceT[A]]) with
       Iter.toStack()
   
   fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C) =
-    fun go(rule: ParseRule) = new mut ParseRule of rule.name, rule.choices
+    fun go(rule: ParseRule) = new ParseRule of rule.name, rule.choices
       Iter.fromStack()
       Iter.mapping of case
         Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]

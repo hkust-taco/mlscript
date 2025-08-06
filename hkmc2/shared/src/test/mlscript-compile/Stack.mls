@@ -67,11 +67,12 @@ fun (:::) concat(xs, ys) = if
         rest = tail' // the remaining of `xs`
       while rest is head :: tail do
         let next = new mut ::(head, ys)
+        set current.tail = next
+        Object.freeze(current)
         set
-          current.tail = next
           current = next
           rest = tail
-      result
+      Object.freeze(result)
 
 fun (:+) append(xs, y) = xs ::: y :: Nil
 

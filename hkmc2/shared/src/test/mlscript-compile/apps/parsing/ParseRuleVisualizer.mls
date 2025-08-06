@@ -20,7 +20,7 @@ open XML { html, tag, style }
 
 module ParseRuleVisualizer with ...
 
-val tracer = new mut TreeTracer.TreeTracer()
+val tracer = new TreeTracer.TreeTracer()
 
 let defaultKinds = tuple of "type", "term", "typevar", "ident"
 

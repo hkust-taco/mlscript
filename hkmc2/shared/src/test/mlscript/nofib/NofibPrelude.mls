@@ -16,7 +16,7 @@ class Lazy[out A](val init: () -> A) with
         let v = init()
         set cached = Some(v)
         v
-fun lazy(x) = new mut Lazy(x)
+fun lazy(x) = new Lazy(x)
 fun force(x) = if x is Lazy then x.Lazy#get()
 
 abstract class List[out T]: Cons[T] | Nil
