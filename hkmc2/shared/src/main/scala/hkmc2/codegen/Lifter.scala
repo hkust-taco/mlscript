@@ -258,7 +258,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       val ident = new Tree.Ident(nme)
       val varSym = VarSymbol(ident)
       val fldSym = BlockMemberSymbol(nme, Nil)
-      val tSym = TermSymbol(syntax.MutVal, N, ident)
+      val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident)
       
       val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)
       varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
@@ -576,14 +576,18 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         // if possible, directly rewrite the call using the efficient version
         case c @ Call(RefOfBms(l), args) => ctx.bmsReqdInfo.get(l) match
           case Some(info) if !ctx.isModOrObj(l) =>
-            val extraArgs = getCallArgs(l, ctx)
+            val extraArgs = ctx.defns.get(l) match
+              // If it's a class, we need to add the isMut parameter.
+              // Instantiation without `new mut` is always immutable 
+              case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
+              case _ => getCallArgs(l, ctx)
             val newArgs = args.map(applyArg(_))
             Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
           case _ => super.applyResult(r)
-        case c @ Instantiate(mut, InstSel(l), args) => // FIXME handle `mut`? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        case c @ Instantiate(mut, InstSel(l), args) =>
           ctx.bmsReqdInfo.get(l) match
           case Some(info) if !ctx.isModOrObj(l) =>
-            val extraArgs = getCallArgs(l, ctx)
+            val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
             val newArgs = args.map(applyPath(_)).map(_.asArg)
             Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
           case _ => super.applyResult(r)
@@ -897,14 +901,23 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             
             inline def toPaths(l: List[Local]) = l.map(_.asPath)
             
+            val isMutSym = VarSymbol(Tree.Ident("isMut"))
+            
             var curSym = TempSymbol(None, "tmp")
-            val inst = if c.paramsOpt.isDefined
+            def instInner(isMut: Bool) = if c.paramsOpt.isDefined
                // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> FIXME mut?
-              then Instantiate(mut = false, Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
-              else Instantiate(mut = false, c.sym.asPath, paramArgs)
+              then Instantiate(mut = isMut, Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
+              else Instantiate(mut = isMut, c.sym.asPath, paramArgs)
             
             val initSym = curSym
-            var acc: Block => Block = blk => Assign(initSym, inst, blk)
+            
+            var acc: Block => Block = blk => Match(
+              isMutSym.asPath,
+              Case.Lit(Tree.BoolLit(true)) -> Assign(initSym, instInner(true), End()) :: Nil,
+              S(Assign(initSym, instInner(false), End())),
+              blk
+            )
+            
             for ps <- newAuxSyms do
               val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
               curSym = TempSymbol(None, "tmp")
@@ -918,7 +931,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             
             val paramPlist = paramSyms.map(toPlist)
             val auxPlist = auxSyms.map(toPlist)
-            val extraPlist = toPlist(extraSyms)
+            // isMut determines whether the instantiation is `new` or `new mut`
+            val extraPlist = toPlist(isMutSym :: extraSyms)
             
             // NOTE: The fake ctor was to support first-class classes.
             // These are currently unused.
@@ -941,11 +955,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case None => s
                 case Some(value) => value
             
-            val headParams = paramPlist match
-              case None => extraPlist
-              case Some(value) => ParamList(value.flags, extraPlist.params ++ value.params, value.restParam)
+            val (headParams, newAuxPlist) = paramPlist match
+              case None => auxPlist match
+                case head :: next => (ParamList(head.flags, extraPlist.params ++ head.params, head.restParam), next)
+                case Nil => (extraPlist, auxPlist)
+              
+              case Some(value) => (ParamList(value.flags, extraPlist.params ++ value.params, value.restParam), auxPlist)
             
-            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: auxPlist, bod)
+            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: newAuxPlist, bod)
             val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
             // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))

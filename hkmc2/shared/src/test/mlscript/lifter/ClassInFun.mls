@@ -40,13 +40,15 @@ f() + f() + f()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│ };
-//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(h$0, tmp$1, tmp$2, tmp$3, tmp$4) {
-//│   return (pc) => {
-//│     let tmp1, tmp2;
+//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
+//│   let tmp1, tmp2;
+//│   if (isMut === true) {
+//│     tmp1 = new Cont$handleBlock$h$1(pc);
+//│   } else {
 //│     tmp1 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
-//│     tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
-//│     return tmp2
 //│   }
+//│   tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
+//│   return tmp2
 //│ };
 //│ Cont$handleBlock$h$1 = class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
 //│   #h$0;
@@ -132,13 +134,15 @@ f() + f() + f()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
 //│ };
-//│ Cont$func$f$$ = function Cont$func$f$$(h$0, tmp$1) {
-//│   return (pc) => {
-//│     let tmp1, tmp2;
+//│ Cont$func$f$$ = function Cont$func$f$$(isMut, h$0, tmp$1, pc) {
+//│   let tmp1, tmp2;
+//│   if (isMut === true) {
+//│     tmp1 = new Cont$func$f$1(pc);
+//│   } else {
 //│     tmp1 = globalThis.Object.freeze(new Cont$func$f$1(pc));
-//│     tmp2 = tmp1(h$0, tmp$1);
-//│     return tmp2
 //│   }
+//│   tmp2 = tmp1(h$0, tmp$1);
+//│   return tmp2
 //│ };
 //│ Cont$func$f$1 = class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│   #h$0;
@@ -185,7 +189,7 @@ f() + f() + f()
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$$(h, tmp1, 0);
+//│     tmp1.contTrace.last.next = Cont$func$f$$(true, h, tmp1, 0);
 //│     tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│     return tmp1
 //│   }
@@ -201,18 +205,18 @@ f() + f() + f()
 //│   h = new Handler$h$1();
 //│   tmp1 = f$(h);
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 2);
+//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 2);
 //│     return runtime.handleBlockImpl(tmp1, h)
 //│   }
 //│   tmp2 = f$(h);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 3);
+//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 3);
 //│     return runtime.handleBlockImpl(tmp2, h)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
 //│   tmp4 = f$(h);
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(h, tmp1, tmp2, tmp3, tmp4, 4);
+//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 4);
 //│     return runtime.handleBlockImpl(tmp4, h)
 //│   }
 //│   return tmp3 + tmp4
@@ -222,19 +226,7 @@ f() + f() + f()
 //│   tmp = runtime.topLevelEffect(tmp, false);
 //│ }
 //│ tmp
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$f$$' expected 2 arguments but got 3
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$f$$ (REPL10:1:4545)
-//│     at f$ (REPL10:1:6385)
-//│     at handleBlock$ (REPL10:1:6902)
-//│     at REPL10:1:7647
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
+//│ = 3
 
 :expect 1
 :sjs
@@ -245,9 +237,13 @@ fun f(x) =
 f(1).get()
 //│ JS (unsanitized):
 //│ let Test1, f1, tmp1, Test$;
-//│ Test$ = function Test$(x$0) {
+//│ Test$ = function Test$(isMut, x$0) {
 //│   let tmp2, tmp3;
-//│   tmp2 = globalThis.Object.freeze(new Test1.class());
+//│   if (isMut === true) {
+//│     tmp2 = new Test1.class();
+//│   } else {
+//│     tmp2 = globalThis.Object.freeze(new Test1.class());
+//│   }
 //│   tmp3 = tmp2(x$0);
 //│   return tmp3
 //│ };
@@ -276,7 +272,7 @@ f(1).get()
 //│   }
 //│ });
 //│ f1 = function f(x) {
-//│   return Test$(x)
+//│   return Test$(false, x)
 //│ };
 //│ tmp1 = f1(1);
 //│ runtime.safeCall(tmp1.get())
@@ -315,9 +311,13 @@ f(1, 2).get()
 //│     return g$(used1, g_arg)
 //│   }
 //│ };
-//│ Test$1 = function Test$(used1$0, a) {
+//│ Test$1 = function Test$(isMut, used1$0, a) {
 //│   let tmp3, tmp4;
-//│   tmp3 = globalThis.Object.freeze(new Test3.class(a));
+//│   if (isMut === true) {
+//│     tmp3 = new Test3.class(a);
+//│   } else {
+//│     tmp3 = globalThis.Object.freeze(new Test3.class(a));
+//│   }
 //│   tmp4 = tmp3(used1$0);
 //│   return tmp4
 //│ };
@@ -349,7 +349,7 @@ f(1, 2).get()
 //│ f2 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
-//│   return Test$1(used1, unused1)
+//│   return Test$1(false, used1, unused1)
 //│ };
 //│ tmp2 = f2(1, 2);
 //│ runtime.safeCall(tmp2.get())
@@ -401,9 +401,13 @@ f(1, 2).get()
 //│     return g$2(used1, g_arg)
 //│   }
 //│ };
-//│ Test$3 = function Test$(used1$0) {
+//│ Test$3 = function Test$(isMut, used1$0) {
 //│   let tmp5;
-//│   tmp5 = globalThis.Object.freeze(new Test7(used1$0));
+//│   if (isMut === true) {
+//│     tmp5 = new Test7(used1$0);
+//│   } else {
+//│     tmp5 = globalThis.Object.freeze(new Test7(used1$0));
+//│   }
 //│   return tmp5
 //│ };
 //│ Test7 = class Test6 {
@@ -422,7 +426,7 @@ f(1, 2).get()
 //│ f4 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
-//│   return Test$3(used1)
+//│   return Test$3(false, used1)
 //│ };
 //│ tmp4 = f4(1, 2);
 //│ runtime.safeCall(tmp4.get())
@@ -438,9 +442,13 @@ fun f(x) =
 f(1)
 //│ JS (unsanitized):
 //│ let A1, f5, A$, f$capture1;
-//│ A$ = function A$(f$capture$0) {
+//│ A$ = function A$(isMut, f$capture$0) {
 //│   let tmp5, tmp6;
-//│   tmp5 = globalThis.Object.freeze(new A1.class());
+//│   if (isMut === true) {
+//│     tmp5 = new A1.class();
+//│   } else {
+//│     tmp5 = globalThis.Object.freeze(new A1.class());
+//│   }
 //│   tmp6 = tmp5(f$capture$0);
 //│   return tmp6
 //│ };
@@ -471,8 +479,7 @@ f(1)
 //│ });
 //│ f$capture1 = class f$capture {
 //│   constructor(x0$) {
-//│     let x0$1;
-//│     x0$1 = x0$;
+//│     this.x0$ = x0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -480,7 +487,7 @@ f(1)
 //│ f5 = function f(x) {
 //│   let tmp5, tmp6, capture;
 //│   capture = new f$capture1(x);
-//│   tmp5 = A$(capture);
+//│   tmp5 = A$(false, capture);
 //│   tmp6 = runtime.safeCall(tmp5.f());
 //│   return capture.x0$
 //│ };
@@ -507,9 +514,13 @@ fun f() =
 f().foo()
 //│ JS (unsanitized):
 //│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
-//│ Good$ = function Good$(x$1, y$2, z$3, f$capture$0) {
+//│ Good$ = function Good$(isMut, x$1, y$2, z$3, f$capture$0) {
 //│   let tmp6, tmp7;
-//│   tmp6 = globalThis.Object.freeze(new Good1.class());
+//│   if (isMut === true) {
+//│     tmp6 = new Good1.class();
+//│   } else {
+//│     tmp6 = globalThis.Object.freeze(new Good1.class());
+//│   }
 //│   tmp7 = tmp6(x$1, y$2, z$3, f$capture$0);
 //│   return tmp7
 //│ };
@@ -553,9 +564,13 @@ f().foo()
 //│     static [definitionMetadata] = ["class", "Good", []]; 
 //│   }
 //│ });
-//│ Bad$ = function Bad$(f$capture$0) {
+//│ Bad$ = function Bad$(isMut, f$capture$0) {
 //│   let tmp6, tmp7;
-//│   tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│   if (isMut === true) {
+//│     tmp6 = new Bad1.class();
+//│   } else {
+//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│   }
 //│   tmp7 = tmp6(f$capture$0);
 //│   return tmp7
 //│ };
@@ -586,8 +601,7 @@ f().foo()
 //│ });
 //│ f$capture3 = class f$capture2 {
 //│   constructor(w0$) {
-//│     let w0$1;
-//│     w0$1 = w0$;
+//│     this.w0$ = w0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -599,9 +613,9 @@ f().foo()
 //│   y = 10;
 //│   z = 10;
 //│   capture.w0$ = 1000;
-//│   tmp6 = Bad$(capture);
+//│   tmp6 = Bad$(false, capture);
 //│   tmp7 = runtime.safeCall(tmp6.foo());
-//│   return Good$(x, y, z, capture)
+//│   return Good$(false, x, y, z, capture)
 //│ };
 //│ tmp5 = f6();
 //│ runtime.safeCall(tmp5.foo())
@@ -621,10 +635,7 @@ a.foo()
 let b = a.newA()
 b.foo()
 a.getX()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'NaN'
-//│ = NaN
+//│ = 2
 //│ a = A()
 //│ b = A()
 
@@ -637,19 +648,7 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(100)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$sum$$' expected 6 arguments but got 7
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$sum$$ (REPL36:1:141)
-//│     at sum (REPL36:1:3461)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
-//│     at sum (REPL36:1:3794)
+//│ = 5050
 
 // instance checks
 
