@@ -1,43 +1,9 @@
 :js
-:showRepl
 // :de
 // :sjs
 // :pt
 // :elt
 
-//│ REPL> Collected:
-//│ >  Welcome to Node.js v22.11.0.
-//│ >  Type ".help" for more information.
-//│ REPL> Sending: console.info = console.error
-//│ REPL> Collected:
-//│ >  [Function: error]
-//│ REPL> Sending: process.chdir('/Users/parreaux/work/Research/code/mlscript')
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const runtime = (await import("/Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs")).default;
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const definitionMetadata = Symbol.for("mlscript.definitionMetadata");
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const prettyPrint = Symbol.for("mlscript.prettyPrint");
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: block$res = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let Predef;try { Predef = await import("/Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs").then(m => m.default ?? m); block$res = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 :global
 // :d
 // :todo
@@ -46,38 +12,8 @@
 ()
 //│ JS:
 //│ block$res1 = runtime.Unit; undefined
-//│ REPL> Sending: block$res1 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { block$res1 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 1
-//│ REPL> Sending: block$res2 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { block$res2 = 1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res2)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 // :sjs
@@ -89,187 +25,30 @@
 
 
 let r = {a: 1}
-//│ REPL> Sending: block$res3 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let r, a;try { a = 1; r = globalThis.Object.freeze({ "a": a }); block$res3 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res3)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(r)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {a: 1}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {a: 1}
-//│ >  Unit {}
 //│ r = {a: 1}
 
 set r.foo = 1
-//│ REPL> Sending: block$res4 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { r.foo = 1; block$res4 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 :re
 r.foo
-//│ REPL> Sending: block$res5 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes, discarded;try { selRes = r.foo; discarded = r.foo$__checkNotMethod; if (selRes === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res5 = selRes; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'foo' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'foo' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res5)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 
 let r = mut {a: 1}
-//│ REPL> Sending: block$res6 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let r1, a1;try { a1 = 1; r1 = { "a": a1 }; block$res6 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(r1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {a: 1}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {a: 1}
-//│ >  Unit {}
 //│ r = {a: 1}
 
 set r.foo = 1
-//│ REPL> Sending: block$res7 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { r1.foo = 1; block$res7 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res7)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 r.foo
-//│ REPL> Sending: block$res8 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes1, discarded1;try { selRes1 = r1.foo; discarded1 = r1.foo$__checkNotMethod; if (selRes1 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res8 = selRes1; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res8)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 
 let r = mut {}
-//│ REPL> Sending: block$res9 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let r2;try { r2 = {  }; block$res9 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res9)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(r2)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {}
-//│ >  Unit {}
 //│ r = {}
 
 set r.foo = 1
-//│ REPL> Sending: block$res10 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { r2.foo = 1; block$res10 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res10)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 r.foo
-//│ REPL> Sending: block$res11 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes2, discarded2;try { selRes2 = r2.foo; discarded2 = r2.foo$__checkNotMethod; if (selRes2 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res11 = selRes2; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res11)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 
@@ -278,345 +57,58 @@ r.foo
 let r = {}
 //│ JS (unsanitized):
 //│ let r3; r3 = runtime.Unit;
-//│ REPL> Sending: block$res12 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let r3;try { r3 = runtime.Unit; block$res12 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res12)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(r3)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 //│ r = ()
 
 :re
 r.x
-//│ REPL> Sending: block$res13 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes3, discarded3;try { selRes3 = r3.x; discarded3 = r3.x$__checkNotMethod; if (selRes3 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'")) } block$res13 = selRes3; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'x' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'x' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res13)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 
 set r.foo = 1
-//│ REPL> Sending: block$res14 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { r3.foo = 1; block$res14 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res14)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 :re
 r.foo
-//│ REPL> Sending: block$res15 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes4, discarded4;try { selRes4 = r3.foo; discarded4 = r3.foo$__checkNotMethod; if (selRes4 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res15 = selRes4; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'foo' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'foo' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res15)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 :re
 ().foo
-//│ REPL> Sending: block$res16 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes5, discarded5;try { selRes5 = runtime.Unit.foo; discarded5 = runtime.Unit.foo$__checkNotMethod; if (selRes5 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res16 = selRes5; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'foo' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'foo' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res16)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 let s = {}
-//│ REPL> Sending: block$res17 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let s;try { s = runtime.Unit; block$res17 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res17)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(s)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 //│ s = ()
 
 set s.foo = 2
-//│ REPL> Sending: block$res18 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { s.foo = 2; block$res18 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 :re
 r.foo
-//│ REPL> Sending: block$res19 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes6, discarded6;try { selRes6 = r3.foo; discarded6 = r3.foo$__checkNotMethod; if (selRes6 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'foo' yielded 'undefined'")) } block$res19 = selRes6; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'foo' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'foo' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res19)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 
 :e
 mut()
 //│ ═══[ERROR] Illegal position for 'mut' modifier.
-//│ REPL> Sending: block$res20 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { block$res20 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res20)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 
 let r = x: 1
-//│ REPL> Sending: block$res21 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let r4, x;try { x = 1; r4 = globalThis.Object.freeze({ "x": x }); block$res21 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res21)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(r4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {x: 1}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {x: 1}
-//│ >  Unit {}
 //│ r = {x: 1}
 
 Object.freeze(r)
-//│ REPL> Sending: block$res22 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes7;try { selRes7 = globalThis.Object; if (selRes7 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'Object' yielded 'undefined'")) } block$res22 = runtime.safeCall(selRes7.freeze(r4)); undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res22)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {x: 1}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {x: 1}
-//│ >  Unit {}
 //│ = {x: 1}
 
 set r.x = 2
-//│ REPL> Sending: block$res23 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { r4.x = 2; block$res23 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res23)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 r.x
-//│ REPL> Sending: block$res24 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes8, discarded7;try { selRes8 = r4.x; discarded7 = r4.x$__checkNotMethod; if (selRes8 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'")) } block$res24 = selRes8; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res24)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 class C(val x) with
   Object.freeze(this)
-//│ REPL> Sending: block$res25 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let C1;try { C1 = function C(...args) {   return globalThis.Object.freeze(new C.class(...args)); }; Object.defineProperty(C1, "class", {   enumerable: true,   value: class C {     constructor(x1) {       let selRes9;       this.x = x1;       selRes9 = globalThis.Object;       if (selRes9 === undefined) {         throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'Object' yielded 'undefined'"))       }       runtime.safeCall(selRes9.freeze(this));     }     toString() { return runtime.render(this); }     static [definitionMetadata] = ["class", "C", ["x"]];    } }); block$res25 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res25)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 let c = C(1)
-//│ REPL> Sending: block$res26 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let c, tmp;try { tmp = runtime.checkCall(C1(1)); c = tmp; block$res26 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res26)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(c)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  C(1)
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  C(1)
-//│ >  Unit {}
 //│ c = C(1)
 
 set c.x = 2
-//│ REPL> Sending: block$res27 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { c.x = 2; block$res27 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res27)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 c
-//│ REPL> Sending: block$res28 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { block$res28 = c; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res28)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  C(1)
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  C(1)
-//│ >  Unit {}
 //│ = C(1)
 
 
@@ -637,98 +129,16 @@ class Foo(val x)
 //│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
 //│ });
-//│ REPL> Sending: block$res29 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let Foo1;try { Foo1 = function Foo(...args) {   return globalThis.Object.freeze(new Foo.class(...args)); }; Object.defineProperty(Foo1, "class", {   enumerable: true,   value: class Foo {     constructor(x1) {       this.x = x1;     }     toString() { return runtime.render(this); }     static [definitionMetadata] = ["class", "Foo", ["x"]];    } }); block$res29 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res29)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 let f = Foo(1)
-//│ REPL> Sending: block$res30 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let f, tmp1;try { tmp1 = runtime.checkCall(Foo1(1)); f = tmp1; block$res30 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res30)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(f)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  Foo(1)
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  Foo(1)
-//│ >  Unit {}
 //│ f = Foo(1)
 
 f.x
-//│ REPL> Sending: block$res31 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes9, discarded8;try { selRes9 = f.x; discarded8 = f.x$__checkNotMethod; if (selRes9 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'")) } block$res31 = selRes9; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res31)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 set f.x = 2
-//│ REPL> Sending: block$res32 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { f.x = 2; block$res32 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res32)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 f.x
-//│ REPL> Sending: block$res33 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes10, discarded9;try { selRes10 = f.x; discarded9 = f.x$__checkNotMethod; if (selRes10 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'")) } block$res33 = selRes10; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res33)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  1
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  1
-//│ >  Unit {}
 //│ = 1
 
 :sjs
@@ -754,98 +164,16 @@ class Foo(val x)(val y)
 //│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
 //│ });
-//│ REPL> Sending: block$res34 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let Foo3;try { Foo3 = function Foo(...args) {   return (...args1) => {     return globalThis.Object.freeze(new Foo.class(...args)(...args1));   } }; Object.defineProperty(Foo3, "class", {   enumerable: true,   value: class Foo2 {     constructor(x1) {       return (y) => {         this.x = x1;         this.y = y;         return this;       }     }     toString() { return runtime.render(this); }     static [definitionMetadata] = ["class", "Foo", ["x"]];    } }); block$res34 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res34)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 let f = Foo(1)(2)
-//│ REPL> Sending: block$res35 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let f1, tmp2, tmp3;try { tmp2 = runtime.checkCall(Foo3(1)); tmp3 = runtime.safeCall(tmp2(2)); f1 = tmp3; block$res35 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res35)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(f1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  Foo(1)
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  Foo(1)
-//│ >  Unit {}
 //│ f = Foo(1)
 
 f.y
-//│ REPL> Sending: block$res36 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes11, discarded10;try { selRes11 = f1.y; discarded10 = f1.y$__checkNotMethod; if (selRes11 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'")) } block$res36 = selRes11; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res36)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  2
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  2
-//│ >  Unit {}
 //│ = 2
 
 set f.y = 3
-//│ REPL> Sending: block$res37 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { f1.y = 3; block$res37 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res37)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 f.y
-//│ REPL> Sending: block$res38 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes12, discarded11;try { selRes12 = f1.y; discarded11 = f1.y$__checkNotMethod; if (selRes12 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'")) } block$res38 = selRes12; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res38)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  2
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  2
-//│ >  Unit {}
 //│ = 2
 
 
@@ -863,23 +191,7 @@ module Foo(x)
 //│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "Foo"]; 
 //│ });
-//│ REPL> Sending: block$res39 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let Foo5;try { (class Foo4 {   static #x1;   static {     Foo5 = Foo4;     Foo4.#x1 = x1;   }   static toString() { return runtime.render(this); }   static [definitionMetadata] = ["module", "Foo"];  }); block$res39 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​ReferenceError: x1 is not defined​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] ReferenceError: x1 is not defined
 //│ ═══[RUNTIME ERROR] ReferenceError: x1 is not defined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res39)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 
 
@@ -891,185 +203,33 @@ class A with
   print("ok")
   val n = 123
   Object.freeze(this)
-//│ REPL> Sending: block$res40 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let A1;try { A1 = class A {   constructor() {     let tmp4, selRes13;     tmp4 = runtime.checkCall(Predef.print("ok"));     this.n = 123;     selRes13 = globalThis.Object;     if (selRes13 === undefined) {       throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'Object' yielded 'undefined'"))     }     runtime.safeCall(selRes13.freeze(this));   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A"];  }; block$res40 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res40)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 let a = new A
-//│ REPL> Sending: block$res41 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let a2, tmp4;try { tmp4 = globalThis.Object.freeze(new A1()); a2 = tmp4; block$res41 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ok
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  ok
-//│ >  undefined
 //│ > ok
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res41)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(a2)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  A { n: 123 }
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  A { n: 123 }
-//│ >  Unit {}
 //│ a = A { n: 123 }
 
 a.n
-//│ REPL> Sending: block$res42 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes13, discarded12;try { selRes13 = a2.n; discarded12 = a2.n$__checkNotMethod; if (selRes13 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'n' yielded 'undefined'")) } block$res42 = selRes13; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res42)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  123
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  123
-//│ >  Unit {}
 //│ = 123
 
 A.prototype
-//│ REPL> Sending: block$res43 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes14, discarded13;try { selRes14 = A1.prototype; discarded13 = A1.prototype$__checkNotMethod; if (selRes14 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'prototype' yielded 'undefined'")) } block$res43 = selRes14; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res43)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  {}
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  {}
-//│ >  Unit {}
 //│ = {}
 
 let b = Object.create(A.prototype)
-//│ REPL> Sending: block$res44 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let b, selRes15, selRes16, discarded14, tmp5;try { selRes15 = globalThis.Object; if (selRes15 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'Object' yielded 'undefined'")) } selRes16 = A1.prototype; discarded14 = A1.prototype$__checkNotMethod; if (selRes16 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'prototype' yielded 'undefined'")) } tmp5 = runtime.safeCall(selRes15.create(selRes16)); b = tmp5; block$res44 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res44)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(b)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  A
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  A
-//│ >  Unit {}
 //│ b = A
 
 :sjs
 b is A
 //│ JS (unsanitized):
 //│ if (b instanceof A1) { true } else { false }
-//│ REPL> Sending: block$res45 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { if (b instanceof A1) { block$res45 = true; undefined } else { block$res45 = false; undefined } } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res45)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  true
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  true
-//│ >  Unit {}
 //│ = true
 
 :re
 b.n
-//│ REPL> Sending: block$res46 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes17, discarded15;try { selRes17 = b.n; discarded15 = b.n$__checkNotMethod; if (selRes17 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'n' yielded 'undefined'")) } block$res46 = selRes17; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ​Error: Access to required field 'n' yielded 'undefined'​
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  [runtime error] Error: Access to required field 'n' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'n' yielded 'undefined'
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res46)) } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
 
 set b.n = 0
-//│ REPL> Sending: block$res47 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: try { b.n = 0; block$res47 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res47)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  ()
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  ()
-//│ >  Unit {}
 
 b.n
-//│ REPL> Sending: block$res48 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let selRes18, discarded16;try { selRes18 = b.n; discarded16 = b.n$__checkNotMethod; if (selRes18 === undefined) {   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'n' yielded 'undefined'")) } block$res48 = selRes18; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res48)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  0
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  0
-//│ >  Unit {}
 //│ = 0
 
 
