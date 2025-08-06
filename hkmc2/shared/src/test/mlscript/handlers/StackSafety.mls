@@ -26,39 +26,43 @@ hi(0)
 //│   Cont$func$hi$1 = function Cont$func$hi$(pc1) {
 //│     return new Cont$func$hi$.class(pc1);
 //│   };
-//│   Cont$func$hi$1.class = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         stackDelayRes = value$;
+//│   Object.defineProperty(Cont$func$hi$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│       constructor(pc) {
+//│         let tmp1;
+//│         tmp1 = super(null);
+//│         this.pc = pc;
 //│       }
-//│       contLoop: while (true) {
+//│       resume(value$) {
 //│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 2;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 1;
-//│           continue contLoop;
-//│         } else if (this.pc === 1) {
-//│           break contLoop;
-//│         } else if (this.pc === 2) {
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           return hi(tmp)
+//│           stackDelayRes = value$;
 //│         }
-//│         break;
+//│         contLoop: while (true) {
+//│           if (this.pc === 0) {
+//│             scrut = n == 0;
+//│             if (scrut === true) {
+//│               return 0
+//│             } else {
+//│               tmp = n - 1;
+//│               this.pc = 2;
+//│               continue contLoop;
+//│             }
+//│             this.pc = 1;
+//│             continue contLoop;
+//│           } else if (this.pc === 1) {
+//│             break contLoop;
+//│           } else if (this.pc === 2) {
+//│             runtime.stackDepth = runtime.stackDepth + 1;
+//│             return hi(tmp)
+//│           }
+//│           break;
+//│         }
 //│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$func$hi$", ["pc"]]; 
 //│     }
-//│     toString() { return "Cont$func$hi$(" + runtime.render(this.pc) + ")"; }
-//│   };
+//│   });
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     stackDelayRes.contTrace.last.next = new Cont$func$hi$1.class(0);
@@ -100,52 +104,56 @@ sum(10000)
 //│   Cont$func$sum$1 = function Cont$func$sum$(pc1) {
 //│     return new Cont$func$sum$.class(pc1);
 //│   };
-//│   Cont$func$sum$1.class = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         stackDelayRes = value$;
-//│       } else if (this.pc === 1) {
-//│         tmp1 = value$;
+//│   Object.defineProperty(Cont$func$sum$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│       constructor(pc) {
+//│         let tmp2;
+//│         tmp2 = super(null);
+//│         this.pc = pc;
 //│       }
-//│       contLoop: while (true) {
+//│       resume(value$) {
 //│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 3;
-//│             continue contLoop;
-//│           }
-//│           this.pc = 2;
-//│           continue contLoop;
-//│         } else if (this.pc === 2) {
-//│           break contLoop;
-//│         } else if (this.pc === 3) {
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           tmp1 = sum1(tmp);
-//│           if (tmp1 instanceof runtime.EffectSig.class) {
-//│             this.pc = 1;
-//│             tmp1.contTrace.last.next = this;
-//│             tmp1.contTrace.last = this;
-//│             return tmp1
-//│           }
-//│           this.pc = 1;
-//│           continue contLoop;
+//│           stackDelayRes = value$;
 //│         } else if (this.pc === 1) {
-//│           tmp1 = runtime.resetDepth(tmp1, curDepth);
-//│           return n + tmp1
+//│           tmp1 = value$;
 //│         }
-//│         break;
+//│         contLoop: while (true) {
+//│           if (this.pc === 0) {
+//│             scrut = n == 0;
+//│             if (scrut === true) {
+//│               return 0
+//│             } else {
+//│               tmp = n - 1;
+//│               this.pc = 3;
+//│               continue contLoop;
+//│             }
+//│             this.pc = 2;
+//│             continue contLoop;
+//│           } else if (this.pc === 2) {
+//│             break contLoop;
+//│           } else if (this.pc === 3) {
+//│             runtime.stackDepth = runtime.stackDepth + 1;
+//│             tmp1 = sum1(tmp);
+//│             if (tmp1 instanceof runtime.EffectSig.class) {
+//│               this.pc = 1;
+//│               tmp1.contTrace.last.next = this;
+//│               tmp1.contTrace.last = this;
+//│               return tmp1
+//│             }
+//│             this.pc = 1;
+//│             continue contLoop;
+//│           } else if (this.pc === 1) {
+//│             tmp1 = runtime.resetDepth(tmp1, curDepth);
+//│             return n + tmp1
+//│           }
+//│           break;
+//│         }
 //│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$func$sum$", ["pc"]]; 
 //│     }
-//│     toString() { return "Cont$func$sum$(" + runtime.render(this.pc) + ")"; }
-//│   };
+//│   });
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {

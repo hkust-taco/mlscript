@@ -73,7 +73,7 @@ fun foldLeft(f)(z) =
   (xs) => aux(z, xs)
 
 let sum = foldLeft((acc, x) => acc + x)(0)
-//│ sum = [function]
+//│ sum = fun
 
 :expect 0
 sum(Nil)
@@ -84,7 +84,7 @@ sum(1 :: 2 :: 3 :: Nil)
 //│ = 6
 
 let product = foldLeft((acc, x) => acc * x)(1)
-//│ product = [function]
+//│ product = fun
 
 :expect 1
 product(Nil)
@@ -95,7 +95,7 @@ product(1 :: 2 :: 3 :: Nil)
 //│ = 6
 
 let length = foldLeft((acc, _) => acc + 1)(0)
-//│ length = [function]
+//│ length = fun
 
 :expect 0
 length(Nil)
@@ -106,7 +106,7 @@ length(1 :: 2 :: 3 :: Nil)
 //│ = 3
 
 let reverse' = foldLeft((acc, x) => x :: acc)(Nil)
-//│ reverse' = [function]
+//│ reverse' = fun
 
 reverse'(Nil)
 //│ = Nil
@@ -130,7 +130,7 @@ fun foldRight(f)(z) =
   (xs) => aux(z, xs)
 
 let double = foldRight((x, acc) => x :: x :: acc)(Nil)
-//│ double = [function]
+//│ double = fun
 
 double(Nil) |> showList
 //│ = "[]"
@@ -139,7 +139,7 @@ double(1 :: 2 :: 3 :: Nil) |> showList
 //│ = "[1, 1, 2, 2, 3, 3]"
 
 let flatten = foldRight((xs, acc) => xs ::: acc)(Nil)
-//│ flatten = [function]
+//│ flatten = fun
 
 flatten(Nil) |> showList
 //│ = "[]"
@@ -154,7 +154,7 @@ fun foldLeft'[A, B](f: (A, B) -> A)(z: A) =
   (xs) => foldRight(g)(id)(xs)(z)
 
 let minus = foldLeft'((acc, x) => acc - x)(0)
-//│ minus = [function]
+//│ minus = fun
 
 minus(Nil)
 //│ = 0
@@ -163,7 +163,7 @@ minus(1 :: 2 :: 3 :: Nil)
 //│ = -6
 
 let reverse'' = foldLeft'((acc, x) => x :: acc)(Nil)
-//│ reverse'' = [function]
+//│ reverse'' = fun
 
 reverse(Nil)
 //│ = Nil

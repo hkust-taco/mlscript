@@ -141,7 +141,7 @@ id
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (integer literal).
 //│ ║  l.137: 	  1
 //│ ╙──       	  ^
-//│ = [function id]
+//│ = fun id
 
 :e
 :re
@@ -213,6 +213,6 @@ fun checkArgs(expected) =
 module TraceLogger
 
 P.TraceLogger
-//│ = TraceLogger
+//│ = module TraceLogger
 
 

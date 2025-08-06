@@ -6,7 +6,12 @@
 
 class Foo
 //│ JS (unsanitized):
-//│ let Foo1; Foo1 = class Foo { constructor() {} toString() { return "Foo"; } };
+//│ let Foo1;
+//│ Foo1 = class Foo {
+//│   constructor() {}
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│ };
 
 Foo is Foo
 //│ JS (unsanitized):
@@ -31,7 +36,7 @@ new Foo()
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = class Foo { constructor() {} toString() { return "Foo"; } }
+//│ = class Foo
 
 :re
 Foo()
@@ -46,9 +51,10 @@ print("ok")
 //│ let Foo3;
 //│ Foo3 = class Foo2 {
 //│   constructor() {
-//│     Predef.print("hi")
+//│     Predef.print("hi");
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 //│ Predef.print("ok")
 //│ > ok
@@ -63,9 +69,10 @@ fun test() =
 //│   let Foo5, tmp;
 //│   Foo5 = class Foo4 {
 //│     constructor() {
-//│       Predef.print("hi")
+//│       Predef.print("hi");
 //│     }
-//│     toString() { return "Foo"; }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo"]; 
 //│   };
 //│   tmp = Predef.print("ok");
 //│   return Foo5
@@ -75,7 +82,7 @@ let t = test()
 //│ JS (unsanitized):
 //│ let t, tmp; tmp = test(); t = tmp;
 //│ > ok
-//│ t = class Foo4 {     constructor() {       runtime.checkCall(Predef.print("hi"))     }     toString() { return "Foo"; }   }
+//│ t = class Foo
 
 new t
 //│ JS (unsanitized):
@@ -107,7 +114,8 @@ class Foo with
 //│   z() {
 //│     return this.#y + this.x
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 
 
@@ -129,7 +137,7 @@ class Foo with
 //│     this.x2 = 2;
 //│     this.#y1 = 3;
 //│     this.#y2 = 4;
-//│     Predef.print("hello")
+//│     Predef.print("hello");
 //│   }
 //│   z1() {
 //│     return 5
@@ -137,7 +145,8 @@ class Foo with
 //│   z2() {
 //│     return 6
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 
 
@@ -159,7 +168,8 @@ class Foo with
 //│     tmp1 = this.foo(z);
 //│     return tmp1 + 1
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 
 let a = new Foo
@@ -178,7 +188,7 @@ print(a.bar(1))
 //│ > 1
 //│ > 2
 //│ > 3
-//│ a = Foo
+//│ a = Foo { x: 1 }
 
 
 
@@ -188,10 +198,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.187: 	  val x = 1
+//│ ║  l.197: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.188: 	  val x = 2
+//│ ║  l.198: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -200,7 +210,8 @@ class Foo with
 //│     this.x = 1;
 //│     this.x = 2;
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 
 :e
@@ -208,10 +219,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.209: 	  let x = 2
+//│ ║  l.220: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.208: 	  val x = 1
+//│ ║  l.219: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -221,7 +232,8 @@ class Foo with
 //│     this.x = 1;
 //│     this.#x = 2;
 //│   }
-//│   toString() { return "Foo"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ };
 
 
@@ -234,9 +246,14 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.235: 	class Foo with val x = 1
+//│ ║  l.247: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
-//│ let Foo16; Foo16 = class Foo15 { constructor() {} toString() { return "Foo"; } };
+//│ let Foo16;
+//│ Foo16 = class Foo15 {
+//│   constructor() {}
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│ };
 
 

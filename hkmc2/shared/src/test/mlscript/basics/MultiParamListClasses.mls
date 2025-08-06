@@ -4,17 +4,17 @@
 data class Foo(x, y)(z)
 
 Foo
-//│ = [function Foo]
+//│ = fun Foo { class: class Foo }
 
 Foo(1, 2)
-//│ = [function]
+//│ = fun
 
 Foo(1, 2)(3)
 //│ = Foo(1, 2)
 
 
 new Foo(1, 2)
-//│ = [function]
+//│ = fun
 
 new Foo(1, 2)(3)
 //│ = Foo(1, 2)
@@ -59,7 +59,7 @@ fun Foo(using z: Int) = new Foo0 !> res =>
 using Int = 123
 
 Foo
-//│ = Foo0
+//│ = Foo0 { z: 123 }
 
 // class Foo(x, y)(using z)
 // * is to be understood as
@@ -72,16 +72,16 @@ fun Foo(x, y)(using z: Int) = new Foo0 !> res =>
 
 
 Foo(1, 2)
-//│ = Foo0
+//│ = Foo0 { x: 1, y: 2, z: 123 }
 
 :sjs
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ JS (unsanitized):
 //│ let f; f = Foo7;
-//│ f = [function Foo]
+//│ f = fun Foo
 
 // FIXME: unsoundness
 f(1, 2)
-//│ = [function]
+//│ = fun
 
 

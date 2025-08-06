@@ -13,20 +13,21 @@ fun test(a) =
 //│     constructor() {
 //│       this.x = a;
 //│     }
-//│     toString() { return "C"; }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "C"]; 
 //│   };
 //│   return new C1()
 //│ };
 
 test(12)
-//│ = C
+//│ = C { x: 12 }
 
 fun test(x) =
   data class Foo(x)
-  Foo(x).toString()
+  Foo(x)
 
 test(3)
-//│ = "Foo(3)"
+//│ = Foo(3)
 
 :sjs
 fun test(x) =
@@ -39,13 +40,17 @@ fun test(x) =
 //│   Foo2 = function Foo(a1, b1) {
 //│     return new Foo.class(a1, b1);
 //│   };
-//│   Foo2.class = class Foo1 {
-//│     constructor(a, b) {
-//│       this.a = a;
-//│       this.b = b;
+//│   Object.defineProperty(Foo2, "class", {
+//│   enumerable: true,
+//│     value: class Foo1 {
+//│       constructor(a, b) {
+//│         this.a = a;
+//│         this.b = b;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│     }
-//│     toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
-//│   };
+//│   });
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)
 //│ };
@@ -60,7 +65,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.61: 	test()
+//│ ║  l.66: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

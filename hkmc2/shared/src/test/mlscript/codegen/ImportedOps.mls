@@ -24,7 +24,7 @@ let name = "_"
 //│ name = "_"
 
 let display(balance) = balance
-//│ display = [function display]
+//│ display = fun display
 
 "b" ~ display("-")
 //│ = "b-"

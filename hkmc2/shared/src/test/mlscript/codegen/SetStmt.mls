@@ -21,7 +21,7 @@ g
 set g.0 |>= Math.sign
 
 set g.2 |>= Math.pow(_, 5)
-//│ = [function]
+//│ = fun
 
 g
 //│ = [1, 1, 2]

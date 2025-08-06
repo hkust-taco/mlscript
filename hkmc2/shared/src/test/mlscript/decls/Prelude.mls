@@ -10,23 +10,46 @@ declare class Object
 declare class Array[T]
 declare class JSON
 declare class Number
+declare class BigInt
 declare class Function
 declare class String
 declare class RegExp
 declare class Set
 declare class Map
+declare class WeakSet
+declare class WeakMap
 declare class Error
 declare class TypeError
 declare class RangeError
-declare class Symbol
 declare class Date
 
+declare class ArrayBuffer
+declare class TypedArray
+declare class Int8Array
+declare class Uint8Array
+declare class Uint8ClampedArray
+declare class Int16Array
+declare class Uint16Array
+declare class Int32Array
+declare class Uint32Array
+declare class Float16Array
+declare class Float32Array
+declare class Float64Array
+declare class BigInt64Array
+declare class BigUint64Array
+
 // MLscript-specific types
-declare class Unit
 declare class Bool
 declare class Int
 declare class Num
 declare class Str
+
+declare object Symbol with
+  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
+  // uninitialized `runtime` in the `Rendering` module.
+  fun for: Str -> Any = ()
+  val iterator: Any
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
 declare module Math with

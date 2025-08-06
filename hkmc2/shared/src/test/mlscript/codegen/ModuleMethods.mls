@@ -16,11 +16,11 @@ let s = Example.f
 //│ JS:
 //│ selRes = Example1.f;
 //│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'f' yielded 'undefined'");
+//│   throw new globalThis.Error("Access to required field 'f' yielded 'undefined'");
 //│ }
 //│ s = selRes;
 //│ block$res3 = undefined;
-//│ s = [function f]
+//│ s = fun f
 
 s(123)
 //│ = [123, 456]
@@ -56,12 +56,13 @@ module Test with
 //│   static bar() {
 //│     return Test.foo()
 //│   }
-//│   static toString() { return "Test"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 //│ > 1
 
 let f = Test.foo
-//│ f = [function foo]
+//│ f = fun foo
 
 // :fixme
 f()

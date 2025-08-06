@@ -16,7 +16,7 @@ module Foo with { val x = 1 }
 //│ ╙──     	       ^^^^^^^^^^^^^^^^^^^^
 
 Foo
-//│ = Foo
+//│ = module Foo { x: 1 }
 
 :todo
 Foo()

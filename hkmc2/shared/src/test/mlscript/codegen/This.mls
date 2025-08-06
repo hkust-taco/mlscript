@@ -55,7 +55,8 @@ module Test with
 //│       x1
 //│     ]
 //│   }
-//│   static toString() { return "Test"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 
 

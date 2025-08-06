@@ -15,8 +15,8 @@ console.log("b")
 123
 //│ JS (unsanitized):
 //│ let tmp, tmp1;
-//│ tmp = runtime.safeCall(this.console.log("a"));
-//│ tmp1 = runtime.safeCall(this.console.log("b"));
+//│ tmp = runtime.safeCall(globalThis.console.log("a"));
+//│ tmp1 = runtime.safeCall(globalThis.console.log("b"));
 //│ 123
 //│ > a
 //│ > b
@@ -25,9 +25,9 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS (unsanitized):
-//│ let l; l = this.console.log; runtime.safeCall(l(123))
+//│ let l; l = globalThis.console.log; runtime.safeCall(l(123))
 //│ > 123
-//│ l = [function log]
+//│ l = fun log
 
 42
 //│ JS (unsanitized):
@@ -37,7 +37,7 @@ l(123)
 
 console.log("a")
 //│ JS (unsanitized):
-//│ runtime.safeCall(this.console.log("a"))
+//│ runtime.safeCall(globalThis.console.log("a"))
 //│ > a
 
 
@@ -50,12 +50,12 @@ console.log("c")
 y * 2
 //│ JS (unsanitized):
 //│ let x, y, tmp2, tmp3, tmp4, tmp5;
-//│ tmp2 = runtime.safeCall(this.console.log("a"));
+//│ tmp2 = runtime.safeCall(globalThis.console.log("a"));
 //│ x = 123;
-//│ tmp3 = runtime.safeCall(this.console.log("b"));
+//│ tmp3 = runtime.safeCall(globalThis.console.log("b"));
 //│ tmp4 = x + 1;
 //│ y = tmp4;
-//│ tmp5 = runtime.safeCall(this.console.log("c"));
+//│ tmp5 = runtime.safeCall(globalThis.console.log("c"));
 //│ y * 2
 //│ > a
 //│ > b

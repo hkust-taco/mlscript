@@ -19,12 +19,16 @@ object Bar with
 //│         this$Bar.Baz = Baz;
 //│         this.a = Bar1.x;
 //│       }
-//│       static toString() { return "Baz"; }
+//│       static toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["module", "Baz"]; 
 //│     });
 //│   }
-//│   toString() { return "Bar"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Bar"]; 
 //│ }; Bar1 = new Bar$class;
-//│ Bar1.class = Bar$class;
+//│ Object.defineProperty(Bar1, "class", {
+//│   value: Bar$class
+//│ });
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 
@@ -47,10 +51,12 @@ module Bar with
 //│         Bar2.Baz = Baz1;
 //│         this.a = Bar3.x;
 //│       }
-//│       static toString() { return "Baz"; }
+//│       static toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["module", "Baz"]; 
 //│     });
 //│   }
-//│   static toString() { return "Bar"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Bar"]; 
 //│ });
 
 

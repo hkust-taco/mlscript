@@ -18,49 +18,57 @@ data class Outer(a, b) with
 //│ Outer1 = function Outer(a1, b1) {
 //│   return new Outer.class(a1, b1);
 //│ };
-//│ Outer1.class = class Outer {
-//│   constructor(a, b) {
-//│     let tmp, tmp1, tmp2;
-//│     this.a = a;
-//│     this.b = b;
-//│     const this$Outer = this;
-//│     this.Inner = function Inner(c1) {
-//│       return new Inner.class(c1);
-//│     };
-//│     this.Inner.class = class Inner {
-//│       constructor(c) {
-//│         let tmp3, tmp4, tmp5;
-//│         this.c = c;
-//│         tmp3 = Predef.print(this$Outer.a);
-//│         tmp4 = Predef.print(this.c);
-//│         tmp5 = this.i1(this$Outer.a);
-//│         Predef.print(tmp5)
-//│       }
-//│       i1(d) {
-//│         return [
-//│           this$Outer.b,
-//│           this.c,
-//│           d
-//│         ]
-//│       }
-//│       toString() { return "Inner(" + runtime.render(this.c) + ")"; }
-//│     };
-//│     tmp = this.Inner(this.a);
-//│     this.i = tmp;
-//│     tmp1 = Predef.print(this.i.c);
-//│     tmp2 = runtime.safeCall(this.i.i1(1));
-//│     Predef.print(tmp2)
+//│ Object.defineProperty(Outer1, "class", {
+//│   enumerable: true,
+//│   value: class Outer {
+//│     constructor(a, b) {
+//│       let tmp, tmp1, tmp2;
+//│       this.a = a;
+//│       this.b = b;
+//│       const this$Outer = this;
+//│       this.Inner = function Inner(c1) {
+//│         return new Inner.class(c1);
+//│       };
+//│       Object.defineProperty(this.Inner, "class", {
+//│       enumerable: true,
+//│         value: class Inner {
+//│           constructor(c) {
+//│             let tmp3, tmp4, tmp5;
+//│             this.c = c;
+//│             tmp3 = Predef.print(this$Outer.a);
+//│             tmp4 = Predef.print(this.c);
+//│             tmp5 = this.i1(this$Outer.a);
+//│             Predef.print(tmp5);
+//│           }
+//│           i1(d) {
+//│             return [
+//│               this$Outer.b,
+//│               this.c,
+//│               d
+//│             ]
+//│           }
+//│           toString() { return runtime.render(this); }
+//│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 
+//│         }
+//│       });
+//│       tmp = this.Inner(this.a);
+//│       this.i = tmp;
+//│       tmp1 = Predef.print(this.i.c);
+//│       tmp2 = runtime.safeCall(this.i.i1(1));
+//│       Predef.print(tmp2);
+//│     }
+//│     o1(c) {
+//│       return this.Inner(c)
+//│     } 
+//│     o2(c1, d) {
+//│       let tmp;
+//│       tmp = this.Inner(c1);
+//│       return runtime.safeCall(tmp.i1(d))
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
 //│   }
-//│   o1(c) {
-//│     return this.Inner(c)
-//│   } 
-//│   o2(c1, d) {
-//│     let tmp;
-//│     tmp = this.Inner(c1);
-//│     return runtime.safeCall(tmp.i1(d))
-//│   }
-//│   toString() { return "Outer(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
-//│ };
+//│ });
 
 
 val o = Outer(100, 200)

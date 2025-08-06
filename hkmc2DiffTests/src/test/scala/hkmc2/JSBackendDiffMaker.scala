@@ -32,6 +32,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
+  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)
+  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)
   
   val ltl = new TraceLogger:
     override def doTrace = debugLowering.isSet || scope.exists:
@@ -52,6 +54,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
       case r => output(s"Failed to load $name: $r")
     importRuntimeModule(runtimeNme, runtimeFile)
+    h.execute(s"const $definitionMetadataNme = Symbol.for(\"mlscript.definitionMetadata\");")
+    h.execute(s"const $prettyPrintNme = Symbol.for(\"mlscript.prettyPrint\");")
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   
@@ -75,11 +79,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val jsb = ltl.givenIn:
-        new JSBuilder
+        JSBuilder()
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le, N, wd)
+        jsb.programBody(le, N, wd)
       val jsStr = je.stripBreaks.mkString(100)
       output(s"JS (unsanitized):")
       output(jsStr)

@@ -5,6 +5,10 @@ const RuntimeJS = {
     try { return computation() }
     catch (error) { return onError(error) }
   },
+  symbols: {
+    definitionMetadata: Symbol.for("mlscript.definitionMetadata"),
+    prettyPrint: Symbol.for("mlscript.prettyPrint")
+  },
   short_and(lhs, rhs) {
     return lhs && rhs();
   },

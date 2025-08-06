@@ -54,7 +54,7 @@ let config(useModules) =
   if useModules do set ext = "m" + ext
   base: "main"
   full: base + "." + ext
-//│ config = [function]
+//│ config = fun
 
 config(true)
 //│ = {ext: "mjs", base: "main", full: "main.mjs"}

@@ -53,6 +53,11 @@ class Scope
       else thisError(thisSym)
     )
     curThis match
+    case S(S(sym: TopLevelSymbol)) if sym === State.globalThisSymbol =>
+      // `this` at the top level evaluates to `undefined` in strict mode.
+      // We need this because we generate some code that uses `this`/`globalThis`,
+      // for example the symbol loading code.
+      "globalThis"
     case S(S(`thisSym`)) => "this" // no need to qualify `this`
     case S(_) => getParent(_.findThisProxy_!(thisSym))
     case N => getParent(_.findThis_!(thisSym))

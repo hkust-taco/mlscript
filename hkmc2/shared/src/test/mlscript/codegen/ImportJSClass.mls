@@ -3,23 +3,23 @@
 
 
 import "../../js/MyClass.mjs"
-//│ MyClass = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ MyClass = class MyClass
 
 MyClass
-//│ = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ = class MyClass
 
 new MyClass("Bob")
-//│ = [object Object]
+//│ = MyClass { name: "Bob" }
 
 let C = MyClass
-//│ C = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ C = class MyClass
 
 let c = C
-//│ c = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ c = class MyClass
 
 :todo
 new c("Bob")
-//│ = [object Object]
+//│ = MyClass { name: "Bob" }
 
 :re
 globalThis.MyClass

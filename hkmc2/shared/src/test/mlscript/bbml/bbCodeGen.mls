@@ -54,7 +54,7 @@ false
 (x => x) as [T] -> T -> T
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (x1) { return x1 }); lambda
-//│ = [function]
+//│ = fun
 //│ Type: ['T] -> ('T) ->{⊥} 'T
 
 
@@ -65,12 +65,16 @@ data class Foo(x: Int)
 //│ Foo1 = function Foo(x2) {
 //│   return new Foo.class(x2);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(x1) {
-//│     this.x = x1;
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
+//│   value: class Foo {
+//│     constructor(x1) {
+//│       this.x = x1;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 //│ Type: ⊤
 
 
@@ -233,7 +237,7 @@ fact(3)
 :sjs
 region x in 42
 //│ JS (unsanitized):
-//│ let x1; x1 = new this.Region(); 42
+//│ let x1; x1 = new globalThis.Region(); 42
 //│ = 42
 //│ Type: Int
 
@@ -241,7 +245,7 @@ region x in 42
 :sjs
 region x in x
 //│ JS (unsanitized):
-//│ let x2; x2 = new this.Region(); x2
+//│ let x2; x2 = new globalThis.Region(); x2
 //│ = Region
 //│ Type: Region[?]
 
@@ -249,7 +253,7 @@ region x in x
 :sjs
 region x in x.ref 42
 //│ JS (unsanitized):
-//│ let x3; x3 = new this.Region(); new this.Ref(x3, 42)
+//│ let x3; x3 = new globalThis.Region(); new globalThis.Ref(x3, 42)
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
 
@@ -257,7 +261,7 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !y
 //│ JS (unsanitized):
-//│ let x4, y, tmp4; x4 = new this.Region(); tmp4 = new this.Ref(x4, 42); y = tmp4; y.value
+//│ let x4, y, tmp4; x4 = new globalThis.Region(); tmp4 = new globalThis.Ref(x4, 42); y = tmp4; y.value
 //│ = 42
 //│ Type: Int
 
@@ -265,7 +269,12 @@ region x in let y = x.ref 42 in !y
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ JS (unsanitized):
-//│ let x5, y1, tmp5; x5 = new this.Region(); tmp5 = new this.Ref(x5, 42); y1 = tmp5; y1.value = 0; 0
+//│ let x5, y1, tmp5;
+//│ x5 = new globalThis.Region();
+//│ tmp5 = new globalThis.Ref(x5, 42);
+//│ y1 = tmp5;
+//│ y1.value = 0;
+//│ 0
 //│ = 0
 //│ Type: Int
 

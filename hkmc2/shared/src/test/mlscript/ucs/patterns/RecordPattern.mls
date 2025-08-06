@@ -32,7 +32,7 @@ take_1(r)
 
 let f = case
   { a: 1 as a } then a
-//│ f = [function]
+//│ f = fun
 
 f(a: 1)
 //│ = 1
@@ -45,7 +45,7 @@ let f = case
 //│ ╔══[ERROR] Name not found: a
 //│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
-//│ f = [function]
+//│ f = fun
 
 // * OTOH, note that `a` is bound here
 let rcd =
@@ -74,12 +74,12 @@ if rr is
 
 let f = case
   { a: 1 & a } then a
-//│ f = [function]
+//│ f = fun
 
 
 let f = case
   { :a } then a
-//│ f = [function]
+//│ f = fun
 
 f(a: 1)
 //│ = 1

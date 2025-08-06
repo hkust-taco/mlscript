@@ -312,7 +312,7 @@ fun eval(step) =
   aux
 
 let evalByValue = eval(stepByValue)
-//│ evalByValue = [function aux]
+//│ evalByValue = fun aux
 
 // Let's program with Church encoding!
 

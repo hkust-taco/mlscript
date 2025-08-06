@@ -20,21 +20,24 @@ object Test with
 //│     tmp = Predef.print(Test1);
 //│     return Test1.x
 //│   }
-//│   toString() { return "Test"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "Test"]; 
 //│ }; Test1 = new Test$class;
-//│ Test1.class = Test$class;
+//│ Object.defineProperty(Test1, "class", {
+//│   value: Test$class
+//│ });
 
 Test
-//│ = Test
+//│ = Test { x: 12, class: object Test }
 
 print(Test)
-//│ > Test
+//│ > Test { x: 12, class: object Test }
 
 :sjs
 Test.foo()
 //│ JS (unsanitized):
 //│ Test1.foo()
-//│ > Test
+//│ > Test { x: 12, class: object Test }
 //│ = 12
 
 :sjs
@@ -56,7 +59,7 @@ f()
 //│ JS (unsanitized):
 //│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
-//│ f = [function f]
+//│ f = fun f
 //│ x = 2
 
 
@@ -66,10 +69,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.67: 	  let x = 2
+//│ ║  l.70: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.66: 	  val x = 1
+//│ ║  l.69: 	  val x = 1
 //│ ╙──      	      ^^^^^
 //│ JS:
 //│ (class Test3 {
@@ -79,7 +82,8 @@ module Test with
 //│     this.x = 1;
 //│     Test3.#x = 2;
 //│   }
-//│   static toString() { return "Test"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Test"]; 
 //│ });
 //│ block$res8 = undefined;
 
@@ -107,26 +111,30 @@ data class Cls(x) with
 //│ Cls1 = function Cls(x3) {
 //│   return new Cls.class(x3);
 //│ };
-//│ Cls1.class = class Cls {
-//│   #x;
-//│   #x1;
-//│   constructor(x2) {
-//│     let tmp, tmp1;
-//│     this.x = x2;
-//│     tmp = this.x + 1;
-//│     this.#x = tmp;
-//│     tmp1 = this.#x * 2;
-//│     this.#x1 = tmp1;
-//│     Predef.print(this.x, this.#x1)
+//│ Object.defineProperty(Cls1, "class", {
+//│   enumerable: true,
+//│   value: class Cls {
+//│     #x;
+//│     #x1;
+//│     constructor(x2) {
+//│       let tmp, tmp1;
+//│       this.x = x2;
+//│       tmp = this.x + 1;
+//│       this.#x = tmp;
+//│       tmp1 = this.#x * 2;
+//│       this.#x1 = tmp1;
+//│       Predef.print(this.x, this.#x1);
+//│     }
+//│     get foo() {
+//│       return this.#x;
+//│     } 
+//│     get bar() {
+//│       return this.#x1;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cls", ["x"]]; 
 //│   }
-//│   get foo() {
-//│     return this.#x;
-//│   } 
-//│   get bar() {
-//│     return this.#x1;
-//│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 let cls = Cls(10)
 //│ > 10 22
@@ -155,7 +163,7 @@ fun foo(): module M =
     A
 
 foo()
-//│ = A
+//│ = module A
 
 
 :sjs
@@ -179,20 +187,22 @@ module Whoops with
 //│       static g() {
 //│         return Whoops.f()
 //│       }
-//│       static toString() { return "Whoops"; }
+//│       static toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["module", "Whoops"]; 
 //│     });
 //│   }
 //│   static f() {
 //│     return "Hello"
 //│   }
-//│   static toString() { return "Whoops"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Whoops"]; 
 //│ });
 
 Whoops.f()
 //│ = "Hello"
 
 Whoops.Whoops
-//│ = Whoops
+//│ = module Whoops { w: ref'1 } as ref'1
 
 Whoops.Whoops.g()
 //│ = "Hello"
@@ -201,7 +211,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.202: 	Runtime
+//│ ║  l.212: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

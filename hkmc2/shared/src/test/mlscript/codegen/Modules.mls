@@ -4,13 +4,20 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; (class None { static { None1 = None; } static toString() { return "None"; } });
+//│ let None1;
+//│ (class None {
+//│   static {
+//│     None1 = None;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "None"]; 
+//│ });
 
 :sjs
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = None
+//│ = module None
 
 :sjs
 :re
@@ -23,7 +30,7 @@ None()
 new None
 //│ JS (unsanitized):
 //│ new None1()
-//│ = [object Object]
+//│ = module None
 
 
 :sjs
@@ -40,24 +47,30 @@ module M with
 //│     let tmp;
 //│     this.C = class C {
 //│       constructor() {}
-//│       toString() { return "C"; }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "C"]; 
 //│     };
 //│     this.D = function D() {
 //│       return new D.class();
 //│     };
-//│     this.D.class = class D {
-//│       constructor() {}
-//│       toString() { return "D(" + "" + ")"; }
-//│     };
+//│     Object.defineProperty(this.D, "class", {
+//│     enumerable: true,
+//│       value: class D {
+//│         constructor() {}
+//│         toString() { return runtime.render(this); }
+//│         static [definitionMetadata] = ["class", "D", []]; 
+//│       }
+//│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static toString() { return "M"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
 M.C
-//│ = class C {       constructor() {}       toString() { return "C"; }     }
+//│ = class C
 
 new M.C
 //│ = C
@@ -75,7 +88,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.76: 	M.oops
+//│ ║  l.89: 	M.oops
 //│ ╙──      	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -87,13 +100,21 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static toString() { return "M"; } });
+//│ let M3;
+//│ (class M2 {
+//│   static {
+//│     M3 = M2;
+//│     this.m = M3;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "M"]; 
+//│ });
 
 :sjs
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = M
+//│ = module M { m: ref'1 } as ref'1
 
 
 

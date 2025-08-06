@@ -11,6 +11,9 @@ declare class Unit
 declare class Bool
 declare class Int
 declare class Num
+declare class TypedArray
+
+declare class BigInt
 
 data
   class
@@ -36,6 +39,13 @@ declare module source with
     line: Int
     name: Str
     file: Str
+
+declare object Symbol with
+  // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
+  // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the
+  // uninitialized `runtime` in the `Rendering` module.
+  fun for: Str -> Any = ()
+  val iterator: Any
 
 declare module js with
   fun try_catch

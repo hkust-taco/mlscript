@@ -186,7 +186,7 @@ let foo =
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
-//│ foo = [function foo]
+//│ foo = fun foo
 
 foo(Tuple(1, 2, 3))
 //│ ═══[RUNTIME ERROR] Error: match error

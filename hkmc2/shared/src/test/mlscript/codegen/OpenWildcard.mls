@@ -42,7 +42,7 @@ console.log(None)
 open OtherModule
 console.log(None)
 none()
-//│ > None { class: [class None] }
+//│ > None {}
 //│ > 123
 //│ = None
 
@@ -73,7 +73,7 @@ open Option
 Some
 //│ JS (unsanitized):
 //│ Option.Some
-//│ = [function Some]
+//│ = fun Some { class: class Some }
 
 :sjs
 None

@@ -2,13 +2,13 @@
 
 
 case x then x
-//│ = [function]
+//│ = fun
 
 :sjs
 case { x then x }
 //│ JS (unsanitized):
 //│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
-//│ = [function]
+//│ = fun
 
 :sjs
 x => if x is
@@ -23,7 +23,7 @@ x => if x is
 //│   }
 //│ });
 //│ lambda2
-//│ = [function]
+//│ = fun
 
 :sjs
 case 0 then true
@@ -37,7 +37,7 @@ case 0 then true
 //│   }
 //│ });
 //│ lambda3
-//│ = [function]
+//│ = fun
 
 (case x then x) of 1
 //│ = 1
@@ -77,7 +77,7 @@ case
 //│   }
 //│ });
 //│ lambda11
-//│ = [function]
+//│ = fun
 
 data class Some(value)
 object None
@@ -99,5 +99,5 @@ val isDefined = case
 //│ });
 //│ tmp6 = lambda12;
 //│ isDefined = tmp6;
-//│ isDefined = [function]
+//│ isDefined = fun
 

@@ -86,7 +86,7 @@ fun f(x, y) =
     then y
 
 let audits = new Set()
-//│ audits = Set{}
+//│ audits = Set(0) {}
 
 if audits.has(1) === true do
   print("ok")

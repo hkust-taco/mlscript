@@ -28,9 +28,15 @@ pattern Zero = "0"
 //│       return runtime.MatchFailure(null)
 //│     }
 //│   }
-//│   toString() { return "Zero"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["pattern", "Zero"]; 
 //│ }; Zero1 = new Zero$class;
-//│ Zero1.class = Zero$class;
+//│ Object.defineProperty(Zero1, "class", {
+//│   value: Zero$class
+//│ });
+
+Zero
+//│ = pattern Zero
 
 :expect true
 Zero.unapply("0") is Runtime.MatchResult

@@ -20,11 +20,11 @@
 //│   return tmp
 //│ });
 //│ lambda
-//│ = [function]
+//│ = fun
 
 () =>
   while true then 0
-//│ = [function]
+//│ = fun
 
 
 let x = true
@@ -124,7 +124,7 @@ while
 //│   return tmp20
 //│ });
 //│ lambda2
-//│ = [function]
+//│ = fun
 
 
 let i = 0 in
@@ -252,7 +252,7 @@ while false do
 
 
 () => while true then 0
-//│ = [function]
+//│ = fun
 
 :fixme
 while print("Hello World"); false

@@ -29,7 +29,7 @@ x => if x is Pair(A, B) then 1
 //│   }
 //│ });
 //│ lambda
-//│ = [function]
+//│ = fun
 
 
 // :e // FIXME: should be an exhaustiveness error

@@ -39,7 +39,7 @@ new Object with 1
 
 // TODO don't show as `$anon`
 new Object with { val x = 1 }
-//│ = $anon
+//│ = $anon { x: 1 }
 
 :e
 new Object with { val x = 1 } with { val y = 1 }
@@ -51,7 +51,7 @@ new Object with { val x = 1 } with { val y = 1 }
 let obj =
   new Object with
     val x = 12
-//│ obj = $anon
+//│ obj = $anon { x: 12 }
 
 obj.x
 //│ = 12
@@ -60,7 +60,7 @@ obj.x
 let n =
   new with
     val x = 12
-//│ n = $anon
+//│ n = $anon { x: 12 }
 
 n.x
 //│ = 12

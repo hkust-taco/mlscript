@@ -1,3 +1,5 @@
+const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
+const prettyPrint = globalThis.Symbol.for("mlscript.prettyPrint");
 import runtime from "./Runtime.mjs";
 import Term from "./Term.mjs";
 import Runtime from "./Runtime.mjs";
@@ -170,6 +172,7 @@ let Predef1;
   static use(instance) {
     return instance
   }
-  static toString() { return "Predef"; }
+  static toString() { return runtime.render(this); }
+  static [definitionMetadata] = ["module", "Predef"]; 
 });
 let Predef = Predef1; export default Predef;

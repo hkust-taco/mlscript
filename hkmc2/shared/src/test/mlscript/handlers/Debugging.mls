@@ -44,63 +44,67 @@ fun f() =
 //│   Cont$func$f$1 = function Cont$func$f$(pc1) {
 //│     return new Cont$func$f$.class(pc1);
 //│   };
-//│   Cont$func$f$1.class = class Cont$func$f$ extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp2;
-//│       tmp2 = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         tmp = value$;
-//│       } else if (this.pc === 1) {
-//│         tmp1 = value$;
+//│   Object.defineProperty(Cont$func$f$1, "class", {
+//│   enumerable: true,
+//│     value: class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│       constructor(pc) {
+//│         let tmp2;
+//│         tmp2 = super(null);
+//│         this.pc = pc;
 //│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 2) {
-//│           return j / i
-//│         } else if (this.pc === 3) {
-//│           tmp1 = Predef.print(tmp);
-//│           if (tmp1 instanceof runtime.EffectSig.class) {
-//│             this.pc = 1;
-//│             tmp1.contTrace.last.next = this;
-//│             tmp1.contTrace.last = this;
-//│             return tmp1
-//│           }
-//│           this.pc = 1;
-//│           continue contLoop;
-//│         } else if (this.pc === 4) {
-//│           tmp = Predef.raiseUnhandledEffect();
-//│           if (tmp instanceof runtime.EffectSig.class) {
-//│             this.pc = 0;
-//│             tmp.contTrace.last.next = this;
-//│             tmp.contTrace.last = this;
-//│             return tmp
-//│           }
-//│           this.pc = 0;
-//│           continue contLoop;
-//│         } else if (this.pc === 0) {
-//│           this.pc = 3;
-//│           continue contLoop;
+//│       resume(value$) {
+//│         if (this.pc === 0) {
+//│           tmp = value$;
 //│         } else if (this.pc === 1) {
-//│           this.pc = 2;
-//│           continue contLoop;
+//│           tmp1 = value$;
 //│         }
-//│         break;
+//│         contLoop: while (true) {
+//│           if (this.pc === 2) {
+//│             return j / i
+//│           } else if (this.pc === 3) {
+//│             tmp1 = Predef.print(tmp);
+//│             if (tmp1 instanceof runtime.EffectSig.class) {
+//│               this.pc = 1;
+//│               tmp1.contTrace.last.next = this;
+//│               tmp1.contTrace.last = this;
+//│               return tmp1
+//│             }
+//│             this.pc = 1;
+//│             continue contLoop;
+//│           } else if (this.pc === 4) {
+//│             tmp = Predef.raiseUnhandledEffect();
+//│             if (tmp instanceof runtime.EffectSig.class) {
+//│               this.pc = 0;
+//│               tmp.contTrace.last.next = this;
+//│               tmp.contTrace.last = this;
+//│               return tmp
+//│             }
+//│             this.pc = 0;
+//│             continue contLoop;
+//│           } else if (this.pc === 0) {
+//│             this.pc = 3;
+//│             continue contLoop;
+//│           } else if (this.pc === 1) {
+//│             this.pc = 2;
+//│             continue contLoop;
+//│           }
+//│           break;
+//│         }
+//│       } 
+//│       get getLocals() {
+//│         return getLocals3();
+//│       } 
+//│       get getLoc() {
+//│         if (this.pc === 0) {
+//│           return "Debugging.mls:17:14"
+//│         } else if (this.pc === 1) {
+//│           return "Debugging.mls:17:5"
+//│         }
 //│       }
-//│     } 
-//│     get getLocals() {
-//│       return getLocals3();
-//│     } 
-//│     get getLoc() {
-//│       if (this.pc === 0) {
-//│         return "Debugging.mls:17:14"
-//│       } else if (this.pc === 1) {
-//│         return "Debugging.mls:17:5"
-//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$func$f$", ["pc"]]; 
 //│     }
-//│     toString() { return "Cont$func$f$(" + runtime.render(this.pc) + ")"; }
-//│   };
+//│   });
 //│   i = 0;
 //│   j = 100;
 //│   k = 2000;
@@ -137,8 +141,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:137:3)
-//│ 	at lambda_test (Debugging.mls:134:3)
+//│ 	at lambda (Debugging.mls:141:3)
+//│ 	at lambda_test (Debugging.mls:138:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -182,7 +186,7 @@ let res =
     fun break(payload)(resume) = resume
   using Debugger = h
   Runtime.try(() => Test.main())
-//│ res = EffectHandle()
+//│ res = EffectHandle(_)
 
 :re
 res.raise()
@@ -211,9 +215,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:204:3) with locals: j=200
+//│ > 	at f (Debugging.mls:208:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:206:3)
+//│ > 	at f (Debugging.mls:210:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:207:3) with locals: j=300
+//│ > 	at f (Debugging.mls:211:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

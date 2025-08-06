@@ -80,15 +80,16 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
-//│   static toString() { return "T"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "T"]; 
 //│ });
 
 
 T.a
-//│ = [function t]
+//│ = fun t
 
 T.b
-//│ = [function t]
+//│ = fun t
 
 T.c
 //│ = 2
@@ -109,7 +110,8 @@ module M with
 //│   static get t() {
 //│     return 0;
 //│   }
-//│   static toString() { return "M"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "M"]; 
 //│ });
 
 
@@ -290,15 +292,19 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x1) {
 //│   return new Foo.class(x1);
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor(x) {
-//│     this.x = x;
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
+//│   value: class Foo {
+//│     constructor(x) {
+//│       this.x = x;
+//│     }
+//│     get oops() {
+//│       return this.x;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│   }
-//│   get oops() {
-//│     return this.x;
-//│   }
-//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
-//│ };
+//│ });
 
 
 fun foo(f) =

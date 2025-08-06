@@ -169,43 +169,48 @@ if true do
 //│         return arg
 //│       })
 //│     }
-//│     toString() { return "Handler$h$"; }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│   };
 //│   h = new Handler$h$12();
 //│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
 //│     return new Cont$handleBlock$h$.class(pc1);
 //│   };
-//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
-//│     constructor(pc) {
-//│       let tmp12;
-//│       tmp12 = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         res = value$;
+//│   Object.defineProperty(Cont$handleBlock$h$11, "class", {
+//│   enumerable: true,
+//│     value: class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│       constructor(pc) {
+//│         let tmp12;
+//│         tmp12 = super(null);
+//│         this.pc = pc;
 //│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 1) {
-//│           break contLoop;
-//│         } else if (this.pc === 2) {
-//│           res = f();
-//│           if (res instanceof runtime.EffectSig.class) {
+//│       resume(value$) {
+//│         if (this.pc === 0) {
+//│           res = value$;
+//│         }
+//│         contLoop: while (true) {
+//│           if (this.pc === 1) {
+//│             break contLoop;
+//│           } else if (this.pc === 2) {
+//│             res = f();
+//│             if (res instanceof runtime.EffectSig.class) {
+//│               this.pc = 0;
+//│               res.contTrace.last.next = this;
+//│               res.contTrace.last = this;
+//│               return res
+//│             }
 //│             this.pc = 0;
-//│             res.contTrace.last.next = this;
-//│             res.contTrace.last = this;
+//│             continue contLoop;
+//│           } else if (this.pc === 0) {
 //│             return res
 //│           }
-//│           this.pc = 0;
-//│           continue contLoop;
-//│         } else if (this.pc === 0) {
-//│           return res
+//│           break;
 //│         }
-//│         break;
 //│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$handleBlock$h$", ["pc"]]; 
 //│     }
-//│     toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
-//│   };
+//│   });
 //│   f = function f() {
 //│     return 3
 //│   };

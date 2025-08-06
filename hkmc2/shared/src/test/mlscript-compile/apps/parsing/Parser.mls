@@ -128,7 +128,7 @@ fun parse(tokens) =
       do tracer.print of "no end choice", source.line
       else
         consume
-        Tree.error("unexpected token " + other) // TODO: Pretty-print the token.
+        Tree.error("unexpected token " + render(other)) // TODO: Pretty-print the token.
     Nil and rule.endChoice is
       Some(value) then value
       None then

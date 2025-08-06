@@ -8,9 +8,8 @@ import utils.*
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
-import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
-import semantics.Elaborator.State
+import semantics.Elaborator.{Ctx, State}
 
 
 class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):

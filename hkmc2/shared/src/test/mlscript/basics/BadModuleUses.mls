@@ -18,7 +18,7 @@ let m = Example.foo()
 //│ ╔══[ERROR] Unexpected moduleful application.
 //│ ║  l.17: 	let m = Example.foo()
 //│ ╙──      	        ^^^^^^^^^^^^^
-//│ m = M
+//│ m = module M
 
 :todo // FIXME: should be an error
 :e
@@ -27,7 +27,7 @@ id(m).mtd()
 
 
 Example.foo()
-//│ = M
+//│ = module M
 
 :e
 id(Example.foo())
@@ -35,7 +35,7 @@ id(Example.foo())
 //│ ║  l.33: 	id(Example.foo())
 //│ ║        	   ^^^^^^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = M
+//│ = module M
 
 Example.foo().mtd()
 //│ = 42
@@ -45,14 +45,14 @@ Example.foo() + 1
 //│ ╔══[ERROR] Unexpected moduleful application.
 //│ ║  l.44: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
-//│ = "M1"
+//│ = "module M1"
 
 :e
 M + 1
 //│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.51: 	M + 1
 //│ ╙──      	^
-//│ = "M1"
+//│ = "module M1"
 
 :e
 M |> id
@@ -60,7 +60,7 @@ M |> id
 //│ ║  l.58: 	M |> id
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = M
+//│ = module M
 
 :e
 id <| M
@@ -68,7 +68,7 @@ id <| M
 //│ ║  l.66: 	id <| M
 //│ ║        	      ^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = M
+//│ = module M
 
 fun (+) lol(a, b) = [a, b]
 
@@ -78,14 +78,14 @@ M + 1
 //│ ║  l.76: 	M + 1
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
-//│ = [M, 1]
+//│ = [module M, 1]
 
 :e
 let m = M
 //│ ╔══[ERROR] Unexpected moduleful reference.
 //│ ║  l.84: 	let m = M
 //│ ╙──      	        ^
-//│ m = M
+//│ m = module M
 
 
 :e
@@ -97,6 +97,6 @@ print(B.a)
 //│ ╔══[ERROR] Unexpected moduleful selection.
 //│ ║  l.96: 	print(B.a)
 //│ ╙──      	      ^^^
-//│ > A
+//│ > module A
 
 

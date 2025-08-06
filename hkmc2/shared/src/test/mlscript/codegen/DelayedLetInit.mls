@@ -50,14 +50,14 @@ fun f() = 1
 f
 //│ JS (unsanitized):
 //│ f
-//│ = [function f]
+//│ = fun f
 
 
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
 //│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
-//│ f = [function f]
+//│ f = fun f
 
 f(1)
 //│ JS (unsanitized):
@@ -86,7 +86,7 @@ else foo = 1
 //│ if (scrut === true) {
 //│   foo1
 //│ } else {
-//│   throw new this.Error("match error");
+//│   throw new globalThis.Error("match error");
 //│ }
 //│ foo = undefined
 

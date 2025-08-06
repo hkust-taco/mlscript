@@ -5,10 +5,10 @@
 _
 //│ JS (unsanitized):
 //│ let lambda; lambda = (undefined, function (_0) { return _0 }); lambda
-//│ = [function]
+//│ = fun
 
 (_)
-//│ = [function]
+//│ = fun
 
 :e
 :ge
@@ -21,16 +21,16 @@ y: _
 //│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
 
 (y: _)
-//│ = [function]
+//│ = fun
 
 :w
 _, _
 //│ ═══[WARNING] Pure expression in statement position
-//│ = [function]
+//│ = fun
 
 
 let inc = _ + 1
-//│ inc = [function inc]
+//│ inc = fun inc
 
 inc(2)
 //│ = 3
@@ -39,10 +39,10 @@ inc(2)
 _ + _
 //│ JS (unsanitized):
 //│ let lambda4; lambda4 = (undefined, function (_0, _1) { return _0 + _1 }); lambda4
-//│ = [function]
+//│ = fun
 
 let f = _ + _
-//│ f = [function f]
+//│ f = fun f
 
 f(2, 3)
 //│ = 5
@@ -53,10 +53,10 @@ open Iter
 
 filtering of [], _ =>
   1
-//│ = Iterable()
+//│ = Iterable(_)
 
 print(_)
-//│ = [function]
+//│ = fun
 
 
 :sjs
@@ -67,7 +67,7 @@ let test = _.f(0, _, 2)
 //│   return runtime.safeCall(_0.f(0, _1, 2))
 //│ };
 //│ test = test1;
-//│ test = [function test]
+//│ test = fun test
 
 :re
 test(f: print)(1)
@@ -80,20 +80,20 @@ test({f: print}, 1)
 //│ > 0 1 2
 
 {f: print}
-//│ = {f: [function print]}
+//│ = {f: fun print}
 
 ({f: print})
-//│ = {f: [function print]}
+//│ = {f: fun print}
 
 [{f: print}]
-//│ = [{f: [function print]}]
+//│ = [{f: fun print}]
 
 [{f: print}, 1]
-//│ = [{f: [function print]}, 1]
+//│ = [{f: fun print}, 1]
 
 
 print(inc(_))
-//│ > [function]
+//│ > fun
 
 :sjs
 _ is Int
@@ -107,12 +107,12 @@ _ is Int
 //│   }
 //│ });
 //│ lambda8
-//│ = [function]
+//│ = fun
 
 let f = _ is Int
 [f(1), f("1")]
 //│ = [true, false]
-//│ f = [function f]
+//│ f = fun f
 
 [1, "a", 3, true] filtering(_ is Int) toArray()
 //│ = [1, 3]
@@ -122,14 +122,14 @@ let f = _ is Int
 
 
 let x_to = x: _
-//│ x_to = [function x_to]
+//│ x_to = fun x_to
 
 x_to(42)
 //│ = {x: 42}
 
 
 let mkObj = (x: _, y: _, z: 3)
-//│ mkObj = [function mkObj]
+//│ mkObj = fun mkObj
 
 mkObj(1, 2)
 //│ = {x: 1, y: 2, z: 3}
@@ -142,7 +142,7 @@ mkObj(1, 2)
 :re
 let mkObj = x: _, y: _, z: 3
 //│ ═══[ERROR] Illegal position for '_' placeholder.
-//│ mkObj = [function mkObj]
+//│ mkObj = fun mkObj
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'y'
 //│ ║  l.143: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                  ^
@@ -157,14 +157,14 @@ let mkObj = x: _, y: _, z: 3
 
 let mkObj =
   x: _, y: _, z: 3
-//│ mkObj = [function mkObj]
+//│ mkObj = fun mkObj
 
 mkObj(1, 2)
 //│ = {x: 1, y: 2, z: 3}
 
 
 let obj = f: _ + 1
-//│ obj = {f: [function f]}
+//│ obj = {f: fun f}
 
 obj.f(123)
 //│ = 124
@@ -174,13 +174,13 @@ obj.f(123)
 
 
 let f = _ => 1
-//│ f = [function f]
+//│ f = fun f
 
 f(2)
 //│ = 1
 
 let f = x => _
-//│ f = [function f]
+//│ f = fun f
 
 f(2)(3)
 //│ = 3

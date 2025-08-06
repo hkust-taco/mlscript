@@ -44,7 +44,7 @@ let b_x = foo()
 b_x.0()
 b_x.1()
 //│ = 2
-//│ b_x = [[function], [function]]
+//│ b_x = [fun, fun]
 
 
 :sjs

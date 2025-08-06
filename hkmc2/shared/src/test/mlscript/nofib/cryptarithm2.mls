@@ -36,7 +36,7 @@ fun guard(b) = if b then StateT(s => [Unit, s] :: Nil) else StateT(s => Nil)
 fun put(s) = StateT(x => [Unit, s] :: Nil)
 
 let get = StateT(s => [s, s] :: Nil)
-//│ get = StateT([function])
+//│ get = StateT(fun)
 
 data class Digits(i: List[Int], c: List[[Char, Int]])
 

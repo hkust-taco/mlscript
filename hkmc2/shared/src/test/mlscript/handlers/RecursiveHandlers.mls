@@ -170,37 +170,41 @@ str
 //│           Cont$handler$h1$perform$2 = function Cont$handler$h1$perform$(pc1) {
 //│             return new Cont$handler$h1$perform$.class(pc1);
 //│           };
-//│           Cont$handler$h1$perform$2.class = class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
-//│             constructor(pc) {
-//│               let tmp15;
-//│               tmp15 = super(null);
-//│               this.pc = pc;
-//│             }
-//│             resume(value$) {
-//│               if (this.pc === 7) {
-//│                 tmp13 = value$;
+//│           Object.defineProperty(Cont$handler$h1$perform$2, "class", {
+//│           enumerable: true,
+//│             value: class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
+//│               constructor(pc) {
+//│                 let tmp15;
+//│                 tmp15 = super(null);
+//│                 this.pc = pc;
 //│               }
-//│               contLoop: while (true) {
-//│                 if (this.pc === 8) {
-//│                   tmp13 = runtime.safeCall(k(arg));
-//│                   if (tmp13 instanceof runtime.EffectSig.class) {
-//│                     this.pc = 7;
-//│                     tmp13.contTrace.last.next = this;
-//│                     tmp13.contTrace.last = this;
-//│                     return tmp13
-//│                   }
-//│                   this.pc = 7;
-//│                   continue contLoop;
-//│                 } else if (this.pc === 7) {
-//│                   tmp14 = str + "A";
-//│                   str = tmp14;
-//│                   return runtime.Unit
+//│               resume(value$) {
+//│                 if (this.pc === 7) {
+//│                   tmp13 = value$;
 //│                 }
-//│                 break;
+//│                 contLoop: while (true) {
+//│                   if (this.pc === 8) {
+//│                     tmp13 = runtime.safeCall(k(arg));
+//│                     if (tmp13 instanceof runtime.EffectSig.class) {
+//│                       this.pc = 7;
+//│                       tmp13.contTrace.last.next = this;
+//│                       tmp13.contTrace.last = this;
+//│                       return tmp13
+//│                     }
+//│                     this.pc = 7;
+//│                     continue contLoop;
+//│                   } else if (this.pc === 7) {
+//│                     tmp14 = str + "A";
+//│                     str = tmp14;
+//│                     return runtime.Unit
+//│                   }
+//│                   break;
+//│                 }
 //│               }
+//│               toString() { return runtime.render(this); }
+//│               static [definitionMetadata] = ["class", "Cont$handler$h1$perform$", ["pc"]]; 
 //│             }
-//│             toString() { return "Cont$handler$h1$perform$(" + runtime.render(this.pc) + ")"; }
-//│           };
+//│           });
 //│           tmp12 = str + "A";
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
@@ -214,31 +218,36 @@ str
 //│           return runtime.Unit
 //│         })
 //│       }
-//│       toString() { return "Handler$h1$"; }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Handler$h1$"]; 
 //│     };
 //│     h1 = new Handler$h1$2();
 //│     Cont$handleBlock$h1$2 = function Cont$handleBlock$h1$(pc1) {
 //│       return new Cont$handleBlock$h1$.class(pc1);
 //│     };
-//│     Cont$handleBlock$h1$2.class = class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
-//│       constructor(pc) {
-//│         let tmp12;
-//│         tmp12 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         if (this.pc === 6) {
-//│           tmp11 = value$;
+//│     Object.defineProperty(Cont$handleBlock$h1$2, "class", {
+//│     enumerable: true,
+//│       value: class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
+//│         constructor(pc) {
+//│           let tmp12;
+//│           tmp12 = super(null);
+//│           this.pc = pc;
 //│         }
-//│         contLoop: while (true) {
+//│         resume(value$) {
 //│           if (this.pc === 6) {
-//│             return tmp11
+//│             tmp11 = value$;
 //│           }
-//│           break;
+//│           contLoop: while (true) {
+//│             if (this.pc === 6) {
+//│               return tmp11
+//│             }
+//│             break;
+//│           }
 //│         }
+//│         toString() { return runtime.render(this); }
+//│         static [definitionMetadata] = ["class", "Cont$handleBlock$h1$", ["pc"]]; 
 //│       }
-//│       toString() { return "Cont$handleBlock$h1$(" + runtime.render(this.pc) + ")"; }
-//│     };
+//│     });
 //│     handleBlock$8 = function handleBlock$() {
 //│       let h2, tmp12, res7, Cont$handleBlock$h2$2, Handler$h2$2;
 //│       Handler$h2$2 = class Handler$h2$1 extends Effect1 {
@@ -252,38 +261,42 @@ str
 //│             Cont$handler$h2$perform$2 = function Cont$handler$h2$perform$(pc1) {
 //│               return new Cont$handler$h2$perform$.class(pc1);
 //│             };
-//│             Cont$handler$h2$perform$2.class = class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
-//│               constructor(pc) {
-//│                 let tmp18;
-//│                 tmp18 = super(null);
-//│                 this.pc = pc;
-//│               }
-//│               resume(value$) {
-//│                 if (this.pc === 4) {
-//│                   tmp15 = value$;
+//│             Object.defineProperty(Cont$handler$h2$perform$2, "class", {
+//│             enumerable: true,
+//│               value: class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
+//│                 constructor(pc) {
+//│                   let tmp18;
+//│                   tmp18 = super(null);
+//│                   this.pc = pc;
 //│                 }
-//│                 contLoop: while (true) {
-//│                   if (this.pc === 5) {
-//│                     tmp15 = runtime.safeCall(k(arg));
-//│                     if (tmp15 instanceof runtime.EffectSig.class) {
-//│                       this.pc = 4;
-//│                       tmp15.contTrace.last.next = this;
-//│                       tmp15.contTrace.last = this;
-//│                       return tmp15
-//│                     }
-//│                     this.pc = 4;
-//│                     continue contLoop;
-//│                   } else if (this.pc === 4) {
-//│                     tmp16 = str + "B";
-//│                     tmp17 = str + tmp16;
-//│                     str = tmp17;
-//│                     return runtime.Unit
+//│                 resume(value$) {
+//│                   if (this.pc === 4) {
+//│                     tmp15 = value$;
 //│                   }
-//│                   break;
+//│                   contLoop: while (true) {
+//│                     if (this.pc === 5) {
+//│                       tmp15 = runtime.safeCall(k(arg));
+//│                       if (tmp15 instanceof runtime.EffectSig.class) {
+//│                         this.pc = 4;
+//│                         tmp15.contTrace.last.next = this;
+//│                         tmp15.contTrace.last = this;
+//│                         return tmp15
+//│                       }
+//│                       this.pc = 4;
+//│                       continue contLoop;
+//│                     } else if (this.pc === 4) {
+//│                       tmp16 = str + "B";
+//│                       tmp17 = str + tmp16;
+//│                       str = tmp17;
+//│                       return runtime.Unit
+//│                     }
+//│                     break;
+//│                   }
 //│                 }
+//│                 toString() { return runtime.render(this); }
+//│                 static [definitionMetadata] = ["class", "Cont$handler$h2$perform$", ["pc"]]; 
 //│               }
-//│               toString() { return "Cont$handler$h2$perform$(" + runtime.render(this.pc) + ")"; }
-//│             };
+//│             });
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
@@ -299,56 +312,61 @@ str
 //│             return runtime.Unit
 //│           })
 //│         }
-//│         toString() { return "Handler$h2$"; }
+//│         toString() { return runtime.render(this); }
+//│         static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│       };
 //│       h2 = new Handler$h2$2();
 //│       Cont$handleBlock$h2$2 = function Cont$handleBlock$h2$(pc1) {
 //│         return new Cont$handleBlock$h2$.class(pc1);
 //│       };
-//│       Cont$handleBlock$h2$2.class = class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
-//│         constructor(pc) {
-//│           let tmp13;
-//│           tmp13 = super(null);
-//│           this.pc = pc;
-//│         }
-//│         resume(value$) {
-//│           if (this.pc === 0) {
-//│             tmp12 = value$;
-//│           } else if (this.pc === 1) {
-//│             res7 = value$;
+//│       Object.defineProperty(Cont$handleBlock$h2$2, "class", {
+//│       enumerable: true,
+//│         value: class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
+//│           constructor(pc) {
+//│             let tmp13;
+//│             tmp13 = super(null);
+//│             this.pc = pc;
 //│           }
-//│           contLoop: while (true) {
-//│             if (this.pc === 3) {
-//│               tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
-//│               if (tmp12 instanceof runtime.EffectSig.class) {
+//│           resume(value$) {
+//│             if (this.pc === 0) {
+//│               tmp12 = value$;
+//│             } else if (this.pc === 1) {
+//│               res7 = value$;
+//│             }
+//│             contLoop: while (true) {
+//│               if (this.pc === 3) {
+//│                 tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
+//│                 if (tmp12 instanceof runtime.EffectSig.class) {
+//│                   this.pc = 0;
+//│                   tmp12.contTrace.last.next = this;
+//│                   tmp12.contTrace.last = this;
+//│                   return tmp12
+//│                 }
 //│                 this.pc = 0;
-//│                 tmp12.contTrace.last.next = this;
-//│                 tmp12.contTrace.last = this;
-//│                 return tmp12
-//│               }
-//│               this.pc = 0;
-//│               continue contLoop;
-//│             } else if (this.pc === 0) {
-//│               this.pc = 2;
-//│               continue contLoop;
-//│             } else if (this.pc === 2) {
-//│               res7 = runtime.safeCall(h1.perform(runtime.Unit));
-//│               if (res7 instanceof runtime.EffectSig.class) {
+//│                 continue contLoop;
+//│               } else if (this.pc === 0) {
+//│                 this.pc = 2;
+//│                 continue contLoop;
+//│               } else if (this.pc === 2) {
+//│                 res7 = runtime.safeCall(h1.perform(runtime.Unit));
+//│                 if (res7 instanceof runtime.EffectSig.class) {
+//│                   this.pc = 1;
+//│                   res7.contTrace.last.next = this;
+//│                   res7.contTrace.last = this;
+//│                   return res7
+//│                 }
 //│                 this.pc = 1;
-//│                 res7.contTrace.last.next = this;
-//│                 res7.contTrace.last = this;
+//│                 continue contLoop;
+//│               } else if (this.pc === 1) {
 //│                 return res7
 //│               }
-//│               this.pc = 1;
-//│               continue contLoop;
-//│             } else if (this.pc === 1) {
-//│               return res7
+//│               break;
 //│             }
-//│             break;
 //│           }
+//│           toString() { return runtime.render(this); }
+//│           static [definitionMetadata] = ["class", "Cont$handleBlock$h2$", ["pc"]]; 
 //│         }
-//│         toString() { return "Cont$handleBlock$h2$(" + runtime.render(this.pc) + ")"; }
-//│       };
+//│       });
 //│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp12 instanceof runtime.EffectSig.class) {
 //│         tmp12.contTrace.last.next = Cont$handleBlock$h2$2(0);

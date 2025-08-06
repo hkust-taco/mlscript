@@ -8,7 +8,7 @@ let g = globalThis
 // FIXME prevent rebinding of this name
 :re
 let globalThis = "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 //│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 :re
@@ -21,9 +21,15 @@ globalThis
 :re
 if false then 0
 //│ JS (unsanitized):
-//│ let scrut; scrut = false; if (scrut === true) { 0 } else { throw new this.Error("match error"); }
-//│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
+//│ let scrut;
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   0
+//│ } else {
+//│   throw new globalThis.Error("match error");
+//│ }
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 // * This one uses `globalThis.Error`
 // * Notice the failed exception throw
@@ -45,6 +51,6 @@ foo()
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'log')
+//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 

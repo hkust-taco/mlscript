@@ -41,15 +41,15 @@ render(1)
 //│ = "1"
 
 render(Object.create(null))
-//│ = "[object]"
+//│ = "{}"
 
 render(x => x)
-//│ = "[function]"
+//│ = "fun"
 
 class Foo
 
 render(Foo)
-//│ = "class Foo { constructor() {} toString() { return \"Foo\"; } }"
+//│ = "class Foo"
 
 render(new Foo)
 //│ = "Foo"
@@ -98,4 +98,356 @@ map(renderAsStr(_))(xs)
 map(_ + 1)(...xs)
 //│ = [2, 3]
 
+renderAsStr of new RegExp("test")
+//│ = "/test/"
 
+renderAsStr of Symbol.for("mlscript")
+//│ = "Symbol(mlscript)"
+
+renderAsStr of BigInt("2" + "0".repeat(30))
+//│ = "2000000000000000000000000000000n"
+
+renderAsStr of new Set of [1, 2, 3]
+//│ = "Set(3) {1, 2, 3}"
+
+renderAsStr of new Map of []
+//│ = "Map(0) {}"
+
+renderAsStr of new Map of [[1, 2], [3, 4]]
+//│ = "Map(2) {1 => 2, 3 => 4}"
+
+renderAsStr of new Map of [[Foo, 2], [Symbol, 1]]
+//│ = "Map(2) {fun Foo { class: class Foo } => 2, class Symbol => 1}"
+
+renderAsStr of new Map([[{ a: 0 }, { b: 0 }]])
+//│ = "Map(1) {{a: 0} => {b: 0}}"
+
+renderAsStr of new Error("hello")
+//│ = "Error: hello"
+
+renderAsStr of new TypeError("hello")
+//│ = "TypeError: hello"
+
+renderAsStr of Object.create(null)
+//│ = "{}"
+
+// `Object`'s prototype has `null` as the prototype.
+renderAsStr of Object.prototype
+//│ = "{}"
+
+renderAsStr of hello: "world"
+//│ = "{hello: \"world\"}"
+
+renderAsStr of Object.assign(Object.create(null), hello: "world")
+//│ = "{hello: \"world\"}"
+
+renderAsStr of new WeakMap
+//│ = "WeakMap { <items unknown> }"
+
+renderAsStr of new WeakSet
+//│ = "WeakSet { <items unknown> }"
+
+//  _____                 _   _
+// |  ___|   _ _ __   ___| |_(_) ___  _ __  ___
+// | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|
+// |  _|| |_| | | | | (__| |_| | (_) | | | \__ \
+// |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/
+//
+// =============================================
+
+class Foo
+
+renderAsStr of Foo
+//│ = "class Foo"
+
+set Foo.bar = (direction: "vertical")
+
+renderAsStr of Foo
+//│ = "class Foo { bar: {direction: \"vertical\"} }"
+
+class Bar extends Foo
+
+renderAsStr of Bar
+//│ = "class Bar"
+
+renderAsStr of new Bar
+//│ = "Bar"
+
+fun test() = ()
+
+renderAsStr of test
+//│ = "fun test"
+
+renderAsStr of [42, 100, test]
+//│ = "[42, 100, fun test]"
+
+set test.test = test
+
+renderAsStr of test
+//│ = "fun test { test: ref'1 } as ref'1"
+
+let greetings = () => "hello"
+//│ greetings = fun greetings
+
+renderAsStr of greetings
+//│ = "fun greetings"
+
+renderAsStr of x => x * 2
+//│ = "fun"
+
+renderAsStr of Object.assign(x => x * 2, { a: 2 })
+//│ = "fun { a: 2 }"
+
+renderAsStr of globalThis.setImmediate
+//│ = "fun setImmediate"
+
+//   ____ _                _
+//  / ___(_)_ __ ___ _   _| | __ _ _ __
+// | |   | | '__/ __| | | | |/ _` | '__|
+// | |___| | | | (__| |_| | | (_| | |
+//  \____|_|_|  \___|\__,_|_|\__,_|_|
+//
+// =====================================
+
+// Test: simple circular reference.
+
+let a =
+  x: 0
+  y: 1
+//│ a = {x: 0, y: 1}
+
+set a.x = a
+
+a
+//│ = {x: ref'1, y: 1} as ref'1
+
+// Test: an object is referenced multiple times in a circular way.
+
+let tree =
+  left:
+    left: null
+    right: null
+  right:
+    left: null
+    right: null
+//│ tree = {left: {left: null, right: null}, right: {left: null, right: null}}
+
+set tree.left.left = tree
+set tree.right.left = tree
+
+tree
+//│ = {left: {left: ref'1, right: null}, right: {left: ref'1, right: null}} as ref'1
+
+// Test: nested circular reference.
+
+// If the same circular object appears multiple times, it should be rendered as
+// the same reference.
+let b = [a, a]
+//│ b = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1]
+
+b.push(b)
+//│ = 3
+
+b
+//│ = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1, ref'2] as ref'2
+
+let functionWithProperties = Object.assign(x => x, "kind": "Callable")
+//│ functionWithProperties = fun { kind: "Callable" }
+
+functionWithProperties
+//│ = fun { kind: "Callable" }
+
+functionWithProperties.kind
+//│ = "Callable"
+
+//   ___  _     _           _
+//  / _ \| |__ (_) ___  ___| |_
+// | | | | '_ \| |/ _ \/ __| __|
+// | |_| | |_) | |  __/ (__| |_
+//  \___/|_.__// |\___|\___|\__|
+//           |__/
+// =============================
+
+let something = (x: 0)
+//│ something = {x: 0}
+
+Object.defineProperty(something, "y", enumerable: true, get: () => 42)
+//│ = {x: 0, y: [Getter]}
+
+Object.defineProperty of
+  something, "z"
+  enumerable: true
+  get: () => 42
+  "set": (value) => print("The user tries to set the value to " + value)
+//│ = {x: 0, y: [Getter], z: [Getter/Setter]}
+
+renderAsStr of
+  "\u6d4b\u8bd5": "Test"
+  "\u4f60\u597d": "Hello"
+//│ = "{测试: \"Test\", 你好: \"Hello\"}"
+
+renderAsStr of
+  "a property name with spaces": true
+//│ = "{\"a property name with spaces\": true}"
+
+//   ____ _
+//  / ___| | __ _ ___ ___  ___  ___
+// | |   | |/ _` / __/ __|/ _ \/ __|
+// | |___| | (_| \__ \__ \  __/\__ \
+//  \____|_|\__,_|___/___/\___||___/
+//
+// =================================
+
+object Singleton
+
+renderAsStr of Singleton
+//│ = "Singleton"
+
+class Phantom
+
+// Parameter-less classes should be rendered as `class`.
+renderAsStr of Phantom
+//│ = "class Phantom"
+
+data class Point(x: Num, y: Num)
+
+// While classes with parameters should be rendered as `fun`.
+renderAsStr of Point
+//│ = "fun Point { class: class Point }"
+
+renderAsStr of Point.class
+//│ = "class Point"
+
+renderAsStr of Point(1, 2)
+//│ = "Point(1, 2)"
+
+renderAsStr of Point(1, 2)
+//│ = "Point(1, 2)"
+
+class Bar(x: Int, val a: Int)
+
+renderAsStr of Bar(123, 789)
+//│ = "Bar(_, 789)"
+
+import "../../mlscript-compile/Stack.mls"
+
+open Stack
+
+renderAsStr of 1 :: 2 :: 3 :: 4
+//│ = "Cons(1, Cons(2, Cons(3, 4)))"
+
+class Origin with
+  val x = 0
+  val y = 0
+
+renderAsStr of new Origin
+//│ = "Origin { x: 0, y: 0 }"
+
+class Point(x: Num, y: Num) with
+  val x = x
+  val y = y
+
+// Note that we do not display members defined in the body.
+// Some classes define lots of members, so doing so could be problematic.
+renderAsStr of new Point(0, 1)
+//│ = "Point(_, _)"
+
+class SelfRef with
+  val a = this
+  val b = 1
+
+renderAsStr of new SelfRef
+//│ = "SelfRef { a: ref'1, b: 1 } as ref'1"
+
+renderAsStr of
+  new Object with
+    val x = 0
+    fun y = 0
+//│ = "$anon { x: 0 }"
+
+abstract class Shape
+
+data class Rectangle(x: Num, y: Num, w: Num, h: Num)
+
+renderAsStr of Shape
+//│ = "class Shape"
+
+renderAsStr of new Shape with
+  val x = 0
+//│ = "$anon { x: 0 }"
+
+renderAsStr of Rectangle
+//│ = "fun Rectangle { class: class Rectangle }"
+
+renderAsStr of Rectangle(0, 0, 5, 5)
+//│ = "Rectangle(0, 0, 5, 5)"
+
+pattern Null = null
+
+renderAsStr of Null
+//│ = "pattern Null"
+
+renderAsStr of Null.class
+//│ = "pattern Null"
+
+declare class Iterator
+
+class RangeIterator(val start: Int, val end: Int) extends Iterator with
+  let current = start
+  fun next() =
+    if current < end then
+      let result = (done: false, value: current)
+      set current += 1
+      result
+    else
+      (done: true, value: undefined)
+
+renderAsStr of RangeIterator(0, 1)
+//│ = "RangeIterator(0, 1)"
+
+renderAsStr of RangeIterator(0, 5).toArray()
+//│ = "[0, 1, 2, 3, 4]"
+
+//  __  __ _
+// |  \/  (_)___  ___
+// | |\/| | / __|/ __|
+// | |  | | \__ \ (__
+// |_|  |_|_|___/\___|
+//
+// ===================
+
+renderAsStr of Object
+//│ = "class Object"
+
+renderAsStr of String
+//│ = "class String"
+
+renderAsStr of Symbol
+//│ = "class Symbol"
+
+renderAsStr of BigInt
+//│ = "class BigInt"
+
+renderAsStr of globalThis.FinalizationRegistry
+//│ = "class FinalizationRegistry"
+
+let asyncFun = globalThis.eval("async () => {}")
+//│ asyncFun = fun
+
+renderAsStr of asyncFun
+//│ = "fun"
+
+renderAsStr of Object.getPrototypeOf(asyncFun).constructor
+//│ = "class AsyncFunction"
+
+renderAsStr of renderAsStr
+//│ = "fun renderAsStr"
+
+renderAsStr of JSON
+//│ = "{}"
+
+renderAsStr of new RegExp("")
+//│ = "/(?:)/"
+
+renderAsStr of globalThis.Iterator
+//│ = "class Iterator"

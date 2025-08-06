@@ -254,7 +254,7 @@ let x
 //│ > 3
 
 let incr = _ + 1
-//│ incr = [function incr]
+//│ incr = fun incr
 
 // :dp
 2
@@ -317,7 +317,7 @@ let incr = _ + 1
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.313: 	2, * 3
 //│ ╙──       	^
-//│ = [function]
+//│ = fun
 
 2,* 3
 //│ = 6

@@ -19,6 +19,7 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static toString() { return "A"; }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "A"]; 
 //│ });
 

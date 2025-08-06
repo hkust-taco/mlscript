@@ -10,15 +10,19 @@ data class Foo()
 //│ Foo1 = function Foo() {
 //│   return new Foo.class();
 //│ };
-//│ Foo1.class = class Foo {
-//│   constructor() {}
-//│   toString() { return "Foo(" + "" + ")"; }
-//│ };
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
+//│   value: class Foo {
+//│     constructor() {}
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", []]; 
+//│   }
+//│ });
 
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = [function Foo]
+//│ = fun Foo { class: class Foo }
 
 Foo()
 //│ JS (unsanitized):
@@ -28,7 +32,7 @@ Foo()
 Foo.class
 //│ JS (unsanitized):
 //│ Foo1.class
-//│ = class Foo {   constructor() {}   toString() { return "Foo(" + "" + ")"; } }
+//│ = class Foo
 
 
 data class Foo(a)
@@ -37,17 +41,21 @@ data class Foo(a)
 //│ Foo3 = function Foo(a1) {
 //│   return new Foo.class(a1);
 //│ };
-//│ Foo3.class = class Foo2 {
-//│   constructor(a) {
-//│     this.a = a;
+//│ Object.defineProperty(Foo3, "class", {
+//│   enumerable: true,
+//│   value: class Foo2 {
+//│     constructor(a) {
+//│       this.a = a;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["a"]]; 
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.a) + ")"; }
-//│ };
+//│ });
 
 Foo
 //│ JS (unsanitized):
 //│ Foo3
-//│ = [function Foo]
+//│ = fun Foo { class: class Foo }
 
 Foo(1)
 //│ JS (unsanitized):
@@ -72,18 +80,22 @@ data class Foo(a, b)
 //│ Foo5 = function Foo(a1, b1) {
 //│   return new Foo.class(a1, b1);
 //│ };
-//│ Foo5.class = class Foo4 {
-//│   constructor(a, b) {
-//│     this.a = a;
-//│     this.b = b;
+//│ Object.defineProperty(Foo5, "class", {
+//│   enumerable: true,
+//│   value: class Foo4 {
+//│     constructor(a, b) {
+//│       this.a = a;
+//│       this.b = b;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.a) + ", " + runtime.render(this.b) + ")"; }
-//│ };
+//│ });
 
 let foo = Foo
 //│ JS (unsanitized):
 //│ let foo1; foo1 = Foo5;
-//│ foo = [function Foo]
+//│ foo = fun Foo { class: class Foo }
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
@@ -136,16 +148,20 @@ data class Inner(c) with
 //│ Inner1 = function Inner(c1) {
 //│   return new Inner.class(c1);
 //│ };
-//│ Inner1.class = class Inner {
-//│   constructor(c) {
-//│     this.c = c;
-//│     Predef.print(this.c)
+//│ Object.defineProperty(Inner1, "class", {
+//│   enumerable: true,
+//│   value: class Inner {
+//│     constructor(c) {
+//│       this.c = c;
+//│       Predef.print(this.c);
+//│     }
+//│     i1(d) {
+//│       return this.c + d
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Inner", ["c"]]; 
 //│   }
-//│   i1(d) {
-//│     return this.c + d
-//│   }
-//│   toString() { return "Inner(" + runtime.render(this.c) + ")"; }
-//│ };
+//│ });
 
 let i = new Inner(100)
 //│ JS (unsanitized):
@@ -173,35 +189,39 @@ class Foo(x, val y, z, val z, z) with
 //│ Foo7 = function Foo(x1, y1, z3, z, z1) {
 //│   return new Foo.class(x1, y1, z3, z, z1);
 //│ };
-//│ Foo7.class = class Foo6 {
-//│   #x;
-//│   #z;
-//│   #z1;
-//│   #x1;
-//│   #y;
-//│   constructor(x, y, z, z1, z2) {
-//│     let tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
-//│     this.#x = x;
-//│     this.y = y;
-//│     this.#z = z;
-//│     this.z = z1;
-//│     this.#z1 = z2;
-//│     this.#x1 = 1;
-//│     tmp7 = this.y + 1;
-//│     this.#y = tmp7;
-//│     tmp8 = "x = " + this.#x1;
-//│     tmp9 = Predef.print(tmp8);
-//│     tmp10 = "y = " + this.#y;
-//│     tmp11 = Predef.print(tmp10);
-//│     tmp12 = "this.y = " + this.y;
-//│     tmp13 = Predef.print(tmp12);
-//│     tmp14 = "z = " + this.#z1;
-//│     tmp15 = Predef.print(tmp14);
-//│     tmp16 = "this.z = " + this.z;
-//│     Predef.print(tmp16)
+//│ Object.defineProperty(Foo7, "class", {
+//│   enumerable: true,
+//│   value: class Foo6 {
+//│     #x;
+//│     #z;
+//│     #z1;
+//│     #x1;
+//│     #y;
+//│     constructor(x, y, z, z1, z2) {
+//│       let tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+//│       this.#x = x;
+//│       this.y = y;
+//│       this.#z = z;
+//│       this.z = z1;
+//│       this.#z1 = z2;
+//│       this.#x1 = 1;
+//│       tmp7 = this.y + 1;
+//│       this.#y = tmp7;
+//│       tmp8 = "x = " + this.#x1;
+//│       tmp9 = Predef.print(tmp8);
+//│       tmp10 = "y = " + this.#y;
+//│       tmp11 = Predef.print(tmp10);
+//│       tmp12 = "this.y = " + this.y;
+//│       tmp13 = Predef.print(tmp12);
+//│       tmp14 = "z = " + this.#z1;
+//│       tmp15 = Predef.print(tmp14);
+//│       tmp16 = "this.z = " + this.z;
+//│       Predef.print(tmp16);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", [null, "y", null, "z", null]]; 
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.y) + ", " + runtime.render(this.z) + ")"; }
-//│ };
+//│ });
 
 Foo(10, 20, 30, 40, 50)
 //│ JS (unsanitized):
@@ -211,7 +231,7 @@ Foo(10, 20, 30, 40, 50)
 //│ > this.y = 20
 //│ > z = 50
 //│ > this.z = 40
-//│ = Foo(20, 40)
+//│ = Foo(_, 20, _, 40, _)
 
 
 :todo // * This should be an error
@@ -222,13 +242,17 @@ class Foo(val z, val z)
 //│ Foo9 = function Foo(z2, z) {
 //│   return new Foo.class(z2, z);
 //│ };
-//│ Foo9.class = class Foo8 {
-//│   constructor(z, z1) {
-//│     this.z = z;
-//│     this.z = z1;
+//│ Object.defineProperty(Foo9, "class", {
+//│   enumerable: true,
+//│   value: class Foo8 {
+//│     constructor(z, z1) {
+//│       this.z = z;
+//│       this.z = z1;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.z) + ", " + runtime.render(this.z) + ")"; }
-//│ };
+//│ });
 
 Foo(1, 2)
 //│ JS (unsanitized):

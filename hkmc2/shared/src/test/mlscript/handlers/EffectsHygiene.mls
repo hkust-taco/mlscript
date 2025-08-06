@@ -20,13 +20,15 @@ fun foo(h): module M =
 //│     static {
 //│       A2 = A;
 //│     }
-//│     static toString() { return "A"; }
+//│     static toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["module", "A"]; 
 //│   });
 //│   (class A1 {
 //│     static {
 //│       A3 = A1;
 //│     }
-//│     static toString() { return "A"; }
+//│     static toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["module", "A"]; 
 //│   });
 //│   scrut = false;
 //│   if (scrut === true) {

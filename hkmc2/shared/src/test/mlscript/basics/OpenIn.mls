@@ -4,7 +4,7 @@ import "../../mlscript-compile/Str.mls"
 
 
 Str.{~}
-//│ = [function concat2]
+//│ = fun concat2
 
 Str.{~}("a", "b")
 //│ = "ab"

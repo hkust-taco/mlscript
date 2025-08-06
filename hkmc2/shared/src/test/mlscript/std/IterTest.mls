@@ -34,7 +34,6 @@ arr
   |> Iter.toArray
 //│ = ["A", "B", "C", "1", "2", "3", "4"]
 
-
 mkStr of
   "0"
   "1"
@@ -53,7 +52,7 @@ mkStr of
 fun xs = [1, 2, 3] Iter.mapping(_ + "!" !> print)
 
 xs
-//│ = Iterable()
+//│ = Iterable(_)
 
 xs.toArray()
 //│ > 1!
@@ -68,7 +67,7 @@ xs.toArray()
 //│ = ["1!", "2!", "3!"]
 
 let ys = xs
-//│ ys = Iterable()
+//│ ys = Iterable(_)
 
 ys.toArray()
 //│ > 1!

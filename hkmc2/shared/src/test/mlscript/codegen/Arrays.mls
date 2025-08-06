@@ -60,7 +60,7 @@ set Array.prototype.toString =
 //│ = [1, 2, 3]
 
 new Array(4)
-//│ = [undefined, undefined, undefined, undefined]
+//│ = [<4 empty items>]
 
 
 // TODO also sanity-check these accesses

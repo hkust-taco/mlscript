@@ -1,7 +1,11 @@
+import "./RuntimeJS.mjs"
 
 
 module Rendering with ...
 
+
+let definitionMetadataSymbol = RuntimeJS.symbols.definitionMetadata
+let prettyPrintSymbol = RuntimeJS.symbols.prettyPrint
 
 fun pass1(f)(...xs) = f(xs.0)
 fun pass2(f)(...xs) = f(xs.0, xs.1)
@@ -35,27 +39,414 @@ fun interleave(sep)(...args) =
     if i < len do set res.[idx + 1] = sep
   res
 
-fun render(arg) = if
-  arg is
-    undefined then "undefined"
-    null      then "null"
-    Array     then fold(+)("[", ...interleave(", ")(...map(render)(...arg)), "]")
-    Str       then JSON.stringify(arg)
-    Set       then fold(+)("Set{", ...interleave(", ")(...map(render)(...arg)), "}")
-    Map       then fold(+)("Map{", ...interleave(", ")(...map(render)(...arg)), "}")
-    Function  and
-      let p = Object.getOwnPropertyDescriptor(arg, "prototype")
-      (p is Object and p.("writable")) || (p is undefined) then
-        "[function" + (if arg.name is
-          ""  then ""
-          nme then " " + nme
-        ) + "]"
-    Object then
-      if arg.constructor.name is "Object"
-      then
-        let es = Object.entries(arg)
-        fold(+)("{", ...interleave(", ")(...map(case [k, v] then k + ": " + render(v))(...es)), "}")
-      else String(arg)
-  let ts = arg.("toString") // not accessing as `arg.toString` to avoid the sanity check
-  ts is undefined then "[" + typeof(arg) + "]"
-  else ts.call(arg)
+// The following regular expression matches non-empty strings that qualify as
+// Unicode identifiers accepted by ECMAScript. 
+let identifierPattern = new RegExp of
+  // A breakdown of the regular expression:
+  // 1. `\p{...}` is a Unicode character class escape. It matches a set of
+  //    characters specified by a Unicode property. 
+  // 2. `ID_Start` includes letters and a few letter-like characters; but it
+  //    does not include `_` or `$`, hence they’re added explicitly.
+  // 3. `ID_Continue` includes `ID_Start` plus combining marks, decimal digits,
+  //    connector punctuation (which covers `_`), etc. But it does not include
+  //    `$`, hence `$` is added explicitly.
+  // 4. `^` and `$` assert that the current position is the start or the end of
+  //    input respectively. Hence, they make sure the entire string matches.
+  // The regular expression follows the production of identifiers defined in
+  // ECMA-262: https://tc39.es/ecma262/multipage/ecmascript-language-lexical-grammar.html#prod-IdentifierName.
+  """^[\p{ID_Start}_$][\p{ID_Continue}$]*$"""
+  "u" // The Unicode flag is required for `\p{...}` Unicode property escapes.
+
+// Return `true` if the identifier needs to be enclosed in quotes.
+let noNeedForQuotes(id) = identifierPattern.test(id)
+
+// Use this object instead when no options object is given.
+let emptyOptions = new Object
+
+let DEFAULT_BREAK_LENGTH = 80
+
+let symbolsForArray =
+  start: "[", end: "]", separator: ",", empty: "[]", padding: true
+
+let symbolsForSet(n: Int) =
+  let headline = "Set(" + n + ") "
+  start: headline + "{", end: "}", separator: ",",
+  empty: headline + "{}", padding: true
+
+let symbolsForClass(name: Str) =
+  start: name + "(", end: ")", separator: ",", empty: name + "()", padding: false
+
+let symbolsForObject =
+  start: "{", end: "}", entrySeparator: ",", keyValueSeparator: ": ", empty: "{}", padding: true
+
+let symbolsForMap(n: Int) =
+  let headline = "Map(" + n + ")"
+  start: headline + " {", end: "}",
+  entrySeparator: ",", keyValueSeparator: " => ", empty: headline + " {}", padding: true
+
+fun render(target, ...args) =
+  let
+    options = if args is [options, ...] then options else emptyOptions
+    indent = if
+      options is (:indent) and indent is
+        true then "  " // The default indentation is of two spaces.
+        // A positive integer will be interpreted as the number of spaces for a
+        // single level of indentation.
+        Int and indent > 0 then " ".repeat(indent)
+        // `null` to indicate no indentation and put all the content on a single line.
+      else null
+    // If the joined string is less than or equal `breakLength`, it stays on one
+    // line; otherwise it becomes multiline and each item is prefixed with `\n`
+    // plus `indent`.
+    breakLength = if
+      indent is null then Number.POSITIVE_INFINITY
+      options is (:breakLength) and breakLength is Int and breakLength > 0 then breakLength
+      else DEFAULT_BREAK_LENGTH
+    // Should we add padding after "["/"{" and before "]"/"}".
+    padding = if options is (padding: true) then " " else ""
+    circularCounter = 1
+    visitingObjects = new WeakMap // Object -> null | Int
+    visitedObjects = new WeakMap // Object -> Str
+  // Add indentations to results of `toString` from other objects.
+  fun indentText(text: Str, currentLevel: Int): Str =
+    if indent is null then text else...
+    let indents = indent.repeat(currentLevel + 1)
+    text
+      .split("\n")
+      .map of (line, index, lines) =>
+        let postfix = if index + 1 === lines.length then "" else " \\"
+        let prefix = if index === 0 then "" else indents
+        prefix + line + postfix
+      .join("\n")
+  fun renderArray(array, level, keyLength, startPos) =
+    let
+      i = 0
+      length = array.length
+      emptyItemCount = 0
+      // The length of indentations that should be prepended to items in this
+      // array if this array is displayed in multi-lines.
+      itemIndentationLength =
+        if indent is null then 0 else (level + 1) * indent.length
+    // Return `true` if the array has no remaining elements.
+    let done() =
+      let isDone = null
+      while isDone is null do
+        if...
+        i >= length then set isDone = true
+        Reflect.has(array, i) then set isDone = false
+        else
+          set { emptyItemCount += 1, i += 1 }
+      (emptyItemCount === 0) && (if isDone is null then true else isDone)
+    let next(isFirst: Bool, prefixLength: Int) = if
+      emptyItemCount > 0 then
+        let emptyItemCount' = emptyItemCount
+        set emptyItemCount = 0
+        "<" + emptyItemCount' + " empty items>"
+      i < length then
+        let
+          // The starting column if the current item is placed on the same line.
+          prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+          valueStartLength = if prefixLengthIfSameLine <= breakLength
+            then prefixLengthIfSameLine else itemIndentationLength
+          valueStr = renderValue(array.[i], level + 1, 0, valueStartLength)
+        set i += 1
+        valueStr
+      else throw new Error("All items in this array has been rendered.")
+    renderSequence of done, next, level, keyLength, startPos, symbolsForArray
+  fun renderSet(theSet, level, keyLength, startPos) =
+    let
+      iterator = theSet.(Symbol.iterator)()
+      peek = iterator.next()
+      // The length of indentations that should be prepended to items in this
+      // array if this array is displayed in multi-lines.
+      itemIndentationLength =
+        if indent is null then 0 else (level + 1) * indent.length
+    // Return `true` if the array has no remaining elements.
+    let done() = peek.done
+    let next(isFirst: Bool, prefixLength: Int) =
+      let result = if peek is (done: false, :value) then 
+        let
+          // The starting column if the current item is placed on the same line.
+          prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+          valueStartLength = if prefixLengthIfSameLine > breakLength
+            then itemIndentationLength else prefixLengthIfSameLine
+        renderValue(value, level + 1, 0, valueStartLength)
+      set peek = iterator.next()
+      result
+    renderSequence of
+      done, next, level, keyLength, startPos, symbolsForSet(theSet.size)
+  // Render instances of MLscript classes.
+  fun renderClassInstance(constructorName, fieldNames, instance, level, keyLength, startPos) =
+    let
+      length = fieldNames.length
+      i = 0
+      itemIndentationLength = if indent is null then 0 else (level + 1) * indent.length
+    let done() = i >= length
+    let next(isFirst: Bool, prefixLength: Int) = if fieldNames.[i] is
+      do set i += 1
+      null then "_"
+      Str as key then
+        let
+          value = instance.(key)
+          prefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+          valueStartLength = if prefixLengthIfSameLine > breakLength
+            then itemIndentationLength else prefixLengthIfSameLine
+        renderValue(value, level + 1, 0, valueStartLength)
+    renderSequence of done, next, level, keyLength, startPos, symbolsForClass(constructorName)
+  fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
+    let
+      items = []
+      hasMultiline = false
+      // Try calculating the length needed to place all items in one line. The
+      // brackets and spaces around items are excluded from the length.
+      singleLineLength = startPos + symbols.start.length +
+        (if symbols.padding then padding.length else 0)
+      parentIndent = if indent is null then null else indent.repeat(level)
+      itemIdent = if indent is null then null else indent.repeat(level + 1)
+    // Iterate through and render all items.
+    while done() is false do
+      let item = next(items.length is 0, singleLineLength)
+      // Append a new item and update needed variables.
+      if item.indexOf("\n") >= 0 do set hasMultiline = true
+      set singleLineLength +=
+        if items.length is 0 then 0 else symbols.separator.length + 1
+      set singleLineLength += item.length
+      items.push of item
+    set singleLineLength += symbols.end.length +
+      (if symbols.padding then padding.length else 0)
+    let
+      layoutMultiLine() =
+        symbols.start + "\n" + itemIdent +
+        items.join(symbols.separator + "\n" + itemIdent) +
+        "\n" + parentIndent + symbols.end
+      layoutSingleLine() =
+        symbols.start + (if symbols.padding then padding else "") +
+        items.join(symbols.separator + " ") +
+        (if symbols.padding then padding else "") + symbols.end
+    if
+      items.length is 0 then symbols.empty
+      indent is null then layoutSingleLine()
+      // If any item is multiline, place each item on a line.
+      hasMultiline then layoutMultiLine()
+      singleLineLength <= breakLength then layoutSingleLine()
+      parentIndent.length + (singleLineLength - startPos + keyLength) <= breakLength then
+        layoutSingleLine()
+      else layoutMultiLine()
+  // Render enumerable properties of the given object.
+  fun renderObject(subject, level, keyLength, startPos, isRefinement) =
+    let
+      entries = Object.entries(Object.getOwnPropertyDescriptors(subject))
+      length = entries.length
+      i = 0
+      itemIndentationLength =
+        if indent is null then 0 else (level + 1) * indent.length
+    let skipNonEnumerable() =
+      while i < length and entries.[i].1.enumerable is false then set i += 1 else ()
+    let done() = i >= length
+    let next(isFirst: Bool, prefixLength: Int) =
+      let
+        key = entries.[i].0
+        desc = entries.[i].1
+      skipNonEnumerable()
+      set i += 1
+      let keyStr = if key noNeedForQuotes() then key else renderValue(key, 0, 0, 0)
+      if desc is
+        (:value) do
+          let
+            dryRunStartPos = prefixLength + // base length
+              (if isFirst then 0 else 2) + // ", "
+              keyStr.length + 2 // "key: "
+            valueStartPos = if dryRunStartPos > breakLength
+              then itemIndentationLength else dryRunStartPos
+            valueStr = renderValue(value, level + 1, keyStr.length + 2, valueStartPos)
+          [keyStr, valueStr]
+        (get: getter, "set": setter) do
+          let valueStr = if
+            setter is undefined then "[Getter]"
+            getter is undefined then "[Setter]"
+            else "[Getter/Setter]"
+          [keyStr, valueStr]
+    skipNonEnumerable()
+    renderRecordLike of
+      done, next, level, keyLength, startPos, symbolsForObject, isRefinement
+  fun renderMap(map, level, keyLength, startPos) =
+    let
+      iterator = map.(Symbol.iterator)()
+      peek = iterator.next()
+      // The length of indentations that should be prepended to items in this
+      // array if this array is displayed in multi-lines.
+      itemIndentationLength =
+        if indent is null then 0 else (level + 1) * indent.length
+    // Return `true` if the array has no remaining elements.
+    let done() = peek.done
+    let next(isFirst: Bool, prefixLength: Int) =
+      let last = peek
+      set peek = iterator.next()
+      if last is (done: false, value: [key, value]) then 
+        let
+          // The starting column if the key is placed on the same line.
+          keyPrefixLengthIfSameLine = prefixLength + (if isFirst then 0 else 2)
+          keyPrefixLength = if keyPrefixLengthIfSameLine > breakLength
+            then itemIndentationLength else keyPrefixLengthIfSameLine
+          keyStr = renderValue(key, level + 1, 0, keyPrefixLength)
+          // The starting column if the value is placed on the same line.
+          valuePrefixLengthIfSameLine = if keyStr.indexOf("\n") >= 0
+            then itemIndentationLength + keyStr.length - keyStr.lastIndexOf("\n") + 5
+            else keyPrefixLength + keyStr.length + 5
+        let
+          valuePrefixLength = if valuePrefixLengthIfSameLine > breakLength
+            then itemIndentationLength else valuePrefixLengthIfSameLine
+          valueStr = renderValue(value, level + 1, 0, valuePrefixLengthIfSameLine)
+        [keyStr, valueStr]
+    renderRecordLike of
+      done, next, level, keyLength, startPos, symbolsForMap(map.size), false
+  fun renderRecordLike(done, next, level, keyLength, startPos, symbols, isRefinement) =
+    let
+      startPadding = if
+        isRefinement then " "
+        symbols.padding then padding
+        else ""
+      endPadding = if
+        isRefinement then " "
+        symbols.padding then padding
+        else ""
+      items = []
+      hasMultiline = false
+      singleLineLength = startPos + symbols.start.length + startPadding.length
+      parentIndent = if indent is null then null else indent.repeat(level)
+      itemIdent = if indent is null then null else indent.repeat(level + 1)
+    while done() is false do
+      let
+        keyValue = next(items.length is 0, singleLineLength)
+        key = keyValue.0
+        value = keyValue.1
+        length = key.length + 2 + value.length // "a: b"
+      if value.indexOf("\n") >= 0 do set hasMultiline = true
+      set singleLineLength +=
+        if items.length is 0 then 0 else symbols.entrySeparator.length
+      set singleLineLength += length // the item
+      items.push of key + symbols.keyValueSeparator + value
+    // Complete the single line length.
+    set singleLineLength += symbols.end.length + endPadding.length
+    let
+      layoutMultiLine() =
+        symbols.start + "\n" + itemIdent +
+        items.join(",\n" + itemIdent) +
+        "\n" + parentIndent + symbols.end
+      layoutSingleLine() =
+        symbols.start + startPadding +
+        items.join(", ") +
+        endPadding + symbols.end
+    if
+      items.length is 0 then symbols.empty
+      indent is null then layoutSingleLine()
+      hasMultiline then layoutMultiLine()
+      singleLineLength <= breakLength then layoutSingleLine()
+      // Try to break the parent object into many lines and check if it fits.
+      let lengthIfBreakParent = parentIndent.length + (singleLineLength - startPos + keyLength)
+      lengthIfBreakParent <= breakLength then layoutSingleLine()
+      else layoutMultiLine()
+  fun renderValue(arg, level, keyLength, startPos) = if
+    arg is // Primitive values
+      undefined then "undefined"
+      null      then "null"
+      Str       then JSON.stringify(arg)
+      BigInt    then arg.toString() + "n"
+      Symbol    and
+        arg.description is undefined then "Symbol()"
+        else "Symbol(" + arg.description + ")"
+      Num       then arg.toString()
+      RegExp    then arg.toString()
+      true      then "true"
+      false     then "false"
+    arg === ()  then "()"
+    // Reuse the cached result if the display mode is inline.
+    visitedObjects.has(arg) and indent is null then visitedObjects.get(arg)
+    visitingObjects.has(arg) and visitingObjects.get(arg) is
+      // We have already found this circular reference before
+      Int as index then "ref'" + index
+      // The first time we find a circular reference
+      else
+        let index = circularCounter
+        set circularCounter += 1
+        visitingObjects.set(arg, index)
+        "ref'" + index
+    else...
+    // Otherwise, add this object to the visited objects
+    // `null` is a marker for visited objects
+    visitingObjects.set(arg, null)
+    let rendered = if
+      arg is
+        Array then renderArray of arg, level, keyLength, startPos
+        Set then renderSet of arg, level, keyLength, startPos
+        Map then renderMap of arg, level, keyLength, startPos
+        WeakSet then "WeakSet { <items unknown> }"
+        WeakMap then "WeakMap { <items unknown> }"
+        Error then arg.name + ": " + arg.message
+        Function then
+          let desc = Object.getOwnPropertyDescriptor(arg, "prototype")
+          let head = if
+            // ES 2015 classes: `desc.writable` is `false`.
+            desc is Object and desc.writable is false and
+              // If it is from MLscript, use the kind written in metadata.
+              desc.value.constructor.hasOwnProperty(definitionMetadataSymbol) and
+                desc.value.constructor.(definitionMetadataSymbol) is [kind, name, ...] then
+                  kind + " " + name
+              arg.name is "" then "class" // Show "class" if there is no name.
+              else "class " + arg.name // Or, we can use the name.
+            // Display as functions if `desc.writable` is not `false`
+            else "fun" + (if arg.name is "" then "" else " " + arg.name)
+          head + if // Add a space if the function do not have enumerable properties
+            let properties = renderObject of
+              arg, level, keyLength, startPos + head.length, true
+            properties is "{}" then ""
+            else " " + properties
+      // The case for objects.
+      Reflect.getPrototypeOf(arg) is
+        // Objects with `null` as the prototype does not have prefix.
+        null then renderObject(arg, level, keyLength, startPos, false)
+        // The result of `getPrototypeOf` is either `null` or `Object`.
+        proto and
+          // For object literals, show its properties without the constructor.
+          proto === Object.prototype then
+            renderObject(arg, level, keyLength, startPos, false)
+          // The `constructor` field refers to the class.
+          proto.constructor is Function and
+            // Call its implementation of `prettyPrint` if defined.
+            proto.hasOwnProperty(prettyPrintSymbol) then
+              arg.(prettyPrintSymbol)() indentText(level)
+            // If the symbol `definitionMetadata` is defined on the constructor,
+            // we render the function using the provided field names.
+            proto.constructor.hasOwnProperty(definitionMetadataSymbol) and
+              let definitionMetadata = proto.constructor.(definitionMetadataSymbol)
+              definitionMetadata is [kind, name, fields] then
+                renderClassInstance(name, fields, arg, level, keyLength, startPos)
+              // If no field names are provided (the case for modules, objects,
+              // patterns, or parameter-less classes), use the constructor name.
+              definitionMetadata is [kind, name] then
+                // For class instances and objects, do not show the kind.
+                let head = if kind is
+                  "class" | "object" then name
+                  else kind + " " + name
+                let body = renderObject of
+                  arg, level, keyLength, startPos + head.length, true
+                head + (if body is "{}" then "" else " " + body)
+            // Otherwise, we print the name of the constructor and the properties.
+            let head = proto.constructor.name + " "
+            else head + renderObject of
+              arg, level, keyLength, startPos + head.length, true
+          // Otherwise, the prototype is not a function.
+          // If the prototype has its own implementation of `toString`, call it.
+          proto.hasOwnProperty("toString") then arg.toString() indentText(level)
+          // Otherwise, treat the input as a normal object.
+          else renderObject(arg, level, keyLength, startPos, false)
+    // We have finished visiting this object.
+    let postfix = if visitingObjects.has(arg) and visitingObjects.get(arg) is
+      Int as index then " as ref'" + index
+      else ""
+    let result = rendered + postfix
+    // Add to the visited objects if the object is a circular reference.
+    if postfix.length > 0 do visitedObjects.set(arg, result)
+    visitingObjects.delete(arg)
+    result
+  renderValue(target, 0, 0, 0)

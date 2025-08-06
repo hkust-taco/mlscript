@@ -360,6 +360,38 @@ final case class ValDefn(
 ) extends Defn:
   val innerSym = N
 
+/*
+  This explains the difference between paramsOpt, auxParams, privateFields and publicFields.
+  
+  paramsOpt is the main parameter list of a class, i.e. in `class A(plist0)`, `plist0` will be in paramsOpt.
+  If there is no such parameter list, for example `class A`, then paramsOpt will be None.
+  
+  auxParams are the secondary parameter lists, and in the future, will be defined using the syntax
+  
+  class A with
+    constructor(plist1)(plist2) = ...
+  
+  with the difference being that they are not printed in the class's toString function. If paramsOpt is None,
+  the class won't have a `.class` field and must be instantiated using `new`. Otherwise, it can be instantiated
+  using either a function call or `new A` or even `new A.class` (the latter is the recommended way when done in JS). The first parameter list will always be passed to `paramsOpt`,
+  if it exists.
+  
+  Private and public fields are defined by the user using `let` and `val` in the class's constructor.
+  Each parameter in the main parameter list **defined by the user** will automatically have an asociated
+  public/private field. The field will be public if the parameter is marked `val`, i.e. class `A(val x)`, 
+  and private otherwise. Fields in the main parameter list created after lowering will not automatically
+  have a field created.
+  
+  For example:
+  
+  class A(privateField0, val publicField0) with
+    let privateField1 = 0
+    val publicField1 = 0
+    
+  In the codegen, private and public fields are initialized by an assignment to a member symbol and a term definition
+  respectively. The symbols must match what is defined in `privateFields` and `publicFields`. 
+  (An assignment to a flow symbol will be treated as a local symbol to the constructor, not a field assignment.)
+*/
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
     isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol,

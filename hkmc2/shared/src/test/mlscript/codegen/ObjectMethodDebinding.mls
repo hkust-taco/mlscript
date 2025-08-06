@@ -10,7 +10,7 @@ let f = Test.foo
 //│ ╔══[ERROR] [debinding error] Method 'foo' cannot be accessed without being called.
 //│ ║  l.9: 	let f = Test.foo
 //│ ╙──     	            ^^^^
-//│ f = [function foo]
+//│ f = fun foo
 
 // TODO make this a type error
 // :e
@@ -21,7 +21,7 @@ let f = id(Test).foo
 
 // * Note that dynamic member accesses are not checked against debinding:
 let f = Test.("foo")
-//│ f = [function foo]
+//│ f = fun foo
 
 :re
 f()
@@ -33,7 +33,7 @@ f()
 // * (and notably may have fields, which are not preserved by `bind`):
 
 let g = if f is Function then f.bind(Test) else f
-//│ g = [function bound foo]
+//│ g = fun bound foo
 
 g()
 //│ = 2
@@ -46,7 +46,7 @@ object Test with
   fun foo() = Test.bar + 1
 
 let f = Test.("foo")
-//│ f = [function foo]
+//│ f = fun foo
 
 f()
 //│ = 2
@@ -61,7 +61,7 @@ fun test() =
   [Test]
 
 let f = test().0.("foo")
-//│ f = [function foo]
+//│ f = fun foo
 
 f()
 //│ = 2

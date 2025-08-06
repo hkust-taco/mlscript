@@ -193,7 +193,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ═══[COMPILATION ERROR] No definition found in scope for 'Foo$'
-//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme

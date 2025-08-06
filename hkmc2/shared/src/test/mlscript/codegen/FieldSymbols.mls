@@ -155,7 +155,7 @@ case
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│ = [function]
+//│ = fun
 
 
 // TODO support:
