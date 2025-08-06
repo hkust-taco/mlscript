@@ -181,8 +181,7 @@ x + y
 //│ };
 //│ f$capture1 = class f$capture {
 //│   constructor(a0$) {
-//│     let a0$1;
-//│     a0$1 = a0$;
+//│     this.a0$ = a0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -274,26 +273,11 @@ a.toString() + b + c + d
 //│ tmp13 = tmp12 + b;
 //│ tmp14 = tmp13 + c;
 //│ tmp14 + d
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│     at Runtime.checkCall (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:406:24)
-//│     at REPL33:1:2212
-//│     at REPL36:1:1146
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '"11110110"', got: 'undefined'
-//│ a = NaN
-//│ b = undefined
-//│ c = undefined
-//│ d = undefined
+//│ = "11110110"
+//│ a = 11
+//│ b = 1
+//│ c = 10
+//│ d = 110
 //│ g2 = fun
 //│ gRet = Tuple(fun, fun)
 //│ hFun = fun
@@ -332,8 +316,7 @@ f(1, 2, 1000)
 //│ };
 //│ f$capture5 = class f$capture4 {
 //│   constructor(mutated0$) {
-//│     let mutated0$1;
-//│     mutated0$1 = mutated0$;
+//│     this.mutated0$ = mutated0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -484,8 +467,7 @@ g()(1)
 //│ };
 //│ g$capture1 = class g$capture {
 //│   constructor(y0$) {
-//│     let y0$1;
-//│     y0$1 = y0$;
+//│     this.y0$ = y0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
@@ -592,8 +574,7 @@ f()
 //│ };
 //│ f$capture15 = class f$capture14 {
 //│   constructor(x0$) {
-//│     let x0$1;
-//│     x0$1 = x0$;
+//│     this.x0$ = x0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -627,9 +608,13 @@ fun f(es, vs) =
   new A
 //│ JS (unsanitized):
 //│ let A1, f23, A$;
-//│ A$ = function A$(v$_$0) {
+//│ A$ = function A$(isMut, v$_$0) {
 //│   let tmp19;
-//│   tmp19 = globalThis.Object.freeze(new A1(v$_$0));
+//│   if (isMut === true) {
+//│     tmp19 = new A1(v$_$0);
+//│   } else {
+//│     tmp19 = globalThis.Object.freeze(new A1(v$_$0));
+//│   }
 //│   return tmp19
 //│ };
 //│ A1 = class A {
@@ -646,10 +631,10 @@ fun f(es, vs) =
 //│ f23 = function f(es, vs) {
 //│   let v$_;
 //│   v$_ = es;
-//│   return A$(v$_)
+//│   return A$(false, v$_)
 //│ };
-//│ > let A1, f23, A$;try { A$ = function A$(...args) {   runtime.checkArgs("A$", 1, true, args.length);   let v$_$0 = args[0];   let tmp19;   tmp19 = globalThis.Object.freeze(new A1(v$_$0));   return tmp19 }; A1 = class A {   #v$_$01;   get v'$0() { return this.#v$_$01; }   set v'$0(value) { this.#v$_$01 = value; }   constructor(v$_$0) {     this["v'$0"] = v$_$0;     this.fld = this["v'$0"];   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A"];  }; f23 = function f(...args) {   runtime.checkArgs("f", 2, true, args.length);   let es = args[0];   let vs = args[1];   let v$_;   v$_ = es;   return runtime.checkCall(A$(v$_)) }; block$res23 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ >                                                                                                                                                                                                                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let A1, f23, A$;try { A$ = function A$(...args) {   runtime.checkArgs("A$", 2, true, args.length);   let isMut = args[0];   let v$_$0 = args[1];   let tmp19;   if (isMut === true) {     tmp19 = new A1(v$_$0);   } else {     tmp19 = globalThis.Object.freeze(new A1(v$_$0));   }   return tmp19 }; A1 = class A {   #v$_$01;   get v'$0() { return this.#v$_$01; }   set v'$0(value) { this.#v$_$01 = value; }   constructor(v$_$0) {     this["v'$0"] = v$_$0;     this.fld = this["v'$0"];   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "A"];  }; f23 = function f(...args) {   runtime.checkArgs("f", 2, true, args.length);   let es = args[0];   let vs = args[1];   let v$_;   v$_ = es;   return runtime.checkCall(A$(false, v$_)) }; block$res23 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ >                                                                                                                                                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:150)
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string

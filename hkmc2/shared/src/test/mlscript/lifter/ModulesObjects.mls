@@ -28,9 +28,13 @@ fun foo(y) =
 foo(10)
 //│ JS (unsanitized):
 //│ let M3, foo1, M$;
-//│ M$ = function M$(y$0) {
+//│ M$ = function M$(isMut, y$0) {
 //│   let tmp;
-//│   tmp = globalThis.Object.freeze(new M3(y$0));
+//│   if (isMut === true) {
+//│     tmp = new M3(y$0);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new M3(y$0));
+//│   }
 //│   return tmp
 //│ };
 //│ M3 = class M2 {
@@ -49,7 +53,7 @@ foo(10)
 //│ };
 //│ foo1 = function foo(y) {
 //│   let tmp;
-//│   tmp = M$(y);
+//│   tmp = M$(false, y);
 //│   return runtime.safeCall(tmp.foo())
 //│ };
 //│ foo1(10)
@@ -76,10 +80,9 @@ set c0.x = 1
 c0.x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
-:fixme
 set c1.x = 1
 c1.x
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ = 1
 
 
 // * Objects should remain non-`new mut`
@@ -137,8 +140,7 @@ fun foo(x, y) =
 //│ };
 //│ foo$capture3 = class foo$capture2 {
 //│   constructor(y0$) {
-//│     let y0$1;
-//│     y0$1 = y0$;
+//│     this.y0$ = y0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
@@ -302,9 +304,13 @@ module M with
 M.A(2).newB.newA_B(3).newB.get
 //│ JS (unsanitized):
 //│ let B2, M21, tmp7, tmp8, B$;
-//│ B$ = function B$(A$instance$0) {
+//│ B$ = function B$(isMut, A$instance$0) {
 //│   let tmp9, tmp10;
-//│   tmp9 = globalThis.Object.freeze(new B2.class());
+//│   if (isMut === true) {
+//│     tmp9 = new B2.class();
+//│   } else {
+//│     tmp9 = globalThis.Object.freeze(new B2.class());
+//│   }
 //│   tmp10 = tmp9(A$instance$0);
 //│   return tmp10
 //│ };
@@ -352,7 +358,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│           return runtime.safeCall(M20.A(42));
 //│         } 
 //│         get newB() {
-//│           return B$(this);
+//│           return B$(false, this);
 //│         }
 //│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "A", ["x"]]; 
@@ -386,19 +392,7 @@ fun foo(x) =
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 
 foo(123)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'bar' yielded 'undefined'
-//│     at foo (REPL80:1:1022)
-//│     at REPL83:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│ = [true, [true, false], true]
 
 :sjs
 module A with

@@ -8,9 +8,13 @@ data class A(x) with
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
 //│ let B1, A1, B$;
-//│ B$ = function B$(A$instance$0, y) {
+//│ B$ = function B$(isMut, A$instance$0, y) {
 //│   let tmp, tmp1;
-//│   tmp = globalThis.Object.freeze(new B1.class(y));
+//│   if (isMut === true) {
+//│     tmp = new B1.class(y);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new B1.class(y));
+//│   }
 //│   tmp1 = tmp(A$instance$0);
 //│   return tmp1
 //│ };
@@ -50,7 +54,7 @@ data class A(x) with
 //│     }
 //│     getA() {
 //│       let tmp;
-//│       tmp = B$(this, 2);
+//│       tmp = B$(false, this, 2);
 //│       return runtime.safeCall(tmp.getB())
 //│     }
 //│     toString() { return runtime.render(this); }

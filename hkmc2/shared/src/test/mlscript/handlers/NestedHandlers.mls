@@ -90,7 +90,7 @@ handleEffects(f)
 class Eff with
   fun perform(): ()
 data class Box(n)
-let box = Box(0)
+let box = new mut Box(0)
 //│ box = Box(0)
 
 
@@ -112,22 +112,7 @@ handle h = Eff with
     k()
 f(h, box, 10)
 box.n
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'n' of object '[object Object]'
-//│     at EffectSig.handlerFun (REPL30:1:4043)
-//│     at Runtime.handleEffect (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:801:34)
-//│     at Runtime.handleEffects (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:750:23)
-//│     at Runtime.handleBlockImpl (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:734:20)
-//│     at handleBlock$ (REPL30:1:6386)
-//│     at f (REPL30:1:6797)
-//│     at handleBlock$ (REPL30:1:6230)
-//│     at f (REPL30:1:6797)
-//│     at handleBlock$ (REPL30:1:6230)
-//│     at f (REPL30:1:6797)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '5120', got: 'undefined'
+//│ = 5120
 
 handle h1 = Eff with
   fun perform()(k) =

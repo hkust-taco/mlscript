@@ -22,13 +22,15 @@ fun hi(n) =
 hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, $_stack$_safe$_body$_, Cont$func$hi$1, Cont$func$hi$$;
-//│ Cont$func$hi$$ = function Cont$func$hi$$(n$0, scrut$1, tmp$2, stackDelayRes$3) {
-//│   return (pc) => {
-//│     let tmp, tmp1;
+//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n$0, scrut$1, tmp$2, stackDelayRes$3, pc) {
+//│   let tmp, tmp1;
+//│   if (isMut === true) {
+//│     tmp = new Cont$func$hi$1(pc);
+//│   } else {
 //│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
-//│     tmp1 = tmp(n$0, scrut$1, tmp$2, stackDelayRes$3);
-//│     return tmp1
 //│   }
+//│   tmp1 = tmp(n$0, scrut$1, tmp$2, stackDelayRes$3);
+//│   return tmp1
 //│ };
 //│ Cont$func$hi$1 = class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│   #n$0;
@@ -87,7 +89,7 @@ hi(0)
 //│   let scrut, tmp, stackDelayRes;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$hi$$(n, scrut, tmp, stackDelayRes, 0);
+//│     stackDelayRes.contTrace.last.next = Cont$func$hi$$(true, n, scrut, tmp, stackDelayRes, 0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -121,13 +123,15 @@ fun sum(n) =
 sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, $_stack$_safe$_body$_1, Cont$func$sum$1, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5) {
-//│   return (pc) => {
-//│     let tmp, tmp1;
+//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5, pc) {
+//│   let tmp, tmp1;
+//│   if (isMut === true) {
+//│     tmp = new Cont$func$sum$1(pc);
+//│   } else {
 //│     tmp = globalThis.Object.freeze(new Cont$func$sum$1(pc));
-//│     tmp1 = tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5);
-//│     return tmp1
 //│   }
+//│   tmp1 = tmp(n$0, scrut$1, tmp$2, tmp$3, curDepth$4, stackDelayRes$5);
+//│   return tmp1
 //│ };
 //│ Cont$func$sum$1 = class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│   #n$0;
@@ -208,7 +212,7 @@ sum(10000)
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = Cont$func$sum$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
+//│     stackDelayRes.contTrace.last.next = Cont$func$sum$$(true, n, scrut, tmp, tmp1, curDepth, stackDelayRes, 0);
 //│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
 //│     return stackDelayRes
 //│   }
@@ -220,7 +224,7 @@ sum(10000)
 //│     runtime.stackDepth = runtime.stackDepth + 1;
 //│     tmp1 = sum1(tmp);
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = Cont$func$sum$$(n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
+//│       tmp1.contTrace.last.next = Cont$func$sum$$(true, n, scrut, tmp, tmp1, curDepth, stackDelayRes, 1);
 //│       tmp1.contTrace.last = tmp1.contTrace.last.next;
 //│       return tmp1
 //│     }
@@ -236,22 +240,7 @@ sum(10000)
 //│   res1 = runtime.topLevelEffect(res1, false);
 //│ }
 //│ res1
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$sum$$' expected 6 arguments but got 7
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$sum$$ (REPL16:1:144)
-//│     at sum (REPL16:1:3450)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│     at sum (REPL16:1:3777)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 // stack-overflows without :stackSafe
 :re
@@ -272,20 +261,8 @@ fun foo(f) =
     set ctr += 1
     dummy(f(f))
 foo(foo)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$foo$$' expected 6 arguments but got 7
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$foo$$ (REPL22:1:274)
-//│     at foo (REPL22:1:3750)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│     at foo (REPL22:1:4098)
-//│ ctr = 99
+//│ = 0
+//│ ctr = 10001
 
 :stackSafe 1000
 :effectHandlers
@@ -296,23 +273,8 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$lambda$$' expected 6 arguments but got 7
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$lambda$$ (REPL26:1:172)
-//│     at lambda (REPL26:1:3506)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│     at lambda (REPL26:1:3837)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
-//│ foo = undefined
+//│ = 50005000
+//│ foo = 50005000
 
 :re
 fun foo() =
@@ -340,22 +302,7 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$handleBlock$h$$' expected 3 arguments but got 4
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$handleBlock$h$$ (REPL36:1:16995)
-//│     at handleBlock$ (REPL36:1:19721)
-//│     at $_stack$_safe$_body$_4 (REPL36:1:19980)
-//│     at Runtime.enterHandleBlock (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:738:28)
-//│     at Runtime.runStackSafe (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:917:20)
-//│     at REPL36:1:20246
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 // function call and defn inside handler
 :effectHandlers
@@ -371,22 +318,7 @@ handle h = Eff with
 in
   fun foo(h) = h.perform
   foo(h)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$handleBlock$h$$' expected 3 arguments but got 4
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$handleBlock$h$$ (REPL39:1:12783)
-//│     at handleBlock$ (REPL39:1:19737)
-//│     at $_stack$_safe$_body$_5 (REPL39:1:19997)
-//│     at Runtime.enterHandleBlock (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:738:28)
-//│     at Runtime.runStackSafe (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:917:20)
-//│     at REPL39:1:20265
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ = 50005000
 
 :re
 :effectHandlers
@@ -399,7 +331,7 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$handleBlock$h$$' expected 2 arguments but got 3
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
 :stackSafe
@@ -442,20 +374,5 @@ fun sum(n) =
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)
 bad()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'Cont$func$sum$$' expected 6 arguments but got 7
-//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:392:24)
-//│     at Cont$func$sum$$ (REPL54:1:185)
-//│     at sum (REPL54:1:3498)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│     at sum (REPL54:1:3828)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '100010000', got: 'undefined'
+//│ = 100010000
 
