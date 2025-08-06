@@ -5,8 +5,11 @@ let bm = benchmark
 module Benchmark with...
 
 val benchmark = bm
+let prefixPath = "src/test/logs/"
 
 fun mkSuite() = new bm.Suite()
+
+fun setPrefixPath(path) = set prefixPath = path
 
 fun runSuite(suite) =
   let settings = {}
@@ -15,4 +18,4 @@ fun runSuite(suite) =
 
 fun writeResults(suite, path) =
   let jsonStr = JSON.stringify(suite.map((res, _, _) => res), null, 2)
-  fs.writeFile(path, jsonStr, (err) => err)
+  fs.writeFile(prefixPath + path, jsonStr, (err) => err)

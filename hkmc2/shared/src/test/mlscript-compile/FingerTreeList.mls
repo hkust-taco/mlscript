@@ -146,6 +146,10 @@ fun mk(...args) = args.reduce(
     (acc, x) => snoc(acc, x),
     Empty)
 
+fun isEmpty = case
+  Empty then true
+  _ then false
+
 // O(1)
 fun length = case
   Array as a then a.length
