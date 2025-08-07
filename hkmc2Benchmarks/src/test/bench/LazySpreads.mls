@@ -336,7 +336,7 @@ suite.add("EagerBuiltSillyEager15", () =>
   sillyEager(xs))
 
 :silent
-let configs = Array of
+let configs = tuple of
   LazyArray.{      (name: "LazyArray",      lazySlice: slice, lazyConcat: __concat,       split: __split) }
   FingerTreeList.{ (name: "FingerTreeList", lazySlice: slice, lazyConcat: __markerConcat, split: __split) }
   LazyFingerTree.{ (name: "LazyFingerTree", lazySlice: slice, lazyConcat: __concat,       split: __split) }
