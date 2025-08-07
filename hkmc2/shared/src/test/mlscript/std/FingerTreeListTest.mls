@@ -6,10 +6,10 @@ import "../../mlscript-compile/LazyFingerTree.mls"
 open FingerTreeList
 
 let xs = FingerTreeList.mk(1,2,3)
-//│ xs = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ xs = [1, 2, 3]
 
 let ys = concat(xs, xs) concat(xs)
-//│ ys = Deep { size: 9, prefix: [1], middle: Deep { size: 6, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 ys |> ith(-1)
 //│ = None
@@ -35,28 +35,28 @@ ys |> ith(9)
 //│ = None
 
 let ys = (ys |> popFront).rest
-//│ ys = Deep { size: 8, prefix: [2, 3, 1], middle: Single { e: Branch3 { size: 3, e1: 2, e2: 3, e3: 1 } }, suffix: [2, 3] }
+//│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
 let ys = (ys |> popBack).rest
-//│ ys = Deep { size: 7, prefix: [2, 3, 1], middle: Single { e: Branch3 { size: 3, e1: 2, e2: 3, e3: 1 } }, suffix: [2] }
+//│ ys = [2, 3, 1, 2, 3, 1, 2]
 let ys = (ys |> popBack).rest
-//│ ys = Deep { size: 6, prefix: [2, 3, 1], middle: Empty { class: class Empty }, suffix: [2, 3, 1] }
+//│ ys = [2, 3, 1, 2, 3, 1]
 let ys = (ys |> popBack).rest
-//│ ys = Deep { size: 5, prefix: [2, 3, 1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ ys = [2, 3, 1, 2, 3]
 let ys = (ys |> popFront).rest
-//│ ys = Deep { size: 4, prefix: [3, 1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ ys = [3, 1, 2, 3]
 let ys = (ys |> popFront).rest
-//│ ys = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ ys = [1, 2, 3]
 let ys = (ys |> popFront).rest
-//│ ys = Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }
+//│ ys = [2, 3]
 
 let ys = xs ++ xs ++ xs
-//│ ys = Deep { size: 9, prefix: [1], middle: Deep { size: 6, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 ys |> slice(3, 3)
-//│ = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ = [1, 2, 3]
 
 let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3
-//│ ys = Deep { size: 15, prefix: [1, 2, 3, 1], middle: Deep { size: 9, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }, Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
 
 :expect true
 LazyFingerTree.equals(ys, [...ys])
@@ -92,92 +92,12 @@ repeat(xs, 512).length == xs.length * 512
 //│ = true
 
 let xs = FingerTreeList.mk(1, 2, 3)
-//│ xs = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
+//│ xs = [1, 2, 3]
 
 :expect [1, [2, 3]]
-:elt
 :sjs
 if xs is
   [a, ...ls] then [a, ls]
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Nil
-//│   res = IfLike:
-//│     kw = keyword 'if'
-//│     desugared = Cons:
-//│       head = Branch:
-//│         scrutinee = Ref:
-//│           sym = xs
-//│           iargsLs = N
-//│         pattern = Tuple:
-//│           size = 1
-//│           inf = true
-//│         continuation = Let:
-//│           sym = $first0
-//│           term = App:
-//│             lhs = SynthSel:
-//│               prefix = SynthSel:
-//│                 prefix = Ref of $runtime
-//│                 nme = Ident of "Tuple"
-//│               nme = Ident of "get"
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 term = Ref:
-//│                   sym = xs
-//│                   iargsLs = N
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 term = Lit of IntLit of 0
-//│                 asc = N
-//│           tail = Let: \
-//│           sym = $rest
-//│           term = App:
-//│             lhs = SynthSel:
-//│               prefix = SynthSel:
-//│                 prefix = Ref of $runtime
-//│                 nme = Ident of "Tuple"
-//│               nme = Ident of "slice"
-//│             rhs = Tup of Ls of 
-//│               Fld:
-//│                 flags = ()
-//│                 term = Ref:
-//│                   sym = xs
-//│                   iargsLs = N
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 term = Lit of IntLit of 1
-//│                 asc = N
-//│               Fld:
-//│                 flags = ()
-//│                 term = Lit of IntLit of 0
-//│                 asc = N
-//│           tail = Let: \
-//│           sym = a
-//│           term = Ref:
-//│             sym = $first0
-//│             iargsLs = N
-//│           tail = Let: \
-//│           sym = ls
-//│           term = Ref:
-//│             sym = $rest
-//│             iargsLs = N
-//│           tail = Else of Tup of Ls of 
-//│             Fld:
-//│               flags = ()
-//│               term = Ref:
-//│                 sym = a
-//│                 iargsLs = N
-//│               asc = N
-//│             Fld:
-//│               flags = ()
-//│               term = Ref:
-//│                 sym = ls
-//│                 iargsLs = N
-//│               asc = N
-//│       tail = End
 //│ JS (unsanitized):
 //│ let rest, first0, a, ls;
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
@@ -189,10 +109,7 @@ if xs is
 //│ } else {
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
-//│ ═══[RUNTIME ERROR] Expected: '[1, [2, 3]]', got: '[1, Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }]'
-//│ = [1, Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }]
+//│ = [1, [2, 3]]
 
 fun addUntilN(xs, n) =
   if n <= 0 then xs

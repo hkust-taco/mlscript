@@ -17,21 +17,19 @@ fun normIdxSlice(i, len) =
     else 0
   else i
 
-// Node[T]
-class Branch2(val size, val e1, val e2)
-class Branch3(val size, val e1, val e2, val e3)
+type Node[T] = Branch2[T] | Branch3[T]
+data class Branch2[T](size: Int, e1: T, e2: T)
+data class Branch3[T](size: Int, e1: T, e2: T, e3: T)
 
 fun getNodeSize(node) = if node is
   Branch2(s, _, _) then s
   Branch3(s, _, _, _) then s
   _ then 1
 
-// View[T]
 object Nil
-class View(val e1, val rest) // T, FingerTreeList[T]
+data class View[T](e1: T, rest: FTL[T])
 
-// FingerTreeList[T]
-class LFT extends IterableBase with
+class FTL[T] extends IterableBase with
   fun iterator() =
     let current = this
     Iterator of () => if popFront(current) is
@@ -55,14 +53,14 @@ class LFT extends IterableBase with
       return Empty
     FingerTreeList.slice(beg, len - end)(this)
 
-object Empty extends LFT with
+object Empty extends FTL[T] with
   fun toString() = "[" + this joined(", ") + "]"
 
-class Single(val e) extends LFT with
+class Single[T](val e: T) extends FTL[T] with
   fun toString() = "[" + this joined(", ") + "]"
 
 // prefix and suffix are at most length 4
-class Deep[T](val size, val prefix: Array[T], val middle, val suffix: Array[T]) extends LFT with // TODO: middle: FingerTreeList[Node[T]]
+class Deep[T](val size: Int, val prefix: Array[T], val middle: FTL[Node[T]], val suffix: Array[T]) extends FTL[T] with
   fun toString() = "[" + [...this].join(", ") + "]"
 
 // amortized O(log n)
@@ -134,12 +132,12 @@ object SpliceMarker
 module FingerTreeList with...
 
 
-fun safeInput(xs) = if xs is
-  LFT then xs
+fun toFTL(xs) = if xs is
+  FTL then xs
   else mk(...xs) // assume that the input is iterable if not a finger tree
 
 // amortized O(1)
-fun (+:) cons(x, xs) = if safeInput(xs) is
+fun (+:) cons(x, xs) = if toFTL(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [x], Empty, [y])
   Deep(s, ax, dt, ay) then if (ax.length >= 4)
@@ -149,7 +147,7 @@ fun (+:) cons(x, xs) = if safeInput(xs) is
     else Deep(s + getNodeSize(x), [x, ...ax], dt, ay)
 
 // amortized O(1)
-fun (:+) snoc(xs, x) = if safeInput(xs) is
+fun (:+) snoc(xs, x) = if toFTL(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [y], Empty, [x])
   Deep(s, ax, dt, ay) then if (ay.length >= 4)
@@ -174,7 +172,7 @@ fun length = case
   Deep(s, _, _, _) then s
 
 // amortized O(1)
-fun popFront(ft) = if safeInput(ft) is
+fun popFront(ft) = if toFTL(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, [x], dt, ay) then if (popFront(dt)) is
@@ -187,7 +185,7 @@ fun popFront(ft) = if safeInput(ft) is
     View(x, Deep(s - getNodeSize(x), ax, dt, ay))
 
 // amortized O(1)
-fun popBack(ft) = if safeInput(ft) is
+fun popBack(ft) = if toFTL(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, ax, dt, [x]) then if popBack(dt) is
@@ -200,7 +198,7 @@ fun popBack(ft) = if safeInput(ft) is
     View(y, Deep(s - getNodeSize(y), ax, dt, ay))
 
 // amortized O(log n)
-fun (++) concat(ft1, ft2) = concatMiddle(safeInput(ft1), [], safeInput(ft2))
+fun (++) concat(ft1, ft2) = concatMiddle(toFTL(ft1), [], toFTL(ft2))
 
 // amortized O(log n)
 fun ith(idx) = case
@@ -215,7 +213,7 @@ fun ith(idx) = case
 
 fun get(idx) = case
   Array as a then a.at(idx)
-  LFT as lft then if ith(normIdx(idx, length(lft)))(lft) is
+  FTL as lft then if ith(normIdx(idx, length(lft)))(lft) is
     None then throw "get: index out of bounds"
     Some(x) then x
 
@@ -225,12 +223,12 @@ fun toArray(ft) = [...ft]
 fun slice(beg, end)(und) =
   if und is
     Array then slice(beg, end)(mk(...und))
-    LFT then if beg < 0 || end < 0 || beg + end > length(und)
+    FTL then if beg < 0 || end < 0 || beg + end > length(und)
       then throw "slice: index out of bounds"
       else repeatPopFront(beg)(repeatPopBack(end)(und))
 
 fun isFingerTree(xs) = if xs is
-  LFT then true
+  FTL then true
   else false
 
 // The following functions are not meant for users; it's meant referred to by Runtime.mls
@@ -242,7 +240,7 @@ fun __markerConcat(...arr) =
   while idx < arr.length do
     if arr.[idx] is SpliceMarker then
       let ftl = arr.[idx + 1]
-      set acc = acc ++ safeInput(ftl)
+      set acc = acc ++ toFTL(ftl)
       set idx = idx + 2
     else
       set acc = acc :+ arr.[idx]
