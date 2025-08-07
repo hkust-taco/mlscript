@@ -355,7 +355,7 @@ while i < configs.length do
   let name = cfg.name
   // dirty hack to modify lazy spread behavior
   set Runtime.Tuple.lazySlice = (xs, a, b) => cfg.lazySlice(a, b)(xs)
-  set Runtime.Tuple.lazyConcat = (...args) => cfg.lazyConcat(...args)
+  set Runtime.Tuple.lazyConcat = cfg.lazyConcat
   set Runtime.Tuple.split = cfg.split
   let a = [1, 2, 3, 4, 5]
   
