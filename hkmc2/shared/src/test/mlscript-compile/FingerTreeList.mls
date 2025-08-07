@@ -39,7 +39,6 @@ class LFT extends IterableBase with
       View(head, tail) then
         set current = tail
         Result.Next of head
-
   fun toString() = "[" + this joined(", ") + "]"
   fun length = FingerTreeList.length(this)
   fun at(i) = get(i)(this)
