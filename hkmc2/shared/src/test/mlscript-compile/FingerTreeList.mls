@@ -27,9 +27,9 @@ fun getNodeSize(node) = if node is
   _ then 1
 
 object Nil
-data class View[T](e1: T, rest: FTL[T])
+data class View[T](e1: T, rest: FingerTree[T])
 
-class FTL[T] extends IterableBase with
+class FingerTree[T] extends IterableBase with
   fun iterator() =
     let current = this
     Iterator of () => if popFront(current) is
@@ -53,14 +53,14 @@ class FTL[T] extends IterableBase with
       return Empty
     FingerTreeList.slice(beg, len - end)(this)
 
-object Empty extends FTL[T] with
+object Empty extends FingerTree[T] with
   fun toString() = "[" + this joined(", ") + "]"
 
-class Single[T](val e: T) extends FTL[T] with
+class Single[T](val e: T) extends FingerTree[T] with
   fun toString() = "[" + this joined(", ") + "]"
 
 // prefix and suffix are at most length 4
-class Deep[T](val size: Int, val prefix: Array[T], val middle: FTL[Node[T]], val suffix: Array[T]) extends FTL[T] with
+class Deep[T](val size: Int, val prefix: Array[T], val middle: FingerTree[Node[T]], val suffix: Array[T]) extends FingerTree[T] with
   fun toString() = "[" + [...this].join(", ") + "]"
 
 // amortized O(log n)
@@ -132,12 +132,12 @@ object SpliceMarker
 module FingerTreeList with...
 
 
-fun toFTL(xs) = if xs is
-  FTL then xs
+fun toFingerTree(xs) = if xs is
+  FingerTree then xs
   else mk(...xs) // assume that the input is iterable if not a finger tree
 
 // amortized O(1)
-fun (+:) cons(x, xs) = if toFTL(xs) is
+fun (+:) cons(x, xs) = if toFingerTree(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [x], Empty, [y])
   Deep(s, ax, dt, ay) then if (ax.length >= 4)
@@ -147,7 +147,7 @@ fun (+:) cons(x, xs) = if toFTL(xs) is
     else Deep(s + getNodeSize(x), [x, ...ax], dt, ay)
 
 // amortized O(1)
-fun (:+) snoc(xs, x) = if toFTL(xs) is
+fun (:+) snoc(xs, x) = if toFingerTree(xs) is
   Empty then Single(x)
   Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [y], Empty, [x])
   Deep(s, ax, dt, ay) then if (ay.length >= 4)
@@ -172,7 +172,7 @@ fun length = case
   Deep(s, _, _, _) then s
 
 // amortized O(1)
-fun popFront(ft) = if toFTL(ft) is
+fun popFront(ft) = if toFingerTree(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, [x], dt, ay) then if (popFront(dt)) is
@@ -185,7 +185,7 @@ fun popFront(ft) = if toFTL(ft) is
     View(x, Deep(s - getNodeSize(x), ax, dt, ay))
 
 // amortized O(1)
-fun popBack(ft) = if toFTL(ft) is
+fun popBack(ft) = if toFingerTree(ft) is
   Empty then Nil
   Single(x) then View(x, Empty)
   Deep(s, ax, dt, [x]) then if popBack(dt) is
@@ -198,7 +198,7 @@ fun popBack(ft) = if toFTL(ft) is
     View(y, Deep(s - getNodeSize(y), ax, dt, ay))
 
 // amortized O(log n)
-fun (++) concat(ft1, ft2) = concatMiddle(toFTL(ft1), [], toFTL(ft2))
+fun (++) concat(ft1, ft2) = concatMiddle(toFingerTree(ft1), [], toFingerTree(ft2))
 
 // amortized O(log n)
 fun ith(idx) = case
@@ -213,7 +213,7 @@ fun ith(idx) = case
 
 fun get(idx) = case
   Array as a then a.at(idx)
-  FTL as lft then if ith(normIdx(idx, length(lft)))(lft) is
+  FingerTree as lft then if ith(normIdx(idx, length(lft)))(lft) is
     None then throw "get: index out of bounds"
     Some(x) then x
 
@@ -223,12 +223,12 @@ fun toArray(ft) = [...ft]
 fun slice(beg, end)(und) =
   if und is
     Array then slice(beg, end)(mk(...und))
-    FTL then if beg < 0 || end < 0 || beg + end > length(und)
+    FingerTree then if beg < 0 || end < 0 || beg + end > length(und)
       then throw "slice: index out of bounds"
       else repeatPopFront(beg)(repeatPopBack(end)(und))
 
 fun isFingerTree(xs) = if xs is
-  FTL then true
+  FingerTree then true
   else false
 
 // The following functions are not meant for users; it's meant referred to by Runtime.mls
@@ -240,7 +240,7 @@ fun __markerConcat(...arr) =
   while idx < arr.length do
     if arr.[idx] is SpliceMarker then
       let ftl = arr.[idx + 1]
-      set acc = acc ++ toFTL(ftl)
+      set acc = acc ++ toFingerTree(ftl)
       set idx = idx + 2
     else
       set acc = acc :+ arr.[idx]
