@@ -1,4 +1,5 @@
-:js 
+:js
+:silent
 
 import "../../../../hkmc2/shared/src/test/mlscript-compile/FingerTreeList.mls"
 import "../../../../hkmc2/shared/src/test/mlscript-compile/Stack.mls"
