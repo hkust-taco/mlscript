@@ -1,8 +1,4 @@
 :js
-// :de
-// :sjs
-// :pt
-// :elt
 
 import "../../mlscript-compile/FingerTreeList.mls"
 import "../../mlscript-compile/LazyFingerTree.mls"
