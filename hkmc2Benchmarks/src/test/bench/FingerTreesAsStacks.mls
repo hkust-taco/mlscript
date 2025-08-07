@@ -20,7 +20,7 @@ let stack = Stack.Nil
 suite.add("FingerTreeList.push100", () =>
   let ft = FingerTreeList.mk()
   let i = 0
-  while (i < 100) do
+  while i < 100 do
     set ft = FingerTreeList.cons(i, ft)
     set i += 1
 )
