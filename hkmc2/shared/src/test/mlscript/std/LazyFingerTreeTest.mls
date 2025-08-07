@@ -12,7 +12,7 @@ open LazyFingerTree
 val a = concat(FingerTreeList.mk(0))
 
 :silent
-let b = a.concat([1,2,3,4])
+let b = a.concat([1, 2, 3, 4])
 
 :expect [0, 1, 2, 3, 4]
 [...b]
@@ -20,7 +20,10 @@ let b = a.concat([1,2,3,4])
 
 :expect [0, 1, 2, 3, 4]
 b.materialize()
-//│ = [0, 1, 2, 3, 4]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[0, 1, 2, 3, 4]', got: 'Deep { size: 5, prefix: [0], middle: Empty { class: class Empty }, suffix: [1, 2, 3, 4] }'
+//│ = Deep { size: 5, prefix: [0], middle: Empty { class: class Empty }, suffix: [1, 2, 3, 4] }
 
 
 // Views
@@ -103,14 +106,20 @@ let ys2 = LazyFingerTree.slice(2, 2)(ys1)
 
 :expect [2, 3, 4, 5, 6, 7]
 ys2
-//│ = [2, 3, 4, 5, 6, 7]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3, 4, 5, 6, 7]', got: 'Deep { size: 6, prefix: [2, 3], middle: Single { e: Branch3 { size: 3, e1: 4, e2: 5, e3: 6 } }, suffix: [7] }'
+//│ = Deep { size: 6, prefix: [2, 3], middle: Single { e: Branch3 { size: 3, e1: 4, e2: 5, e3: 6 } }, suffix: [7] }
 
 :silent
 let ys2 = LazyFingerTree.slice(0, 2)(ys2)
 
 :expect [2, 3, 4, 5]
 ys2
-//│ = [2, 3, 4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[2, 3, 4, 5]', got: 'Deep { size: 4, prefix: [2, 3], middle: Empty { class: class Empty }, suffix: [4, 5] }'
+//│ = Deep { size: 4, prefix: [2, 3], middle: Empty { class: class Empty }, suffix: [4, 5] }
 
 
 // concat and __concat should do similar things
@@ -161,7 +170,7 @@ let o3 = concat([1, 2, 3, 4])
 let o4 = o3.concat([5, 6, 7], [8])
 
 let o5 = o4.slice(1, 7)
-//│ o5 = [2, 3, 4, 5, 6, 7]
+//│ o5 = Deep { size: 6, prefix: [2, 3, 4], middle: Empty { class: class Empty }, suffix: [5, 6, 7] }
 
 :expect true
 equals(o2, o5)
@@ -191,7 +200,10 @@ r.slice(3, 5)
 v.slice(3, 5)
 //│ = [4, 5]
 s.slice(3, 5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[4, 5]', got: 'Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }'
+//│ = Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }
 slice(3, 5)(r)
 //│ = [4, 5]
 // both negative
@@ -200,21 +212,30 @@ r.slice(-7, -5)
 v.slice(-7, -5)
 //│ = [4, 5]
 s.slice(-7, -5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[4, 5]', got: 'Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }'
+//│ = Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }
 // beg positive, fin negative
 r.slice(3, -5)
 //│ = [4, 5]
 v.slice(3, -5)
 //│ = [4, 5]
 s.slice(3, -5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[4, 5]', got: 'Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }'
+//│ = Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }
 // beg negative, fin positive
 r.slice(-7, 5)
 //│ = [4, 5]
 v.slice(-7, 5)
 //│ = [4, 5]
 s.slice(-7, 5)
-//│ = [4, 5]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[4, 5]', got: 'Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }'
+//│ = Deep { size: 2, prefix: [4], middle: Empty { class: class Empty }, suffix: [5] }
 
 :expect []
 // both positive, beg > fin

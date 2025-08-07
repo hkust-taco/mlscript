@@ -10,10 +10,10 @@ import "../../mlscript-compile/LazyFingerTree.mls"
 open FingerTreeList
 
 let xs = FingerTreeList.mk(1,2,3)
-//│ xs = [1, 2, 3]
+//│ xs = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 
 let ys = concat(xs, xs) concat(xs)
-//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+//│ ys = Deep { size: 9, prefix: [1], middle: Deep { size: 6, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
 
 ys |> ith(-1)
 //│ = None
@@ -39,28 +39,28 @@ ys |> ith(9)
 //│ = None
 
 let ys = (ys |> popFront).rest
-//│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
+//│ ys = Deep { size: 8, prefix: [2, 3, 1], middle: Single { e: Branch3 { size: 3, e1: 2, e2: 3, e3: 1 } }, suffix: [2, 3] }
 let ys = (ys |> popBack).rest
-//│ ys = [2, 3, 1, 2, 3, 1, 2]
+//│ ys = Deep { size: 7, prefix: [2, 3, 1], middle: Single { e: Branch3 { size: 3, e1: 2, e2: 3, e3: 1 } }, suffix: [2] }
 let ys = (ys |> popBack).rest
-//│ ys = [2, 3, 1, 2, 3, 1]
+//│ ys = Deep { size: 6, prefix: [2, 3, 1], middle: Empty { class: class Empty }, suffix: [2, 3, 1] }
 let ys = (ys |> popBack).rest
-//│ ys = [2, 3, 1, 2, 3]
+//│ ys = Deep { size: 5, prefix: [2, 3, 1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 let ys = (ys |> popFront).rest
-//│ ys = [3, 1, 2, 3]
+//│ ys = Deep { size: 4, prefix: [3, 1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 let ys = (ys |> popFront).rest
-//│ ys = [1, 2, 3]
+//│ ys = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 let ys = (ys |> popFront).rest
-//│ ys = [2, 3]
+//│ ys = Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }
 
 let ys = xs ++ xs ++ xs
-//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+//│ ys = Deep { size: 9, prefix: [1], middle: Deep { size: 6, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
 
 ys |> slice(3, 3)
-//│ = [1, 2, 3]
+//│ = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 
 let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3
-//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+//│ ys = Deep { size: 15, prefix: [1, 2, 3, 1], middle: Deep { size: 9, prefix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }], middle: Empty { class: class Empty }, suffix: [Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }, Branch3 { size: 3, e1: 2, e2: 3, e3: 1 }] }, suffix: [2, 3] }
 
 :expect true
 LazyFingerTree.equals(ys, [...ys])
@@ -96,7 +96,7 @@ repeat(xs, 512).length == xs.length * 512
 //│ = true
 
 let xs = FingerTreeList.mk(1, 2, 3)
-//│ xs = [1, 2, 3]
+//│ xs = Deep { size: 3, prefix: [1], middle: Empty { class: class Empty }, suffix: [2, 3] }
 
 :expect [1, [2, 3]]
 :elt
@@ -189,14 +189,14 @@ if xs is
 //│   rest = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
 //│   a = first0;
 //│   ls = rest;
-//│   [
-//│     a,
-//│     ls
-//│   ]
+//│   globalThis.Object.freeze([ a, ls ])
 //│ } else {
-//│   throw new globalThis.Error("match error");
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ = [1, [2, 3]]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:200)
+//│ ═══[RUNTIME ERROR] Expected: '[1, [2, 3]]', got: '[1, Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }]'
+//│ = [1, Deep { size: 2, prefix: [2], middle: Empty { class: class Empty }, suffix: [3] }]
 
 fun addUntilN(xs, n) =
   if n <= 0 then xs
@@ -228,10 +228,7 @@ fun popByIndex(start, end, acc, lft) =
 //│   } else {
 //│     tmp39 = start + 1;
 //│     tmp40 = runtime.safeCall(lft.at(start));
-//│     return popByIndex(tmp39, end, [
-//│       ...acc,
-//│       tmp40
-//│     ], lft)
+//│     return popByIndex(tmp39, end, globalThis.Object.freeze([ ...acc, tmp40 ]), lft)
 //│   }
 //│ };
 

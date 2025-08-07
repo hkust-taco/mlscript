@@ -53,7 +53,7 @@ fun sliceHelper(beg, fin, arr) =
 class LazyFT extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
-  fun concat(...args) = concatHelper([SpliceMarker, this], this.length, ...args)
+  fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
 class View(val underlying: IterableBase, val start, val end) extends LazyFT with
 
@@ -87,7 +87,7 @@ class Splice(val bits, val len) extends LazyFT with
 
   fun reify =
     let acc = FingerTreeList.mk()
-    let stack = []
+    let stack = mut []
     stack.push([0, bits])
     while stack.length > 0 do
       let e = stack.pop()
@@ -120,8 +120,8 @@ class Splice(val bits, val len) extends LazyFT with
   fun slice(beg, fin) = sliceHelper(beg, fin, this)
   fun concat(...args) =
     if materialized === null 
-    then concatHelper([SpliceMarker, this], len, ...args)
-    else concatHelper([SpliceMarker, materialized], len, ...args)   
+    then concatHelper(mut [SpliceMarker, this], len, ...args)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...args)   
   
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
@@ -131,7 +131,7 @@ module LazyFingerTree with...
 
 
 fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
-fun concat(...args) = concatHelper([], 0, ...args)
+fun concat(...args) = concatHelper(mut [], 0, ...args)
 fun slice(beg, fin)(xs) = 
   if beg < 0 || fin < 0 do
     throw RangeError("LazyFingerTree.slice: indices must be non-negative")
