@@ -174,7 +174,7 @@ show of new Map([[{ x: longText }, shortText]])
 //│ > }                                                                         ┊
 
 :silent
-let testKey = (x: 0, y: 0, z: 0)
+let testKey = mut { x: 0, y: 0, z: 0 }
 let testMap = new Map([[testKey, testKey]])
 
 show of testMap
@@ -193,7 +193,7 @@ set testKey.b = 404, show of testMap
 //│ > }                                                                         ┊
 
 :silent
-let testKey = (a: 1, b: a * 10, c: b * 10, d: c * 10, e: d * 10)
+let testKey = mut { a: 1, b: a * 10, c: b * 10, d: c * 10, e: d * 10 }
 let testMap = new Map([[testKey, shortText]])
 
 show of testMap

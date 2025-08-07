@@ -14,6 +14,7 @@ object Unit with
 val short_and = RuntimeJS.short_and
 val short_or = RuntimeJS.short_or
 
+
 fun unreachable = throw Error("unreachable")
 
 fun checkArgs(functionName, expected, isUB, got) =
@@ -30,7 +31,7 @@ fun checkArgs(functionName, expected, isUB, got) =
       + " but got " + got
 
 fun safeCall(x) =
-  if x is undefined then Unit else x
+  if x is undefined then () else x
 
 fun checkCall(x) =
   if x is undefined
@@ -244,14 +245,14 @@ fun debugEff(eff) =
 
 // runtime implementations
 fun mkEffect(handler, handlerFun) =
-  let res = new EffectSig(new ContTrace(null, null, null, null, false), handler, handlerFun)
+  let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
     res.contTrace.last = res.contTrace
     res.contTrace.lastHandler = res.contTrace
   res
 
 fun handleBlockImpl(cur, handler) =
-  let handlerFrame = new HandlerContFrame(null, null, handler)
+  let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
     cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
@@ -292,7 +293,7 @@ fun handleEffect(cur) =
   let handlerFrame = prevHandlerFrame.nextHandler
 
   // unlink and save frames
-  let saved = new ContTrace(
+  let saved = new mut ContTrace(
     handlerFrame.next,
     cur.contTrace.last,
     handlerFrame.nextHandler,

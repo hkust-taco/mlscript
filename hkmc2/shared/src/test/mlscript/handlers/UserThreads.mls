@@ -3,7 +3,7 @@
 
 
 abstract class ThreadEffect with
-  val tasks = []
+  val tasks = mut []
   fun start(thread: () -> ()): ()
   fun fork(thread: () -> ()): ()
   fun yld(): ()
@@ -93,7 +93,7 @@ abstract class ThreadEffect with
   fun fork(thread: ThreadEffect -> ()): ()
   fun yld(): ()
 
-val tasks = []
+val tasks = mut []
 //│ tasks = []
 
 fun f(x)(h) =
@@ -148,7 +148,7 @@ abstract class ThreadEffect with
   fun yld(): ()
   fun xchg(x: Int): Int
 
-val tasks = []
+val tasks = mut []
 fun enqueue(k, x) =
   tasks.push(() => k(x))
 fun dequeue() =

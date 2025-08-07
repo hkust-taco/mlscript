@@ -54,7 +54,7 @@ class BlockTraverser:
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(cls, args) =>; applyPath(cls); args.foreach(applyPath)
+    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyPath)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
@@ -69,8 +69,8 @@ class BlockTraverser:
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
     case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(elems) => elems.foreach(applyArg)
-    case Value.Rcd(fields) => fields.foreach:
+    case Value.Arr(mut, elems) => elems.foreach(applyArg)
+    case Value.Rcd(mut, fields) => fields.foreach:
       case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
   
   def applyLocal(sym: Local): Unit = sym.traverse
@@ -82,8 +82,8 @@ class BlockTraverser:
     applySubBlock(fun.body)
   
   def applyValDefn(defn: ValDefn): Unit =
-    val ValDefn(owner, k, sym, rhs) = defn
-    owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
+    val ValDefn(tsym, sym, rhs) = defn
+    tsym.owner.foreach(_.traverse); sym.traverse; applyPath(rhs)
   
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
@@ -98,7 +98,8 @@ class BlockTraverser:
       parentPath.foreach(applyPath)
       methods.foreach(applyFunDefn)
       privateFields.foreach(_.traverse)
-      publicFields.foreach(_.traverse)
+      publicFields.foreach: f =>
+        f._1.traverse; f._2.traverse
       applySubBlock(preCtor)
       applySubBlock(ctor)
   

@@ -325,7 +325,7 @@ class Resolver(tl: TraceLogger)
       t match
         case blk: Term.Blk =>
           traverseBlock(blk)
-        case Term.Rcd(stats) =>
+        case Term.Rcd(mut, stats) =>
           traverseStmts(stats)
         
         case t: Term.IfLike =>
@@ -357,7 +357,7 @@ class Resolver(tl: TraceLogger)
   def resolveDefn(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
-      val TermDefinition(_owner, _k, _sym, 
+      val TermDefinition(_k, _sym, _tsym, 
         pss, tps, sign, body, 
         _resSym, TermDefFlags(isMethod), modulefulness, annotations
       ) = tdf
@@ -425,7 +425,7 @@ class Resolver(tl: TraceLogger)
     defn match
     
     // Case: instance definition. Add the instance to the context.
-    case defn @ TermDefinition(_, Ins, sym, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
+    case defn @ TermDefinition(k = Ins, sym = sym, flags = TermDefFlags(isMethod), sign = sign) =>
       log(s"Resolving instance definition ${defn.showDbg}")
       traverseTermDef(defn)
       sign match
@@ -437,7 +437,7 @@ class Resolver(tl: TraceLogger)
           case S(typ) => ictx + (typ, sym)
     
     // Case: Fun/Val definition. 
-    case defn @ TermDefinition(_, Fun | ImmutVal | MutVal, _, pss, tps, sign, body, _, TermDefFlags(isMethod), modulefulness, annotations) =>
+    case defn @ TermDefinition(k = Fun | ImmutVal | MutVal) =>
       log(s"Resolving ${defn.k.desc} definition $defn")
       traverseTermDef(defn)
       ictx

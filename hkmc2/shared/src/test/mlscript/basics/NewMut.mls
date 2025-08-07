@@ -1,0 +1,188 @@
+:js
+
+
+class Foo with
+  val x = 0
+  fun change =
+    set x += 1
+
+
+:sjs
+let f = new Foo
+//│ JS (unsanitized):
+//│ let f, tmp; tmp = globalThis.Object.freeze(new Foo1()); f = tmp;
+//│ f = Foo { x: 0 }
+
+set
+  f.x = 1
+  f.y = 1
+
+:expect 0
+f.x
+//│ = 0
+
+:re
+f.change
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'x' of object '[object Object]'
+
+:expect 0
+f.x
+//│ = 0
+
+:re
+f.y
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+:sjs
+// :elt
+let f = new mut Foo
+//│ JS (unsanitized):
+//│ let f1, tmp1; tmp1 = new Foo1(); f1 = tmp1;
+//│ f = Foo { x: 0 }
+
+set
+  f.x = 1
+  f.y = 1
+
+f.change
+
+:expect 2
+f.x
+//│ = 2
+
+:expect 1
+f.y
+//│ = 1
+
+
+:e
+let f = mut new Foo
+//│ ═══[ERROR] Illegal position for 'mut' modifier.
+//│ f = Foo { x: 0 }
+
+:re
+new mut Foo.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+
+let f = new mut Foo()
+//│ f = Foo { x: 0 }
+
+set
+  f.x = 1
+  f.y = 1
+
+f.change
+
+:expect 2
+f.x
+//│ = 2
+
+:expect 1
+f.y
+//│ = 1
+
+
+new mut Foo().x
+//│ = 0
+
+new Foo().x
+//│ = 0
+
+
+
+class Foo(val x)
+
+
+let f = new Foo(0)
+//│ f = Foo(0)
+
+set f.x = 1
+
+:expect 0
+f.x
+//│ = 0
+
+
+let f = new mut Foo(0)
+//│ f = Foo(0)
+
+set f.x = 1
+
+:expect 1
+f.x
+//│ = 1
+
+
+let f = Foo(0)
+//│ f = Foo(0)
+
+set
+  f.x = 1
+  f.y = 1
+
+:expect 0
+f.x
+//│ = 0
+
+:re
+f.y
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+
+class Foo(mut val x) with
+  mut val y = 0
+
+
+let f = new Foo(0)
+//│ f = Foo(0)
+
+set
+  f.x = 1
+  f.y = 1
+
+// * Note that `mut val`s are backed by an internally mutable private field.
+
+:expect 1
+f.x
+//│ = 1
+
+:expect 1
+f.y
+//│ = 1
+
+
+
+let f = new Object with
+  val x = 12
+//│ f = $anon { x: 12 }
+
+set
+  f.x = 1
+  f.y = 1
+
+f.x
+//│ = 12
+
+:re
+f.y
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
+
+
+let f = new mut Object with
+  val x = 12
+//│ f = $anon { x: 12 }
+
+set
+  f.x = 1
+  f.y = 1
+
+f.x
+//│ = 1
+
+f.y
+//│ = 1
+
+

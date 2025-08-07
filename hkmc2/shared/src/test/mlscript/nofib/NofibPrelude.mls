@@ -7,7 +7,7 @@ object None extends Option
 
 fun fromSome(s) = if s is Some(x) then x
 
-data class Lazy[out A](init: () -> A) with
+class Lazy[out A](val init: () -> A) with
   mut val cached: Option[A] = None
   fun get() =
     if cached is
@@ -16,7 +16,7 @@ data class Lazy[out A](init: () -> A) with
         let v = init()
         set cached = Some(v)
         v
-fun lazy(x) = Lazy(x)
+fun lazy(x) = new Lazy(x)
 fun force(x) = if x is Lazy then x.Lazy#get()
 
 abstract class List[out T]: Cons[T] | Nil
@@ -274,14 +274,14 @@ fun map_lz(f, ls) = lazy of () =>
     LzNil then LzNil
     LzCons(h, t) then LzCons(f(h), map_lz(f, t))
 
-fun filter_lz(p, ls) = Lazy of () =>
+fun filter_lz(p, ls) = lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) and
       p(h) then LzCons(h, filter_lz(p, t))
       else force(filter_lz(p, t))
 
-fun nubBy_lz(eq, ls) = Lazy of () =>
+fun nubBy_lz(eq, ls) = lazy of () =>
   if force(ls) is
     LzNil then LzNil
     LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))

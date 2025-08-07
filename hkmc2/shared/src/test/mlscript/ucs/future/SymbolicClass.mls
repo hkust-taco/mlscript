@@ -24,3 +24,23 @@ fun map(f, xs) = if xs is
   x :: xs' then f(x) :: map(f, xs')
 
 
+// TODO?
+:re
+:sjs
+new 1 :: 2
+//│ JS (unsanitized):
+//│ let tmp; tmp = globalThis.Object.freeze(new 1()); Cons1(tmp, 2)
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a constructor
+
+// TODO?
+:re
+:sjs
+new (1 :: 2)
+//│ JS (unsanitized):
+//│ let tmp1; tmp1 = Cons1(1, 2); globalThis.Object.freeze(new tmp1())
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+
+new ::(1, 2)
+//│ = Cons(1, 2)
+
+

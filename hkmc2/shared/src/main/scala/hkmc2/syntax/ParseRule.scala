@@ -72,6 +72,11 @@ class ParseRules(using State):
     Blk(body)(k) ::
     Nil
   
+  def standaloneExprOrBlk[Rest, Res]: List[Alt[Tree]] =
+    standaloneExpr ::
+    Blk(ParseRule("block")(end(())))((l, _: Unit) => l) ::
+    Nil
+  
   val typeDeclTemplate: Alt[Opt[Tree]] = end(N)
   
   /* // * What we had before we allowed parsing juxtapositions
@@ -302,7 +307,7 @@ class ParseRules(using State):
         exprOrBlk(ParseRule("'open' declaration")(end(()))){
           case (body, _) => Open(body)}*),
     modified(`abstract`, Kw(`class`)(typeDeclBody(Cls))),
-    modified(`mut`),
+    Kw(`mut`)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)).map(Tree.Modified(`mut`, N, _)),
     Kw(`do`):
       ParseRule(s"`do` keyword")(
         exprOrBlk(ParseRule(s"`do` body")(end(()))):

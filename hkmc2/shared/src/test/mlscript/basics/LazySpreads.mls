@@ -23,13 +23,13 @@ fun buildPalindrome = case
 //│   lambda = (undefined, function (caseScrut) {
 //│     let n, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
-//│       return []
+//│       return globalThis.Object.freeze([])
 //│     } else {
 //│       n = caseScrut;
 //│       tmp = buildPalindrome();
 //│       tmp1 = n - 1;
 //│       tmp2 = tmp(tmp1);
-//│       return runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp2, n)
+//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp2, n))
 //│     }
 //│   });
 //│   return lambda
@@ -67,7 +67,7 @@ fun sum2 = case
 //│       tmp4 = tmp3(xs);
 //│       return tmp2 + tmp4
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   });
 //│   return lambda

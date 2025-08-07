@@ -23,7 +23,7 @@ fun main(h) =
 
 
 // task queue
-let tasks = []
+let tasks = mut []
 fun drain() =
   while tasks.length != 0 do
     tasks.pop()()

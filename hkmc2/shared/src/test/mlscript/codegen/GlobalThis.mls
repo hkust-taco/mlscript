@@ -26,9 +26,9 @@ if false then 0
 //│ if (scrut === true) {
 //│   0
 //│ } else {
-//│   throw new globalThis.Error("match error");
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 // * This one uses `globalThis.Error`
@@ -46,11 +46,11 @@ foo()
 //│   if (scrut1 === true) {
 //│     return 0
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 //│ foo()
-//│ ═══[RUNTIME ERROR] TypeError: globalThis.Error is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
 
 

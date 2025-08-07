@@ -8,7 +8,7 @@ data class Foo(arguments)
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo(arguments2) {
-//│   return new Foo.class(arguments2);
+//│   return globalThis.Object.freeze(new Foo.class(arguments2));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,
@@ -26,7 +26,7 @@ data class Foo(eval)
 //│ JS (unsanitized):
 //│ let Foo3;
 //│ Foo3 = function Foo(eval2) {
-//│   return new Foo.class(eval2);
+//│   return globalThis.Object.freeze(new Foo.class(eval2));
 //│ };
 //│ Object.defineProperty(Foo3, "class", {
 //│   enumerable: true,
@@ -44,7 +44,7 @@ data class Foo(static)
 //│ JS (unsanitized):
 //│ let Foo5;
 //│ Foo5 = function Foo(static2) {
-//│   return new Foo.class(static2);
+//│   return globalThis.Object.freeze(new Foo.class(static2));
 //│ };
 //│ Object.defineProperty(Foo5, "class", {
 //│   enumerable: true,
@@ -62,7 +62,7 @@ data class Foo(v')
 //│ JS (unsanitized):
 //│ let Foo7;
 //│ Foo7 = function Foo(v$_1) {
-//│   return new Foo.class(v$_1);
+//│   return globalThis.Object.freeze(new Foo.class(v$_1));
 //│ };
 //│ Object.defineProperty(Foo7, "class", {
 //│   enumerable: true,

@@ -86,7 +86,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     HandlerCtx(false, false, contNme, ctorThis, h.debugInfo.copy(debugNme), state =>
       blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
-          state.cls.selN(Tree.Ident("class")),
+          mut = true,
+          state.cls,
           Value.Lit(Tree.IntLit(state.uid)) :: Nil))
         .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
         .ret(state.res.asPath))
@@ -102,7 +103,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   
   private def rtThrowMsg(msg: Str) = Throw(
-    Instantiate(State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
+    Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
     Value.Lit(Tree.StrLit(msg)) :: Nil)
   )
   
@@ -312,7 +313,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
-      FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
+      FlowSymbol(s.nme) -> Instantiate(mut = true, localVarInfoPath,
         Value.Lit(Tree.StrLit(s.nme)) :: s.asPath :: Nil
       )
     val startSym = FlowSymbol("prev")
@@ -320,14 +321,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val body = blockBuilder
       .assign(startSym, h.debugInfo.prevLocalsFn match
-          case None => Value.Arr(Nil)
+          case None => Value.Arr(mut = true, Nil)
           case Some(value) => PureCall(value, Nil)
         )
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
-      .assign(thisInfo, Instantiate(fnLocalsPath,
+      .assign(thisInfo, Instantiate(mut = true, fnLocalsPath,
           Value.Lit(Tree.StrLit(h.debugInfo.debugNme))
-            :: Value.Arr(localsInfo.map(v => v._1.asPath.asArg))
+            :: Value.Arr(mut = false, localsInfo.map(v => v._1.asPath.asArg))
             :: Nil
         ))
       .assign(TempSymbol(N, ""), Call(startSym.asPath.selSN("push"), thisInfo.asPath.asArg :: Nil)(false, false))
@@ -374,10 +375,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           val args2 = args.mapConserve(applyArg)
           val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
           ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
-        case Assign(lhs, c @ Instantiate(cls, args), rest) =>
+        case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
           val cls2 = applyPath(cls)
           val args2 = args.mapConserve(applyPath)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
+          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
           ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult2(r: Result)(k: Result => Block): Block = r match
@@ -387,11 +388,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           val args2 = args.mapConserve(applyArg)
           val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-        case c @ Instantiate(cls, args) =>
+        case c @ Instantiate(mut, cls, args) =>
           val res = freshTmp("res")
           val cls2 = applyPath(cls)
           val args2 = args.mapConserve(applyPath)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
+          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
       override def applyPath(p: Path): Path = p match
@@ -454,7 +455,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val handlerBody = translateBlock(h.body, Set.empty, HandlerCtx(false, true,
       s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), state => blockBuilder
-        .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+        .assignFieldN(state.res.asPath.contTrace.last, nextIdent,
+          Instantiate(mut = true, state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
         .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
@@ -480,7 +482,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val body = blockBuilder
       .define(clsDefn)
-      .assign(h.lhs, Instantiate(Value.Ref(clsDefn.sym), Nil))
+      .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym), Nil))
       .rest(handlerBody)
     
     val defn = FunDefn(
@@ -594,7 +596,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       
       val localsRes = h.debugInfo.prevLocalsFn match
         case Some(value) => PureCall(value, Nil)
-        case None => Value.Arr(Nil)
+        case None => Value.Arr(mut = true, Nil)
       
       val getLocalsFnDef = FunDefn(
         S(clsSym),
@@ -623,12 +625,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       clsSym,
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
-      S(PlainParamList({
-        val p = Param(FldFlags.empty.copy(value = true), pcVar, N, Modulefulness.none)
+      N,
+      PlainParamList({
+        val p = Param(FldFlags.empty.copy(isVal = true), pcVar, N, Modulefulness.none)
         pcVar.decl = S(p)
         p
-      } :: Nil)),
-      Nil,
+      } :: Nil) :: Nil,
       S(paths.contClsPath),
       resumeFnDef :: debugMtds,
       Nil,

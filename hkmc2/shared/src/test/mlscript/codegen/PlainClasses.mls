@@ -20,17 +20,23 @@ Foo is Foo
 
 (new Foo) is Foo
 //│ JS (unsanitized):
-//│ let scrut1; scrut1 = new Foo1(); if (scrut1 instanceof Foo1) { true } else { false }
+//│ let scrut1;
+//│ scrut1 = globalThis.Object.freeze(new Foo1());
+//│ if (scrut1 instanceof Foo1) {
+//│   true
+//│ } else {
+//│   false
+//│ }
 //│ = true
 
 new Foo
 //│ JS (unsanitized):
-//│ new Foo1()
+//│ globalThis.Object.freeze(new Foo1())
 //│ = Foo
 
 new Foo()
 //│ JS (unsanitized):
-//│ new Foo1()
+//│ globalThis.Object.freeze(new Foo1())
 //│ = Foo
 
 Foo
@@ -86,13 +92,13 @@ let t = test()
 
 new t
 //│ JS (unsanitized):
-//│ new t()
+//│ globalThis.Object.freeze(new t())
 //│ > hi
 //│ = Foo
 
 new t()
 //│ JS (unsanitized):
-//│ new t()
+//│ globalThis.Object.freeze(new t())
 //│ > hi
 //│ = Foo
 
@@ -178,7 +184,7 @@ print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
 //│ let a, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│ tmp1 = new Foo10();
+//│ tmp1 = globalThis.Object.freeze(new Foo10());
 //│ a = tmp1;
 //│ tmp2 = Predef.print(a.x);
 //│ tmp3 = runtime.safeCall(a.foo(1));
@@ -198,10 +204,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.197: 	  val x = 1
+//│ ║  l.203: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.198: 	  val x = 2
+//│ ║  l.204: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -219,10 +225,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.220: 	  let x = 2
+//│ ║  l.226: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.219: 	  val x = 1
+//│ ║  l.225: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -246,7 +252,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.247: 	class Foo with val x = 1
+//│ ║  l.253: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;

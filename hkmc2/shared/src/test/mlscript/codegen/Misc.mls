@@ -23,9 +23,9 @@
 //│ = 3
 
 
-set [].0 = 1
+set (mut []).0 = 1
 
-let arr = []
+let arr = mut []
 set arr.0 = 1
 //│ arr = [1]
 

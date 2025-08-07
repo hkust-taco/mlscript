@@ -14,6 +14,9 @@ object Test with
 //│ const Test$class = class Test {
 //│   constructor() {
 //│     this.x = 12;
+//│     Object.defineProperty(this, "class", {
+//│     value: Test
+//│     })
 //│   }
 //│   foo() {
 //│     let tmp;
@@ -22,10 +25,7 @@ object Test with
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Test"]; 
-//│ }; Test1 = new Test$class;
-//│ Object.defineProperty(Test1, "class", {
-//│   value: Test$class
-//│ });
+//│ }; Test1 = globalThis.Object.freeze(new Test$class);
 
 Test
 //│ = Test { x: 12, class: object Test }
@@ -109,7 +109,7 @@ data class Cls(x) with
 //│ JS (unsanitized):
 //│ let Cls1;
 //│ Cls1 = function Cls(x3) {
-//│   return new Cls.class(x3);
+//│   return globalThis.Object.freeze(new Cls.class(x3));
 //│ };
 //│ Object.defineProperty(Cls1, "class", {
 //│   enumerable: true,

@@ -45,7 +45,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
   let
     i = 0
     n = text.length
-    ns = []
+    ns = mut []
   while i < n do
     let i' = text.indexOf("\n", i)
     if i' == -1 then

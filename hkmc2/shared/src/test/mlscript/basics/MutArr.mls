@@ -1,0 +1,35 @@
+:js
+
+
+:sjs
+let t = [0, 1, 2]
+//│ JS (unsanitized):
+//│ let t; t = globalThis.Object.freeze([ 0, 1, 2 ]);
+//│ t = [0, 1, 2]
+
+:re
+t.push(4)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot add property 3, object is not extensible
+
+// Has no effect, as t is frozen
+set t.[1] = 5
+
+t
+//│ = [0, 1, 2]
+
+
+:sjs
+let t = mut [0, 1, 2]
+//│ JS (unsanitized):
+//│ let t1; t1 = [ 0, 1, 2 ];
+//│ t = [0, 1, 2]
+
+t.push(4)
+//│ = 4
+
+set t.[1] = 5
+
+t
+//│ = [0, 5, 2, 4]
+
+

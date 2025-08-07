@@ -176,16 +176,16 @@ data object Cls(x) with
 //│ const Cls$class = class Cls {
 //│   constructor(x1) {
 //│     this.x = x1;
+//│     Object.defineProperty(this, "class", {
+//│     value: Cls
+//│     })
 //│   }
 //│   get huh() {
 //│     return this.x;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Cls"]; 
-//│ }; Cls1 = new Cls$class;
-//│ Object.defineProperty(Cls1, "class", {
-//│   value: Cls$class
-//│ });
+//│ }; Cls1 = globalThis.Object.freeze(new Cls$class);
 
 :e
 Cls.x
@@ -199,7 +199,7 @@ Cls.huh
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'huh' yielded 'undefined'
 
 let c = new Cls(123)
-//│ c = Cls { x: 123 }
+//│ c = Cls { x: 123, class: object Cls }
 
 c.x
 //│ = 123
@@ -253,11 +253,6 @@ oops
 // ——— ——— ———
 
 // TODO prevent explicit accesses to Unit, Int etc. from Prelude or elaborate them
-
-Unit
-//│ ╔══[ERROR] Name not found: Unit
-//│ ║  l.257: 	Unit
-//│ ╙──       	^^^^
 
 Int
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
@@ -314,13 +309,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.315: 	open Stack { ::, Nil }
+//│ ║  l.310: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.321: 	open Stack { (::), Nil }
+//│ ║  l.316: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -328,7 +323,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.329: 	1 :: Nil
+//│ ║  l.324: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -339,9 +334,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.339: 	mkStr of ... // hello
+//│ ║  l.334: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.340: 	"oops"
+//│ ║  l.335: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -364,22 +359,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.365: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.365: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] the constructor does not take any arguments but found 3
-//│ ║  l.374: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.369: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] the constructor does not take any arguments but found 1
-//│ ║  l.380: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.375: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -413,10 +408,51 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.413: 	  let bar(x: Str): Str = x + x
+//│ ║  l.408: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.414: 	  bar("test")
+//│ ║  l.409: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
+
+// ——— ——— ———
+
+:fixme // proper comoilation error
+:sjs
+module Foo(x)
+//│ JS (unsanitized):
+//│ let Foo5;
+//│ (class Foo4 {
+//│   static #x;
+//│   static {
+//│     Foo5 = Foo4;
+//│     Foo4.#x = x2;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Foo"]; 
+//│ });
+//│ ═══[RUNTIME ERROR] ReferenceError: x2 is not defined
+
+:fixme // proper comoilation error
+:sjs
+module Foo(val x)
+//│ JS (unsanitized):
+//│ let Foo7;
+//│ (class Foo6 {
+//│   static {
+//│     Foo7 = Foo6;
+//│     this.x = x2;
+//│   }
+//│   static toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["module", "Foo"]; 
+//│ });
+//│ ═══[RUNTIME ERROR] ReferenceError: x2 is not defined
+
+// ——— ——— ———
+
+// TODO support syntax?
+data class Foo(mut x)
+//│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
+//│ ║  l.453: 	data class Foo(mut x)
+//│ ╙──       	                   ^
 
 // ——— ——— ———

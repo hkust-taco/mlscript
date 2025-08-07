@@ -195,7 +195,7 @@ x + y
 //│   return Tuple1(g$this, h$this)
 //│ };
 //│ Tuple1 = function Tuple(a1, b1) {
-//│   return new Tuple.class(a1, b1);
+//│   return globalThis.Object.freeze(new Tuple.class(a1, b1));
 //│ };
 //│ Object.defineProperty(Tuple1, "class", {
 //│   enumerable: true,
@@ -608,12 +608,19 @@ fun f(es, vs) =
   new A
 //│ JS (unsanitized):
 //│ let A1, f23, A$;
-//│ A$ = function A$(v$_$0) {
+//│ A$ = function A$(isMut, v$_$0) {
 //│   let tmp19;
-//│   tmp19 = new A1(v$_$0);
+//│   if (isMut === true) {
+//│     tmp19 = new A1(v$_$0);
+//│   } else {
+//│     tmp19 = globalThis.Object.freeze(new A1(v$_$0));
+//│   }
 //│   return tmp19
 //│ };
 //│ A1 = class A {
+//│   #v$_$0;
+//│   get ["v'$0"]() { return this.#v$_$0; }
+//│   set ["v'$0"](value) { this.#v$_$0 = value; }
 //│   constructor(v$_$0) {
 //│     this["v'$0"] = v$_$0;
 //│     this.fld = this["v'$0"];
@@ -624,6 +631,6 @@ fun f(es, vs) =
 //│ f23 = function f(es, vs) {
 //│   let v$_;
 //│   v$_ = es;
-//│   return A$(v$_)
+//│   return A$(false, v$_)
 //│ };
 

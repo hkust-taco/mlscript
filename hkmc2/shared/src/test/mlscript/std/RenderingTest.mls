@@ -211,7 +211,7 @@ renderAsStr of globalThis.setImmediate
 
 // Test: simple circular reference.
 
-let a =
+let a = mut
   x: 0
   y: 1
 //│ a = {x: 0, y: 1}
@@ -224,10 +224,10 @@ a
 // Test: an object is referenced multiple times in a circular way.
 
 let tree =
-  left:
+  left: mut
     left: null
     right: null
-  right:
+  right: mut
     left: null
     right: null
 //│ tree = {left: {left: null, right: null}, right: {left: null, right: null}}
@@ -242,7 +242,7 @@ tree
 
 // If the same circular object appears multiple times, it should be rendered as
 // the same reference.
-let b = [a, a]
+let b = mut [a, a]
 //│ b = [{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1]
 
 b.push(b)
@@ -268,7 +268,7 @@ functionWithProperties.kind
 //           |__/
 // =============================
 
-let something = (x: 0)
+let something = mut { x: 0 }
 //│ something = {x: 0}
 
 Object.defineProperty(something, "y", enumerable: true, get: () => 42)
@@ -387,8 +387,10 @@ pattern Null = null
 renderAsStr of Null
 //│ = "pattern Null"
 
+// FIXME?
+:re
 renderAsStr of Null.class
-//│ = "pattern Null"
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'class' yielded 'undefined'
 
 declare class Iterator
 

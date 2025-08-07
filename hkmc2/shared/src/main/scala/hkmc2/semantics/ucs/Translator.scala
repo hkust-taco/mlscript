@@ -171,10 +171,11 @@ class Translator(val elaborator: Elaborator)(using State, Ctx) extends Desugarin
   /** Create a function definition from the given UCS splits. */
   private def makeMatcher(name: Str, scrut: VarSymbol, topmost: Split)(using Raise): TermDefinition =
     val sym = BlockMemberSymbol(name, Nil)
+    val tsym = TermSymbol(Fun, N, Tree.Ident(name))
     val ps = PlainParamList(Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil)
     val body = Term.IfLike(Keyword.`if`, topmost)
     val res = FlowSymbol(s"result of $name")
-    TermDefinition(N, Fun, sym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Modulefulness.none, Nil)
+    TermDefinition(Fun, sym, tsym, ps :: Nil, N, N, S(body), res, TermDefFlags.empty, Modulefulness.none, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.

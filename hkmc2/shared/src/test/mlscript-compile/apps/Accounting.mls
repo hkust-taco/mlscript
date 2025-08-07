@@ -19,7 +19,7 @@ data class Accounting with ...
 
 fun display(amt): Str = (amt / 1000).toFixed(1)
 
-val warnings = []
+val warnings = mut []
 
 
 data class Project(val num: Str)
@@ -33,7 +33,7 @@ data class Line(val name: Str, val proj: Project, val starting_balance: Num, val
     if balance > 10_000 do
       warnings.push of "> **❗️** Unspent balance of " ~ name ~ ": `" ~ display(balance) ~ "`"
 
-val lines = []
+val lines = mut []
 
 fun mkLine(nme, proj, starting_balance, matchable) =
   let line = Line(nme, proj, starting_balance, matchable)

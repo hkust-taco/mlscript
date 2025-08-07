@@ -88,6 +88,7 @@ enum Term extends Statement:
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term with ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
+  case Mut(underlying: Tup | Rcd | New)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
   case Lam(params: ParamList, body: Term)
@@ -95,7 +96,7 @@ enum Term extends Statement:
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
-  case Rcd(stats: Ls[Statement])
+  case Rcd(mut: Bool, stats: Ls[Statement])
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, argss: Ls[Ls[Term]], rft: Opt[ClassSymbol -> ObjBody])
@@ -216,11 +217,12 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case SynthSel(pre, _) => pre :: Nil
     case DynSel(o, f, _) => o :: f :: Nil
     case Tup(fields) => fields.flatMap(_.subTerms)
+    case Mut(und) => und :: Nil
     case CtxTup(fields) => fields.flatMap(_.subTerms)
     case IfLike(_, body) => body.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
-    case Rcd(stats) => stats.flatMap(_.subTerms)
+    case Rcd(mut, stats) => stats.flatMap(_.subTerms)
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
     case New(cls, argss, rft) => cls :: argss.flatten ::: rft.toList.flatMap(_._2.blk.subTerms)
@@ -238,7 +240,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case SetRef(lhs, rhs) => lhs :: rhs :: Nil
     case Deref(term) => term :: Nil
-    case TermDefinition(_, k, _, pss, tps, sign, body, res, _, _, annotations) =>
+    case TermDefinition(_, _, _, pss, tps, sign, body, res, _, _, annotations) =>
       pss.toList.flatMap(_.subTerms) ::: tps.getOrElse(Nil).flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: cls.annotations.flatMap(_.subTerms)
@@ -306,9 +308,8 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
       .mkString("( ", "", ")")
-    case Rcd(stats) =>
-      (stats.map(_.showDbg + "; "))
-      .mkString("{ ", "", "}")
+    case Rcd(mut, stats) =>
+      (if mut then "mut " else "") + stats.map(_.showDbg + "; ").mkString("{ ", "", "}")
     case Quoted(term) => s"""code"${term.showDbg}""""
     case Unquoted(term) => s"$${${term.showDbg}}"
     case New(cls, args, rft) =>
@@ -328,16 +329,18 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
+    case Mut(und) => s"mut ${und.showDbg}"
     case CtxTup(fields) => fields.map(_.showDbg).mkString("‹using›[", ", ", "]")
-    case TermDefinition(_, k, sym, pss, tps, sign, body, res, flags, _, _) => s"${flags} ${k.str} ${sym}${
-      tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
-    }${
-      pss.map(_.showDbg).mkString("")
-    }${sign.fold("")(": "+_.showDbg)}${
-      body match
-        case S(x) => " = " + x.showDbg
-        case N => ""
-      }"
+    case TermDefinition(k, sym, tsym, pss, tps, sign, body, res, flags, _, _) =>
+      s"${flags} ${k.str} ${sym}${
+        tps.map(_.map(_.showDbg)).mkStringOr(", ", "[", "]")
+      }${
+        pss.map(_.showDbg).mkString("")
+      }${sign.fold("")(": "+_.showDbg)}${
+        body match
+          case S(x) => " = " + x.showDbg
+          case N => ""
+        }"
     case cls: ClassLikeDef =>
       s"${cls.kind} ${cls.sym.nme}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
@@ -406,9 +409,9 @@ object Modulefulness:
   val none = Modulefulness(N)(false)
 
 final case class TermDefinition(
-    owner: Opt[InnerSymbol],
-    k: TermDefKind,
+    k: TermDefKind, // * The only reason we store it here in addition to tsym.k is for refining patmats
     sym: BlockMemberSymbol,
+    tsym: TermSymbol,
     params: Ls[ParamList],
     tparams: Opt[Ls[Param]],
     sign: Opt[Term],
@@ -418,6 +421,8 @@ final case class TermDefinition(
     modulefulness: Modulefulness,
     annotations: Ls[Annot],
 ) extends CompanionValue:
+  require(k is tsym.k)
+  val owner = tsym.owner
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true
@@ -439,7 +444,7 @@ case class ObjBody(blk: Term.Blk):
     case td: TermDefinition if td.k is syntax.Fun => L(td)
     case s => R(s)
   lazy val publicFlds: Ls[TermDefinition] = nonMethods.collect:
-    case td @ TermDefinition(k = (_: syntax.Val)) => td
+    case td: TermDefinition if td.k.isInstanceOf[syntax.Val] => td
   
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
   override def toString: String = blk.showDbg
@@ -585,23 +590,22 @@ case class TypeDef(
 
 
 // TODO Store optional source locations for the flags instead of booleans
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool, pat: Bool, value: Bool):
-  def showDbg: Str = 
+final case class FldFlags(mut: Bool, spec: Bool, pat: Bool, isVal: Bool):
+  def show: Str = 
     val flags = Buffer.empty[String]
     if mut then flags += "mut"
     if spec then flags += "spec"
-    if genGetter then flags += "gen"
     if pat then flags += "pattern"
-    if value then flags += "val"
+    if isVal then flags += "val"
     flags.mkString(" ")
-  override def toString: String = "‹" + showDbg + "›"
+  override def toString: String = "‹" + show + "›"
 
 object FldFlags:
-  val empty: FldFlags = FldFlags(false, false, false, false, false)
+  val empty: FldFlags = FldFlags(false, false, false, false)
   object benign:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
-      !flags.spec && !flags.genGetter
+      !flags.spec
 
 
 sealed abstract class Elem:
@@ -630,7 +634,7 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     (if isCovariant then
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
-    flags.showDbg + sym
+    flags.show + sym
 
 
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness) 
@@ -669,7 +673,7 @@ object ParamListFlags:
 trait FldImpl extends AutoLocated:
   self: Fld =>
   def children: Ls[Located] = self.term :: self.asc.toList ::: Nil
-  def showDbg: Str = flags.showDbg + self.term.showDbg
+  def showDbg: Str = flags.show + self.term.showDbg
   def describe: Str =
     (if self.flags.spec then "specialized " else "") +
     (if self.flags.mut then "mutable " else "") +

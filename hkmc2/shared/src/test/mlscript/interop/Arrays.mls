@@ -10,9 +10,36 @@ let arr = [true, false]
 arr.map(_ === false)
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
-:todo
+:sjs
 arr.map((e, ...) => e === false)
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(12,15,Arrays.mls:+14)),None) (of class hkmc2.syntax.Tree$Spread)
+//│ JS (unsanitized):
+//│ let lambda1;
+//│ lambda1 = (undefined, function (e, ..._) {
+//│   return e === false
+//│ });
+//│ runtime.safeCall(arr.map(lambda1))
+//│ = [false, true]
+
+:sjs
+arr.map((_, ...) => 1)
+//│ JS (unsanitized):
+//│ let lambda2;
+//│ lambda2 = (undefined, function (_, ..._1) {
+//│   return 1
+//│ });
+//│ runtime.safeCall(arr.map(lambda2))
+//│ = [1, 1]
+
+:e
+arr.map((..., ...) => 1)
+//│ ═══[ERROR] Spread parameters must be the last in the parameter list.
+//│ = [1, 1]
+
+:e
+:re
+arr.map((..., e) => e)
+//│ ═══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 3
 
 arr.map(pass1(_ === false))
 //│ = [false, true]

@@ -16,7 +16,7 @@ let s = Example.f
 //│ JS:
 //│ selRes = Example1.f;
 //│ if (selRes === undefined) {
-//│   throw new globalThis.Error("Access to required field 'f' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'f' yielded 'undefined'"))
 //│ }
 //│ s = selRes;
 //│ block$res3 = undefined;

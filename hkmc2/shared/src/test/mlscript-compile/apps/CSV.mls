@@ -17,7 +17,7 @@ data class CSV(strDelimiter) with ...
 set strDelimiter ||= ","
 
 // TODO allow better code layout/formatting
-val objPattern = new RegExp of
+val objPattern = new mut RegExp of
   // Delimiters.
   "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
     // Quoted fields.
@@ -30,7 +30,7 @@ val objPattern = new RegExp of
 fun toArrays(strData) =
   
   // Create an array to hold our data. Give the array a default empty first row.
-  let arrData = [[]]
+  let arrData = mut [mut []]
   
   // Keep looping over the regular expression matches until we can no longer find a match.
   while
@@ -45,7 +45,7 @@ fun toArrays(strData) =
       // If id does not, then we know that this delimiter is a row delimiter.
       if strMatchedDelimiter.length && strMatchedDelimiter != strDelimiter do
         // Since we have reached a new row of data, add an empty row to our data array.
-        arrData.push([])
+        arrData.push(mut [])
       
       // Now that we have our delimiter out of the way,
       // let's check to see which kind of value we captured (quoted or unquoted).
@@ -54,7 +54,7 @@ fun toArrays(strData) =
         then
           // We found a quoted value. When we capture this value, unescape any double quotes.
           arrMatches.2.replace of
-            new RegExp("\"\"", "g")
+            new mut RegExp("\"\"", "g")
             "\""
         else
           // We found a non-quoted value.
@@ -75,7 +75,7 @@ fun toArrays(strData) =
     strDelimiter = (strDelimiter || ",");
 
     // Create a regular expression to parse the CSV values.
-    var objPattern = new RegExp(
+    var objPattern = new mut RegExp(
       (
         // Delimiters.
         "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
@@ -130,7 +130,7 @@ fun toArrays(strData) =
         // We found a quoted value. When we capture
         // this value, unescape any double quotes.
         var strMatchedValue = arrMatches[ 2 ].replace(
-          new RegExp( "\"\"", "g" ),
+          new mut RegExp( "\"\"", "g" ),
           "\""
           );
 

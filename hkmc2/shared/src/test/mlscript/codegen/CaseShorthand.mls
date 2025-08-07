@@ -19,7 +19,7 @@ x => if x is
 //│   if (x === 0) {
 //│     return true
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
 //│ lambda2
@@ -33,7 +33,7 @@ case 0 then true
 //│   if (caseScrut === 0) {
 //│     return true
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
 //│ lambda3
@@ -94,7 +94,7 @@ val isDefined = case
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
 //│ tmp6 = lambda12;

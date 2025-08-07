@@ -86,7 +86,7 @@ else foo = 1
 //│ if (scrut === true) {
 //│   foo1
 //│ } else {
-//│   throw new globalThis.Error("match error");
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ foo = undefined
 

@@ -107,7 +107,7 @@ let Predef1;
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp);
+    throw globalThis.Error(tmp)
   } 
   static get notImplementedError() {
     throw globalThis.Error("Not implemented");
@@ -136,7 +136,7 @@ let Predef1;
             tmp4 = runtime.safeCall(f13(tmp3, init));
             init = tmp4;
             tmp5 = runtime.Unit;
-            continue tmp6;
+            continue tmp6
           } else {
             tmp5 = runtime.Unit;
           }

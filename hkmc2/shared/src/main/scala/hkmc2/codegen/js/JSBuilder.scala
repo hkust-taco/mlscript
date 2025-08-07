@@ -7,7 +7,7 @@ import utils.*
 import document.*
 
 import hkmc2.Message.MessageContext
-import hkmc2.syntax.{Tree, ImmutVal}
+import hkmc2.syntax.{Tree, MutVal, ImmutVal}
 import hkmc2.semantics.*
 import Elaborator.{State, Ctx}
 import hkmc2.codegen.Value.Lam
@@ -39,6 +39,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     + (";" -> ",")
   )
   val needsParens: Set[Str] = Set(",")
+  
+  val freeze = "globalThis.Object.freeze"
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -94,8 +96,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case _: Value.Lam => doc"(${result(r)})"
     case _ => result(r)
   
-  def fieldSelect(s: Str): Document =
-    if JSBuilder.isValidFieldName(s) then doc".$s"
+  def fieldSelect(s: Str): Document = escapeField(s, ".")
+  def escapeField(s: Str, defaultPrefix: Str): Document =
+    if JSBuilder.isValidFieldName(s) then doc"$defaultPrefix$s"
     else s.toIntOption match
       case S(index) => s"[$index]"
       case N => s"[${JSBuilder.makeStringLiteral(s)}]"
@@ -155,23 +158,26 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       if ai
       then doc"${result(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
-    case Instantiate(cls, as) =>
-      doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
-    case Value.Arr(es) if es.isEmpty => doc"[]"
-    case Value.Arr(es) =>
-      val lazyConcat = es.exists(!_.spread.getOrElse(true))
-      if lazyConcat then
-       doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
-      else
-       doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
-    case Value.Rcd(flds) =>
-      doc"{ #  #{ ${
-        flds.map:
-          case RcdArg(S(idx), v) =>
-            doc"${result(idx)}: ${result(v)}"
-          case RcdArg(N, v) => doc"...${result(v)}"
-        .mkDocument(", ")
-      } #}  # }"
+    case Instantiate(mut, cls, as) =>
+      val inner = doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
+      if mut then inner else s"$freeze(${inner})"
+    case Value.Arr(mut, es) if es.isEmpty => if mut then "[]" else s"$freeze([])"
+    case Value.Arr(mut, es) =>
+      val inner =
+        val lazyConcat = es.exists(!_.spread.getOrElse(true))
+        if lazyConcat
+        then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
+        else doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
+      if mut then inner else s"$freeze(${inner})"
+    case Value.Rcd(mut, flds) =>
+      val inner = doc"{ #  #{ ${
+          flds.map:
+            case RcdArg(S(idx), v) =>
+              doc"${result(idx)}: ${result(v)}"
+            case RcdArg(N, v) => doc"...${result(v)}"
+          .mkDocument(", ")
+        } #}  # }"
+      if mut then inner else s"$freeze(${inner})"
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
@@ -188,11 +194,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       def mkThis(sym: InnerSymbol): Document =
         result(Value.This(sym))
       val resJS = defn match
-      case ValDefn(own, k, sym, p) =>
+      case ValDefn(tsym, sym, p) =>
         val sym = defn.sym
         // * Currently we allow `val` outside of object/module scopes,
         // * in which case it has no owner and is just a glorified local variable rather than a field.
-        own match
+        tsym.owner match
         case N =>
           doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
@@ -219,36 +225,52 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             else
               // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
               doc"${getVar(sym)} = (undefined, function ($params) ${ braced(bodyDoc) });"
-          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, _pubFlds, preCtor, ctor) =>
-            // * Note: `_pubFlds` is not used because in JS, fields are not declared
+          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, pubFlds, preCtor, ctor) =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
             val ctorFields = ctorParams.filter: p =>
               p._1.decl match
-              case S(Param(flags = FldFlags(value = true))) => true
+              case S(Param(flags = FldFlags(isVal = true))) => true
               case _ => false
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
-
+            
             val isModule = kind is syntax.Mod
             val mtdPrefix = if isModule then "static " else ""
-
+            
+            // * Note: the non-mut-val parts of `pubFlds` are not used because in JS, fields are not declared
+            val mutPubFields = 
+              pubFlds.collect:
+                case (_, sym) if sym.k is MutVal =>
+                  sym -> TermSymbol(
+                    syntax.LetBind, S(isym), Tree.Ident(sym.nme))
+            
+            val allPrivFlds = privFlds ++ mutPubFields.map(_._2)
+            
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
-              privFlds.map: fld =>
+              val privDecls = allPrivFlds.map: fld =>
                   val nme = scp.allocateName(fld)
                   doc" # $mtdPrefix#$nme;"
-                .mkDocument(doc"")
+              val accessors = mutPubFields.flatMap: (valSym, letSym) =>
+                doc" # get ${escapeField(valSym.name, "")}() { return ${getVar(letSym)}; }" ::
+                  doc" # set ${escapeField(valSym.name, "")}(value) { ${getVar(letSym)} = value; }" ::
+                  Nil
+              (privDecls ::: accessors).mkDocument(doc"")
             val preCtorCode = body(preCtor, true)
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}"
+            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}${
+                kind match
+                case syntax.Obj =>
+                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym)}")}"
+                case _ => ""
+              }"
             
             // If there are no ctor params, pop one param list off the aux params
             val (newCtorAuxParams, initialCtorParams) = paramsOpt match
               case None => ctorAuxParams match
                 case head :: next => (next, head)
                 case Nil => (ctorAuxParams, Nil)
-              
               case Some(_) => (ctorAuxParams, ctorParams)
-
+            
             val ctorAux = if newCtorAuxParams.isEmpty then
               ctorCode
             else
@@ -257,15 +279,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               val ctorBraced = doc"${ braced(newCtorCode) }"
               val funBod = pss.foldRight(ctorBraced):
                 case (psDoc, doc) => doc"(${psDoc.mkDocument(", ")}) => $doc"
-
               doc" # return $funBod"
             
             val ctorBod = if isModule then
               ownr match
               case S(owner) =>
-                braced(doc" # ${result(Value.Ref(owner))}.${sym.nme} = ${getVar(isym)};$ctorCode")
+                braced(doc" # ${result(Value.Ref(owner))}.${sym.nme} = ${getVar(isym)};$ctorAux")
               case N =>
-                braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorCode")
+                braced(doc" # ${getVar(sym)} = ${getVar(isym)};$ctorAux")
             else
               braced(ctorAux)
             
@@ -274,6 +295,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               else doc"constructor(${
                   initialCtorParams.unzip._2.mkDocument(", ")
                 })"
+            
             val clsJS = doc"class ${scope.lookup_!(isym)}${
                 par.map(p => s" extends ${result(p)}").getOrElse("")
               } { #{ ${
@@ -315,12 +337,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   kind.desc.escaped}, ${sym.nme.escaped}${
                   if (kind is syntax.Cls) && paramsOpt.isDefined then
                     doc", [${ctorParams.map { (p, _) => p.decl match
-                      case S(Param(flags = FldFlags(value = true))) => doc"${p.name.escaped}"
+                      case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
                       case S(_) | N => doc"null"
                     }.mkDocument(", ")}]"
                   else doc""
                 }]; """
               } #}  # }"
+            
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
               lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
               ownr match
@@ -329,14 +352,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 // doc"${mkThis(owner)}.${sym.nme} = new ${clsJS}"
                 if isModule
                 then doc"(${clsJS});"
-                else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = new ${clsTmp
-                  }; # ${defineProperty(doc"${mkThis(owner)}.${sym.nme}", "class", clsTmp)};"
+                else doc"const $clsTmp = ${clsJS}; # ${mkThis(owner)}.${sym.nme} = $freeze(new ${clsTmp});"
               case N =>
                 val v = getVar(sym)
                 if isModule
                 then doc"(${clsJS});"
-                else doc"const $clsTmp = ${clsJS}; ${v} = new ${clsTmp
-                  }; # ${defineProperty(v, "class", clsTmp)};"
+                else doc"const $clsTmp = ${clsJS}; ${v} = $freeze(new ${clsTmp});"
             else
               val paramsAll = paramsOpt match
                 case None => auxParams
@@ -348,7 +369,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   val pss = pss_.map(setupFunction(N, _, End())._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
                     case (doc, ps) => doc"${doc}(${ps})"
-                  val bod = braced(doc" # return new ${sym.nme}.class$paramsDoc;")
+                  val inner = doc"new ${sym.nme}.class$paramsDoc"
+                  val bod = braced(doc" # return $freeze($inner);")
                   val funBod = pss.foldRight(bod):
                     case (psDoc, doc_) => doc"($psDoc) => $doc_"
                   val funBodRet = if pss.isEmpty then funBod else braced(doc" # return $funBod")
@@ -375,11 +397,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   doc"${getVar(sym)} = ${f}; # ${defineProperty(getVar(sym),
                     "class", clsJS, enumerable = true)};"
                 case N => doc"${getVar(sym)} = ${clsJS};"
+            
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
             scope.thisProxyDefined = true
             doc"const $proxy = this; # $res${returningTerm(rst, endSemi)}"
-          case _ => doc"$res${returningTerm(rst, endSemi = false)}"
+          case _ => doc"$res${returningTerm(rst, endSemi)}"
       doc" # $resJS"
     case Return(Value.Lit(UnitLit(false)), false) => doc" # return${mkSemi}"
     case Return(res, true) => doc" # ${result(res)}${mkSemi}"
@@ -428,13 +451,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc" # /* $msg */"
     
     case Throw(res) =>
-      doc" # throw ${result(res)};"
+      doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
-      doc" # break ${getVar(lbl)};"
+      doc" # break ${getVar(lbl)}${mkSemi}"
     
     case Continue(lbl) =>
-      doc" # continue ${getVar(lbl)};"
+      doc" # continue ${getVar(lbl)}${mkSemi}"
     
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)
