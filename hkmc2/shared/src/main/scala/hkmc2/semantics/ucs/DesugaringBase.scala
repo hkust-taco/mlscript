@@ -39,7 +39,7 @@ trait DesugaringBase(using Ctx, State):
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)(Nil)
+    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
@@ -47,7 +47,7 @@ trait DesugaringBase(using Ctx, State):
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)(Nil)
+    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
   protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")

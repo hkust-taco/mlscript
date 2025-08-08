@@ -457,20 +457,14 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
     )(fallback: Split): Sequel = ctx =>
       val scrutinees = scrutSymbol.getSubScrutinees(args.size)
       val matches = scrutinees.iterator.zip(args).map:
-        case (symbol, tree) =>
+        case (symbol, tree) => tree match
           // We only elaborate arguments marked with `pattern` keyword. This is
           // due to a technical limitation that the desugarer generates flat
           // patterns on the fly and we don't know whether the argument should
-          // be interpreted as a sub-pattern or a pattern argument.
-          val pattern = tree match
-            case TypeDef(syntax.Pat, body, N) =>
-              val pattern = elaborator.pattern(body)
-              val compiler = new ups.NaiveCompiler(using tl)
-              S((pattern, compiler.compileAnonymousPattern(Nil, Nil, pattern)))
-            case td @ TypeDef(k = syntax.Pat) =>
-              error(msg"Ill-formed pattern argument" -> td.toLoc); N
-            case _ => N
-          Argument(symbol, tree, pattern)
+          // be interpreted as a sub-pattern or a pattern argument. This can be
+          // solved after we rewrite the desugarer using `Pattern`.
+          case TypeDef(syntax.Pat, body, _) => Argument(symbol, elaborator.pattern(body))
+          case _: Tree => Argument(symbol, tree)
       .toList
       Branch(
         ref,
@@ -514,12 +508,12 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
         val (wrapRest, restMatches) = rest match
           case S((kw, rest, last)) =>
             val (wrapLast, reversedLastMatches) = last.reverseIterator.zipWithIndex
-              .foldLeft[(Split => Split, Ls[(BlockLocalSymbol, Tree)])]((identity, Nil)):
+              .foldLeft[(Split => Split, Ls[Argument.Term])]((identity, Nil)):
                 case ((wrapInner, matches), (pat, lastIndex)) =>
                   val sym = scrutSymbol.getTupleLastSubScrutinee(lastIndex)
                   val wrap = (split: Split) =>
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
-                  (wrap, (sym, pat) :: matches)
+                  (wrap, Argument(sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
             val sliceFn = kw match
               case Keyword.`..` => tupleLazySlice
@@ -530,21 +524,21 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
                 val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
                   Split.Let(sym, app(sliceFn, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
-                (wrap, (sym, pat) :: lastMatches)
+                (wrap, Argument(sym, pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
-        val (wrap, matches) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
-          case ((pat, i), (wrapInner, matches)) =>
+        val (wrap, arguments) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):
+          case ((pat, i), (wrapInner, arguments)) =>
             val sym = scrutSymbol.getTupleLeadSubScrutinee(i)
             val wrap = (split: Split) =>
               // TODO: Changing from the following line in #318 breaks some LLIR difftests (marked :todo)
               // Split.Let(sym, Term.SynthSel(ref, Ident(s"$i"))(N), wrapInner(split))
               Split.Let(sym, callTupleGet(ref, i, sym), wrapInner(split))
-            (wrap, (sym, pat) :: matches)
+            (wrap, Argument(sym, pat) :: arguments)
         Branch(
           ref,
           FlatPattern.Tuple(lead.length + rest.fold(0)(_._3.length), rest.isDefined)(output),
           // The outermost is a tuple, so pattern arguments are not possible.
-          wrap(subMatches(matches.map { case (s, t) => Argument(s, t, N) }, sequel)(Split.End)(ctx))
+          wrap(subMatches(arguments, sequel)(Split.End)(ctx))
         ) ~: fallback
       // Negative numeric literals
       case App(Ident("-"), Tup(IntLit(value) :: Nil)) => fallback => ctx =>
@@ -651,9 +645,9 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
       post = (r: Split) => s"subMatches >>> ${r.showDbg}"
     ):
       sequel(ctx)
-    case Argument(_, Under(), _) :: rest => subMatches(rest, sequel) // Skip wildcards
-    case Argument(_, _, S(_)) :: rest => subMatches(rest, sequel) // Skip pattern arguments
-    case Argument(scrutinee, tree, _) :: rest => fallback => trace(
+    case (Argument.Term(_, Under()) | Argument.Pattern(_, _)) :: rest =>
+      subMatches(rest, sequel) // Skip pattern arguments and wildcards
+    case Argument.Term(scrutinee, tree) :: rest => fallback => trace(
       pre = s"subMatches (nested) <<< $scrutinee is $tree",
       post = (r: Sequel) => s"subMatches (nested) >>>"
     ):

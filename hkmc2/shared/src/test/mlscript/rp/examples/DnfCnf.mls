@@ -123,4 +123,4 @@ print of isDeepDnf of cnf6
 //│ > false
 
 pattern Cnf'(pattern P) = And(Cnf'(pattern P), Cnf'(pattern P))
-pattern DnfOrCnf = Dnf'(DnfOrCnf) | Cnf'(DnfOrCnf)
+pattern DnfOrCnf = Dnf'(pattern DnfOrCnf) | Cnf'(pattern DnfOrCnf)

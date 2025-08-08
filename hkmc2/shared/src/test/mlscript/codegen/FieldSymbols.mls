@@ -90,10 +90,9 @@ case
 //│               sym = member:Foo
 //│               iargsLs = N
 //│             arguments = S of Ls of 
-//│               Argument:
+//│               Term:
 //│                 scrutinee = $param0
 //│                 tree = Ident of "a"
-//│                 pattern = N
 //│             mode = Default
 //│             refined = false
 //│           continuation = Let:

@@ -127,15 +127,13 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
                     argumentOutput, // TODO: Combine `outerOutput` and `argumentOutput`
                     outerBindings ++ argumentBindings),
                   Split.End)
-              val theArgument = FlatPattern.Argument(subScrutinee, Tree.Empty().withLocOf(argument), N)
+              val theArgument = FlatPattern.Argument(subScrutinee, Tree.Empty().withLocOf(argument))
               (theArgument :: theArguments, makeThisSplit)
           .mapFirst(S(_))
         // For pattern arguments for higher-order patterns, we generate the
         // inline objects with `unapply` and `unapplyStringPrefix` methods.
         val arguments0 = patternArguments.iterator.zipWithIndex.map: (pattern, index) =>
-          val patternSymbol = TempSymbol(N, s"patternArgument$index$$")
-          val patternObject = compileAnonymousPattern(Nil, Nil, pattern)
-          FlatPattern.Argument(patternSymbol, Tree.Empty().withLocOf(pattern), S((pattern, patternObject)))
+          FlatPattern.Argument(TempSymbol(N, s"patternArgument$index$$"), pattern)
         .toList
         val theArguments = arguments1.fold(if arguments0.isEmpty then N else S(arguments0)):
           case arguments => S(arguments0 ::: arguments)
@@ -148,7 +146,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         // pattern or not.
         val outputSymbol = TempSymbol(N, "output")
         val consequent = makeChainedConsequent(outputSymbol.toScrut, Map.empty)
-        Branch(scrutinee(), FlatPattern.ClassLike(target, theArguments, MatchMode.Default, false)(Tree.Dummy, outputSymbol :: Nil), consequent) ~: alternative
+        Branch(scrutinee(), FlatPattern.ClassLike(target, theArguments, outputSymbol :: Nil), consequent) ~: alternative
       case Composition(true, left, right) =>
         makeMatchSplit(scrutinee, left) | makeMatchSplit(scrutinee, right)
       case Composition(false, left, right) => (makeConsequent, alternative) =>
@@ -181,6 +179,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, Map.empty)) ~~: alternative
       case Concatenation(left, right) => (makeConsequent, alternative) =>
+        log(s"Concatenation")
         makeStringPrefixMatchSplit(scrutinee, left)(
           (consumedOutput, remainingOutput, bindingsFromConsumed) =>
             makeMatchSplit(remainingOutput, right)(
@@ -298,37 +297,56 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       scrutinee: Scrut,
       pattern: SP,
   )(using Raise): MakePrefixSplit = pattern match
-    case Constructor(target, patternArguments, arguments) =>
-      // TODO: Handle `patternArguments` and `arguments` accordingly.
-      // 
-      // This case is very different from the `Constructor` case in
-      // `makeMatchSplit` because we know the `scrutinee` is a string.
-      // Hence, the match is acceptable only if `target` is a pattern that
-      // also matches a string. If `target` is a class or object, we should
-      // directly reject.
-      // 
-      // However, we do not know whether `target` is a pattern or not until
-      // the lowering stage. As discussed, we will move `NaiveCompiler` to the
-      // lowering stage.
-      (makeConsequent, alternative) =>
-        val outputSymbol = TempSymbol(N, "output") // Denotes the pattern's output.
-        val remainingSymbol = TempSymbol(N, "remaining") // Denotes the remaining value.
-        // This is just a temporary solution. After moving `NaiveCompiler` to
-        // the lowering stage, it should be implemented correctly.
-        val argumentVariables = arguments.fold(Map.empty: BindingMap):
-          _.foldLeft(Map.empty: BindingMap):
-            case (acc, pattern) => acc ++ pattern.variables.symbols.map: symbol =>
-              symbol -> symbol.toScrut
-        log(s"argumentVariables of ${pattern.showDbg} are ${argumentVariables.keys.map(_.nme).mkString(", ")}")
-        val consequent = makeConsequent(outputSymbol.toScrut, remainingSymbol.toScrut, argumentVariables)
-        val mode = MatchMode.StringPrefix(outputSymbol, remainingSymbol)
-        val theArguments = patternArguments.iterator.zipWithIndex.map: (pattern, index) =>
-          val patternSymbol = TempSymbol(N, s"patternArgument$index$$")
-          val patternObject = compileAnonymousPattern(Nil, Nil, pattern)
-          FlatPattern.Argument(patternSymbol, Tree.Empty().withLocOf(pattern), S((pattern, patternObject)))
-        .toList
-        val thePattern = FlatPattern.ClassLike(target, S(theArguments), mode, false)(Tree.Dummy, Nil)
-        Branch(scrutinee(), thePattern, consequent) ~: alternative
+    case Constructor(target, patternArguments, arguments) => target.symbol match
+      // The case when the target refers to a pattern parameter.
+      case S(symbol: VarSymbol) => symbol.decl match
+        case S(param @ Param(flags = FldFlags(pat = true))) =>
+          (makeConsequent, alternative) =>
+            val outputSymbol = TempSymbol(N, "output") // Denotes the pattern's output.
+            val remainingSymbol = TempSymbol(N, "remaining") // Denotes the remaining value.
+            val mode = MatchMode.StringPrefix(outputSymbol, remainingSymbol)
+            val thePattern = FlatPattern.ClassLike(target, N, mode, false)(Tree.Dummy, Nil)
+            val consequent = makeConsequent(outputSymbol.toScrut, remainingSymbol.toScrut, Map.empty)
+            Branch(scrutinee(), thePattern, consequent) ~: alternative
+        case S(_) | N => rejectPrefixSplit
+      case S(symbol) => symbol.asPat match
+        // The case when the target refers to a pattern symbol.
+        case S(symbol: PatternSymbol) =>
+          (makeConsequent, alternative) =>
+            val defn = symbol.defn.getOrElse(die)
+            val outputSymbol = TempSymbol(N, "output") // Denotes the pattern's output.
+            val remainingSymbol = TempSymbol(N, "remaining") // Denotes the remaining value.
+            // Unfold extraction parameters and create symbols for sub-scrutinees.
+            val (theExtractionArguments, makeChainedConsequent) = arguments.fold((N, makeConsequent)):
+              _.iterator.zipWithIndex.foldRight(Nil: Ls[FlatPattern.Argument], makeConsequent):
+                case ((argument, index), (theArguments, makeInnerSplit)) =>
+                  val subScrutinee = TempSymbol(N, s"argument$index$$")
+                  val makeThisSplit: MakePrefixConsequent = (outerConsumedOutput, outerRemainingOutput, outerBindings) =>
+                    makeStringPrefixMatchSplit(subScrutinee.toScrut, argument)(
+                      (consumedOutput, remainingOutput, bindings) => makeInnerSplit(
+                        // TODO: Combine `outerConsumedOutput` and `consumedOutput`
+                        consumedOutput,
+                        // TODO: Combine `outerRemainingOutput` and `remainingOutput`
+                        remainingOutput,
+                        outerBindings ++ bindings),
+                      Split.End)
+                  val theArgument = FlatPattern.Argument(subScrutinee, Tree.Empty().withLocOf(argument))
+                  (theArgument :: theArguments, makeThisSplit)
+              .mapFirst(S(_))
+            val thePatternArguments = patternArguments.iterator.zipWithIndex.map: (pattern, index) =>
+              FlatPattern.Argument(TempSymbol(N, s"patternArgument$index$$"), pattern)
+            .toList
+            val allArguments = theExtractionArguments.fold(
+              if thePatternArguments.isEmpty then N else S(thePatternArguments)
+            ):
+              case arguments => S(thePatternArguments ::: arguments)
+            val consequent = makeChainedConsequent(outputSymbol.toScrut, remainingSymbol.toScrut, Map.empty)
+            val mode = MatchMode.StringPrefix(outputSymbol, remainingSymbol)
+            val thePattern = FlatPattern.ClassLike(target, allArguments, mode, false)(Tree.Dummy, Nil)
+            Branch(scrutinee(), thePattern, consequent) ~: alternative
+        case N => rejectPrefixSplit
+      // The other possibilities do not match strings.
+      case S(_) | N => rejectPrefixSplit
     case Composition(true, left, right) =>
       val makeLeft = makeStringPrefixMatchSplit(scrutinee, left)
       val makeRight = makeStringPrefixMatchSplit(scrutinee, right)
@@ -364,7 +382,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       // string and returns an empty string as the remaining value.
       val emptyStringSymbol = TempSymbol(N, "emptyString")
       makeConsequent(scrutinee, emptyStringSymbol.toScrut, Map.empty)
-      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, N)(Nil),
+      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, N, Nil),
         Split.Let(emptyStringSymbol, str(""),
           makeConsequent(scrutinee, emptyStringSymbol.toScrut, Map.empty))
       ) ~: alternative
@@ -460,8 +478,6 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
   /** Make a term like `MatchFailure(null)`. We will synthesize detailed
    *  error messages and pass them to the function. */
   private def failure: Split = Split.Else(makeMatchFailure())
-  
-  private def errorSplit: Split = Split.Else(Term.Error)
   
   /** Create a method from the given UCS splits.
    *  The function has a parameter list that contains the pattern parameters and

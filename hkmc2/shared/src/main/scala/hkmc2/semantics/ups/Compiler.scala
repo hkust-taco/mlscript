@@ -43,8 +43,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
     def toFlatPattern: FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)(Nil)
       case sym: ClassLikeSymbol =>
-        val target = reference(sym).getOrElse(Term.Error)
-        FlatPattern.ClassLike(target, N)(Nil)
+        FlatPattern.ClassLike(reference(sym).getOrElse(Term.Error), N, Nil)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
       case sym: ClassLikeSymbol => sym.nme

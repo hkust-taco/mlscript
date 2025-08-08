@@ -5,12 +5,6 @@ pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╔══[ERROR] Found an unrecognizable pattern.
 //│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                           ^^^^^^^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
-//│ ╙──     	                       ^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
-//│ ╙──     	                       ^
 
 
 :fixme
@@ -26,38 +20,38 @@ pattern Foo2[pattern A]: ...
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.26: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║  l.20: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.27: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.27: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.27: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ║        	             ^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.27: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	  ^^
 
 :todo // Pattern extractions via aliases.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.39: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ║        	                                ^^^^^^^^^^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.39: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	   ^^^^^^^^^^
 //│ ╔══[WARNING] Useless pattern binding: Identifier.
-//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.39: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	                                ^^^^^^^^^^
 
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.58: 	  n and n > value then n
+//│ ║  l.52: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -70,11 +64,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator).
-//│ ║  l.69: 	  view as
+//│ ║  l.63: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.70: 	    Unit then ....
+//│ ║  l.64: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.71: 	    Arrow(...) then ....
+//│ ║  l.65: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -92,20 +86,20 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.89: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.83: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.89: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.83: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.102: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──       	                                   ^^^
+//│ ║  l.96: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──      	                                   ^^^
 //│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.102: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──       	                                   ^^^
+//│ ║  l.96: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──      	                                   ^^^
 
 :todo
 pattern LineSep(pattern P) = case
@@ -114,11 +108,11 @@ pattern LineSep(pattern P) = case
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.112: 	  "" then Nil
+//│ ║  l.106: 	  "" then Nil
 //│ ║         	  ^^^^^^^^^^^
-//│ ║  l.113: 	  L(...nd) ~
+//│ ║  l.107: 	  L(...nd) ~
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.114: 	    ""                   then nd :: Nil
+//│ ║  l.108: 	    ""                   then nd :: Nil
 //│ ╙──       	^^^^
 
 :todo
@@ -132,25 +126,25 @@ pattern Lines(pattern L) = case
 :todo
 if input is Lines of Email then
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.133: 	if input is Lines of Email then
+//│ ║  l.127: 	if input is Lines of Email then
 //│ ╙──       	                               ^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.126: 	  "" then []
+//│ ║  l.120: 	  "" then []
 //│ ║         	  ^^^^^^^^^^
-//│ ║  l.127: 	  pattern Tail = case
+//│ ║  l.121: 	  pattern Tail = case
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.128: 	    "" then []
+//│ ║  l.122: 	    "" then []
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.129: 	    "\n" ~ (Lines of L) as t then t
+//│ ║  l.123: 	    "\n" ~ (Lines of L) as t then t
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.130: 	  L as h ~ Tail as t then [h, ...t]
+//│ ║  l.124: 	  L as h ~ Tail as t then [h, ...t]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	  
+//│ ║  l.125: 	  
 //│ ║         	^^^
-//│ ║  l.132: 	:todo
+//│ ║  l.126: 	:todo
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.133: 	if input is Lines of Email then
+//│ ║  l.127: 	if input is Lines of Email then
 //│ ╙──       	   ^^^^^
 
 :todo
@@ -161,25 +155,25 @@ pattern Opt(pattern P) = case
 :todo
 pattern Email(name, domain) = ...
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.158: 	  P(value) then (Some(value))
+//│ ║  l.152: 	  P(value) then (Some(value))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.159: 	  ""       then (None)
+//│ ║  l.153: 	  ""       then (None)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.160: 	  
+//│ ║  l.154: 	  
 //│ ║         	^^^
-//│ ║  l.161: 	:todo
+//│ ║  l.155: 	:todo
 //│ ╙──       	^^^^^
 
 :todo
 if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Name not found: Some
-//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
 //│ ╔══[ERROR] invalid record field pattern
-//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                                ^
 //│ ═══[ERROR] Expected zero arguments, but found two arguments.
 
@@ -188,9 +182,9 @@ pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.188: 	  P(...values) then (Some(values))
+//│ ║  l.182: 	  P(...values) then (Some(values))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.189: 	  ""           then (None)
+//│ ║  l.183: 	  ""           then (None)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -198,16 +192,16 @@ pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.198: 	  P(...values) then Some(values)
+//│ ║  l.192: 	  P(...values) then Some(values)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.199: 	  ""           then None
+//│ ║  l.193: 	  ""           then None
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.207: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.207: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                 ^^^^^^

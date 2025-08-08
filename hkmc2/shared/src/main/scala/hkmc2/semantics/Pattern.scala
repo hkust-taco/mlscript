@@ -289,8 +289,9 @@ enum Pattern extends AutoLocated:
   def showDbg: Str = this match
     case Constructor(target, patternArguments, arguments) =>
       val targetText = target.symbol.fold(target.showDbg)(_.toString())
-      val patternArgumentsText = patternArguments.iterator.map(_.showDbg)
-        .map("pattern " + _).mkStringOr("(", ", ", ")", "")
+      val patternArgumentsText = if patternArguments.isEmpty then "" else
+        patternArguments.iterator.map(_.showDbg)
+          .map("pattern " + _).mkString("(", ", ", ")")
       val argumentsText = arguments.fold(""): args =>
         s"(${args.map(_.showDbg).mkString(", ")})"
       s"$targetText$patternArgumentsText$argumentsText"

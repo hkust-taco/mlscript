@@ -9,6 +9,7 @@ import Elaborator.{Ctx, State, ctx}
 import utils.*
 import FlatPattern.Argument
 import ups.Instantiator
+import hkmc2.semantics.ups.NaiveCompiler
 
 class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBase:
   import Normalization.*, Mode.*, FlatPattern.MatchMode
@@ -146,10 +147,6 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             ctor.symbol match
               case S(symbol: VarSymbol) => symbol.decl match
                 case S(param @ Param(flags = FldFlags(pat = true))) =>
-                  // We're missing two checks here. The first one is to make
-                  // sure that the pattern parameter is accessible from the
-                  // context. The second one is to make sure that the current
-                  // is in a pattern translation.
                   if argsOpt.fold(false)(_.nonEmpty) then
                     error(msg"Pattern parameters cannot be applied." -> ctor.toLoc)
                   mode match
@@ -172,7 +169,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             normalizeImpl(alternative)
           case S(S(cls: ClassSymbol)) =>
             validateMatchMode(ctor, cls, mode)
-            if validateClassPattern(ctor, cls, argsOpt) then // TODO(ucs): deduplicate [1]
+            if validateClassPattern(ctor, cls, ensureArguments(argsOpt)) then // TODO(ucs): deduplicate [1]
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
                 normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
@@ -224,7 +221,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   private def validateClassPattern(
       ctorTerm: Term,
       ctorSymbol: ClassSymbol,
-      argsOpt: Opt[Ls[FlatPattern.Argument]]
+      argsOpt: Opt[Ls[FlatPattern.Argument.Term]]
   ): Bool =
     // Obtain the `classHead` used for error reporting and the parameter list
     // from the class definitions.
@@ -247,7 +244,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                 }${"argument" countBy args.size}." -> loc
           // Check the fields are accessible.
           paramList.params.iterator.zip(args).map:
-            case (_, Argument(_, Tree.Under(), _)) => true
+            case (_, Argument.Term(_, Tree.Under())) => true
             case (Param(flags, sym, _, _), arg) if !flags.isVal =>
               error(msg"This pattern cannot be matched" -> arg.toLoc, // TODO: use correct location
                 msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,
@@ -290,6 +287,15 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       false
     case N => true
   
+  /** Ensure that there are no pattern arguments. */
+  private def ensureArguments(
+      arguments: Opt[Ls[FlatPattern.Argument]]
+  ): Opt[Ls[FlatPattern.Argument.Term]] = arguments.map:
+    _.flatMap:
+      case arg: FlatPattern.Argument.Term => S(arg)
+      case FlatPattern.Argument.Pattern(_, pattern) =>
+        error(msg"Pattern argument `${pattern.showDbg}` cannot be used here." -> pattern.toLoc); N
+  
   /** Warn about inappropriate annotations used on class or object patterns. */
   private def validateMatchMode(
       ctorTerm: Term,
@@ -330,12 +336,15 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     normalize(split)
   
   /** Create a split that binds the pattern arguments. */
-  def bindPatternArguments(
-      patternArguments: List[(BlockLocalSymbol, (pattern: Pattern, term: Term.Rcd))],
+  def buildPatternArguments(
+      patternArguments: List[(BlockLocalSymbol, Pattern)],
       split: Split
   ): Split =
+    val compiler = new NaiveCompiler
     patternArguments.foldRight(split):
-      case ((sym, arg), innerSplit) => Split.Let(sym, arg.term, innerSplit)
+      case ((symbol, pattern), innerSplit) =>
+        val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
+        Split.Let(symbol, record, innerSplit)
   
   /** Normalize splits whose leading branch matches a pattern and does not have
    *  a `@compile` annotation. */
@@ -352,21 +361,21 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       log:
         allArgsOpt.fold(Iterator.empty[Str]):
           _.iterator.map:
-            case Argument(scrutinee, _, N) => s"extraction: ${scrutinee.nme}"
-            case Argument(scrutinee, _, S((_, term))) => s"pattern: ${scrutinee.nme} = ${term.showDbg}"
+            case Argument.Term(scrutinee, _) => s"extraction: ${scrutinee.nme}"
+            case Argument.Pattern(scrutinee, pattern) => s"pattern: ${scrutinee.nme} = ${pattern.showDbg}"
         .mkString("extractor pattern arguments:\n", "\n", "")
     val defn = patternSymbol.defn.getOrElse:
       lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
     // Partition the arguments into pattern arguments and bindings.
     val (extractionArgsOpt, patternArguments) = allArgsOpt.fold((N: Opt[Ls[BlockLocalSymbol]], Nil)): args =>
       val (extractionArgs, patternArgs) = args.partitionMap:
-        case Argument(scrutinee, _, N) => Left(scrutinee)
-        case Argument(scrutinee, _, S(pattern)) => Right((scrutinee, pattern))
+        case Argument.Term(scrutinee, _) => Left(scrutinee)
+        case Argument.Pattern(scrutinee, pattern) => Right((scrutinee, pattern))
       (if extractionArgs.isEmpty then N else S(extractionArgs), patternArgs)
     // Place pattern arguments first, then the scrutinee.
     val unapplyArgs = patternArguments.map(_._1.safeRef |> fld) :+ fld(scrutinee)
     val unapplyCall = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(unapplyArgs*), s"result of unapply")
-    val split = bindPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
+    val split = buildPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
       extractionArgsOpt match
         case N =>
           if outputSymbols.isEmpty then
@@ -435,9 +444,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     pre = s"normalizeStringPrefixPattern <<< ${ctorTerm.showDbg}",
     post = (r: Split) => s"normalizeStringPrefixPattern >>> ${Split.display(r)}"
   ):
-    val patternArguments = allArgsOpt.fold(Nil):
-      _.collect:
-        case Argument(symbol, _, S(pattern)) => symbol -> pattern
+    val patternArguments = allArgsOpt.fold(Nil)(_.collect:
+      case Argument.Pattern(symbol, pattern) => symbol -> pattern)
     val call =
       val method = "unapplyStringPrefix"
       val args = tup(patternArguments.map(_._1.safeRef) :+ scrutinee)
@@ -455,7 +463,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
             Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent)))
       ) ~: alternative
-    normalize(bindPatternArguments(patternArguments, split))
+    normalize(buildPatternArguments(patternArguments, split))
   
   // Note: This function will be overhauled in the new pattern compilation scheme.
   private def normalizeCompiledPattern(
@@ -472,7 +480,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     // Instantiate the pattern and all patterns used in it.
     val instantiator = new Instantiator
     val patternArguments = argsOpt.fold(Nil)(_.collect:
-      case Argument(_, _, S((pattern, _))) => pattern)
+      case Argument.Pattern(_, pattern) => pattern)
     val (synonym, context) = instantiator(symbol, patternArguments, Loc(ctorTerm :: patternArguments))
     // Initate the compilation.
     val compiler = new Compiler(using context)
