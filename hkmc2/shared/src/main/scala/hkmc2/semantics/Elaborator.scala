@@ -1178,7 +1178,7 @@ extends Importer:
                 // All flags are `false`.
                 case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
                 case Param(flags, sym, _, _) =>
-                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.show}" -> sym.toLoc :: Nil))
+                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${flags.show}" -> sym.toLoc :: Nil))
                   N
               .partition(_.flags.pat)
             log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
