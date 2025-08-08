@@ -1203,7 +1203,7 @@ extends Importer:
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
-            val pd = PatternDef(owner, patSym, sym, tps, N,
+            val pd = PatternDef(owner, patSym, sym, tps,
               patternParams, extractionParams, pat, annotations)
             patSym.defn = S(pd)
             pd

@@ -502,7 +502,6 @@ case class PatternDef(
     sym: PatternSymbol,
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
-    paramsOpt: Opt[ParamList],
     /** The pattern parameters, for example, `T` in
      *  `pattern Nullable(pattern T) = null | T`. */
     patternParams: Ls[Param],
@@ -522,7 +521,8 @@ case class PatternDef(
    *  `unapplyStringPrefix`, which are generated in `Lowering`. Hence, there
    *  is no need to make `body` an parameter. */
   val body: ObjBody = ObjBody(Blk(Nil, Term.Lit(syntax.Tree.UnitLit(false))))
-  /** Pattern definitions can only have one parameter list. */
+  /** Pattern definitions do not need parameter lists. */
+  val paramsOpt: Opt[ParamList] = N
   val auxParams: Ls[ParamList] = Nil
 
 
