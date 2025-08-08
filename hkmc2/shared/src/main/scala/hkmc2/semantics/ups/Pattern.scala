@@ -181,7 +181,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   /** Expand the pattern by replacing any top-level synonym with its body.
    *  @return the expanded pattern named "ExPat" in the paper. */
-  def expand(alreadyExpanded: Set[Instantiation] = Set())(using Context, Raise): ExPat = map:
+  def expand(alreadyExpanded: Set[Instantiation])(using Context, Raise): ExPat = map:
     case Synonym(instantiation) =>
       if alreadyExpanded contains instantiation then
         error(msg"Expanding this pattern leads to an infinite loop." -> instantiation.toLoc)

@@ -102,7 +102,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
         s"${pattern.showDbg} => ${pattern.label}"
       .mkString("{", ", ", "}")}"
   ):
-    val expandedPatterns = patterns.map(p => (p.label, p.expand()))
+    val expandedPatterns = patterns.map(p => (p.label, p.expand(Set.empty)))
     val heads = expandedPatterns.flatMap((_, p) => p.heads).toList
     // This is the parameter of the current multi-matcher.
     val scrutinee = VarSymbol(Ident("input"))
