@@ -1,0 +1,247 @@
+import "./Option.mls"
+import "./Iter.mls"
+
+open Option
+open Iter
+open FingerTreeList
+
+fun normIdx(idx, len) =
+  if idx < 0 then idx + len
+  else idx
+
+// Follows the semantics of Array.prototype.slice indices:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+fun normIdxSlice(i, len) =
+  if i < 0 and
+    i >= -len then len + i
+    else 0
+  else i
+
+type Node[T] = Branch2[T] | Branch3[T]
+data class Branch2[T](size: Int, e1: T, e2: T)
+data class Branch3[T](size: Int, e1: T, e2: T, e3: T)
+
+fun getNodeSize(node) = if node is
+  Branch2(s, _, _) then s
+  Branch3(s, _, _, _) then s
+  _ then 1
+
+object Nil
+data class View[T](e1: T, rest: FingerTree[T])
+
+class FingerTree[T] extends IterableBase with
+  fun iterator() =
+    let current = this
+    Iterator of () => if popFront(current) is
+      Nil then Result.Done
+      View(head, tail) then
+        set current = tail
+        Result.Next of head
+  fun toString() = "[" + this joined(", ") + "]"
+  fun length = FingerTreeList.length(this)
+  fun at(i) = get(i)(this)
+  fun concat(other) = FingerTreeList.concat(this, other)
+  fun slice(beg, end) = 
+    let len = this.length
+    set beg = normIdxSlice(beg, len)
+    set end = normIdxSlice(end, len)
+    if beg >= len do
+      return Empty
+    if end >= len do
+      set end = len
+    if end <= beg do
+      return Empty
+    FingerTreeList.dropLeftRight(beg, len - end)(this)
+
+object Empty extends FingerTree[T] with
+  fun toString() = "[" + this joined(", ") + "]"
+
+class Single[T](val e: T) extends FingerTree[T] with
+  fun toString() = "[" + this joined(", ") + "]"
+
+// prefix and suffix are at most length 4
+class Deep[T](val size: Int, val prefix: Array[T], val middle: FingerTree[Node[T]], val suffix: Array[T]) extends FingerTree[T] with
+  fun toString() = "[" + [...this].join(", ") + "]"
+
+// amortized O(log n)
+fun concatMiddle(ft1, middle, ft2) = if [ft1, middle, ft2] is
+  [Empty, [], right] then right
+  [Empty, [x, ...xs], right] then cons(x, concatMiddle(Empty, xs, right))
+  [Single(y), xs, right] then cons(y, concatMiddle(Empty, xs, right))
+  [left, [], Empty] then left
+  [left, [...xs, x], Empty] then snoc(concatMiddle(left, xs, Empty), x)
+  [left, xs, Single(y)] then snoc(concatMiddle(left, xs, Empty), y)
+  [Deep(s1, pre1, dt1, ay1), middle, Deep(s2, ax2, dt2, post2)] then
+    Deep(s1 + s2 + middle.length, pre1, concatMiddle(dt1, toNodes([...ay1, ...middle, ...ax2]), dt2), post2)
+
+// arr should be at most size 8, and at least size 2
+fun toNodes(arr) = if arr is
+  [] then []
+  [a, b, c, d] then [Branch2(getNodeSize(a) + getNodeSize(b), a, b), Branch2(getNodeSize(c) + getNodeSize(d), c, d)]
+  [a, b, c, ...rest] then [Branch3(getNodeSize(a) + getNodeSize(b) + getNodeSize(c), a, b, c), ...toNodes(rest)]
+  [a, b, ...rest] then [Branch2(getNodeSize(a) + getNodeSize(b), a, b), ...toNodes(rest)]
+
+// O(1)
+fun arrayOfNode(node) = if node is
+  Branch2(_, a, b) then [a, b]
+  Branch3(_, a, b, c) then [a, b, c]
+
+// affix should be at most size 4
+fun getAffixSize(arr) = if arr is
+  [] then 0
+  [a, ...rest] then getNodeSize(a) + getAffixSize(rest)
+
+fun ithAffixElement(idx, arr) = if arr is
+  [] then None
+  [a, ...rest] then if idx < getNodeSize(a)
+    then ithNode(idx, a)
+    else ithAffixElement(idx - getNodeSize(a), rest)
+
+fun ithNode(idx, node) = if node is
+  Branch2(s, a, b) and
+    idx >= 0 && idx < s and
+      idx < getNodeSize(a) then ithNode(idx, a)
+      else ithNode(idx - getNodeSize(a), b)
+    else None
+  Branch3(s, a, b, c) and
+    idx >= 0 && idx < s and
+      idx < getNodeSize(a) then ithNode(idx, a)
+      idx < getNodeSize(a) + getNodeSize(b) then ithNode(idx - getNodeSize(a), b)
+      else ithNode(idx - getNodeSize(a) - getNodeSize(b), c)
+    else None
+  a and idx == 0 then Some(a)
+  else None
+
+fun repeatPopFront(n)(xs) =
+  if n is
+    0 then xs
+    _ then if popFront(xs) is
+      Nil then xs
+      View(_, rest) then repeatPopFront(n - 1)(rest)
+
+fun repeatPopBack(n)(xs) =
+  if n is
+    0 then xs
+    _ then if popBack(xs) is
+      Nil then xs
+      View(_, rest) then repeatPopBack(n - 1)(rest)
+
+object SpliceMarker
+
+
+module FingerTreeList with...
+
+
+fun toFingerTree(xs) = if xs is
+  FingerTree then xs
+  else mk(...xs) // assume that the input is iterable if not a finger tree
+
+// amortized O(1)
+fun (+:) cons(x, xs) = if toFingerTree(xs) is
+  Empty then Single(x)
+  Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [x], Empty, [y])
+  Deep(s, ax, dt, ay) then if (ax.length >= 4)
+    then Deep(s + getNodeSize(x), [x, ax.0], cons(Branch3(
+      getNodeSize(ax.1) + getNodeSize(ax.2) + getNodeSize(ax.3),
+      ax.1, ax.2, ax.3), dt), ay)
+    else Deep(s + getNodeSize(x), [x, ...ax], dt, ay)
+
+// amortized O(1)
+fun (:+) snoc(xs, x) = if toFingerTree(xs) is
+  Empty then Single(x)
+  Single(y) then Deep(getNodeSize(y) + getNodeSize(x), [y], Empty, [x])
+  Deep(s, ax, dt, ay) then if (ay.length >= 4)
+    then Deep(s + getNodeSize(x), ax, snoc(dt, Branch3(
+      getNodeSize(ay.0) + getNodeSize(ay.1) + getNodeSize(ay.2),
+      ay.0, ay.1, ay.2)), [ay.3, x])
+    else Deep(s + getNodeSize(x), ax, dt, [...ay, x])
+
+fun mk(...args) = args.reduce(
+    (acc, x) => snoc(acc, x),
+    Empty)
+
+fun isEmpty = case
+  Empty then true
+  _ then false
+
+// O(1)
+fun length = case
+  Array as a then a.length
+  Empty then 0
+  Single(x) then getNodeSize(x)
+  Deep(s, _, _, _) then s
+
+// amortized O(1)
+fun popFront(ft) = if toFingerTree(ft) is
+  Empty then Nil
+  Single(x) then View(x, Empty)
+  Deep(s, [x], dt, ay) then if (popFront(dt)) is
+    Nil then if ay is
+      [y] then View(x, Single(y))
+      [...front, y] then View(x, Deep(s - getNodeSize(x), front, Empty, [y]))
+    View(x', dt') then
+      View(x, Deep(s - getNodeSize(x), arrayOfNode(x'), dt', ay))
+  Deep(s, [x, ...ax], dt, ay) then
+    View(x, Deep(s - getNodeSize(x), ax, dt, ay))
+
+// amortized O(1)
+fun popBack(ft) = if toFingerTree(ft) is
+  Empty then Nil
+  Single(x) then View(x, Empty)
+  Deep(s, ax, dt, [x]) then if popBack(dt) is
+    Nil then if ax is
+      [y] then View(x, Single(y))
+      [y, ...front] then View(x, Deep(s - getNodeSize(x), [y], Empty, front))
+    View(x', dt') then
+      View(x, Deep(s - getNodeSize(x), ax, dt', arrayOfNode(x')))
+  Deep(s, ax, dt, [...ay, y]) then
+    View(y, Deep(s - getNodeSize(y), ax, dt, ay))
+
+// amortized O(log n)
+fun (++) concat(ft1, ft2) = concatMiddle(toFingerTree(ft1), [], toFingerTree(ft2))
+
+// amortized O(log n)
+fun ith(idx) = case
+  Empty then None
+  Single(x) then ithNode(idx, x)
+  Deep(s, ax, dt, ay) and
+    idx >= 0 && idx < s and
+      idx < getAffixSize(ax) then ithAffixElement(idx, ax)
+      idx < getAffixSize(ax) + length(dt) then ith(idx - getAffixSize(ax))(dt)
+      else ithAffixElement(idx - getAffixSize(ax) - length(dt), ay)
+    else None
+
+fun get(idx) = case
+  Array as a then a.at(idx)
+  FingerTree as lft then if ith(normIdx(idx, length(lft)))(lft) is
+    None then throw "get: index out of bounds"
+    Some(x) then x
+
+fun toArray(ft) = [...ft]
+
+/// amortized O(beg + end)
+fun dropLeftRight(beg, end)(und) = if beg < 0 || end < 0 || beg + end > length(und)
+    then throw "dropLeftRight: index out of bounds"
+    else repeatPopFront(beg)(repeatPopBack(end)(toFingerTree(und)))
+
+fun isFingerTree(xs) = if xs is
+  FingerTree then true
+  else false
+
+// The following functions are not meant for users; it's meant referred to by Runtime.mls
+// TODO: use `FingerTreeList.internals.concat` when this is implemented
+
+fun __markerConcat(...arr) =
+  let acc = FingerTreeList.mk()
+  let idx = 0
+  while idx < arr.length do
+    if arr.[idx] is SpliceMarker then
+      let ftl = arr.[idx + 1]
+      set acc = acc ++ toFingerTree(ftl)
+      set idx = idx + 2
+    else
+      set acc = acc :+ arr.[idx]
+      set idx = idx + 1
+  acc
+
+val __split = SpliceMarker

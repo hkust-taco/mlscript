@@ -1,29 +1,25 @@
 import "./Iter.mls"
+import "./FingerTreeList.mls"
 
 open Iter
-open LazyArray
+open LazyFingerTree
+open FingerTreeList
 
-// Helper Methods
 fun normIdx(i, len) =
   if i < 0 then len + i
   else i
 
-fun enforceArray = case
-  LazyArr | Array | String | Str | TypedArray  as a then a
-  ow then throw Error("Expected an Array, got: " + ow.toString())
-
 fun concatHelper(a, l, ...args) =
-  let
-    idx = 0
-    init_len = a.length
+  let idx = 0
+  let init_len = a.length
   set a.length = init_len + args.length * 2
   while (idx < args.length) do
     let x = args.[idx]
-    set 
-      a.[init_len + idx * 2] = SpliceMarker
-      a.[init_len + idx * 2 + 1] = enforceArray(x)
-      l += x.length
-      idx += 1
+
+    set a.[init_len + idx * 2] = SpliceMarker
+    set a.[init_len + idx * 2 + 1] = x
+    set l += x.length
+    set idx += 1
   Splice of a, l
 
 // Follows the semantics of Array.prototype.slice indices:
@@ -47,17 +43,19 @@ fun sliceHelper(beg, fin, arr) =
   
   if arr is
     View(itr, start, end) then View of itr, start + beg, end + (len - fin)
-    Splice(bits, l) as s then View of s.materialize().slice(beg, fin), 0, 0
-    else View of enforceArray(arr), beg, (arr.length - fin)
+    Splice(bits, l) as s then s.materialize().slice(beg, fin)
+    ft and
+      FingerTreeList.isFingerTree(ft) 
+        then FingerTreeList.dropLeftRight(beg, (len - fin))(ft)
+        else View of arr, beg, (len - fin)
 
 // Marker base class for View and Splice
-class LazyArr extends IterableBase with
+class LazyFT extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
   fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
-// Requires that the underlying iterable is constant-time indexable
-class View(val underlying: IterableBase, val start, val end) extends LazyArr with
+class View(val underlying: IterableBase, val start, val end) extends LazyFT with
 
   fun iterator() =
     let idx = start
@@ -82,36 +80,13 @@ class View(val underlying: IterableBase, val start, val end) extends LazyArr wit
   fun toString() = "[" + this joined(", ") + "]"
 
 object SpliceMarker
-class Splice(val bits, val len) extends LazyArr with
+class Splice(val bits, val len) extends LazyFT with
   let materialized = null
 
-  fun iterator() =
-    let idx = 0
-    let uitr = null
-    
-    fun nextf() =
-      if idx < bits.length and
-        bits.[idx] is 
-          SpliceMarker then
-            if uitr === null do 
-              set uitr = bits.[idx + 1].(Symbol.iterator)()
-            let n = uitr.next()
-            if n.done then
-              set uitr = null
-              set idx += 2
-              nextf()
-            else
-              n
-          else
-            let value = bits.[idx]
-            set idx += 1
-            Result.Next of value
-      else Result.Done
-    Iterator of nextf
+  fun iterator() = materialize().iterator()
 
-  fun reify = 
-    let counter = 0
-    let arr = new mut Array(len)
+  fun reify =
+    let acc = FingerTreeList.mk()
     let stack = mut []
     stack.push([0, bits])
     while stack.length > 0 do
@@ -124,65 +99,67 @@ class Splice(val bits, val len) extends LazyArr with
 
       while (idx < vals.length and
           (vals.at(idx) is SpliceMarker) is false) do
-        set arr.[counter] = vals.at(idx)
-        set counter += 1
+        set acc = acc :+ vals.at(idx)
         set idx += 1
-      
+
       if (idx < vals.length and vals.at(idx) is SpliceMarker) do
         stack.push([idx + 2, vals])
-        stack.push([0, vals.at(idx + 1)])
-    arr
+        let next = vals.at(idx + 1)
+        if FingerTreeList.isFingerTree(next)
+          then set acc = acc ++ next
+          else stack.push([0, next])
+    acc
 
   fun materialize() =
-    if materialized === null do
+    if materialized == null do
       set materialized = reify
     materialized
-  
+
   fun at(i) = materialize().at(i)
+  // called on eager spreads in matches
   fun slice(beg, fin) = sliceHelper(beg, fin, this)
-  fun concat(...args) = 
+  fun concat(...args) =
     if materialized === null 
     then concatHelper(mut [SpliceMarker, this], len, ...args)
-    else concatHelper(mut [SpliceMarker, materialized], len, ...args)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...args)   
   
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
 
 
-module LazyArray with...
+module LazyFingerTree with...
 
 
-fun mk(...args) = View of args, 0, 0
+fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
 fun concat(...args) = concatHelper(mut [], 0, ...args)
 fun dropLeftRight(beg, fin)(xs) = 
   if beg < 0 || fin < 0 do
-    throw RangeError("LazyArray.dropLeftRight: indices must be non-negative")
+    throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
-    throw RangeError("LazyArray.dropLeftRight: indices out of bounds")
+    throw RangeError("LazyFingerTree.dropLeftRight: indices out of bounds")
   sliceHelper(beg, xs.length - fin, xs)
 
 fun equals(xs, ys) =
-  xs.length === ys.length &&
-    let idx = 0
-    while (idx < xs.length) do
-      if xs.at(idx) !== ys.at(idx) do return false
-      set idx += 1
-    true
+  if xs is
+    [x, ...xs] then
+      if ys is
+        [b, ...bs] then x == b && equals(xs, bs)
+        [] then false
+    [] then ys.length === 0
 
-// This is not meant for users; it's referred to by Runtime.mls
-// TODO: use `LazyArray.internals.concat` when this is implemented
-fun __concat(...args) =
+// The following functions are not meant for users; it's meant referred to by Runtime.mls
+// TODO: use `LazyFingerTree.internals.concat` when this is implemented
+
+fun __concat(...args) = 
   let len = 0
   let idx = 0
   while (idx < args.length) do
     if args.[idx] is SpliceMarker then
-      set len += enforceArray(args.[idx + 1]).length
+      set len += args.[idx + 1].length
       set idx += 2
     else
       set len += 1
       set idx += 1
   Splice of args, len
 
-// This is not meant for users; it's referred to by Runtime.mls
-// TODO: use `LazyArray.internals.split` when this is implemented
 val __split = SpliceMarker

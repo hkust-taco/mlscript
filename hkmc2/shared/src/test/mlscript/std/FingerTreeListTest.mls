@@ -1,0 +1,183 @@
+:js
+
+import "../../mlscript-compile/FingerTreeList.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+
+open FingerTreeList
+
+let xs = FingerTreeList.mk(1,2,3)
+//│ xs = [1, 2, 3]
+
+let ys = concat(xs, xs) concat(xs)
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+ys |> ith(-1)
+//│ = None
+ys |> ith(0)
+//│ = Some(1)
+ys |> ith(1)
+//│ = Some(2)
+ys |> ith(2)
+//│ = Some(3)
+ys |> ith(3)
+//│ = Some(1)
+ys |> ith(4)
+//│ = Some(2)
+ys |> ith(5)
+//│ = Some(3)
+ys |> ith(6)
+//│ = Some(1)
+ys |> ith(7)
+//│ = Some(2)
+ys |> ith(8)
+//│ = Some(3)
+ys |> ith(9)
+//│ = None
+
+let ys = (ys |> popFront).rest
+//│ ys = [2, 3, 1, 2, 3, 1, 2, 3]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3, 1, 2]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3, 1]
+let ys = (ys |> popBack).rest
+//│ ys = [2, 3, 1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [3, 1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [1, 2, 3]
+let ys = (ys |> popFront).rest
+//│ ys = [2, 3]
+
+let ys = xs ++ xs ++ xs
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+ys |> dropLeftRight(3, 3)
+//│ = [1, 2, 3]
+
+let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3
+//│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3]
+
+:expect true
+LazyFingerTree.equals(ys, [...ys])
+//│ = true
+
+:expect true
+(ys ++ ys).length == ys.length + ys.length
+//│ = true
+
+:silent
+let zs = ys ++ ys
+
+:expect true
+zs FingerTreeList.isFingerTree()
+//│ = true
+
+:expect true
+[...zs] Array.isArray()
+//│ = true
+
+fun mkRange(start, end) =
+  if start < end then
+    mkRange(start + 1, end) :+ start
+  else
+    mk()
+
+fun repeat(xs, n) = 
+  if n == 0 then mk()
+  else xs ++ repeat(xs, n - 1)
+
+:expect true
+repeat(xs, 512).length == xs.length * 512
+//│ = true
+
+let xs = FingerTreeList.mk(1, 2, 3)
+//│ xs = [1, 2, 3]
+
+:expect [1, [2, 3]]
+:sjs
+if xs is
+  [a, ...ls] then [a, ls]
+//│ JS (unsanitized):
+//│ let rest, first0, a, ls;
+//│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
+//│   first0 = runtime.Tuple.get(xs1, 0);
+//│   rest = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
+//│   a = first0;
+//│   ls = rest;
+//│   globalThis.Object.freeze([ a, ls ])
+//│ } else {
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ }
+//│ = [1, [2, 3]]
+
+fun addUntilN(xs, n) =
+  if n <= 0 then xs
+  else addUntilN([n] ++ xs, n - 1)
+
+:silent
+let zs = addUntilN(mk(), 1000)
+
+:expect 1000
+zs.length
+//│ = 1000
+
+fun popUntilEmpty(lft, acc) =
+  if lft is
+    [a, ...ls] then popUntilEmpty(ls, [..acc, a])
+    [] then acc
+
+:sjs
+fun popByIndex(start, end, acc, lft) =
+  if start >= end then acc
+  else popByIndex(start + 1, end, [...acc, lft.at(start)], lft)
+//│ JS (unsanitized):
+//│ let popByIndex;
+//│ popByIndex = function popByIndex(start, end, acc, lft) {
+//│   let scrut, tmp39, tmp40;
+//│   scrut = start >= end;
+//│   if (scrut === true) {
+//│     return acc
+//│   } else {
+//│     tmp39 = start + 1;
+//│     tmp40 = runtime.safeCall(lft.at(start));
+//│     return popByIndex(tmp39, end, globalThis.Object.freeze([ ...acc, tmp40 ]), lft)
+//│   }
+//│ };
+
+:silent
+let zs1 = popUntilEmpty(zs, [])
+
+:silent
+let zs2 = popByIndex(0, zs.length, [], zs)
+
+zs1 |> isFingerTree
+//│ = false
+
+zs2 |> isFingerTree
+//│ = false
+
+zs |> isFingerTree
+//│ = true
+
+:expect true
+LazyFingerTree.equals(zs1, zs)
+//│ = true
+
+:expect true
+LazyFingerTree.equals(zs2, zs)
+//│ = true
+
+(if FingerTreeList.mk(1,2,3) is
+  [a, ...ls, b] then ls) |> FingerTreeList.isFingerTree
+//│ = true
+
+:expect 1
+zs.at(0)
+//│ = 1
+
+:expect 1
+zs.[0]
+//│ = 1
+
+

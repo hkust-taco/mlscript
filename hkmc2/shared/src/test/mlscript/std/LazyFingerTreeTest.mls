@@ -1,17 +1,18 @@
 :js
 
-import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/LazyFingerTree.mls"
+import "../../mlscript-compile/FingerTreeList.mls"
 import "../../mlscript-compile/MutMap.mls"
 
-open LazyArray
+open LazyFingerTree
 
 // Splices
 
 :silent
-val a = concat([0])
+val a = concat(FingerTreeList.mk(0))
 
 :silent
-let b = a.concat([1,2,3,4])
+let b = a.concat([1, 2, 3, 4])
 
 :expect [0, 1, 2, 3, 4]
 [...b]
@@ -54,10 +55,6 @@ a
 [...a]
 //│ = [4, 5, 6]
 
-:expect [4, 5, 6]
-a.materialize()
-//│ = [4, 5, 6]
-
 :re
 a.at(-4)
 //│ ═══[RUNTIME ERROR] RangeError: View.at: Index out of bounds
@@ -70,7 +67,7 @@ a.at(3)
 // View and Splices that represent the same array should be equal
 
 :silent
-let xs = mk(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) dropLeftRight (1, 1)()
+let xs = mk(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) dropLeftRight(1, 1)()
 
 :silent
 let ys = concat([1, 2, 3], [4, 5, 6], [7, 8, 9, 10])
@@ -91,7 +88,7 @@ equals(xs.materialize(), ys.materialize())
 // Mixing Views and Splices
 
 :silent
-let ys1 = mk(0).concat([1, 2, 3, 4], [5, 6, 7], [8, 9])
+let ys1 = concat(mk(0), [1, 2, 3, 4], [5, 6, 7], [8, 9])
 
 :expect [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 [...ys1]
@@ -102,14 +99,14 @@ ys1.length
 //│ = 10
 
 :silent
-let ys2 = LazyArray.dropLeftRight(2, 2)(ys1)
+let ys2 = LazyFingerTree.dropLeftRight(2, 2)(ys1)
 
 :expect [2, 3, 4, 5, 6, 7]
 ys2
 //│ = [2, 3, 4, 5, 6, 7]
 
 :silent
-let ys2 = LazyArray.dropLeftRight(0, 2)(ys2)
+let ys2 = LazyFingerTree.dropLeftRight(0, 2)(ys2)
 
 :expect [2, 3, 4, 5]
 ys2
@@ -154,10 +151,6 @@ o1
 [...o1]
 //│ = [2, 3, 4]
 
-:expect [2, 3, 4]
-o1.materialize()
-//│ = [2, 3, 4]
-
 let o2 = o1.concat([5, 6, 7])
 //│ o2 = [2, 3, 4, 5, 6, 7]
 
@@ -179,9 +172,8 @@ equals([...o2], [...o5])
 //│ = true
 
 :expect true
-equals(o2.materialize(), o5.materialize())
+equals(o2.materialize(), o5)
 //│ = true
-
 
 // slice indices
 
@@ -255,31 +247,3 @@ s.slice(0, 0)
 //│ = []
 
 
-// LazyArray on non-arrays
-
-dropLeftRight(1, 1)("hello")
-//│ = [e, l, l]
-
-val mm = MutMap.empty
-//│ mm = MutMap(Map(0) {})
-
-mm |> MutMap.insert of "a", 1
-
-:re
-val uint8Arr = new Uint8Array([1, 2, 3, 4, 5])
-//│ ═══[RUNTIME ERROR] TypeError: Cannot freeze array buffer views with elements
-//│ uint8Arr = undefined
-
-val uint8Arr = new mut Uint8Array([1, 2, 3, 4, 5])
-//│ uint8Arr = Uint8Array { "0": 1, "1": 2, "2": 3, "3": 4, "4": 5 }
-
-dropLeftRight(1, 1)(uint8Arr)
-//│ = [2, 3, 4]
-
-:re
-concat([1, 2, 3], "hello", uint8Arr, mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})
-
-:re
-dropLeftRight(0, 0)(mm)
-//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})
