@@ -486,11 +486,11 @@ object Compiler:
         if patterns.isEmpty then S(symbol.nme) else
           patterns.iterator.mapOption(_.shortName(0)).map:
             _.reverse.mkString(symbol.nme + FAKE_LEFT_ANGLE, FAKE_COMMA, FAKE_RIGHT_ANGLE)
-      case Or(Nil) => S(FAKE_TOP)
+      case Or(Nil) => S(FAKE_BOTTOM)
       case Or(patterns) => patterns.iterator.mapOption(_.shortName(1)).map:
         _.reverse.mkString(
           if prec > 0 then FAKE_LEFT_PAREN else "",
           FAKE_BAR,
           if prec > 0 then FAKE_RIGHT_PAREN else "")
-      case And(Nil) => S(FAKE_BOTTOM)
+      case And(Nil) => S(FAKE_TOP)
       case _ => N
