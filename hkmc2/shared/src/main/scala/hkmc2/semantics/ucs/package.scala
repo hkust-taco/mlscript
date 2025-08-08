@@ -13,7 +13,7 @@ package object ucs:
   def bug(using Line, FileName, Name, Raise)(msgs: (Message, Option[Loc])*): Unit =
     raise(InternalError(msgs.toList))
   
-  extension (symbol: BlockLocalSymbol)
+  extension (symbol: Symbol)
     /** Create a `Ref` that does not have any implicit arguments. We need this
      *  function because we generate a lot of `Ref`s after implicit resolution.
      *  Writing `.withIArgs(Nil)` is too verbose.

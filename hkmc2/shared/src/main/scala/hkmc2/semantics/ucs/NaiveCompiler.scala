@@ -26,7 +26,7 @@ object NaiveCompiler:
   type Scrut = () => Term.Ref
   
   extension (symbol: BlockLocalSymbol)
-    def toScrut: Scrut = () => symbol.ref().withIArgs(Nil)
+    def toScrut: Scrut = () => symbol.safeRef
   
   type BindingMap = Map[VarSymbol, Scrut]
   
@@ -84,9 +84,9 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
   
   private def makeRangeTest(scrut: Scrut, lo: syntax.Literal, hi: syntax.Literal, rightInclusive: Bool, innerSplit: Split) =
     def scrutFld = fld(scrut())
-    val test1 = app(lteq.ref(), tup(fld(Term.Lit(lo)), scrutFld), "isGreaterThanLower")
+    val test1 = app(lteq.safeRef, tup(fld(Term.Lit(lo)), scrutFld), "isGreaterThanLower")
     val upperOp = if rightInclusive then lteq else lt
-    val test2 = app(upperOp.ref(), tup(scrutFld, fld(Term.Lit(hi))), "isLessThanUpper")
+    val test2 = app(upperOp.safeRef, tup(scrutFld, fld(Term.Lit(hi))), "isLessThanUpper")
     plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
   
   /** Create a pattern object that contains the given pattern. */
@@ -102,7 +102,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     val paramList = PlainParamList(param :: Nil)
     val lambda = Term.Lam(paramList, Term.IfLike(Keyword.`if`, topmost))
     val defineVar = DefineVar(fieldSymbol, lambda)
-    val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.ref())
+    val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil
   
   extension (patterns: Ls[Pattern])
@@ -179,7 +179,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
               val tupleIdent = Ident("tupledResults")
               val tupleSymbol = TempSymbol(N, "tupledResults")
               val tupleTerm = tup(leftOutput() |> fld, rightOutput() |> fld)
-              Split.Let(tupleSymbol, tupleTerm, makeConsequent(() => tupleSymbol.ref(), leftBindings ++ rightBindings) ~~: alternative),
+              Split.Let(tupleSymbol, tupleTerm, makeConsequent(() => tupleSymbol.safeRef, leftBindings ++ rightBindings) ~~: alternative),
             alternative),
           alternative)
       case Negation(pattern) => (makeConsequent, alternative) =>
@@ -193,7 +193,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         val outputTerm = scrutinee()
         makeMatchSplit(scrutinee, pattern)(
           (_output, _bindings) => alternative, // The output and bindings are discarded.
-          Split.Let(outputSymbol, outputTerm, makeConsequent(() => outputSymbol.ref(), Map.empty) ~~: alternative)
+          Split.Let(outputSymbol, outputTerm, makeConsequent(() => outputSymbol.safeRef, Map.empty) ~~: alternative)
         )
       // Because a wildcard pattern always matches, `alternative` is not used.
       case Wildcard() => (makeConsequent, _) => makeConsequent(scrutinee, Map.empty)
@@ -307,7 +307,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
               log(s"we are handling pattern ${pattern.showDbg}")
               log(s"produced bindings are ${bindings.keys.map(_.nme).mkString(", ")}")
               val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
-              val resultTerm = app(lambdaSymbol.ref(), tup(arguments*), "the transform's result")
+              val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
               val resultSymbol = TempSymbol(N, "transformResult")
               Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, Map.empty)),
             alternative))
@@ -379,7 +379,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       // string and returns an empty string as the remaining value.
       val emptyStringSymbol = TempSymbol(N, "emptyString")
       makeConsequent(scrutinee, emptyStringSymbol.toScrut, Map.empty)
-      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.ref(), N)(Nil),
+      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, N)(Nil),
         Split.Let(emptyStringSymbol, str(""),
           makeConsequent(scrutinee, emptyStringSymbol.toScrut, Map.empty))
       ) ~: alternative
@@ -394,7 +394,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       val remainsSymbol = TempSymbol(N, "remains")
       val remainsTerm = callStringDrop(scrutinee(), prefix.value.length, "the remaining input")
       Split.Let(isLeadingSymbol, isLeadingTerm,
-        Branch(isLeadingSymbol.ref(),
+        Branch(isLeadingSymbol.safeRef,
           Split.Let(outputSymbol, outputTerm,
             Split.Let(remainsSymbol, remainsTerm,
               makeConsequent(outputSymbol.toScrut, remainsSymbol.toScrut, Map.empty)))
@@ -406,9 +406,9 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       val stringHeadSymbol = TempSymbol(N, "stringHead")
       val stringTailSymbol = TempSymbol(N, "stringTail")
       val nonEmptySymbol = TempSymbol(N, "nonEmpty")
-      val nonEmptyTerm = app(this.lt.ref(), tup(fld(int(0)), fld(sel(scrutinee(), "length"))), "string is not empty")
+      val nonEmptyTerm = app(this.lt.safeRef, tup(fld(int(0)), fld(sel(scrutinee(), "length"))), "string is not empty")
       Split.Let(nonEmptySymbol, nonEmptyTerm, // `0 < string.length`
-        Branch(nonEmptySymbol.ref(),
+        Branch(nonEmptySymbol.safeRef,
           Split.Let(stringHeadSymbol, callStringGet(scrutinee(), 0, "head"),
             Split.Let(stringTailSymbol, callStringDrop(scrutinee(), 1, "tail"),
               makeRangeTest(stringHeadSymbol.toScrut, lower, upper, rightInclusive,
@@ -467,7 +467,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
           // term can only access the matched values by bindings.
           (_output, remains, bindings) =>
             val arguments = symbols.iterator.map(bindings).map(_() |> fld).toSeq
-            val resultTerm = app(lambdaSymbol.ref(), tup(arguments*), "the transform's result")
+            val resultTerm = app(lambdaSymbol.safeRef, tup(arguments*), "the transform's result")
             val resultSymbol = TempSymbol(N, "transformResult")
             Split.Let(resultSymbol, resultTerm, makeConsequent(resultSymbol.toScrut, remains, Map.empty)),
           alternative))
@@ -512,26 +512,28 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
    *                 `Pattern` class. Now the new `pattern` parameter and the
    *                 old `body` parameter are mixed.
    */
-  def compilePattern(patternParams: Ls[Param], params: Ls[Param], pattern: Pattern): Ls[TermDefinition] = trace(
-    pre = s"compilePattern <<< ${params.mkString(", ")}", 
+  def compilePattern(pd: PatternDef): Ls[TermDefinition] = trace(
+    pre = s"compilePattern <<< ${pd.showDbg}", 
     post = (blk: Ls[TermDefinition]) => s"compilePattern >>> $blk"
   ):
+    // TODO: Use `pd.extractionParams`.
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pattern)
+      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
       log(s"Translated `unapply`: ${display(topmost)}")
-      makeMethod(N, "unapply", patternParams, inputSymbol, topmost)
+      makeMethod(N, "unapply", pd.patternParams, inputSymbol, topmost)
+    // TODO: Use `pd.extractionParams`.
     val unapplyStringPrefix = scoped("ucs:cp"):
       // We don't report errors here because they have been already reported in
       // the translation of `unapply` function.
       given Raise = Function.const(())
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
+      val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
       log(s"Translated `unapply`: ${display(topmost)}")
-      makeMethod(N, "unapplyStringPrefix", patternParams, inputSymbol, topmost)
+      makeMethod(N, "unapplyStringPrefix", pd.patternParams, inputSymbol, topmost)
     unapply :: unapplyStringPrefix :: Nil
   
   /** Translate an anonymous pattern. They are usually pattern arguments. */

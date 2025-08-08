@@ -89,7 +89,7 @@ trait DesugaringBase(using Ctx, State):
 
   protected final def plainTest(cond: Term, dbgName: Str = "cond")(inner: => Split): Split =
     val s = TempSymbol(N, dbgName)
-    Split.Let(s, cond, Branch(s.ref(), inner) ~: Split.End)
+    Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
   
   protected final def makeMatchResult(output: Term) =
     app(matchResultClass, tup(fld(output), fld(rcd())), "result of `MatchResult`")
@@ -109,9 +109,9 @@ trait DesugaringBase(using Ctx, State):
       localPatternSymbol: BlockLocalSymbol,
       inner: => Split,
   )(fallback: Split): Split =
-    val call = app(localPatternSymbol.ref().withIArgs(Nil), tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
+    val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
     tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.ref().withIArgs(Nil), matchResultPattern(N), inner) ~: fallback
+      Branch(resultSymbol.safeRef, matchResultPattern(N), inner) ~: fallback
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,

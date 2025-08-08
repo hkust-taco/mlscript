@@ -1182,15 +1182,10 @@ extends Importer:
                 case N => raise(WarningReport(msg"Useless pattern binding: $name." -> aliases.head.toLoc :: Nil))
             scoped("ucs:ups")(log(s"elaborated pattern body: ${pat.showDbg}"))
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
-            // Translate the pattern directly into methods that perform matching
-            // using backtracking.
-            val compiler = new ucs.NaiveCompiler(using tl)
-            val bod = compiler.compilePattern(patternParams, extractionParams, pat)
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, N,
-              patternParams, extractionParams, pat, Nil,
-              ObjBody(Blk(bod, Term.Lit(UnitLit(false)))), annotations)
+              patternParams, extractionParams, pat, annotations)
             patSym.defn = S(pd)
             pd
         case k: (Mod.type | Obj.type) =>
