@@ -3,6 +3,7 @@
 pattern Oops = "" ~ (Oops | "")
 
 :re
+:todo
 "" is Oops
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
