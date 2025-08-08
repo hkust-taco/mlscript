@@ -429,28 +429,51 @@ object Compiler:
           case N => N
         case (N, _) => N
   
+  /** Canadian Syllabics Pa */
+  val FAKE_LEFT_ANGLE = "ᐸ"
+  /** Canadian Syllabics Na */
+  val FAKE_RIGHT_ANGLE = "ᐳ"
+  
+  // I learned the characters above from Go's trick:
+  // https://news.ycombinator.com/item?id=14276891
+  // and I introduced more symbols by following the trick.
+  
+  /** Katakana-Hiragana Prolonged Sound Mark */
+  val FAKE_MINUS = "ー"
+  /** Lisu Letter Ta */
+  val FAKE_TOP = "ꓔ"
+  /** Lisu Letter Tha */
+  val FAKE_BOTTOM = "ꓕ"
+  /** Lisu Letter Tone Na Po */
+  val FAKE_COMMA = "ꓹ"
+  /** Modifier Letter Left Half Ring */
+  val FAKE_LEFT_PAREN = "ʿ"
+  /** Modifier Letter Right Half Ring */
+  val FAKE_RIGHT_PAREN = "ʾ"
+  /** Latin Letter Lateral Click */
+  val FAKE_BAR = "ǁ"
+  
   extension (pattern: Pat)
     /** Make a human-readable short name using Unicode letters, which are
      *  allowed in in identifiers in the generated code, for patterns. */
     def shortName(prec: Int = 0): Opt[Str] = pattern match
-      case Literal(IntLit(n)) => S((if n < 0 then "\u30FC" else "") + n.toString)
+      case Literal(IntLit(n)) => S((if n < 0 then FAKE_MINUS else "") + n.toString)
       case Literal(StrLit(s)) => S(s"str${s.length}")
       case Literal(UnitLit(true)) => S("null")
       case Literal(UnitLit(false)) => S("undefined")
       case ClassLike(sym, arguments) => arguments.fold(S(sym.nme)): arguments =>
         arguments.iterator.mapOption:
           case (_, pat) => pat.shortName(0)
-        .map(_.reverse.mkString(s"${sym.nme}\u02BF", "_", "\u02BE"))
+        .map(_.reverse.mkString(sym.nme + FAKE_LEFT_PAREN, FAKE_COMMA, FAKE_RIGHT_PAREN))
       case Synonym(Instantiation(symbol, patterns)) =>
         if patterns.isEmpty then S(symbol.nme) else
           patterns.iterator.mapOption(_.shortName(0)).map:
-            // Go's trick: https://news.ycombinator.com/item?id=14276891
-            _.reverse.mkString(s"${symbol.nme}\u1438", "_", "\u1433")
-      case Or(Nil) => S("\uA4D5")
+            _.reverse.mkString(symbol.nme + FAKE_LEFT_ANGLE, FAKE_COMMA, FAKE_RIGHT_ANGLE)
+      case Or(Nil) => S(FAKE_TOP)
       case Or(patterns) => patterns.iterator.mapOption(_.shortName(1)).map:
         _.reverse.mkString(
-          if prec > 0 then "\u02BF" else "",
-          "\u01C1", // LATIN LETTER LATERAL CLICK
-          if prec > 0 then "\u02BE" else "")
-      case And(Nil) => S("\u0422")
+          if prec > 0 then FAKE_LEFT_PAREN else "",
+          FAKE_BAR,
+          if prec > 0 then FAKE_RIGHT_PAREN else "")
+      case And(Nil) => S(FAKE_BOTTOM)
       case _ => N
