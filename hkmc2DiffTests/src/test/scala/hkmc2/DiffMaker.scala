@@ -364,7 +364,7 @@ abstract class DiffMaker:
   // * and every time a further command block with `:init` finishes
   def init(): Unit =
     ()
-
+  
   
 end DiffMaker
 
