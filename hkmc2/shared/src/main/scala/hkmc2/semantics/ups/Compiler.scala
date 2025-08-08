@@ -13,6 +13,7 @@ import ucs.{DesugaringBase as Base, FlatPattern, safeRef}
 import Message.MessageContext, ucs.error
 
 import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
+import scala.annotation.tailrec
 
 /** The compiler for pattern definitions. It compiles instantiated patterns into
   * a few matcher functions. Each matcher function matches a set of patterns
@@ -42,7 +43,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
     /** Create a flat pattern that can be used in the UCS expressions. */
     def toFlatPattern: FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)(Nil)
-      case sym: ClassLikeSymbol =>
+      case sym: (ClassSymbol | ModuleSymbol) =>
         FlatPattern.ClassLike(reference(sym).getOrElse(Term.Error), N, Nil)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
@@ -396,25 +397,42 @@ object Compiler:
   
   /** Perform a reverse lookup for a term that references a symbol in the
    *  current context. */
-  def reference(symbol: ClassLikeSymbol)(using tl: TL)(using Ctx, State): Opt[Term] =
-    /** To make lowering happy about the terms. */
+  def reference(symbol: ClassSymbol | ModuleSymbol | PatternSymbol)(using tl: TL)(using Ctx, State): Opt[Term] =
+    /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
       case ref: Ref => ref.withIArgs(Nil)
       case sel: SynthSel =>
         fillImplicitArgs(sel.prefix)
         sel.withIArgs(Nil)
-      case other => other
-    def go(ctx: Ctx): Opt[Term] =
-      ctx.env.values.collectFirst:
-        case elem if elem.symbol.flatMap(_.asClsLike).contains(symbol) =>
-          fillImplicitArgs(elem.ref(symbol.id))
-      .orElse(ctx.parent.flatMap(go))
+      case _: Term => term
+    def findSymbol(elem: Ctx.Elem): Opt[Term] =
+      elem.symbol.flatMap(_.asClsLike).collectFirst:
+        // Check the element's symbol.
+        case `symbol` =>
+          val id = symbol match
+            case symbol: PatternSymbol => symbol.id
+            case symbol: (ClassSymbol | ModuleSymbol) => symbol.id
+          S(elem.ref(id))
+        // Look up the symbol in module members.
+        case module: ModuleSymbol =>
+          val moduleRef = module.defn.get.bsym.ref()
+          module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
+            case (key, S(`symbol`)) =>
+              val memberSymbol = symbol.defn.get.bsym
+              SynthSel(moduleRef, Ident(key))(S(memberSymbol))
+      .flatten
+    @tailrec def go(ctx: Ctx): Opt[Term] =
+      ctx.env.values.iterator.map(findSymbol).firstSome match
+        case S(term) => S(fillImplicitArgs(term))
+        case N => ctx.parent match
+          case N => N
+          case S(parent) => go(parent)
     go(ctx).map: term =>
       // If the `symbol` is a virtual class, then do not select `class`.
       symbol match
         case s: ClassSymbol if !(ctx.builtins.virtualClasses contains s) =>
           SynthSel(term, Ident("class"))(S(s)).withIArgs(Nil)
-        case _: (ClassSymbol | ModuleSymbol) => term
+        case _: (ClassSymbol | ModuleSymbol | PatternSymbol) => term
   
   import Pattern.*
   

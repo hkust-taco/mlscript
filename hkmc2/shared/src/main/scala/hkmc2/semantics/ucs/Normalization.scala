@@ -343,6 +343,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     val compiler = new NaiveCompiler
     patternArguments.foldRight(split):
       case ((symbol, pattern), innerSplit) =>
+        scoped("ucs:translation"):
+          log(s"build anonymous pattern: ${pattern.showDbg} for symbol ${symbol.nme}")
         val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
         Split.Let(symbol, record, innerSplit)
   

@@ -557,28 +557,33 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     decl :: defineVar :: field :: Nil
   
   /** Translate an anonymous pattern. They are usually pattern arguments. */
-  def compileAnonymousPattern(patternParams: Ls[Param], params: Ls[Param], pattern: SP): Term.Rcd = trace(
+  def compileAnonymousPattern(patternParams: Ls[Param], params: Ls[Param], pattern: SP): Term = trace(
     pre = s"compileAnonymousPattern <<< $pattern", 
-    post = (blk: Term.Rcd) => s"compileAnonymousPattern >>> $blk"
+    post = (blk: Term) => s"compileAnonymousPattern >>> $blk"
   ):
-    // We should apply an optimization to avoid generating unnecessary objects.
-    // If the pattern is a constructor pattern, we can just reference the
-    // `target` term. Currently, we don't do this because it is until resolution
-    // stage that we can know the `target` refers to a pattern or not.
-    val unapply = scoped("ucs:translation"):
-      val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pattern)
-        ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
-      log(s"Translated `unapply`: ${display(topmost)}")
-      makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
-    val unapplyStringPrefix = scoped("ucs:cp"):
-      // We don't report errors here because they have been already reported in
-      // the translation of `unapply` function.
-      given Raise = Function.const(())
-      val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
-        ((consumedOutput, remainingOutput, bindings) => Split.Else:
-          makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-      log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
-      makeUnapplyRecordStatements("unapplyStringPrefix", patternParams, inputSymbol, topmost)
-    Term.Rcd(false, unapply ::: unapplyStringPrefix)
+    // If the `target` refers to a pattern symbol, we can reference the pattern.
+    val term = pattern match
+      case Constructor(target, Nil, N) =>
+        log(s"target.symbol: ${target.symbol}")
+        log(s"target.symbol.flatMap(_.asPat): ${target.symbol.flatMap(_.asPat)}")
+        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference)
+      case _ => N
+    log(s"term: ${term}")
+    term.getOrElse:
+      val unapply = scoped("ucs:translation"):
+        val inputSymbol = VarSymbol(Ident("input"))
+        val topmost = makeMatchSplit(inputSymbol.toScrut, pattern)
+          ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
+        log(s"Translated `unapply`: ${display(topmost)}")
+        makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
+      val unapplyStringPrefix = scoped("ucs:cp"):
+        // We don't report errors here because they have been already reported in
+        // the translation of `unapply` function.
+        given Raise = Function.const(())
+        val inputSymbol = VarSymbol(Ident("input"))
+        val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
+          ((consumedOutput, remainingOutput, bindings) => Split.Else:
+            makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
+        log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+        makeUnapplyRecordStatements("unapplyStringPrefix", patternParams, inputSymbol, topmost)
+      Term.Rcd(false, unapply ::: unapplyStringPrefix)
