@@ -1317,7 +1317,7 @@ extends Importer:
   
   def pattern(t: Tree): Ctxl[Pattern] =
     import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ucs.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
+    import ups.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
     given TraceLogger = tl
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */

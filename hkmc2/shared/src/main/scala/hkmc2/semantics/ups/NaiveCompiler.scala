@@ -1,13 +1,14 @@
 package hkmc2
 package semantics
-package ucs
+package ups
 
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
-import Split.display, Desugarer.unapply, extractors.*
-import syntax.{Fun, Keyword, Tree}, Tree.*, Keyword.{`as`, `=>`}
+import Split.display, ucs.{DesugaringBase, FlatPattern, error, safeRef}, ucs.extractors.*
+import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
 import scala.collection.mutable.Buffer
 import Elaborator.{Ctx, State, ctx}, utils.TL
+import semantics.Pattern as SP // "SP" is short for "semantic patterns"
 
 object NaiveCompiler:
   /** String range bounds must be single characters. */
@@ -77,7 +78,7 @@ import NaiveCompiler.*
 /** This class compiles a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern. */
 class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBase:
-  import tl.*, FlatPattern.MatchMode, Pattern.*
+  import tl.*, FlatPattern.MatchMode, SP.*
   
   private lazy val lteq = State.builtinOpsMap("<=")
   private lazy val lt = State.builtinOpsMap("<")
@@ -105,7 +106,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil
   
-  extension (patterns: Ls[Pattern])
+  extension (patterns: Ls[SP])
     def folded(z: (Ls[TempSymbol], MakeConsequent))(makeSubScrutineeSymbol: Int => TempSymbol) =
       patterns.iterator.zipWithIndex.foldRight(z):
         case ((element, index), (subScrutinees, makeInnerSplit)) =>
@@ -122,14 +123,8 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
    *  Since each pattern has an output, the split is responsible for creating
    *  a binding that holds the output value and pass it to the continuation
    *  function that makes the conseuqent split.
-   * 
-   *  @param bindings Variables that can be bound in this pattern. Currently,
-   *                  when we encounter an `Alias` pattern, we check whether
-   *                  its symbol exists in this list before binding it. But I'm
-   *                  not sure whether this check is redundant.
    */
-  private def makeMatchSplit(scrutinee: Scrut, pattern: Pattern): MakeSplit =
-    import Pattern.*
+  private def makeMatchSplit(scrutinee: Scrut, pattern: SP): MakeSplit =
     pattern match
       case Constructor(target, patternArguments, arguments) => (makeConsequent, alternative) =>
         // If we treat a constructor pattern as the intersection of constructor
@@ -317,7 +312,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
    *  @return The return value is a function that builds the split. */
   private def makeStringPrefixMatchSplit(
       scrutinee: Scrut,
-      pattern: Pattern,
+      pattern: SP,
   )(using Raise): MakePrefixSplit = pattern match
     case Constructor(target, patternArguments, arguments) =>
       // TODO: Handle `patternArguments` and `arguments` accordingly.
@@ -537,7 +532,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     unapply :: unapplyStringPrefix :: Nil
   
   /** Translate an anonymous pattern. They are usually pattern arguments. */
-  def compileAnonymousPattern(patternParams: Ls[Param], params: Ls[Param], pattern: Pattern): Term.Rcd = trace(
+  def compileAnonymousPattern(patternParams: Ls[Param], params: Ls[Param], pattern: SP): Term.Rcd = trace(
     pre = s"compileAnonymousPattern <<< $pattern", 
     post = (blk: Term.Rcd) => s"compileAnonymousPattern >>> $blk"
   ):

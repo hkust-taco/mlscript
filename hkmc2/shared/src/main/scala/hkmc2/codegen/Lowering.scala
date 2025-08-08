@@ -820,7 +820,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def compilePatternMethods(defn: PatternDef)(using Subst):
       // The return type is intended to be consistent with `gatherMembers`
       (Ls[FunDefn], Ls[BlockMemberSymbol], Ls[TermSymbol], Block) =
-    val compiler = new ucs.NaiveCompiler
+    val compiler = new ups.NaiveCompiler
     val methods = compiler.compilePattern(defn)
     val mtds = methods
       .flatMap: td =>
