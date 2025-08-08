@@ -60,7 +60,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
       )
 
   override def processTerm(trm: Blk, inImport: Bool, statefulComments: Ls[String])(using Config, Raise): Unit = 
-    super.processTerm(trm, inImport, statefulComments)    
+    super.processTerm(trm, inImport, statefulComments)
     if llir.isSet then
       val low = ltl.givenIn:
         codegen.Lowering()
