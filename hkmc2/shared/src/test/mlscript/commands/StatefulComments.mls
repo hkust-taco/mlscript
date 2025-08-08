@@ -18,4 +18,19 @@ while i < 1000000 do
 Date.now()
 //+ freeze (date): = 1754638286509
 
+fun choose(choices) =
+  val index = Math.floor(Math.random() * choices.length)
+  choices.[index]
 
+:freeze choose
+let c = choose(["a", "b", "c"])
+//+ freeze (choose): c = "b"
+
+:freeze choose
+if c == "a" then
+  "You chose a!"
+else if c == "b" then
+  "You chose b!"
+else
+  "You chose c!"
+//+ freeze (choose): = "You chose b!"
