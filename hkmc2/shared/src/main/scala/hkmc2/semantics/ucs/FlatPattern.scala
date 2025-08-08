@@ -64,8 +64,7 @@ enum FlatPattern extends AutoLocated:
       output.iterator.map(s => s.nme).mkStringOr("as ", " as ", "", "")
 
 object FlatPattern:
-  /** Represent the type of arguments in `ClassLike` patterns. This type alias
-   *  is used to reduce repetition in the code.
+  /** Represent the type of arguments in `ClassLike` patterns.
    * 
    *  @param scrutinee the symbol representing the scrutinee
    *  @param tree the original `Tree` for making error messages

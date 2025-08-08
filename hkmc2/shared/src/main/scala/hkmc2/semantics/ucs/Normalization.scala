@@ -155,8 +155,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
                   mode match
                     case MatchMode.Default =>
                       normalizeExtractorPatternParameter(scrutinee, ctor, pattern.output, consequent, alternative)
-                    case MatchMode.StringPrefix(prefix, postfix) =>
-                      normalizeStringPrefixPattern(scrutinee, ctor, postfix, pattern.output, consequent, alternative)
+                    case sp: MatchMode.StringPrefix =>
+                      log(s"symbol name is ${symbol.nme}")
+                      normalizeStringPrefixPattern(scrutinee, ctor, N, sp, pattern.output, consequent, alternative)
                     case MatchMode.Annotated(annotation) =>
                       error(msg"Annotated pattern parameters are not supported here." -> annotation.toLoc)
                       normalizeImpl(alternative)
@@ -193,8 +194,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             // should properly handle the pattern arguments.
             case MatchMode.Default =>
               normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, pattern.output, consequent, normalizeImpl(alternative))
-            case MatchMode.StringPrefix(prefix, postfix) =>
-              normalizeStringPrefixPattern(scrutinee, ctor, postfix, pattern.output, consequent, normalizeImpl(alternative))
+            case sp: MatchMode.StringPrefix =>
+              normalizeStringPrefixPattern(scrutinee, ctor, argsOpt, sp, pattern.output, consequent, normalizeImpl(alternative))
             case MatchMode.Annotated(annotation) => annotation.symbol match
               case S(symbol) if symbol === ctx.builtins.annotations.compile =>
                 normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, pattern.output, consequent, normalizeImpl(alternative))
@@ -328,6 +329,14 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         ) ~: alternative
     normalize(split)
   
+  /** Create a split that binds the pattern arguments. */
+  def bindPatternArguments(
+      patternArguments: List[(BlockLocalSymbol, (pattern: Pattern, term: Term.Rcd))],
+      split: Split
+  ): Split =
+    patternArguments.foldRight(split):
+      case ((sym, arg), innerSplit) => Split.Let(sym, arg.term, innerSplit)
+  
   /** Normalize splits whose leading branch matches a pattern and does not have
    *  a `@compile` annotation. */
   private def normalizeExtractorPattern(
@@ -355,13 +364,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         case Argument(scrutinee, _, S(pattern)) => Right((scrutinee, pattern))
       (if extractionArgs.isEmpty then N else S(extractionArgs), patternArgs)
     // Place pattern arguments first, then the scrutinee.
-    val unapplyArgs = patternArguments.map(_._1.ref().withIArgs(Nil) |> fld) :+ fld(scrutinee)
+    val unapplyArgs = patternArguments.map(_._1.safeRef |> fld) :+ fld(scrutinee)
     val unapplyCall = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(unapplyArgs*), s"result of unapply")
-    // Create a split that binds the pattern arguments.
-    def bindPatternArguments(split: Split): Split =
-      patternArguments.foldRight(split):
-        case ((sym, arg), innerSplit) => Split.Let(sym, arg.term, innerSplit)
-    val split = bindPatternArguments(tempLet("matchResult", unapplyCall): resultSymbol =>
+    val split = bindPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
       extractionArgsOpt match
         case N =>
           if outputSymbols.isEmpty then
@@ -421,25 +426,36 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   private def normalizeStringPrefixPattern(
       scrutinee: Term.Ref,
       ctorTerm: Term,
-      remainingSymbol: TempSymbol,
+      allArgsOpt: Opt[Ls[FlatPattern.Argument]],
+      stringPrefix: MatchMode.StringPrefix,
       outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
-  )(using VarSet): Split =
-    val method = "unapplyStringPrefix"
-    val call = app(sel(ctorTerm, method), tup(fld(scrutinee)), s"result of $method")
+  )(using VarSet): Split = trace(
+    pre = s"normalizeStringPrefixPattern <<< ${ctorTerm.showDbg}",
+    post = (r: Split) => s"normalizeStringPrefixPattern >>> ${Split.display(r)}"
+  ):
+    val patternArguments = allArgsOpt.fold(Nil):
+      _.collect:
+        case Argument(symbol, _, S(pattern)) => symbol -> pattern
+    val call =
+      val method = "unapplyStringPrefix"
+      val args = tup(patternArguments.map(_._1.safeRef) :+ scrutinee)
+      app(sel(ctorTerm, method), args, s"result of $method")
     val split = tempLet("matchResult", call): resultSymbol =>
       // let `matchResult` be the return value
-      val argSym = TempSymbol(N, "arg")
+      val outputSymbol = TempSymbol(N, "arg")
       val bindingsSymbol = TempSymbol(N, "bindings")
-      // let `arg` be the first element of `matchResult`
       Branch(
-        resultSymbol.ref().withIArgs(Nil),
-        matchResultPattern(S(argSym :: bindingsSymbol :: Nil)),
+        resultSymbol.safeRef,
+        matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
         aliasOutputSymbols(resultSymbol.safeRef, outputSymbols,
-          Split.Let(remainingSymbol, callTupleGet(argSym.ref().withIArgs(Nil), 1, "postfix"), consequent))
+          // Bind the `remaining` variable to the second element of the output
+          // of `matchResult`.
+          Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
+            Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent)))
       ) ~: alternative
-    normalize(split)
+    normalize(bindPatternArguments(patternArguments, split))
   
   // Note: This function will be overhauled in the new pattern compilation scheme.
   private def normalizeCompiledPattern(

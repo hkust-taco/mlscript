@@ -90,22 +90,6 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     val test2 = app(upperOp.safeRef, tup(scrutFld, fld(Term.Lit(hi))), "isLessThanUpper")
     plainTest(test1, "isGreaterThanLower")(plainTest(test2, "isLessThanUpper")(innerSplit))
   
-  /** Create a pattern object that contains the given pattern. */
-  def makeAnonymousPatternObject(
-      name: Str,
-      patternParameters: List[Param],
-      scrut: VarSymbol,
-      topmost: Split
-  ): Ls[Statement] =
-    val fieldSymbol = TempSymbol(N, name)
-    val decl = LetDecl(fieldSymbol, Nil)
-    val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
-    val paramList = PlainParamList(param :: Nil)
-    val lambda = Term.Lam(paramList, Term.IfLike(Keyword.`if`, topmost))
-    val defineVar = DefineVar(fieldSymbol, lambda)
-    val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
-    decl :: defineVar :: field :: Nil
-  
   extension (patterns: Ls[SP])
     def folded(z: (Ls[TempSymbol], MakeConsequent))(makeSubScrutineeSymbol: Int => TempSymbol) =
       patterns.iterator.zipWithIndex.foldRight(z):
@@ -338,7 +322,13 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         log(s"argumentVariables of ${pattern.showDbg} are ${argumentVariables.keys.map(_.nme).mkString(", ")}")
         val consequent = makeConsequent(outputSymbol.toScrut, remainingSymbol.toScrut, argumentVariables)
         val mode = MatchMode.StringPrefix(outputSymbol, remainingSymbol)
-        Branch(scrutinee(), FlatPattern.ClassLike(target, N, mode, false)(Tree.Dummy, outputSymbol :: Nil), consequent) ~: alternative
+        val theArguments = patternArguments.iterator.zipWithIndex.map: (pattern, index) =>
+          val patternSymbol = TempSymbol(N, s"patternArgument$index$$")
+          val patternObject = compileAnonymousPattern(Nil, Nil, pattern)
+          FlatPattern.Argument(patternSymbol, Tree.Empty().withLocOf(pattern), S((pattern, patternObject)))
+        .toList
+        val thePattern = FlatPattern.ClassLike(target, S(theArguments), mode, false)(Tree.Dummy, Nil)
+        Branch(scrutinee(), thePattern, consequent) ~: alternative
     case Composition(true, left, right) =>
       val makeLeft = makeStringPrefixMatchSplit(scrutinee, left)
       val makeRight = makeStringPrefixMatchSplit(scrutinee, right)
@@ -529,9 +519,26 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-      log(s"Translated `unapply`: ${display(topmost)}")
+      log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
       makeMethod(N, "unapplyStringPrefix", pd.patternParams, inputSymbol, topmost)
     unapply :: unapplyStringPrefix :: Nil
+  
+  /** Generate the record statements of `unapply` methods that can be used in
+   *  objects for anonymous patterns. */
+  def makeUnapplyRecordStatements(
+      name: Str,
+      patternParameters: List[Param],
+      scrut: VarSymbol,
+      topmost: Split
+  ): Ls[Statement] =
+    val fieldSymbol = TempSymbol(N, name)
+    val decl = LetDecl(fieldSymbol, Nil)
+    val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
+    val paramList = PlainParamList(param :: Nil)
+    val lambda = Term.Lam(paramList, Term.IfLike(Keyword.`if`, topmost))
+    val defineVar = DefineVar(fieldSymbol, lambda)
+    val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
+    decl :: defineVar :: field :: Nil
   
   /** Translate an anonymous pattern. They are usually pattern arguments. */
   def compileAnonymousPattern(patternParams: Ls[Param], params: Ls[Param], pattern: SP): Term.Rcd = trace(
@@ -542,10 +549,20 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
     // If the pattern is a constructor pattern, we can just reference the
     // `target` term. Currently, we don't do this because it is until resolution
     // stage that we can know the `target` refers to a pattern or not.
-    val unapplyStmts = scoped("ucs:translation"):
+    val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
       val topmost = makeMatchSplit(inputSymbol.toScrut, pattern)
         ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
       log(s"Translated `unapply`: ${display(topmost)}")
-      makeAnonymousPatternObject("unapply", patternParams, inputSymbol, topmost)
-    Term.Rcd(false, unapplyStmts)
+      makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
+    val unapplyStringPrefix = scoped("ucs:cp"):
+      // We don't report errors here because they have been already reported in
+      // the translation of `unapply` function.
+      given Raise = Function.const(())
+      val inputSymbol = VarSymbol(Ident("input"))
+      val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
+        ((consumedOutput, remainingOutput, bindings) => Split.Else:
+          makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
+      log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+      makeUnapplyRecordStatements("unapplyStringPrefix", patternParams, inputSymbol, topmost)
+    Term.Rcd(false, unapply ::: unapplyStringPrefix)

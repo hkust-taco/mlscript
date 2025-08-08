@@ -17,7 +17,9 @@ trait DesugaringBase(using Ctx, State):
   protected final def str(s: Str) = Term.Lit(StrLit(s))
   protected final def `null` = Term.Lit(UnitLit(true))
   protected final def fld(t: Term) = Fld(FldFlags.empty, t, N)
-  protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(Tup(Nil))
+  protected final def tup(xs: List[Term]): Term.Tup =
+    Term.Tup(xs.iterator.map(fld).toList)(DummyTup)
+  protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(DummyTup)
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
