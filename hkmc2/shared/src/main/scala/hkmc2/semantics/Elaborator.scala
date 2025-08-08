@@ -1191,7 +1191,7 @@ extends Importer:
             val pat = pattern(rhs)(using ctx ++ patternParams.iterator.map(p => p.sym.name -> p.sym))
             // Report all invalid variables we found in the top-level pattern.
             pat.variables.report
-            // Note that the remaining variables have not been bounded to any
+            // Note that the remaining variables have not been bound to any
             // `VarSymbol` yet. Thus, we need to pair them with the extraction
             // parameters. We only report warnings for unbounded variables
             // because they are harmless.
