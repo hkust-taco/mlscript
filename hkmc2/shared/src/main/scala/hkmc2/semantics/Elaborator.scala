@@ -1193,7 +1193,7 @@ extends Importer:
             pat.variables.report
             // Note that the remaining variables have not been bound to any
             // `VarSymbol` yet. Thus, we need to pair them with the extraction
-            // parameters. We only report warnings for unbounded variables
+            // parameters. We only report warnings for unbound variables
             // because they are harmless.
             pat.variables.varMap.foreach: (name, aliases) =>
               extractionParams.find(_.sym.name == name) match
