@@ -2,7 +2,7 @@
 
 :e
 pattern Foo(val T) = null | T
-//│ ╔══[ERROR] Unexpected pattern parameter T with flags val
+//│ ╔══[ERROR] Unexpected pattern parameter T with modifiers: val
 //│ ║  l.4: 	pattern Foo(val T) = null | T
 //│ ╙──     	                ^
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
