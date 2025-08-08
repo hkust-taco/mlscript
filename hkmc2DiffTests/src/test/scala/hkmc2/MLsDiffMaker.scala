@@ -145,11 +145,11 @@ abstract class MLsDiffMaker extends DiffMaker:
       processTrees(
         Modified(`import`, N, StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
-        :: Nil)
+        :: Nil, Nil)
     if importQQ.isSet then
       given Config = mkConfig
       processTrees(
-        Modified(`import`, N, StrLit(termFile.toString)) :: Nil)
+        Modified(`import`, N, StrLit(termFile.toString)) :: Nil, Nil)
     super.init()
   
   
@@ -234,7 +234,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   private var blockNum = 0
   
-  def processTrees(trees: Ls[syntax.Tree], statefulComments: Ls[String] = Ls.empty)(using Config, Raise): Unit =
+  def processTrees(trees: Ls[syntax.Tree], statefulComments: Ls[String])(using Config, Raise): Unit =
     val elab = Elaborator(etl, file / os.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
