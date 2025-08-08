@@ -1184,10 +1184,8 @@ extends Importer:
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // Translate the pattern directly into methods that perform matching
             // using backtracking.
-            val bod = new ucs.NaiveCompiler(this)(
-              patternParams, Nil, // TODO: Remove this parameter after we finish
-              // the pattern translation for string concatenation.
-              td.rhs.getOrElse(die), pat)
+            val compiler = new ucs.NaiveCompiler(using tl)
+            val bod = compiler.compilePattern(patternParams, extractionParams, pat)
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps, N,

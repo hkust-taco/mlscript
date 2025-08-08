@@ -16,13 +16,15 @@ pattern Zero = "0"
 //│       return runtime.MatchFailure(null)
 //│     }
 //│   } 
-//│   unapplyStringPrefix(topic) {
-//│     let cond, sliced;
-//│     cond = runtime.Str.startsWith(topic, "0");
-//│     if (cond === true) {
-//│       sliced = runtime.Str.drop(topic, 1);
+//│   unapplyStringPrefix(input1) {
+//│     let isLeading, consumed, remains;
+//│     isLeading = runtime.Str.startsWith(input1, "0");
+//│     if (isLeading === true) {
+//│       consumed = runtime.Str.take(input1, 1);
+//│       remains = runtime.Str.drop(input1, 1);
 //│       return runtime.MatchResult([
-//│         sliced
+//│         consumed,
+//│         remains
 //│       ], {})
 //│     } else {
 //│       return runtime.MatchFailure(null)

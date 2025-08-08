@@ -232,3 +232,21 @@ pattern Positive = (x & (((Int as x) => x > 0) as true)) => x
 
 Positive.unapply(100)
 //│ = MatchResult(100, {})
+
+//  ____  _        _
+// / ___|| |_ _ __(_)_ __   __ _
+// \___ \| __| '__| | '_ \ / _` |
+//  ___) | |_| |  | | | | | (_| |
+// |____/ \__|_|  |_|_| |_|\__, |
+//                         |___/
+// ==============================
+
+pattern HelloWorld =
+  (("hello" as a) ~ " " ~ ("world" as b)) =>
+    "the user said " + a + " to the " + b
+
+"hello world" is HelloWorld
+//│ = true
+
+if "hello world" is HelloWorld as x then x
+//│ = "the user said hello to the world"

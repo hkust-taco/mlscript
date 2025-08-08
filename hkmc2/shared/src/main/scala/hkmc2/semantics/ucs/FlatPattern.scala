@@ -69,9 +69,6 @@ object FlatPattern:
    * 
    *  @param scrutinee the symbol representing the scrutinee
    *  @param tree the original `Tree` for making error messages
-   *  @param split is for the old pattern compilation. **TODO(ucs/rp)**: Replace
-   *               with suitable representation when implementing the new pattern
-   *               compilation.
    *  @param pattern is for the new pattern compilation and translation.
    */
   final case class Argument(

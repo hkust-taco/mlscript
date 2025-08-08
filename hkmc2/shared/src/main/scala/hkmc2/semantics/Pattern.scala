@@ -61,7 +61,8 @@ object Pattern:
       .toSeq
     
     /** Get all symbols for the variables. */
-    def symbols: Ls[VarSymbol] = varMap.iterator.map(_._2.head.symbol).toList
+    def symbols: Ls[VarSymbol] =
+      varMap.iterator.flatMap(_._2.head.symbolOption).toList
     
     /** Add a single variable to the variable set. */
     def +(alias: Pattern.Alias): Variables =

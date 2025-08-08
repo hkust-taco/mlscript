@@ -28,7 +28,7 @@ object Desugarer:
 end Desugarer
 
 class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) extends DesugaringBase:
-  import Desugarer.*, elaborator.term, elaborator.subterm, elaborator.tl.*
+  import Desugarer.*, elaborator.term, elaborator.subterm, elaborator.tl, tl.*
   
   given Ordering[Loc] = Ordering.by: loc =>
     (loc.spanStart, loc.spanEnd)
@@ -465,8 +465,8 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
           val pattern = tree match
             case TypeDef(syntax.Pat, body, N) =>
               val pattern = elaborator.pattern(body)
-              val term = new NaiveCompiler(elaborator).translateAnonymousPattern(Nil, Nil, pattern)
-              S((pattern, term))
+              val compiler = new NaiveCompiler(using tl)
+              S((pattern, compiler.compileAnonymousPattern(Nil, Nil, pattern)))
             case td @ TypeDef(k = syntax.Pat) =>
               error(msg"Ill-formed pattern argument" -> td.toLoc); N
             case _ => N

@@ -102,8 +102,21 @@ fun parseIntegerLiteral(value) = if
 //│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
 //│ ╙──      	                                              ^
 
-// The workaround we can use currently is to use a pattern declaration.
-:fixme
 pattern IntegerLiteral =
   ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: radix
+
+fun parseIntegerLiteral(value) = if
+  value is IntegerLiteral as output then Some(output)
+  else None
+
+parseIntegerLiteral of "0x1234"
+//│ = Some({radix: "x", digits: "1234"})
+
+parseIntegerLiteral of "0b0000111100001111"
+//│ = Some({radix: "b", digits: "0000111100001111"})
+
+parseIntegerLiteral of "0o673264673"
+//│ = Some({radix: "o", digits: "673264673"})
+
+parseIntegerLiteral of "0k1234"
+//│ = None

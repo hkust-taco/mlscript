@@ -39,27 +39,25 @@ pattern Rep0(pattern A, B, C)(head) =
 //│ ╟── The variable is missing from this sub-pattern.
 //│ ║  l.27: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	  ^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: no symbol was assigned to variable `head` at Some(Loc(51,55,Future.mls:+26))
 
 :todo // Pattern extractions via aliases.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.46: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ║        	                                ^^^^^^^^^^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.46: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	   ^^^^^^^^^^
 //│ ╔══[WARNING] Useless pattern binding: Identifier.
-//│ ║  l.46: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
+//│ ║  l.45: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
 //│ ╙──      	                                ^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: no symbol was assigned to variable `Identifier` at Some(Loc(33,43,Future.mls:+45))
 
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.60: 	  n and n > value then n
+//│ ║  l.58: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -72,11 +70,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator).
-//│ ║  l.71: 	  view as
+//│ ║  l.69: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.72: 	    Unit then ....
+//│ ║  l.70: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.73: 	    Arrow(...) then ....
+//│ ║  l.71: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -94,16 +92,19 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.91: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.89: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.91: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.89: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
 :todo
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.104: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ║  l.102: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──       	                                   ^^^
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.102: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──       	                                   ^^^
 
 :todo
@@ -113,11 +114,11 @@ pattern LineSep(pattern P) = case
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.111: 	  "" then Nil
+//│ ║  l.112: 	  "" then Nil
 //│ ║         	  ^^^^^^^^^^^
-//│ ║  l.112: 	  L(...nd) ~
+//│ ║  l.113: 	  L(...nd) ~
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.113: 	    ""                   then nd :: Nil
+//│ ║  l.114: 	    ""                   then nd :: Nil
 //│ ╙──       	^^^^
 
 :todo
@@ -131,29 +132,26 @@ pattern Lines(pattern L) = case
 :todo
 if input is Lines of Email then
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.132: 	if input is Lines of Email then
+//│ ║  l.133: 	if input is Lines of Email then
 //│ ╙──       	                               ^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.125: 	  "" then []
+//│ ║  l.126: 	  "" then []
 //│ ║         	  ^^^^^^^^^^
-//│ ║  l.126: 	  pattern Tail = case
+//│ ║  l.127: 	  pattern Tail = case
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.127: 	    "" then []
+//│ ║  l.128: 	    "" then []
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.128: 	    "\n" ~ (Lines of L) as t then t
+//│ ║  l.129: 	    "\n" ~ (Lines of L) as t then t
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.129: 	  L as h ~ Tail as t then [h, ...t]
+//│ ║  l.130: 	  L as h ~ Tail as t then [h, ...t]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.130: 	  
+//│ ║  l.131: 	  
 //│ ║         	^^^
-//│ ║  l.131: 	:todo
+//│ ║  l.132: 	:todo
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.132: 	if input is Lines of Email then
+//│ ║  l.133: 	if input is Lines of Email then
 //│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Name not found: Email
-//│ ║  l.132: 	if input is Lines of Email then
-//│ ╙──       	                     ^^^^^
 
 :todo
 pattern Opt(pattern P) = case
@@ -163,25 +161,25 @@ pattern Opt(pattern P) = case
 :todo
 pattern Email(name, domain) = ...
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.160: 	  P(value) then (Some(value))
+//│ ║  l.158: 	  P(value) then (Some(value))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.161: 	  ""       then (None)
+//│ ║  l.159: 	  ""       then (None)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.162: 	  
+//│ ║  l.160: 	  
 //│ ║         	^^^
-//│ ║  l.163: 	:todo
+//│ ║  l.161: 	:todo
 //│ ╙──       	^^^^^
 
 :todo
 if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.176: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Name not found: Some
-//│ ║  l.176: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
 //│ ╔══[ERROR] invalid record field pattern
-//│ ║  l.176: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.174: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                                ^
 //│ ═══[ERROR] Expected zero arguments, but found two arguments.
 
@@ -190,9 +188,9 @@ pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.190: 	  P(...values) then (Some(values))
+//│ ║  l.188: 	  P(...values) then (Some(values))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.191: 	  ""           then (None)
+//│ ║  l.189: 	  ""           then (None)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -200,16 +198,16 @@ pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.200: 	  P(...values) then Some(values)
+//│ ║  l.198: 	  P(...values) then Some(values)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.201: 	  ""           then None
+//│ ║  l.199: 	  ""           then None
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.209: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.207: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ ╔══[ERROR] Found an unrecognizable pattern.
-//│ ║  l.209: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.207: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                 ^^^^^^

@@ -146,23 +146,3 @@ trait DesugaringBase(using Ctx, State):
         val label = s"the first ${index + 1}-th element of the tuple"
         Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
     Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true)(Nil), split2) ~: alternative
-  
-  /** Make a `Branch` that calls `Pattern` symbols' `unapplyStringPrefix` functions. */
-  protected final def makeUnapplyStringPrefixBranch(
-      scrut: => Term.Ref,
-      clsTerm: Term,
-      postfixSymbol: TempSymbol,
-      inner: => Split,
-      method: Str = "unapplyStringPrefix"
-  )(fallback: Split): Split =
-    val call = app(sel(clsTerm, method), tup(fld(scrut)), s"result of $method")
-    tempLet("matchResult", call): resultSymbol =>
-      // let `matchResult` be the return value
-      val argSym = TempSymbol(N, "arg")
-      val bindingsSymbol = TempSymbol(N, "bindings")
-      // let `arg` be the first element of `matchResult`
-      Branch(
-        resultSymbol.ref().withIArgs(Nil),
-        matchResultPattern(S(argSym :: bindingsSymbol :: Nil)),
-        Split.Let(postfixSymbol, callTupleGet(argSym.ref().withIArgs(Nil), 0, "postfix"), inner)
-      ) ~: fallback
