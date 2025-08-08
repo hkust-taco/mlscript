@@ -10,10 +10,14 @@ import Term.{Blk, IfLike, Rcd, Ref, SynthSel}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{DesugaringBase as Base, FlatPattern, safeRef}
+import Message.MessageContext, ucs.error
 
 import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
 
-
+/** The compiler for pattern definitions. It compiles instantiated patterns into
+  * a few matcher functions. Each matcher function matches a set of patterns
+  * and returns a record that contains the results of each pattern.
+  */
 class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Base:
   import Compiler.*, tl.*
   
@@ -184,23 +188,22 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
   
   import Pattern.*
   
+  /** Represent things that can be used as expressions in consequents. */
   type Usable = BlockLocalSymbol | Term
+  
+  extension (usable: Usable)
+    def use: Term = usable match
+      case symbol: BlockLocalSymbol => symbol.safeRef
+      case term: Term => term
   
   /** The bindings can be a `Term` or a `TempSymbol`. */
   type MakeConsequent = (output: Usable, bindings: Usable) => Split
   
   /** A function that makes a split in matcher functions. The first argument
-   *  indicates the transform that should be applied to bindings at the
-   *  innermost split. If it is `None`, then the innermost split should just
-   *  return the bindings through `MatchResult`. The second argument is the
-   *  alternative split. It is not a global fallback split.
+   *  is the function that makes the innermost split. The second argument is the
+   *  alternative split. Note that the alternative is not a fallback.
    */
   type MakeSplit = (makeConsequent: MakeConsequent, alternative: Split) => Split
-  
-  extension (symbolOrTerm: Usable)
-    def use: Term = symbolOrTerm match
-      case symbol: BlockLocalSymbol => symbol.safeRef
-      case term: Term => term
   
   /** Create the innermost `Else` split based on whether we have a transform
    *  term or not.
@@ -223,7 +226,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
         makeMatchResult(resultSymbol.safeRef)))
   
   def completePattern(
-      pattern: SpPat, // This is actually a `SpPat`.
+      pattern: SpPat,
       scrutinee: BlockLocalSymbol,
       subScrutinees: Map[Ident | Int, BlockLocalSymbol],
       aliases: Ls[VarSymbol]
@@ -288,9 +291,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
                 )
               ) ~: alternative)): MakeSplit
       makeMakeSplit(Nil, Nil)
-    case Tuple(leading, spread, trailing) =>
-      // Think about how to handle the spread pattern.
-      ???
+    case Tuple(leading, spread, trailing) => (_, _) => 
+      // TODO: Think about how to handle the spread pattern.
+      error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
+      Split.Else(makeMatchFailure(str("unsupported tuple pattern")))
     // The wildcard case always succeeds. Thus, the `alternative` is not used.
     case Or(Nil) => (makeConsequent, _) =>
       // Do forget to add the aliases of the current pattern to bindings.
@@ -336,7 +340,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
             alternative = alternative)
         ): MakeSplit
       makeMakeSplit(Nil, Nil)
-    case Not(pattern) => ???
+    case Not(pattern) => (_, _) =>
+      // TODO: Think about how to handle negation patterns.
+      error(msg"Negation patterns are not supported yet." -> pattern.toLoc)
+      Split.Else(makeMatchFailure(str("unsupported negation pattern")))
     case Rename(pattern, name) =>
       // We should add those fields to a context.
       completePattern(pattern, scrutinee, subScrutinees, name :: aliases)
