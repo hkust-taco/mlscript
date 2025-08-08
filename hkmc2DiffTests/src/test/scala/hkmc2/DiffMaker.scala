@@ -306,7 +306,7 @@ abstract class DiffMaker:
       
       val blockLineNum = allLines.size - lines.size + 1
       
-      val (blockU, rest) = takeWhileAndRest(l :: ls, (l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
+      val (blockU, rest) = (l :: ls).takeWhileAndRest((l => (l.nonEmpty || consumeEmptyLines.isSet) && !(
         l.startsWith(output.outputMarker)
         || l.startsWith(output.diffBegMarker)
         || l.startsWith(output.statefulMarker)
@@ -365,16 +365,6 @@ abstract class DiffMaker:
   def init(): Unit =
     ()
 
-  @inline final def takeWhileAndRest[A](xs: List[A], p: A => Boolean): (List[A], List[A]) = {
-    val b = new ListBuffer[A]
-    var ys = xs
-    while (!ys.isEmpty && p(ys.head)) {
-      b += ys.head
-      ys = ys.tail
-    }
-    (b.toList, ys)
-  }
-  
   
 end DiffMaker
 

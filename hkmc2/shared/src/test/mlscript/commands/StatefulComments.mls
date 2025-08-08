@@ -1,0 +1,21 @@
+:js
+
+:clock 10000
+let i = 0
+while i < 10000 do
+  set i += 1
+//+ runtime clock time (10000): 0.761641 ms
+//│ i = 10000
+
+:clock 1000000
+let i = 0
+while i < 1000000 do
+  set i += 1
+//+ runtime clock time (1000000): 6.105116 ms
+//│ i = 1000000
+
+:freeze date
+Date.now()
+//+ freeze (date): = 1754638286509
+
+

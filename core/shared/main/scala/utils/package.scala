@@ -185,6 +185,15 @@ package object utils {
       case h :: t => f(h) :: t
       case Nil => Nil
     }
+    def takeWhileAndRest(p: A => Boolean): (Ls[A], Ls[A]) = {
+      val b = new mutable.ListBuffer[A]
+      var ys = ls
+      while (!ys.isEmpty && p(ys.head)) {
+        b += ys.head
+        ys = ys.tail
+      }
+      (b.toList, ys)
+    }
   }
   
   implicit final class OptionHelpers[A](opt: Opt[A]) {
