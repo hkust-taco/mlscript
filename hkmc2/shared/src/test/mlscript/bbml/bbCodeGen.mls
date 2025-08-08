@@ -63,7 +63,7 @@ data class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo(x2) {
-//│   return new Foo.class(x2);
+//│   return globalThis.Object.freeze(new Foo.class(x2));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,
@@ -81,7 +81,7 @@ data class Foo(x: Int)
 :sjs
 new Foo(42)
 //│ JS (unsanitized):
-//│ new Foo1.class(42)
+//│ globalThis.Object.freeze(new Foo1.class(42))
 //│ = Foo(42)
 //│ Type: Foo
 
@@ -89,7 +89,7 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ JS (unsanitized):
-//│ let foo, tmp; tmp = new Foo1.class(42); foo = tmp; foo.x
+//│ let foo, tmp; tmp = globalThis.Object.freeze(new Foo1.class(42)); foo = tmp; foo.x
 //│ = 42
 //│ Type: Int
 
@@ -135,7 +135,7 @@ let foo = new Foo()
 if foo is Foo then 1 else 0
 //│ JS (unsanitized):
 //│ let foo1, tmp1;
-//│ tmp1 = new Foo3.class();
+//│ tmp1 = globalThis.Object.freeze(new Foo3.class());
 //│ foo1 = tmp1;
 //│ if (foo1 instanceof Foo3.class) {
 //│   1
@@ -186,7 +186,7 @@ fun not = case
 //│     } else if (caseScrut === false) {
 //│       return true
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   });
 //│   return lambda1
@@ -237,7 +237,7 @@ fact(3)
 :sjs
 region x in 42
 //│ JS (unsanitized):
-//│ let x1; x1 = new globalThis.Region(); 42
+//│ let x1; x1 = globalThis.Object.freeze(new globalThis.Region()); 42
 //│ = 42
 //│ Type: Int
 
@@ -245,7 +245,7 @@ region x in 42
 :sjs
 region x in x
 //│ JS (unsanitized):
-//│ let x2; x2 = new globalThis.Region(); x2
+//│ let x2; x2 = globalThis.Object.freeze(new globalThis.Region()); x2
 //│ = Region
 //│ Type: Region[?]
 
@@ -253,7 +253,9 @@ region x in x
 :sjs
 region x in x.ref 42
 //│ JS (unsanitized):
-//│ let x3; x3 = new globalThis.Region(); new globalThis.Ref(x3, 42)
+//│ let x3;
+//│ x3 = globalThis.Object.freeze(new globalThis.Region());
+//│ globalThis.Object.freeze(new globalThis.Ref(x3, 42))
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
 
@@ -261,7 +263,11 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !y
 //│ JS (unsanitized):
-//│ let x4, y, tmp4; x4 = new globalThis.Region(); tmp4 = new globalThis.Ref(x4, 42); y = tmp4; y.value
+//│ let x4, y, tmp4;
+//│ x4 = globalThis.Object.freeze(new globalThis.Region());
+//│ tmp4 = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
+//│ y = tmp4;
+//│ y.value
 //│ = 42
 //│ Type: Int
 
@@ -270,8 +276,8 @@ region x in let y = x.ref 42 in !y
 region x in let y = x.ref 42 in y := 0
 //│ JS (unsanitized):
 //│ let x5, y1, tmp5;
-//│ x5 = new globalThis.Region();
-//│ tmp5 = new globalThis.Ref(x5, 42);
+//│ x5 = globalThis.Object.freeze(new globalThis.Region());
+//│ tmp5 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
 //│ y1 = tmp5;
 //│ y1.value = 0;
 //│ 0

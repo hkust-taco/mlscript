@@ -6,6 +6,23 @@
 //│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$TyTup)
 
 fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$Tup)
+//│ ╔══[ERROR] Expected a valid parameter, found tuple
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	           ^^^^^^
+//│ ╔══[ERROR] Expected a valid parameter, found tuple
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	                   ^^^^^^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	                             ^
+//│ ╔══[ERROR] Name not found: c
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	                                  ^
+//│ ╔══[ERROR] Name not found: b
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	                                        ^
+//│ ╔══[ERROR] Name not found: d
+//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
+//│ ╙──     	                                             ^
 
 

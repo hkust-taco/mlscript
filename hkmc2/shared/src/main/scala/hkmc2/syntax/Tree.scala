@@ -163,7 +163,7 @@ enum Tree extends AutoLocated:
     case LetLike(kw, lhs, rhs, body) => kw.name
     case TermDef(k, alphaName, rhs) => "term definition"
     case TypeDef(k, head, rhs) => "type definition"
-    case Modified(kw, _, body) => s"${kw.name}-modified ${body.describe}"
+    case Modified(kw, _, body) => s"'${kw.name}'-modified ${body.describe}"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
     case Tup(fields) => "tuple"
@@ -243,20 +243,25 @@ enum Tree extends AutoLocated:
    * Parameter `inUsing` means the param list is modified by `using`.
    * In the first result, `S(true)` means eager spread, `S(false)` means lazy spread, and `N` means no spread.
    */
-  def asParam(inUsing: Bool): Opt[(Opt[Bool], Ident, Opt[Tree])] = this match
-    case und: Under => S(N, new Ident("_").withLocOf(und), N)
+  def asParam(inUsing: Bool): Diagnostic \/ (Opt[Bool], Ident, Opt[Tree]) = this match
+    case und: Under => R(N, new Ident("_").withLocOf(und), N)
     // * In `using` clauses, identifiers and type applications are
     // * understood as type names for unnamed contextual parameters:
-    case ty: Ident if inUsing => S(N, Ident(""), S(ty))
-    case ty @ TyApp(_, _) if inUsing => S(N, Ident(""), S(ty))
-    case id: Ident => S(N, id, N)
-    case Spread(Keyword.`..`, _, S(id: Ident)) => S(S(false), id, N)
-    case Spread(Keyword.`...`, _, S(id: Ident)) => S(S(true), id, N)
-    case Spread(Keyword.`..`, _, S(und: Under)) => S(S(false), new Ident("_").withLocOf(und), N)
-    case Spread(Keyword.`...`, _, S(und: Under)) => S(S(true), new Ident("_").withLocOf(und), N)
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => S(N, lhs, S(rhs))
-    case TermDef(ImmutVal, inner, _) => inner.asParam(inUsing)
+    case ty: Ident if inUsing => R(N, Ident(""), S(ty))
+    case ty @ TyApp(_, _) if inUsing => R(N, Ident(""), S(ty))
+    case id: Ident => R(N, id, N)
+    case Spread(Keyword.`..`, _, S(id: Ident)) => R(S(false), id, N)
+    case Spread(Keyword.`...`, _, S(id: Ident)) => R(S(true), id, N)
+    case Spread(Keyword.`..`, _, S(und: Under)) => R(S(false), new Ident("_").withLocOf(und), N)
+    case Spread(Keyword.`...`, _, S(und: Under)) => R(S(true), new Ident("_").withLocOf(und), N)
+    case Spread(Keyword.`...`, kwLoc, N) => R(S(true), new Ident("_").withLoc(kwLoc), N)
+    case Spread(Keyword.`..`, kwLoc, N) => R(S(false), new Ident("_").withLoc(kwLoc), N)
+    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => R(N, lhs, S(rhs))
+    case TermDef(ImmutVal | MutVal, inner, _) => inner.asParam(inUsing)
     case TermDef(Ins, inner, N) => inner.asParam(inUsing)
+    case _ => L:
+      ErrorReport:
+        msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
   
   def isModuleModifier: Bool = this match
     case td @ Tree.TypeDef(Mod, _, rhs) => rhs.isEmpty && td.extension.isEmpty && td.withPart.isEmpty
@@ -448,7 +453,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   
   lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.asParam(false)).map:
+      tup.fields.iterator.flatMap(_.asParam(false).toOption).map:
         case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
         case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList

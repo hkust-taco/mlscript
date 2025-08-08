@@ -2,14 +2,41 @@
 :js
 
 
-let xs = []
+let xs = mut []
 //│ xs = []
 
+:sjs
 fun foo() =
   let x = 1
   fun bar() = x
   xs.push(bar)
   set x = 2
+//│ JS (unsanitized):
+//│ let bar, foo, bar$, foo$capture1;
+//│ bar$ = function bar$(foo$capture2) {
+//│   return foo$capture2.x0$
+//│ };
+//│ bar = function bar(foo$capture2) {
+//│   return () => {
+//│     return bar$(foo$capture2)
+//│   }
+//│ };
+//│ foo$capture1 = class foo$capture {
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "foo$capture"]; 
+//│ };
+//│ foo = function foo() {
+//│   let tmp, capture, bar$this;
+//│   capture = new foo$capture1(null);
+//│   capture.x0$ = 1;
+//│   bar$this = runtime.safeCall(bar(capture));
+//│   tmp = runtime.safeCall(xs.push(bar$this));
+//│   capture.x0$ = 2;
+//│   return runtime.Unit
+//│ };
 
 :expect 2
 foo()
@@ -17,7 +44,7 @@ xs.0()
 //│ = 2
 
 
-let xs = []
+let xs = mut []
 //│ xs = []
 
 // :sjs

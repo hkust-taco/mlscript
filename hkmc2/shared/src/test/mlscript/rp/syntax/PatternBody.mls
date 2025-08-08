@@ -2,7 +2,10 @@
 
 :todo // Patterns at parameter position are not supported yet.
 0 => false
-//│ /!!!\ Uncaught error: scala.MatchError: IntLit(0) (of class hkmc2.syntax.Tree$IntLit)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.4: 	0 => false
+//│ ╙──     	^
+//│ = fun
 
 :ucs ups
 pattern BooleanLike = true | false | (0 => false) | (1 => true)
@@ -46,7 +49,7 @@ pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
 :w
 pattern UselessParameter = x
 //│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.47: 	pattern UselessParameter = x
+//│ ║  l.50: 	pattern UselessParameter = x
 //│ ╙──      	                           ^
 
 :ucs ups
@@ -56,13 +59,13 @@ pattern PlainList(pattern T) = (null => Nil) | ([T as hd, PlainList(T) as tl] =>
 :fixme
 [T as hd, PlainList(pattern T) as tl]
 //│ ╔══[ERROR] Name not found: hd
-//│ ║  l.57: 	[T as hd, PlainList(pattern T) as tl]
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
 //│ ╙──      	      ^^
 //│ ╔══[ERROR] Illegal type declaration in term position.
-//│ ║  l.57: 	[T as hd, PlainList(pattern T) as tl]
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
 //│ ╙──      	                            ^
 //│ ╔══[ERROR] Name not found: tl
-//│ ║  l.57: 	[T as hd, PlainList(pattern T) as tl]
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
 //│ ╙──      	                                  ^^
 //│ ═══[RUNTIME ERROR] TypeError: PlainList3 is not a function
 
@@ -73,19 +76,19 @@ pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
 :e
 pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╔══[ERROR] This pattern cannot be bound.
-//│ ║  l.74: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ║        	                           ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.74: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                           ^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.74: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
 //│ ╙──      	                                               ^
 
 :e
 pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.86: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ║  l.89: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
 //│ ╙──      	                                                        ^
 
 :ucs ups
@@ -115,13 +118,13 @@ pattern BadNegated = ~(Int as x) => x
 :e
 pattern BadNegated = (~(Int as x)) => x
 //│ ╔══[ERROR] This pattern cannot be bound.
-//│ ║  l.116: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
 //│ ║         	                        ^^^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.116: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                        ^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.116: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
 //│ ╙──       	                                      ^
 //│ elaborated pattern body: ¬(member:Int as x) => <error>
 
@@ -129,13 +132,13 @@ pattern BadNegated = (~(Int as x)) => x
 :e
 pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╔══[ERROR] This variable cannot be accessed.
-//│ ║  l.130: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ║         	                                 ^
 //│ ╟── Because the pattern it belongs to is negated.
-//│ ║  l.130: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                       ^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.130: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
 //│ ╙──       	                                        ^
 //│ elaborated pattern body: ¬member:Pair(member:Int, x) => <error>
 

@@ -87,7 +87,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
                   error(msg"Class `${symbol.nme}` has ${params.size} parameters." -> Loc(params),
                     msg"But ${arguments.size} arguments were provided." -> Loc(arguments))
                 S(params.iterator.zip(arguments).flatMap:
-                  case (param, argument) if param.flags.value =>
+                  case (param, argument) if param.flags.isVal =>
                     S(param.sym.id -> instantiate(argument))
                   case (param, argument) =>
                     error(msg"Parameter `${param.sym.nme}` is not accessible." -> param.toLoc)

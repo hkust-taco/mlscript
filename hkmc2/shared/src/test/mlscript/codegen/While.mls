@@ -11,9 +11,9 @@
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
-//│       continue tmp1;
+//│       continue tmp1
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│     break;
 //│   }
@@ -59,7 +59,7 @@ while x
 //│     tmp4 = Predef.print("Hello World");
 //│     x2 = false;
 //│     tmp5 = runtime.Unit;
-//│     continue tmp6;
+//│     continue tmp6
 //│   } else {
 //│     tmp5 = 42;
 //│   }
@@ -115,7 +115,7 @@ while
 //│       tmp19 = i2 + 1;
 //│       i2 = tmp19;
 //│       tmp20 = runtime.Unit;
-//│       continue tmp21;
+//│       continue tmp21
 //│     } else {
 //│       tmp20 = runtime.Unit;
 //│     }
@@ -210,7 +210,7 @@ fun f(ls) =
 //│       tl = param1;
 //│       ls = tl;
 //│       tmp28 = Predef.print(h);
-//│       continue tmp29;
+//│       continue tmp29
 //│     } else {
 //│       tmp28 = Predef.print("Done!");
 //│     }
@@ -262,17 +262,18 @@ while print("Hello World"); false
 //│ ║  l.259: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ═══[ERROR] Unrecognized term split (false literal).
-//│ > Hello World
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ > let scrut7;try { tmp37: while (true) {   scrut7 = runtime.checkCall(Predef.print("Hello World"));   throw globalThis.Object.freeze(new globalThis.Error("match error"))   break; } block$res28 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                           ^^^^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'break'
 
 :fixme
 while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.269: 	while { print("Hello World"), false }
+//│ ║  l.270: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.270: 	  then 0(0)
+//│ ║  l.271: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ═══[ERROR] Illegal position for 'else' modifier.
 
@@ -283,11 +284,11 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.281: 	    print("Hello World")
+//│ ║  l.282: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.282: 	    false
+//│ ║  l.283: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.283: 	  then 0(0)
+//│ ║  l.284: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ═══[ERROR] Illegal position for 'else' modifier.
 

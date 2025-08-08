@@ -3,7 +3,7 @@
 
 data class Foo(x)
 
-let foo = Foo(null)
+let foo = new mut Foo(null)
 //│ foo = Foo(null)
 
 set foo.x = foo

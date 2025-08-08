@@ -135,10 +135,10 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
     // The default record value for each sub-scrutinee. It is only used in the
     // bindings of fields.
     val emptyRecordSymbol = TempSymbol(N, s"emptyRecord$$")
-    val emptyRecord = Rcd:
-      patterns.map: (label, _) =>
-        RcdField(str(label.asFieldName), makeMatchFailure(str("empty")))
-      .toList
+    val recordItems = patterns.map: (label, _) =>
+      RcdField(str(label.asFieldName), makeMatchFailure(str("empty")))
+    .toList
+    val emptyRecord = Rcd(false, recordItems)
     // Let bindings that bind the sub-scrutinee to the result of each matcher.
     val bindings = subScrutinees.iterator.flatMap: (field, subScrutineeVar) =>
       val subPatterns = patterns.flatMap((_, p) => p.collectSubPatterns(field))
@@ -180,7 +180,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
         val field = RcdField(str(label.asFieldName), symbol.safeRef)
         (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, field :: fields)
     // Lastly, we return the output record.
-    Blk(bindings2 ::: tests.reverse, Rcd(recordFields.reverse))
+    Blk(bindings2 ::: tests.reverse, Rcd(false, recordFields.reverse))
   
   import Pattern.*
   
@@ -245,18 +245,18 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
             // accumulated bindings. Some special cases here are to make the
             // generated code more concise and efficient.
             val bindings = bindingsSymbols match
-              case Nil => if currentBindings.isEmpty then rcd() else Rcd(currentBindings)
+              case Nil => if currentBindings.isEmpty then rcd() else Rcd(false, currentBindings)
               case bindingsSymbol :: Nil =>
                 if currentBindings.isEmpty then bindingsSymbol.safeRef
-                else Rcd(RcdSpread(bindingsSymbol.safeRef) :: currentBindings)
+                else Rcd(false, RcdSpread(bindingsSymbol.safeRef) :: currentBindings)
               case _ =>
                 // Spread the previously accumulated bindings.
                 val spreads = bindingsSymbols.reverseIterator.map:
                   _.safeRef |> RcdSpread.apply
                 .toList
                 // Append the current bindings to the spreads.
-                Rcd(spreads ::: currentBindings)
-            makeConsequent(Rcd(fields.reverse), bindings)
+                Rcd(false, spreads ::: currentBindings)
+            makeConsequent(Rcd(false, fields.reverse), bindings)
           ): MakeSplit
       ):
         case ((field, pattern), makeInnerSplit) =>
@@ -270,7 +270,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
           // This is the bindings of the current field.
           val fieldAliases = pattern.aliases
           val fieldBindingsSymbol = TempSymbol(N, "fieldBindings")
-          val fieldBindingsTerm = Rcd(fieldAliases.map:
+          val fieldBindingsTerm = Rcd(false, fieldAliases.map:
             alias => RcdField(str(alias.name), outputSymbol.safeRef))
           (outputFields: Ls[RcdField], bindingsSymbols: Ls[TempSymbol]) =>
             ((makeConsequent, alternative) =>
@@ -296,7 +296,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
       // Do forget to add the aliases of the current pattern to bindings.
       val bindings = aliases.map:
         alias => RcdField(str(alias.name), scrutinee.safeRef)
-      makeConsequent(scrutinee, Rcd(bindings))
+      makeConsequent(scrutinee, Rcd(false, bindings))
     // The never case should always fail.
     case And(Nil) => (_, _) => Split.Else(makeMatchFailure(str("never")))
     // The disjunction case should check the result from each pattern in order.
@@ -320,7 +320,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
             val outputTerm = tup(allOutputs.reverseIterator.map(_.use |> fld).toSeq*)
             val bindingsSymbol = TempSymbol(N, "combinedBindings")
             // I think the bindings do not need to be reversed.
-            val bindingsTerm = Rcd(allBindings.map:
+            val bindingsTerm = Rcd(false, allBindings.map:
               binding => RcdSpread(binding.use))
             splitLet(outputSymbol, outputTerm) <|:
               splitLet(bindingsSymbol, bindingsTerm) <|:
@@ -367,7 +367,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
             // Don't forget that current pattern may also have aliases which are
             // available in some outer transform patterns.
             val currentBindingsSymbol = TempSymbol(N, "bindings")
-            val currentBindings = Rcd(aliases.map:
+            val currentBindings = Rcd(false, aliases.map:
               alias => RcdField(str(alias.name), resultSymbol.safeRef))
             Split.Let(resultSymbol, transformTerm,
               Split.Let(currentBindingsSymbol, currentBindings,

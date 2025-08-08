@@ -28,7 +28,7 @@ import "../../mlscript-compile/Iter.mls"
 fun steal(...fields_from) =
   let from = fields_from.at(-1).from
   let fields = fields_from.slice(0, -1)
-  let rcd = new Object
+  let rcd = new mut Object
   fields Iter.each of f => set rcd.(f) = from.(f)
   rcd
 

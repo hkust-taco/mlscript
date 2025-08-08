@@ -1,0 +1,38 @@
+:js
+
+
+class A with
+  print("ok")
+  val n = 123
+  Object.freeze(this)
+
+let a = new A
+//│ > ok
+//│ a = A { n: 123 }
+
+a.n
+//│ = 123
+
+A.prototype
+//│ = {}
+
+// * This can be used for deserialization
+let b = Object.create(A.prototype)
+//│ b = A
+
+:sjs
+b is A
+//│ JS (unsanitized):
+//│ if (b instanceof A1) { true } else { false }
+//│ = true
+
+:re
+b.n
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'n' yielded 'undefined'
+
+set b.n = 0
+
+b.n
+//│ = 0
+
+

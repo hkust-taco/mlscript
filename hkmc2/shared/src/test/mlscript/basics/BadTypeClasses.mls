@@ -75,7 +75,11 @@ f
 //│ ║        	               ^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 
-:fixme // graceful error
 :e
 fun f(using t: Int = 42) = t
-//│ /!!!\ Uncaught error: scala.MatchError: TermDef(Ins,InfixApp(Ident(t),keyword ':',Ident(Int)),Some(IntLit(42))) (of class hkmc2.syntax.Tree$TermDef)
+//│ ╔══[ERROR] Expected a valid parameter, found term definition
+//│ ║  l.79: 	fun f(using t: Int = 42) = t
+//│ ╙──      	            ^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: t
+//│ ║  l.79: 	fun f(using t: Int = 42) = t
+//│ ╙──      	                           ^

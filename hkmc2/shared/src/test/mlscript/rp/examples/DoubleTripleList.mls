@@ -71,7 +71,7 @@ pattern DoubleTripleList = DoubleList | TripleList
 // property is accessed.
 let doLog = false
 fun (::) makeObservableCons(x, xs) =
-  let cons = Cons(x, xs)
+  let cons = new mut Cons(x, xs)
   let repr = "[" + (cons Iter.fromStack() Iter.joined of ", ") + "]"
   Object.defineProperty of
     cons

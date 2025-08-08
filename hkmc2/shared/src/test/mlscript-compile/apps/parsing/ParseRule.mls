@@ -144,6 +144,8 @@ data class Lazy[out A](init: () -> A) with
       set cached = Some(v)
       v
 
+fun lazy(init) = new Lazy of init
+
 //  ____                     ____        _
 // |  _ \ __ _ _ __ ___  ___|  _ \ _   _| | ___
 // | |_) / _` | '__/ __|/ _ \ |_) | | | | |/ _ \
@@ -152,17 +154,17 @@ data class Lazy[out A](init: () -> A) with
 //
 // =============================================
 
-data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
+data class ParseRule[A](name: Str, mut val choices: StackT[ChoiceT[A]]) with
   open Choice { Keyword, Ref, End, Siding }
   
   fun map[B](op: A -> B) =
-    ParseRule of name, choices
+    new mut ParseRule of name, choices
       Iter.fromStack()
       Iter.mapping of choice => choice Choice.map(op)
       Iter.toStack()
   
   fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C) =
-    fun go(rule: ParseRule) = ParseRule of rule.name, rule.choices
+    fun go(rule: ParseRule) = new ParseRule of rule.name, rule.choices
       Iter.fromStack()
       Iter.mapping of case
         Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]
@@ -184,7 +186,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
       Iter.toStack()
     go(this).map of res => process(res.0, res.1)
   
-  let _endChoice = Lazy of () => choices
+  let _endChoice = lazy of () => choices
     Iter.fromStack()
     Iter.firstDefined of case
       End(value) then Some(value)
@@ -200,7 +202,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   // Collect the first end choice in this rule.
   fun endChoice = _endChoice.get()
   
-  let _keywordChoices = Lazy of () => choices
+  let _keywordChoices = lazy of () => choices
     Iter.fromStack()
     Iter.mapping of case
       Keyword(keyword, rest) then [[keyword.name, rest]]
@@ -221,7 +223,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   // Collect all keyword choices in this rule.
   fun keywordChoices = _keywordChoices.get()
   
-  let _refChoice = Lazy of () => choices
+  let _refChoice = lazy of () => choices
     Iter.fromStack()
     Iter.firstDefined of case
       Ref as ref then Some(ref)
@@ -293,7 +295,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
 
 // Shorthands for constructing parse rules.
 // Automatically adds an end choice to the rule if no choices are provided.
-fun rule(name, ...choices) = ParseRule of
+fun rule(name, ...choices) = new ParseRule of
   name
   if choices.length == 0 then
     Choice.end(()) :: Nil

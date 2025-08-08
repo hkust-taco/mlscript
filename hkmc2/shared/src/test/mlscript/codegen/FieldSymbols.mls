@@ -143,6 +143,7 @@ case
 //│               res = Ref of a
 //│               implct = false
 //│         dflt = S of Throw of Instantiate:
+//│           mut = false
 //│           cls = Select:
 //│             qual = Ref of globalThis:globalThis
 //│             name = Ident of "Error"

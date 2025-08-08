@@ -485,13 +485,15 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       topmost: Split
   ): TermDefinition =
     val sym = BlockMemberSymbol(name, Nil)
+    val tsym = TermSymbol(Fun, owner, Ident(name))
     // Pattern parameters are passed as objects.
     val patternInputs = patternParameters.map(_.copy(flags = FldFlags.empty))
     // The last parameter is the scrutinee.
     val scrutParam = Param(FldFlags.empty, scrut, N, Modulefulness.none)
     val ps = PlainParamList(patternInputs :+ scrutParam)
-    TermDefinition(owner, Fun, sym, ps :: Nil, N, N, S(Term.IfLike(Keyword.`if`, topmost)),
-      FlowSymbol(s"‹unapply-result›"), TermDefFlags.empty, Modulefulness.none, Nil)
+    TermDefinition(Fun, sym, tsym, ps :: Nil, N, N,
+      S(Term.IfLike(Keyword.`if`, topmost)), FlowSymbol(s"‹unapply-result›"),
+      TermDefFlags.empty, Modulefulness.none, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
@@ -546,4 +548,4 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
       log(s"Translated `unapply`: ${display(topmost)}")
       makeAnonymousPatternObject("unapply", patternParams, inputSymbol, topmost)
-    Term.Rcd(unapplyStmts)
+    Term.Rcd(false, unapplyStmts)

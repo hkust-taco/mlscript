@@ -8,25 +8,41 @@ import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
 let Runtime1;
 (class Runtime {
+  static #stackLimit;
+  static #stackDepth;
+  static #stackOffset;
+  static #stackHandler;
+  static #stackResume;
+  get stackLimit() { return Runtime.#stackLimit; }
+  set stackLimit(value) { Runtime.#stackLimit = value; }
+  get stackDepth() { return Runtime.#stackDepth; }
+  set stackDepth(value) { Runtime.#stackDepth = value; }
+  get stackOffset() { return Runtime.#stackOffset; }
+  set stackOffset(value) { Runtime.#stackOffset = value; }
+  get stackHandler() { return Runtime.#stackHandler; }
+  set stackHandler(value) { Runtime.#stackHandler = value; }
+  get stackResume() { return Runtime.#stackResume; }
+  set stackResume(value) { Runtime.#stackResume = value; }
   static {
     Runtime1 = Runtime;
     const Unit$class = class Unit {
-      constructor() {}
+      constructor() {
+        Object.defineProperty(this, "class", {
+        value: Unit
+        })
+      }
       toString() {
         return "()"
       }
       [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["object", "Unit"]; 
     };
-    this.Unit = new Unit$class;
-    Object.defineProperty(this.Unit, "class", {
-    value: Unit$class
-    });
+    this.Unit = globalThis.Object.freeze(new Unit$class);
     this.short_and = RuntimeJS.short_and;
     this.short_or = RuntimeJS.short_or;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified1) {
-      return new EffectHandle.class(_reified1);
+      return globalThis.Object.freeze(new EffectHandle.class(_reified1));
     };
     Object.defineProperty(this.EffectHandle, "class", {
     enumerable: true,
@@ -54,7 +70,7 @@ let Runtime1;
       }
     });
     this.MatchResult = function MatchResult(output1, bindings1) {
-      return new MatchResult.class(output1, bindings1);
+      return globalThis.Object.freeze(new MatchResult.class(output1, bindings1));
     };
     Object.defineProperty(this.MatchResult, "class", {
     enumerable: true,
@@ -68,7 +84,7 @@ let Runtime1;
       }
     });
     this.MatchFailure = function MatchFailure(errors1) {
-      return new MatchFailure.class(errors1);
+      return globalThis.Object.freeze(new MatchFailure.class(errors1));
     };
     Object.defineProperty(this.MatchFailure, "class", {
     enumerable: true,
@@ -102,14 +118,14 @@ let Runtime1;
         let scrut, scrut1, tmp, tmp1, tmp2;
         scrut = i2 >= xs2.length;
         if (scrut === true) {
-          throw globalThis.RangeError("Tuple.get: index out of bounds");
+          throw globalThis.RangeError("Tuple.get: index out of bounds")
         } else {
           tmp = runtime.Unit;
         }
         tmp1 = - xs2.length;
         scrut1 = i2 < tmp1;
         if (scrut1 === true) {
-          throw globalThis.RangeError("Tuple.get: negative index out of bounds");
+          throw globalThis.RangeError("Tuple.get: negative index out of bounds")
         } else {
           tmp2 = runtime.Unit;
         }
@@ -132,7 +148,7 @@ let Runtime1;
         let scrut;
         scrut = i >= string1.length;
         if (scrut === true) {
-          throw globalThis.RangeError("Str.get: index out of bounds");
+          throw globalThis.RangeError("Str.get: index out of bounds")
         } else {
           return runtime.safeCall(string1.at(i))
         }
@@ -148,6 +164,12 @@ let Runtime1;
     });
     this.render = Rendering.render;
     (class TraceLogger {
+      static #enabled;
+      static #indentLvl;
+      get enabled() { return TraceLogger.#enabled; }
+      set enabled(value) { TraceLogger.#enabled = value; }
+      get indentLvl() { return TraceLogger.#indentLvl; }
+      set indentLvl(value) { TraceLogger.#indentLvl = value; }
       static {
         Runtime.TraceLogger = TraceLogger;
         this.enabled = false;
@@ -193,25 +215,27 @@ let Runtime1;
       static [definitionMetadata] = ["module", "TraceLogger"]; 
     });
     const FatalEffect$class = class FatalEffect {
-      constructor() {}
+      constructor() {
+        Object.defineProperty(this, "class", {
+        value: FatalEffect
+        })
+      }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "FatalEffect"]; 
     };
-    this.FatalEffect = new FatalEffect$class;
-    Object.defineProperty(this.FatalEffect, "class", {
-    value: FatalEffect$class
-    });
+    this.FatalEffect = globalThis.Object.freeze(new FatalEffect$class);
     const PrintStackEffect$class = class PrintStackEffect {
-      constructor() {}
+      constructor() {
+        Object.defineProperty(this, "class", {
+        value: PrintStackEffect
+        })
+      }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
     };
-    this.PrintStackEffect = new PrintStackEffect$class;
-    Object.defineProperty(this.PrintStackEffect, "class", {
-    value: PrintStackEffect$class
-    });
+    this.PrintStackEffect = globalThis.Object.freeze(new PrintStackEffect$class);
     this.FunctionContFrame = function FunctionContFrame(next1) {
-      return new FunctionContFrame.class(next1);
+      return globalThis.Object.freeze(new FunctionContFrame.class(next1));
     };
     Object.defineProperty(this.FunctionContFrame, "class", {
     enumerable: true,
@@ -224,7 +248,7 @@ let Runtime1;
       }
     });
     this.HandlerContFrame = function HandlerContFrame(next1, nextHandler1, handler1) {
-      return new HandlerContFrame.class(next1, nextHandler1, handler1);
+      return globalThis.Object.freeze(new HandlerContFrame.class(next1, nextHandler1, handler1));
     };
     Object.defineProperty(this.HandlerContFrame, "class", {
     enumerable: true,
@@ -239,7 +263,7 @@ let Runtime1;
       }
     });
     this.ContTrace = function ContTrace(next1, last1, nextHandler1, lastHandler1, resumed1) {
-      return new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1);
+      return globalThis.Object.freeze(new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1));
     };
     Object.defineProperty(this.ContTrace, "class", {
     enumerable: true,
@@ -256,7 +280,7 @@ let Runtime1;
       }
     });
     this.EffectSig = function EffectSig(contTrace1, handler1, handlerFun1) {
-      return new EffectSig.class(contTrace1, handler1, handlerFun1);
+      return globalThis.Object.freeze(new EffectSig.class(contTrace1, handler1, handlerFun1));
     };
     Object.defineProperty(this.EffectSig, "class", {
     enumerable: true,
@@ -276,7 +300,7 @@ let Runtime1;
       static [definitionMetadata] = ["class", "NonLocalReturn"]; 
     };
     this.FnLocalsInfo = function FnLocalsInfo(fnName1, locals1) {
-      return new FnLocalsInfo.class(fnName1, locals1);
+      return globalThis.Object.freeze(new FnLocalsInfo.class(fnName1, locals1));
     };
     Object.defineProperty(this.FnLocalsInfo, "class", {
     enumerable: true,
@@ -290,7 +314,7 @@ let Runtime1;
       }
     });
     this.LocalVarInfo = function LocalVarInfo(localName1, value1) {
-      return new LocalVarInfo.class(localName1, value1);
+      return globalThis.Object.freeze(new LocalVarInfo.class(localName1, value1));
     };
     Object.defineProperty(this.LocalVarInfo, "class", {
     enumerable: true,
@@ -309,7 +333,11 @@ let Runtime1;
     this.stackHandler = null;
     this.stackResume = null;
     const StackDelayHandler$class = class StackDelayHandler {
-      constructor() {}
+      constructor() {
+        Object.defineProperty(this, "class", {
+        value: StackDelayHandler
+        })
+      }
       delay() {
         let lambda;
         lambda = (undefined, function (k) {
@@ -321,10 +349,7 @@ let Runtime1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "StackDelayHandler"]; 
     };
-    this.StackDelayHandler = new StackDelayHandler$class;
-    Object.defineProperty(this.StackDelayHandler, "class", {
-    value: StackDelayHandler$class
-    });
+    this.StackDelayHandler = globalThis.Object.freeze(new StackDelayHandler$class);
   }
   static get unreachable() {
     throw globalThis.Error("unreachable");
@@ -368,21 +393,21 @@ let Runtime1;
       tmp10 = tmp8 + tmp9;
       tmp11 = tmp10 + " but got ";
       tmp12 = tmp11 + got;
-      throw globalThis.Error(tmp12);
+      throw globalThis.Error(tmp12)
     } else {
       return runtime.Unit
     }
   } 
   static safeCall(x) {
     if (x === undefined) {
-      return Runtime.Unit
+      return runtime.Unit
     } else {
       return x
     }
   } 
   static checkCall(x1) {
     if (x1 === undefined) {
-      throw globalThis.Error("MLscript call unexpectedly returned `undefined`, the forbidden value.");
+      throw globalThis.Error("MLscript call unexpectedly returned `undefined`, the forbidden value.")
     } else {
       return x1
     }
@@ -393,7 +418,7 @@ let Runtime1;
     tmp1 = tmp + "' of class '";
     tmp2 = tmp1 + clsName;
     tmp3 = tmp2 + "' was accessed without being called.";
-    throw globalThis.Error(tmp3);
+    throw globalThis.Error(tmp3)
   } 
   static try(f) {
     let res, tmp;
@@ -424,7 +449,7 @@ let Runtime1;
         tmp3 = runtime.safeCall(tmp2(runtime.Unit));
         tr = tmp3;
         tmp4 = runtime.Unit;
-        continue tmp6;
+        continue tmp6
       } else {
         tmp4 = runtime.Unit;
       }
@@ -432,7 +457,7 @@ let Runtime1;
     }
     if (tr instanceof Runtime.EffectSig.class) {
       tmp5 = "Error: Unhandled effect " + tr.handler.constructor.name;
-      throw Runtime.showStackTrace(tmp5, tr, debug, false);
+      throw Runtime.showStackTrace(tmp5, tr, debug, false)
     } else {
       return tr
     }
@@ -491,7 +516,7 @@ let Runtime1;
               cur = cur.next;
               atTail = false;
               tmp12 = runtime.Unit;
-              continue tmp21;
+              continue tmp21
             } else {
               tmp12 = runtime.Unit;
             }
@@ -509,7 +534,7 @@ let Runtime1;
             tmp15 = runtime.Unit;
           }
           tmp16 = tmp15;
-          continue tmp20;
+          continue tmp20
         } else {
           tmp16 = runtime.Unit;
         }
@@ -554,7 +579,7 @@ let Runtime1;
         reps = tmp4;
         scrut2 = reps > 10;
         if (scrut2 === true) {
-          throw globalThis.Error("10 repeated continuation frame (loop?)");
+          throw globalThis.Error("10 repeated continuation frame (loop?)")
         } else {
           tmp5 = runtime.Unit;
         }
@@ -600,7 +625,7 @@ let Runtime1;
         reps1 = tmp2;
         scrut2 = reps1 > 10;
         if (scrut2 === true) {
-          throw globalThis.Error("10 repeated continuation frame (loop?)");
+          throw globalThis.Error("10 repeated continuation frame (loop?)")
         } else {
           tmp3 = runtime.Unit;
         }
@@ -624,15 +649,15 @@ let Runtime1;
   } 
   static debugCont(cont2) {
     let tmp, tmp1, tmp2;
-    tmp = new globalThis.Map();
-    tmp1 = new globalThis.Set();
+    tmp = globalThis.Object.freeze(new globalThis.Map());
+    tmp1 = globalThis.Object.freeze(new globalThis.Set());
     tmp2 = Runtime.showFunctionContChain(cont2, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
   } 
   static debugHandler(cont3) {
     let tmp, tmp1, tmp2;
-    tmp = new globalThis.Map();
-    tmp1 = new globalThis.Set();
+    tmp = globalThis.Object.freeze(new globalThis.Map());
+    tmp1 = globalThis.Object.freeze(new globalThis.Set());
     tmp2 = Runtime.showHandlerContChain(cont3, tmp, tmp1, 0);
     return runtime.safeCall(globalThis.console.log(tmp2))
   } 
@@ -652,17 +677,13 @@ let Runtime1;
       } else {
         tmp2 = runtime.Unit;
       }
-      tmp3 = new globalThis.Set();
+      tmp3 = globalThis.Object.freeze(new globalThis.Set());
       vis2 = tmp3;
-      tmp4 = new globalThis.Map();
+      tmp4 = globalThis.Object.freeze(new globalThis.Map());
       hl2 = tmp4;
-      tmp5 = new globalThis.Set([
-        contTrace.last
-      ]);
+      tmp5 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([ contTrace.last ])));
       tmp6 = hl2.set("last", tmp5);
-      tmp7 = new globalThis.Set([
-        contTrace.lastHandler
-      ]);
+      tmp7 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([ contTrace.lastHandler ])));
       tmp8 = hl2.set("last-handler", tmp7);
       tmp9 = Runtime.showFunctionContChain(contTrace.next, hl2, vis2, 0);
       tmp10 = runtime.safeCall(globalThis.console.log(tmp9));
@@ -674,7 +695,7 @@ let Runtime1;
           tmp12 = runtime.safeCall(globalThis.console.log(tmp11));
           cur = cur.nextHandler;
           tmp13 = runtime.Unit;
-          continue tmp15;
+          continue tmp15
         } else {
           tmp13 = runtime.Unit;
         }
@@ -740,7 +761,7 @@ let Runtime1;
           tmp1 = runtime.Unit;
         }
         tmp2 = tmp1;
-        continue tmp3;
+        continue tmp3
       } else {
         return cur1
       }
@@ -758,7 +779,7 @@ let Runtime1;
         if (scrut1 === true) {
           prevHandlerFrame = prevHandlerFrame.nextHandler;
           tmp = runtime.Unit;
-          continue tmp7;
+          continue tmp7
         } else {
           tmp = runtime.Unit;
         }
@@ -810,7 +831,7 @@ let Runtime1;
       let scrut, tmp, tmp1;
       scrut = contTrace1.resumed;
       if (scrut === true) {
-        throw globalThis.Error("Multiple resumption");
+        throw globalThis.Error("Multiple resumption")
       } else {
         tmp = runtime.Unit;
       }
@@ -850,13 +871,13 @@ let Runtime1;
           tmp3 = runtime.Unit;
         }
         tmp4 = tmp3;
-        continue tmp5;
+        continue tmp5
       } else {
         if (handlerCont instanceof Runtime.HandlerContFrame.class) {
           cont4 = handlerCont.next;
           handlerCont = handlerCont.nextHandler;
           tmp4 = runtime.Unit;
-          continue tmp5;
+          continue tmp5
         } else {
           return value
         }
@@ -908,7 +929,7 @@ let Runtime1;
         tmp2 = runtime.safeCall(saved());
         result = tmp2;
         tmp3 = runtime.Unit;
-        continue tmp4;
+        continue tmp4
       } else {
         tmp3 = runtime.Unit;
       }

@@ -16,7 +16,7 @@ data class Outer(a, b) with
 //│ JS (unsanitized):
 //│ let Outer1;
 //│ Outer1 = function Outer(a1, b1) {
-//│   return new Outer.class(a1, b1);
+//│   return globalThis.Object.freeze(new Outer.class(a1, b1));
 //│ };
 //│ Object.defineProperty(Outer1, "class", {
 //│   enumerable: true,
@@ -27,7 +27,7 @@ data class Outer(a, b) with
 //│       this.b = b;
 //│       const this$Outer = this;
 //│       this.Inner = function Inner(c1) {
-//│         return new Inner.class(c1);
+//│         return globalThis.Object.freeze(new Inner.class(c1));
 //│       };
 //│       Object.defineProperty(this.Inner, "class", {
 //│       enumerable: true,
@@ -41,11 +41,7 @@ data class Outer(a, b) with
 //│             Predef.print(tmp5);
 //│           }
 //│           i1(d) {
-//│             return [
-//│               this$Outer.b,
-//│               this.c,
-//│               d
-//│             ]
+//│             return globalThis.Object.freeze([ this$Outer.b, this.c, d ])
 //│           }
 //│           toString() { return runtime.render(this); }
 //│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 

@@ -103,7 +103,7 @@ data class Cls(x, y) with
 Cls(1, 2).f(3)
 //│ JS:
 //│ Cls1 = function Cls(x1, y1) {
-//│   return new Cls.class(x1, y1);
+//│   return globalThis.Object.freeze(new Cls.class(x1, y1));
 //│ };
 //│ Object.defineProperty(Cls1, "class", {
 //│   enumerable: true,
@@ -134,7 +134,7 @@ data class Cls(x, y) with
 Cls(1, 2).f(3)
 //│ JS:
 //│ Cls3 = function Cls(...args1) {
-//│   return new Cls.class(...args1);
+//│   return globalThis.Object.freeze(new Cls.class(...args1));
 //│ };
 //│ Object.defineProperty(Cls3, "class", {
 //│   enumerable: true,
@@ -170,7 +170,7 @@ data class Cls(x, y) with
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
 //│ Cls5 = function Cls(...args1) {
-//│   return new Cls.class(...args1);
+//│   return globalThis.Object.freeze(new Cls.class(...args1));
 //│ };
 //│ Object.defineProperty(Cls5, "class", {
 //│   enumerable: true,
@@ -212,7 +212,7 @@ console.log(1)
 //│ JS:
 //│ selRes = globalThis.console;
 //│ if (selRes === undefined) {
-//│   throw new globalThis.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
 //│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
@@ -226,7 +226,7 @@ globalThis.x
 //│ selRes1 = globalThis.x;
 //│ discarded = globalThis.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
-//│   throw new globalThis.Error("Access to required field 'x' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"))
 //│ }
 //│ block$res11 = selRes1;
 //│ undefined
@@ -255,7 +255,7 @@ if M.A(1).y is
 //│   static {
 //│     M1 = M;
 //│     this.A = function A(...args1) {
-//│       return new A.class(...args1);
+//│       return globalThis.Object.freeze(new A.class(...args1));
 //│     };
 //│     Object.defineProperty(this.A, "class", {
 //│     enumerable: true,
@@ -281,7 +281,7 @@ if M.A(1).y is
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
-//│   throw new globalThis.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = selRes2;
 //│ x = scrut;
@@ -304,13 +304,13 @@ M.A(1).y
 //│ JS:
 //│ selRes3 = globalThis.console;
 //│ if (selRes3 === undefined) {
-//│   throw new globalThis.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
 //│ tmp6 = runtime.safeCall(M1.A(1));
 //│ selRes4 = tmp6.y;
 //│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
-//│   throw new globalThis.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined

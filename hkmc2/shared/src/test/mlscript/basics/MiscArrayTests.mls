@@ -7,6 +7,16 @@ let xs = [0, 1, 2]
 xs. print()
 //│ > [0, 1, 2]
 
+:re
+xs.reverse()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property '0' of object '[object Array]'
+
+xs
+//│ = [0, 1, 2]
+
+let xs = mut [...xs]
+//│ xs = [0, 1, 2]
+
 let f = xs. print
 //│ f = fun
 
@@ -16,9 +26,6 @@ f()
 xs.reverse()
 //│ = [2, 1, 0]
 
-xs
-//│ = [2, 1, 0]
-
 :re
 xs.map(x => x * 2)
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
@@ -26,9 +33,8 @@ xs.map(x => x * 2)
 xs.map((x, i, a) => x * 2)
 //│ = [4, 2, 0]
 
-:fixme
 xs.map((x, ...) => x * 2)
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(11,14,MiscArrayTests.mls:+30)),None) (of class hkmc2.syntax.Tree$Spread)
+//│ = [4, 2, 0]
 
 xs.map((x, ..._) => x * 2)
 //│ = [4, 2, 0]
@@ -45,15 +51,15 @@ xs. map(x => x * 2). print()
 xs .
   map(x => x * 2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.46: 	  map(x => x * 2)
+//│ ║  l.52: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let tmp5, lambda4;
-//│ lambda4 = (undefined, function (x) {
+//│ let tmp5, lambda5;
+//│ lambda5 = (undefined, function (x) {
 //│   return x * 2
 //│ });
-//│ tmp5 = map(lambda4);
-//│ Predef.passTo(xs, tmp5)
+//│ tmp5 = map(lambda5);
+//│ Predef.passTo(xs1, tmp5)
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :e
@@ -61,7 +67,7 @@ xs .
 xs.
   map(x => x * 2)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.62: 	  map(x => x * 2)
+//│ ║  l.68: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 

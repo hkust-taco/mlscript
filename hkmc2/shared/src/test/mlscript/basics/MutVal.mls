@@ -13,3 +13,67 @@ cached
 //│ = 2
 
 
+object O with
+  val x = 1
+  let y = 1
+  fun gy = y
+  fun sy = set y += 1
+
+set O.x = 2
+
+O.x
+//│ = 1
+
+O.sy
+
+O.gy
+//│ = 2
+
+
+:sjs
+class Foo(x, val y, mut val z)
+//│ JS (unsanitized):
+//│ let Foo1;
+//│ Foo1 = function Foo(x1, y1, z1) {
+//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z1));
+//│ };
+//│ Object.defineProperty(Foo1, "class", {
+//│   enumerable: true,
+//│   value: class Foo {
+//│     #x;
+//│     #z;
+//│     get z() { return this.#z; }
+//│     set z(value) { this.#z = value; }
+//│     constructor(x, y, z) {
+//│       this.#x = x;
+//│       this.y = y;
+//│       this.z = z;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", [null, "y", "z"]]; 
+//│   }
+//│ });
+
+let f = Foo(1, 2, 3)
+//│ f = Foo(_, 2, 3)
+
+f.z
+//│ = 3
+
+set f.z = 0
+
+f.z
+//│ = 0
+
+
+data class Foo(mut val x)
+
+let f = Foo(1)
+//│ f = Foo(1)
+
+set f.x = 2
+
+f.x
+//│ = 2
+
+

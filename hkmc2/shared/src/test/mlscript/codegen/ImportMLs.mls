@@ -39,7 +39,7 @@ Some(1)
 :sjs
 (new Some(1)) isDefined()
 //│ JS (unsanitized):
-//│ let tmp3; tmp3 = new Option.Some.class(1); Option.isDefined(tmp3)
+//│ let tmp3; tmp3 = globalThis.Object.freeze(new Option.Some.class(1)); Option.isDefined(tmp3)
 //│ = true
 
 new Some(1) isDefined()

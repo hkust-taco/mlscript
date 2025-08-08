@@ -16,11 +16,17 @@ pattern Test = 1 | 2 => 3
 
 :todo
 pattern Test = 1 => 2 | 4 => 8
-//│ /!!!\ Uncaught error: scala.MatchError: IntLit(4) (of class hkmc2.syntax.Tree$IntLit)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.18: 	pattern Test = 1 => 2 | 4 => 8
+//│ ╙──      	                        ^
+//│ elaborated pattern body: 1 => 2 | λ. 8
 
 :todo
 pattern Test = 1 => 2 | (4 => 8)
-//│ /!!!\ Uncaught error: scala.MatchError: IntLit(4) (of class hkmc2.syntax.Tree$IntLit)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.25: 	pattern Test = 1 => 2 | (4 => 8)
+//│ ╙──      	                         ^
+//│ elaborated pattern body: 1 => 2 | λ. 8
 
 pattern Test = (1 => 2) | 4 => 8
 //│ elaborated pattern body: 1 => 2 ∨ 4 => 8
@@ -36,10 +42,10 @@ pattern Test = (0 as x) => 2
 :e
 pattern Test(x) = 0 as x | 1 as x
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.37: 	pattern Test(x) = 0 as x | 1 as x
+//│ ║  l.43: 	pattern Test(x) = 0 as x | 1 as x
 //│ ║        	                       ^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.37: 	pattern Test(x) = 0 as x | 1 as x
+//│ ║  l.43: 	pattern Test(x) = 0 as x | 1 as x
 //│ ╙──      	                           ^
 //│ elaborated pattern body: (0 as (x ∨ 1)) as x
 

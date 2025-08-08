@@ -29,7 +29,7 @@ None()
 :sjs
 new None
 //│ JS (unsanitized):
-//│ new None1()
+//│ globalThis.Object.freeze(new None1())
 //│ = module None
 
 
@@ -51,7 +51,7 @@ module M with
 //│       static [definitionMetadata] = ["class", "C"]; 
 //│     };
 //│     this.D = function D() {
-//│       return new D.class();
+//│       return globalThis.Object.freeze(new D.class());
 //│     };
 //│     Object.defineProperty(this.D, "class", {
 //│     enumerable: true,

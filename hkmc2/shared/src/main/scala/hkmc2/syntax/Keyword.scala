@@ -55,7 +55,6 @@ object Keyword:
   val `with` = Keyword("with", curPrec, curPrec)
   
   val `val` = Keyword("val", N, curPrec)
-  val `mut` = Keyword("mut", N, curPrec)
   
   val eqPrec = nextPrec
   val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
@@ -141,6 +140,7 @@ object Keyword:
   val newRightPrec = S(maxPrec.get + charPrecList.length - 1)
   // * ^ maxPrec.get + charPrecList.length is the precedence of selection
   val `new` = Keyword("new", N, newRightPrec)
+  val `mut` = Keyword("mut", N, newRightPrec)
   
   val __ = Keyword("_", N, N)
   

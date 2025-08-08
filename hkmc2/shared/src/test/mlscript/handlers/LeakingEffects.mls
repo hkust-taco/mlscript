@@ -7,7 +7,7 @@ abstract class Effect[A] with
 
 
 let
-  xs = []
+  xs = mut []
   count = 0
 fun main() =
   handle g = Effect with
@@ -42,7 +42,7 @@ handle h = Effect with
   fun perform(arg)(k) =
     print("A " + arg)
     let
-      xs = []
+      xs = mut []
       count = 0
     handle g = Effect with
       fun perform(arg1)(k1) =

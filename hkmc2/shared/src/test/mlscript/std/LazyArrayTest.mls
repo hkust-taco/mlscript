@@ -265,7 +265,12 @@ val mm = MutMap.empty
 
 mm |> MutMap.insert of "a", 1
 
-val uint8Arr = new Uint8Array([1, 2, 3, 4, 5]) 
+:re
+val uint8Arr = new Uint8Array([1, 2, 3, 4, 5])
+//│ ═══[RUNTIME ERROR] TypeError: Cannot freeze array buffer views with elements
+//│ uint8Arr = undefined
+
+val uint8Arr = new mut Uint8Array([1, 2, 3, 4, 5])
 //│ uint8Arr = Uint8Array { "0": 1, "1": 2, "2": 3, "3": 4, "4": 5 }
 
 slice(1, 1)(uint8Arr)

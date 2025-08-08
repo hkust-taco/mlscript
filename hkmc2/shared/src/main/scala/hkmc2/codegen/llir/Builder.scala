@@ -295,12 +295,12 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Value.This(sym) => bErrStop(msg"Unsupported value: This")
       case Value.Lit(lit) => k(Expr.Literal(lit))
       case lam @ Value.Lam(params, body) => bLam(lam, N, N)(k)
-      case Value.Arr(elems) =>
+      case Value.Arr(false, elems) =>
         bArgs(elems):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(builtinTuple(elems.length), args), k(v |> sr))
-      case Value.Rcd(fields) => bErrStop(msg"Unsupported value: Rcd")
+      case Value.Rcd(mut, fields) => bErrStop(msg"Unsupported value: Rcd")
         
   
   private def getClassOfField(p: FieldSymbol)(using ctx: Ctx)(using Raise, Scope): Local =
@@ -424,12 +424,13 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
                 Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
       case Call(_, _) => bErrStop(msg"Unsupported kind of Call ${r.toString()}")
       case Instantiate(
+        false,
         Select(Value.Ref(sym), Tree.Ident("class")), args) =>
         bPaths(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
-      case Instantiate(cls, args) =>
+      case Instantiate(_, cls, args) =>
         bErrStop(msg"Unsupported kind of Instantiate")
       case x: Path => bPath(x)(k)
 
@@ -472,7 +473,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             summon[Ctx].def_acc += jpdef
             Node.Case(e, casesList, defaultCase)
       case Return(res, implct) => bResult(res)(x => Node.Result(Ls(x)))
-      case Throw(Instantiate(Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
+      case Throw(Instantiate(false, Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
         Node.Panic(e)
       case Label(label, body, rest) => TODO("Label not supported")
       case Break(label) => TODO("Break not supported")

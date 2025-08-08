@@ -53,7 +53,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│ JS (unsanitized):
 //│ let Baz1;
 //│ Baz1 = function Baz(z1) {
-//│   return new Baz.class(z1);
+//│   return globalThis.Object.freeze(new Baz.class(z1));
 //│ };
 //│ Object.defineProperty(Baz1, "class", {
 //│   enumerable: true,

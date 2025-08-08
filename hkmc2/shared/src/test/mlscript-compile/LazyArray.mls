@@ -14,16 +14,17 @@ fun enforceArray = case
   ow then throw Error("Expected an Array, got: " + ow.toString())
 
 fun concatHelper(a, l, ...args) =
-  let idx = 0
-  let init_len = a.length
+  let
+    idx = 0
+    init_len = a.length
   set a.length = init_len + args.length * 2
   while (idx < args.length) do
     let x = args.[idx]
-
-    set a.[init_len + idx * 2] = SpliceMarker
-    set a.[init_len + idx * 2 + 1] = enforceArray(x)
-    set l += x.length
-    set idx += 1
+    set 
+      a.[init_len + idx * 2] = SpliceMarker
+      a.[init_len + idx * 2 + 1] = enforceArray(x)
+      l += x.length
+      idx += 1
   Splice of a, l
 
 // Follows the semantics of Array.prototype.slice indices:
@@ -54,7 +55,7 @@ fun sliceHelper(beg, fin, arr) =
 class LazyArr extends IterableBase with
 
   fun toString() = "[" + this joined(", ") + "]"
-  fun concat(...args) = concatHelper([SpliceMarker, this], this.length, ...args)
+  fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
 
 // Requires that the underlying iterable is constant-time indexable
 class View(val underlying: IterableBase, val start, val end) extends LazyArr with
@@ -111,8 +112,8 @@ class Splice(val bits, val len) extends LazyArr with
 
   fun reify = 
     let counter = 0
-    let arr = new Array(len)
-    let stack = []
+    let arr = new mut Array(len)
+    let stack = mut []
     stack.push([0, bits])
     while stack.length > 0 do
       let e = stack.pop()
@@ -137,14 +138,14 @@ class Splice(val bits, val len) extends LazyArr with
     if materialized === null do
       set materialized = reify
     materialized
-
+  
   fun at(i) = materialize().at(i)
   fun slice(beg, fin) = sliceHelper(beg, fin, this)
   fun concat(...args) = 
     if materialized === null 
-    then concatHelper([SpliceMarker, this], len, ...args)
-    else concatHelper([SpliceMarker, materialized], len, ...args)
-
+    then concatHelper(mut [SpliceMarker, this], len, ...args)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...args)
+  
   fun length = len
   fun toString() = "[" + materialize() joined(", ") + "]"
 
@@ -153,7 +154,7 @@ module LazyArray with...
 
 
 fun mk(...args) = View of args, 0, 0
-fun concat(...args) = concatHelper([], 0, ...args)
+fun concat(...args) = concatHelper(mut [], 0, ...args)
 fun slice(beg, fin)(xs) = 
   if beg < 0 || fin < 0 do
     throw RangeError("LazyArray.slice: indices must be non-negative")

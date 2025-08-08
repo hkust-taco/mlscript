@@ -87,7 +87,7 @@ if 1 + 2
 //│ if (scrut === true) {
 //│   0
 //│ } else {
-//│   throw new globalThis.Error("match error");
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ ═══[RUNTIME ERROR] Error: match error
 

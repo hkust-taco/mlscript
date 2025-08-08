@@ -195,7 +195,7 @@ fun render(target, ...args) =
     renderSequence of done, next, level, keyLength, startPos, symbolsForClass(constructorName)
   fun renderSequence(done, next, level: Int, keyLength: Int, startPos: Int, symbols) =
     let
-      items = []
+      items = mut []
       hasMultiline = false
       // Try calculating the length needed to place all items in one line. The
       // brackets and spaces around items are excluded from the length.
@@ -310,7 +310,7 @@ fun render(target, ...args) =
         isRefinement then " "
         symbols.padding then padding
         else ""
-      items = []
+      items = mut []
       hasMultiline = false
       singleLineLength = startPos + symbols.start.length + startPadding.length
       parentIndent = if indent is null then null else indent.repeat(level)

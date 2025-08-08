@@ -47,11 +47,10 @@ extension (t: Product)
         val flags = Buffer.empty[String]
         if isMethod then flags += "method"
         flags.mkString("(", ", ", ")")
-      case FldFlags(mut, spec, genGetter, pat, value) =>
+      case FldFlags(mut, spec, pat, value) =>
         val flags = Buffer.empty[String]
         if mut then flags += "mut"
         if spec then flags += "spec"
-        if genGetter then flags += "gen"
         if pat then flags += "pat"
         if value then flags += "val"
         flags.mkString("(", ", ", ")")

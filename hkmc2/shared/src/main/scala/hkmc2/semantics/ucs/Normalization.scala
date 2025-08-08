@@ -247,7 +247,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           // Check the fields are accessible.
           paramList.params.iterator.zip(args).map:
             case (_, Argument(_, Tree.Under(), _)) => true
-            case (Param(flags, sym, _, _), arg) if !flags.value =>
+            case (Param(flags, sym, _, _), arg) if !flags.isVal =>
               error(msg"This pattern cannot be matched" -> arg.toLoc, // TODO: use correct location
                 msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,
                 msg"Suggestion: use a wildcard pattern `_` in this position" -> N,
@@ -599,7 +599,7 @@ object Normalization:
           case S(_) | N => Nil
         case (S(_) | N) => Nil
       entries.forall { (fieldName, _) => clsParams.exists {
-        case Param(flags = FldFlags(value = value), sym = sym) => value && fieldName === sym.id
+        case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
     case (_: FlatPattern, _: FlatPattern)  => false
 

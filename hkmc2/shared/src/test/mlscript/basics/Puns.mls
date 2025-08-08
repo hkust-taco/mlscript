@@ -4,7 +4,16 @@
 let a = 1
 //│ a = 1
 
+(a: 1)
+//│ = {a: 1}
+
+(a: a)
+//│ = {a: 1}
+
 (:a)
+//│ = {a: 1}
+
+{:a}
 //│ = {a: 1}
 
 
@@ -38,7 +47,7 @@ if r is
 if r is
   a: x then x
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator).
-//│ ║  l.39: 	  a: x then x
+//│ ║  l.48: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 
 if 1 is
@@ -79,13 +88,13 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.80: 	val =a
+//│ ║  l.89: 	val =a
 //│ ╙──      	    ^
 
 :pe
 let =a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.86: 	let =a
+//│ ║  l.95: 	let =a
 //│ ╙──      	    ^
 
 

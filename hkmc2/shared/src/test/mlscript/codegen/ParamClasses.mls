@@ -8,7 +8,7 @@ data class Foo()
 //│ JS (unsanitized):
 //│ let Foo1;
 //│ Foo1 = function Foo() {
-//│   return new Foo.class();
+//│   return globalThis.Object.freeze(new Foo.class());
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,
@@ -39,7 +39,7 @@ data class Foo(a)
 //│ JS (unsanitized):
 //│ let Foo3;
 //│ Foo3 = function Foo(a1) {
-//│   return new Foo.class(a1);
+//│   return globalThis.Object.freeze(new Foo.class(a1));
 //│ };
 //│ Object.defineProperty(Foo3, "class", {
 //│   enumerable: true,
@@ -78,7 +78,7 @@ data class Foo(a, b)
 //│ JS (unsanitized):
 //│ let Foo5;
 //│ Foo5 = function Foo(a1, b1) {
-//│   return new Foo.class(a1, b1);
+//│   return globalThis.Object.freeze(new Foo.class(a1, b1));
 //│ };
 //│ Object.defineProperty(Foo5, "class", {
 //│   enumerable: true,
@@ -104,7 +104,7 @@ let f = foo(1, 2)
 
 let f = new foo(1, 2)
 //│ JS (unsanitized):
-//│ let f1, tmp2; tmp2 = new foo1(1, 2); f1 = tmp2;
+//│ let f1, tmp2; tmp2 = globalThis.Object.freeze(new foo1(1, 2)); f1 = tmp2;
 //│ f = Foo(1, 2)
 
 f.a
@@ -146,7 +146,7 @@ data class Inner(c) with
 //│ JS (unsanitized):
 //│ let Inner1;
 //│ Inner1 = function Inner(c1) {
-//│   return new Inner.class(c1);
+//│   return globalThis.Object.freeze(new Inner.class(c1));
 //│ };
 //│ Object.defineProperty(Inner1, "class", {
 //│   enumerable: true,
@@ -165,7 +165,7 @@ data class Inner(c) with
 
 let i = new Inner(100)
 //│ JS (unsanitized):
-//│ let i, tmp6; tmp6 = new Inner1.class(100); i = tmp6;
+//│ let i, tmp6; tmp6 = globalThis.Object.freeze(new Inner1.class(100)); i = tmp6;
 //│ > 100
 //│ i = Inner(100)
 
@@ -187,7 +187,7 @@ class Foo(x, val y, z, val z, z) with
 //│ JS (unsanitized):
 //│ let Foo7;
 //│ Foo7 = function Foo(x1, y1, z3, z, z1) {
-//│   return new Foo.class(x1, y1, z3, z, z1);
+//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z3, z, z1));
 //│ };
 //│ Object.defineProperty(Foo7, "class", {
 //│   enumerable: true,
@@ -240,7 +240,7 @@ class Foo(val z, val z)
 //│ JS (unsanitized):
 //│ let Foo9;
 //│ Foo9 = function Foo(z2, z) {
-//│   return new Foo.class(z2, z);
+//│   return globalThis.Object.freeze(new Foo.class(z2, z));
 //│ };
 //│ Object.defineProperty(Foo9, "class", {
 //│   enumerable: true,

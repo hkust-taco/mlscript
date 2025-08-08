@@ -11,7 +11,7 @@ pattern Zero = "0"
 //│   constructor() {}
 //│   unapply(input) {
 //│     if (input === "0") {
-//│       return runtime.MatchResult(input, {})
+//│       return runtime.MatchResult(input, globalThis.Object.freeze({}))
 //│     } else {
 //│       return runtime.MatchFailure(null)
 //│     }
@@ -22,20 +22,14 @@ pattern Zero = "0"
 //│     if (isLeading === true) {
 //│       consumed = runtime.Str.take(input1, 1);
 //│       remains = runtime.Str.drop(input1, 1);
-//│       return runtime.MatchResult([
-//│         consumed,
-//│         remains
-//│       ], {})
+//│       return runtime.MatchResult(globalThis.Object.freeze([ consumed, remains ]), globalThis.Object.freeze({}))
 //│     } else {
 //│       return runtime.MatchFailure(null)
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["pattern", "Zero"]; 
-//│ }; Zero1 = new Zero$class;
-//│ Object.defineProperty(Zero1, "class", {
-//│   value: Zero$class
-//│ });
+//│ }; Zero1 = globalThis.Object.freeze(new Zero$class);
 
 Zero
 //│ = pattern Zero

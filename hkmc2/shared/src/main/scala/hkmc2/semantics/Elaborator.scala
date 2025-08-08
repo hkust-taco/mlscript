@@ -224,7 +224,7 @@ object Elaborator:
       val id = new Ident("MatchResult")
       val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)
       val cs = ClassSymbol(td, id)
-      val flag = FldFlags.empty.copy(value = true)
+      val flag = FldFlags.empty.copy(isVal = true)
       val ps = PlainParamList(
         Param(flag, VarSymbol(Ident("output")), N, Modulefulness(N)(false)) ::
         Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
@@ -236,7 +236,7 @@ object Elaborator:
       val id = new Ident("MatchFailure")
       val td = DummyTypeDef(syntax.Cls)
       val cs = ClassSymbol(td, id)
-      val flag = FldFlags.empty.copy(value = true)
+      val flag = FldFlags.empty.copy(isVal = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
@@ -389,10 +389,10 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(owner, Fun, sym, params, tparams, sign, body, resSym, flags, mf, annotations) =>
+          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, annotations) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
-                val newTd = TermDefinition(owner, Fun, sym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ => 
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -471,7 +471,7 @@ extends Importer:
       Term.FunTy(subterm(lhs), subterm(rhs), N)
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
       ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
-        val (syms, nestCtx) = params(lhs, false, false)
+        val (syms, nestCtx) = funParams(lhs)
         Term.Lam(syms, term(rhs)(using nestCtx))
     case InfixApp(lhs, Keyword.`as`, rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
@@ -586,6 +586,8 @@ extends Importer:
       )
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
       Term.CtxTup((f :: fs).map(fld(_)))(tree)
+    case Modified(Keyword.`mut`, kwLoc, tree @ Tup(fields)) =>
+      Term.Mut(Term.Tup(fields.map(fld(_)))(tree))
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
     // case New(c, rfto) =>
@@ -601,15 +603,18 @@ extends Importer:
             ObjBody(block(rft, hasResult = false)._1)
       body match
       case S(Apps(c, argss)) =>
-        Term.New(
-          cls(subterm(c), inAppPrefix = true), 
-          argss.map: 
+        val (mut, c2) = c match
+          case Modified(Keyword.`mut`, kwLoc, c) => (true, c)
+          case c => (false, c)
+        val inner = new Term.New(
+          cls(subterm(c2), // * Note: we'll catch bad `new` targets during type checking
+            inAppPrefix = true), 
+          argss.map{
             case Tup(args) =>
-              args.map(subterm(_)),
+              args.map(subterm(_))},
           bodo
         ).withLocOf(tree)
-      case S(c) => // * We'll catch bad `new` targets during type checking
-        Term.New(cls(subterm(c), inAppPrefix = false), Nil, bodo).withLocOf(tree)
+        if mut then Term.Mut(inner) else inner
       case N =>
         Term.New(State.globalThisSymbol.ref().sel(Ident("Object"), S(ctx.builtins.Object)),
           Nil, bodo).withLocOf(tree)
@@ -682,6 +687,14 @@ extends Importer:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
+    case Modified(Keyword.`mut`, kwLoc, body: Block) =>
+      blockOrRcd(body, hasResult = true) match
+      case (Blk(Nil, Term.UnitVal()), ctx) =>
+        Rcd(mut = true, Nil).withLocOf(body)
+      case (blk: Blk, ctx) =>
+        raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
+        blk
+      case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
     case Modified(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
       subterm(body)
@@ -980,7 +993,7 @@ extends Importer:
               // * Add parameters to context
               var newCtx = newCtx1
               val pss = td.paramLists.map: ps =>
-                val (res, newCtx2) = params(ps, false, false)(using newCtx)
+                val (res, newCtx2) = funParams(ps)(using newCtx)
                 newCtx = newCtx2
                 res
               // * Elaborate signature
@@ -994,8 +1007,9 @@ extends Importer:
                 val valueSym = VarSymbol(Ident("value"))
                 val resumeSym = VarSymbol(Ident("resume"))
                 val mtdSym = BlockMemberSymbol("ret", Nil, true)
+                val tsym = TermSymbol(Fun, N, Ident("ret"))
                 val td = TermDefinition(
-                  N, Fun, mtdSym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
+                  Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
                   N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, Nil)
                 val htd = HandlerTermDefinition(resumeSym, td)
                 Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, inner)
@@ -1010,7 +1024,8 @@ extends Importer:
                 case _ =>
                   Modulefulness.none
               
-              val tdf = TermDefinition(owner, k, sym, pss, tps, s, nb, r, 
+              val tsym = TermSymbol(k, owner, id) // TODO?
+              val tdf = TermDefinition(k, sym, tsym, pss, tps, s, nb, r, 
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations)
               sym.defn = S(tdf)
               
@@ -1072,18 +1087,22 @@ extends Importer:
           val fields: Ls[Statement] = pss.flatMap: ps =>
             ps.params.flatMap: p =>
               // For class-like types, "desugar" the parameters into additional class fields.
+              
               val owner = td.symbol match
                 // Any MemberSymbol should be an InnerSymbol, except for TypeAliasSymbol, 
                 // but type aliases should not call this function.
                 case s: InnerSymbol => S(s)
                 case _: TypeAliasSymbol => die
-
-              if p.flags.value || isDataClass then
+              
+              if p.flags.isVal || isDataClass
+              then
+                val k = if p.flags.mut then MutVal else ImmutVal
                 val fsym = BlockMemberSymbol(p.sym.nme, Nil)
+                val tsym = TermSymbol(k, owner, p.sym.id) // TODO?
                 val fdef = TermDefinition(
-                  owner,
-                  ImmutVal,
+                  k,
                   fsym,
+                  tsym,
                   Nil, N, N,
                   S(p.sym.ref()),
                   FlowSymbol("‹class-param-res›"),
@@ -1155,11 +1174,11 @@ extends Importer:
             val (patternParams, extractionParams) = ps.fold((Nil, Nil)):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
-                case p @ Param(flags = FldFlags(false, false, false, true, false)) => S(p)
+                case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
                 // All flags are `false`.
-                case p @ Param(flags = FldFlags(false, false, false, false, false)) => S(p)
+                case p @ Param(flags = FldFlags(false, false, false, false)) => S(p)
                 case Param(flags, sym, _, _) =>
-                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.showDbg}" -> sym.toLoc :: Nil))
+                  raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with flags ${flags.show}" -> sym.toLoc :: Nil))
                   N
               .partition(_.flags.pat)
             log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
@@ -1230,7 +1249,7 @@ extends Importer:
     val isRcd = acc.exists:
       case _: (RcdField | RcdSpread) => true
       case _ => false
-    if isRcd then Term.Rcd((res.toList ::: acc).reverse)
+    if isRcd then Term.Rcd(mut = false, (res.toList ::: acc).reverse)
     else Blk(acc.reverse, res.getOrElse:
       if hasResult
         then unit
@@ -1255,15 +1274,17 @@ extends Importer:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
     else VarSymbol(id)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Opt[Opt[Bool] -> Param]] =
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Opt[Bool] -> Param)] =
     // mm: `module`-modified
-    def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Opt[Opt[Bool] -> Param]] = t match
+    def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Diagnostic \/ (Opt[Bool] -> Param)] = t match
     case TypeDef(Mod, inner, N) =>
       go(inner, inUsing, flags, true)
     case TypeDef(Pat, inner, N) =>
       go(inner, inUsing, flags.copy(pat = true), mm)
     case TermDef(ImmutVal, inner, _) =>
-      go(inner, inUsing, flags.copy(value = true), mm)
+      go(inner, inUsing, flags.copy(isVal = true), mm)
+    case TermDef(MutVal, inner, _) =>
+      go(inner, inUsing, flags.copy(isVal = true, mut = true), mm)
     case TermDef(Ins, inner, N) =>
       go(inner, inUsing, flags, mm)
     case _ =>
@@ -1273,8 +1294,16 @@ extends Importer:
         val param = Param(flags, sym, sign, Modulefulness.ofSign(sign)(mm))
         sym.decl = S(param)
         isSpd -> param
-    go(t, inUsing, if inDataClass then FldFlags.empty.copy(value = true) else FldFlags.empty, false)
-      
+    go(t.desugared, inUsing, if inDataClass then FldFlags.empty.copy(isVal = true) else FldFlags.empty, false)
+  
+  def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
+    val ps_ctx = params(t, inDataClass = false, inPattern = false)
+    def checkFlags(p: Param): Unit =
+      if p.flags.isVal || p.flags.mut then
+        raise(ErrorReport(msg"Illegal function parameter modifiers: ${p.flags.show}" -> p.sym.toLoc :: Nil))
+    ps_ctx._1.params.foreach(checkFlags)
+    ps_ctx._1.restParam.foreach(checkFlags)
+    ps_ctx
   
   /** Elaborate a parameter list of a term or a definition.
    * @param inDataClass Whether the parameter list belongs to a data class.
@@ -1292,7 +1321,7 @@ extends Importer:
             case TermDef(k = Ins, rhs = N) => true
             case _ => false
           param(hd, flags.ctx || isCtxParam, inDataClass)(using ctx) match
-          case S((isSpd, p)) =>
+          case R((isSpd, p)) =>
             val newCtx = if !inPattern || p.flags.pat then ctx + (p.sym.name -> p.sym) else ctx
             val newFlags = if isCtxParam then flags.copy(ctx = true) else flags
             if isCtxParam && acc.nonEmpty then
@@ -1300,12 +1329,12 @@ extends Importer:
             isSpd match
             case S(eagerSpd) =>
               if !eagerSpd then raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
-              if tl.nonEmpty then
+              if tl.isEmpty then (ParamList(flags, acc.reverse, S(p)), newCtx)
+              else
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
-              (ParamList(flags, acc.reverse, S(p)), newCtx)
+                go(tl, p :: acc, newCtx, newFlags)
             case N => go(tl, p :: acc, newCtx, newFlags)
-          case N =>
-            ???
+          case L(d) => raise(d); go(tl, acc, ctx, flags)
       go(ps, Nil, ctx, ParamListFlags.empty)
   
   def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = ctx.get(id.name) match
@@ -1457,7 +1486,7 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(_, k, sym, pss, _, sign, body, r, _, _, _) =>
+      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match

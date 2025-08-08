@@ -19,13 +19,13 @@ x => if x is Pair(A, B) then 1
 //│       if (param1 instanceof B1) {
 //│         return 1
 //│       } else {
-//│         throw new globalThis.Error("match error");
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
 //│ lambda
@@ -48,19 +48,19 @@ fun f(x) = if x is
 //│       if (param1 instanceof A1) {
 //│         return 1
 //│       } else {
-//│         throw new globalThis.Error("match error");
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     } else if (param0 instanceof B1) {
 //│       if (param1 instanceof B1) {
 //│         return 2
 //│       } else {
-//│         throw new globalThis.Error("match error");
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 

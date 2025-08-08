@@ -24,7 +24,7 @@ fun showAsTree(thing) =
     None then tuple of "None", []
     head :: tail then
       let
-        items = [go(head)]
+        items = mut [go(head)]
         remaining = tail
       while remaining is
         head' :: tail' do

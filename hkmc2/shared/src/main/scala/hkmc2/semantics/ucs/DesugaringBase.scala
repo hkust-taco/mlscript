@@ -21,7 +21,7 @@ trait DesugaringBase(using Ctx, State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
-  protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(fields.toList)
+  protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
   protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
     Split.Let(sym, term, inner)
@@ -98,7 +98,7 @@ trait DesugaringBase(using Ctx, State):
     app(matchResultClass, tup(fld(output), fld(bindings)), "result of `MatchResult`")
   
   protected final def makeMatchResult(output: Term, fields: Ls[RcdField | RcdSpread]) =
-    app(matchResultClass, tup(fld(output), fld(Term.Rcd(fields))), "result of `MatchResult`")
+    app(matchResultClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchResult`")
     
   protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
     app(matchFailureClass, tup(fld(errors)), "result of `MatchFailure`")

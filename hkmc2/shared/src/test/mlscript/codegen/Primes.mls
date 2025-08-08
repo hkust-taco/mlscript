@@ -13,3 +13,22 @@ let x' = 2
 x'
 //│ = 2
 
+
+object Foo with
+  val x' = 0
+
+Foo.x'
+//│ = 0
+
+Foo.("x'")
+//│ = 0
+
+object Foo with
+  mut val x' = 0
+
+set Foo.x' += 1
+
+Foo.("x'")
+//│ = 1
+
+

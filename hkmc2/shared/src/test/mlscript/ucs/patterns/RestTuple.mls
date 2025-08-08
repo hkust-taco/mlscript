@@ -13,7 +13,7 @@ fun nonsense(xs) = if xs is
 //│     ys = rest;
 //│     return ys
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 
@@ -42,7 +42,7 @@ fun lead_and_last(xs) = if xs is
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 
@@ -82,12 +82,12 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       tmp1 = tmp + z;
 //│       return tmp1 + w
 //│     } else {
-//│       throw new globalThis.Error("match error");
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 

@@ -1,7 +1,7 @@
 :js
 
 
-let xs = [1, 2, 3]
+let xs = mut [1, 2, 3]
 //│ xs = [1, 2, 3]
 
 :sjs

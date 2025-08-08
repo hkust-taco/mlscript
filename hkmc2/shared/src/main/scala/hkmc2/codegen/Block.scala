@@ -37,10 +37,10 @@ sealed abstract class Block extends Product with AutoLocated:
     case AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) => lhs :: nme :: rhs :: rest :: Nil
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs :: fld :: rhs :: rest :: Nil
     case Define(FunDefn(owner, sym, params, body), rest) => sym :: (params :+ body :+ rest)
-    case Define(ValDefn(owner, k, sym, rhs), rest) => sym :: rhs :: rest :: Nil
+    case Define(ValDefn(tsym, sym, rhs), rest) => tsym :: sym :: rhs :: rest :: Nil
     case Define(ClsLikeDefn(owner, isym, sym, k, paramsOpt, aux, parentSym, methods, privFlds, pubFlds, preCtor, ctor), rest) =>
-      isym :: sym :: paramsOpt.toList ++ aux ++ parentSym.toList ++ methods.flatMap(_.subBlocks) ++ privFlds ++ pubFlds
-      ++ preCtor.subBlocks ++ ctor.subBlocks :+ rest
+      isym :: sym :: paramsOpt.toList ++ aux ++ parentSym.toList ++ methods.flatMap(_.subBlocks) ++
+        privFlds ++ pubFlds.flatMap(f => f._1 :: f._2 :: Nil) ++ preCtor.subBlocks ++ ctor.subBlocks :+ rest
     case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
       lhs :: res :: par :: args ++ handlers.flatMap: handler =>
         handler.sym :: handler.resumeSym :: (handler.params :+ handler.body)
@@ -328,7 +328,7 @@ sealed abstract class Defn:
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
-    case ValDefn(owner, k, sym, rhs) => rhs.freeVars
+    case ValDefn(tsym, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVars
@@ -337,7 +337,7 @@ sealed abstract class Defn:
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
-    case ValDefn(owner, k, sym, rhs) => rhs.freeVarsLLIR
+    case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor) =>
       preCtor.freeVarsLLIR
@@ -353,12 +353,23 @@ final case class FunDefn(
   val innerSym = N
 
 final case class ValDefn(
-    owner: Opt[InnerSymbol],
-    k: syntax.Val,
+    tsym: TermSymbol,
     sym: BlockMemberSymbol,
     rhs: Path,
 ) extends Defn:
-  val innerSym = N
+  val innerSym = S(tsym)
+  val k = tsym.k
+  val owner: Opt[InnerSymbol] = tsym.owner
+
+object ValDefn:
+  def mk(
+      owner: Opt[InnerSymbol],
+      k: syntax.Val,
+      sym: BlockMemberSymbol,
+      rhs: Path,
+    )(using State)
+    : ValDefn =
+      ValDefn(tsym = TermSymbol(k, owner, Tree.Ident(sym.nme)), sym = sym, rhs = rhs)
 
 /*
   This explains the difference between paramsOpt, auxParams, privateFields and publicFields.
@@ -402,7 +413,7 @@ final case class ClsLikeDefn(
     parentPath: Opt[Path],
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
-    publicFields: Ls[BlockMemberSymbol],
+    publicFields: Ls[BlockMemberSymbol -> TermSymbol],
     preCtor: Block,
     ctor: Block,
 ) extends Defn:
@@ -448,41 +459,41 @@ sealed abstract class Result extends AutoLocated:
 
   protected def children: List[Located] = this match
     case Call(fun, args) => fun :: args.map(_.value)
-    case Instantiate(cls, args) => cls :: args
+    case Instantiate(mut, cls, args) => cls :: args
     case Select(qual, name) => qual :: name :: Nil
     case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
     case Value.Ref(l) => Nil
     case Value.This(sym) => Nil
     case Value.Lit(lit) => lit :: Nil
     case Value.Lam(params, body) => params :: body :: Nil
-    case Value.Arr(elems) => elems.map(_.value)
-    case Value.Rcd(elems) => elems.map(_.value)
+    case Value.Arr(mut, elems) => elems.map(_.value)
+    case Value.Rcd(mut, elems) => elems.map(_.value)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
     case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
-    case Instantiate(cls, args) => args.flatMap(_.subBlocks)
+    case Instantiate(mut, cls, args) => args.flatMap(_.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case Value.Lam(params, body) => body :: Nil
-    case Value.Arr(elems) => elems.flatMap(_.value.subBlocks)
+    case Value.Arr(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
-    case Instantiate(cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
+    case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVars -- params.paramSyms
-    case Value.Arr(elems) => elems.flatMap(_.value.freeVars).toSet
-    case Value.Rcd(elems) => elems.flatMap(_.value.freeVars).toSet
+    case Value.Arr(mut, elems) => elems.flatMap(_.value.freeVars).toSet
+    case Value.Rcd(mut, args) =>
+      args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
-    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
-
+  
   lazy val freeVarsLLIR: Set[Local] = this match
     case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
-    case Instantiate(cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.freeVarsLLIR).toSet
+    case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
     case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
     case Value.Ref(l: MemberSymbol[?]) => l.defn match
@@ -492,10 +503,10 @@ sealed abstract class Result extends AutoLocated:
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case Value.Lam(params, body) => body.freeVarsLLIR -- params.paramSyms
-    case Value.Arr(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
-    case Value.Rcd(elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case Value.Arr(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case Value.Rcd(mut, args) =>
+      args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
-    case Value.Rcd(args) => args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
   
 // type Local = LocalSymbol
 type Local = Symbol
@@ -506,7 +517,7 @@ type Local = Symbol
  * after handler is lowered does not have any effect on the code generation. */
 case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
 
-case class Instantiate(cls: Path, args: Ls[Path]) extends Result
+case class Instantiate(mut: Bool, cls: Path, args: Ls[Path]) extends Result
 
 sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
@@ -524,8 +535,8 @@ enum Value extends Path:
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
   case Lam(params: ParamList, body: Block)
-  case Arr(elems: Ls[Arg])
-  case Rcd(elems: Ls[RcdArg])
+  case Arr(mut: Bool, elems: Ls[Arg])
+  case Rcd(mut: Bool, elems: Ls[RcdArg])
 
 case class Arg(spread: Opt[Bool], value: Path)
 

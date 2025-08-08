@@ -31,7 +31,7 @@ fun reset() =
 
 // * `rr` is the railroad library.
 fun render(rr, title: Str, rule: ParseRule.ParseRule) =
-  let helperRules = []
+  let helperRules = mut []
   let referencedKinds = new Set()
   let renderCache = new globalThis.Map()
   fun sequence(lhs, rhsOpt) =
@@ -68,7 +68,7 @@ fun render(rr, title: Str, rule: ParseRule.ParseRule) =
     let
       rest = rule.choices
       optional = false
-      nodes = []
+      nodes = mut []
     while rest is head :: tail do
       if renderChoice(rule, head) is
         Some(node) do nodes.push of node
@@ -81,7 +81,7 @@ fun render(rr, title: Str, rule: ParseRule.ParseRule) =
       optional is true then Some(rr.Optional(choice))
       else Some(choice)
   // Iteratively render the rule and its dependencies.
-  let diagrams = [[title, diagram of renderRule(rule)]]
+  let diagrams = mut [[title, diagram of renderRule(rule)]]
   while referencedKinds.size > 0 do
     let currentKinds = referencedKinds
     set renderedKinds = renderedKinds.union of currentKinds

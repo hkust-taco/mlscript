@@ -100,10 +100,10 @@ class BlockTransformer(subst: SymbolSubst):
       val fun2 = applyPath(fun)
       val args2 = args.mapConserve(applyArg)
       if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
-    case Instantiate(cls, args) =>
+    case Instantiate(mut, cls, args) =>
       val cls2 = applyPath(cls)
       val args2 = args.mapConserve(applyPath)
-      if (cls2 is cls) && (args2 is args) then r else Instantiate(cls2, args2)
+      if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Path = p match
@@ -126,16 +126,16 @@ class BlockTransformer(subst: SymbolSubst):
       if (sym2 is sym) then v else Value.This(sym2)
     case Value.Lit(lit) => v
     case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(elems) =>
+    case Value.Arr(mut, elems) =>
       val elems2 = elems.mapConserve(applyArg)
-      if (elems2 is elems) then v else Value.Arr(elems2)
-    case Value.Rcd(fields) =>
+      if (elems2 is elems) then v else Value.Arr(mut, elems2)
+    case Value.Rcd(mut, fields) =>
       val fields2 = fields.mapConserve:
         case arg @ RcdArg(idx, v) =>
           val idx2 = idx.mapConserve(applyPath)
           val v2 = applyPath(v)
           if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
-      if fields2 is fields then v else Value.Rcd(fields2)
+      if fields2 is fields then v else Value.Rcd(mut, fields2)
   
   def applyLocal(sym: Local): Local = sym.subst
   
@@ -148,12 +148,12 @@ class BlockTransformer(subst: SymbolSubst):
       then fun else FunDefn(own2, sym2, params2, body2)
   
   def applyValDefn(defn: ValDefn): ValDefn =
-    val ValDefn(owner, k, sym, rhs) = defn
-    val owner2 = owner.mapConserve(_.subst)
+    val ValDefn(tsym, sym, rhs) = defn
+    val tsym2 = tsym.subst
     val sym2 = sym.subst
     val rhs2 = applyPath(rhs)
-    if (owner2 is owner) && (sym2 is sym) && (rhs2 is rhs)
-      then defn else ValDefn(owner2, k, sym2, rhs2)
+    if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
+      then defn else ValDefn(tsym2, sym2, rhs2)
   
   def applyDefn(defn: Defn): Defn = defn match
     case defn: FunDefn => applyFunDefn(defn)
@@ -168,7 +168,7 @@ class BlockTransformer(subst: SymbolSubst):
       val parentPath2 = parentPath.mapConserve(applyPath)
       val methods2 = methods.mapConserve(applyFunDefn)
       val privateFields2 = privateFields.mapConserve(_.subst)
-      val publicFields2 = publicFields.mapConserve(_.subst)
+      val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
       val preCtor2 = applySubBlock(preCtor)
       val ctor2 = applySubBlock(ctor)
       if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
