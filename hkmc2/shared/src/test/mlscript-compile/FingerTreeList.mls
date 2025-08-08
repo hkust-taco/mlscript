@@ -51,7 +51,7 @@ class FingerTree[T] extends IterableBase with
       set end = len
     if end <= beg do
       return Empty
-    FingerTreeList.slice(beg, len - end)(this)
+    FingerTreeList.dropLeftRight(beg, len - end)(this)
 
 object Empty extends FingerTree[T] with
   fun toString() = "[" + this joined(", ") + "]"
@@ -220,12 +220,9 @@ fun get(idx) = case
 fun toArray(ft) = [...ft]
 
 /// amortized O(beg + end)
-fun slice(beg, end)(und) =
-  if und is
-    Array then slice(beg, end)(mk(...und))
-    FingerTree then if beg < 0 || end < 0 || beg + end > length(und)
-      then throw "slice: index out of bounds"
-      else repeatPopFront(beg)(repeatPopBack(end)(und))
+fun dropLeftRight(beg, end)(und) = if beg < 0 || end < 0 || beg + end > length(und)
+    then throw "dropLeftRight: index out of bounds"
+    else repeatPopFront(beg)(repeatPopBack(end)(toFingerTree(und)))
 
 fun isFingerTree(xs) = if xs is
   FingerTree then true

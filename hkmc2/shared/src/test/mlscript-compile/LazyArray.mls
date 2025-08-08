@@ -154,11 +154,11 @@ module LazyArray with...
 
 fun mk(...args) = View of args, 0, 0
 fun concat(...args) = concatHelper(mut [], 0, ...args)
-fun slice(beg, fin)(xs) = 
+fun dropLeftRight(beg, fin)(xs) = 
   if beg < 0 || fin < 0 do
-    throw RangeError("LazyArray.slice: indices must be non-negative")
+    throw RangeError("LazyArray.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
-    throw RangeError("LazyArray.slice: indices out of bounds")
+    throw RangeError("LazyArray.dropLeftRight: indices out of bounds")
   sliceHelper(beg, xs.length - fin, xs)
 
 fun equals(xs, ys) =

@@ -65,7 +65,7 @@ data class MatchFailure(errors)
 module Tuple with
   fun slice(xs, i, j) = xs.slice(i, xs.length - j)
 
-  fun lazySlice(xs, i, j) = LazyArray.slice(i, j)(xs)
+  fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
   fun lazyConcat(...args) = LazyArray.__concat(...args)
 
   fun get(xs, i) =

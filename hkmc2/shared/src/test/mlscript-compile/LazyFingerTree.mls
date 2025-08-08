@@ -46,7 +46,7 @@ fun sliceHelper(beg, fin, arr) =
     Splice(bits, l) as s then s.materialize().slice(beg, fin)
     ft and
       FingerTreeList.isFingerTree(ft) 
-        then FingerTreeList.slice(beg, (len - fin))(ft)
+        then FingerTreeList.dropLeftRight(beg, (len - fin))(ft)
         else View of arr, beg, (len - fin)
 
 // Marker base class for View and Splice
@@ -132,11 +132,11 @@ module LazyFingerTree with...
 
 fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
 fun concat(...args) = concatHelper(mut [], 0, ...args)
-fun slice(beg, fin)(xs) = 
+fun dropLeftRight(beg, fin)(xs) = 
   if beg < 0 || fin < 0 do
-    throw RangeError("LazyFingerTree.slice: indices must be non-negative")
+    throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
   if beg > xs.length || fin > xs.length do
-    throw RangeError("LazyFingerTree.slice: indices out of bounds")
+    throw RangeError("LazyFingerTree.dropLeftRight: indices out of bounds")
   sliceHelper(beg, xs.length - fin, xs)
 
 fun equals(xs, ys) =

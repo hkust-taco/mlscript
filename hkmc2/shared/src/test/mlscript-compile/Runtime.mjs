@@ -107,7 +107,7 @@ let Runtime1;
       } 
       static lazySlice(xs1, i1, j1) {
         let tmp;
-        tmp = LazyArray.slice(i1, j1);
+        tmp = LazyArray.dropLeftRight(i1, j1);
         return runtime.safeCall(tmp(xs1))
       } 
       static lazyConcat(...args) {

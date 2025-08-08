@@ -52,7 +52,7 @@ let ys = (ys |> popFront).rest
 let ys = xs ++ xs ++ xs
 //│ ys = [1, 2, 3, 1, 2, 3, 1, 2, 3]
 
-ys |> slice(3, 3)
+ys |> dropLeftRight(3, 3)
 //│ = [1, 2, 3]
 
 let ys = 1 +: 2 +: 3 +: ys :+ 1 :+ 2 :+ 3

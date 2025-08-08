@@ -337,9 +337,9 @@ suite.add("EagerBuiltSillyEager15", () =>
 
 :silent
 let configs = tuple of
-  LazyArray.{      (name: "LazyArray",      lazySlice: slice, lazyConcat: __concat,       split: __split) }
-  FingerTreeList.{ (name: "FingerTreeList", lazySlice: slice, lazyConcat: __markerConcat, split: __split) }
-  LazyFingerTree.{ (name: "LazyFingerTree", lazySlice: slice, lazyConcat: __concat,       split: __split) }
+  LazyArray.{      (name: "LazyArray",      lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split) }
+  FingerTreeList.{ (name: "FingerTreeList", lazySlice: dropLeftRight, lazyConcat: __markerConcat, split: __split) }
+  LazyFingerTree.{ (name: "LazyFingerTree", lazySlice: dropLeftRight, lazyConcat: __concat,       split: __split) }
 
 let i = 0
 while i < configs.length do
