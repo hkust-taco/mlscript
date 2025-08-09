@@ -10,7 +10,7 @@ import Keyword.{`as`, `and`, `or`, `do`, `else`, is, let, `then`, where}
 import collection.mutable.{Buffer, HashMap, SortedSet}
 import Elaborator.{Ctx, Ctxl, State, UnderCtx, ctx}
 import scala.annotation.targetName
-import FlatPattern.{Argument,MatchMode}
+import FlatPattern.{Argument, MatchMode}
 
 object Desugarer:
   extension (op: Keyword.Infix)
