@@ -1,10 +1,13 @@
 package hkmc2
 package syntax
 
+import scala.annotation.tailrec
+
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import hkmc2.Message.MessageContext
+import semantics.{FldFlags, TermDefFlags, Modulefulness}
 import semantics.Elaborator.State
 import Tree._
 
@@ -37,6 +40,8 @@ sealed trait Literal extends AutoLocated:
   
   // def children: List[Located] = Nil
 
+enum SpreadKind:
+  case Eager, Lazy
 
 enum Tree extends AutoLocated:
   case Empty()
@@ -239,35 +244,91 @@ enum Tree extends AutoLocated:
     
     case _ => this
   
-  /** 
-   * Parameter `inUsing` means the param list is modified by `using`.
-   * In the first result, `S(true)` means eager spread, `S(false)` means lazy spread, and `N` means no spread.
+  /**
+   * Parse a tree as a parameter.
+   * @param inUsing whether the parameter is in a `using` parameter list
+   * @param inDataClass whether the parameter is in a data class
    */
-  def asParam(inUsing: Bool): Diagnostic \/ (Opt[Bool], Ident, Opt[Tree]) = this match
-    case und: Under => R(N, new Ident("_").withLocOf(und), N)
-    // * In `using` clauses, identifiers and type applications are
-    // * understood as type names for unnamed contextual parameters:
-    case ty: Ident if inUsing => R(N, Ident(""), S(ty))
-    case ty @ TyApp(_, _) if inUsing => R(N, Ident(""), S(ty))
-    case id: Ident => R(N, id, N)
-    case Spread(Keyword.`..`, _, S(id: Ident)) => R(S(false), id, N)
-    case Spread(Keyword.`...`, _, S(id: Ident)) => R(S(true), id, N)
-    case Spread(Keyword.`..`, _, S(und: Under)) => R(S(false), new Ident("_").withLocOf(und), N)
-    case Spread(Keyword.`...`, _, S(und: Under)) => R(S(true), new Ident("_").withLocOf(und), N)
-    case Spread(Keyword.`...`, kwLoc, N) => R(S(true), new Ident("_").withLoc(kwLoc), N)
-    case Spread(Keyword.`..`, kwLoc, N) => R(S(false), new Ident("_").withLoc(kwLoc), N)
-    case InfixApp(lhs: Ident, Keyword.`:`, rhs) => R(N, lhs, S(rhs))
-    case TermDef(ImmutVal | MutVal, inner, _) => inner.asParam(inUsing)
-    case TermDef(Ins, inner, N) => inner.asParam(inUsing)
-    case _ => L:
-      ErrorReport:
-        msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
+  def asParam(inUsing: Bool, inDataClass: Bool): Diagnostic \/ TreeParam =
+    @tailrec
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ TreeParam = t match
+      // * Base Cases.
+      
+      // fun f(_)
+      case und: Under => 
+        R(TreeParam(flags, new Ident("_").withLocOf(und), N, N, modifiers))
+
+      // In `using` clauses, identifiers and type applications are
+      // understood as type names for unnamed contextual parameters:
+      // fun f(using A)
+      case ty: Ident if inUsing =>
+        R(TreeParam(flags, Ident(""), S(ty), N, modifiers))
+      // fun f(using A[B])
+      case ty @ TyApp(_, _) if inUsing =>
+        R(TreeParam(flags, Ident(""), S(ty), N, modifiers))
+
+      // fun f(a)
+      case id: Ident =>
+        R(TreeParam(flags, id, N, N, modifiers))
+      // fun f(a: A)
+      case InfixApp(id: Ident, Keyword.`:`, sign) =>
+        R(TreeParam(flags, id, S(sign), N, modifiers))
+
+      // fun f(..a)
+      case Spread(Keyword.`..`, _, S(id: Ident)) =>
+        R(TreeParam(flags, id, N, S(SpreadKind.Lazy), modifiers))
+      // fun f(...a)
+      case Spread(Keyword.`...`, _, S(id: Ident)) =>
+        R(TreeParam(flags, id, N, S(SpreadKind.Eager), modifiers))
+      // fun f(.._)
+      case Spread(Keyword.`..`, _, S(und: Under)) =>
+        R(TreeParam(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Lazy), modifiers))
+      // fun f(..._)
+      case Spread(Keyword.`...`, _, S(und: Under)) => 
+        R(TreeParam(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Eager), modifiers))
+      // fun f(..)
+      case Spread(Keyword.`..`, kwLoc, N) =>
+        R(TreeParam(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Lazy), modifiers))
+      // fun f(...)
+      case Spread(Keyword.`...`, kwLoc, N) =>
+        R(TreeParam(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Eager), modifiers))
+      
+      // * Unwrapping Cases
+      
+      // fun f(module <...>)
+      case TypeDef(Mod, inner, N) =>
+        go(inner, flags, modifiers + Mod)
+      // fun f(pattern <...>)
+      case TypeDef(Pat, inner, N) =>
+        go(inner, flags.copy(pat = true), modifiers + Pat)
+      // class C(val <...>)
+      case TermDef(ImmutVal, inner, _) =>
+        go(inner, flags.copy(isVal = true), modifiers + ImmutVal)
+      // class C(mut val <...>)
+      case TermDef(MutVal, inner, _) =>
+        go(inner, flags.copy(isVal = true, mut = true), modifiers + MutVal)
+      // fun f(using <...>)
+      case TermDef(Ins, inner, N) =>
+        go(inner, flags, modifiers + Ins)
+
+      // * Default Case
+      case _ => L:
+        ErrorReport:
+          msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
+    
+    go(this, flags = FldFlags.empty.copy(isVal = inDataClass), modifiers = Set.empty)
   
   def isModuleModifier: Bool = this match
     case td @ Tree.TypeDef(Mod, _, rhs) => rhs.isEmpty && td.extension.isEmpty && td.withPart.isEmpty
     case _ => false
 
 object Tree:
+  // A parameter yet to be elaborated.
+  case class TreeParam(
+    flags: FldFlags, ident: Ident, sign: Opt[Tree], 
+    spd: Opt[SpreadKind], modifiers: Set[DeclKind]
+  )
+  
   val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
@@ -453,9 +514,9 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   
   lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.asParam(false).toOption).map:
-        case (S(spd), id, _) => ??? // spreads are not allowed in class parameters
-        case (N, id, _) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+      tup.fields.iterator.flatMap(_.asParam(inUsing = false, inDataClass = false).toOption).map:
+        case TreeParam(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
+        case TreeParam(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
     
   lazy val allSymbols = definedSymbols ++ clsParams.map(s => s.nme -> s).toMap

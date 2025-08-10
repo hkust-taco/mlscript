@@ -1265,28 +1265,15 @@ extends Importer:
     if ctx.outer.inner.isDefined then TermSymbol(k, ctx.outer.inner, id)
     else VarSymbol(id)
   
-  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Opt[Bool] -> Param)] =
-    // mm: `module`-modified
-    def go(t: Tree, inUsing: Bool, flags: FldFlags, mm: Bool): Ctxl[Diagnostic \/ (Opt[Bool] -> Param)] = t match
-    case TypeDef(Mod, inner, N) =>
-      go(inner, inUsing, flags, true)
-    case TypeDef(Pat, inner, N) =>
-      go(inner, inUsing, flags.copy(pat = true), mm)
-    case TermDef(ImmutVal, inner, _) =>
-      go(inner, inUsing, flags.copy(isVal = true), mm)
-    case TermDef(MutVal, inner, _) =>
-      go(inner, inUsing, flags.copy(isVal = true, mut = true), mm)
-    case TermDef(Ins, inner, N) =>
-      go(inner, inUsing, flags, mm)
-    case _ =>
-      t.asParam(inUsing).map: (isSpd, p, t) =>
-        val sym = VarSymbol(p)
-        val sign = t.map(term(_))
-        val param = Param(flags, sym, sign, Modulefulness.ofSign(sign)(mm))
-        sym.decl = S(param)
-        isSpd -> param
-    go(t.desugared, inUsing, if inDataClass then FldFlags.empty.copy(isVal = true) else FldFlags.empty, false)
-  
+  def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind])] =
+    t.desugared.asParam(inUsing, inDataClass).map: tp =>
+      val TreeParam(flags, id, sign, spd, modifiers) = tp
+      val sym = VarSymbol(id)
+      val sig = sign.map(term(_))
+      val p = Param(flags, sym, sig, Modulefulness.ofSign(sig)(Mod in modifiers))
+      sym.decl = S(p)
+      (p, spd)
+
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false)
     def checkFlags(p: Param): Unit =
@@ -1305,16 +1292,19 @@ extends Importer:
           val isCtxParam = hd match
             case TermDef(k = Ins, rhs = N) => true
             case _ => false
-          param(hd, flags.ctx || isCtxParam, inDataClass)(using ctx) match
-          case R((isSpd, p)) =>
-            val newCtx = ctx + (p.sym.name -> p.sym)
-            val newFlags = if isCtxParam then flags.copy(ctx = true) else flags
+          val inUsing = flags.ctx || isCtxParam
+          param(hd, inUsing, inDataClass)(using ctx) match
+          case R((p, spd)) =>
             if isCtxParam && acc.nonEmpty then
               raise(ErrorReport(msg"Keyword `using` must occur before all parameters." -> hd.toLoc :: Nil))
-            isSpd match
-            case S(eagerSpd) =>
-              if !eagerSpd then raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
-              if tl.isEmpty then (ParamList(flags, acc.reverse, S(p)), newCtx)
+            val newCtx = ctx + (p.sym.name -> p.sym)
+            val newFlags = flags.copy(ctx = inUsing)
+            spd match
+            case S(spd) =>
+              if spd == SpreadKind.Lazy then
+                raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
+              if tl.isEmpty then 
+                (ParamList(flags, acc.reverse, S(p)), newCtx)
               else
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
                 go(tl, p :: acc, newCtx, newFlags)
