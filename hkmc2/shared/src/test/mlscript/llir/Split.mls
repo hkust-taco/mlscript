@@ -26,8 +26,6 @@ map_sum(x => x, 200)
 //│ Stopped due to an error during the Llir generation
 
 :intl
-:todo
-// Works fine with `~hkmc2DiffTests/Test/run` but not with `hkmc2AllTests/test`.
 abstract class Iter[T]
 object Done
 data class Yield(n)
