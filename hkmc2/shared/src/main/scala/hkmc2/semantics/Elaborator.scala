@@ -1289,9 +1289,7 @@ extends Importer:
         ps match
         case Nil => (ParamList(flags, acc.reverse, N), ctx)
         case hd :: tl =>
-          val isCtxParam = hd match
-            case TermDef(k = Ins, rhs = N) => true
-            case _ => false
+          val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
           param(hd, inUsing, inDataClass)(using ctx) match
           case R((p, spd)) =>

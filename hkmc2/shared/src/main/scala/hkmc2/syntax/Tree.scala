@@ -317,10 +317,16 @@ enum Tree extends AutoLocated:
           msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
     
     go(this, flags = FldFlags.empty.copy(isVal = inDataClass), modifiers = Set.empty)
-  
-  def isModuleModifier: Bool = this match
-    case td @ Tree.TypeDef(Mod, _, rhs) => rhs.isEmpty && td.extension.isEmpty && td.withPart.isEmpty
-    case _ => false
+
+  def isModified(modifier: Keyword | DeclKind): Bool = this match
+    case td @ Tree.TypeDef(m, head, N) =>
+      (td.extension.isEmpty && td.withPart.isEmpty && m == modifier) || head.isModified(modifier)
+    case td @ Tree.TermDef(m, head, N) =>
+      (td.extension.isEmpty && td.withPart.isEmpty && m == modifier) || head.isModified(modifier)
+    case Modified(m, _, body) =>
+      modifier == m || body.isModified(modifier)
+    case _ =>
+      false
 
 object Tree:
   // A parameter yet to be elaborated.
@@ -514,7 +520,9 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   
   lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
-      tup.fields.iterator.flatMap(_.asParam(inUsing = false, inDataClass = false).toOption).map:
+      val pts = tup.fields
+      val inUsing = pts.headOption.map(_.isModified(Ins)).exists(identity)
+      pts.flatMap(_.asParam(inUsing = inUsing, inDataClass = false).toOption).map:
         case TreeParam(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
         case TreeParam(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
