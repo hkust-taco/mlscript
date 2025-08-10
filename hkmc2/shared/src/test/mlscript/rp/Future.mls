@@ -2,7 +2,7 @@
 
 :todo // Parameterized patterns.
 pattern Rep0[A] = "" | A ~ Rep0[A]
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (application).
 //│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                           ^^^^^^^
 
@@ -24,7 +24,7 @@ pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (application).
 //│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
@@ -50,7 +50,7 @@ pattern Email(name, domain) =
 :todo // View patterns
 pattern GreaterThan(value) = case
   n and n > value then n
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case).
 //│ ║  l.52: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -88,7 +88,7 @@ pattern Email(name, domains) =
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.83: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
 //│ ║  l.83: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
@@ -107,7 +107,7 @@ pattern LineSep(pattern P) = case
   L(...nd) ~
     ""                   then nd :: Nil
     "\n" ~ LineSep(P, t) then nd :: t
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case).
 //│ ║  l.106: 	  "" then Nil
 //│ ║         	  ^^^^^^^^^^^
 //│ ║  l.107: 	  L(...nd) ~
@@ -181,7 +181,7 @@ if input is Opt(Email, Some((n, d))) then ...
 pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case).
 //│ ║  l.182: 	  P(...values) then (Some(values))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.183: 	  ""           then (None)
@@ -191,7 +191,7 @@ pattern Opt(pattern P) = case
 pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case).
 //│ ║  l.192: 	  P(...values) then Some(values)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.193: 	  ""           then None
@@ -202,6 +202,6 @@ pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
-//│ ╔══[ERROR] Found an unrecognizable pattern.
+//│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
 //│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                 ^^^^^^

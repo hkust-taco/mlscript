@@ -1457,8 +1457,8 @@ extends Importer:
         case S(target) => Constructor(target, N)
         case N => Variable(id) // Fallback to variable pattern.
       case sel: (SynthSel | Sel) => Constructor(term(sel), N)
-      case other: Tree =>
-        raise(ErrorReport(msg"Found an unrecognizable pattern." -> t.toLoc :: Nil))
+      case _: Tree =>
+        raise(ErrorReport(msg"Unrecognized pattern (${t.describe})." -> t.toLoc :: Nil))
         Pattern.Wildcard()
     go(t)
   
