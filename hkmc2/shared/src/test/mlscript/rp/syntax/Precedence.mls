@@ -19,14 +19,14 @@ pattern Test = 1 => 2 | 4 => 8
 //│ ╔══[ERROR] Expected a valid parameter, found integer literal
 //│ ║  l.18: 	pattern Test = 1 => 2 | 4 => 8
 //│ ╙──      	                        ^
-//│ elaborated pattern body: 1 => 2 | λ. 8
+//│ elaborated pattern body: 1 => 2 | λ(). 8
 
 :todo
 pattern Test = 1 => 2 | (4 => 8)
 //│ ╔══[ERROR] Expected a valid parameter, found integer literal
 //│ ║  l.25: 	pattern Test = 1 => 2 | (4 => 8)
 //│ ╙──      	                         ^
-//│ elaborated pattern body: 1 => 2 | λ. 8
+//│ elaborated pattern body: 1 => 2 | λ(). 8
 
 pattern Test = (1 => 2) | 4 => 8
 //│ elaborated pattern body: 1 => 2 ∨ 4 => 8
