@@ -17,7 +17,7 @@ enum Split extends AutoLocated with ProductWithTail:
   case Let(sym: BlockLocalSymbol, term: Term, tail: Split)
   case Else(default: Term)
   case End
-
+  
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
   lazy val isFull: Bool = this match
@@ -25,12 +25,12 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Let(_, _, tail) => tail.isFull
     case Split.Else(_) => true
     case Split.End => false
-
+  
   lazy val isEmpty: Bool = this match
     case Split.Let(_, _, tail) => tail.isEmpty
     case Split.Else(_) | Split.Cons(_, _) => false
     case Split.End => true
-
+  
   final override def children: Ls[Located] = this match
     case Split.Cons(head, tail) => List(head, tail)
     case Split.Let(name, term, tail) => List(name, term, tail)
@@ -49,7 +49,7 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Let(name, term, tail) => s"let ${name} = ${term.showDbg}; ${tail.showDbg}"
     case Split.Else(default) => s"else ${default.showDbg}"
     case Split.End => ""
-
+  
   final override def withLoc(loco: Option[Loc]): this.type =
     super.withLoc:
       this match
@@ -58,8 +58,10 @@ enum Split extends AutoLocated with ProductWithTail:
         case Split.End => N
         case _: Split.Else => N // FIXME: @Luyu pls clean up this mess
         case _ => loco
-
+  
   var isFallback: Bool = false
+  
+  def prettyPrint: Str = Split.prettyPrint(this)
 end Split
 
 extension (split: Split)
@@ -74,20 +76,20 @@ extension (split: Split)
 object Split:
   def default(term: Term): Split = Split.Else(term)
 
-  object display:
+  private object prettyPrint:
     /** Represents lines with indentations. */
     type Lines = Ls[(Int, Str)]
-
+    
     extension (lines: Lines)
       /** Increase the indentation of all lines by one. */
       def indent: Lines = lines.map:
         case (n, line) => (n + 1, line)
-
+    
       /** Make a multi-line string. */
       def toIndentedString: Str = lines.iterator.map:
         case (n, line) => "  " * n + line
       .mkString("\n")
-
+    
     extension (prefix: String)
       /**
         * If the first line does not have indentation and the remaining lines are
@@ -102,7 +104,7 @@ object Split:
         case lines => (0, prefix) :: lines.indent
     
     inline def apply(s: Split): Str = showSplit("if", s)
-
+    
     private def showSplit(prefix: Str, s: Split): Str =
       /** Show a split as a list of lines.
        *  @param isFirst whether this is the first and frontmost branch
@@ -116,7 +118,6 @@ object Split:
         case Split.Let(nme, rhs, tail) =>
           (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
         case Split.Else(t) =>
-          // (if isFirst then (0, s"then ${t.showDbg}") else (0, s"else ${t.showDbg}")) :: Nil
           (if isFirst && !isTopLevel then "" else "else") #: term(t)
         case Split.End => Nil
       def term(t: Statement): Lines = t match
@@ -137,4 +138,4 @@ object Split:
       val lines = split(s, true, true)
       (if prefix.isEmpty then lines else prefix #: lines).toIndentedString
   
-  end display
+  end prettyPrint

@@ -4,7 +4,7 @@ package ups
 
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
-import Split.display, ucs.{DesugaringBase, FlatPattern, error, safeRef}, ucs.extractors.*
+import ucs.{DesugaringBase, FlatPattern, error, safeRef}, ucs.extractors.*
 import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
 import scala.collection.mutable.Buffer
 import Elaborator.{Ctx, State, ctx}, utils.TL
@@ -524,7 +524,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       val inputSymbol = VarSymbol(Ident("input"))
       val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
-      log(s"Translated `unapply`: ${display(topmost)}")
+      log(s"Translated `unapply`: ${topmost.prettyPrint}")
       makeMethod(N, "unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.
     val unapplyStringPrefix = scoped("ucs:cp"):
@@ -535,7 +535,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
       val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pd.pattern)
         ((consumedOutput, remainingOutput, bindings) => Split.Else:
           makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-      log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+      log(s"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
       makeMethod(N, "unapplyStringPrefix", pd.patternParams, inputSymbol, topmost)
     unapply :: unapplyStringPrefix :: Nil
   
@@ -574,7 +574,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         val inputSymbol = VarSymbol(Ident("input"))
         val topmost = makeMatchSplit(inputSymbol.toScrut, pattern)
           ((output, bindings) => Split.Else(makeMatchResult(output())), failure)
-        log(s"Translated `unapply`: ${display(topmost)}")
+        log(s"Translated `unapply`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapply", patternParams, inputSymbol, topmost)
       val unapplyStringPrefix = scoped("ucs:cp"):
         // We don't report errors here because they have been already reported in
@@ -584,6 +584,6 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBas
         val topmost = makeStringPrefixMatchSplit(inputSymbol.toScrut, pattern)
           ((consumedOutput, remainingOutput, bindings) => Split.Else:
             makeMatchResult(tup(fld(consumedOutput()), fld(remainingOutput()))), failure)
-        log(s"Translated `unapplyStringPrefix`: ${display(topmost)}")
+        log(s"Translated `unapplyStringPrefix`: ${topmost.prettyPrint}")
         makeUnapplyRecordStatements("unapplyStringPrefix", patternParams, inputSymbol, topmost)
       Term.Rcd(false, unapply ::: unapplyStringPrefix)

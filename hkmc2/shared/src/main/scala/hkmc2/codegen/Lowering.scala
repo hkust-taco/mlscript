@@ -569,7 +569,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       val normalized = tl.scoped("ucs:normalize"):
         normalize(iftrm.desugared)
       tl.scoped("ucs:normalized"):
-        tl.log(s"Normalized:\n${Split.display(normalized)}")
+        tl.log(s"Normalized:\n${normalized.prettyPrint}")
 
       if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
       else

@@ -120,7 +120,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
     // Make a split that tries all branches in order.
     val topmostSplit = branches.foldRight(default)(_ ~: _)
     val bodyTerm = IfLike(Keyword.`if`, topmostSplit)
-    log(s"Multi-matcher body:\n${Split.display(topmostSplit)}")
+    log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
   
   def multiMatcherBranch(

@@ -115,8 +115,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     * @return the normalized term
     */ 
   private def normalize(split: Split)(using vs: VarSet): Split = trace(
-    pre = s"normalize <<< ${Split.display(split)}",
-    post = (res: Split) => "normalize >>> " + Split.display(res),
+    pre = s"normalize <<< ${split.prettyPrint}",
+    post = (res: Split) => "normalize >>> " + res.prettyPrint,
   ):
     normalizeImpl(split)
   
@@ -444,7 +444,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       alternative: Split,
   )(using VarSet): Split = trace(
     pre = s"normalizeStringPrefixPattern <<< ${ctorTerm.showDbg}",
-    post = (r: Split) => s"normalizeStringPrefixPattern >>> ${Split.display(r)}"
+    post = (r: Split) => s"normalizeStringPrefixPattern >>> ${r.prettyPrint}"
   ):
     val patternArguments = allArgsOpt.fold(Nil)(_.collect:
       case Argument.Pattern(symbol, pattern) => symbol -> pattern)
@@ -519,8 +519,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       scrutinee: Term.Ref,
       pattern: FlatPattern
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
-    post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
+    post = (r: Split) => s"S$mode >>> ${r.prettyPrint}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
       case Split.End => log("CASE Nil"); split

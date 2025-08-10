@@ -480,7 +480,7 @@ extends Importer:
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
-        log(s"Desugared:\n${Split.display(des)}")
+        log(s"Desugared:\n${des.prettyPrint}")
       Term.IfLike(Keyword.`if`, des)
     case InfixApp(lhs, kw @ (Keyword.`then` | Keyword.`with`), rhs) =>
       raise:
@@ -623,7 +623,7 @@ extends Importer:
     case tree @ IfLike(kw, _, split) =>
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
-        log(s"Desugared:\n${Split.display(desugared)}")
+        log(s"Desugared:\n${desugared.prettyPrint}")
       Term.IfLike(kw, desugared)
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
@@ -631,7 +631,7 @@ extends Importer:
       val scrut = VarSymbol(Ident("caseScrut"))
       val des = new ucs.Desugarer(this)(tree, scrut)
       scoped("ucs:desugared"):
-        log(s"Desugared:\n${Split.display(des)}")
+        log(s"Desugared:\n${des.prettyPrint}")
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
         ), Term.IfLike(Keyword.`if`, des))
