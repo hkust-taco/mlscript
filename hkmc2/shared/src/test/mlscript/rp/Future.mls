@@ -122,13 +122,7 @@ pattern Lines(pattern L) = case
     "" then []
     "\n" ~ (Lines of L) as t then t
   L as h ~ Tail as t then [h, ...t]
-  
-:todo
-if input is Lines of Email then
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.127: 	if input is Lines of Email then
-//│ ╙──       	                               ^
-//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ╔══[ERROR] Unrecognized pattern (case).
 //│ ║  l.120: 	  "" then []
 //│ ║         	  ^^^^^^^^^^
 //│ ║  l.121: 	  pattern Tail = case
@@ -138,42 +132,40 @@ if input is Lines of Email then
 //│ ║  l.123: 	    "\n" ~ (Lines of L) as t then t
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.124: 	  L as h ~ Tail as t then [h, ...t]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	  
-//│ ║         	^^^
-//│ ║  l.126: 	:todo
-//│ ╙──       	^^^^^
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:todo
+if input is Lines of Email then
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
+//│ ║  l.138: 	if input is Lines of Email then
+//│ ╙──       	                               ^
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.127: 	if input is Lines of Email then
+//│ ║  l.138: 	if input is Lines of Email then
 //│ ╙──       	   ^^^^^
 
 :todo
 pattern Opt(pattern P) = case
   P(value) then (Some(value))
   ""       then (None)
-  
+//│ ╔══[ERROR] Unrecognized pattern (case).
+//│ ║  l.148: 	  P(value) then (Some(value))
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	  ""       then (None)
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+
 :todo
 pattern Email(name, domain) = ...
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.152: 	  P(value) then (Some(value))
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	  ""       then (None)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.154: 	  
-//│ ║         	^^^
-//│ ║  l.155: 	:todo
-//│ ╙──       	^^^^^
 
 :todo
 if input is Opt(Email, Some((n, d))) then ...
 //│ ╔══[ERROR] Name not found: input
-//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	   ^^^^^
 //│ ╔══[ERROR] Name not found: Some
-//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                       ^^^^
 //│ ╔══[ERROR] invalid record field pattern
-//│ ║  l.168: 	if input is Opt(Email, Some((n, d))) then ...
+//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
 //│ ╙──       	                                ^
 //│ ═══[ERROR] Expected zero arguments, but found two arguments.
 
@@ -182,9 +174,9 @@ pattern Opt(pattern P) = case
   P(...values) then (Some(values))
   ""           then (None)
 //│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.182: 	  P(...values) then (Some(values))
+//│ ║  l.174: 	  P(...values) then (Some(values))
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.183: 	  ""           then (None)
+//│ ║  l.175: 	  ""           then (None)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo
@@ -192,16 +184,16 @@ pattern Opt(pattern P) = case
   P(...values) then Some(values)
   ""           then None
 //│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.192: 	  P(...values) then Some(values)
+//│ ║  l.184: 	  P(...values) then Some(values)
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.193: 	  ""           then None
+//│ ║  l.185: 	  ""           then None
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
 
 :todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.193: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                        ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.201: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.193: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──       	                 ^^^^^^
