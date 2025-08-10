@@ -519,7 +519,7 @@ case class PatternDef(
   val ext: Opt[New] = N
   /** Each pattern definition should contain two methods: `unapply` and
    *  `unapplyStringPrefix`, which are generated in `Lowering`. Hence, there
-   *  is no need to make `body` an parameter. */
+   *  is no need to make `body` a parameter. */
   val body: ObjBody = ObjBody(Blk(Nil, Term.Lit(syntax.Tree.UnitLit(false))))
   /** Pattern definitions do not need parameter lists. */
   val paramsOpt: Opt[ParamList] = N
