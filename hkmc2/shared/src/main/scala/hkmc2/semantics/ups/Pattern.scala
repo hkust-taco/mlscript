@@ -219,14 +219,14 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       val spreadText = spread.map(_.showDbg).mkString(", ")
       val trailingText = trailing.map(_.showDbg).mkString(", ")
       List(leadingText, spreadText, trailingText).mkString("[", ", ", "]")
-    case And(Nil) => "\u22A5"
+    case And(Nil) => "⊤"
     case And(pattern :: Nil) => pattern.showDbg
     case And(patterns) =>
-      patterns.map(_.showDbg).mkString("(", " \u2227 ", ")")
-    case Or(Nil) => "\u22A4"
+      patterns.map(_.showDbg).mkString("(", " ∧ ", ")")
+    case Or(Nil) => "⊥"
     case Or(pattern :: Nil) => pattern.showDbg
     case Or(patterns) =>
-      patterns.map(_.showDbg).mkString("(", " \u2228 ", ")")
+      patterns.map(_.showDbg).mkString("(", " ∨ ", ")")
     case Not(pattern) => s"!${pattern.showDbg}"
     case Rename(Or(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"

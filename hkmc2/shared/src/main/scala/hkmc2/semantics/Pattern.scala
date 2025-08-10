@@ -295,9 +295,9 @@ enum Pattern extends AutoLocated:
       val argumentsText = arguments.fold(""): args =>
         s"(${args.map(_.showDbg).mkString(", ")})"
       s"$targetText$patternArgumentsText$argumentsText"
-    case Composition(true, left, right) => s"${left.showDbg} \u2228 ${right.showDbg}"
-    case Composition(false, left, right) => s"${left.showDbg} \u2227 ${right.showDbg}"
-    case Negation(pattern) => s"\u00ac${pattern.showDbgWithPar}"
+    case Composition(true, left, right) => s"${left.showDbg} ∨ ${right.showDbg}"
+    case Composition(false, left, right) => s"${left.showDbg} ∧ ${right.showDbg}"
+    case Negation(pattern) => s"¬${pattern.showDbgWithPar}"
     case Wildcard() => "_"
     case Literal(literal) => literal.idStr
     case Range(lower, upper, rightInclusive) =>

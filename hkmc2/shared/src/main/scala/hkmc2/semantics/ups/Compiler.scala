@@ -56,9 +56,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Bas
       patterns.map: (label, pattern) =>
         val spec = pattern.specialize(head)
         val simp = spec.simplify
-        log(s"\u2022 Label $label")
-        log(s"  \u2023 Expanded: ${spec.showDbg}")
-        log(s"  \u2023 Simplified: ${simp.showDbg}")
+        log(s"• Label $label")
+        log(s"  ‣ Expanded: ${spec.showDbg}")
+        log(s"  ‣ Simplified: ${simp.showDbg}")
         (label, simp)
   
   val labelMap: MutMap[Pat, Label] = MutMap()
