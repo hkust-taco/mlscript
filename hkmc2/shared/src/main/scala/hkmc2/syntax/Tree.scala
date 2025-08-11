@@ -249,49 +249,49 @@ enum Tree extends AutoLocated:
    * @param inUsing whether the parameter is in a `using` parameter list
    * @param inDataClass whether the parameter is in a data class
    */
-  def asParam(inUsing: Bool, inDataClass: Bool): Diagnostic \/ TreeParam =
+  def asParam(inUsing: Bool, inDataClass: Bool): Diagnostic \/ ParamTree =
     @tailrec
-    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ TreeParam = t match
+    def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
       
       // fun f(_)
       case und: Under => 
-        R(TreeParam(flags, new Ident("_").withLocOf(und), N, N, modifiers))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers))
 
       // In `using` clauses, identifiers and type applications are
       // understood as type names for unnamed contextual parameters:
       // fun f(using A)
       case ty: Ident if inUsing =>
-        R(TreeParam(flags, Ident(""), S(ty), N, modifiers))
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
       // fun f(using A[B])
       case ty @ TyApp(_, _) if inUsing =>
-        R(TreeParam(flags, Ident(""), S(ty), N, modifiers))
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
 
       // fun f(a)
       case id: Ident =>
-        R(TreeParam(flags, id, N, N, modifiers))
+        R(ParamTree(flags, id, N, N, modifiers))
       // fun f(a: A)
       case InfixApp(id: Ident, Keyword.`:`, sign) =>
-        R(TreeParam(flags, id, S(sign), N, modifiers))
+        R(ParamTree(flags, id, S(sign), N, modifiers))
 
       // fun f(..a)
       case Spread(Keyword.`..`, _, S(id: Ident)) =>
-        R(TreeParam(flags, id, N, S(SpreadKind.Lazy), modifiers))
+        R(ParamTree(flags, id, N, S(SpreadKind.Lazy), modifiers))
       // fun f(...a)
       case Spread(Keyword.`...`, _, S(id: Ident)) =>
-        R(TreeParam(flags, id, N, S(SpreadKind.Eager), modifiers))
+        R(ParamTree(flags, id, N, S(SpreadKind.Eager), modifiers))
       // fun f(.._)
       case Spread(Keyword.`..`, _, S(und: Under)) =>
-        R(TreeParam(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Lazy), modifiers))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Lazy), modifiers))
       // fun f(..._)
       case Spread(Keyword.`...`, _, S(und: Under)) => 
-        R(TreeParam(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Eager), modifiers))
+        R(ParamTree(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Eager), modifiers))
       // fun f(..)
       case Spread(Keyword.`..`, kwLoc, N) =>
-        R(TreeParam(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Lazy), modifiers))
+        R(ParamTree(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Lazy), modifiers))
       // fun f(...)
       case Spread(Keyword.`...`, kwLoc, N) =>
-        R(TreeParam(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Eager), modifiers))
+        R(ParamTree(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Eager), modifiers))
       
       // * Unwrapping Cases
       
@@ -329,11 +329,6 @@ enum Tree extends AutoLocated:
       false
 
 object Tree:
-  // A parameter yet to be elaborated.
-  case class TreeParam(
-    flags: FldFlags, ident: Ident, sign: Opt[Tree], 
-    spd: Opt[SpreadKind], modifiers: Set[DeclKind]
-  )
   
   val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
@@ -350,6 +345,16 @@ object Tree:
     def unapply(t: App): Opt[(Tree, Ls[Tree])] = t match
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
+
+/**
+ * A parameter yet to be elaborated, which is different from
+ * semantics.Param. It merely contains the information directly
+ * extracted from the syntax tree.
+ */
+case class ParamTree(
+  flags: FldFlags, ident: Ident, sign: Opt[Tree], 
+  spd: Opt[SpreadKind], modifiers: Set[DeclKind]
+)
 
 object Desugared:
   def unapply(t: Tree): S[Tree] = S(t.desugared)
@@ -523,8 +528,8 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
       pts.flatMap(_.asParam(inUsing = inUsing, inDataClass = false).toOption).map:
-        case TreeParam(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
-        case TreeParam(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
+        case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
+        case ParamTree(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
     
   lazy val allSymbols = definedSymbols ++ clsParams.map(s => s.nme -> s).toMap

@@ -1267,7 +1267,7 @@ extends Importer:
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind])] =
     t.desugared.asParam(inUsing, inDataClass).map: tp =>
-      val TreeParam(flags, id, sign, spd, modifiers) = tp
+      val ParamTree(flags, id, sign, spd, modifiers) = tp
       val sym = VarSymbol(id)
       val sig = sign.map(term(_))
       val p = Param(flags, sym, sig, Modulefulness.ofSign(sig)(Mod in modifiers))
