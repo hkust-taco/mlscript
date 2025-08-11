@@ -521,7 +521,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
   lazy val clsParams: Ls[semantics.TermSymbol] =
     this.paramLists.headOption.fold(Nil): tup =>
       val pts = tup.fields
-      val inUsing = pts.headOption.map(_.isModified(Ins)).exists(identity)
+      val inUsing = pts.headOption.exists(_.isModified(Ins))
       pts.flatMap(_.asParam(inUsing = inUsing, inDataClass = false).toOption).map:
         case TreeParam(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
         case TreeParam(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
