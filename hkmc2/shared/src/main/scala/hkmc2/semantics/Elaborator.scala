@@ -1266,8 +1266,9 @@ extends Importer:
     else VarSymbol(id)
   
   def param(t: Tree, inUsing: Bool, inDataClass: Bool): Ctxl[Diagnostic \/ (Param, Opt[SpreadKind])] =
-    t.desugared.asParam(inUsing).map: tp =>
-      val ParamTree(flags, id, sign, spd, modifiers) = tp
+    t.desugared.asParam(inUsing).map: pt =>
+      log(s"Elaborating ParamTree: ${pt}")
+      val ParamTree(flags, id, sign, spd, modifiers) = pt
       val flg = flags.copy(isVal = flags.isVal || inDataClass)
       val sym = VarSymbol(id)
       val sig = sign.map(term(_))

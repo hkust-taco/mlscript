@@ -42,6 +42,10 @@ sealed trait Literal extends AutoLocated:
 
 enum SpreadKind:
   case Eager, Lazy
+object SpreadKind:
+  def fromKw(kw: Keyword.Ellipsis) = kw match
+    case Keyword.`..` => SpreadKind.Lazy
+    case Keyword.`...` => SpreadKind.Eager
 
 enum Tree extends AutoLocated:
   case Empty()
@@ -253,48 +257,20 @@ enum Tree extends AutoLocated:
     @tailrec
     def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
-      
       // fun f(_)
       case und: Under => 
         R(ParamTree(flags, new Ident("_").withLocOf(und), N, N, modifiers))
-
-      // In `using` clauses, identifiers and type applications are
-      // understood as type names for unnamed contextual parameters:
-      // fun f(using A)
-      case ty: Ident if inUsing =>
-        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
-      // fun f(using A[B])
-      case ty @ TyApp(_, _) if inUsing =>
-        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
-
       // fun f(a)
-      case id: Ident =>
+      case id: Ident if !inUsing =>
         R(ParamTree(flags, id, N, N, modifiers))
       // fun f(a: A)
       case InfixApp(id: Ident, Keyword.`:`, sign) =>
         R(ParamTree(flags, id, S(sign), N, modifiers))
-
-      // fun f(..a)
-      case Spread(Keyword.`..`, _, S(id: Ident)) =>
-        R(ParamTree(flags, id, N, S(SpreadKind.Lazy), modifiers))
-      // fun f(...a)
-      case Spread(Keyword.`...`, _, S(id: Ident)) =>
-        R(ParamTree(flags, id, N, S(SpreadKind.Eager), modifiers))
-      // fun f(.._)
-      case Spread(Keyword.`..`, _, S(und: Under)) =>
-        R(ParamTree(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Lazy), modifiers))
-      // fun f(..._)
-      case Spread(Keyword.`...`, _, S(und: Under)) => 
-        R(ParamTree(flags, new Ident("_").withLocOf(und), N, S(SpreadKind.Eager), modifiers))
-      // fun f(..)
-      case Spread(Keyword.`..`, kwLoc, N) =>
-        R(ParamTree(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Lazy), modifiers))
-      // fun f(...)
-      case Spread(Keyword.`...`, kwLoc, N) =>
-        R(ParamTree(flags, new Ident("_").withLoc(kwLoc), N, S(SpreadKind.Eager), modifiers))
+      // fun f(..a) / fun f(...a)
+      case SpreadParam(id, spd) =>
+        R(ParamTree(flags, id, N, S(spd), modifiers))
       
       // * Unwrapping Cases
-      
       // fun f(module <...>)
       case TypeDef(Mod, inner, N) =>
         go(inner, flags, modifiers + Mod)
@@ -310,7 +286,16 @@ enum Tree extends AutoLocated:
       // fun f(using <...>)
       case TermDef(Ins, inner, N) =>
         go(inner, flags, modifiers + Ins)
-
+      
+      // * Base Case (for `using` clause)
+      // fun f(using A)
+      case ty: Tree if inUsing =>
+        // In contextual parameter lists, a single Tree as parameter is
+        // understood as a type for unnamed contextual parameters, as
+        // opposed to that an identifier is understood as the identifier
+        // for a regular parameter list.
+        R(ParamTree(flags, Ident(""), S(ty), N, modifiers))
+      
       // * Default Case
       case _ => L:
         ErrorReport:
@@ -355,6 +340,22 @@ case class ParamTree(
   flags: FldFlags, ident: Ident, sign: Opt[Tree], 
   spd: Opt[SpreadKind], modifiers: Set[DeclKind]
 )
+
+object SpreadParam:
+  def unapply(t: Tree): Opt[(Ident, SpreadKind)] = t match
+    // fun f(..a)
+    // fun f(...a)
+    case Spread(kw, _, S(id: Ident)) =>
+      S(id, SpreadKind.fromKw(kw))
+    // fun f(.._)
+    // fun f(..._)
+    case Spread(kw, _, S(und: Under)) => 
+      S(new Ident("_").withLocOf(und), SpreadKind.fromKw(kw))
+    // fun f(..)
+    // fun f(...)
+    case Spread(kw, kwLoc, N) =>
+      S(new Ident("_").withLoc(kwLoc), SpreadKind.fromKw(kw))
+    case _ => N
 
 object Desugared:
   def unapply(t: Tree): S[Tree] = S(t.desugared)
