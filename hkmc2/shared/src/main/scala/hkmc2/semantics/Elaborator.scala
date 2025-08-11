@@ -1275,7 +1275,7 @@ extends Importer:
       val p = Param(flg, sym, sig, Modulefulness.ofSign(sig)(Mod in modifiers))
       sym.decl = S(p)
       (p, spd)
-
+  
   def funParams(t: Tree): Ctxl[(ParamList, Ctx)] =
     val ps_ctx = params(t, inDataClass = false)
     def checkFlags(p: Param): Unit =

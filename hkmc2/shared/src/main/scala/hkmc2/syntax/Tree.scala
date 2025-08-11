@@ -313,7 +313,6 @@ enum Tree extends AutoLocated:
       false
 
 object Tree:
-  
   val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
