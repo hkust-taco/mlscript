@@ -1,0 +1,12 @@
+:js
+
+class Foo(val bar: Int)
+
+:e
+pattern Bar = Foo(pattern 0)
+//│ ╔══[ERROR] The pattern argument cannot be used here.
+//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
+//│ ╙──     	                          ^
+//│ ╔══[ERROR] Expected one argument, but found only zero arguments.
+//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
+//│ ╙──     	              ^^^
