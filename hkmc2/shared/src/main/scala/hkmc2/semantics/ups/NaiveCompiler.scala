@@ -4,7 +4,7 @@ package ups
 
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
-import ucs.{DesugaringBase, FlatPattern, error, safeRef}, ucs.extractors.*
+import ucs.{TermSynthesizer, FlatPattern, error, safeRef}, ucs.extractors.*
 import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
 import scala.collection.mutable.Buffer
 import Elaborator.{Ctx, State, ctx}, utils.TL
@@ -77,7 +77,7 @@ import NaiveCompiler.*
 
 /** This class compiles a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern. */
-class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends DesugaringBase:
+class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesizer:
   import tl.*, FlatPattern.MatchMode, SP.*
   
   private lazy val lteq = State.builtinOpsMap("<=")

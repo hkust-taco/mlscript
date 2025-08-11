@@ -5,8 +5,11 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.Tree.*, Elaborator.{Ctx, State, ctx}
 
-/** Contains some helpers that makes UCS desugaring easier. */
-trait DesugaringBase(using Ctx, State):
+/** This trait includes some helpers for synthesizing `Term`s which look like 
+  * they have already been processed by the `Resolver`. Its methods should only
+  * be called in stages after the `Resolver`. Currently, its derived classes are
+  * `Normalization`, `Compiler`, and `NaiveCompiler`. */
+trait TermSynthesizer(using Ctx, State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
     (Term.SynthSel(p, k)(N): Term.SynthSel).withIArgs(Nil)
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =

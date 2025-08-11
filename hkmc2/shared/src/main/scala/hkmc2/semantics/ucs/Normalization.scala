@@ -11,7 +11,7 @@ import FlatPattern.Argument
 import ups.Instantiator
 import hkmc2.semantics.ups.NaiveCompiler
 
-class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBase:
+class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
   import Normalization.*, Mode.*, FlatPattern.MatchMode
   import tl.*
 

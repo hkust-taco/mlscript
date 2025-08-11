@@ -27,8 +27,18 @@ object Desugarer:
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) extends DesugaringBase:
+class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   import Desugarer.*, elaborator.term, elaborator.subterm, elaborator.tl, tl.*
+  
+  // A few helper methods to select useful functions from the runtime.
+  private def selectTuple: Term.SynthSel =
+    Term.SynthSel(State.runtimeSymbol.ref(), Ident("Tuple"))(N)
+  private def tupleSlice = Term.SynthSel(selectTuple, Ident("slice"))(N)
+  private def tupleLazySlice = Term.SynthSel(selectTuple, Ident("lazySlice"))(N)
+  private def tupleGet = Term.SynthSel(selectTuple, Ident("get"))(N)
+  private def callTupleGet(t: Term, i: Int, s: FlowSymbol): Term =
+    val args = PlainFld(t) :: PlainFld(Term.Lit(IntLit(BigInt(i)))) :: Nil
+    Term.App(tupleGet, Term.Tup(args)(DummyTup))(DummyApp, N, s)
   
   given Ordering[Loc] = Ordering.by: loc =>
     (loc.spanStart, loc.spanEnd)
@@ -515,15 +525,20 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx) exten
                     Split.Let(sym, callTupleGet(ref, -1 - lastIndex, sym), wrapInner(split))
                   (wrap, Argument(sym, pat) :: matches)
             val lastMatches = reversedLastMatches.reverse
-            val sliceFn = kw match
-              case Keyword.`..` => tupleLazySlice
-              case Keyword.`...` => tupleSlice
             rest match
               case N => (wrapLast, lastMatches)
               case S(pat) =>
                 val sym = TempSymbol(N, "rest")
                 val wrap = (split: Split) =>
-                  Split.Let(sym, app(sliceFn, tup(fld(ref), fld(int(lead.length)), fld(int(last.length))), sym), wrapLast(split))
+                  val arg0 = PlainFld(ref)
+                  val arg1 = PlainFld(Term.Lit(IntLit(lead.length)))
+                  val arg2 = PlainFld(Term.Lit(IntLit(BigInt(last.length))))
+                  val args = Term.Tup(arg0 :: arg1 :: arg2 :: Nil)(DummyTup)
+                  val func = kw match
+                    case Keyword.`..` => tupleLazySlice
+                    case Keyword.`...` => tupleSlice
+                  val call = Term.App(func, args)(DummyApp, N, TempSymbol(N, "slice"))
+                  Split.Let(sym, call, wrapLast(split))
                 (wrap, Argument(sym, pat) :: lastMatches)
           case N => (identity: Split => Split, Nil)
         val (wrap, arguments) = lead.zipWithIndex.foldRight((wrapRest, restMatches)):

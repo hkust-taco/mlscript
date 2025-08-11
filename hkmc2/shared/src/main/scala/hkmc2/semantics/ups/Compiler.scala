@@ -9,7 +9,7 @@ import syntax.{Keyword, LetBind, Tree}, Tree.{DecLit, Ident, IntLit, StrLit, Uni
 import Term.{Blk, IfLike, Rcd, Ref, SynthSel}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
-import ucs.{DesugaringBase as Base, FlatPattern, safeRef}
+import ucs.{TermSynthesizer, FlatPattern, safeRef}
 import Message.MessageContext, ucs.error
 
 import collection.mutable.{Queue, Map as MutMap}, collection.immutable.{Set, Map}
@@ -19,7 +19,7 @@ import scala.annotation.tailrec
   * a few matcher functions. Each matcher function matches a set of patterns
   * and returns a record that contains the results of each pattern.
   */
-class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Base:
+class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends TermSynthesizer:
   import Compiler.*, tl.*
   
   extension (label: Label)
