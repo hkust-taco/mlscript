@@ -342,10 +342,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       val isMlsFun = f.resolvedSymbol.fold(f.isInstanceOf[st.Lam]):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
-          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
-        // Do not perform safety check on `MatchResult` and `MatchFailure`.
-        case sym => (sym is State.matchResultClsSymbol) ||
-          (sym is State.matchFailureClsSymbol)
+          // Do no check if the symbol refers to a function definition or
+          sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun) || (
+            // it refers to classes `MatchResult` or `MatchFailure`.
+            sym.asCls match
+              case S(cls) => (sym is State.matchResultClsSymbol) ||
+                (sym is State.matchFailureClsSymbol)
+              case N => false)
+        case _ => false
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
