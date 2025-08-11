@@ -249,7 +249,7 @@ enum Tree extends AutoLocated:
    * @param inUsing whether the parameter is in a `using` parameter list
    * @param inDataClass whether the parameter is in a data class
    */
-  def asParam(inUsing: Bool, inDataClass: Bool): Diagnostic \/ ParamTree =
+  def asParam(inUsing: Bool): Diagnostic \/ ParamTree =
     @tailrec
     def go(t: Tree, flags: FldFlags, modifiers: Set[DeclKind]): Diagnostic \/ ParamTree = t match
       // * Base Cases.
@@ -316,7 +316,7 @@ enum Tree extends AutoLocated:
         ErrorReport:
           msg"Expected a valid parameter, found ${this.describe}" -> this.toLoc :: Nil
     
-    go(this, flags = FldFlags.empty.copy(isVal = inDataClass), modifiers = Set.empty)
+    go(this, flags = FldFlags.empty, modifiers = Set.empty)
 
   def isModified(modifier: Keyword | DeclKind): Bool = this match
     case td @ Tree.TypeDef(m, head, N) =>
@@ -527,7 +527,7 @@ trait TypeDefImpl(using State) extends TypeOrTermDef:
     this.paramLists.headOption.fold(Nil): tup =>
       val pts = tup.fields
       val inUsing = pts.headOption.exists(_.isModified(Ins))
-      pts.flatMap(_.asParam(inUsing = inUsing, inDataClass = false).toOption).map:
+      pts.flatMap(_.asParam(inUsing = inUsing).toOption).map:
         case ParamTree(spd = S(_)) => lastWords("spreads are not allowed in class parameters")
         case ParamTree(ident = id) => semantics.TermSymbol(ParamBind, symbol.asClsLike, id)
       .toList
