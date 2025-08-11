@@ -251,7 +251,6 @@ enum Tree extends AutoLocated:
   /**
    * Parse a tree as a parameter.
    * @param inUsing whether the parameter is in a `using` parameter list
-   * @param inDataClass whether the parameter is in a data class
    */
   def asParam(inUsing: Bool): Diagnostic \/ ParamTree =
     @tailrec
