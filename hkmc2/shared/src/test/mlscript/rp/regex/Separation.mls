@@ -1,0 +1,15 @@
+:js
+
+
+pattern TailLines(pattern L) =
+  ("" => []) |
+  ("\n" ~ (Lines(pattern L) as t)) => t
+pattern Lines(pattern L) = 
+  ("" => []) |
+  (((L as h) ~ (TailLines(pattern L) as t)) => [h, ...t])
+
+fun foo(input) = input is Lines("hello")
+
+:fixme
+foo of "hello"
+//│ ═══[RUNTIME ERROR] Error: Function 'unapply' expected 2 arguments but got 1

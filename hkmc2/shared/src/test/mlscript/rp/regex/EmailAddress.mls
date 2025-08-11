@@ -65,7 +65,8 @@ pattern Domain = DomainName ~ DomainSuffix
 
 pattern Email = UserName ~ "@" ~ Domain
 
-[
+:silent
+let emails = [
   "example@example.com"
   "john.doe@guardian.co.uk"
   "alice_bob123@sub-domain.example.org"
@@ -74,6 +75,21 @@ pattern Email = UserName ~ "@" ~ Domain
   "foo-bar@company-name.io"
   "simple123@abc.xyz"
 ]
+
+emails
   Iter.mapping of _ is Email
   Iter.folded of true, _ && _
 //│ = true
+
+open Stack
+
+pattern CommaSep(pattern S) =
+  ("" => Nil) |
+  ((S as head) ~ "," ~ (CommaSep(pattern S) as tail)) => head :: tail
+
+fun parseEmails(input) =
+  if input is CommaSep(pattern Email) as emails then emails else Nil
+
+:todo
+parseEmails of emails.join(",")
+//│ = Nil

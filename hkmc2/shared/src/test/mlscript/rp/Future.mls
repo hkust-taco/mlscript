@@ -1,6 +1,6 @@
 :js
 
-:todo // Parameterized patterns.
+:todo // Parameterized patterns declared by type parameters?
 pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╔══[ERROR] Unrecognized pattern (application).
 //│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
@@ -77,7 +77,7 @@ fun foo(x) = if x is
 //  (case { ... }) as ...
 
 
-:todo
+:todo // `to` instead of ugly `..=`
 // in-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 // out-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
@@ -93,107 +93,22 @@ pattern Email(name, domains) =
 //│ ╙──      	               ^^^^^^
 
 :todo
-pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.96: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──      	                                   ^^^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.96: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──      	                                   ^^^
-
-:todo
-pattern LineSep(pattern P) = case
-  "" then Nil
-  L(...nd) ~
-    ""                   then nd :: Nil
-    "\n" ~ LineSep(P, t) then nd :: t
-//│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.106: 	  "" then Nil
-//│ ║         	  ^^^^^^^^^^^
-//│ ║  l.107: 	  L(...nd) ~
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.108: 	    ""                   then nd :: Nil
-//│ ╙──       	^^^^
-
-:todo
-pattern Lines(pattern L) = case
-  "" then []
-  pattern Tail = case
-    "" then []
-    "\n" ~ (Lines of L) as t then t
-  L as h ~ Tail as t then [h, ...t]
-//│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.120: 	  "" then []
-//│ ║         	  ^^^^^^^^^^
-//│ ║  l.121: 	  pattern Tail = case
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.122: 	    "" then []
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.123: 	    "\n" ~ (Lines of L) as t then t
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	  L as h ~ Tail as t then [h, ...t]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:todo
-if input is Lines of Email then
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.138: 	if input is Lines of Email then
-//│ ╙──       	                               ^
-//│ ╔══[ERROR] Name not found: input
-//│ ║  l.138: 	if input is Lines of Email then
-//│ ╙──       	   ^^^^^
-
-:todo
-pattern Opt(pattern P) = case
-  P(value) then (Some(value))
-  ""       then (None)
-//│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.148: 	  P(value) then (Some(value))
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.149: 	  ""       then (None)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
-
-:todo
-pattern Email(name, domain) = ...
-
-:todo
-if input is Opt(Email, Some((n, d))) then ...
-//│ ╔══[ERROR] Name not found: input
-//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
-//│ ╙──       	   ^^^^^
-//│ ╔══[ERROR] Name not found: Some
-//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
-//│ ╙──       	                       ^^^^
-//│ ╔══[ERROR] invalid record field pattern
-//│ ║  l.160: 	if input is Opt(Email, Some((n, d))) then ...
-//│ ╙──       	                                ^
-//│ ═══[ERROR] Expected zero arguments, but found two arguments.
-
-:todo
-pattern Opt(pattern P) = case
-  P(...values) then (Some(values))
-  ""           then (None)
-//│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.174: 	  P(...values) then (Some(values))
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	  ""           then (None)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:todo
-pattern Opt(pattern P) = case
-  P(...values) then Some(values)
-  ""           then None
-//│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.184: 	  P(...values) then Some(values)
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.185: 	  ""           then None
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
-
-:todo  
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.193: 	pattern Digits = "0" to "9" ~ (Digits | "")
-//│ ╙──       	                        ^^^
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──      	                        ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.193: 	pattern Digits = "0" to "9" ~ (Digits | "")
-//│ ╙──       	                 ^^^^^^
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ╙──      	                 ^^^^^^
+
+:todo // Extraction parameters.
+pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.105: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──       	                                   ^^^
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.105: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+//│ ╙──       	                                   ^^^
+
+:todo // Should report errors
+pattern Email(name, domain) = ...
