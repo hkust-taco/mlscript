@@ -1357,23 +1357,28 @@ extends Importer:
       Transform(pattern, term(rhs)(using termCtx))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
+      // We are accumulating three components: the leading patterns, the spread
+      // pattern, and the trailing patterns.
       val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())
       val (leading, spread, trailing) = ts.foldLeft(z):
         case (acc @ (_, S(_), _), Spread(`...`, _, _)) =>
-          // Found two spreads in the same tuple pattern. Report an error.
+          // Found two `...p` in the same tuple pattern. Report an error.
           raise(ErrorReport(msg"Multiple spread patterns are not supported." -> t.toLoc :: Nil))
-          acc // Do not modify the accumulator and skip this spread.
+          acc // Do not modify the accumulator and skip this `Spread`.
         case ((leading, N, trailing), Spread(`...`, _, S(t))) =>
-          // Elaborate the spread pattern and add it to spread element.
+          // Found `...p`, elaborate `p` and assign it to the spread pattern.
           (leading, S(go(t)), trailing)
         case ((leading, N, trailing), Spread(`...`, _, N)) =>
-          // Empty spreads results in a wildcard pattern.
+          // Found `...` (no following patterns), which means the spread part
+          // will not be further matched. Set the spread pattern to `Wildcard`.
           (leading, S(Wildcard()), trailing)
         case ((leading, N, trailing), t) => 
-          // The spread is not filled. Add new patterns to the leading.
+          // Found a tuple field while the spread pattern is not set. Add the
+          // elaborated pattern to the leading patterns.
           (go(t) :: leading, N, trailing)
         case ((leading, spread @ S(_), trailing), t) => 
-          // The spread is filled. Add new patterns to the trailing.
+          // Found a tuple field while the spread pattern has been set. Add the
+          // elaborated pattern to the trailing patterns.
           (leading, spread, go(t) :: trailing)
       Tuple(leading.reverse, spread, trailing.reverse)
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
