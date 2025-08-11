@@ -93,7 +93,7 @@ module Str with
 // Re-export rendering functions
 val render = Rendering.render
 
-fun printRaw(x) = console.log(render(x))
+fun printRaw(x) = console.log(render(x, indent: 2, breakLength: 76))
 
 // TraceLogger
 

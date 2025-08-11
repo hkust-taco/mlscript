@@ -39,7 +39,19 @@ fun suffixes(l) = if l is
   l & (_ :: tl) then l :: suffixes(tl)
 
 suffixes(range(0, 5))
-//│ = Cons(Cons(0, Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil)))))), Cons(Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil))))), Cons(Cons(2, Cons(3, Cons(4, Cons(5, Nil)))), Cons(Cons(3, Cons(4, Cons(5, Nil))), Cons(Cons(4, Cons(5, Nil)), Cons(Cons(5, Nil), Cons(Nil, Nil)))))))
+//│ = Cons(
+//│   Cons(0, Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil)))))),
+//│   Cons(
+//│     Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Nil))))),
+//│     Cons(
+//│       Cons(2, Cons(3, Cons(4, Cons(5, Nil)))),
+//│       Cons(
+//│         Cons(3, Cons(4, Cons(5, Nil))),
+//│         Cons(Cons(4, Cons(5, Nil)), Cons(Cons(5, Nil), Cons(Nil, Nil)))
+//│       )
+//│     )
+//│   )
+//│ )
 
 suffixes(range(0, -1))
 //│ = Cons(Nil, Nil)

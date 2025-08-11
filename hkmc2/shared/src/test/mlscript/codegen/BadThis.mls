@@ -15,17 +15,17 @@ if 0 is A then 1
 // * TODO: prevent rebinding of `globalThis`
 :re
 val globalThis = "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 :re
 globalThis.clearInterval
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 :re
 if 0 is A then 1
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 

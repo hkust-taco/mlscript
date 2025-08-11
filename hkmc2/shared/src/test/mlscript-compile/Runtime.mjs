@@ -432,7 +432,7 @@ let Runtime1;
   } 
   static printRaw(x2) {
     let tmp;
-    tmp = runtime.safeCall(Runtime.render(x2));
+    tmp = Runtime.render(x2, globalThis.Object.freeze({ "indent": 2, "breakLength": 76 }));
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static raisePrintStackEffect(showLocals) {

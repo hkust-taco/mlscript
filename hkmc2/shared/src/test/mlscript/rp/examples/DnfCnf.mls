@@ -66,16 +66,28 @@ let cnf2 = And(Or(Var("a"), Var("b")), Or(Pred("P", Var("c")), Var("d")))
 //│ cnf2 = And(Or(Var("a"), Var("b")), Or(Pred("P", Var("c")), Var("d")))
 
 let cnf3 = And(And(Or(Var("x"), Pred("Q", Var("y"))), Or(Var("z"), Var("w"))), Or(Pred("R", Var("u")), Var("v")))
-//│ cnf3 = And(And(Or(Var("x"), Pred("Q", Var("y"))), Or(Var("z"), Var("w"))), Or(Pred("R", Var("u")), Var("v")))
+//│ cnf3 = And(
+//│   And(Or(Var("x"), Pred("Q", Var("y"))), Or(Var("z"), Var("w"))),
+//│   Or(Pred("R", Var("u")), Var("v"))
+//│ )
 
 let cnf4 = And(Or(And(Var("m"), Var("n")), Var("o")), Or(Pred("S", Var("p")), And(Var("q"), Var("r"))))
-//│ cnf4 = And(Or(And(Var("m"), Var("n")), Var("o")), Or(Pred("S", Var("p")), And(Var("q"), Var("r"))))
+//│ cnf4 = And(
+//│   Or(And(Var("m"), Var("n")), Var("o")),
+//│   Or(Pred("S", Var("p")), And(Var("q"), Var("r")))
+//│ )
 
 let cnf5 = And(Or(Var("a"), Or(Var("b"), Var("c"))), And(Or(Pred("T", Var("d")), Var("e")), Or(Var("f"), Var("g"))))
-//│ cnf5 = And(Or(Var("a"), Or(Var("b"), Var("c"))), And(Or(Pred("T", Var("d")), Var("e")), Or(Var("f"), Var("g"))))
+//│ cnf5 = And(
+//│   Or(Var("a"), Or(Var("b"), Var("c"))),
+//│   And(Or(Pred("T", Var("d")), Var("e")), Or(Var("f"), Var("g")))
+//│ )
 
 let cnf6 = And(Or(Var("x"), And(Var("y"), Or(Var("z"), Var("w")))), Or(Pred("U", Var("t")), Var("s")))
-//│ cnf6 = And(Or(Var("x"), And(Var("y"), Or(Var("z"), Var("w")))), Or(Pred("U", Var("t")), Var("s")))
+//│ cnf6 = And(
+//│   Or(Var("x"), And(Var("y"), Or(Var("z"), Var("w")))),
+//│   Or(Pred("U", Var("t")), Var("s"))
+//│ )
 
 print of cnf1 is Dnf
 print of cnf2 is Dnf
