@@ -1299,7 +1299,7 @@ extends Importer:
             val newFlags = flags.copy(ctx = inUsing)
             spd match
             case S(spd) =>
-              if spd == SpreadKind.Lazy then
+              if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.isEmpty then 
                 (ParamList(flags, acc.reverse, S(p)), newCtx)
