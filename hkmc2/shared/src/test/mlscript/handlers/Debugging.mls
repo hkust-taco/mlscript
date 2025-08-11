@@ -211,9 +211,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:198:3) with locals: j=200
+//│ > 	at f (Debugging.mls:204:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:200:3)
+//│ > 	at f (Debugging.mls:206:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:201:3) with locals: j=300
+//│ > 	at f (Debugging.mls:207:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]
