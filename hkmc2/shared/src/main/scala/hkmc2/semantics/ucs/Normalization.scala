@@ -7,9 +7,12 @@ import syntax.{Literal, Tree}, utils.TraceLogger
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
 import utils.*
+import FlatPattern.Argument
+import ups.Instantiator
+import hkmc2.semantics.ups.NaiveCompiler
 
-class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBase:
-  import Normalization.*, Mode.*, Pattern.MatchMode
+class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
+  import Normalization.*, Mode.*, FlatPattern.MatchMode
   import tl.*
 
   def reportUnreachableCase[T <: Located](unreachable: Located, subsumedBy: T, when: Bool = true): T =
@@ -36,9 +39,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
 
-  extension (lhs: Pattern.ClassLike)
+  extension (lhs: FlatPattern.ClassLike)
     /** Generate a term that really resolves to the class at runtime. */
-    def selectClass: Pattern.ClassLike =
+    def selectClass: FlatPattern.ClassLike =
       val constructor = lhs.constructor.symbol match
         case S(cls: ClassSymbol) => lhs.constructor
         case S(mem: BlockMemberSymbol) =>
@@ -49,30 +52,30 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           else
             Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
         case _ => lhs.constructor
-      lhs.copy(constructor)(lhs.tree)
+      lhs.copy(constructor)(lhs.tree, lhs.output)
   
-  extension (lhs: Pattern)
+  extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
-    def =:=(rhs: Pattern): Bool = (lhs, rhs) match
-      case (lhs: Pattern.ClassLike, rhs: Pattern.ClassLike) =>
+    def =:=(rhs: FlatPattern): Bool = (lhs, rhs) match
+      case (lhs: FlatPattern.ClassLike, rhs: FlatPattern.ClassLike) =>
         lhs.constructor.symbol === rhs.constructor.symbol
-      case (Pattern.Lit(l1), Pattern.Lit(l2)) => l1 === l2
-      case (Pattern.Tuple(n1, b1), Pattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
-      case (Pattern.Record(ls1), Pattern.Record(ls2)) =>
+      case (FlatPattern.Lit(l1), FlatPattern.Lit(l2)) => l1 === l2
+      case (FlatPattern.Tuple(n1, b1), FlatPattern.Tuple(n2, b2)) => n1 === n2 && b1 === b2
+      case (FlatPattern.Record(ls1), FlatPattern.Record(ls2)) =>
         ls1.lazyZip(ls2).forall:
           case ((fieldName1, p1), (fieldName2, p2)) =>
             fieldName1 === fieldName2 && p1 === p2
-      case (_: Pattern.ClassLike, _) | (_: Pattern.Lit, _) |
-        (_: Pattern.Tuple, _) | (_: Pattern.Record, _) => false
+      case (_: FlatPattern.ClassLike, _) | (_: FlatPattern.Lit, _) |
+        (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
-    def <:<(rhs: Pattern): Bool = compareCasePattern(lhs, rhs)
+    def <:<(rhs: FlatPattern): Bool = compareCasePattern(lhs, rhs)
     /**
       * If two class-like patterns has different `refined` flag. Report the
       * inconsistency as a warning.
       */
-    infix def reportInconsistentRefinedWith(rhs: Pattern): Unit = (lhs, rhs) match
+    infix def reportInconsistentRefinedWith(rhs: FlatPattern): Unit = (lhs, rhs) match
       // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
-      case (Pattern.ClassLike(c1, _, _, rfd1), Pattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
+      case (FlatPattern.ClassLike(c1, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
         def be(value: Bool): Str = if value then "is" else "is not"
         warn(
           msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
@@ -81,24 +84,24 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       case (_, _) => ()
     /** If the pattern is a class-like pattern, override its `refined` flag. */
     def markAsRefined: Unit = lhs match
-      case lhs: Pattern.ClassLike => lhs.refined = true
+      case lhs: FlatPattern.ClassLike => lhs.refined = true
       case _ => ()
   
-  extension (lhs: Pattern.Record)
+  extension (lhs: FlatPattern.Record)
     /** reduces the record pattern `lhs` assuming we have matched `rhs`.
       * It removes field matches that may now be unnecessary
       */
-    infix def assuming(rhs: Pattern): Pattern.Record = rhs match
-      case Pattern.Record(rhsEntries) =>
+    infix def assuming(rhs: FlatPattern): FlatPattern.Record = rhs match
+      case FlatPattern.Record(rhsEntries) =>
         val filteredEntries = lhs.entries.filter:
           (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        Pattern.Record(filteredEntries)
-      case rhs: Pattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
+        FlatPattern.Record(filteredEntries)(lhs.output)
+      case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
             val filteredEntries = lhs.entries.filter:
               (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
-            Pattern.Record(filteredEntries)
+            FlatPattern.Record(filteredEntries)(lhs.output)
           case S(_) | N => lhs
         case S(_) | N => lhs
       case _ => lhs
@@ -112,36 +115,63 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     * @return the normalized term
     */ 
   private def normalize(split: Split)(using vs: VarSet): Split = trace(
-    pre = s"normalize <<< ${Split.display(split)}",
-    post = (res: Split) => "normalize >>> " + Split.display(res),
+    pre = s"normalize <<< ${split.prettyPrint}",
+    post = (res: Split) => "normalize >>> " + res.prettyPrint,
   ):
     normalizeImpl(split)
   
+  /** Bind the current scrutinee to a flat pattern's output symbols. */
+  def aliasOutputSymbols(scrutinee: => Term.Ref, outputSymbols: Ls[BlockLocalSymbol], split: Split): Split =
+    outputSymbols.foldRight(split):
+      // Can we use `Subst` to transform the inner split?
+      case (symbol, innerSplit) => Split.Let(symbol, scrutinee, innerSplit)
+  
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-      case pattern: (Pattern.Lit | Pattern.Tuple | Pattern.Record) =>
+      case pattern: (FlatPattern.Lit | FlatPattern.Tuple | FlatPattern.Record) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // TODO(ucs): deduplicate [1]
-        val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
+        val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
+          normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
         Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-      case pattern @ Pattern.ClassLike(ctor, argsOpt, mode, _) =>
+      case pattern @ FlatPattern.ClassLike(ctor, argsOpt, mode, _) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // Make sure that the pattern has correct arity and fields are accessible.
         ctor.symbol.map(_.asClsLike) match
           case N => // The constructor is not resolved. The error should have been reported.
             normalizeImpl(alternative)
           case S(N) =>
-            // The constructor is not a class-like symbol. Report the error and skip the branch.
-            error(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc)
-            normalizeImpl(alternative)
+            // The constructor is not a class-like symbol. But it might be a
+            // `VarSymbol` referencing to a pattern parameter.
+            ctor.symbol match
+              case S(symbol: VarSymbol) => symbol.decl match
+                case S(param @ Param(flags = FldFlags(pat = true))) =>
+                  if argsOpt.fold(false)(_.nonEmpty) then
+                    error(msg"Pattern parameters cannot be applied." -> ctor.toLoc)
+                  mode match
+                    case MatchMode.Default =>
+                      normalizeExtractorPatternParameter(scrutinee, ctor, pattern.output, consequent, alternative)
+                    case sp: MatchMode.StringPrefix =>
+                      log(s"symbol name is ${symbol.nme}")
+                      normalizeStringPrefixPattern(scrutinee, ctor, N, sp, pattern.output, consequent, alternative)
+                    case MatchMode.Annotated(annotation) =>
+                      error(msg"Annotated pattern parameters are not supported here." -> annotation.toLoc)
+                      normalizeImpl(alternative)
+                case S(_) | N =>
+                  error(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc)
+                  normalizeImpl(alternative)
+              case S(_) | N =>
+                error(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc)
+                normalizeImpl(alternative)
           case S(S(cls: (ClassSymbol | ModuleSymbol))) if mode.isInstanceOf[MatchMode.StringPrefix] =>
             // Match classes and modules are disallowed in the string mode.
             normalizeImpl(alternative)
           case S(S(cls: ClassSymbol)) =>
             validateMatchMode(ctor, cls, mode)
-            if validateClassPattern(ctor, cls, argsOpt) then // TODO(ucs): deduplicate [1]
-              val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
+            if validateClassPattern(ctor, cls, ensureArguments(argsOpt)) then // TODO(ucs): deduplicate [1]
+              val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
+                normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
@@ -149,7 +179,8 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
           case S(S(mod: ModuleSymbol)) =>
             validateMatchMode(ctor, mod, mode)
             if validateObjectPattern(pattern, mod, argsOpt) then // TODO(ucs): deduplicate [1]
-              val whenTrue = normalize(specialize(consequent ++ alternative, +, scrutinee, pattern))
+              val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
+                normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
@@ -159,20 +190,20 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             // the current implementation does not use it. The future version
             // should properly handle the pattern arguments.
             case MatchMode.Default =>
-              normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
-            case MatchMode.StringPrefix(prefix, postfix) =>
-              normalizeStringPrefixPattern(scrutinee, pat, ctor, postfix, consequent, alternative)
+              normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, pattern.output, consequent, normalizeImpl(alternative))
+            case sp: MatchMode.StringPrefix =>
+              normalizeStringPrefixPattern(scrutinee, ctor, argsOpt, sp, pattern.output, consequent, normalizeImpl(alternative))
             case MatchMode.Annotated(annotation) => annotation.symbol match
               case S(symbol) if symbol === ctx.builtins.annotations.compile =>
-                normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, mode, consequent, alternative)
+                normalizeCompiledPattern(scrutinee, pat, ctor, argsOpt, pattern.output, consequent, normalizeImpl(alternative))
               case S(_) =>
                 warn(msg"This annotation is not supported here." -> annotation.toLoc,
                   msg"Note: Patterns (like `${pat.nme}`) only support the `@compile` annotation." -> N)
-                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+                normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, pattern.output,consequent, normalizeImpl(alternative))
               case N =>
                 // Name resolution should have already reported an error. We
                 // treat this as an extractor pattern.
-                normalizeExtractorPattern(scrutinee, pat, ctor, consequent, alternative)
+                normalizeExtractorPattern(scrutinee, pat, ctor, argsOpt, pattern.output, consequent, normalizeImpl(alternative))
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -190,7 +221,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
   private def validateClassPattern(
       ctorTerm: Term,
       ctorSymbol: ClassSymbol,
-      argsOpt: Opt[Ls[Pattern.Argument]]
+      argsOpt: Opt[Ls[FlatPattern.Argument.Term]]
   ): Bool =
     // Obtain the `classHead` used for error reporting and the parameter list
     // from the class definitions.
@@ -201,20 +232,21 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       case S(paramList) => argsOpt match
         case S(args) =>
           // Check the number of parameters is correct.
-          val n = args.size.toString
-          val m = paramList.params.size.toString
-          if n != m then
-            val argsLoc = Loc(args.iterator.map(_.pattern))
+          if args.size != paramList.params.size then
+            val loc = Loc(args) orElse ctorTerm.toLoc
             error:
               if paramList.params.isEmpty then
-                msg"the constructor does not take any arguments but found $n" -> argsLoc
+                msg"The constructor does not take any arguments but found ${
+                  "argument" countBy args.size}." -> loc
               else
-                msg"mismatched arity: expect $m, found $n" -> argsLoc
+                msg"Expected ${"argument" countBy paramList.params.size
+                }, but found ${if args.size < paramList.params.size then "only " else ""
+                }${"argument" countBy args.size}." -> loc
           // Check the fields are accessible.
           paramList.params.iterator.zip(args).map:
-            case (_, (_, Tree.Under(), _)) => true
+            case (_, Argument.Term(_, Tree.Under())) => true
             case (Param(flags, sym, _, _), arg) if !flags.isVal =>
-              error(msg"This pattern cannot be matched" -> arg.pattern.toLoc, // TODO: use correct location
+              error(msg"This pattern cannot be matched" -> arg.toLoc, // TODO: use correct location
                 msg"because the corresponding parameter `${sym.name}` is not publicly accessible" -> sym.toLoc,
                 msg"Suggestion: use a wildcard pattern `_` in this position" -> N,
                 msg"Suggestion: mark this parameter with `val` so it becomes accessible" -> N)
@@ -222,11 +254,11 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             case _ => true
           // If patterns are more than parameters, or one of parameters is
           // incessible, we cannot make the branch.
-          .foldLeft(n <= m)(_ && _)
+          .foldLeft(args.size <= paramList.params.size)(_ && _)
         case N => argsOpt match
           case S(args) =>
             error(msg"class ${ctorSymbol.name} does not have parameters" -> classHead.toLoc,
-              msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
+              msg"but the pattern has ${"sub-pattern" countBy args.size}" -> Loc(args))
             false
           case N => true // No parameters, no arguments. This is fine.
       case N =>
@@ -237,12 +269,12 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
             true
           case S(args) =>
             error(msg"Class ${ctorSymbol.name} does not have a parameter list" -> ctorTerm.toLoc,
-              msg"but the pattern has ${"sub-pattern".pluralize(args.size, true, false)}" -> Loc(args.iterator.map(_.pattern)))
+              msg"but the pattern has ${"sub-pattern" countBy args.size}" -> Loc(args))
             false
           case N => true
   
   /** Check whether the object pattern has an argument list. */
-  private def validateObjectPattern(pattern: Pattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[Pattern.Argument]]): Bool = argsOpt match
+  private def validateObjectPattern(pattern: FlatPattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[FlatPattern.Argument]]): Bool = argsOpt match
     case S(Nil) =>
       // This means the pattern has an unnecessary parameter list.
       error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
@@ -254,6 +286,15 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         msg"Its pattern cannot have arguments." -> pattern.tree.toLoc)
       false
     case N => true
+  
+  /** Ensure that there are no pattern arguments. */
+  private def ensureArguments(
+      arguments: Opt[Ls[FlatPattern.Argument]]
+  ): Opt[Ls[FlatPattern.Argument.Term]] = arguments.map:
+    _.flatMap:
+      case arg: FlatPattern.Argument.Term => S(arg)
+      case FlatPattern.Argument.Pattern(_, pattern) =>
+        error(msg"This ${pattern.describe} pattern cannot be used as an argument here." -> pattern.toLoc); N
   
   /** Warn about inappropriate annotations used on class or object patterns. */
   private def validateMatchMode(
@@ -270,120 +311,200 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
         warn(msg"This annotation is not supported on ${ctorSymbol.tree.k.desc} instance patterns." -> annotation.toLoc)
       case N => () // `Resolver` should have already reported an error.
   
+  /** This function normalizes a pattern that resolves to a pattern parameter.
+   *  We might be able to merge this function with `normalizeExtractorPattern`.
+   *  The difference is that we don't have a way to check the arity of the 
+   *  referenced pattern argument. */
+  private def normalizeExtractorPatternParameter(
+      scrutinee: Term.Ref,
+      ctorTerm: Term,
+      outputSymbols: Ls[BlockLocalSymbol],
+      consequent: Split,
+      alternative: Split,
+  )(using VarSet): Split =
+    val call = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(fld(scrutinee)), s"result of unapply")
+    val split = tempLet("patternParamMatchResult", call): resultSymbol =>
+      if outputSymbols.isEmpty then
+        // No need to destruct the result.
+        Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
+      else
+        val outputSymbol = TempSymbol(N, "output")
+        val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
+        Branch(resultSymbol.safeRef, matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
+          aliasOutputSymbols(outputSymbol.safeRef, outputSymbols, consequent)
+        ) ~: alternative
+    normalize(split)
+  
+  /** Create a split that binds the pattern arguments. */
+  def buildPatternArguments(
+      patternArguments: List[(BlockLocalSymbol, Pattern)],
+      split: Split
+  ): Split =
+    val compiler = new NaiveCompiler
+    patternArguments.foldRight(split):
+      case ((symbol, pattern), innerSplit) =>
+        scoped("ucs:translation"):
+          log(s"build anonymous pattern: ${pattern.showDbg} for symbol ${symbol.nme}")
+        val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
+        Split.Let(symbol, record, innerSplit)
+  
+  /** Normalize splits whose leading branch matches a pattern and does not have
+   *  a `@compile` annotation. */
   private def normalizeExtractorPattern(
       scrutinee: Term.Ref,
       patternSymbol: PatternSymbol,
       ctorTerm: Term,
+      allArgsOpt: Opt[Ls[FlatPattern.Argument]],
+      outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
-    normalize(makeUnapplyBranch(scrutinee, ctorTerm, consequent)(alternative))
+    scoped("ucs:np"):
+      log:
+        allArgsOpt.fold(Iterator.empty[Str]):
+          _.iterator.map:
+            case Argument.Term(scrutinee, _) => s"extraction: ${scrutinee.nme}"
+            case Argument.Pattern(scrutinee, pattern) => s"pattern: ${scrutinee.nme} = ${pattern.showDbg}"
+        .mkString("extractor pattern arguments:\n", "\n", "")
+    val defn = patternSymbol.defn.getOrElse:
+      lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
+    // Partition the arguments into pattern arguments and bindings.
+    val (extractionArgsOpt, patternArguments) = allArgsOpt.fold((N: Opt[Ls[BlockLocalSymbol]], Nil)): args =>
+      val (extractionArgs, patternArgs) = args.partitionMap:
+        case Argument.Term(scrutinee, _) => Left(scrutinee)
+        case Argument.Pattern(scrutinee, pattern) => Right((scrutinee, pattern))
+      (if extractionArgs.isEmpty then N else S(extractionArgs), patternArgs)
+    // Place pattern arguments first, then the scrutinee.
+    val unapplyArgs = patternArguments.map(_._1.safeRef |> fld) :+ fld(scrutinee)
+    val unapplyCall = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(unapplyArgs*), s"result of unapply")
+    val split = buildPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
+      extractionArgsOpt match
+        case N =>
+          if outputSymbols.isEmpty then
+            // No need to destruct the result.
+            Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
+          else
+            val extractionSymbol = TempSymbol(N, "output")
+            val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
+            Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
+              aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols, consequent)
+            ) ~: alternative
+        case S(extractionArgs) =>
+          val extractionParams = defn.extractionParams
+          // TODO: Check if the number of arguments is correct.
+          // Note that if the pattern definition doesn't have any extraction
+          // parameters, we still allow there to be a single argument, which
+          // represents the entire output.
+          val extractionSymbol = TempSymbol(N, "tuple")
+          val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
+          if extractionArgs.size === extractionParams.size then
+            log(s"number of arguments is correct")
+            // If the number of arguments is the same as the number of extraction
+            // parameters, we destruct the `MatchResult`'s argument as a tuple
+            // with length equal to the number of extraction parameters.
+            // 
+            // For example, with pattern `pattern Foo(x, y, z) = ...`, we are
+            // allowed to do `if input is Foo(x, y, z) then ...`.
+            Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
+              aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols,
+                makeTupleBranch(extractionSymbol.safeRef, extractionArgs, consequent, Split.End))
+            ) ~: alternative
+          else extractionArgs match
+            case arg :: Nil if extractionParams.isEmpty =>
+              log(s"only one argument and no extraction params")
+              // If the pattern definition doesn't have any extraction parameters,
+              // we allow there to be a single argument, which represents the
+              // entire output of the pattern.
+              // 
+              // For example, with pattern `pattern Foo = ...`, we are allowed to
+              // do `if input is Foo(output) then ...`, which is equivalent to
+              // `if input is Foo as output then ...`.
+              Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
+                aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols,
+                  Split.Let(arg, extractionSymbol.safeRef, consequent))
+              ) ~: alternative
+            case _ =>
+              log(s"number of arguments is incorrect")
+              // Otherwise, the number of arguments is incorrect.
+              error(msg"Expected ${"argument" countBy extractionParams.size
+              }, but found ${if extractionArgs.size < extractionParams.size then "only " else ""
+              }${"argument" countBy extractionArgs.size}." -> Loc(extractionArgs))
+              // TODO: Improve the error message by checking the pattern definition
+              // and demonstrating how to correctly write the pattern.
+              normalizeImpl(alternative))
+    normalize(split)
   
   private def normalizeStringPrefixPattern(
       scrutinee: Term.Ref,
-      patternSymbol: PatternSymbol,
       ctorTerm: Term,
-      postfixSymbol: TempSymbol,
+      allArgsOpt: Opt[Ls[FlatPattern.Argument]],
+      stringPrefix: MatchMode.StringPrefix,
+      outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
-  )(using VarSet): Split =
-    normalize(makeUnapplyStringPrefixBranch(scrutinee, ctorTerm, postfixSymbol, consequent)(alternative))
+  )(using VarSet): Split = trace(
+    pre = s"normalizeStringPrefixPattern <<< ${ctorTerm.showDbg}",
+    post = (r: Split) => s"normalizeStringPrefixPattern >>> ${r.prettyPrint}"
+  ):
+    val patternArguments = allArgsOpt.fold(Nil)(_.collect:
+      case Argument.Pattern(symbol, pattern) => symbol -> pattern)
+    val call =
+      val method = "unapplyStringPrefix"
+      val args = tup(patternArguments.map(_._1.safeRef) :+ scrutinee)
+      app(sel(ctorTerm, method), args, s"result of $method")
+    val split = tempLet("matchResult", call): resultSymbol =>
+      // let `matchResult` be the return value
+      val outputSymbol = TempSymbol(N, "arg")
+      val bindingsSymbol = TempSymbol(N, "bindings")
+      Branch(
+        resultSymbol.safeRef,
+        matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
+        aliasOutputSymbols(resultSymbol.safeRef, outputSymbols,
+          // Bind the `remaining` variable to the second element of the output
+          // of `matchResult`.
+          Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
+            Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent)))
+      ) ~: alternative
+    normalize(buildPatternArguments(patternArguments, split))
   
   // Note: This function will be overhauled in the new pattern compilation scheme.
   private def normalizeCompiledPattern(
       scrutinee: Term.Ref,
       symbol: PatternSymbol,
       ctorTerm: Term,
-      argsOpt: Opt[Ls[Pattern.Argument]],
-      mode: MatchMode,
+      argsOpt: Opt[Ls[FlatPattern.Argument]],
+      outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split = scoped("ucs:rp"):
-    log(s"SYNONYM: ${scrutinee.showDbg} is $symbol")
-    import DeBrujinSplit.*, PatternStub.*
-    // The reason why we comment the pattern arguments number check is that
-    // it has been checked during elaboration, as the old pattern compilation
-    // scheme still resolves symbols. The new pattern compilation scheme, which
-    // will be implemented in the near future, should not do this.
-    val arguments = argsOpt match
-      case S(args) =>
-        val patternArgs = args.collect:
-          case (_, pattern, S(split)) => (split, pattern)
-        // if symbol.patternParams.size != patternArgs.size then error(
-        //   msg"Pattern `${symbol.nme}` expects ${"pattern argument".pluralize(symbol.patternParams.size, true)}" ->
-        //     Loc(symbol.patternParams.iterator.map(_.sym)),
-        //   msg"But ${"pattern argument".pluralize(patternArgs.size, true)} were given" -> Loc(args.iterator.map(_.pattern)))
-        patternArgs
-      case N =>
-        // if symbol.patternParams.size > 0 then error(
-        //   msg"Pattern `${symbol.nme}` expects ${"pattern argument".pluralize(symbol.patternParams.size, true)}" ->
-        //     Loc(symbol.patternParams.iterator.map(_.sym)),
-        //   msg"But no arguments were given" -> ctorTerm.toLoc)
-        Nil
-    val mainSplit = Binder:
-      Branch(
-        scrutinee = Outermost,
-        // Here we run into a problem: during elaboration, we don't know whether
-        // a constructor will be resolved to a pattern symbol. So we don't know
-        // whether we should elaborate its arguments into terms or de Bruijn
-        // splits. What's worse, `Desugarer` treats pattern arguments as
-        // sub-patterns and expands them... For example:
-        // ```
-        // pattern Nullable(pattern A) = null | A
-        // 0 is @compile Nullable(Int)
-        // ```
-        // My solution is to add `pattern` before each pattern argument.
-        // ```
-        // 0 is @compile Nullable(pattern Int)
-        // ```
-        pattern = ClassLike(ConstructorLike.Instantiation(symbol, arguments)),
-        consequent = Accept(42),
-        alternative = Reject
-      )
-    log(s"the initial split:\n${mainSplit.display}")
-    val (normalizedMainSplit, indexSplitMap) = scoped("ucs:rpn"):
-      mainSplit.normalize
-    log(s"the normalized main split:\n${normalizedMainSplit.display}")
-    // The entry in the local pattern map.
-    val indexSplitSymbolMap = indexSplitMap.map:
-      case (index, split) => (index, (split, TempSymbol(N, s"match$index")))
-    val idSymbolMap = indexSplitSymbolMap.map(_ -> _._2)
-    val compiledMainSplit = normalizedMainSplit.toSplit(
-      scrutinees = Vector(() => scrutinee),
-      localPatterns = idSymbolMap,
-      outcomes = Map(S(42) -> consequent),
-    )
-    log(s"the compiled main split:\n${Split.display(compiledMainSplit)}")
-    // Insert local pattern bindings before the split.
-    val compiled = indexSplitSymbolMap.foldRight(normalizeImpl(compiledMainSplit ++ alternative)):
-      case ((index, (split, symbol)), inner) =>
-        val definition =
-          log(s"making definition for ${split.display}")
-          import syntax.{Fun, Keyword, ParamBind, Tree}, Tree.Ident
-          // The memorized splits may have free variables. We will count
-          // the number of free variables, bind them, and substitute them
-          // with the new indices.
-          val paramSymbols = (1 to split.arity).map: i =>
-            VarSymbol(Ident(s"param$i"))
-          .toVector
-          val paramList = PlainParamList:
-            paramSymbols.iterator.map(Param(FldFlags.empty, _, N, Modulefulness.none)).toList
-          val success = Split.Else(makeMatchResult(Term.Tup(Nil)(Tree.Tup(Nil))))
-          val failure = Split.Else(makeMatchFailure)
-          val bodySplit = scoped("ucs:rp:split"):
-            val bodySplit = split.toSplit(
-              scrutinees = paramSymbols.map(symbol => () => symbol.ref().withIArgs(Nil)),
-              localPatterns = idSymbolMap,
-              outcomes = Map(S(0) -> success, N -> failure)
-            ) ++ Split.Else(makeMatchFailure)
-            log(s"the compiled local pattern $index:\n${Split.display(bodySplit)}")
-            bodySplit
-          val funcBody: Term = Term.IfLike(Keyword.`if`, bodySplit)
-          Term.Lam(paramList, funcBody)
-        Split.Let(symbol, definition, inner)
-    scoped("ucs:compiled"):
-      log(s"the compiled split:\n${compiledMainSplit.toString()}")
-    compiled
+    import ups.*
+    
+    // Instantiate the pattern and all patterns used in it.
+    val instantiator = new Instantiator
+    val patternArguments = argsOpt.fold(Nil)(_.collect:
+      case Argument.Pattern(_, pattern) => pattern)
+    val (synonym, context) = instantiator(symbol, patternArguments, Loc(ctorTerm :: patternArguments))
+    // Initate the compilation.
+    val compiler = new Compiler(using context)
+    val ((matcherSymbol, fieldName), implementations) = compiler.buildMatcher(synonym)
+    val innermostSplit =
+      // 1. Bind the call result to a variable.
+      val recordSymbol = TempSymbol(N, "matchRecord")
+      val recordTerm = app(matcherSymbol.safeRef, tup(fld(scrutinee)), "result of matcher function")
+      val f1 = Split.Let(recordSymbol, recordTerm, _)
+      // 2. Select the selection field to the result.
+      val matchResultSymbol = TempSymbol(N, "matchResult")
+      val matchResultTerm = sel(recordSymbol.safeRef, fieldName)
+      val f2 = Split.Let(matchResultSymbol, matchResultTerm, _)
+      // 3. Check if the field value is a `MatchResult` and bind the output.
+      val outputSymbol = TempSymbol(N, "patternOutput")
+      val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
+      val branch = Branch(matchResultSymbol.safeRef, matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
+        aliasOutputSymbols(outputSymbol.safeRef, outputSymbols, consequent))
+      f1(f2(branch ~: alternative))
+    implementations.iterator.foldRight(innermostSplit):
+      case ((symbol, paramList, term), innerSplit) =>
+        Split.Let(symbol, Term.Lam(paramList, term), innerSplit)
 
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
@@ -396,10 +517,10 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
       split: Split,
       mode: Mode,
       scrutinee: Term.Ref,
-      pattern: Pattern
+      pattern: FlatPattern
   )(using VarSet): Split = trace(
-    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${Split.display(split)}",
-    post = (r: Split) => s"S$mode >>> ${Split.display(r)}"
+    pre = s"S$mode <<< ${scrutinee.showDbg} is ${pattern.showDbg} : ${split.prettyPrint}",
+    post = (r: Split) => s"S$mode >>> ${r.prettyPrint}"
   ):
     def rec(split: Split)(using mode: Mode, vs: VarSet): Split = split match
       case Split.End => log("CASE Nil"); split
@@ -423,7 +544,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
               log(s"Case 1.1.3: $pattern is unrelated with $thatPattern")
               rec(tail)
             else thatPattern match
-            case thatPattern: Pattern.Record =>
+            case thatPattern: FlatPattern.Record =>
               log(s"Case 1.1.4: $thatPattern is a record")
               // we can use information if pattern is itself a record, or if it is a constructor with arguments
               val simplifiedRecord = thatPattern assuming pattern
@@ -466,11 +587,11 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends DesugaringBas
     end rec
     rec(split)(using mode, summon)
   
-  private def aliasBindings(p: Pattern, q: Pattern): Split => Split = (p, q) match
-    case (Pattern.ClassLike(_, S(ss1), _, _), Pattern.ClassLike(_, S(ss2), _, _)) =>
+  private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
+    case (FlatPattern.ClassLike(_, S(ss1), _, _), FlatPattern.ClassLike(_, S(ss2), _, _)) =>
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l.scrutinee === r.scrutinee => acc
-        case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.ref(), acc(innermost))
+        case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.safeRef, acc(innermost))
     case (_, _) => identity
 end Normalization
 
@@ -479,8 +600,8 @@ object Normalization:
     * Hard-coded subtyping relations used in normalization and coverage checking.
     * TODO use base classes and also handle modules
     */
-  def compareCasePattern(lhs: Pattern, rhs: Pattern)(using ctx: Elaborator.Ctx): Bool =
-    import Pattern.*, ctx.builtins as blt
+  def compareCasePattern(lhs: FlatPattern, rhs: FlatPattern)(using ctx: Elaborator.Ctx): Bool =
+    import FlatPattern.*, ctx.builtins as blt
     (lhs, rhs) match
     // `Object` is the supertype of all (non-virtual) classes and modules.
     case (Class(cs: ClassSymbol), Class(blt.`Object`))
@@ -506,7 +627,7 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    case (_: Pattern, _: Pattern)  => false
+    case (_: FlatPattern, _: FlatPattern)  => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

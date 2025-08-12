@@ -69,17 +69,18 @@ let Runtime1;
         static [definitionMetadata] = ["class", "EffectHandle", [null]]; 
       }
     });
-    this.MatchResult = function MatchResult(captures1) {
-      return globalThis.Object.freeze(new MatchResult.class(captures1));
+    this.MatchResult = function MatchResult(output1, bindings1) {
+      return globalThis.Object.freeze(new MatchResult.class(output1, bindings1));
     };
     Object.defineProperty(this.MatchResult, "class", {
     enumerable: true,
       value: class MatchResult {
-        constructor(captures) {
-          this.captures = captures;
+        constructor(output, bindings) {
+          this.output = output;
+          this.bindings = bindings;
         }
         toString() { return runtime.render(this); }
-        static [definitionMetadata] = ["class", "MatchResult", ["captures"]]; 
+        static [definitionMetadata] = ["class", "MatchResult", ["output", "bindings"]]; 
       }
     });
     this.MatchFailure = function MatchFailure(errors1) {
@@ -152,8 +153,11 @@ let Runtime1;
           return runtime.safeCall(string1.at(i))
         }
       } 
-      static drop(string2, n) {
-        return runtime.safeCall(string2.slice(n))
+      static take(string2, n) {
+        return string2.slice(0, n)
+      } 
+      static drop(string3, n1) {
+        return runtime.safeCall(string3.slice(n1))
       }
       static toString() { return runtime.render(this); }
       static [definitionMetadata] = ["module", "Str"]; 
@@ -428,7 +432,7 @@ let Runtime1;
   } 
   static printRaw(x2) {
     let tmp;
-    tmp = runtime.safeCall(Runtime.render(x2));
+    tmp = Runtime.render(x2, globalThis.Object.freeze({ "indent": 2, "breakLength": 76 }));
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static raisePrintStackEffect(showLocals) {

@@ -1,7 +1,47 @@
 :js
 :qq
 
-//│ Term = module Term { Symbol: fun Symbol { class: class Symbol }, ConstructorLike: class ConstructorLike, SymbolCons: fun SymbolCons { class: class SymbolCons }, StringJoin: class StringJoin, TupleCapacity: fun TupleCapacity { class: class TupleCapacity }, Instantiation: fun Instantiation { class: class Instantiation }, LocalPattern: fun LocalPattern { class: class LocalPattern }, Parameter: fun Parameter { class: class Parameter }, Nested: fun Nested { class: class Nested }, PatternStub: class PatternStub, LiteralStub: fun LiteralStub { class: class LiteralStub }, CharClass: fun CharClass { class: class CharClass }, ClassLikeStub: fun ClassLikeStub { class: class ClassLikeStub }, Wildcard: class Wildcard, DebrujinSplit: class DebrujinSplit, Binder: fun Binder { class: class Binder }, DebrujinBranch: fun DebrujinBranch { class: class DebrujinBranch }, Accept: fun Accept { class: class Accept }, Reject: class Reject, Pattern: class Pattern, LitPattern: fun LitPattern { class: class LitPattern }, Var: fun Var { class: class Var }, ClassLike: fun ClassLike { class: class ClassLike }, Synonym: fun Synonym { class: class Synonym }, Tuple: fun Tuple { class: class Tuple }, Record: fun Record { class: class Record }, Branch: fun Branch { class: class Branch }, Split: class Split, Cons: fun Cons { class: class Cons }, Let: fun Let { class: class Let }, Else: fun Else { class: class Else }, End: class End, Keyword: module Keyword { If: If, While: While }, Statement: class Statement, LetDecl: fun LetDecl { class: class LetDecl }, DefineVar: fun DefineVar { class: class DefineVar }, Term: class Term, Lit: fun Lit { class: class Lit }, Builtin: fun Builtin { class: class Builtin }, Ref: fun Ref { class: class Ref }, CSRef: fun CSRef { class: class CSRef }, App: fun App { class: class App }, Sel: fun Sel { class: class Sel }, DynSel: fun DynSel { class: class DynSel }, Tup: fun Tup { class: class Tup }, IfLike: fun IfLike { class: class IfLike }, Lam: fun Lam { class: class Lam }, Blk: fun Blk { class: class Blk }, New: fun New { class: class New }, Region: fun Region { class: class Region }, RegRef: fun RegRef { class: class RegRef }, Assgn: fun Assgn { class: class Assgn }, Deref: fun Deref { class: class Deref }, SetRef: fun SetRef { class: class SetRef }, Ret: fun Ret { class: class Ret }, Throw: fun Throw { class: class Throw }, Try: fun Try { class: class Try }, Context: fun Context { class: class Context } }
+//│ Term = module Term {
+//│   Symbol: fun Symbol { class: class Symbol },
+//│   Pattern: class Pattern,
+//│   LitPattern: fun LitPattern { class: class LitPattern },
+//│   Var: fun Var { class: class Var },
+//│   ClassLike: fun ClassLike { class: class ClassLike },
+//│   Tuple: fun Tuple { class: class Tuple },
+//│   Record: fun Record { class: class Record },
+//│   Branch: fun Branch { class: class Branch },
+//│   Split: class Split,
+//│   Cons: fun Cons { class: class Cons },
+//│   Let: fun Let { class: class Let },
+//│   Else: fun Else { class: class Else },
+//│   End: class End,
+//│   Keyword: module Keyword { If: If, While: While },
+//│   Statement: class Statement,
+//│   LetDecl: fun LetDecl { class: class LetDecl },
+//│   DefineVar: fun DefineVar { class: class DefineVar },
+//│   Term: class Term,
+//│   Lit: fun Lit { class: class Lit },
+//│   Builtin: fun Builtin { class: class Builtin },
+//│   Ref: fun Ref { class: class Ref },
+//│   CSRef: fun CSRef { class: class CSRef },
+//│   App: fun App { class: class App },
+//│   Sel: fun Sel { class: class Sel },
+//│   DynSel: fun DynSel { class: class DynSel },
+//│   Tup: fun Tup { class: class Tup },
+//│   IfLike: fun IfLike { class: class IfLike },
+//│   Lam: fun Lam { class: class Lam },
+//│   Blk: fun Blk { class: class Blk },
+//│   New: fun New { class: class New },
+//│   Region: fun Region { class: class Region },
+//│   RegRef: fun RegRef { class: class RegRef },
+//│   Assgn: fun Assgn { class: class Assgn },
+//│   Deref: fun Deref { class: class Deref },
+//│   SetRef: fun SetRef { class: class SetRef },
+//│   Ret: fun Ret { class: class Ret },
+//│   Throw: fun Throw { class: class Throw },
+//│   Try: fun Try { class: class Try },
+//│   Context: fun Context { class: class Context }
+//│ }
 
 Term.print
 //│ = fun print

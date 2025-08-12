@@ -183,7 +183,7 @@ let foo =
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
-//│ ╔══[ERROR] mismatched arity: expect 3, found 1
+//│ ╔══[ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.182: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = fun foo

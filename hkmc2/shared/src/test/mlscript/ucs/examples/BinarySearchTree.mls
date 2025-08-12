@@ -174,7 +174,19 @@ lowerBound(example1, 5) ?? "not found"
 //│ = 4
 
 let example2 = fromList(1 :: 5 :: 42 :: 10 :: 23 :: 59 :: 81 :: Nil)
-//│ example2 = Node(1, Empty, Node(5, Empty, Node(42, Node(10, Empty, Node(23, Empty, Empty)), Node(59, Empty, Node(81, Empty, Empty)))))
+//│ example2 = Node(
+//│   1,
+//│   Empty,
+//│   Node(
+//│     5,
+//│     Empty,
+//│     Node(
+//│       42,
+//│       Node(10, Empty, Node(23, Empty, Empty)),
+//│       Node(59, Empty, Node(81, Empty, Empty))
+//│     )
+//│   )
+//│ )
 
 lowerBound(example2, 0) ?? "not found"
 //│ = "not found"

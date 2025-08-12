@@ -502,14 +502,28 @@ case class PatternDef(
     sym: PatternSymbol,
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
-    paramsOpt: Opt[ParamList],
-    auxParams: Ls[ParamList],
-    body: ObjBody,
+    /** The pattern parameters, for example, `T` in
+     *  `pattern Nullable(pattern T) = null | T`. */
+    patternParams: Ls[Param],
+    /** The extraction parameters, for example, `x` in
+     *  `pattern PairLike(x, y) = [x, y] | Pair(x, y)`. */
+    extractionParams: Ls[Param],
+    /** The elaborated pattern on the right-hand side, for example,
+     *  `[x, y] | Pair(x, y)` in `pattern PairLike(x, y) = [x, y] | Pair(x, y)`.
+     */
+    pattern: Pattern,
     annotations: Ls[Annot],
 ) extends ClassLikeDef:
   self =>
   val kind: ClsLikeKind = Pat
   val ext: Opt[New] = N
+  /** Each pattern definition should contain two methods: `unapply` and
+   *  `unapplyStringPrefix`, which are generated in `Lowering`. Hence, there
+   *  is no need to make `body` a parameter. */
+  val body: ObjBody = ObjBody(Blk(Nil, Term.Lit(syntax.Tree.UnitLit(false))))
+  /** Pattern definitions do not need parameter lists. */
+  val paramsOpt: Opt[ParamList] = N
+  val auxParams: Ls[ParamList] = Nil
 
 
 sealed abstract class ClassDef extends ClassLikeDef:

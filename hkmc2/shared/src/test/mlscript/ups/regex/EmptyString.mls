@@ -1,0 +1,22 @@
+:js
+
+pattern Oops = "" ~ (Oops | "")
+
+:re
+:todo
+"" is Oops
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
+pattern Funny = "" ~ "" ~ ""
+
+"" is Funny
+//│ = true
+
+pattern Funny = "" ~ "hello" ~ ""
+
+"hello" is Funny
+//│ = true
+
+"" is Funny
+//│ = false

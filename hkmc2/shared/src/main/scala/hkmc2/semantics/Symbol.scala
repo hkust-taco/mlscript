@@ -225,6 +225,7 @@ case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymb
 
 sealed trait ClassLikeSymbol extends Symbol:
   self: MemberSymbol[? <: ClassDef | ModuleDef] =>
+  val id: Tree.Ident
   val tree: Tree.TypeDef
   def subst(using sub: SymbolSubst): ClassLikeSymbol
 
@@ -272,15 +273,6 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def toString: Str = s"pattern:${id.name}"
-  /** The desugared nameless split. */
-  private var _split: Opt[ucs.DeBrujinSplit] = N
-  def split_=(split: ucs.DeBrujinSplit): Unit = _split = S(split)
-  def split: ucs.DeBrujinSplit = _split.getOrElse:
-    lastWords(s"found unelaborated pattern: $nme")
-  /** The list of pattern parameters, for example,
-    * `T` in `pattern Nullable(pattern T) = null | T`.
-    */
-  var patternParams: Ls[Param] = Nil
   
   override def subst(using sub: SymbolSubst): PatternSymbol = sub.mapPatSym(this)
 

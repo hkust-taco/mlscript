@@ -258,7 +258,7 @@ fun lookupCache(csp, t) =
       [[a :: as_, cs], tbl]
   
   mapTree(x => f5(csp, x), t)
-//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ ═══[COMPILATION ERROR] Name not found: member:head
 //│ Stopped due to an error during the Llir generation
 
 
@@ -331,7 +331,7 @@ fun domainWipeout(csp, t) = if csp is CSP(vars, vals, rel) then
     [as_, cs_]
   
   mapTree(f8, t)
-//│ ═══[COMPILATION ERROR] Name not found: $runtime
+//│ ═══[COMPILATION ERROR] Name not found: member:head
 //│ Stopped due to an error during the Llir generation
 
 

@@ -194,7 +194,10 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             jsb.block(le, endSemi = false)
           val jsStr = je.stripBreaks.mkString(100)
           mkQuery("", jsStr): out =>
-            val result = out.splitSane('\n').init.mkString // should always ends with "undefined" (TODO: check)
+            // Omit the last line which is always "undefined" or the unit.
+            val result = out.lastIndexOf('\n') match
+              case n if n >= 0 => out.substring(0, n)
+              case _ => ""
             expect match
             case S(expected) if result =/= expected => raise:
               ErrorReport(msg"Expected: '${expected}', got: '${result}'" -> N :: Nil,
@@ -204,7 +207,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             result match
             case "undefined" if anon =>
             case "()" if anon =>
-            case _ =>
-              output(s"${if anon then "" else s"$nme "}= ${result.indentNewLines("| ")}")
+            case _ => output(s"${if anon then "" else s"$nme "}= $result")
       
 

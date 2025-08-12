@@ -1,0 +1,122 @@
+:js
+
+open annotations
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+// Compute Body Mass Index (BMI) from weight (kg) and height (m)
+pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
+
+pattern Rounded = (Num as value) => Math.round(value)
+
+:todo // This looks decent! Make this happen!
+// Note: This needs refactoring the desugarer.
+(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator)
+//│ ║  l.16: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = false
+
+pattern RoundedBMI = CalculateBMI as Rounded
+
+fun bmi(record) = if record is RoundedBMI as value then value
+
+bmi of weight: 70, height: 1.75
+//│ = 23
+
+:re
+bmi of weight: 70
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// This pattern is useful becuase it turns a pattern into a function that
+// returns `Some` if the pattern matches, and `None` otherwise.
+pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
+
+fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then value
+
+:e
+// alternatively?
+fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╔══[ERROR] Unrecognized pattern (application)
+//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
+
+bmi of weight: 70, height: 1.75
+//│ = Some(23)
+
+bmi of height: 1.75
+//│ = None
+
+// Calculate the area of different shapes
+pattern ShapeArea = 
+  (((:radius)) => Math.PI * radius * radius) |  // Circle
+  (((:width, :height)) => width * height) |     // Rectangle
+  (((:base, :height)) => base * height / 2)     // Triangle
+
+fun area(shape) = if shape is ShapeArea as a then Some(a) else None
+
+area of (radius: 10)
+//│ = Some(314.1592653589793)
+
+area of (width: 10, height: 20)
+//│ = Some(200)
+
+area of (base: 10, height: 20)
+//│ = Some(100)
+
+// Fields are tested in the same order as they are written in the pattern.
+area of (radius: 10, height: 20)
+//│ = Some(314.1592653589793)
+
+area of (width: 10, height: 20, base: 10)
+//│ = Some(200)
+
+fun area__compiled(shape) = if shape is (@compile ShapeArea) as a then Some(a) else None
+
+area__compiled of (radius: 10)
+//│ = Some(314.1592653589793)
+
+area__compiled of (width: 10, height: 20)
+//│ = Some(200)
+
+area__compiled of (base: 10, height: 20)
+//│ = Some(100)
+
+area__compiled of (width: 10, height: 20, base: 10)
+//│ = Some(200)
+
+// Convert between different number systems
+pattern NumberSystem = 
+  (((:digits, radix: "x")) => parseInt(digits, 16)) |
+  (((:digits, radix: "o")) => parseInt(digits, 8)) |
+  (((:digits, radix: "b")) => parseInt(digits, 2))
+
+:todo // This looks decent! Make this happen!
+fun parseIntegerLiteral(value) = if
+  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+    (:radix, :digits) is NumberSystem as value then Some(value)
+  else None
+//│ ╔══[ERROR] Cannot use this reference as a pattern
+//│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+//│ ╙──      	                                              ^
+
+pattern IntegerLiteral =
+  ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)
+
+fun parseIntegerLiteral(value) = if
+  value is IntegerLiteral as output then Some(output)
+  else None
+
+parseIntegerLiteral of "0x1234"
+//│ = Some({radix: "x", digits: "1234"})
+
+parseIntegerLiteral of "0b0000111100001111"
+//│ = Some({radix: "b", digits: "0000111100001111"})
+
+parseIntegerLiteral of "0o673264673"
+//│ = Some({radix: "o", digits: "673264673"})
+
+parseIntegerLiteral of "0k1234"
+//│ = None

@@ -169,6 +169,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
         else doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
       if mut then inner else s"$freeze(${inner})"
+    case Value.Rcd(mut, Nil) =>
+      if mut then "{}" else s"$freeze({})"
     case Value.Rcd(mut, flds) =>
       val inner = doc"{ #  #{ ${
           flds.map:

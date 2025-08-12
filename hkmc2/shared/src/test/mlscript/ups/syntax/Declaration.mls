@@ -1,0 +1,24 @@
+:js
+
+:e
+pattern Foo(val T) = null | T
+//│ ╔══[ERROR] Unexpected pattern parameter T with modifiers: val
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ╙──     	                ^
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.4: 	pattern Foo(val T) = null | T
+//│ ║       	                            ^
+//│ ╙── The variable is missing from this sub-pattern.
+
+pattern Foo(pattern T) = null | T
+
+:fixme
+pattern Foo(pattern T)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
+:fixme
+pattern Foo
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+
+:todo
+data pattern Foo = _

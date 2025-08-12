@@ -1,0 +1,106 @@
+:js
+
+import "../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+open annotations
+
+pattern OverlappedIntervals = (0 ..= 2) & (1 ..= 3)
+
+fun test(n) = n is @compile OverlappedIntervals
+
+print of "0:", test of 0
+print of "1:", test of 1
+print of "2:", test of 2
+print of "3:", test of 3
+print of "42:", test of 42
+//│ > 0: false
+//│ > 1: true
+//│ > 2: true
+//│ > 3: false
+//│ > 42: false
+
+fun show(n) = if n is (@compile OverlappedIntervals) as v then Some(v) else None
+
+print of "0:", show of 0
+print of "1:", show of 1
+print of "2:", show of 2
+print of "3:", show of 3
+print of "42:", show of 42
+//│ > 0: None
+//│ > 1: Some(1)
+//│ > 2: Some(2)
+//│ > 3: None
+//│ > 42: None
+
+data class A(x: Int)
+data class B(x: Int)
+
+pattern BothTransformedConjunction =
+  (((0 ..= 2) as x) => A(x)) &
+  (((1 ..= 3) as y) => B(y))
+
+fun show(n) = if n is (@compile BothTransformedConjunction) as v then Some(v) else None
+
+print of "0:", show of 0
+print of "1:", show of 1
+print of "2:", show of 2
+print of "3:", show of 3
+print of "42:", show of 42
+//│ > 0: None
+//│ > 1: Some([A(1), B(1)])
+//│ > 2: Some([A(2), B(2)])
+//│ > 3: None
+//│ > 42: None
+
+pattern RightTransformedConjunction =
+  (0 ..= 2) &
+  (((1 ..= 3) as y) => B(y))
+
+fun show(n) = if n is (@compile RightTransformedConjunction) as v then Some(v) else None
+
+print of "0:", show of 0
+print of "1:", show of 1
+print of "2:", show of 2
+print of "3:", show of 3
+print of "42:", show of 42
+//│ > 0: None
+//│ > 1: Some([1, B(1)])
+//│ > 2: Some([2, B(2)])
+//│ > 3: None
+//│ > 42: None
+
+pattern LeftTransformedConjunction =
+  (((0 ..= 2) as x) => A(x)) &
+  (1 ..= 3)
+
+fun show(n) = if n is (@compile LeftTransformedConjunction) as v then Some(v) else None
+
+print of "0:", show of 0
+print of "1:", show of 1
+print of "2:", show of 2
+print of "3:", show of 3
+print of "42:", show of 42
+//│ > 0: None
+//│ > 1: Some([A(1), 1])
+//│ > 2: Some([A(2), 2])
+//│ > 3: None
+//│ > 42: None
+
+// We can statically reduce this pattern to bottom.
+pattern ImpossibleIntervals = (0 ..= 2) & (3 ..= 4)
+
+// From the generated code we can see that all cases lead to match failure.
+fun test(n) = n is @compile ImpossibleIntervals
+
+// This pattern is equivalent to bottom but we can't statically reduce it.
+pattern UnionRecords = (a: 1, b: 2) & (a: 3, b: 4)
+
+fun test(rcd) = rcd is @compile UnionRecords
+
+test of (a: 1, b: 2)
+//│ = false
+
+test of (a: 3, b: 4)
+//│ = false

@@ -50,7 +50,7 @@ fun testAtom_nofib(n) =
     Nil then Nil
     state :: t then stringConcat(show(state), "\n") :: lscomp(t)
   stringListConcat of lscomp(take_lz(n, runExperiment(testforce, 0.02, 1.0 :: Nil, State(1.0 :: Nil, 0.0 :: Nil))))
-//│ ═══[COMPILATION ERROR] Name not found: member:stringConcat
+//│ ═══[COMPILATION ERROR] Name not found: member:show
 //│ Stopped due to an error during the Llir generation
 
 testAtom_nofib(20)

@@ -90,10 +90,9 @@ case
 //│               sym = member:Foo
 //│               iargsLs = N
 //│             arguments = S of Ls of 
-//│               Tuple3:
-//│                 _1 = $param0
-//│                 _2 = Ident of "a"
-//│                 _3 = N
+//│               Term:
+//│                 scrutinee = $param0
+//│                 tree = Ident of "a"
 //│             mode = Default
 //│             refined = false
 //│           continuation = Let:

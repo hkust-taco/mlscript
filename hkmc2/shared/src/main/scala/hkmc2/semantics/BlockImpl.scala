@@ -13,7 +13,7 @@ trait BlockImpl(using Elaborator.State):
   val desugStmts =
     def desug(stmts: Ls[Tree]): Ls[Tree] =
       stmts match
-      case PossiblyAnnotated(anns, syntax.Desugared(td: TypeDef)) :: stmts =>
+      case syntax.Desugared(PossiblyAnnotated(anns, td: TypeDef)) :: stmts =>
         val ctors = td.withPart.toList.flatMap:
           case Block(sts) => sts.flatMap:
             case Constructor(Block(ctors)) => ctors

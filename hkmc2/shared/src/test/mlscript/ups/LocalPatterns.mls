@@ -1,0 +1,73 @@
+:js
+
+pattern One = "1"
+
+module Playground with
+  pattern Zero = "0"
+  pattern DoubleZero = Zero ~ Zero
+  pattern ZeroOne = Zero ~ One
+
+Playground
+//│ = module Playground {
+//│   Zero: pattern Zero,
+//│   DoubleZero: pattern DoubleZero,
+//│   ZeroOne: pattern ZeroOne
+//│ }
+
+// Pattern defined in a module can be used with qualified name.
+// ============================================================
+
+Playground.Zero
+//│ = pattern Zero
+
+Playground.Zero.unapply("0")
+//│ = MatchResult("0", {})
+
+:expect true
+"0" is Playground.Zero
+//│ = true
+
+// Patterns defined in a module can refer to other patterns in the same module.
+// ============================================================================
+
+Playground.DoubleZero
+//│ = pattern DoubleZero
+
+Playground.DoubleZero.unapply("00")
+//│ = MatchResult("00", {})
+
+:expect true
+"00" is Playground.DoubleZero
+//│ = true
+
+// Patterns defined in a module can refer to patterns in the global scope.
+// =======================================================================
+
+Playground.ZeroOne
+//│ = pattern ZeroOne
+
+Playground.ZeroOne.unapply("01")
+//│ = MatchResult("01", {})
+
+:expect true
+"01" is Playground.ZeroOne
+//│ = true
+
+// Patterns defined in the global scope can refer to patterns in a module.
+// =======================================================================
+
+pattern TripleZero = Playground.DoubleZero ~ Playground.Zero
+
+TripleZero
+//│ = pattern TripleZero
+
+TripleZero.unapply("000")
+//│ = MatchResult("000", {})
+
+:expect true
+"000" is TripleZero
+//│ = true
+
+:expect false
+"001" is TripleZero
+//│ = false

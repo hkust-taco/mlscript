@@ -8,12 +8,12 @@ let g = globalThis
 // FIXME prevent rebinding of this name
 :re
 let globalThis = "oops"
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 :re
 globalThis
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 
 // * This one uses `this.Error` so it's fine
@@ -29,7 +29,7 @@ if false then 0
 //│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 // * This one uses `globalThis.Error`
 // * Notice the failed exception throw
@@ -51,6 +51,6 @@ foo()
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
-//│ ═══[RUNTIME ERROR] TypeError: Right-hand side of 'instanceof' is not an object
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
 

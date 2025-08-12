@@ -361,19 +361,19 @@ if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
-//│ ╔══[ERROR] the constructor does not take any arguments but found 1
+//│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
-//│ ╔══[ERROR] the constructor does not take any arguments but found 3
+//│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
 //│ ║  l.369: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
-//│ ╔══[ERROR] the constructor does not take any arguments but found 1
+//│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.375: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error

@@ -166,16 +166,51 @@ let lfxx = Lam(nofibStringToList("x"), App(Var(nofibStringToList("F")), App(Var(
 //│ lfxx = Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))
 
 let fix = Lam(nofibStringToList("F"), App(lfxx, lfxx))
-//│ fix = Lam(["F"], App(Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))), Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))))
+//│ fix = Lam(
+//│   ["F"],
+//│   App(
+//│     Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))),
+//│     Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))
+//│   )
+//│ )
 
 let nMinus1 = Add(Var(nofibStringToList("n")), Con(-1))
 //│ nMinus1 = Add(Var(["n"]), Con(-1))
 
 let partialSum0 = Lam(nofibStringToList("sum"), Lam(nofibStringToList("n"), IfZero(Var(nofibStringToList("n")), Con(0), Add(Var(nofibStringToList("n")), App(Var(nofibStringToList("sum")), nMinus1)))))
-//│ partialSum0 = Lam(["s","u","m"], Lam(["n"], IfZero(Var(["n"]), Con(0), Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1)))))))
+//│ partialSum0 = Lam(
+//│   ["s","u","m"],
+//│   Lam(
+//│     ["n"],
+//│     IfZero(
+//│       Var(["n"]),
+//│       Con(0),
+//│       Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1))))
+//│     )
+//│   )
+//│ )
 
 let sum0 = App(fix, partialSum0)
-//│ sum0 = App(Lam(["F"], App(Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))), Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))))), Lam(["s","u","m"], Lam(["n"], IfZero(Var(["n"]), Con(0), Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1))))))))
+//│ sum0 = App(
+//│   Lam(
+//│     ["F"],
+//│     App(
+//│       Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"])))),
+//│       Lam(["x"], App(Var(["F"]), App(Var(["x"]), Var(["x"]))))
+//│     )
+//│   ),
+//│   Lam(
+//│     ["s","u","m"],
+//│     Lam(
+//│       ["n"],
+//│       IfZero(
+//│         Var(["n"]),
+//│         Con(0),
+//│         Add(Var(["n"]), App(Var(["s","u","m"]), Add(Var(["n"]), Con(-1))))
+//│       )
+//│     )
+//│   )
+//│ )
 
 fun showTerm(t) = if t is Con(a) then nofibStringToList("Con ") +: nofibStringToList(stringOfInt(a))
 

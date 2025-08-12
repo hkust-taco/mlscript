@@ -10,7 +10,7 @@ import utils.*
 
 import hkmc2.Message.MessageContext
 
-import semantics.*
+import semantics.*, ucs.FlatPattern
 import hkmc2.{semantics => sem}
 import semantics.{Term => st}
 import semantics.Term.{Throw => _, *}
@@ -184,7 +184,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         blockImpl(stats, res)(k)
       case cls: ClassLikeDef =>
         reportAnnotations(cls, cls.extraAnnotations)
-        val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(cls.body)
+        val (mtds, publicFlds, privateFlds, ctor) = cls match
+          case pd: PatternDef => compilePatternMethods(pd)
+          case _ => gatherMembers(cls.body)
         cls.ext match
         case N =>
           Define(ClsLikeDefn(cls.owner, cls.sym, cls.bsym, cls.kind, cls.paramsOpt, cls.auxParams, N,
@@ -341,7 +343,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case _: sem.BuiltinSymbol => true
         case sym: sem.BlockMemberSymbol =>
           sym.trmImplTree.fold(sym.clsTree.isDefined)(_.k is syntax.Fun)
-        case _ => false
+        // Do not perform safety check on `MatchResult` and `MatchFailure`.
+        case sym => (sym is State.matchResultClsSymbol) ||
+          (sym is State.matchFailureClsSymbol)
       def conclude(fr: Path) =
         arg match
         case Tup(fs) =>
@@ -506,8 +510,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 End()
               )
             pat match
-              case Pattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case Pattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
+              case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
+              case FlatPattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
                 /** Make a continuation that creates the match. */
                 def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
                   val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
@@ -537,8 +541,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                     // resolves to a class or module. Branches with unresolved
                     // constructors should have been removed.
                     lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
-              case Pattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
-              case Pattern.Record(entries) =>
+              case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
+              case FlatPattern.Record(entries) =>
                 val objectSym = ctx.builtins.Object
                 mkMatch( // checking that we have an object
                   Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
@@ -565,7 +569,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       val normalized = tl.scoped("ucs:normalize"):
         normalize(iftrm.desugared)
       tl.scoped("ucs:normalized"):
-        tl.log(s"Normalized:\n${Split.display(normalized)}")
+        tl.log(s"Normalized:\n${normalized.prettyPrint}")
 
       if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
       else
@@ -683,8 +687,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def setupSymbol(symbol: Local)(k: Result => Block)(using Subst): Block =
     k(Instantiate(mut = false, Value.Ref(State.termSymbol).selSN("Symbol"), Value.Lit(Tree.StrLit(symbol.nme)) :: Nil))
 
-  def quotePattern(p: Pattern)(k: Result => Block)(using Subst): Block = p match
-    case Pattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
+  def quotePattern(p: FlatPattern)(k: Result => Block)(using Subst): Block = p match
+    case FlatPattern.Lit(lit) => setupTerm("LitPattern", Value.Lit(lit) :: Nil)(k)
     case _ => // TODO
       fail:
         ErrorReport(
@@ -818,6 +822,21 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
           case t => t
     (mtds, publicFlds, privateFlds, ctor)
+  
+  /** Compile the pattern definition into `unapply` and `unapplyStringPrefix`
+   *  methods using the `NaiveCompiler`, which transliterate the pattern into
+   *  UCS splits that backtrack without any optimizations. */
+  def compilePatternMethods(defn: PatternDef)(using Subst):
+      // The return type is intended to be consistent with `gatherMembers`
+      (Ls[FunDefn], Ls[BlockMemberSymbol -> TermSymbol], Ls[TermSymbol], Block) =
+    val compiler = new ups.NaiveCompiler
+    val methods = compiler.compilePattern(defn)
+    val mtds = methods
+      .flatMap: td =>
+        td.body.map: bod =>
+          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
+          FunDefn(td.owner, td.sym, paramLists, bodyBlock)
+    (mtds, Nil, Nil, End())
   
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
     val as = elems.map:

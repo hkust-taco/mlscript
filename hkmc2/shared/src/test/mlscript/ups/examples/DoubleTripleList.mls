@@ -1,0 +1,360 @@
+:js
+
+open annotations
+
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
+
+open Stack
+
+fun list(...elements) = elements Iter.toStack()
+
+// The example of lists whose length is a multiple of two.
+
+// Note that the parentheses are necessary.
+pattern DoubleList = Nil | (Int :: Int :: DoubleList)
+
+list(1, 2, 3, 4) is DoubleList
+//│ = true
+
+list(1, 2, 3) is DoubleList
+//│ = false
+
+Nil is DoubleList
+//│ = true
+
+fun isDoubleList(xs) = xs is @compile DoubleList
+
+isDoubleList of list(1, 2, 3, 4)
+//│ = true
+
+isDoubleList of list(1, 2, 3)
+//│ = false
+
+isDoubleList of Nil
+//│ = true
+
+// The example of lists whose length is a multiple of three.
+
+// Note that the parentheses are necessary.
+pattern TripleList = Nil | (Int :: Int :: Int :: TripleList)
+
+list(1, 2, 3, 4, 5, 6) is TripleList
+//│ = true
+
+list(1, 2, 3) is TripleList
+//│ = true
+
+list(1, 2, 3, 4) is TripleList
+//│ = false
+
+Nil is TripleList
+//│ = true
+
+fun isTripleList(xs) = xs is @compile TripleList
+
+isTripleList of list(1, 2, 3, 4, 5, 6)
+//│ = true
+
+isTripleList of list(1, 2, 3)
+//│ = true
+
+isTripleList of list(1, 2, 3, 4)
+//│ = false
+
+isTripleList of Nil
+//│ = true
+
+pattern DoubleTripleList = DoubleList | TripleList
+
+// Make a `Cons` object and print a message whenever the `head` or `tail`
+// property is accessed.
+let doLog = false
+fun (::) makeObservableCons(x, xs) =
+  let cons = new mut Cons(x, xs)
+  let repr = "[" + (cons Iter.fromStack() Iter.joined of ", ") + "]"
+  Object.defineProperty of
+    cons
+    "head"
+    enumerable: true
+    configurable: false
+    get: () =>
+      if doLog do print("access the `head` of " + repr)
+      x
+  Object.defineProperty of
+    cons
+    "tail"
+    enumerable: true
+    configurable: false
+    get: () =>
+      if doLog do print("access the `tail` of " + repr)
+      xs
+  cons
+//│ doLog = false
+
+fun withLog(f) =
+  set doLog = true
+  val result = f()
+  set doLog = false
+  result
+
+let testList = 1 :: 2 :: Nil
+//│ testList = Cons(1, Cons(2, Nil))
+
+withLog of () =>
+  testList.head
+  testList.tail
+  ()
+//│ > access the `head` of [1, 2]
+//│ > access the `tail` of [1, 2]
+
+fun list(...elements) = elements Iter.rightFolded of Nil, (::)
+
+fun isDoubleTripleList__compiled(xs) = withLog of
+  () => xs is @compile DoubleTripleList
+
+isDoubleTripleList__compiled of list(1, 2, 3)
+//│ > access the `head` of [1, 2, 3]
+//│ > access the `tail` of [1, 2, 3]
+//│ > access the `head` of [2, 3]
+//│ > access the `tail` of [2, 3]
+//│ > access the `head` of [3]
+//│ > access the `tail` of [3]
+//│ = true
+
+isDoubleTripleList__compiled of list(1, 2, 3, 4)
+//│ > access the `head` of [1, 2, 3, 4]
+//│ > access the `tail` of [1, 2, 3, 4]
+//│ > access the `head` of [2, 3, 4]
+//│ > access the `tail` of [2, 3, 4]
+//│ > access the `head` of [3, 4]
+//│ > access the `tail` of [3, 4]
+//│ > access the `head` of [4]
+//│ > access the `tail` of [4]
+//│ = true
+
+isDoubleTripleList__compiled of list(1, 2, 3, 4, 5)
+//│ > access the `head` of [1, 2, 3, 4, 5]
+//│ > access the `tail` of [1, 2, 3, 4, 5]
+//│ > access the `head` of [2, 3, 4, 5]
+//│ > access the `tail` of [2, 3, 4, 5]
+//│ > access the `head` of [3, 4, 5]
+//│ > access the `tail` of [3, 4, 5]
+//│ > access the `head` of [4, 5]
+//│ > access the `tail` of [4, 5]
+//│ > access the `head` of [5]
+//│ > access the `tail` of [5]
+//│ = false
+
+isDoubleTripleList__compiled of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
+//│ > access the `head` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [5, 6, 7, 8, 9]
+//│ > access the `tail` of [5, 6, 7, 8, 9]
+//│ > access the `head` of [6, 7, 8, 9]
+//│ > access the `tail` of [6, 7, 8, 9]
+//│ > access the `head` of [7, 8, 9]
+//│ > access the `tail` of [7, 8, 9]
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ = true
+
+isDoubleTripleList__compiled of Nil
+//│ = true
+
+fun isDoubleTripleList__naive(xs) =
+  set doLog = true
+  let result = xs is DoubleTripleList
+  set doLog = false
+  result
+
+// It does not backtracking because the `DoubleList` is tested first.
+isDoubleTripleList__naive of list(1, 2, 3, 4)
+//│ > access the `head` of [1, 2, 3, 4]
+//│ > access the `tail` of [1, 2, 3, 4]
+//│ > access the `head` of [2, 3, 4]
+//│ > access the `tail` of [2, 3, 4]
+//│ > access the `head` of [3, 4]
+//│ > access the `tail` of [3, 4]
+//│ > access the `head` of [4]
+//│ > access the `tail` of [4]
+//│ = true
+
+// It does backtracking when `DoubleList` does not match.
+isDoubleTripleList__naive of list(1, 2, 3)
+//│ > access the `head` of [1, 2, 3]
+//│ > access the `tail` of [1, 2, 3]
+//│ > access the `head` of [2, 3]
+//│ > access the `tail` of [2, 3]
+//│ > access the `head` of [3]
+//│ > access the `tail` of [3]
+//│ > access the `head` of [1, 2, 3]
+//│ > access the `tail` of [1, 2, 3]
+//│ > access the `head` of [2, 3]
+//│ > access the `tail` of [2, 3]
+//│ > access the `head` of [3]
+//│ > access the `tail` of [3]
+//│ = true
+
+isDoubleTripleList__naive of list(1, 2, 3, 4, 5, 6, 7, 8, 9)
+//│ > access the `head` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [5, 6, 7, 8, 9]
+//│ > access the `tail` of [5, 6, 7, 8, 9]
+//│ > access the `head` of [6, 7, 8, 9]
+//│ > access the `tail` of [6, 7, 8, 9]
+//│ > access the `head` of [7, 8, 9]
+//│ > access the `tail` of [7, 8, 9]
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ > access the `head` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [2, 3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [3, 4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [4, 5, 6, 7, 8, 9]
+//│ > access the `tail` of [4, 5, 6, 7, 8, 9]
+//│ > access the `head` of [5, 6, 7, 8, 9]
+//│ > access the `tail` of [5, 6, 7, 8, 9]
+//│ > access the `head` of [6, 7, 8, 9]
+//│ > access the `tail` of [6, 7, 8, 9]
+//│ > access the `head` of [7, 8, 9]
+//│ > access the `tail` of [7, 8, 9]
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ = true
+
+pattern DoubleAndTripleList = DoubleList & TripleList
+
+fun isDoubleAndTriple__naive(xs) = withLog of
+  () => xs is DoubleAndTripleList
+
+isDoubleAndTriple__naive of list(8, 9)
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ = false
+
+isDoubleAndTriple__naive of list(1, 2, 3)
+//│ > access the `head` of [1, 2, 3]
+//│ > access the `tail` of [1, 2, 3]
+//│ > access the `head` of [2, 3]
+//│ > access the `tail` of [2, 3]
+//│ > access the `head` of [3]
+//│ > access the `tail` of [3]
+//│ = false
+
+isDoubleAndTriple__naive of list(4, 3, 2, 1)
+//│ > access the `head` of [4, 3, 2, 1]
+//│ > access the `tail` of [4, 3, 2, 1]
+//│ > access the `head` of [3, 2, 1]
+//│ > access the `tail` of [3, 2, 1]
+//│ > access the `head` of [2, 1]
+//│ > access the `tail` of [2, 1]
+//│ > access the `head` of [1]
+//│ > access the `tail` of [1]
+//│ > access the `head` of [4, 3, 2, 1]
+//│ > access the `tail` of [4, 3, 2, 1]
+//│ > access the `head` of [3, 2, 1]
+//│ > access the `tail` of [3, 2, 1]
+//│ > access the `head` of [2, 1]
+//│ > access the `tail` of [2, 1]
+//│ > access the `head` of [1]
+//│ > access the `tail` of [1]
+//│ = false
+
+isDoubleAndTriple__naive of list(1, 2, 3, 4, 5, 6)
+//│ > access the `head` of [1, 2, 3, 4, 5, 6]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6]
+//│ > access the `head` of [2, 3, 4, 5, 6]
+//│ > access the `tail` of [2, 3, 4, 5, 6]
+//│ > access the `head` of [3, 4, 5, 6]
+//│ > access the `tail` of [3, 4, 5, 6]
+//│ > access the `head` of [4, 5, 6]
+//│ > access the `tail` of [4, 5, 6]
+//│ > access the `head` of [5, 6]
+//│ > access the `tail` of [5, 6]
+//│ > access the `head` of [6]
+//│ > access the `tail` of [6]
+//│ > access the `head` of [1, 2, 3, 4, 5, 6]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6]
+//│ > access the `head` of [2, 3, 4, 5, 6]
+//│ > access the `tail` of [2, 3, 4, 5, 6]
+//│ > access the `head` of [3, 4, 5, 6]
+//│ > access the `tail` of [3, 4, 5, 6]
+//│ > access the `head` of [4, 5, 6]
+//│ > access the `tail` of [4, 5, 6]
+//│ > access the `head` of [5, 6]
+//│ > access the `tail` of [5, 6]
+//│ > access the `head` of [6]
+//│ > access the `tail` of [6]
+//│ = true
+
+fun isDoubleAndTriple__compiled(xs) = withLog of
+  () => xs is @compile DoubleAndTripleList
+
+isDoubleAndTriple__compiled of list(8, 9)
+//│ > access the `head` of [8, 9]
+//│ > access the `tail` of [8, 9]
+//│ > access the `head` of [9]
+//│ > access the `tail` of [9]
+//│ = false
+
+isDoubleAndTriple__compiled of list(1, 2, 3)
+//│ > access the `head` of [1, 2, 3]
+//│ > access the `tail` of [1, 2, 3]
+//│ > access the `head` of [2, 3]
+//│ > access the `tail` of [2, 3]
+//│ > access the `head` of [3]
+//│ > access the `tail` of [3]
+//│ = false
+
+isDoubleAndTriple__compiled of list(4, 3, 2, 1)
+//│ > access the `head` of [4, 3, 2, 1]
+//│ > access the `tail` of [4, 3, 2, 1]
+//│ > access the `head` of [3, 2, 1]
+//│ > access the `tail` of [3, 2, 1]
+//│ > access the `head` of [2, 1]
+//│ > access the `tail` of [2, 1]
+//│ > access the `head` of [1]
+//│ > access the `tail` of [1]
+//│ = false
+
+isDoubleAndTriple__compiled of list(1, 2, 3, 4, 5, 6)
+//│ > access the `head` of [1, 2, 3, 4, 5, 6]
+//│ > access the `tail` of [1, 2, 3, 4, 5, 6]
+//│ > access the `head` of [2, 3, 4, 5, 6]
+//│ > access the `tail` of [2, 3, 4, 5, 6]
+//│ > access the `head` of [3, 4, 5, 6]
+//│ > access the `tail` of [3, 4, 5, 6]
+//│ > access the `head` of [4, 5, 6]
+//│ > access the `tail` of [4, 5, 6]
+//│ > access the `head` of [5, 6]
+//│ > access the `tail` of [5, 6]
+//│ > access the `head` of [6]
+//│ > access the `tail` of [6]
+//│ = true

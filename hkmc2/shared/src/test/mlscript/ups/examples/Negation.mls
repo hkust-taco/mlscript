@@ -1,0 +1,28 @@
+:js
+
+pattern NonZero = ~0
+
+0 is NonZero
+//│ = false
+
+1 is NonZero
+//│ = true
+
+-1 is NonZero
+//│ = true
+
+pattern HomogeneousCoordinate = ((:x, :y, w: ~0 as w)) => (x: x / w, y: y / w)
+
+(x: 0, y: 0, w: 0) is HomogeneousCoordinate
+//│ = false
+
+(x: 0, y: 0, w: 1) is HomogeneousCoordinate
+//│ = true
+
+fun flatten(xyw) = if xyw is HomogeneousCoordinate as xy then xy
+
+flatten of x: 0, y: 0, w: 1
+//│ = {x: 0, y: 0}
+
+flatten of x: 4, y: 4, w: 2
+//│ = {x: 2, y: 2}

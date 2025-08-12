@@ -1,0 +1,184 @@
+:js
+
+:todo // Patterns at parameter position are not supported yet.
+0 => false
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.4: 	0 => false
+//│ ╙──     	^
+//│ = fun
+
+:ucs ups
+pattern BooleanLike = true | false | (0 => false) | (1 => true)
+//│ elaborated pattern body: true ∨ false ∨ 0 => false ∨ 1 => true
+
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+class Pair[A, B](val fst: A, val snd: B)
+
+:ucs ups
+pattern PlainList(pattern T) = (null => Nil) | (Pair(T as hd, PlainList(T) as tl) => hd :: tl)
+//│ elaborated pattern body: null => (member:Stack#666.)Nil‹member:Nil› ∨ member:Pair(T as hd, member:PlainList(T) as tl) => (member:Stack#666.)Cons‹member:Cons›(hd#666, tl#666)
+
+:todo
+:ucs ups
+// Decide the operator precedence between `as` and `=>`.
+// This is elaborated into `T as (x => x)`, which might not be what we want.
+pattern Identity(pattern T) = T as x => x
+//│ elaborated pattern body: T as (x => x#666)
+
+:ucs ups
+pattern Identity(pattern T) = (T as x) => x
+//│ elaborated pattern body: (T as x) => x#666
+
+pattern Identity = x => x
+
+:ucs ups
+pattern Sick = (0 as a as b as c as d as e as f) => a + b + c + d + e + f
+//│ elaborated pattern body: ((((((0 as a) as b) as c) as d) as e) as f) => builtin:+#4(builtin:+#3(builtin:+#2(builtin:+#1(builtin:+#0(a#666, b#666), c#666), d#666), e#666), f#666)
+
+:ucs ups
+pattern PairLike = [fst, snd] => Pair(fst, snd)
+//│ elaborated pattern body: [fst, snd] => member:Pair#666(fst#666, snd#666)
+
+:ucs ups
+pattern PairLike(fst, snd) = Pair(fst, snd) | [fst, snd]
+//│ elaborated pattern body: member:Pair(fst, snd) ∨ [fst, snd]
+
+:w
+pattern UselessParameter = x
+//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ║  l.50: 	pattern UselessParameter = x
+//│ ╙──      	                           ^
+
+:ucs ups
+pattern PlainList(pattern T) = (null => Nil) | ([T as hd, PlainList(T) as tl] => hd :: tl)
+//│ elaborated pattern body: null => (member:Stack#666.)Nil‹member:Nil› ∨ [T as hd, member:PlainList(T) as tl] => (member:Stack#666.)Cons‹member:Cons›(hd#666, tl#666)
+
+:fixme
+[T as hd, PlainList(pattern T) as tl]
+//│ ╔══[ERROR] Name not found: hd
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	      ^^
+//│ ╔══[ERROR] Illegal type declaration in term position.
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	                            ^
+//│ ╔══[ERROR] Name not found: tl
+//│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
+//│ ╙──      	                                  ^^
+//│ ═══[RUNTIME ERROR] TypeError: PlainList3 is not a function
+
+:ucs ups
+pattern Consistent = ((Int as x) | (Str as x)) => x.toString()
+//│ elaborated pattern body: (member:Int as x ∨ member:Str as x) => x#666.toString()
+
+:e
+pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╔══[ERROR] This pattern cannot be bound.
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ║        	                           ^^^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                           ^^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.77: 	pattern Inconsistent = ~(~(Int as x) | Str) => x.toString()
+//│ ╙──      	                                               ^
+
+:e
+pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.89: 	pattern Inconsistent = (~(~((Int as x) => x)) | Str) => x.toString()
+//│ ╙──      	                                                        ^
+
+:ucs ups
+pattern Negated = ~(Int | Str)
+//│ elaborated pattern body: ¬(member:Int ∨ member:Str)
+
+:todo // The precedence of `=>` is higher than `~`?
+:pt
+pattern BadNegated = ~(Int as x) => x
+//│ Parsed tree:
+//│ TypeDef:
+//│   k = Pat
+//│   head = Ident of "BadNegated"
+//│   rhs = S of App:
+//│     lhs = Ident of "~"
+//│     rhs = Tup of Ls of 
+//│       InfixApp:
+//│         lhs = Tup of Ls of 
+//│           InfixApp:
+//│             lhs = Ident of "Int"
+//│             kw = keyword 'as'
+//│             rhs = Ident of "x"
+//│         kw = keyword '=>'
+//│         rhs = Ident of "x"
+
+:ucs ups
+:e
+pattern BadNegated = (~(Int as x)) => x
+//│ ╔══[ERROR] This pattern cannot be bound.
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
+//│ ║         	                        ^^^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
+//│ ╙──       	                        ^^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.119: 	pattern BadNegated = (~(Int as x)) => x
+//│ ╙──       	                                      ^
+//│ elaborated pattern body: ¬(member:Int as x) => <error>
+
+:ucs ups
+:e
+pattern BadNegated = (~Pair(Int, x)) => x
+//│ ╔══[ERROR] This variable cannot be accessed.
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ║         	                                 ^
+//│ ╟── Because the pattern it belongs to is negated.
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ╙──       	                       ^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.133: 	pattern BadNegated = (~Pair(Int, x)) => x
+//│ ╙──       	                                        ^
+//│ elaborated pattern body: ¬member:Pair(member:Int, x) => <error>
+
+:ucs ups
+pattern DoubleNegated = ~(~Int)
+//│ elaborated pattern body: ¬¬member:Int
+
+:ucs ups
+pattern Nothing = ~_
+//│ elaborated pattern body: ¬_
+
+:ucs ups
+pattern Origin = (x: 0, y: 0)
+//│ elaborated pattern body: {x: 0, y: 0}
+
+:ucs ups
+pattern Origin = (x: 0, y: 0, z: 0)
+//│ elaborated pattern body: {x: 0, y: 0, z: 0}
+
+:ucs ups
+pattern PointLike = ((x: x, y: y)) => x + y
+//│ elaborated pattern body: {x: x, y: y} => builtin:+#5(x#666, y#666)
+
+:ucs ups
+pattern PointLike = ((:x, :y, :z)) => x + y
+//│ elaborated pattern body: {x: x, y: y, z: z} => builtin:+#6(x#666, y#666)
+
+:ucs ups
+pattern NestedTuple = [[[]]]
+//│ elaborated pattern body: [[[]]]
+
+pattern Digit = "0" ..= "9"
+
+pattern Naughty = CanYouSeeMe(n) => n
+data class CanYouSeeMe(wow: Int)
+
+
+fun y = HiddenCorner.m.m.k
+pattern Naughty = HiddenCorner.m.m.YouCantSeeMe(n) => n + HiddenCorner.m.m.k
+module HiddenCorner with
+  val m: module HiddenCorner = HiddenCorner
+  class YouCantSeeMe(wow: Int)
+  val k = 0

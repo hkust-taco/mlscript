@@ -1,0 +1,138 @@
+:js
+
+open annotations
+
+class Formula with
+  constructor
+    Var(val name: Str)
+    Pred(val name: Str, val arg: Formula)
+    And(val left: Formula, val right: Formula)
+    Or(val left: Formula, val right: Formula)
+
+pattern Dnf = Or(Dnf, Dnf) | Atoms
+pattern Atoms = And(Atoms, Atoms) | Atom
+pattern Atom = Pred | Var
+
+fun isDnf(x) = x is @compile Dnf
+
+let f1 = Var("x")
+let f2 = Pred("P", Var("y"))
+//│ f1 = Var("x")
+//│ f2 = Pred("P", Var("y"))
+
+f1 is Dnf
+//│ = true
+
+isDnf of f1
+//│ = true
+
+f2 is Dnf
+//│ = true
+
+isDnf of f2
+//│ = true
+
+let f3 = And(f1, f2)
+//│ f3 = And(Var("x"), Pred("P", Var("y")))
+
+f3 is Dnf
+//│ = true
+
+isDnf of f3
+//│ = true
+
+let f4 = Or(f3, Pred("Q", Var("z")))
+//│ f4 = Or(And(Var("x"), Pred("P", Var("y"))), Pred("Q", Var("z")))
+
+f4 is Dnf
+//│ = true
+
+isDnf of f4
+//│ = true
+
+let f5 = Or(And(Pred("A", Var("a")), Pred("B", Var("b"))), Pred("C", Var("c")))
+//│ f5 = Or(And(Pred("A", Var("a")), Pred("B", Var("b"))), Pred("C", Var("c")))
+
+f5 is Dnf
+//│ = true
+
+isDnf of f5
+//│ = true
+
+let cnf1 = And(Or(Var("x"), Var("y")), Pred("P", Var("z")))
+//│ cnf1 = And(Or(Var("x"), Var("y")), Pred("P", Var("z")))
+
+let cnf2 = And(Or(Var("a"), Var("b")), Or(Pred("P", Var("c")), Var("d")))
+//│ cnf2 = And(Or(Var("a"), Var("b")), Or(Pred("P", Var("c")), Var("d")))
+
+let cnf3 = And(And(Or(Var("x"), Pred("Q", Var("y"))), Or(Var("z"), Var("w"))), Or(Pred("R", Var("u")), Var("v")))
+//│ cnf3 = And(
+//│   And(Or(Var("x"), Pred("Q", Var("y"))), Or(Var("z"), Var("w"))),
+//│   Or(Pred("R", Var("u")), Var("v"))
+//│ )
+
+let cnf4 = And(Or(And(Var("m"), Var("n")), Var("o")), Or(Pred("S", Var("p")), And(Var("q"), Var("r"))))
+//│ cnf4 = And(
+//│   Or(And(Var("m"), Var("n")), Var("o")),
+//│   Or(Pred("S", Var("p")), And(Var("q"), Var("r")))
+//│ )
+
+let cnf5 = And(Or(Var("a"), Or(Var("b"), Var("c"))), And(Or(Pred("T", Var("d")), Var("e")), Or(Var("f"), Var("g"))))
+//│ cnf5 = And(
+//│   Or(Var("a"), Or(Var("b"), Var("c"))),
+//│   And(Or(Pred("T", Var("d")), Var("e")), Or(Var("f"), Var("g")))
+//│ )
+
+let cnf6 = And(Or(Var("x"), And(Var("y"), Or(Var("z"), Var("w")))), Or(Pred("U", Var("t")), Var("s")))
+//│ cnf6 = And(
+//│   Or(Var("x"), And(Var("y"), Or(Var("z"), Var("w")))),
+//│   Or(Pred("U", Var("t")), Var("s"))
+//│ )
+
+print of cnf1 is Dnf
+print of cnf2 is Dnf
+print of cnf3 is Dnf
+print of cnf4 is Dnf
+print of cnf5 is Dnf
+print of cnf6 is Dnf
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+
+pattern Dnf'(pattern P) = Or(Dnf'(pattern P), Dnf'(pattern P)) | Atoms'(pattern P)
+pattern Atoms'(pattern P) = And(Atoms'(pattern P), Atoms'(pattern P)) | Atom'(pattern P)
+pattern Atom'(pattern P) = Pred(_, P) | Var
+
+pattern DeepDnf = Dnf'(pattern DeepDnf)
+
+fun isDeepDnf(f) = f is @compile DeepDnf
+
+print of isDeepDnf of f1
+print of isDeepDnf of f2
+print of isDeepDnf of f3
+print of isDeepDnf of f4
+print of isDeepDnf of f5
+//│ > true
+//│ > true
+//│ > true
+//│ > true
+//│ > true
+
+print of isDeepDnf of cnf1
+print of isDeepDnf of cnf2
+print of isDeepDnf of cnf3
+print of isDeepDnf of cnf4
+print of isDeepDnf of cnf5
+print of isDeepDnf of cnf6
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+//│ > false
+
+pattern Cnf'(pattern P) = And(Cnf'(pattern P), Cnf'(pattern P))
+pattern DnfOrCnf = Dnf'(pattern DnfOrCnf) | Cnf'(pattern DnfOrCnf)

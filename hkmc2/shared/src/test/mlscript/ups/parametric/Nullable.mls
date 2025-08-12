@@ -1,0 +1,78 @@
+:js
+
+open annotations
+
+pattern Null = null
+
+null is Null
+//│ = true
+
+pattern Nullable(pattern T) = null | T
+
+// This creates an inline object with `unapply` method and pass it to
+// `Nullable.unapply`.
+fun isPositiveOrNull(x) = x is Nullable(pattern ((Int as x) => x > 0) as true)
+
+isPositiveOrNull of 0
+//│ = false
+
+isPositiveOrNull of null
+//│ = true
+
+isPositiveOrNull of 1
+//│ = true
+
+isPositiveOrNull of -2
+//│ = false
+
+// No transformation, so the output is the same as the input.
+
+fun mightBeInt(x) =
+  if x is (@compile Nullable(pattern Int)) as output then output
+
+mightBeInt of 42
+//│ = 42
+
+mightBeInt of null
+//│ = null
+
+:re
+mightBeInt of "hello"
+//│ ═══[RUNTIME ERROR] Error: match error
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
+
+null is Optional(pattern Int, None)
+//│ = true
+
+42 is Optional(pattern Int, Some(42))
+//│ = true
+
+null is Optional(pattern Int, Some(42))
+//│ = false
+
+:e
+// Test the error message.
+fun toIntOption(x) = if x is (@compile Optional) as o then o
+//│ ╔══[ERROR] Pattern `Optional` has one pattern parameter.
+//│ ║  l.47: 	pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
+//│ ║        	                         ^
+//│ ╟── But zero pattern arguments were provided.
+//│ ║  l.60: 	fun toIntOption(x) = if x is (@compile Optional) as o then o
+//│ ╙──      	                                       ^^^^^^^^
+
+fun toIntOption(x) = if x is (@compile Optional(pattern Int)) as o then o
+
+toIntOption of 42
+//│ = Some(42)
+
+toIntOption of null
+//│ = None
+
+:re
+toIntOption of "hello"
+//│ ═══[RUNTIME ERROR] Error: match error

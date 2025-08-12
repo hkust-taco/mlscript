@@ -58,7 +58,7 @@ fun try(f) =
 
 
 // For `pattern` definitions
-data class MatchResult(captures)
+data class MatchResult(output, bindings)
 data class MatchFailure(errors)
 
 // For pattern matching on tuples
@@ -85,13 +85,15 @@ module Str with
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
+  
+  fun take(string, n) = string.slice(0, n)
 
   fun drop(string, n) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render
 
-fun printRaw(x) = console.log(render(x))
+fun printRaw(x) = console.log(render(x, indent: 2, breakLength: 76))
 
 // TraceLogger
 

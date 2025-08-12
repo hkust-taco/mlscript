@@ -447,6 +447,13 @@ class Resolver(tl: TraceLogger)
     // Traverse through other subterms with original context.
     case defn: ClassLikeDef =>
       log(s"Resolving ${defn.kind.desc} definition $defn")
+      
+      // For pattern definitions, we need to traverse through the pattern body.
+      defn match
+        case defn: PatternDef =>
+          defn.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
+        case _: ClassLikeDef => ()
+      
       traverseClassLikeDef(defn)
       ictx
     
