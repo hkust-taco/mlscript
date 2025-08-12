@@ -110,5 +110,8 @@ pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ║  l.105: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──       	                                   ^^^
 
-:todo // Should report errors
+:todo
+// This is tokenized into:
+// ┊pattern┊ ┊Email┊(⟨┊name┊,┊ ┊domain┊⟩)┊ ┊=┊ ┊→⟨┊undefined┊⟩←┊
+// We should report this error.
 pattern Email(name, domain) = ...
