@@ -265,7 +265,7 @@ enum Tree extends AutoLocated:
       // fun f(a: A)
       case InfixApp(id: Ident, Keyword.`:`, sign) =>
         R(ParamTree(flags, id, S(sign), N, modifiers))
-      // fun f(..a) / fun f(...a)
+      // fun f(..a) | fun f(...a)
       case SpreadParam(id, spd) =>
         R(ParamTree(flags, id, N, S(spd), modifiers))
       
