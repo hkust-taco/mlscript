@@ -279,6 +279,21 @@ enum Pattern extends AutoLocated:
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, transform) => pattern.subTerms :+ transform
   
+  def describe: Str = this match
+    case Constructor(_, _, _) => "constructor"
+    case Composition(true, _, _) => "disjunction"
+    case Composition(false, _, _) => "conjunction"
+    case Negation(_) => "negation"
+    case Wildcard() => "wildcard"
+    case Literal(_) => "literal"
+    case Range(_, _, _) => "range"
+    case Concatenation(_, _) => "concatenation"
+    case Tuple(_, _, _) => "tuple"
+    case Record(_) => "record"
+    case Chain(_, _) => "chain"
+    case Alias(_, _) => "alias"
+    case Transform(_, _) => "transform"
+  
   private def showDbgWithPar =
     val addPar = this match
       case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation) => false

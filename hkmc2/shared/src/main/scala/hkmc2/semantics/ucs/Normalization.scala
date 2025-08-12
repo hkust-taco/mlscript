@@ -294,7 +294,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
     _.flatMap:
       case arg: FlatPattern.Argument.Term => S(arg)
       case FlatPattern.Argument.Pattern(_, pattern) =>
-        error(msg"The pattern argument cannot be used here." -> pattern.toLoc); N
+        error(msg"This ${pattern.describe} pattern cannot be used as an argument here." -> pattern.toLoc); N
   
   /** Warn about inappropriate annotations used on class or object patterns. */
   private def validateMatchMode(
