@@ -19,12 +19,12 @@ r
 
 :e
 let r = region x in x.ref 42
-!r
+!(r)
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.21: 	let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
-//│ ║  l.22: 	!r
-//│ ║        	^^
+//│ ║  l.22: 	!(r)
+//│ ║        	^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -86,18 +86,18 @@ in t := 0
 
 
 region x in
-  let r = x.ref 42 in !r
+  let r = x.ref 42 in !(r)
 //│ Type: Int
 
 :e
 let t = region x in
   x.ref 42
-in !t
+in !(t)
 //│ ╔══[ERROR] Type error in block
 //│ ║  l.94: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.95: 	in !t
-//│ ║        	^^^^^
+//│ ║  l.95: 	in !(t)
+//│ ║        	^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
 //│ ╟── because: cannot constrain  'reg1  <:  ⊥
@@ -108,7 +108,7 @@ in !t
 //│ Type: Int
 
 region x in
-  let r = x.ref 42 in let t = r := 0 in !r
+  let r = x.ref 42 in let t = r := 0 in !(r)
 //│ Type: Int
 
 fun rid: [A] -> A -> A

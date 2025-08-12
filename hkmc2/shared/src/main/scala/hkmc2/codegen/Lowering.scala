@@ -306,20 +306,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case st.Tup(Nil) =>
         if !sym.nullary then raise:
           ErrorReport(
-            msg"Expected arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            msg"Expected arguments for builtin operator '${sym.nme}'" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         k(Value.Ref(sym))
       case st.Tup(Fld(FldFlags.benign(), arg, N) :: Nil) =>
         if !sym.unary then raise:
           ErrorReport(
-            msg"Expected a single argument for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
           k(Call(Value.Ref(sym), Arg(N, ar) :: Nil)(true, false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
-            msg"Expected two arguments for ${sym.nme}" -> t.toLoc :: Nil, S(arg),
+            msg"Builtin '${sym.nme}' is not a binary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg1): ar1 =>
           val isAnd = sym is State.andSymbol

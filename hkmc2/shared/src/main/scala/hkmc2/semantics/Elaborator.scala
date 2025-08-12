@@ -11,6 +11,7 @@ import utils.TraceLogger
 
 import syntax.*
 import Tree.*
+import BracketKind.*
 import Term.{ Blk, Rcd }
 import hkmc2.Message.MessageContext
 
@@ -335,8 +336,8 @@ extends Importer:
     case unt @ Unt() => unit.withLocOf(unt)
     case Bra(k, e) =>
       k match
-      case BracketKind.Round =>
-      case BracketKind.Curly =>
+      case Round =>
+      case Curly =>
       case _ =>
         raise(ErrorReport(msg"Unsupported ${k.name} in this position" -> tree.toLoc :: Nil))
       term(e) // * not `subterm` as `e` could be a lambda shorthand
@@ -477,6 +478,9 @@ extends Importer:
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       block(tree :: Nil, hasResult = false)._1
+    case PrefixApp(Keyword.`not`, kwLoc, rhs) =>
+      Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLoc(kwLoc)), Term.Tup(
+        PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
@@ -590,6 +594,11 @@ extends Importer:
       Term.Mut(Term.Tup(fields.map(fld(_)))(tree))
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
+      
+    case DynamicNew(Apps(c, argss)) =>
+      Term.New(subterm(c, inAppPrefix = inAppPrefix), argss.map{
+        case Tup(args) =>
+          args.map(subterm(_))}, N).withLocOf(tree)
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
@@ -620,6 +629,7 @@ extends Importer:
           Nil, bodo).withLocOf(tree)
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
+      
     case tree @ IfLike(kw, _, split) =>
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
@@ -635,7 +645,7 @@ extends Importer:
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
         ), Term.IfLike(Keyword.`if`, des))
-    case Modified(Keyword.`return`, kwLoc, body) =>
+    case PrefixApp(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
         tl.log(s"Non-local return: $sym")
@@ -657,9 +667,9 @@ extends Importer:
         raise:
           ErrorReport(msg"Return statements are not allowed in this context." -> tree.toLoc :: Nil)
         Term.Error
-    case Modified(Keyword.`throw`, kwLoc, body) =>
+    case PrefixApp(Keyword.`throw`, kwLoc, body) =>
       Term.Throw(subterm(body))
-    case Modified(Keyword.`do`, kwLoc, body) =>
+    case PrefixApp(Keyword.`do`, kwLoc, body) =>
       Blk(subterm(body) :: Nil, unit)
     case TypeDef(Mod, head, N) =>
       subterm(head)
@@ -698,6 +708,9 @@ extends Importer:
     case Modified(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
       subterm(body)
+    case PrefixApp(kw, kwLoc, body) =>
+      raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kwLoc :: Nil))
+      subterm(body)
     case Jux(lhs, rhs) =>
       def go(acc: Term, trees: Ls[Tree]): Term =
         trees match
@@ -729,8 +742,14 @@ extends Importer:
       Term.Error
     case OpenIn(op, body) =>
       subterm(Block(Open(op) :: body :: Nil), inAppPrefix)
-    case DynAccess(obj, fld, ai) =>
-      Term.DynSel(subterm(obj), subterm(fld), ai)
+    case DynAccess(obj, rhs) =>
+      rhs match
+      case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square)
+      case id: Ident =>
+        Term.DynSel(subterm(obj), Term.Lit(StrLit(id.name)).withLocOf(id), false)
+      case _ =>
+        raise(ErrorReport(msg"Illegal dynamic field access selector (${rhs.describe})." -> tree.toLoc :: Nil))
+        Term.Error
     case Spread(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kwLoc :: Nil))
       Term.Error
@@ -888,7 +907,7 @@ extends Importer:
           case _ =>
             raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
             go(sts, Nil, acc)
-      case (m @ Modified(Keyword.`import`, absLoc, arg)) :: sts =>
+      case (m @ PrefixApp(Keyword.`import`, absLoc, arg)) :: sts =>
         reportUnusedAnnotations
         val (newCtx, newAcc) = arg match
           case StrLit(path) =>
@@ -922,7 +941,7 @@ extends Importer:
           case lit: Literal =>
             reportUnusedAnnotations
             RcdField(Term.Lit(lit).withLocOf(lit), rhs_t) :: acc
-          case Bra(BracketKind.Round, inner) =>
+          case Bra(Round, inner) =>
             reportUnusedAnnotations
             RcdField(term(inner), rhs_t) :: acc
           case _ =>
@@ -1551,7 +1570,8 @@ extends Importer:
           // case S(sym) => ???
           case N =>
             log(s"No symbol found $lhs ${lhs.symbol}")
-            ???
+            // ???
+            () // TODO
       case Term.Ref(sym: VarSymbol) =>
         sym.decl match
           case S(ty: TyParam) =>

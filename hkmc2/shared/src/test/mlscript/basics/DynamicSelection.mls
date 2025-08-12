@@ -1,0 +1,118 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+let r =
+  a: 1
+  value: 2
+//│ r = {a: 1, value: 2}
+
+:pt
+r!a
+//│ Parsed tree:
+//│ DynAccess:
+//│   obj = Ident of "r"
+//│   fld = Ident of "a"
+//│ = 1
+
+r!("a")
+//│ = 1
+
+r !a
+//│ = 1
+
+:e
+:fixme
+r! a
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.33: 	r! a
+//│ ╙──      	   ^
+//│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
+//│ ║  l.33: 	r! a
+//│ ╙──      	^^
+
+:e
+:fixme
+r ! a
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.43: 	r ! a
+//│ ╙──      	    ^
+//│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
+//│ ║  l.43: 	r ! a
+//│ ╙──      	^^^
+
+// * Note: artifact from BbML/InvalML
+:sjs
+!(r)
+//│ JS (unsanitized):
+//│ r.value
+//│ = 2
+
+
+let t = [1, 2, 3]
+//│ t = [1, 2, 3]
+
+t!0
+//│ = 1
+
+t!("0")
+//│ = 1
+
+t!(0)
+//│ = 1
+
+t![0]
+//│ = 1
+
+t.1
+//│ = 2
+
+:pe
+t.01
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.78: 	t.01
+//│ ╙──      	 ^
+//│ = [1, 2, 3]
+
+
+:w
+:fixme // * Strange that this is treated as a statement
+!(1,2)
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.87: 	!(1,2)
+//│ ╙──      	  ^
+//│ > try { block$res15 = 2.value; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                     ^^
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
+
+:ge
+(!)(1,2)
+//│ ╔══[COMPILATION ERROR] Builtin '!' is not a binary operator
+//│ ║  l.96: 	(!)(1,2)
+//│ ╙──      	^^^^^^^^
+//│ ═══[COMPILATION ERROR] Cannot call non-binary builtin symbol '!'
+//│ ═══[RUNTIME ERROR] Error: Cannot call non-binary builtin symbol '!'
+
+:sjs
+(!)
+//│ JS (unsanitized):
+//│ let lambda; lambda = (undefined, function (arg) { return ! arg }); lambda
+//│ = fun
+
+:fixme
+!1
+//│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
+//│ ║  l.110: 	!1
+//│ ╙──       	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found dynamic selector instead
+//│ ║  l.110: 	!1
+//│ ╙──       	^^
+
+

@@ -46,10 +46,10 @@ if x
 //│         rhs = Ident of "y"
 //│       kw = keyword 'then'
 //│       rhs = Ident of "z"
-//│     Modified:
-//│       modifier = keyword 'else'
-//│       modLoc = N
-//│       body = Ident of "d"
+//│     PrefixApp:
+//│       kw = keyword 'else'
+//│       kwLoc = N
+//│       rhs = Ident of "d"
 
 if x is
   A and y then z

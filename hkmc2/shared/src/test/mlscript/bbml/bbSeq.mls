@@ -33,17 +33,17 @@ fun mapi = s => f =>
   region r in
     let i = r.ref 0
     map(s) of x =>
-      i := !i + 1
-      f(!i, x)
+      i := !(i) + 1
+      f(!(i), x)
 //│ ╔══[ERROR] Type error in region expression with expected type Seq[out A, out E]
 //│ ║  l.34: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      i := !i + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.37: 	      f(!i, x)
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.36: 	      i := !(i) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	      f(!(i), x)
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  E
@@ -57,10 +57,10 @@ fun mapi = s => f =>
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      i := !i + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.37: 	      f(!i, x)
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.36: 	      i := !(i) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	      f(!(i), x)
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  E
@@ -74,10 +74,10 @@ fun mapi = s => f =>
 //│ ║        	            ^^^^^^^
 //│ ║  l.35: 	    map(s) of x =>
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.36: 	      i := !i + 1
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ║  l.37: 	      f(!i, x)
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.36: 	      i := !(i) + 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	      f(!(i), x)
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  Seq[in ⊥ out 'B, in ⊥ out 'E1]  <:  Seq[in ⊥ out A, in ⊥ out E]
 //│ ╟── because: cannot constrain  'E1  <:  E
 //│ ╟── because: cannot constrain  'E1  <:  E
@@ -93,8 +93,8 @@ fun mapi = s => f =>
   region r in
     let i = r.ref 0
     map(s) of x =>
-      i := !i + 1
-      f(!i, x)
+      i := !(i) + 1
+      f(!(i), x)
 mapi
 //│ Type: [outer, 'A, 'E, 'app, 'eff] -> Seq[out 'A, out 'E] -> (((Int, 'A) ->{'eff} 'app) -> Seq[out 'app, out (¬outer ∨ 'eff) ∨ 'E])
 
@@ -104,8 +104,8 @@ fun mapi_force = s => f =>
   region r in
     let i = r.ref 0
     force_cache of map(s) of x =>
-      i := !i + 1
-      f(!i, x)
+      i := !(i) + 1
+      f(!(i), x)
 //│ Type: ⊤
 
 // * An alternative version that takes an existing region in parameter
@@ -113,8 +113,8 @@ fun mapi: [A, R, E] -> (Seq[out A, out E], Region[R]) -> ((Int, A) ->{E} A) ->{R
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
-    i := !i + 1
-    f(!i, x)
+    i := !(i) + 1
+    f(!(i), x)
 //│ Type: ⊤
 
 // * Simpler; should be equivalent when Region is covariant
@@ -122,8 +122,8 @@ fun mapi: [A, E] -> (Seq[out A, out E], Region[E]) -> ((Int, A) ->{E} A) ->{E} S
 fun mapi = (s, r) => f =>
   let i = r.ref 0
   map(s) of x =>
-    i := !i + 1
-    f(!i, x)
+    i := !(i) + 1
+    f(!(i), x)
 //│ Type: ⊤
 
 
@@ -136,10 +136,10 @@ fun head: [A, E] -> Seq[out A, out E] ->{E} A
 region r in
   let sum = r.ref 0
   let s1 = mkSeq of () =>
-    sum := !sum + 1,
-    !sum
+    sum := !(sum) + 1,
+    !(sum)
   let s2 = mapi(s1, r) of (x, i) => x * i
-  !sum + head(s2)
+  !(sum) + head(s2)
 //│ Type: Int
 
 
@@ -147,7 +147,7 @@ fun r: Ref[Int, Nothing]
 //│ Type: ⊤
 
 r := 1
-!r
+!(r)
 //│ Type: Int
 
 :e

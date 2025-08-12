@@ -147,6 +147,8 @@ abstract class Parser(
   private var _cur: Ls[TokLoc] = preprocessTokens(tokens)
   
   private def preprocessTokens(tokens: Ls[TokLoc]): Ls[TokLoc] = tokens match
+    case (IDENT("new", false), l1) :: (IDENT("!", true), l2) :: rest =>
+      (IDENT("new!", false), l1 ++ l2) :: preprocessTokens(rest)
     // * Remove empty indented sections
     case (BRACKETS(Indent, toks), _) :: rest
     if toks.forall:
@@ -651,7 +653,7 @@ abstract class Parser(
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
                   Quoted(IfLike(Keyword.`if`, S(l0), Block(
-                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: Modified(Keyword.`else`, N, Unquoted(ele)) :: Nil
+                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: PrefixApp(Keyword.`else`, N, Unquoted(ele)) :: Nil
                   )))
                 case tk =>
                   err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
@@ -754,7 +756,7 @@ abstract class Parser(
     case (_: NEWLINE_COMMA, l0) :: _ =>
       consume
       opSplitImpl(lhs, splittingOpLoc, prec, newAcc)
-    case (SELECT(nme), l0) :: rest =>
+    case (SELECT(nme, dyn), l0) :: rest =>
       assert(SelPrec <= prec)
       ??? // TODO?
     case (IDENT("then", false), l0) :: rest if e.isDefined =>
@@ -843,18 +845,27 @@ abstract class Parser(
         val res = acc match
           case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines = allowNewlines)
-      case (IDENT(".", _), l0) :: (br @ BRACKETS(bk @ (Round | Square), toks), l1) :: _ =>
+        
+      case (IDENT("!", _), l0) :: (br @ BRACKETS(bk, toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(DynAccess(acc, inner, bk is Square), prec, allowNewlines = allowNewlines)
-      case (IDENT(".", _), l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
+        exprCont(DynAccess(acc, Bra(bk, inner)), prec, allowNewlines = allowNewlines)
+      // TODO: these should eventually no longer be treated as dynamic:
+      case (PERIOD, l0) :: (br @ BRACKETS(bk @ (Round | Square), toks), l1) :: _ =>
         consume
         consume
         val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0, allowNewlines = true))
-        exprCont(OpenIn(acc, inner), prec, allowNewlines = allowNewlines)
+        exprCont(DynAccess(acc, Bra(bk, inner)), prec, allowNewlines = allowNewlines)
+      
+      case (PERIOD, l0) :: (br @ BRACKETS(Curly, toks), l1) :: _ =>
+        consume
+        consume
+        val inner = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+        exprCont(OpenIn(acc, Block(inner)), prec, allowNewlines = allowNewlines)
+        
         /* 
-      case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
+      case (PERIOD, l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
         val idx = rec(toks, S(br.innerLoc), br.describe)
@@ -865,7 +876,7 @@ abstract class Parser(
       
       // * Parse operator splits
       case (br @ BRACKETS(_: Indent_Curly,
-          toks @ ((tok @ (IDENT(_, true) | SELECT(_) | KEYWORD(_: Keyword.InfixSplittable)), l0) :: _)), loc) :: _
+          toks @ ((tok @ (IDENT(_, true) | SELECT(_, _) | KEYWORD(_: Keyword.InfixSplittable)), l0) :: _)), loc) :: _
       if tok.match {
         case KEYWORD(Keyword.`of`) => AppPrec
         case KEYWORD(kw) => kw.leftPrecOrMin
@@ -966,9 +977,13 @@ abstract class Parser(
         acc match // TODO: looks fishy. a better way?
           case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0, allowNewlines = false))
           case _ => exprCont(acc, prec, allowNewlines = allowNewlines)
-      case (SELECT(name), l0) :: _ if SelPrec >= prec =>
+      case (SELECT(name, dyn), l0) :: _ if SelPrec >= prec =>
         consume
-        exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines = allowNewlines)
+        val tree = if dyn then
+          DynAccess(acc, new Ident(name).withLoc(S(l0)))
+        else
+          Sel(acc, new Ident(name).withLoc(S(l0)))
+        exprCont(tree, prec, allowNewlines = allowNewlines)
         /*
       // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
       case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>

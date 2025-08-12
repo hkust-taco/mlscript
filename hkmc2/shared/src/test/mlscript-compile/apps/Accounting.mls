@@ -69,7 +69,7 @@ data class Report(fileName) with
       lines.filter(x => x.isMatchable).map(x => x.balance).reduce((a, b) => a +. b, 0)
     ) ~ "|"
     wln of "|" ~ "Non-matchable" ~ "|" ~ display(
-      lines.filter(x => not(x.isMatchable)).map(x => x.balance).reduce((a, b) => a +. b, 0)
+      lines.filter(x => not x.isMatchable).map(x => x.balance).reduce((a, b) => a +. b, 0)
     ) ~ "|"
 
 fun process(filename, k) =

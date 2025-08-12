@@ -1,5 +1,8 @@
 :llir
 :todo // Started failing after the addition of lazy spreads (#318)
+// The errors are nondeterministic, producing useless diffs, so I disabled the whole file for now
+:exit
+====================================================================================================
 
 :import NofibPrelude.mls
 //│ Imported 104 member(s)

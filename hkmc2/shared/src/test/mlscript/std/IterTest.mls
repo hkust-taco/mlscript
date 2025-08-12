@@ -18,7 +18,7 @@ let arr = [
 arr Iter.joined("")
 //│ = "0123"
 
-arr . Iter.mapping(_ + "!") . Iter.toArray()
+arr \ Iter.mapping(_ + "!") \ Iter.toArray()
 //│ = ["0!", "1!", "2!", "3!"]
 
 arr

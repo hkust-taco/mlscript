@@ -91,10 +91,10 @@ if x +
 //│                     lhs = Ident of "B"
 //│                     kw = keyword 'then'
 //│                     rhs = IntLit of 9
-//│                   Modified:
-//│                     modifier = keyword 'else'
-//│                     modLoc = N
-//│                     body = IntLit of 42
+//│                   PrefixApp:
+//│                     kw = keyword 'else'
+//│                     kwLoc = N
+//│                     rhs = IntLit of 42
 //│               InfixApp:
 //│                 lhs = IntLit of 8
 //│                 kw = keyword 'then'

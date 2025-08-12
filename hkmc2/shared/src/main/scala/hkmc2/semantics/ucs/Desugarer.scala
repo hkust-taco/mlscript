@@ -201,13 +201,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
         val sym = VarSymbol(ident)
         val fallbackCtx = ctx + (ident.name -> sym)
         Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
-      case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+      case PrefixApp(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
         pre = s"termSplit: do $computation",
         post = (res: Split) => s"termSplit: else >>> $res"
       ):
         val sym = TempSymbol(N, "doTemp")
         Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx)).withLocOf(t)
-      case Modified(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
+      case PrefixApp(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
         pre = s"termSplit: else $default",
         post = (res: Split) => s"termSplit: else >>> $res"
       ):
@@ -292,13 +292,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
               val sym = VarSymbol(ident)
               val fallbackCtx = ctx + (ident.name -> sym)
               Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
-          case Modified(Keyword.`do`, doLoc, computation) => ctx => trace(
+          case PrefixApp(Keyword.`do`, doLoc, computation) => ctx => trace(
             pre = s"termSplit: do $computation",
             post = (res: Split) => s"termSplit: do >>> $res"
           ):
             val sym = TempSymbol(N, "doTemp")
             Split.Let(sym, term(computation)(using ctx), elabFallback(ctx))
-          case Modified(Keyword.`else`, elsLoc, default) => ctx =>
+          case PrefixApp(Keyword.`else`, elsLoc, default) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
           case rawRhs => ctx =>
@@ -393,13 +393,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
         case N =>
           raise(ErrorReport(msg"Pattern matching with `let` must have a term." -> branch.toLoc :: Nil))
           backup
-      case Modified(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+      case PrefixApp(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
         pre = s"patternSplit (do) <<< $computation",
         post = (res: Split) => s"patternSplit: else >>> $res"
       ):
         val sym = TempSymbol(N, "doTemp")
         Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx))
-      case Modified(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
+      case PrefixApp(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
       ):

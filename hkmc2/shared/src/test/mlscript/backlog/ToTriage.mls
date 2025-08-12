@@ -456,3 +456,9 @@ data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
+
+// FIXME should report an error
+fun Foo
+class Foo
+
+// ——— ——— ———

@@ -102,7 +102,7 @@ renderAsStr of new RegExp("test")
 //│ = "/test/"
 
 renderAsStr of Symbol.for("mlscript")
-//│ = "Symbol(mlscript)"
+//│ = "Symbol(\"mlscript\")"
 
 renderAsStr of BigInt("2" + "0".repeat(30))
 //│ = "2000000000000000000000000000000n"
@@ -456,3 +456,24 @@ renderAsStr of new RegExp("")
 
 renderAsStr of globalThis.Iterator
 //│ = "class Iterator"
+
+
+// * Customization
+// ===================
+
+class Test
+
+Test
+//│ = class Test
+
+new Test
+//│ = Test
+
+set Test.prototype.(Symbols.prettyPrint) = () => "Test pretty print!"
+
+Test
+//│ = class Test
+
+new Test
+//│ = Test pretty print!
+

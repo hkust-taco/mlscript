@@ -1,5 +1,6 @@
-// shadow the one in Predef
-fun not(c) = if c then false else true
+
+// Alternative from the standard operator
+fun nott(c) = if c then false else true
 
 type Char = String
 
@@ -124,7 +125,7 @@ fun inList(x, ls) = if ls is
     else inList(x, t)
   Nil then false
 
-fun notElem(x, ls) = not(inList(x, ls))
+fun notElem(x, ls) = nott(inList(x, ls))
 
 fun (+:) append(xs, ys) = if xs is
   Nil then ys
@@ -191,7 +192,7 @@ fun maximum(xs) = foldl1((x, y) => if x > y then x else y, xs)
 
 fun nubBy(eq, ls) = if ls is
   Nil then Nil
-  h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+  h :: t then h :: nubBy(eq, filter(y => nott(eq(h, y)), t))
 
 fun zipWith(f, xss, yss) = if
   xss is x :: xs and yss is y :: ys then f(x, y) :: zipWith(f, xs, ys)
@@ -274,7 +275,7 @@ fun filter_lz(p, ls) = Lazy of () =>
 fun nubBy_lz(eq, ls) = Lazy of () =>
   if force(ls) is
     LzNil then LzNil
-    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => not(eq(h, y)), t)))
+    LzCons(h, t) then LzCons(h, nubBy_lz(eq, filter_lz(y => nott(eq(h, y)), t)))
 
 fun nub_lz(ls) = nubBy_lz((x, y) => x == y, ls)
 

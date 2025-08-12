@@ -26,7 +26,7 @@ fun (#) pair(a, b) = Pair(a, b)
 B is @compile EvenTree
 //│ = true
 
-not of A is @compile EvenTree
+not A is @compile EvenTree
 //│ = true
 
 B # B is @compile EvenTree

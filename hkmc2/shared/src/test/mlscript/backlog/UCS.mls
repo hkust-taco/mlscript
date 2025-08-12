@@ -130,7 +130,7 @@ class Some(val v)
 
 Some(1) is
   Some of [process, rest] do "hi"
-//│ ╔══[ERROR] Unrecognized pattern (infix operator)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'do')
 //│ ║  l.132: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
@@ -201,16 +201,23 @@ module Foo with
 fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
-//│ ╔══[ERROR] Unrecognized pattern split (operator application).
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
 //│ ║  l.201: 	fun foo(x) = if x is Foo.
-//│ ║         	                     ^^^^
-//│ ║  l.202: 	  Bar then "Bar"
-//│ ╙──       	^^
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] Unrecognized pattern split (identifier).
+//│ ║  l.201: 	fun foo(x) = if x is Foo.
+//│ ╙──       	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
-//│ /!!!\ Uncaught error: scala.MatchError: OpSplit(Ident(Foo),List(InfixApp(Sel(SplitPoint(),Ident(Bar)),keyword 'then',StrLit(Bar)), InfixApp(Sel(SplitPoint(),Ident(Foo)),keyword 'then',StrLit(Foo)))) (of class hkmc2.syntax.Tree$OpSplit)
+//│ ╔══[ERROR] Unrecognized pattern split (operator split).
+//│ ║  l.211: 	fun foo(x) = if x is Foo
+//│ ║         	                     ^^^
+//│ ║  l.212: 	  .Bar then "Bar"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.213: 	  .Foo then "Foo"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———
 

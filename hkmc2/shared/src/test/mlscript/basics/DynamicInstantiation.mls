@@ -1,0 +1,58 @@
+:js
+
+
+class C
+
+:sjs
+new! C
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze(new C1())
+//│ = C
+
+let c = C
+//│ c = class C
+
+new! c
+//│ = C
+
+// * Same in JS:
+// *    > new id(C)
+// *    Uncaught TypeError: id is not a constructor
+// *    > new (id(C))
+// *    C {}
+:sjs
+:pt
+:re
+new! id(C)
+//│ Parsed tree:
+//│ App:
+//│   lhs = PrefixApp:
+//│     kw = keyword 'new!'
+//│     kwLoc = N
+//│     rhs = Ident of "id"
+//│   rhs = Tup of Ls of 
+//│     Ident of "C"
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze(new Predef.id(C1))
+//│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
+
+// * Ok (as in JS)
+new! (id(C))
+//│ = C
+
+// * Note that this is currently miscompiled by the Elaborator's ad-hoc logic;
+// * instead, we should reject static new on an unknown class.
+:re
+new id(C)
+//│ ═══[RUNTIME ERROR] TypeError: Predef.id.class is not a constructor
+
+
+data class C(x, y)
+
+new! C
+//│ = C(undefined, undefined)
+
+new! C(1, 2)
+//│ = C(1, 2)
+
+

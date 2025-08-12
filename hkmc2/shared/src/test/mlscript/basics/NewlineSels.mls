@@ -38,10 +38,10 @@ rcd
 :todo
 rcd
 .a
-//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
+//│ ╔══[PARSE ERROR] Expected an expression; found static selector instead
 //│ ║  l.40: 	.a
 //│ ╙──      	^^
-//│ ╔══[PARSE ERROR] Expected end of input; found selector instead
+//│ ╔══[PARSE ERROR] Expected end of input; found static selector instead
 //│ ║  l.40: 	.a
 //│ ╙──      	^^
 //│ ╔══[WARNING] Pure expression in statement position

@@ -223,13 +223,13 @@ _ - _ of 1, 2
 //│ = -1
 
 :sjs
-1 . (_ - 2)
+1 \ (_ - 2)
 //│ JS (unsanitized):
 //│ let lambda38; lambda38 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda38)
 //│ = fun
 
 :sjs
-1 . (_ - 2)()
+1 \ (_ - 2)()
 //│ JS (unsanitized):
 //│ let tmp14, lambda39;
 //│ lambda39 = (undefined, function (_0) {
@@ -239,7 +239,7 @@ _ - _ of 1, 2
 //│ runtime.safeCall(tmp14())
 //│ = -1
 
-1 . (_ - _)(2)
+1 \ (_ - _)(2)
 //│ = -1
 
 

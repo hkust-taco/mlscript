@@ -75,7 +75,7 @@ pattern StackLike = ([] => Nil) | ([x, ...StackLike as xs] => x :: xs)
 
 :todo
 [1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
-//│ ╔══[ERROR] Unrecognized pattern (infix operator)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
 //│ ║  l.77: 	[1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false

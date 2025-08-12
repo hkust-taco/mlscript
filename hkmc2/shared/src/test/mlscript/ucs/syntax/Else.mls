@@ -26,10 +26,10 @@ fun f(x, y, z) = if x then y else z
 //│         lhs = Ident of "x"
 //│         kw = keyword 'then'
 //│         rhs = Ident of "y"
-//│       Modified:
-//│         modifier = keyword 'else'
-//│         modLoc = N
-//│         body = Ident of "z"
+//│       PrefixApp:
+//│         kw = keyword 'else'
+//│         kwLoc = N
+//│         rhs = Ident of "z"
 
 
 fun f(x, y, z) =

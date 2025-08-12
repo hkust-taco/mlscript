@@ -210,11 +210,11 @@ foo()
 abstract class Option[out T]: Some[T] | None
 data class Some[out T](x: T) extends Option[T]
 object None extends Option
-fun not(x) =
+fun nott(x) =
   if x then false else true
 fun foo(x) =
   if x then None
-       else Some(foo(not(x)))
+       else Some(foo(nott(x)))
 fun main() = foo(false)
 main()
 //│ = Some(None)
@@ -239,11 +239,11 @@ fun aaa() =
 fun bbb() =
   let x = aaa()
   x * 100 + 4
-fun not(x) =
+fun nott(x) =
   if x then false else true
 fun foo(x) =
   if x then None
-       else Some(foo(not(x)))
+       else Some(foo(nott(x)))
 fun main() =
   let x = foo(false)
   if x is

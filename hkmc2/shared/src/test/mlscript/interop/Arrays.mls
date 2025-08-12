@@ -53,3 +53,31 @@ arr.map(pass1(_ === false))
 //│ = [2, 3, 4]
 
 
+Array
+//│ = class Array
+
+Array(1)
+//│ = [<1 empty items>]
+
+:e
+Array()
+//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ║  l.63: 	Array()
+//│ ╙──      	     ^^
+//│ = []
+
+:e
+Array(1, 2, 3)
+//│ ╔══[ERROR] Expected 1 arguments, got 3
+//│ ║  l.70: 	Array(1, 2, 3)
+//│ ╙──      	     ^^^^^^^^^
+//│ = [1, 2, 3]
+
+
+if arr is Array then "ok"
+//│ = "ok"
+
+if arr is Array(n) then n
+//│ = 2
+
+

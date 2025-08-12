@@ -62,7 +62,7 @@ enum Tree extends AutoLocated:
     extends Tree with TypeDefImpl
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
-  case DynAccess(obj: Tree, fld: Tree, arrayIdx: Bool)
+  case DynAccess(obj: Tree, fld: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
@@ -74,9 +74,11 @@ enum Tree extends AutoLocated:
   case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
+  case PrefixApp(kw: Keyword.Prefix, kwLoc: Opt[Loc], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
-  case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence
-  case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right
+  case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
+  case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
+  case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
@@ -120,10 +122,12 @@ enum Tree extends AutoLocated:
     case App(lhs, rhs) => Ls(lhs, rhs)
     case OpApp(lhs, op, rhss) => lhs :: op :: rhss
     case Jux(lhs, rhs) => Ls(lhs, rhs)
+    case PrefixApp(kw, _, rhs) => rhs :: Nil
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case LexicalNew(body, rft) => body.toList ::: rft.toList
     case ProperNew(body, rft) => body.toList ::: rft.toList
+    case DynamicNew(body) => body :: Nil
     case IfLike(_, _, split) => split :: Nil
     case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
@@ -133,7 +137,7 @@ enum Tree extends AutoLocated:
     case TyTup(tys) => tys
     case Sel(prefix, name) => prefix :: Nil
     case SynthSel(prefix, name) => prefix :: Nil
-    case DynAccess(prefix, fld, ai) => prefix :: fld :: Nil
+    case DynAccess(prefix, fld) => prefix :: fld :: Nil
     case Open(bod) => bod :: Nil
     case OpenIn(opened, body) => opened :: body :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
@@ -173,11 +177,12 @@ enum Tree extends AutoLocated:
     case Jux(lhs, rhs) => "juxtaposition"
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
-    case DynAccess(prefix, name, true) => "dynamic index access"
-    case DynAccess(prefix, name, false) => "dynamic field access"
-    case InfixApp(lhs, kw, rhs) => "infix operator"
+    case DynAccess(prefix, name) => "dynamic field access"
+    case PrefixApp(kw, _, body) => s"prefix operator '${kw.name}'"
+    case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
     case LexicalNew(body, _) => "new"
     case ProperNew(body, _) => "new"
+    case DynamicNew(body) => "dynamic new"
     case IfLike(Keyword.`if`, _, split) => "if expression"
     case IfLike(Keyword.`while`, _, split) => "while expression"
     case Case(_, branches) => "case"
@@ -195,6 +200,10 @@ enum Tree extends AutoLocated:
     case Keywrd(kw) => s"'${kw.name}' keyword"
     case Dummy => "‹dummy›"
     case Trm(t) => t.describe + " term"
+    case Pun(eql, id) => "pun"
+    case SplitPoint() => "split point"
+    case OpSplit(lhs, ops_rhss) => "operator split"
+    case OpenIn(opened, body) => "open-in"
     
   def deparenthesized: Tree = this match
     case Bra(BracketKind.Round, inner) => inner.deparenthesized
@@ -230,6 +239,8 @@ enum Tree extends AutoLocated:
       // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
       PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
+    case Apps(PrefixApp(Keyword.`new!`, _, cls), argss) =>
+      DynamicNew(Apps(cls, argss)).withLocOf(this)
     case Apps(LexicalNew(S(body), N), argss) =>
       ProperNew(S(Apps(body, argss)), N).withLocOf(this)
     case LexicalNew(bodo, rfto) =>

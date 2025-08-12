@@ -46,7 +46,7 @@ if r is
 :e
 if r is
   a: x then x
-//│ ╔══[ERROR] Unrecognized pattern split (infix operator).
+//│ ╔══[ERROR] Unrecognized pattern split (infix operator ':').
 //│ ║  l.48: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 
@@ -97,4 +97,14 @@ let =a
 //│ ║  l.95: 	let =a
 //│ ╙──      	    ^
 
+
+import "../../mlscript-compile/LazyArray.mls"
+
+// * Should probably warn that `dropLeftRight` has no effect
+// * (this requires checking it's not an effectful getter!)
+LazyArray.{ dropLeftRight, concat }
+//│ = fun concat
+
+LazyArray.{ :dropLeftRight, :concat }
+//│ = {dropLeftRight: fun dropLeftRight, concat: fun concat}
 

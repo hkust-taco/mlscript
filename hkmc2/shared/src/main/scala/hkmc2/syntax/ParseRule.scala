@@ -63,6 +63,10 @@ class ParseRules(using State):
   val standaloneExpr =
     Expr(ParseRule("expression")(end(())))((l, _: Unit) => l)
   
+  def prefixed(kw: Keyword.Prefix): Alt[Tree] = prefixed(kw, standaloneExpr)
+  def prefixed(kw: Keyword.Prefix, body: Alt[Tree]) =
+    Kw(kw)(ParseRule(s"prefix keyword '${kw.name}'")(body)).map(Tree.PrefixApp(kw, N, _))
+  
   def modified(kw: Keyword): Alt[Tree] = modified(kw, standaloneExpr)
   def modified(kw: Keyword, body: Alt[Tree]) =
     Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)).map(Tree.Modified(kw, N, _))
@@ -172,7 +176,7 @@ class ParseRules(using State):
           )
         ):
           case (split, S(default)) =>
-            val clause = Modified(`else`, N/* TODO */, default)
+            val clause = PrefixApp(`else`, N/* TODO */, default)
             val items = split match
               case Block(stmts) => stmts.appended(clause)
               case _ => split :: clause :: Nil
@@ -260,9 +264,9 @@ class ParseRules(using State):
     Kw(`else`):
       ParseRule("`else` clause")(
         Expr(ParseRule("`else` expression")(end(()))):
-          case (tree, _) => Modified(`else`, N/* TODO */, tree),
+          case (tree, _) => PrefixApp(`else`, N/* TODO */, tree),
         Blk(ParseRule("`else` expression")(end(()))):
-          case (tree, _) => Modified(`else`, N/* TODO */, tree),
+          case (tree, _) => PrefixApp(`else`, N/* TODO */, tree),
       )
     ,
     Kw(`case`):
@@ -311,8 +315,13 @@ class ParseRules(using State):
     Kw(`do`):
       ParseRule(s"`do` keyword")(
         exprOrBlk(ParseRule(s"`do` body")(end(()))):
-          case (body, ()) => Tree.Modified(`do`, N, body)
+          case (body, ()) => Tree.PrefixApp(`do`, N, body)
         *),
+    prefixed(`not`),
+    prefixed(`new!`),
+    prefixed(`return`),
+    prefixed(`throw`),
+    prefixed(`import`), // TODO improve – only allow strings
     modified(`virtual`),
     modified(`override`),
     modified(`declare`),
@@ -320,10 +329,6 @@ class ParseRules(using State):
     modified(`public`),
     modified(`private`),
     modified(`out`),
-    modified(`return`),
-    modified(`throw`),
-    modified(`import`), // TODO improve – only allow strings
-    // modified(`type`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),

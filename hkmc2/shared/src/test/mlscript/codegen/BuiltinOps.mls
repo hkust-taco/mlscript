@@ -35,7 +35,7 @@
 
 :ge
 *(1)
-//│ ╔══[COMPILATION ERROR] Expected a single argument for *
+//│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
 //│ ║  l.37: 	*(1)
 //│ ╙──      	^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'
@@ -52,7 +52,7 @@
 
 :ge
 (*)(2)
-//│ ╔══[COMPILATION ERROR] Expected a single argument for *
+//│ ╔══[COMPILATION ERROR] Builtin '*' is not a unary operator
 //│ ║  l.54: 	(*)(2)
 //│ ╙──      	^^^^^^
 //│ ═══[COMPILATION ERROR] Cannot call non-unary builtin symbol '*'

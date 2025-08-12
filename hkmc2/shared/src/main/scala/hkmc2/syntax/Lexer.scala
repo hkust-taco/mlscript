@@ -154,7 +154,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
       i
 
   @tailrec final
-  def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil)(implicit triple: Bool): (Str, Int) =
+  def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil)(using triple: Bool): (Str, Int) =
     if escapeMode then
       if i < length then
         bytes(i) match
@@ -222,7 +222,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             else
               // Process the traditional 4-digit Unicode escape (\uXXXX).
               val (nextIdx, acc, count) = scanHexDigits(i + 1, 4, 0, 0)
-              if count != 4 then
+              if count =/= 4 then
                 raise(WarningReport(msg"Invalid Unicode escape sequence: expected 4 hexadecimal digits but got ${count.toString}" -> S(loc(i + 1, nextIdx)) :: Nil,
                   source = Lexing))
                 str(nextIdx, false, cur)
@@ -262,12 +262,12 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
     case _ => IDENT(nme, true)
   
   @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qqList: Ls[BracketKind]): Ls[TokLoc] = if i >= length then acc.reverse else
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])
+        (using qqList: Ls[BracketKind]): Ls[TokLoc] = if i >= length then acc.reverse else
     
     val c = bytes(i)
     
     def pe(msg: Message): Unit =
-      // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing))
     
     def isQuasiquoteOpening(i: Int): Bool = matches(i, BracketKind.Quasiquote.beg, 0)
@@ -275,20 +275,17 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
     def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg, 0)
     def isQuasiquoteTripleClosing(i: Int): Bool = matches(i, BracketKind.QuasiquoteTriple.end, 0)
     
-    inline def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
-    inline def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
+    inline def go(j: Int, tok: Token)(using qqList: Ls[BracketKind]) = lex(j, ind, (tok, loc(i, j)) :: acc)
     
     c match
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
-        // go(j, SPACE)
-        lex(j, ind, next(j, SPACE))
+        go(j, SPACE)
       case ',' =>
         val j = i + 1
-        // go(j, COMMA)
-        lex(j, ind, next(j, COMMA))
+        go(j, COMMA)
       case '`' =>
-        lex(i + 1, ind, next(i + 1, QUOTE))
+        go(i + 1, QUOTE)
       case 'c' if isQuasiquoteOpening(i) || isQuasiquoteTripleOpening(i) =>
         val isTripleQuoteQQ = isQuasiquoteTripleOpening(i)
         val bracket_kind = if isTripleQuoteQQ then
@@ -296,48 +293,45 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         else
           BracketKind.Quasiquote
         val len = bracket_kind.beg.length
-        lex(i + len, ind, next(i + len, OPEN_BRACKET(bracket_kind)))(bracket_kind :: qqList)
+        go(i + len, OPEN_BRACKET(bracket_kind))(using bracket_kind :: qqList)
       case '$' if isUnquoteOpening(i) =>
-        lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
+        go(i + 2, OPEN_BRACKET(BracketKind.Unquote))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
         val (n, j) = takeWhile(i + 1)(isIdentChar)
-        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (
-            // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n)),
+        go(j, BRACKETS(BracketKind.Unquote, (
             IDENT(n, false),
             loc(i + 1, j)
-          ) :: Nil)(loc(i, j))))
+          ) :: Nil)(loc(i, j)))
       case 'i' if i + 2 < length && bytes(i + 1) === 'd' && bytes(i + 2) === '"' =>
         val (n, j) = takeWhile(i + 3)(isIdentChar)
-        lex(j + 1, ind, next(j + 1,
+        go(j + 1,
           if bytes(j) === '"' && !n.isEmpty() then ESC_IDENT(n)
           else { pe(msg"unexpected identifier escape"); ERROR }
-        ))
+        )
       case ';' =>
         val j = i + 1
         // lex(j, ind, next(j, SEMI))
-        lex(j, ind, next(j, IDENT(";", true)))
+        go(j, IDENT(";", true))
       case '"' =>
         val (isTripleQQ, cons) = qqList match
           case h :: t => (h === BracketKind.QuasiquoteTriple, t)
           case Nil => (false, Nil)
         if isTripleQQ && isQuasiquoteTripleClosing(i) then
           val length = BracketKind.QuasiquoteTriple.end.length
-          lex(i + length, ind, next(i + length, CLOSE_BRACKET(BracketKind.QuasiquoteTriple)))(cons)
+          go(i + length, CLOSE_BRACKET(BracketKind.QuasiquoteTriple))(using cons)
         else if !isTripleQQ && qqList.nonEmpty then
-          lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote)))(cons)
+          go(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote))(using cons)
         else
           val isTriple = matches(i, "\"\"\"", 0)
           val j = i + (if isTriple then 3 else 1)
-          val (chars, k) = str(j, false)(isTriple)
+          val (chars, k) = str(j, false)(using isTriple)
           val k2 = closeStr(k, isTriple)
-          // go(k2, LITVAL(StrLit(chars)))
-          lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
+          go(k2, LITVAL(StrLit(chars)))
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
           takeWhile(j)(c => c =/= '\n')
-        // go(k, COMMENT(txt))
-        lex(k, ind, next(k, COMMENT(txt)))
+        go(k, COMMENT(txt))
       case '/' if bytes.lift(i + 1).contains('*') => // multiple-line comment
         val j = i + 2
         var prev1 = '/'; var prev2 = '*'
@@ -347,12 +341,9 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
             prev1 = prev2; prev2 = c
             res
           })
-        // go(k, COMMENT(txt.dropRight(2)))
-        lex(k, ind, next(k, COMMENT(txt.dropRight(2))))
-      // case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
-      // case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
-      case BracketKind(Left(k)) => lex(i + 1, ind, next(i + 1, OPEN_BRACKET(k)))
-      case BracketKind(Right(k)) => lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(k)))
+        go(k, COMMENT(txt.dropRight(2)))
+      case BracketKind(Left(k)) => go(i + 1, OPEN_BRACKET(k))
+      case BracketKind(Right(k)) => go(i + 1, CLOSE_BRACKET(k))
       case '\n' =>
         val j = i + 1
         val (space, k) =
@@ -377,45 +368,37 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
           )
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        // go(j, if (keywords.contains(n)) KEYWRD(n) else IDENT(n, isAlphaOp(n)))
-        lex(j, ind, next(j,
-            // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n))
-            IDENT(n, false)
-          ))
+        go(j, IDENT(n, false))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        if n === "." && j < length then
+        if (n === "." || n === "!") && j < length
+        then
+          inline def mkSelect(str: Str) = SELECT(str, n === "!")
           val nc = bytes(j)
           if isIdentFirstChar(nc) then
             val (name, k) = takeWhile(j)(isIdentChar)
-            // go(k, SELECT(name))
-            lex(k, ind, next(k, SELECT(name)))
+            go(k, mkSelect(name))
           else if
             // The first character is '0' and the next character is not a digit
             (nc === '0' && !(j + 1 < length && isDigit(bytes(j + 1)))) ||
             ('0' < nc && nc <= '9') // The first character is a digit other than '0'
           then
             val (name, k) = takeWhile(j)(isDigit)
-            // go(k, SELECT(name))
-            lex(k, ind, next(k, SELECT(name)))
-          else lex(j, ind, next(j,
-              // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
-              mkSymIdent(n)
-            ))
-        // else go(j, if (isSymKeyword.contains(n)) KEYWRD(n) else IDENT(n, true))
-        else lex(j, ind, next(j,
-            // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
-            mkSymIdent(n)
-          ))
+            go(k, mkSelect(name))
+          else
+            go(j,
+              if n === "." then PERIOD else
+                // * Eventually we should also forbid `!` as an identifier, but it's currently used by BbML/InvalML
+                mkSymIdent(n)
+            )
+        else go(j, mkSymIdent(n))
       case _ if isDigit(c) =>
         val (lit, j) = num(i)
-        // go(j, LITVAL(IntLit(BigInt(str))))
-        lex(j, ind, next(j, LITVAL(lit)))
+        go(j, LITVAL(lit))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
-        // go(i + 1, ERROR)
-        lex(i + 1, ind, next(i + 1, ERROR))
- 
+        go(i + 1, ERROR)
+  
   def escapeChar(ch: Char): String = ch match
     case '\b' => "\\b"
     case '\t' => "\\t"
@@ -431,7 +414,7 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   
   
   
-  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)(Nil)
+  lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)(using Nil)
   
   
   /** Converts the lexed tokens into structured tokens. */
@@ -600,6 +583,7 @@ object Lexer:
   def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
     case (COMMA, _) => ","
+    case (PERIOD, _) => "."
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"
@@ -607,13 +591,14 @@ object Lexer:
     case (QUOTE, _) => "`"
     case (LITVAL(lv), _) => lv.idStr
     // case (KEYWRD(name: String), _) => "#" + name
-    case (IDENT(name: String, symbolic: Bool), _) => name
-    case (SELECT(name: String), _) => "." + name
+    case (IDENT(name, symbolic), _) => name
+    case (SELECT(name, false), _) => "." + name
+    case (SELECT(name, true), _) => "!" + name
     case (OPEN_BRACKET(k), _) => k.beg
     case (CLOSE_BRACKET(k), _) => k.end
     case (BRACKETS(k, contents), _) =>
       k.beg + "⟨" + printTokens(contents) + "⟩" + k.end
-    case (COMMENT(text: String), _) => "/*" + text + "*/"
+    case (COMMENT(text), _) => "/*" + text + "*/"
     case (SUSPENSION(true), _) => "..."
     case (SUSPENSION(false), _) => ".."
     case (ESC_IDENT(name), _) => name

@@ -34,16 +34,16 @@ B is @compile EvenTree
 B is EvenTree
 //│ = true
 
-not of A is @compile EvenTree
+not A is @compile EvenTree
 //│ = true
 
-not of A is EvenTree
+not A is EvenTree
 //│ = true
 
-not of a(B, B) is @compile EvenTree
+not a(B, B) is @compile EvenTree
 //│ = true
 
-not of a(B, B) is EvenTree
+not a(B, B) is EvenTree
 //│ = true
 
 a(B, A) is @compile EvenTree

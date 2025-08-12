@@ -80,6 +80,7 @@ object Keyword:
   val `of` = Keyword("of", N, N) // * Note that `of` is parsed specially, so its precedence is not listed here
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
+  val `not` = Keyword("not", nextPrec, nextPrec)
   val `is` = Keyword("is", nextPrec, curPrec, canStartInfixOnNewLine = false)
   val `as` = Keyword("as", nextPrec, curPrec)
   // val `let` = Keyword("let", nextPrec, curPrec)
@@ -140,12 +141,16 @@ object Keyword:
   val newRightPrec = S(maxPrec.get + charPrecList.length - 1)
   // * ^ maxPrec.get + charPrecList.length is the precedence of selection
   val `new` = Keyword("new", N, newRightPrec)
+  val `new!` = Keyword("new!", N, newRightPrec)
   val `mut` = Keyword("mut", N, newRightPrec)
   
   val __ = Keyword("_", N, N)
   
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
+  
+  type Prefix =
+    `do`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |

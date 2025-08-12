@@ -1,4 +1,6 @@
 
+import "./RuntimeJS.mjs"
+
 // * Importing the mjs for now to avoid reparsing/re-elaborating these files Runtime all the time
 // * TODO: proper caching of parsed/elaborated files
 import "./Runtime.mjs"
@@ -12,8 +14,6 @@ module Predef with ...
 
 
 fun id(x) = x
-
-fun not(x) = x is false
 
 
 fun (@) apply(f, ...args) = f(...args)
@@ -33,15 +33,17 @@ fun (|!) alsoDo(x, eff) = x
 fun (>>) andThen(f, g)(x) = g(f(x))
 fun (<<) compose(f, g)(x) = f(g(x))
 
-// x . foo(a, b, c) == foo(x, a, b, c)
-fun (.) passTo(receiver, f)(...args) = f(receiver, ...args)
-fun (\) passTo2(receiver, f)(...args) = f(receiver, ...args)
+// x \foo(a, b, c) == foo(x, a, b, c)
+fun (\) passTo(receiver, f)(...args) = f(receiver, ...args)
 
 // Same as above but with low precedence
 fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
 
 // x |>. foo(a, b, c) == foo.call(x, a, b, c)
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
+
+object Symbols with
+  val prettyPrint = RuntimeJS.symbols.prettyPrint
 
 val pass1 = Rendering.pass1
 val pass2 = Rendering.pass2

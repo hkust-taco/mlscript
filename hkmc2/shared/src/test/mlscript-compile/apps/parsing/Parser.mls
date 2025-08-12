@@ -154,7 +154,7 @@ fun parse(tokens) =
           Tree.empty
       // * the non-keyword case
       None then
-        if (not of options.allowOperators) and symbolic then
+        if not options.allowOperators and symbolic then
           Tree.error("symbolic identifiers are disallowed in kind \"" + options.kind + "\"")
         else
           consume

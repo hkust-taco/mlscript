@@ -173,12 +173,12 @@ fun pow(x) = case
 
 
 :sjs
-fun not = case
+fun nott = case
   true then false
   false then true
 //│ JS (unsanitized):
-//│ let not;
-//│ not = function not() {
+//│ let nott;
+//│ nott = function nott() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
 //│     if (caseScrut === true) {
@@ -196,9 +196,9 @@ fun not = case
 
 :expect true
 :sjs
-not of false
+nott of false
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = not(); tmp2(false)
+//│ let tmp2; tmp2 = nott(); tmp2(false)
 //│ = true
 //│ Type: Bool
 
@@ -261,7 +261,7 @@ region x in x.ref 42
 
 
 :sjs
-region x in let y = x.ref 42 in !y
+region x in let y = x.ref 42 in !(y)
 //│ JS (unsanitized):
 //│ let x4, y, tmp4;
 //│ x4 = globalThis.Object.freeze(new globalThis.Region());

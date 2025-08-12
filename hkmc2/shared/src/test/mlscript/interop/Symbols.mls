@@ -1,0 +1,16 @@
+:js
+
+
+:expect false
+Symbol("123") === Symbol("123")
+//│ = false
+
+:expect true
+Symbol.for("123") === Symbol.for("123")
+//│ = true
+
+:expect false
+Symbol.for("123") === Symbol("123")
+//│ = false
+
+

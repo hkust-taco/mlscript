@@ -147,13 +147,28 @@ show of x: new Set([longText])
 let testSet = new Set([shortText, (), Symbol.for("you"), 1, 2, 3, 4, 5, 6, 7])
 
 show of x: testSet
-//│ > {x: Set(10) {"Hello, world!", (), Symbol(you), 1, 2, 3, 4, 5, 6, 7}}      ┊
+//│ > {x: Set(10) {"Hello, world!", (), Symbol("you"), 1, 2, 3, 4, 5, 6, 7}}    ┊
 
 testSet.add(8); show of x: testSet
-//│ > {x: Set(11) {"Hello, world!", (), Symbol(you), 1, 2, 3, 4, 5, 6, 7, 8}}   ┊
+//│ > {x: Set(11) {"Hello, world!", (), Symbol("you"), 1, 2, 3, 4, 5, 6, 7, 8}} ┊
 
 testSet.add(9); show of x: testSet
-//│ > {x: Set(12) {"Hello, world!", (), Symbol(you), 1, 2, 3, 4, 5, 6, 7, 8, 9}}┊
+//│ > {                                                                         ┊
+//│ >   x: Set(12) {                                                            ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     (),                                                                   ┊
+//│ >     Symbol("you"),                                                        ┊
+//│ >     1,                                                                    ┊
+//│ >     2,                                                                    ┊
+//│ >     3,                                                                    ┊
+//│ >     4,                                                                    ┊
+//│ >     5,                                                                    ┊
+//│ >     6,                                                                    ┊
+//│ >     7,                                                                    ┊
+//│ >     8,                                                                    ┊
+//│ >     9                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
 
 show of new Map([[1, 2], [3, 4]])
 //│ > Map(2) {1 => 2, 3 => 4}                                                   ┊

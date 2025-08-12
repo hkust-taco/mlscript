@@ -13,7 +13,7 @@
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.12: 	\{ Int }
 //│ ╙──      	   ^^^
-//│ = fun passTo2
+//│ = fun passTo
 
 :e
 \(0)

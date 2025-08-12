@@ -275,7 +275,7 @@ while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.271: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ═══[ERROR] Illegal position for 'else' modifier.
+//│ ═══[ERROR] Illegal position for prefix keyword 'else'.
 
 :fixme
 while
@@ -290,6 +290,6 @@ while
 //│ ║         	^^^^^^^^^
 //│ ║  l.284: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ═══[ERROR] Illegal position for 'else' modifier.
+//│ ═══[ERROR] Illegal position for prefix keyword 'else'.
 
 

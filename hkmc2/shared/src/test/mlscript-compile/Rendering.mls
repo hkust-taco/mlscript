@@ -354,7 +354,7 @@ fun render(target, ...args) =
       BigInt    then arg.toString() + "n"
       Symbol    and
         arg.description is undefined then "Symbol()"
-        else "Symbol(" + arg.description + ")"
+        else "Symbol(\"" + arg.description + "\")"
       Num       then arg.toString()
       RegExp    then arg.toString()
       true      then "true"

@@ -80,7 +80,7 @@ class Context(val names: Map, val bindings: Map, val dependencies: Set, val prin
     fn
   fun depends(d) = dependencies.add(d)
   fun freshName(name) =
-    if not(names.has(name)) do
+    if not names.has(name) do
       names.set(name, 0)
     let i = names.get(name)
     names.set(name, i + 1)
@@ -163,7 +163,7 @@ fun codegen(t, file) =
   let code = Str.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"
   let dependencies =
     Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
-  if not(fs.existsSync(file)) do
+  if not fs.existsSync(file) do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")
   let newData = Str.concat of dependencies.join("\n"), "\n", code

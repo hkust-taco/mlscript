@@ -45,7 +45,27 @@ fun ~ concat(a, b) = a + b
 //│ ║  l.37: 	fun ~ concat(a, b) = a + b
 //│ ╙──      	                         ^
 
-:todo // error
+// * Note the strange parsing
+:pt
+:todo // better error?
 fun not(b) = !b
+//│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
+//│ ║  l.51: 	fun not(b) = !b
+//│ ╙──      	             ^^
+//│ Parsed tree:
+//│ DynAccess:
+//│   obj = TermDef:
+//│     k = Fun
+//│     head = PrefixApp:
+//│       kw = keyword 'not'
+//│       kwLoc = N
+//│       rhs = Bra:
+//│         k = Round
+//│         inner = Ident of "b"
+//│     rhs = S of Error
+//│   fld = Ident of "b"
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.51: 	fun not(b) = !b
+//│ ╙──      	       ^^^^^^^^
 
 

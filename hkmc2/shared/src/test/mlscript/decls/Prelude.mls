@@ -7,7 +7,6 @@ declare type Nothing
 declare type untyped
 
 declare class Object
-declare class Array[T]
 declare class JSON
 declare class Number
 declare class BigInt
@@ -43,6 +42,16 @@ declare class Bool
 declare class Int
 declare class Num
 declare class Str
+
+// The `Array` class/function is a footgun:
+//    > Array()
+//    []
+//    > Array(1)
+//    [ <1 empty item> ]
+//    > Array(1, 2)
+//    [ 1, 2 ]
+// We declare it as a function of exactly one argument here to avoid that footgun.
+declare class Array[T](val length: Int): Array[T]
 
 declare object Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
