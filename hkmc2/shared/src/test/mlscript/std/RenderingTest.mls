@@ -243,6 +243,11 @@ tree
 let b = mut [a, a]
 //│ b = [{x: ref'1, y: 1} as ref'1, {x: ref'2, y: 1} as ref'2]
 
+// If the same circular object appears multiple times, it should be rendered as
+// the same reference in single-line mode.
+render(b)
+//│ = "[{x: ref'1, y: 1} as ref'1, {x: ref'1, y: 1} as ref'1]"
+
 b.push(b)
 //│ = 3
 
