@@ -55,7 +55,7 @@ enum Tree extends AutoLocated:
   case Unt()
   case Ident(name: Str)
   case Pun(eql: Bool, id: Ident) // `=ident` (eql) or `:ident` (!eql)
-  case Keywrd(kw: Keyword)
+  case Keywrd[+K <: Keyword](kw: K)
   case IntLit(value: BigInt)             extends Tree with Literal
   case DecLit(value: BigDecimal)         extends Tree with Literal
   case StrLit(value: Str)                extends Tree with Literal
@@ -73,6 +73,7 @@ enum Tree extends AutoLocated:
   case OpenIn(opened: Tree, body: Tree)
   case DynAccess(obj: Tree, fld: Tree)
   case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
+  // case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree) // TODO
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
@@ -83,7 +84,7 @@ enum Tree extends AutoLocated:
   case SynthSel(prefix: Tree, name: Ident)
   case Sel(prefix: Tree, name: Ident)
   case MemberProj(cls: Tree, name: Ident)
-  case PrefixApp(kw: Keyword.Prefix, kwLoc: Opt[Loc], rhs: Tree)
+  case PrefixApp(kw: Keywrd[Keyword.Prefix], rhs: Tree)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
@@ -131,7 +132,7 @@ enum Tree extends AutoLocated:
     case App(lhs, rhs) => Ls(lhs, rhs)
     case OpApp(lhs, op, rhss) => lhs :: op :: rhss
     case Jux(lhs, rhs) => Ls(lhs, rhs)
-    case PrefixApp(kw, _, rhs) => rhs :: Nil
+    case PrefixApp(kw, rhs) => kw :: rhs :: Nil
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, head, rhs) => head :: rhs.toList
     case LexicalNew(body, rft) => body.toList ::: rft.toList
@@ -187,7 +188,7 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name) => "dynamic field access"
-    case PrefixApp(kw, _, body) => s"prefix operator '${kw.name}'"
+    case PrefixApp(kw, body) => s"prefix operator '${kw.kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
     case LexicalNew(body, _) => "new"
     case ProperNew(body, _) => "new"
@@ -248,7 +249,7 @@ enum Tree extends AutoLocated:
       // TODO only do this if the lhs is non-expansive/a valid assignment receiver?
       PossiblyAnnotated(anns, LetLike(letLike, lhs, S(OpApp(lhs, Ident(nme.init), rhss)), bodo).withLocOf(this).desugared)
     
-    case Apps(PrefixApp(Keyword.`new!`, _, cls), argss) =>
+    case Apps(PrefixApp(Keywrd(Keyword.`new!`), cls), argss) =>
       DynamicNew(Apps(cls, argss)).withLocOf(this)
     case Apps(LexicalNew(S(body), N), argss) =>
       ProperNew(S(Apps(body, argss)), N).withLocOf(this)

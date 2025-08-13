@@ -3,7 +3,9 @@
 
 :fixme
 true or true
-//│ ═══[ERROR] Logical `or` is not yet supported.
+//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ║  l.5: 	true or true
+//│ ╙──     	^^^^
 //│ = true
 
 :fixme
@@ -39,8 +41,8 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.40: 	true or test(42)
-//│ ╙──      	        ^^^^^^^^
+//│ ║  l.42: 	true or test(42)
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false
 

@@ -205,10 +205,10 @@ class Foo with
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
 //│ ║  l.203: 	  val x = 1
-//│ ║         	      ^^^^^
+//│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.204: 	  val x = 2
-//│ ╙──       	      ^^^^^
+//│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
 //│ Foo12 = class Foo11 {
@@ -229,7 +229,7 @@ class Foo with
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
 //│ ║  l.225: 	  val x = 1
-//│ ╙──       	      ^^^^^
+//│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
 //│ Foo14 = class Foo13 {

@@ -88,6 +88,8 @@ final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin):
   def right: Loc = copy(spanStart = spanEnd)
   def left: Loc = copy(spanEnd = spanStart)
 object Loc:
+  def apply(xs: Located*): Opt[Loc] =
+    apply(xs.iterator)
   def apply(xs: IterableOnce[Located]): Opt[Loc] =
     xs.iterator.foldLeft(none[Loc])((acc, l) => acc.fold(l.toLoc)(_ ++ l.toLoc |> some))
 

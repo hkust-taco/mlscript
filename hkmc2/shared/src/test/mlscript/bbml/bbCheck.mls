@@ -14,10 +14,10 @@ fun foo: Int -> Int
 //│ ╔══[ERROR] Multiple declarations of symbol 'foo'
 //│ ╟── declared here
 //│ ║  l.12: 	fun foo: Int -> Int
-//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── declared here
 //│ ║  l.13: 	fun foo: Int -> Int
-//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
@@ -26,10 +26,10 @@ fun id(y) = y
 //│ ╔══[ERROR] Multiple definitions of symbol 'id'
 //│ ╟── defined here
 //│ ║  l.24: 	fun id(x) = x
-//│ ║        	    ^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.25: 	fun id(y) = y
-//│ ╙──      	    ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e

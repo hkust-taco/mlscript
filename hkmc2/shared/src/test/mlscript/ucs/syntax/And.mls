@@ -47,8 +47,7 @@ if x
 //│       kw = keyword 'then'
 //│       rhs = Ident of "z"
 //│     PrefixApp:
-//│       kw = keyword 'else'
-//│       kwLoc = N
+//│       kw = Keywrd of keyword 'else'
 //│       rhs = Ident of "d"
 
 if x is
@@ -139,9 +138,9 @@ if x is
     B then z
   B then C
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.138: 	    and v is
+//│ ║  l.137: 	    and v is
 //│ ║         	            ^
-//│ ║  l.139: 	    B then z
+//│ ║  l.138: 	    B then z
 //│ ╙──       	^^^^
 //│ Parsed tree:
 //│ IfLike:

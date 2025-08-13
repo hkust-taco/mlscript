@@ -4,7 +4,7 @@ module M with
   fun f(foo: Int, using bar: Int)
 //│ ╔══[ERROR] Keyword `using` must occur before all parameters.
 //│ ║  l.4: 	  fun f(foo: Int, using bar: Int)
-//│ ╙──     	                        ^^^^^^^^
+//│ ╙──     	                  ^^^^^^^^^^^^^^
 
 module M with
   fun f(using Int)
@@ -79,7 +79,7 @@ f
 fun f(using t: Int = 42) = t
 //│ ╔══[ERROR] Expected a valid parameter, found term definition
 //│ ║  l.79: 	fun f(using t: Int = 42) = t
-//│ ╙──      	            ^^^^^^^^^^^
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: t
 //│ ║  l.79: 	fun f(using t: Int = 42) = t
 //│ ╙──      	                           ^

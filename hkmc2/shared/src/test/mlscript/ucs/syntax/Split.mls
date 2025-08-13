@@ -92,8 +92,7 @@ if x +
 //│                     kw = keyword 'then'
 //│                     rhs = IntLit of 9
 //│                   PrefixApp:
-//│                     kw = keyword 'else'
-//│                     kwLoc = N
+//│                     kw = Keywrd of keyword 'else'
 //│                     rhs = IntLit of 42
 //│               InfixApp:
 //│                 lhs = IntLit of 8

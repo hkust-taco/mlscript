@@ -73,7 +73,9 @@ handle h2 = Effect with
 //│ ╔══[ERROR] Name not found: h2
 //│ ║  l.65: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
-//│ ═══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.66: 	      else "0"
+//│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2
 //│ > –––

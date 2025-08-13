@@ -143,13 +143,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     if file != preludeFile then
       given Config = mkConfig
       processTrees(
-        PrefixApp(`import`, N, StrLit(predefFile.toString))
+        PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
         :: Nil)
     if importQQ.isSet then
       given Config = mkConfig
       processTrees(
-        PrefixApp(`import`, N, StrLit(termFile.toString)) :: Nil)
+        PrefixApp(Keywrd(`import`), StrLit(termFile.toString)) :: Nil)
     super.init()
   
   

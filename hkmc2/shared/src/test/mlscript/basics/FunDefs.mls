@@ -57,8 +57,7 @@ fun not(b) = !b
 //│   obj = TermDef:
 //│     k = Fun
 //│     head = PrefixApp:
-//│       kw = keyword 'not'
-//│       kwLoc = N
+//│       kw = Keywrd of keyword 'not'
 //│       rhs = Bra:
 //│         k = Round
 //│         inner = Ident of "b"
@@ -66,6 +65,6 @@ fun not(b) = !b
 //│   fld = Ident of "b"
 //│ ╔══[ERROR] Illegal definition in term position.
 //│ ║  l.51: 	fun not(b) = !b
-//│ ╙──      	       ^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 

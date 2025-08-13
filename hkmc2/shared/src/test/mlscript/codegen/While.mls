@@ -275,7 +275,9 @@ while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.271: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ═══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.272: 	  else 1
+//│ ╙──       	  ^^^^
 
 :fixme
 while
@@ -284,12 +286,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.282: 	    print("Hello World")
+//│ ║  l.284: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.283: 	    false
+//│ ║  l.285: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.284: 	  then 0(0)
+//│ ║  l.286: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ═══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.287: 	  else 1
+//│ ╙──       	  ^^^^
 
 

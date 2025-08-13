@@ -14,7 +14,7 @@ g(5)
 f(1)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'f'
 //│ ║  l.3: 	fun f: Any -> Any
-//│ ╙──     	    ^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: f is not defined
 
 // no errors if we don't generate code
@@ -27,4 +27,4 @@ fun g(x) = f(x)
 fun g(x) = f(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'f'
 //│ ║  l.3: 	fun f: Any -> Any
-//│ ╙──     	    ^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^

@@ -65,6 +65,6 @@ fun f(val x) = x
 class Foo(class C)
 //│ ╔══[ERROR] Expected a valid parameter, found type definition
 //│ ║  l.65: 	class Foo(class C)
-//│ ╙──      	                ^
+//│ ╙──      	          ^^^^^^^
 
 

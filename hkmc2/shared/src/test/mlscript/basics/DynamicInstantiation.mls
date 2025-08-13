@@ -27,8 +27,7 @@ new! id(C)
 //│ Parsed tree:
 //│ App:
 //│   lhs = PrefixApp:
-//│     kw = keyword 'new!'
-//│     kwLoc = N
+//│     kw = Keywrd of keyword 'new!'
 //│     rhs = Ident of "id"
 //│   rhs = Tup of Ls of 
 //│     Ident of "C"

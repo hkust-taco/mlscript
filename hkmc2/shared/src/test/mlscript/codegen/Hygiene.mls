@@ -73,7 +73,7 @@ module Test with
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
 //│ ║  l.69: 	  val x = 1
-//│ ╙──      	      ^^^^^
+//│ ╙──      	  ^^^^^^^^^
 //│ JS:
 //│ (class Test3 {
 //│   static #x;

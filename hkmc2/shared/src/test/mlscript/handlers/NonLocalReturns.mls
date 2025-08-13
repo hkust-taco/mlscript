@@ -67,7 +67,7 @@ f()()
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of a function.
 //│ ║  l.67: 	return 100
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 
 :e
 if true do

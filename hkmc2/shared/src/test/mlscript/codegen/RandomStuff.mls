@@ -76,7 +76,7 @@ fun foo(x) = foo
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
 //│ ║  l.73: 	fun foo(x) = foo
-//│ ╙──      	    ^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;
 //│ foo = 1

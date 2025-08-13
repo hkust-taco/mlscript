@@ -10,10 +10,10 @@ module Foo with { val x = 1 }
 //│ ╔══[ERROR] Multiple definitions of symbol 'Foo'
 //│ ╟── defined here
 //│ ║  l.8: 	fun Foo() = 1
-//│ ║       	    ^^^^^^^^^
+//│ ║       	^^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.9: 	module Foo with { val x = 1 }
-//│ ╙──     	       ^^^^^^^^^^^^^^^^^^^^
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Foo
 //│ = module Foo { x: 1 }

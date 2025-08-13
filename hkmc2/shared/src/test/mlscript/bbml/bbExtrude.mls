@@ -102,7 +102,7 @@ k
 k(_ => "")
 //│ ╔══[ERROR] Type error in function literal with expected type 'x
 //│ ║  l.102: 	k(_ => "")
-//│ ║         	       ^^
+//│ ║         	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (Int) ->{'eff} (Int)
@@ -125,7 +125,7 @@ k
 k(_ => "")
 //│ ╔══[ERROR] Type error in function literal with expected type 'x
 //│ ║  l.125: 	k(_ => "")
-//│ ║         	       ^^
+//│ ║         	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Str)  <:  (⊤) ->{⊥} ⊥
@@ -136,7 +136,7 @@ k(_ => "")
 k(_ => 42)
 //│ ╔══[ERROR] Type error in function literal with expected type 'x
 //│ ║  l.136: 	k(_ => 42)
-//│ ║         	       ^^
+//│ ║         	  ^^^^^^^
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  'x
 //│ ╟── because: cannot constrain  ('_) ->{⊥} (Int)  <:  (⊤) ->{⊥} ⊥

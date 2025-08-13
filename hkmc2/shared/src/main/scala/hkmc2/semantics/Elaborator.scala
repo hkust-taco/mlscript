@@ -478,8 +478,8 @@ extends Importer:
       Term.Asc(subterm(lhs), subterm(rhs))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       block(tree :: Nil, hasResult = false)._1
-    case PrefixApp(Keyword.`not`, kwLoc, rhs) =>
-      Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLoc(kwLoc)), Term.Tup(
+    case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
+      Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
       val des = new ucs.Desugarer(this)(tree)
@@ -645,14 +645,14 @@ extends Importer:
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
         ), Term.IfLike(Keyword.`if`, des))
-    case PrefixApp(Keyword.`return`, kwLoc, body) =>
+    case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
         tl.log(s"Non-local return: $sym")
         val rs = FlowSymbol("‹app-res›")
         val retMtdTree = new Ident("ret")
         val argTree = new Tup(body :: Nil)
-        val dummyIdent = new Ident("return").withLoc(kwLoc)
+        val dummyIdent = new Ident("return").withLocOf(kw)
         Term.App(
           Term.Sel(sym.ref(dummyIdent), retMtdTree)(S(state.nonLocalRet)),
           Term.Tup(PlainFld(subterm(body)) :: Nil)(argTree)
@@ -667,10 +667,10 @@ extends Importer:
         raise:
           ErrorReport(msg"Return statements are not allowed in this context." -> tree.toLoc :: Nil)
         Term.Error
-    case PrefixApp(Keyword.`throw`, kwLoc, body) =>
-      Term.Throw(subterm(body))
-    case PrefixApp(Keyword.`do`, kwLoc, body) =>
-      Blk(subterm(body) :: Nil, unit)
+    case PrefixApp(Keywrd(Keyword.`throw`), body) =>
+      Term.Throw(subterm(body)).withLocOf(tree)
+    case PrefixApp(Keywrd(Keyword.`do`), body) =>
+      Blk(subterm(body) :: Nil, unit).withLocOf(tree)
     case TypeDef(Mod, head, N) =>
       subterm(head)
     case Region(id: Ident, body) =>
@@ -708,8 +708,8 @@ extends Importer:
     case Modified(kw, kwLoc, body) =>
       raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
       subterm(body)
-    case PrefixApp(kw, kwLoc, body) =>
-      raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kwLoc :: Nil))
+    case PrefixApp(kw, body) =>
+      raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)
     case Jux(lhs, rhs) =>
       def go(acc: Term, trees: Ls[Tree]): Term =
@@ -907,13 +907,13 @@ extends Importer:
           case _ =>
             raise(ErrorReport(msg"Illegal 'open' statement base." -> base.toLoc :: Nil))
             go(sts, Nil, acc)
-      case (m @ PrefixApp(Keyword.`import`, absLoc, arg)) :: sts =>
+      case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
         val (newCtx, newAcc) = arg match
           case StrLit(path) =>
-            val stmt = importPath(path)
+            val stmt = importPath(path).withLocOf(m)
             (ctx + (stmt.sym.nme -> stmt.sym),
-            stmt.withLocOf(m) :: acc)
+            stmt :: acc)
           case _ =>
             raise(ErrorReport(
               msg"Expected string literal after 'import' keyword" ->

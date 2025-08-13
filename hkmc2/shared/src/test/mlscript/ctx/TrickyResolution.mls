@@ -23,7 +23,7 @@ using Bar[Str] = new Bar
 foo
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'foo'
 //│ ║  l.11: 	fun foo[A](using f: Foo[A], b: Bar[A]): A
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 
 

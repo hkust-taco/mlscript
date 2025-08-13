@@ -303,7 +303,7 @@ throw new Error("oops")
 throw 42
 //│ ╔══[ERROR] Type error in throw
 //│ ║  l.303: 	throw 42
-//│ ║         	      ^^
+//│ ║         	^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥
 

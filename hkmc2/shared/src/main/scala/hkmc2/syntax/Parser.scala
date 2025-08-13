@@ -136,7 +136,7 @@ abstract class Parser(
   
   object PrefixRule:
     def unapply(t: IDENT): Opt[(Keyword, ParseRule[Tree])] = t match
-      case KEYWORD(kw) => prefixRules.kwAlts.get(kw.name).map(kw -> _)
+      case KEYWORD(kw) => prefixRules.kwAltsTODO.get(kw.name).map(kw -> _)
       case _ => N
   
   protected def doPrintDbg(msg: => Str): Unit
@@ -314,19 +314,20 @@ abstract class Parser(
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
-        rule.kwAlts.get(kw.name) match
+        rule.getKwAlt(kw) match
         case S(subRule) =>
+          val rest = subRule.rest.map(a => subRule.k(new Keywrd[kw.type](kw).withLoc(S(loc)), a))
           yeetSpaces match
-          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
+          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if rest.blkAlt.isEmpty =>
             consume
-            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, Nil, allowNewlines)) // FIXME allowNewlines?
+            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(rest, Nil, allowNewlines)) // FIXME allowNewlines?
             if blk.isEmpty then
-              err(msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil)
+              err(msg"Expected ${rest.whatComesAfter} ${rest.mkAfterStr}; found end of block instead" -> S(loc) :: Nil)
               errExpr
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
             val p = kw.rightPrec.getOrElse(CommaPrecNext)
-            val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
+            val res = parseRule(p, rest, allowNewlines = allowNewlines).getOrElse(errExpr)
             annotations.annotate(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines)) :: blockContOf(rule)
         case N =>
           
@@ -337,7 +338,7 @@ abstract class Parser(
             yeetSpaces match
             case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ /* if subRule.blkAlt.isEmpty */ =>
               consume
-              prefixRules.kwAlts.get(kw.name) match
+              prefixRules.kwAltsTODO.get(kw.name) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
                 rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
                   p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
@@ -345,7 +346,7 @@ abstract class Parser(
               case _ =>
                 TODO(cur)
             case _ =>
-              prefixRules.kwAlts.get(kw.name) match
+              prefixRules.kwAltsTODO.get(kw.name) match
               case S(subRule) =>
                 val e = parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
                 annotations.annotate(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
@@ -412,7 +413,7 @@ abstract class Parser(
         // encountering `:` should lead to parsing an expr (likely a pun)
         tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>
-        rule.kwAlts.get(id.name) match
+        rule.kwAltsTODO.get(id.name) match
         case S(subRule) =>
           if verbose then printDbg(s"$$ proceed with rule: ${subRule.name}")
           consume
@@ -428,7 +429,7 @@ abstract class Parser(
           rule.exprAlt match
           case S(exprAlt) =>
             consume
-            prefixRules.kwAlts.get(id.name) match
+            prefixRules.kwAltsTODO.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
               val e = exprCont(
@@ -527,6 +528,7 @@ abstract class Parser(
           case (IDENT("=", _), l1) :: _ => consume
           case (tk, l1) :: _ =>
             err(msg"Expected `=` after ${nme}; found ${tk.toString} instead" -> S(l1) :: Nil)
+          case _ => die
         val rhs = simpleExprImpl(0, allowNewlines = true)
         val v = Tree.Ident(nme).withLoc(S(l0))
         cur match {
@@ -653,7 +655,8 @@ abstract class Parser(
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
                   Quoted(IfLike(Keyword.`if`, S(l0), Block(
-                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) :: PrefixApp(Keyword.`else`, N, Unquoted(ele)) :: Nil
+                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) ::
+                      PrefixApp(new Keywrd[Keyword.`else`.type](Keyword.`else`).withLoc(S(l1)), Unquoted(ele)) :: Nil
                   )))
                 case tk =>
                   err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
@@ -719,7 +722,7 @@ abstract class Parser(
       case Nil => false
       case (_: NEWLINE_COMMA | SPACE, _) :: _ => consume; true
       case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
-        prefixRules.kwAlts.get(kw.name) match
+        prefixRules.kwAltsTODO.get(kw.name) match
         case S(subRule) =>
           consume
           parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
@@ -742,7 +745,7 @@ abstract class Parser(
     wrap((lhs,splittingOpLoc,prec))(opSplitImpl(lhs, splittingOpLoc, prec, Nil))
   def opSplitImpl(lhs: Tree, splittingOpLoc: Loc, prec: Int, acc: Ls[Tree]): Tree =
     val (newAcc, e) = yeetSpaces match
-      case (PrefixRule((kw, rule)), _) :: _ =>
+      case (PrefixRule(kw, rule), _) :: _ =>
         consume
         val e = parseRule(kw.rightPrecOrMin, rule, allowNewlines = true).getOrElse(errExpr)
         (e :: acc, S(e))
@@ -1131,7 +1134,7 @@ abstract class Parser(
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>
         if verbose then printDbg(s"$$ found keyword: ${kw.name} (${kw.leftPrecOrMin})")
-        infixRules.kwAlts.get(kw.name) match
+        infixRules.kwAltsTODO.get(kw.name) match
           case S(rule) =>
             consume
             if verbose then printDbg(s"$$ proceed with rule: ${rule.name}")
