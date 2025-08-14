@@ -527,7 +527,7 @@ class Resolver(tl: TraceLogger)
         resolveSymbol(t)
         (N, ictx)
     
-    log(s"Resolving resolvable with defn = ${defn}")
+    log(s"Resolving resolvable (${t.resolvedSymbol}): ${defn}")
     
     // Fill the context with possibly the type arguments information.
     val newICtx2 = newICtx1.givenIn:
@@ -715,10 +715,10 @@ class Resolver(tl: TraceLogger)
     
     t match
     case t @ AnySel(lhs: Resolvable, id) =>
-      log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
       lhs.typeDefn match
         case S(mdef @ ModuleDef(kind = Mod)) => mdef.body.members.get(id.name) match
           case S(sym) =>
+            log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
             t match
               case t: Term.Sel => t.sym = S(sym)
               case t: Term.SynthSel => t.sym = S(sym)
