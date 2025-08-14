@@ -675,7 +675,7 @@ class Resolver(tl: TraceLogger)
               ((t: Term) => lam(bod(t)), pss)
         
         val (expansion, pss) = expand(defn.params, identity, identity)
-        t.expand(if expansion is identity then N else S(expansion))
+        t.expand(if defn.params.length != pss.length then S(expansion) else N)
         
         // resolution may change the semantics
         if t.hasExpansion then t.instantiate match
