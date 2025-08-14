@@ -1,0 +1,57 @@
+:js
+
+using Int = 42
+
+fun foo()(using Int) = [use[Int]]
+
+fun bar(x)(using Int) = [x, use[Int]]
+
+fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
+
+
+:e
+baz
+//│ ╔══[ERROR] Cannot query instance of type Num for call: 
+//│ ║  l.13: 	baz
+//│ ║        	^^^
+//│ ╟── Required by contextual parameter declaration: 
+//│ ║  l.9: 	fun baz(x)(using Int)(y)(using Num) = [x, use[Int], y, use[Num]]
+//│ ║       	                               ^^^
+//│ ╙── Missing instance: Expected: Num; Available: Int
+//│ = fun
+
+
+using Num = 0.42
+
+// foo
+// should be expanded to
+// () => foo()
+// and then resolved to
+// () => foo()(<using> 42)
+:expect [42]
+let f1 = foo
+f1()
+//│ = [42]
+//│ f1 = fun f1
+
+// bar
+// should be expanded to
+// (x) => bar(x)
+// and then resolved to
+// (x) => bar(x)(<using> 42)
+:expect [0.42, 42]
+let f2 = bar
+f2(0.42)
+//│ = [0.42, 42]
+//│ f2 = fun f2
+
+// baz
+// should be expanded to
+// (x) => baz(x)
+// and then resolved to
+// (x) => baz(x)(<using> 42)
+:expect [43, 42, 44, 0.42]
+let f3 = baz
+f3(43)(44)
+//│ = [43, 42, 44, 0.42]
+//│ f3 = fun f3

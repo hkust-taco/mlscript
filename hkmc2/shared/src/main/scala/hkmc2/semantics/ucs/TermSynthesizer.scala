@@ -11,9 +11,9 @@ import syntax.Tree.*, Elaborator.{Ctx, State, ctx}
   * `Normalization`, `Compiler`, and `NaiveCompiler`. */
 trait TermSynthesizer(using Ctx, State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
-    (Term.SynthSel(p, k)(N): Term.SynthSel).withIArgs(Nil)
+    (Term.SynthSel(p, k)(N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
-    (Term.SynthSel(p, k)(S(s)): Term.SynthSel).withIArgs(Nil)
+    (Term.SynthSel(p, k)(S(s)): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
   protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
@@ -25,7 +25,7 @@ trait TermSynthesizer(using Ctx, State):
   protected final def tup(xs: Fld*): Term.Tup = Term.Tup(xs.toList)(DummyTup)
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
-    (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).withIArgs(Nil)
+    (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).resolve
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
   protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
@@ -34,7 +34,7 @@ trait TermSynthesizer(using Ctx, State):
   protected final def param = Param(FldFlags.empty, _, N, Modulefulness.none)
   protected final def paramList(params: Param*) = PlainParamList(params.toList)
     
-  private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().withIArgs(Nil)
+  private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
   protected lazy val matchResultClass =

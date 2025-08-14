@@ -56,6 +56,13 @@ import Subst.subst
 
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
+  extension (t: Term)
+    def instantiate = t match
+      case r: Resolvable =>
+        tl.trace[Term](s"Instantiating term ${r}", post = t => s"~> ${t.show}"):
+          r.instantiate
+      case t => t
+  
   val lowerHandlers: Bool = config.effectHandlers.isDefined
   val lift: Bool = config.liftDefns.isDefined
 
@@ -252,11 +259,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
     
-    // Funny Scala: the non-exhaustive match is actually the second match
-    t match
-      case t: sem.Resolvable => t.instantiate
-      case t => t
-    match
+    t.instantiate match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       warnStmt
@@ -289,13 +292,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val p2 = Param(FldFlags.empty, VarSymbol(t2), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: p2 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).noIArgs, st.Ref(p2.sym)(t2, 666, N).noIArgs))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve, st.Ref(p2.sym)(t2, 666, N).resolve))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
               N,
               FlowSymbol(sym.nme)
-            ).noIArgs
+            ).resolve
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
@@ -304,13 +307,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val t1 = new Tree.Ident("arg")
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
           val ps = PlainParamList(p1 :: Nil)
-          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).noIArgs))
+          val bod = st.App(t, st.Tup(List(st.Ref(p1.sym)(t1, 666, N).resolve))
             (Tree.Tup(Nil // FIXME should not be required (using dummy value)
               )))(
               Tree.App(Tree.Empty(), Tree.Empty()), // FIXME should not be required (using dummy value)
               N,
               FlowSymbol(sym.nme)
-            ).noIArgs
+            ).resolve
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
@@ -318,7 +321,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.isDeclare.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref().noIArgs, ref.tree)(S(bs)).noIArgs)(k)
+          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs)).resolve)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list
@@ -377,7 +380,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case sym => (sym is State.matchResultClsSymbol) ||
           (sym is State.matchFailureClsSymbol)
       def conclude(fr: Path) = lowerCall(fr, isMlsFun, arg, t.toLoc)(k)
-      f match
+      // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
+      // * function is not called again with f. See below `Sel` and `SelProj` cases.
+      f.instantiate match
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.printStack) =>
@@ -639,7 +644,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor)
-          val inner = new New(sym.ref().noIArgs, Nil, N)
+          val inner = new New(sym.ref().resolve, Nil, N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>

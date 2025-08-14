@@ -148,49 +148,52 @@ R.bar
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Sel{module:M}:
-//│     prefix = Ref{member:R} of member:R
-//│     nme = Ident of "bar"
-//│     iargsLs = S of Ls of 
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
-//│           asc = N
-//│       Tup of Ls of 
+//│   res = App{module:M}:
+//│     lhs = App:
+//│       lhs = App:
+//│         lhs = Sel{member:bar}:
+//│           prefix = Ref{member:R} of member:R
+//│           nme = Ident of "bar"
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             asc = N
+//│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
 //│           asc = N
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
-//│           asc = N
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         asc = N
 
 // the symbol of this Ref should be M because of the implicit application
 foo
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Ref{module:M}:
-//│     sym = member:foo
-//│     iargsLs = S of Ls of 
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
-//│           asc = N
-//│       Tup of Ls of 
+//│   res = App{module:M}:
+//│     lhs = App:
+//│       lhs = App:
+//│         lhs = Ref{member:foo} of member:foo
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             asc = N
+//│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
 //│           asc = N
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
-//│           asc = N
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
 // note that the resolved symbol for implicit application is on TyApp instead of on Sel
@@ -198,28 +201,30 @@ R.bar[Int]
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = TyApp{module:M}:
-//│     lhs = Sel{member:bar}:
-//│       prefix = Ref{member:R} of member:R
-//│       nme = Ident of "bar"
-//│     targs = Ls of 
-//│       Ref{member:Int} of member:Int
-//│     iargsLs = S of Ls of 
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
-//│           asc = N
-//│       Tup of Ls of 
+//│   res = App{module:M}:
+//│     lhs = App:
+//│       lhs = App:
+//│         lhs = TyApp{member:bar}:
+//│           lhs = Sel{member:bar}:
+//│             prefix = Ref{member:R} of member:R
+//│             nme = Ident of "bar"
+//│           targs = Ls of 
+//│             Ref{member:Int} of member:Int
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             asc = N
+//│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
 //│           asc = N
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
-//│           asc = N
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
 // note that the resolved symbol for implicit application is on TyApp instead of on Ref
@@ -227,23 +232,25 @@ foo[Int]
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = TyApp{module:M}:
-//│     lhs = Ref{member:foo} of member:foo
-//│     targs = Ls of 
-//│       Ref{member:Int} of member:Int
-//│     iargsLs = S of Ls of 
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
-//│           asc = N
-//│       Tup of Ls of 
+//│   res = App{module:M}:
+//│     lhs = App:
+//│       lhs = App:
+//│         lhs = TyApp{member:foo}:
+//│           lhs = Ref{member:foo} of member:foo
+//│           targs = Ls of 
+//│             Ref{member:Int} of member:Int
+//│         rhs = Tup of Ls of 
+//│           Fld:
+//│             flags = ()
+//│             term = Ref{member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             asc = N
+//│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Ref{member:instance$Ident(Num)} of member:instance$Ident(Num)
 //│           asc = N
-//│       Tup of Ls of 
-//│         Fld:
-//│           flags = ()
-//│           term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
-//│           asc = N
+//│     rhs = Tup of Ls of 
+//│       Fld:
+//│         flags = ()
+//│         term = Ref{member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         asc = N
