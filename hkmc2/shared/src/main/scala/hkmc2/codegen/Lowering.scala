@@ -57,9 +57,9 @@ import Subst.subst
 class Lowering()(using Config, TL, Raise, State, Ctx):
   
   extension (t: Term)
-    def instantiate = t match
+    def instantiated = t match
       case r: Resolvable =>
-        tl.trace[Term](s"Instantiating term ${r}", post = t => s"~> ${t.show}"):
+        tl.trace[Term](s"Expanding term ${r}", post = t => s"~> ${t.show}"):
           r.instantiate
       case t => t
   
