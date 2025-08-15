@@ -667,8 +667,6 @@ extends Importer:
       Term.Throw(subterm(body))
     case PrefixApp(Keyword.`do`, kwLoc, body) =>
       Blk(subterm(body) :: Nil, unit)
-    case TypeDef(Mod, head, N) =>
-      subterm(head)
     case Region(id: Ident, body) =>
       val sym = VarSymbol(id)
       given Ctx = ctx + (id.name -> sym)
@@ -1013,7 +1011,12 @@ extends Importer:
                 res
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
-              val s = st.map(term(_)(using newCtx))
+              val s = st.map:
+                // unwrap possible module modifier
+                // e.g, `fun f: module M`
+                //              ^^^^^^
+                case TypeDef(Mod, st, N) => term(st)(using newCtx)
+                case st => term(st)(using newCtx)
               val b = if ctx.mode != Mode.Light
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
@@ -1031,10 +1034,10 @@ extends Importer:
               val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = st match
-                // TypeDef(Mod, _, N, N) indicates if the function marks
+                // st.isModified(Mod) indicates if the function marks
                 // its result as "module". e.g, `fun f: module M`
                 //                                      ^^^^^^
-                case S(TypeDef(Mod, _, N)) => 
+                case S(st) if st.isModified(Mod) => 
                   Modulefulness.ofSign(s)(true)
                 case _ =>
                   Modulefulness.none

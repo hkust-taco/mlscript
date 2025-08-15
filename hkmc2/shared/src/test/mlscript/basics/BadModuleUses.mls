@@ -100,3 +100,11 @@ print(B.a)
 //│ > module A
 
 
+:e
+:re
+id(module 1)
+//│ ╔══[ERROR] Illegal type declaration in term position.
+//│ ║  l.105: 	id(module 1)
+//│ ╙──       	          ^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
