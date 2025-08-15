@@ -511,7 +511,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
         // 2. A variable number of middle patterns indicated by `..`.
         // 3. A fixed number of trailing patterns.
         val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Keyword.Ellipsis, Opt[Tree], Ls[Tree])])]((Nil, N)):
-          case ((lead, N), Spread(kw, _, patOpt)) => (lead, S((kw, patOpt, Nil)))
+          case ((lead, N), Spread(kw, patOpt)) => (lead, S((kw.kw, patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((kw: Keyword.Ellipsis, rest, last))), pat) => (lead, S((kw, rest, last :+ pat)))
         // `wrap`: add let bindings for tuple elements

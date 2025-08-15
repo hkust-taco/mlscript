@@ -685,7 +685,10 @@ abstract class Parser(
       val bod = yeetSpaces match
         case Nil | (COMMA, _) :: _ => N
         case _ => S(expr(prec, allowNewlines = allowNewlines))
-      Spread(if dotDotDot then Keyword.`...` else Keyword.`..`, S(loc), bod)
+      val kw = if dotDotDot 
+        then new Keywrd[Keyword.`...`.type](Keyword.`...`) 
+        else new Keywrd[Keyword.`..`.type](Keyword.`..`)
+      Spread(kw.withLoc(S(loc)), bod)
     // case (NEWLINE, loc) :: _ => // this seems to never be reached
     //   raise(WarningReport(msg"???" -> S(loc) :: Nil))
     //   consume

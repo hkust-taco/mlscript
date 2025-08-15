@@ -43,7 +43,7 @@ sealed trait Literal extends AutoLocated:
 enum SpreadKind:
   case Eager, Lazy
 object SpreadKind:
-  def fromKw(kw: Keyword.Ellipsis) = kw match
+  def fromKw(kw: Keywrd[Keyword.Ellipsis]) = kw.kw match
     case Keyword.`..` => SpreadKind.Lazy
     case Keyword.`...` => SpreadKind.Eager
 
@@ -72,8 +72,7 @@ enum Tree extends AutoLocated:
   case Open(opened: Tree)
   case OpenIn(opened: Tree, body: Tree)
   case DynAccess(obj: Tree, fld: Tree)
-  case Modified(modifier: Keyword, modLoc: Opt[Loc], body: Tree)
-  // case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree) // TODO
+  case Modified(modifier: Keywrd[Keyword.Modifier], body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
@@ -97,7 +96,7 @@ enum Tree extends AutoLocated:
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
   case Outer(name: Opt[Tree])
-  case Spread(kw: Keyword.Ellipsis, kwLoc: Opt[Loc], body: Opt[Tree])
+  case Spread(kw: Keywrd[Keyword.Ellipsis], body: Opt[Tree])
   case Annotated(annotation: Tree, target: Tree)
   case Constructor(decl: Tree)
   /** Represents a term that has already been elaborated. When desugaring
@@ -125,7 +124,7 @@ enum Tree extends AutoLocated:
       case Some(value) => lhs :: rhs :: defs :: value :: Nil
       case None => lhs :: rhs :: defs :: Nil
     case TypeDef(k, head, rhs) => head :: rhs.toList
-    case Modified(_, _, body) => Ls(body)
+    case Modified(_, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
     case Tup(fields) => fields
@@ -151,7 +150,7 @@ enum Tree extends AutoLocated:
     case Open(bod) => bod :: Nil
     case OpenIn(opened, body) => opened :: body :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
-    case Spread(_, _, body) => body.toList
+    case Spread(_, body) => body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil
     case Constructor(decl) => decl :: Nil
     case MemberProj(cls, name) => cls :: Nil
@@ -177,7 +176,7 @@ enum Tree extends AutoLocated:
     case LetLike(kw, lhs, rhs, body) => kw.name
     case TermDef(k, alphaName, rhs) => "term definition"
     case TypeDef(k, head, rhs) => "type definition"
-    case Modified(kw, _, body) => s"'${kw.name}'-modified ${body.describe}"
+    case Modified(kw, body) => s"'${kw.name}'-modified ${body.describe}"
     case Quoted(body) => "quoted"
     case Unquoted(body) => "unquoted"
     case Tup(fields) => "tuple"
@@ -188,7 +187,7 @@ enum Tree extends AutoLocated:
     case Sel(prefix, name) => "selection"
     case SynthSel(prefix, name) => "synthetic selection"
     case DynAccess(prefix, name) => "dynamic field access"
-    case PrefixApp(kw, body) => s"prefix operator '${kw.kw.name}'"
+    case PrefixApp(kw, body) => s"prefix operator '${kw.name}'"
     case InfixApp(lhs, kw, rhs) => s"infix operator '${kw.name}'"
     case LexicalNew(body, _) => "new"
     case ProperNew(body, _) => "new"
@@ -202,7 +201,7 @@ enum Tree extends AutoLocated:
     case Outer(_) => "outer binding"
     case Hndl(_, _, _, _) => "handle"
     case Def(lhs, rhs) => "defining assignment"
-    case Spread(_, _, _) => "spread"
+    case Spread(_, _) => "spread"
     case Annotated(_, _) => "annotated"
     case Open(_) => "open"
     case Constructor(_) => "constructor"
@@ -233,13 +232,13 @@ enum Tree extends AutoLocated:
     case PossiblyAnnotated(anns, m: Modified) =>
       PossiblyAnnotated(anns,
         m match
-        case Modified(Keyword.`declare`, modLoc, s) =>
-          Annotated(Keywrd(Keyword.`declare`), s.desugared) // TODO properly attach location
-        case Modified(Keyword.`data`, modLoc, s) =>
-          Annotated(Keywrd(Keyword.`data`), s.desugared) // TODO properly attach location
-        case Modified(Keyword.`abstract`, modLoc, s) =>
-          Annotated(Keywrd(Keyword.`abstract`), s.desugared) // TODO properly attach location
-        case Modified(Keyword.`mut`, modLoc, TermDef(ImmutVal, anme, rhs)) =>
+        case Modified(kw @ Keywrd(Keyword.`declare`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`data`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`abstract`), s) =>
+          Annotated(kw, s.desugared)
+        case Modified(kw @ Keywrd(Keyword.`mut`), TermDef(ImmutVal, anme, rhs)) =>
           TermDef(MutVal, anme, rhs).withLocOf(this).desugared
         case _ => m
       )
@@ -319,7 +318,7 @@ enum Tree extends AutoLocated:
       (td.extension.isEmpty && td.withPart.isEmpty && m == modifier) || head.isModified(modifier)
     case td @ Tree.TermDef(m, head, N) =>
       (td.extension.isEmpty && td.withPart.isEmpty && m == modifier) || head.isModified(modifier)
-    case Modified(m, _, body) =>
+    case Modified(Keywrd(m), body) =>
       modifier == m || body.isModified(modifier)
     case _ =>
       false
@@ -340,6 +339,9 @@ object Tree:
     def unapply(t: App): Opt[(Tree, Ls[Tree])] = t match
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
+  
+  extension [T <: Keyword](kw: Tree.Keywrd[T])
+    def name = kw.kw.name
 
 /**
  * A parameter yet to be elaborated, which is different from
@@ -355,16 +357,16 @@ object SpreadParam:
   def unapply(t: Tree): Opt[(Ident, SpreadKind)] = t match
     // fun f(..a)
     // fun f(...a)
-    case Spread(kw, _, S(id: Ident)) =>
+    case Spread(kw, S(id: Ident)) =>
       S(id, SpreadKind.fromKw(kw))
     // fun f(.._)
     // fun f(..._)
-    case Spread(kw, _, S(und: Under)) => 
+    case Spread(kw, S(und: Under)) =>
       S(new Ident("_").withLocOf(und), SpreadKind.fromKw(kw))
     // fun f(..)
     // fun f(...)
-    case Spread(kw, kwLoc, N) =>
-      S(new Ident("_").withLoc(kwLoc), SpreadKind.fromKw(kw))
+    case Spread(kw, N) =>
+      S(new Ident("_").withLocOf(kw), SpreadKind.fromKw(kw))
     case _ => N
 
 object Desugared:

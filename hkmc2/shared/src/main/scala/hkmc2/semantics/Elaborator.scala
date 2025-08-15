@@ -428,9 +428,9 @@ extends Importer:
       Term.Error
     case TyApp(lhs, targs) =>
       Term.TyApp(subterm(lhs, inTyAppPrefix = true), targs.map {
-        case Modified(Keyword.`in`, inLoc, arg) => Term.WildcardTy(S(subterm(arg)), N)
-        case Modified(Keyword.`out`, outLoc, arg) => Term.WildcardTy(N, S(subterm(arg)))
-        case Tup(Modified(Keyword.`in`, inLoc, arg1) :: Modified(Keyword.`out`, outLoc, arg2) :: Nil) =>
+        case Modified(Keywrd(Keyword.`in`), arg) => Term.WildcardTy(S(subterm(arg)), N)
+        case Modified(Keywrd(Keyword.`out`), arg) => Term.WildcardTy(N, S(subterm(arg)))
+        case Tup(Modified(Keywrd(Keyword.`in`), arg1) :: Modified(Keywrd(Keyword.`out`), arg2) :: Nil) =>
           Term.WildcardTy(S(subterm(arg1)), S(subterm(arg2)))
         case arg => subterm(arg)
       })(N)
@@ -590,7 +590,7 @@ extends Importer:
       )
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
       Term.CtxTup((f :: fs).map(fld(_)))(tree)
-    case Modified(Keyword.`mut`, kwLoc, tree @ Tup(fields)) =>
+    case Modified(Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
       Term.Mut(Term.Tup(fields.map(fld(_)))(tree))
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
@@ -613,7 +613,7 @@ extends Importer:
       body match
       case S(Apps(c, argss)) =>
         val (mut, c2) = c match
-          case Modified(Keyword.`mut`, kwLoc, c) => (true, c)
+          case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
         val inner = new Term.New(
           cls(subterm(c2), // * Note: we'll catch bad `new` targets during type checking
@@ -697,7 +697,7 @@ extends Importer:
     case TypeDef(k, head, rhs) =>
       raise(ErrorReport(msg"Illegal type declaration in term position." -> tree.toLoc :: Nil))
       Term.Error
-    case Modified(Keyword.`mut`, kwLoc, body: Block) =>
+    case Modified(Keywrd(Keyword.`mut`), body: Block) =>
       blockOrRcd(body, hasResult = true) match
       case (Blk(Nil, Term.UnitVal()), ctx) =>
         Rcd(mut = true, Nil).withLocOf(body)
@@ -705,11 +705,11 @@ extends Importer:
         raise(ErrorReport(msg"Expected a record after 'mut' keyword; found a block" -> blk.toLoc :: Nil))
         blk
       case (rcd: Rcd, ctx) => rcd.copy(mut = true).withLocOf(rcd)
-    case Modified(kw, kwLoc, body) =>
-      raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kwLoc :: Nil))
+    case Modified(kw, body) =>
+      raise(ErrorReport(msg"Illegal position for '${kw.name}' modifier." -> kw.toLoc :: Nil))
       subterm(body)
     case PrefixApp(kw, body) =>
-      raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.kw.name}'." -> kw.toLoc :: Nil))
+      raise(ErrorReport(msg"Illegal position for prefix keyword '${kw.name}'." -> kw.toLoc :: Nil))
       subterm(body)
     case Jux(lhs, rhs) =>
       def go(acc: Term, trees: Ls[Tree]): Term =
@@ -750,8 +750,8 @@ extends Importer:
       case _ =>
         raise(ErrorReport(msg"Illegal dynamic field access selector (${rhs.describe})." -> tree.toLoc :: Nil))
         Term.Error
-    case Spread(kw, kwLoc, body) =>
-      raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kwLoc :: Nil))
+    case Spread(kw, body) =>
+      raise(ErrorReport(msg"Illegal position for '${kw.name}' spread operator." -> kw.toLoc :: Nil))
       Term.Error
     case und: Under =>
       summon[UnderCtx].unders match
@@ -782,9 +782,9 @@ extends Importer:
       Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs)))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
-    case Spread(Keyword.`..`, _, S(trm)) =>
+    case Spread(Keywrd(Keyword.`..`), S(trm)) =>
       Spd(false, arg(trm))
-    case Spread(Keyword.`...`, _, S(trm)) =>
+    case Spread(Keywrd(Keyword.`...`), S(trm)) =>
       Spd(true, arg(trm))
     case _ =>
       val t = arg(tree)
@@ -922,7 +922,7 @@ extends Importer:
         newCtx.givenIn:
           go(sts, Nil, newAcc)
       
-      case Spread(Keyword.`...`, kwLoc, S(body)) :: sts =>
+      case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
         go(sts, Nil, RcdSpread(term(body)) :: acc)
       case InfixApp(lhs, Keyword.`:`, rhs) :: sts =>
@@ -1079,9 +1079,9 @@ extends Importer:
               val (id, vce) = targ match
                 case id: Ident =>
                   (id, N)
-                case Modified(Keyword.`in`, inLoc, id: Ident) =>
+                case Modified(Keywrd(Keyword.`in`), id: Ident) =>
                   (id, S(false))
-                case Modified(Keyword.`out`, outLoc, id: Ident) =>
+                case Modified(Keywrd(Keyword.`out`), id: Ident) =>
                   (id, S(true))
               val vs = VarSymbol(id)
               val res = TyParam(FldFlags.empty, vce, vs)
@@ -1370,14 +1370,14 @@ extends Importer:
       // pattern, and the trailing patterns.
       val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())
       val (leading, spread, trailing) = ts.foldLeft(z):
-        case (acc @ (_, S(_), _), Spread(`...`, _, _)) =>
+        case (acc @ (_, S(_), _), Spread(Keywrd(`...`), _)) =>
           // Found two `...p` in the same tuple pattern. Report an error.
           raise(ErrorReport(msg"Multiple spread patterns are not supported." -> t.toLoc :: Nil))
           acc // Do not modify the accumulator and skip this `Spread`.
-        case ((leading, N, trailing), Spread(`...`, _, S(t))) =>
+        case ((leading, N, trailing), Spread(Keywrd(`...`), S(t))) =>
           // Found `...p`, elaborate `p` and assign it to the spread pattern.
           (leading, S(go(t)), trailing)
-        case ((leading, N, trailing), Spread(`...`, _, N)) =>
+        case ((leading, N, trailing), Spread(Keywrd(`...`), N)) =>
           // Found `...` (no following patterns), which means the spread part
           // will not be further matched. Set the spread pattern to `Wildcard`.
           (leading, S(Wildcard()), trailing)

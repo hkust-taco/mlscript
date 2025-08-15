@@ -86,11 +86,10 @@ class ParseRules(using State):
   def prefixed(kw: Keyword.Prefix, body: Alt[Tree]) =
     Kw(kw)(ParseRule(s"prefix keyword '${kw.name}'")(body))((k, r) => Tree.PrefixApp(k, r))
   
-  def modified(kw: Keyword): Alt[Tree] = modified(kw, standaloneExpr)
-  def modified(kw: Keyword, body: Alt[Tree]) =
-    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body))((k, r) =>
-        Tree.Modified(k.kw, N, r) // TODO
-      )
+  def modified(kw: Keyword.Modifier): Alt[Tree] = modified(kw, standaloneExpr)
+  def modified(kw: Keyword.Modifier, body: Alt[Tree]) =
+    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(body)):
+      case (k: Keywrd[Keyword.Modifier], r) => Tree.Modified(k, r)
   
   def exprOrBlk[Rest, Res](body: ParseRule[Rest])(k: (Tree, Rest) => Res): List[Alt[Res]] =
     Expr(body)(k) ::
@@ -270,19 +269,22 @@ class ParseRules(using State):
         )*
       )
     ,
-    discardKw(`in`):
+    Kw(`in`)(
       ParseRule("modifier keyword `in`"):
         Expr(
           ParseRule("`in` expression")(
-            discardKw(`out`)( // TODO keep kw
-              ParseRule(s"modifier keyword `out`")(standaloneExpr)).map(s => S(Tree.Modified(`out`, N/* TODO */, s))),
+            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)):
+              case (kw, s) => S(Tree.Modified(kw, s)),
             end(N),
           )
         ) {
-          case (lhs, N) => Tree.Modified(`in`, N/* TODO */, lhs)
-          case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, N/* TODO */, lhs) :: rhs :: Nil)
+          case (lhs, S(rhs)) => Tup(lhs :: rhs :: Nil)
+          case (lhs, N) => lhs
         }
-    ,
+    ) {
+      case (kw, Tup(lhs :: rhs :: Nil)) => Tup(Modified(kw, lhs) :: rhs :: Nil)
+      case (kw, lhs) => Modified(kw, lhs)
+    },
     ifLike(`if`),
     ifLike(`while`),
     Kw(`else`)(
@@ -333,7 +335,9 @@ class ParseRules(using State):
         exprOrBlk(ParseRule("'open' declaration")(end(()))){
           case (body, _) => Open(body)}*),
     modified(`abstract`, discardKw(`class`)(typeDeclBody(Cls))), // TODO keep kw
-    discardKw(`mut`)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)).map(Tree.Modified(`mut`, N, _)), // TODO keep kw
+    Kw(`mut`)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)) {
+      case (kw, body) => Tree.Modified(kw, body)
+    },
     Kw(`do`)(
       ParseRule(s"`do` keyword")(
         exprOrBlk(ParseRule(s"`do` body")(end(()))):

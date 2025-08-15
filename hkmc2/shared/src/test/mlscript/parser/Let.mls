@@ -174,7 +174,7 @@ let
 in x
 //│ Parsed:
 //│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
-//│ 	Modified(keyword 'in',None,Ident(x))
+//│ 	Modified(Keywrd(keyword 'in'),Ident(x))
 
 :pe
 let
@@ -188,7 +188,7 @@ in x
 //│ Parsed:
 //│ 	Error()
 //│ 	Def(Ident(x),IntLit(1))
-//│ 	Modified(keyword 'in',None,Ident(x))
+//│ 	Modified(Keywrd(keyword 'in'),Ident(x))
 
 
 let a in b

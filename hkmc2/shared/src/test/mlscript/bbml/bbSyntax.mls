@@ -5,23 +5,23 @@
 //│ Type: ⊤
 data class Foo
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,Ident(Foo),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,Ident(Foo),None))
 
 data class Bar(x: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None))
 
 data class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None))
 
 data class Baz[A]
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None))
 
 data class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None))
 
 Baz[Int]
 //│ Parsed:
@@ -29,15 +29,15 @@ Baz[Int]
 
 Baz[in Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Modified(keyword 'in',None,Ident(Int)))))
+//│ 	App(Ident(Baz),TyTup(List(Modified(Keywrd(keyword 'in'),Ident(Int)))))
 
 Baz[out Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Modified(keyword 'out',None,Ident(Int)))))
+//│ 	App(Ident(Baz),TyTup(List(Modified(Keywrd(keyword 'out'),Ident(Int)))))
 
 Baz[in Int out Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Tup(List(Modified(keyword 'in',None,Ident(Int)), Modified(keyword 'out',None,Ident(Int)))))))
+//│ 	App(Ident(Baz),TyTup(List(Tup(List(Modified(Keywrd(keyword 'in'),Ident(Int)), Modified(Keywrd(keyword 'out'),Ident(Int)))))))
 
 t.Bar#x
 //│ Parsed:
