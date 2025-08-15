@@ -130,8 +130,13 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Concatenation(left, right) =>
       error(msg"String concatenation is not supported in pattern compilation." -> pattern.toLoc)
       Never
-    case SP.Tuple(leading, spread, trailing) => Tuple(leading.map(instantiate(_)), spread.map(instantiate(_)), trailing.map(instantiate(_)))
-    case SP.Record(fields) => Record(fields.iterator.map((id, pattern) => (id, instantiate(pattern))).to(SeqMap))
+    case SP.Tuple(leading, spread) =>
+      val instantiatedSpread = spread.map:
+        case (spreadKind, middle, trailing) =>
+          (spreadKind, instantiate(middle), trailing.map(instantiate(_)))
+      Tuple(leading.map(instantiate(_)), instantiatedSpread)
+    case SP.Record(fields) => Record:
+      fields.iterator.map((id, pattern) => (id, instantiate(pattern))).to(SeqMap)
     case SP.Chain(first, second) =>
       error(msg"Pattern chaining is not supported in pattern compilation." -> pattern.toLoc)
       Never

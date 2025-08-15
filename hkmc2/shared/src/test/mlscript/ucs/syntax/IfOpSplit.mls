@@ -45,6 +45,13 @@ if 1 + 2
 //│ ║        	^^^^^^^^^^^^
 //│ ║  l.28: 	  + 4 then 0
 //│ ╙──      	^^^^^
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.26: 	if 1 + 2
+//│ ║        	       ^
+//│ ║  l.27: 	  * 3 then 0
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.28: 	  + 4 then 0
+//│ ╙──      	^^^^^
 
 if 1 + 2
   * 3 then 0
@@ -70,15 +77,20 @@ if 1 + 2
   * 3 then 0
   then 0
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.71: 	  then 0
+//│ ║  l.78: 	  then 0
 //│ ║        	  ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.70: 	  * 3 then 0
+//│ ║  l.77: 	  * 3 then 0
 //│ ╙──      	  ^
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.69: 	if 1 + 2
+//│ ║  l.76: 	if 1 + 2
 //│ ║        	       ^
-//│ ║  l.70: 	  * 3 then 0
+//│ ║  l.77: 	  * 3 then 0
+//│ ╙──      	^^^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.76: 	if 1 + 2
+//│ ║        	       ^
+//│ ║  l.77: 	  * 3 then 0
 //│ ╙──      	^^^^^^^^^^^^
 
 

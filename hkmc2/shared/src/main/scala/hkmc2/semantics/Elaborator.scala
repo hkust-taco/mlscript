@@ -271,7 +271,7 @@ import Elaborator.*
 
 class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 (using val raise: Raise, val state: State)
-extends Importer:
+extends Importer with ucs.NewDesugarer:
   import tl.*
   
   def mkLetBinding(sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
@@ -485,7 +485,7 @@ extends Importer:
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${des.prettyPrint}")
-      Term.IfLike(Keyword.`if`, des)
+      Term.OldIfLike(Keyword.`if`, des)
     case InfixApp(lhs, kw @ (Keyword.`then` | Keyword.`with`), rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -634,7 +634,10 @@ extends Importer:
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${desugared.prettyPrint}")
-      Term.IfLike(kw, desugared)
+      val ssss = this.split(split)
+      scoped("ucs:nu"):
+        log(s"Split:\n${ssss.prettyPrint}")
+      Term.OldIfLike(kw, desugared)
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(_, branches) =>
@@ -644,7 +647,7 @@ extends Importer:
         log(s"Desugared:\n${des.prettyPrint}")
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-        ), Term.IfLike(Keyword.`if`, des))
+        ), Term.OldIfLike(Keyword.`if`, des))
     case PrefixApp(Keyword.`return`, kwLoc, body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -1366,34 +1369,36 @@ extends Importer:
       Transform(pattern, term(rhs)(using termCtx))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
-      // We are accumulating three components: the leading patterns, the spread
-      // pattern, and the trailing patterns.
-      val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())
-      val (leading, spread, trailing) = ts.foldLeft(z):
-        case (acc @ (_, S(_), _), Spread(`...`, _, _)) =>
-          // Found two `...p` in the same tuple pattern. Report an error.
+      // We are accumulating two components: the leading patterns, the spred
+      // part including the trailing patterns.
+      val z = (Ls[Pattern](), N: Opt[(SpreadKind, Pattern, Ls[Pattern])])
+      val (leading, spread) = ts.foldLeft(z):
+        case (acc @ (_, S(_)), t: Spread) =>
+          // Found two `...p`s in the same tuple pattern. Report an error.
           raise(ErrorReport(msg"Multiple spread patterns are not supported." -> t.toLoc :: Nil))
           acc // Do not modify the accumulator and skip this `Spread`.
-        case ((leading, N, trailing), Spread(`...`, _, S(t))) =>
+        case ((leading, N), Spread(ellipsis, _, S(t))) =>
           // Found `...p`, elaborate `p` and assign it to the spread pattern.
-          (leading, S(go(t)), trailing)
-        case ((leading, N, trailing), Spread(`...`, _, N)) =>
+          (leading, S(SpreadKind.fromKw(ellipsis), go(t), Nil))
+        case ((leading, N), Spread(ellipsis, _, N)) =>
           // Found `...` (no following patterns), which means the spread part
           // will not be further matched. Set the spread pattern to `Wildcard`.
-          (leading, S(Wildcard()), trailing)
-        case ((leading, N, trailing), t) => 
+          (leading, S(SpreadKind.fromKw(ellipsis), Wildcard(), Nil))
+        case ((leading, N), t) => 
           // Found a tuple field while the spread pattern is not set. Add the
           // elaborated pattern to the leading patterns.
-          (go(t) :: leading, N, trailing)
-        case ((leading, spread @ S(_), trailing), t) => 
+          (go(t) :: leading, N)
+        case ((leading, S((spreadKind, spread, trailing))), t) => 
           // Found a tuple field while the spread pattern has been set. Add the
           // elaborated pattern to the trailing patterns.
-          (leading, spread, go(t) :: trailing)
-      Tuple(leading.reverse, spread, trailing.reverse)
+          (leading, S((spreadKind, spread, go(t) :: trailing)))
+      Tuple(leading.reverse, spread)
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
     def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
       val entries = ps.foldLeft(List[(Ident, Pattern)]()):
         case (acc, InfixApp(id: Ident, Keyword.`:`, p)) => (id, go(p)) :: acc
+        case (acc, InfixApp(key: StrLit, Keyword.`:`, p)) =>
+          ((Ident(key.value): Ident).withLocOf(key), go(p)) :: acc
         case (acc, Pun(false, p)) => (p, Variable(p)) :: acc
         case (acc, t) =>
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
@@ -1404,8 +1409,11 @@ extends Importer:
       case TypeDef(syntax.Pat, body, N) => L(go(body))
       case _ => R(go(t))
     def go(t: Tree): Ctxl[Pattern] = t match
+      // Annotated patterns like `@compile P`.
+      case Tree.Annotated(annotation, target) =>
+        go(target).annotate(term(annotation))
       // Brackets.
-      case Bra(BracketKind.Round, t) => go(t)
+      case Bra(BracketKind.Round | BracketKind.Curly, t) => go(t)
       // Tuple patterns like `[p1, p2, ...ps, pn]`.
       case TyTup(ps) => tuple(ps)
       case Tup(ps) => tuple(ps)
@@ -1444,6 +1452,8 @@ extends Importer:
         // `p as q` where `q` is not an identifier is elaborated into chain.
         case _: Tree => Chain(go(p), go(q))
       case Under() => Pattern.Wildcard()
+      // Singleton blocks like `{1}`.
+      case Block(p :: Nil) => go(p)
       // Record patterns like `(a: p1, b: p2, ...pn)`.
       case Block(ps) => record(ps)
       // A single pun pattern is a record pattern.

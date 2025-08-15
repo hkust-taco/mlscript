@@ -42,6 +42,9 @@ fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╔══[ERROR] Unrecognized pattern (application)
 //│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (application).
+//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 bmi of weight: 70, height: 1.75
 //│ = Some(23)
@@ -99,8 +102,8 @@ fun parseIntegerLiteral(value) = if
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
 //│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
-//│ ╙──      	                                              ^
+//│ ║  l.101: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+//│ ╙──       	                                              ^
 
 pattern IntegerLiteral =
   ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)

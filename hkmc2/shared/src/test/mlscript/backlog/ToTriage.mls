@@ -361,6 +361,12 @@ if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
+//│ ╔══[ERROR] Unrecognized pattern (spread).
+//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                          ^^^^
+//│ ╔══[ERROR] Name not found: args
+//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                                     ^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
@@ -368,13 +374,13 @@ if Foo(1, 2, 3) is Foo(...args) then args
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.369: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.375: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.375: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.381: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -408,10 +414,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.408: 	  let bar(x: Str): Str = x + x
+//│ ║  l.414: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.409: 	  bar("test")
+//│ ║  l.415: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -452,7 +458,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.453: 	data class Foo(mut x)
+//│ ║  l.459: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———

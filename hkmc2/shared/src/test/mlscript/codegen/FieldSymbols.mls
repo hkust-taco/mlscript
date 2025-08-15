@@ -78,7 +78,7 @@ case
 //│           sign = N
 //│           modulefulness = Modulefulness of N
 //│       restParam = N
-//│     body = IfLike:
+//│     body = OldIfLike:
 //│       kw = keyword 'if'
 //│       desugared = Cons:
 //│         head = Branch:

@@ -172,7 +172,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           (_output, _bindings) => alternative, // The output and bindings are discarded.
           Split.Let(outputSymbol, outputTerm, makeConsequent(() => outputSymbol.safeRef, Map.empty) ~~: alternative)
         )
-      // Because a wildcard pattern always matches, `alternative` is not used.
+      // Because a  wildcard pattern always matches, `alternative` is not used.
       case Wildcard() => (makeConsequent, _) => makeConsequent(scrutinee, Map.empty)
       case Literal(literal) => (makeConsequent, alternative) =>
         Branch(scrutinee(), FlatPattern.Lit(literal)(Nil), makeConsequent(scrutinee, Map.empty)) ~: alternative
@@ -192,7 +192,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             ),
           alternative
         )
-      case Tuple(elements, N, _) => (makeConsequent, alternative) =>
+      case Tuple(elements, N) => (makeConsequent, alternative) =>
         // Fixed-length tuple patterns are similar to constructor patterns.
         val z = (Nil: Ls[TempSymbol], makeConsequent)
         // TODO: Deduplicate the code with the `Constructor` case.
@@ -208,7 +208,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             (subScrutinee :: subScrutinees, makeThisSplit)
         // END TODO
         makeTupleBranch(scrutinee(), subScrutinees, makeChainedConsequent(scrutinee, Map.empty), alternative)
-      case Tuple(leading, S(spread), trailing) => (makeConsequent, alternative) =>
+      case Tuple(leading, S((_, spread, trailing))) => (makeConsequent, alternative) =>
         val (trailSubScrutinees, makeConsequent0) = trailing.folded((Nil, makeConsequent)):
           index => TempSymbol(N, s"lastElement$index$$")
         val spreadSubScrutinee = TempSymbol(N, "middleElements")
@@ -428,7 +428,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             alternative),
         alternative)
     // Tuples and records cannot be string prefixes.
-    case Tuple(_, _, _) => rejectPrefixSplit
+    case Tuple(_, _) => rejectPrefixSplit
     case Record(_) => rejectPrefixSplit
     case Chain(first, second) => (makeConsequent, alternative) =>
       // This case is different because the first pattern might haven
@@ -498,7 +498,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     val scrutParam = Param(FldFlags.empty, scrut, N, Modulefulness.none)
     val ps = PlainParamList(patternInputs :+ scrutParam)
     TermDefinition(Fun, sym, tsym, ps :: Nil, N, N,
-      S(Term.IfLike(Keyword.`if`, topmost)), FlowSymbol(s"‹unapply-result›"),
+      S(Term.OldIfLike(Keyword.`if`, topmost)), FlowSymbol(s"‹unapply-result›"),
       TermDefFlags.empty, Modulefulness.none, Nil)
   
   /** Translate a list of extractor/matching functions for the given pattern.
@@ -551,7 +551,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     val decl = LetDecl(fieldSymbol, Nil)
     val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
     val paramList = PlainParamList(param :: Nil)
-    val lambda = Term.Lam(paramList, Term.IfLike(Keyword.`if`, topmost))
+    val lambda = Term.Lam(paramList, Term.OldIfLike(Keyword.`if`, topmost))
     val defineVar = DefineVar(fieldSymbol, lambda)
     val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil

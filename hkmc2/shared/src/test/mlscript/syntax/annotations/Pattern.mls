@@ -39,6 +39,9 @@ fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╔══[ERROR] Name not found: name_not_found
 //│ ║  l.38: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: name_not_found
+//│ ║  l.38: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ╙──      	                      ^^^^^^^^^^^^^^
 
 pattern Box' = Box
 
@@ -47,6 +50,6 @@ fun foo(x) = if x is @compile Box' then "yes" else "no"
 :w
 fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.48: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ║  l.51: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ║        	                      ^^^^^^^^^^^^^^
 //│ ╙── Note: Patterns (like `Box'`) only support the `@compile` annotation.

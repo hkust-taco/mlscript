@@ -3,7 +3,8 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import collection.immutable.HashMap, collection.mutable.Buffer
-import syntax.Tree, Tree.Ident, Elaborator.State, Message.MessageContext, ucs.error
+import syntax.{Keyword, SpreadKind, Tree}, Tree.{Ident, StrLit}
+import Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
 import utils.{TraceLogger, tl}
 
@@ -202,9 +203,16 @@ enum Pattern extends AutoLocated:
   case Concatenation(left: Pattern, right: Pattern)
   
   /** A pattern that matches a tuple. At most one `spread` pattern is allowed.
-   *  When the `spread` pattern is absent, sub-patterns should be placed in the 
-   *  `leading` field. */
-  case Tuple(leading: Ls[Pattern], spread: Opt[Pattern], trailing: Ls[Pattern])
+    * When the `spread` pattern is absent, sub-patterns should be placed in the 
+    * `leading` field.
+    * @param leading matches a fixed number of leading elements in the tuple.
+    * @param spread matches a variable number of elements in the tuple plus
+    *               the trailing elements.
+    */
+  case Tuple(
+      leading: Ls[Pattern],
+      spread: Opt[(SpreadKind, Pattern, Ls[Pattern])],
+  )
   
   /** A pattern that matches a record consisting of a list of fields. Note that
    *  the fields are not ordered semantically. */
@@ -226,7 +234,14 @@ enum Pattern extends AutoLocated:
    */
   case Transform(pattern: Pattern, transform: Term)
   
+  case Annotated(pattern: Pattern, annotations: Vector[Term])
+  
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
+  
+  inline def annotate(annotation: Term): Pattern.Annotated = this match
+    case Annotated(pattern, annotations) =>
+      Annotated(pattern, annotations :+ annotation)
+    case _ => Annotated(this, Vector(annotation))
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
@@ -243,11 +258,12 @@ enum Pattern extends AutoLocated:
     case negation @ Negation(pattern) => pattern.variables.invalidated(Negated(negation))
     case _: (Wildcard | Literal | Range | Transform) => Variables.empty
     case Concatenation(left, right) => left.variables ++ right.variables
-    case Tuple(leading, spread, trailing) =>
-      leading.variables ++ spread.map(_.variables).getOrElse(Variables.empty) ++ trailing.variables
+    case Tuple(leading, spread) => leading.variables ++ spread.fold(Variables.empty):
+      case (_, middle, trailing) => middle.variables ++ trailing.variables
     case Record(fields) => fields.iterator.map(_._2).variables
     case alias @ Alias(pattern, _) => pattern.variables + alias
     case Chain(first, second) => first.variables ++ second.variables
+    case Annotated(pattern, _) => pattern.variables
   
   def children: Ls[Located] = this match
     case Constructor(target, patternArguments, arguments) =>
@@ -258,12 +274,14 @@ enum Pattern extends AutoLocated:
     case Literal(literal) => literal :: Nil
     case Range(lower, upper, rightInclusive) => lower :: upper :: Nil
     case Concatenation(left, right) => left :: right :: Nil
-    case Tuple(leading, spread, trailing) => leading ::: spread.toList ::: trailing
+    case Tuple(leading, spread) => leading ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle :: trailing
     case Record(fields) => fields.flatMap:
       case (name, pattern) => name :: pattern.children
     case Chain(first, second) => first :: second :: Nil
     case Alias(pattern, alias) => pattern :: alias :: Nil
     case Transform(pattern, transform) => pattern :: transform :: Nil
+    case Annotated(pattern, annotations) => pattern :: annotations.toList
   
   def subTerms: Ls[Term] = this match
     case Constructor(target, patternArguments, arguments) =>
@@ -272,12 +290,13 @@ enum Pattern extends AutoLocated:
     case Negation(pattern) => pattern.subTerms
     case _: (Wildcard | Literal | Range) => Nil
     case Concatenation(left, right) => left.subTerms ::: right.subTerms
-    case Tuple(leading, spread, trailing) => leading.flatMap(_.subTerms) :::
-      spread.fold(Nil)(_.subTerms) ::: trailing.flatMap(_.subTerms)
+    case Tuple(leading, spread) => leading.flatMap(_.subTerms) ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle.subTerms ::: trailing.flatMap(_.subTerms)
     case Record(fields) => fields.flatMap(_._2.subTerms)
     case Chain(first, second) => first.subTerms ::: second.subTerms
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, transform) => pattern.subTerms :+ transform
+    case Annotated(pattern, annotations) => pattern.subTerms ::: annotations.toList
   
   def describe: Str = this match
     case Constructor(_, _, _) => "constructor"
@@ -288,15 +307,16 @@ enum Pattern extends AutoLocated:
     case Literal(_) => "literal"
     case Range(_, _, _) => "range"
     case Concatenation(_, _) => "concatenation"
-    case Tuple(_, _, _) => "tuple"
+    case Tuple(_, _) => "tuple"
     case Record(_) => "record"
     case Chain(_, _) => "chain"
     case Alias(_, _) => "alias"
     case Transform(_, _) => "transform"
+    case Annotated(_, _) => "annotated pattern"
   
   private def showDbgWithPar =
     val addPar = this match
-      case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation) => false
+      case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation | Annotated) => false
       case Alias(Wildcard(), _) => false
       case _: (Alias | Composition | Transform | Range | Concatenation | Chain) => true
     if addPar then s"(${showDbg})" else showDbg
@@ -318,12 +338,15 @@ enum Pattern extends AutoLocated:
     case Range(lower, upper, rightInclusive) =>
       s"${lower.idStr} ${if rightInclusive then "to" else "until"} ${upper.idStr}"
     case Concatenation(left, right) => s"${left.showDbg} ~ ${right.showDbg}"
-    case Tuple(leading, spread, trailing) =>
-      (leading.iterator.map(_.showDbg) ++
-        spread.iterator.map(s => "..." + s.showDbg) ++
-        trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
+    case Tuple(leading, spread) =>
+      (leading.iterator.map(_.showDbg) ++ spread.fold(Iterator.empty):
+        case (spreadKind, middle, trailing) =>
+          Iterator.single(spreadKind.toString + middle.showDbg) ++
+            trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
     case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
     case Transform(pattern, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
+    case Annotated(pattern, annotations) =>
+      annotations.iterator.map(_.showDbg).mkString("@", " @", " ") + pattern.showDbgWithPar

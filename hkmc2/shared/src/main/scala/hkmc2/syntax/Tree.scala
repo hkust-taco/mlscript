@@ -42,6 +42,10 @@ sealed trait Literal extends AutoLocated:
 
 enum SpreadKind:
   case Eager, Lazy
+  override def toString(): String = this match
+    case Eager => "..."
+    case Lazy => ".."
+
 object SpreadKind:
   def fromKw(kw: Keyword.Ellipsis) = kw match
     case Keyword.`..` => SpreadKind.Lazy

@@ -6,7 +6,7 @@ package ups
 import mlscript.utils.*, shorthands.*
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{DecLit, Ident, IntLit, StrLit, UnitLit}
-import Term.{Blk, IfLike, Rcd, Ref, SynthSel}
+import Term.{Blk, OldIfLike, Rcd, Ref, SynthSel}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
@@ -119,7 +119,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       Split.Else(multiMatcherBranch(specialized, scrutinee))
     // Make a split that tries all branches in order.
     val topmostSplit = branches.foldRight(default)(_ ~: _)
-    val bodyTerm = IfLike(Keyword.`if`, topmostSplit)
+    val bodyTerm = OldIfLike(Keyword.`if`, topmostSplit)
     log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
   
@@ -157,7 +157,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val consequent = Split.Else:
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
         val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
-        IfLike(Keyword.`if`, branch ~: Split.Else(emptyRecordSymbol.safeRef))
+        OldIfLike(Keyword.`if`, branch ~: Split.Else(emptyRecordSymbol.safeRef))
       LetDecl(subScrutineeVar, Nil) :: DefineVar(subScrutineeVar, conditional) :: Nil
     .toList
     // If there are no bindings, we do not need to create the empty record.
@@ -179,7 +179,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           // Here the string "topmost" is just to indicate the failure is
           // passed from the topmost split for the purpose of debugging.
           alternative = Split.Else(makeMatchFailure(str("topmost"))))
-        val test = IfLike(Keyword.`if`, split)
+        val test = OldIfLike(Keyword.`if`, split)
         // The corresponding record field should just take the result of the split.
         val field = RcdField(str(label.asFieldName), symbol.safeRef)
         (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, field :: fields)
@@ -291,7 +291,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
                 )
               ) ~: alternative)): MakeSplit
       makeMakeSplit(Nil, Nil)
-    case Tuple(leading, spread, trailing) => (_, _) => 
+    case Tuple(leading, spread) => (_, _) => 
       // TODO: Think about how to handle the spread pattern.
       error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
       Split.Else(makeMatchFailure(str("unsupported tuple pattern")))

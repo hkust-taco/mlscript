@@ -8,13 +8,16 @@ if x else z
 //│ ╔══[ERROR] Unrecognized term split (identifier).
 //│ ║  l.4: 	if x else z
 //│ ╙──     	   ^
+//│ ╔══[ERROR] Name not found: z
+//│ ║  l.4: 	if x else z
+//│ ╙──     	          ^
 
 :e
 fun f(x, z) =
   if x
     else z
 //│ ╔══[ERROR] Unrecognized term split (identifier).
-//│ ║  l.14: 	  if x
+//│ ║  l.17: 	  if x
 //│ ╙──      	     ^
 
 

@@ -328,7 +328,7 @@ class Resolver(tl: TraceLogger)
         case Term.Rcd(mut, stats) =>
           traverseStmts(stats)
         
-        case t: Term.IfLike =>
+        case t: Term.OldIfLike =>
           def split(s: Split): Unit = s match
             case Split.Cons(head, tail) =>
               traverse(head.scrutinee, expect = NonModule(N))
@@ -342,6 +342,21 @@ class Resolver(tl: TraceLogger)
               traverse(default, expect = Any)
             case Split.End =>
           split(t.desugared)
+        
+        case t: Term.IfLike =>
+          def split(s: SimpleSplit): Unit = s match
+            case SimpleSplit.Cons(head: SimpleSplit.Head.Match, tail) =>
+              traverse(head.scrutinee, expect = NonModule(N))
+              head.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
+              split(head.consequent)
+              split(tail)
+            case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, term), tail) =>
+              traverse(term, expect = NonModule(N))
+              split(tail)
+            case SimpleSplit.Else(default) =>
+              traverse(default, expect = Any)
+            case SimpleSplit.End =>
+          split(t.split)
         
         case Term.New(cls, argss, rft) =>
           traverse(cls, expect = Any)
@@ -889,7 +904,7 @@ object ModuleChecker:
     
     t match
       case Term.Blk(_, res) => evalsToModule(res)
-      case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_))
+      case Term.OldIfLike(`if`, split) => split.results.exists(evalsToModule(_))
       case t => t.resolvedSymbol.exists(checkSym)
 
 extension [T](xs: Ls[Opt[T]])

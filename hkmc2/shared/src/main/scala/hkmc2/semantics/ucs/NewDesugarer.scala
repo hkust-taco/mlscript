@@ -1,0 +1,185 @@
+package hkmc2
+package semantics
+package ucs
+
+import mlscript.utils.*, shorthands.*
+import syntax.{Keyword, Tree}, Tree.*
+import Keyword.{`and`, `do`, `else`, `if`, `is`, `let`, `or`, `then`}
+import Elaborator.{Ctx, Ctxl, ctx}, SimpleSplit.*
+import Desugarer.{unapply}, Message.MessageContext
+import utils.TL
+
+object NewDesugarer:
+  /** A scrutinee is a function that returns a reference to the symbol. */
+  type Reference = () => Term.Ref
+
+import NewDesugarer.*
+
+/** TODO: Remove after we remove the `Desugarer`. */
+trait NewDesugarer:
+  self: Elaborator =>
+    
+  private given TL = tl
+  
+  object `~>`:
+    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
+      case lhs `and` rhs => S((lhs, L(rhs)))
+      case lhs `then` rhs => S((lhs, R(rhs)))
+      case lhs `do` rhs => S((lhs, R(rhs)))
+      case _ => N
+  
+  private val reject = (mkAlt: Ctx => SimpleSplit) => End
+  
+  /** Transform trees into a UCS split. */
+  protected def split(t: Tree): Ctxl[SimpleSplit] = t match
+    case block: Block => termSplit(block.desugStmts, identity)
+    case other: Tree => termSplit(Ls(other), identity)
+  
+  /** Desugar a list of trees as a term split. The returned function takes a
+    * function, which takes a `Ctx` and returns a `SimpleSplit` representing
+    * the _alternative_ split, and returns a `SimpleSplit` representing the
+    * split of the given trees. */
+  protected def termSplit(ts: Ls[Tree], mk: Term => Term): Ctxl[SimpleSplit] =
+    val (_, splits) = ts.foldLeft((ctx, Ls[SimpleSplit]())):
+      case ((curCtx, splits), t) =>
+        termBranch(t, mk)(using curCtx).mapSecond(_ :: splits)
+    concatenate(splits)
+  
+  private def concatenate(splits: Ls[SimpleSplit]): SimpleSplit =
+    splits.reduceOption:
+      case (inner, outer) => outer ~~: inner
+    .getOrElse(End)
+  
+  /** Handle the common cases of branches in splits. */
+  protected def branch(using Ctx): PartialFunction[Tree, (Ctx, SimpleSplit)] =
+    // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
+    case LetLike(`let`, ident: Ident, S(rhsTree), N) =>
+      val symbol = VarSymbol(ident)
+      val head = Head.Let(symbol, term(rhsTree)) 
+      ((ctx + (ident.name -> symbol)), head ~: End)
+    // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
+    case PrefixApp(`do`, _, rhsTree) =>
+      val symbol = TempSymbol(N, "unused")
+      (ctx, Head.Let(symbol, term(rhsTree)) ~: End)
+    // Although the `else`-clause marks the end of the split, we cannot
+    // stop and still have to elaborate the remaining trees.
+    case PrefixApp(`else`, _, elseTree) => (ctx, Else(term(elseTree)))
+  
+  protected def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
+    val z = (ctx, Ls[(Term, Pattern)]())
+    // Elaborate the term and the pattern in each match.
+    val (innerCtx, matches) = matchesTree.foldLeft(z):
+      case ((curCtx, matches), (scrutineeTree, patternTree)) =>
+        val scrutinee = term(scrutineeTree)(using curCtx)
+        val pattern = self.pattern(patternTree)(using curCtx)
+        val resCtx = curCtx ++ pattern.variables.allocate
+        (resCtx, (scrutinee, pattern) :: matches)
+    // As `matches` is reversed, we should process it from the left.
+    val split = matches.foldLeft(consequent(using innerCtx)):
+      case (innerSplit, (scrutinee, pattern)) =>
+        scrutinee.reference: scrutineeRef =>
+          Head.Match(scrutineeRef(), pattern, innerSplit) ~: End
+    split
+  
+  protected def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
+    case block: Block => (ctx, termSplit(block.desugStmts, mk))
+    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs)))
+    // Several matches followed by `and`, `do`, or `then`.
+    case matchesTree ~> consequent =>
+      val split = expandMatches(disaggregate(matchesTree)):
+        consequent match
+          case L(tree) => termSplit(Ls(tree), mk)
+          case R(tree) => Else(term(tree))
+      (ctx, split)
+    // Handle splits on binary operators.
+    case OpApp(lhs, ident: Ident, rhss) =>
+      val op = term(ident)
+      val split = term(lhs).reference: lhs =>
+        val mk2 = (rhs: Term) =>
+          val args = Term.Tup(PlainFld(lhs()) :: PlainFld(rhs) :: Nil)(DummyTup)
+          Term.App(op, args)(Tree.DummyApp, N, FlowSymbol("‹operator-split›"))
+        termSplit(rhss, mk2 andThen mk)
+      (ctx, split)
+    case OpSplit(lhs, rhss) =>
+      val split = mk(term(lhs)).reference: lhs =>
+        val (_, splits) = rhss.foldLeft((ctx, Ls[SimpleSplit]())):
+          case ((curCtx, splits), t) =>
+            operatorBranch(lhs, t)(using curCtx).mapSecond(_ :: splits)
+        concatenate(splits)
+      (ctx, split)
+    // Unrecognized term split.
+    case _ =>
+      // error(msg"Unrecognized term split (${t.describe})" -> t.toLoc)
+      (ctx, Else(Term.Error))
+  
+  protected def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =
+    branch.appOrElse(rhs): rhsTree => 
+      termBranch(rhsTree.splitOn(Trm(scrutinee())), identity)
+  
+  private def patternBranch(scrutinee: Reference, t: Tree): Ctxl[SimpleSplit] = t match
+    case block: Block =>
+      val (_, splits) = block.desugStmts.foldLeft((ctx, Ls[SimpleSplit]())):
+        case ((curCtx, splits), t) =>
+          branch(using curCtx).lift(t).getOrElse:
+            (curCtx, patternBranch(scrutinee, t)(using curCtx))
+          .mapSecond(_ :: splits)
+      concatenate(splits)
+    case patternAndMatches ~> consequentTree =>
+      val (firstPatternTree, _) :: matches = disaggregate(patternAndMatches)
+      val firstPattern = self.pattern(firstPatternTree)
+      (ctx ++ firstPattern.variables.allocate).givenIn:
+        val split = expandMatches(matches):
+          consequentTree match
+            case L(tree) =>
+              termSplit(Ls(tree), identity)
+            case R(tree) => Else(term(tree))
+        Head.Match(scrutinee(), firstPattern, split) ~: End
+    case _ =>
+      // error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
+      Else(Term.Error)
+  
+  extension (term: Term)
+    inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
+      term match
+        // If the term is already a reference, we can re-reference its symbol.
+        case Term.Ref(symbol) => continuation(() => symbol.ref())
+        // Otherwise, we need to create a temporary symbol holding the term.
+        case term: Term =>
+          val symbol = TempSymbol(N, "scrut")
+          Head.Let(symbol, term) ~: continuation(() => symbol.ref())
+  
+  type TT = (Tree, Tree)
+  
+  /** Decompose a `Tree` of conjunct matches. The tree is from the same line in
+   *  the source code and followed by a `then`, or `and` with a continued line.
+   *  A formal definition of the conjunction is:
+   *  
+   *  ```bnf
+   *  conjunction ::= conjunction `and` conjunction  # conjunction
+   *                | term `is` pattern              # pattern matching
+   *                | term                           # Boolean condition
+   *  ```
+   * 
+   *  Each match is represented by a pair of a _coda_ and a _pattern_ that is
+   *  yet to be elaborated. For boolean conditions, the pattern is a `BoolLit`.
+   * 
+   *  This function does not invoke elaboration and the implementation utilizes
+   *  functional lists to avoid calling the `reverse` method on the output,
+   *  which returns type `List[T]` instead of `::[T]`. See paper _A Novel
+   *  Representation of Lists and Its Application to the Function_ for details.
+   * 
+   *  @param tree the tree to desugar
+   *  @return a non-empty list of scrutinee and pattern pairs represented in
+   *          type `::[T]` (instead of `List[T]`) so that the head element
+   *          can be retrieved in a type-safe manner
+   */
+  def disaggregate(tree: Tree): ::[TT] =
+    def go(tree: Tree, acc: TT => ::[TT]): () => ::[TT] = tree match
+      case lhs `and` rhs  => go(lhs, ::(_, go(rhs, acc)()))
+      case lhs `or` rhs   =>
+        error(msg"Logical `or` is not yet supported." -> tree.toLoc)
+        go(lhs, ::(_, go(rhs, acc)())) // FIXME: this is currently copy-pasted from the `and` case
+      case scrut `is` pat => () => acc((scrut, pat))
+      case test           => () => acc((test, Tree.BoolLit(true)))
+    go(tree, ::(_, Nil))()
+

@@ -138,6 +138,13 @@ if 1 + 2
 //│ ║         	^^^^^^^^^^^^
 //│ ║  l.121: 	  + 4 then 1
 //│ ╙──       	^^^^^
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.119: 	if 1 + 2
+//│ ║         	       ^
+//│ ║  l.120: 	  * 3 then 0
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.121: 	  + 4 then 1
+//│ ╙──       	^^^^^
 
 :pt
 :re
