@@ -60,7 +60,8 @@ sealed trait ResolvableImpl:
     case S(N) => t
     case N => lastWords(s"missing expansion for term ${t}")
 
-  def expand(expansion: Opt[Term => Term]): this.type =
+  /** This method is only supposed to be called by Resolver. */
+  private[semantics] def expand(expansion: Opt[Term => Term]): this.type =
     val newExpansion = expansion.map(_(t.duplicate.resolve))
     if this.hasExpansion && this.expansion.get != newExpansion then lastWords:
       s"the expansion for term ${t.showDbg} " +
