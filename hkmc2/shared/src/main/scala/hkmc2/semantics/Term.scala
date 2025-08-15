@@ -44,12 +44,14 @@ sealed trait ResolvableImpl:
    */
   private var expansion: Opt[Opt[Term]] = N
 
-  def duplicate: Resolvable = t match
-    case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym)
-    case t: Term.App => t.copy()(t.tree, t.sym, t.resSym)
-    case t: Term.TyApp => t.copy()(t.sym)
-    case t: Term.Sel => t.copy()(t.sym)
-    case t: Term.SynthSel => t.copy()(t.sym)
+  def duplicate: Resolvable =
+    t.match
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym)
+      case t: Term.App => t.copy()(t.tree, t.sym, t.resSym)
+      case t: Term.TyApp => t.copy()(t.sym)
+      case t: Term.Sel => t.copy()(t.sym)
+      case t: Term.SynthSel => t.copy()(t.sym)
+    .withLocOf(t)
   
   override def show: Str = expansion match
     case S(S(expansion)) => t.showDbg + "{~>" + expansion.show + "}"
