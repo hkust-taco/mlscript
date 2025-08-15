@@ -52,7 +52,7 @@ sealed trait ResolvableImpl:
     case t: Term.SynthSel => t.copy()(t.sym)
   
   override def show: Str = expansion match
-    case S(S(expansion)) => expansion.show
+    case S(S(expansion)) => t.showDbg + "{~>" + expansion.show + "}"
     case _ => t.showDbg
   
   def instantiate = expansion match
