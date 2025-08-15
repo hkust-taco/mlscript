@@ -88,7 +88,7 @@ module Str with
   
   fun take(string, n) = string.slice(0, n)
 
-  fun drop(string, n) = string.slice(n)
+  fun leave(string, n) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render

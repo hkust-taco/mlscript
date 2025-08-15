@@ -367,9 +367,7 @@ str
 //│     tmp9 = runtime.topLevelEffect(tmp9, false);
 //│   }
 //│   tmp10 = tmp9;
-//│ } else {
-//│   tmp10 = runtime.Unit;
-//│ }
+//│ } else { tmp10 = runtime.Unit; }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"

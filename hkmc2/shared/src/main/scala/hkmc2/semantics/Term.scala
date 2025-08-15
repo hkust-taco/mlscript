@@ -159,6 +159,7 @@ enum Term extends Statement:
   case Region(name: VarSymbol, body: Term)
   case RegRef(reg: Term, value: Term)
   case Assgn(lhs: Term, rhs: Term)
+  case Drop(trm: Term)
   case Deref(ref: Term)
   case SetRef(ref: Term, value: Term)
   case Ret(result: Term)
@@ -239,6 +240,7 @@ enum Term extends Statement:
     case RegRef(reg, value) => "reference creation"
     case Assgn(lhs, rhs) => "assignment"
     case SetRef(ref, value) => "mutable reference assignment"
+    case Drop(ref) => "drop"
     case Deref(ref) => "dereference"
     case Throw(e) => "throw"
     case Annotated(annotation, target) => "annotation"
@@ -297,6 +299,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case RegRef(reg, value) => reg :: value :: Nil
     case Assgn(lhs, rhs) => lhs :: rhs :: Nil
     case SetRef(lhs, rhs) => lhs :: rhs :: Nil
+    case Drop(term) => term :: Nil
     case Deref(term) => term :: Nil
     case TermDefinition(_, _, _, pss, tps, sign, body, res, _, _, annotations) =>
       pss.toList.flatMap(_.subTerms) ::: tps.getOrElse(Nil).flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
@@ -382,6 +385,7 @@ sealed trait Statement extends AutoLocated with ProductWithExtraInfo:
     case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
     case Assgn(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
     case SetRef(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
+    case Drop(term) => s"drop $term"
     case Deref(term) => s"!$term"
     case Neg(ty) => s"~${ty.showDbg}"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"

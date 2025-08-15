@@ -388,13 +388,9 @@ f(2)
 //│   }
 //│ };
 //│ h3 = function h(arg) {
-//│   return (n) => {
-//│     return h$3(arg, n)
-//│   }
+//│   return (n) => { return h$3(arg, n) }
 //│ };
-//│ f10 = function f(arg) {
-//│   return h$3(arg, 5)
-//│ };
+//│ f10 = function f(arg) { return h$3(arg, 5) };
 //│ f10(2)
 //│ = 2
 
@@ -418,12 +414,8 @@ g()
 //│ f14 = function f() {
 //│   return 3
 //│ };
-//│ h4 = function h() {
-//│   return 3
-//│ };
-//│ g12 = function g() {
-//│   return h4()
-//│ };
+//│ h4 = function h() { return 3 };
+//│ g12 = function g() { return h4() };
 //│ g12()
 //│ = 3
 
@@ -543,10 +535,7 @@ fun f(x, cond) =
 //│   x1 = 2;
 //│   if (cond === true) {
 //│     return runtime.safeCall(lambda(x1))
-//│   } else {
-//│     x1 = 3;
-//│     return runtime.safeCall(lambda1(x1))
-//│   }
+//│   } else { x1 = 3; return runtime.safeCall(lambda1(x1)) }
 //│ };
 
 :sjs
@@ -628,9 +617,5 @@ fun f(es, vs) =
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ };
-//│ f23 = function f(es, vs) {
-//│   let v$_;
-//│   v$_ = es;
-//│   return A$(false, v$_)
-//│ };
+//│ f23 = function f(es, vs) { let v$_; v$_ = es; return A$(false, v$_) };
 

@@ -58,7 +58,7 @@ trait TermSynthesizer(using Ctx, State):
   protected lazy val stringStartsWith = sel(sel(runtimeRef, "Str"), "startsWith")
   protected lazy val stringGet = sel(sel(runtimeRef, "Str"), "get")
   protected lazy val stringTake = sel(sel(runtimeRef, "Str"), "take")
-  protected lazy val stringDrop = sel(sel(runtimeRef, "Str"), "drop")
+  protected lazy val stringLeave = sel(sel(runtimeRef, "Str"), "leave")
 
   /** Make a term that looks like `runtime.Tuple.get(t, i)`. */
   protected final def callTupleGet(t: Term, i: Int, label: Str): Term =
@@ -86,7 +86,7 @@ trait TermSynthesizer(using Ctx, State):
   
   /** Make a term that looks like `runtime.Str.drop(t, n)`. */
   protected final def callStringDrop(t: Term.Ref, n: Int, label: Str) =
-    app(stringDrop, tup(fld(t), fld(int(n))), label)
+    app(stringLeave, tup(fld(t), fld(int(n))), label)
 
   protected final def tempLet(dbgName: Str, term: Term)(inner: TempSymbol => Split): Split =
     val s = TempSymbol(N, dbgName)

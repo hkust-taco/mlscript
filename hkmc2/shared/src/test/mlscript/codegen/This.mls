@@ -50,7 +50,10 @@ module Test with
 //│     return test1(x)
 //│   } 
 //│   static test2(x1) {
-//│     return globalThis.Object.freeze([ Test.a, x1 ])
+//│     return globalThis.Object.freeze([
+//│       Test.a,
+//│       x1
+//│     ])
 //│   }
 //│   static toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["module", "Test"]; 

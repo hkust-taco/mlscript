@@ -19,9 +19,7 @@ x
 //│     tmp2 = runtime.topLevelEffect(tmp2, false);
 //│   }
 //│   tmp = tmp2;
-//│ } finally {
-//│   x = old;
-//│ }
+//│ } finally { x = old; }
 //│ x
 //│ > 2
 //│ = 1

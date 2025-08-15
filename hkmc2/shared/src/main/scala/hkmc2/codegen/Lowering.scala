@@ -666,6 +666,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case RegRef(reg, value) =>
       plainArgs(reg :: value :: Nil): args =>
         k(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Ref"))(N), args))
+    case Drop(ref) =>
+      subTerm(ref): _ =>
+        k(unit)
     case Deref(ref) =>
       subTerm(ref): r =>
         k(Select(r, Tree.Ident("value"))(N))

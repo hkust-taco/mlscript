@@ -82,13 +82,7 @@ fun foo() =
   bar
 //│ JS (unsanitized):
 //│ let bar3, foo3;
-//│ bar3 = function bar() {
-//│   let x;
-//│   x = undefined;
-//│   return x
-//│ };
-//│ foo3 = function foo() {
-//│   return bar3
-//│ };
+//│ bar3 = function bar() { let x; x = undefined; return x };
+//│ foo3 = function foo() { return bar3 };
 
 

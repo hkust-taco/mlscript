@@ -1,0 +1,41 @@
+:js
+
+:global
+:sjs
+
+
+{ a: 1 }
+//│ JS (unsanitized):
+//│ let a; a = 1; globalThis.Object.freeze({ a: a })
+//│ = {a: 1}
+
+{ "a": 1 }
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze({ a: 1 })
+//│ = {a: 1}
+
+:sjs
+{ " ": 1 }
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze({ " ": 1 })
+//│ = {" ": 1}
+
+:sjs
+{ 0: 1 }
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze({ 0: 1 })
+//│ = {"0": 1}
+
+:sjs
+{ (0): 1 }
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze({ 0: 1 })
+//│ = {"0": 1}
+
+:sjs
+{ (id(0)): 1 }
+//│ JS (unsanitized):
+//│ let tmp; tmp = Predef.id(0); globalThis.Object.freeze({ [tmp]: 1 })
+//│ = {"0": 1}
+
+

@@ -53,7 +53,7 @@ object Foo with
 //│   constructor() {
 //│     this.self = Foo9;
 //│     Object.defineProperty(this, "class", {
-//│     value: Foo8
+//│       value: Foo8
 //│     })
 //│   }
 //│   toString() { return runtime.render(this); }

@@ -8,20 +8,12 @@ fun f() =
   console.log("ok"), 42
 //│ JS (unsanitized):
 //│ let f;
-//│ f = function f() {
-//│   let tmp;
-//│   tmp = runtime.safeCall(globalThis.console.log("ok"));
-//│   return 42
-//│ };
+//│ f = function f() { let tmp; tmp = runtime.safeCall(globalThis.console.log("ok")); return 42 };
 
 fun f() = { console.log("ok"), 42 }
 //│ JS (unsanitized):
 //│ let f1;
-//│ f1 = function f() {
-//│   let tmp;
-//│   tmp = runtime.safeCall(globalThis.console.log("ok"));
-//│   return 42
-//│ };
+//│ f1 = function f() { let tmp; tmp = runtime.safeCall(globalThis.console.log("ok")); return 42 };
 
 fun f() = console.log("ok"), 42
 //│ JS (unsanitized):

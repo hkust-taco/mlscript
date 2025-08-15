@@ -25,21 +25,15 @@ true and test(42)
 //│ scrut6 = true;
 //│ if (scrut6 === true) {
 //│   scrut7 = test(42);
-//│   if (scrut7 === true) {
-//│     true
-//│   } else {
-//│     false
-//│   }
-//│ } else {
-//│   false
-//│ }
+//│   if (scrut7 === true) { true } else { false }
+//│ } else { false }
 //│ > 42
 //│ = false
 
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.40: 	true or test(42)
+//│ ║  l.34: 	true or test(42)
 //│ ╙──      	        ^^^^^^^^
 //│ > 42
 //│ = false

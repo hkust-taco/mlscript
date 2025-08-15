@@ -1,0 +1,78 @@
+:js
+:sjs
+
+//│ JS (unsanitized):
+//│ import Predef from "./../../mlscript-compile/Predef.mjs"; 
+
+
+let discard = drop _
+//│ JS (unsanitized):
+//│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
+//│ discard = fun discard
+
+
+// * Same code, but the latter occurrence is broken because of the slightly wider gensym'd idents
+
+discard of { a: 0, b: 11111 }
+//│ JS (unsanitized):
+//│ let a, b; a = 0; b = 11111; runtime.safeCall(discard(globalThis.Object.freeze({ a: a, b: b })))
+
+discard of { a: 0, b: 11111 }
+//│ JS (unsanitized):
+//│ let a1, b1;
+//│ a1 = 0;
+//│ b1 = 11111;
+//│ runtime.safeCall(discard(globalThis.Object.freeze({ a: a1, b: b1 })))
+
+
+discard of { aaaa: 1 }
+//│ JS (unsanitized):
+//│ let aaaa; aaaa = 1; runtime.safeCall(discard(globalThis.Object.freeze({ aaaa: aaaa })))
+
+discard of { aaaaaaaaa: 1, bbbb: 2 }
+//│ JS (unsanitized):
+//│ let aaaaaaaaa, bbbb;
+//│ aaaaaaaaa = 1;
+//│ bbbb = 2;
+//│ runtime.safeCall(discard(globalThis.Object.freeze({ aaaaaaaaa: aaaaaaaaa, bbbb: bbbb })))
+
+discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
+//│ JS (unsanitized):
+//│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd;
+//│ aaaaaaaaa1 = 1;
+//│ bbbbbbbb = 2;
+//│ ccccccccc = 3;
+//│ dddddddddd = 4;
+//│ runtime.safeCall(discard(globalThis.Object.freeze({
+//│   aaaaaaaaa: aaaaaaaaa1,
+//│   bbbbbbbb: bbbbbbbb,
+//│   ccccccccc: ccccccccc,
+//│   dddddddddd: dddddddddd
+//│ })))
+
+
+discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ]
+//│ JS (unsanitized):
+//│ runtime.safeCall(discard(globalThis.Object.freeze([ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ])))
+
+discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]
+//│ JS (unsanitized):
+//│ runtime.safeCall(discard(globalThis.Object.freeze([
+//│   "aaaaaaaaaaaaaaa",
+//│   "bbbbbbbbbbbbbbbb",
+//│   "ccccccccccccccccc",
+//│   "dddddddddddddddddd"
+//│ ])))
+
+discard of [[ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]]
+//│ JS (unsanitized):
+//│ runtime.safeCall(discard(globalThis.Object.freeze([
+//│   globalThis.Object.freeze([
+//│     "aaaaaaaaaaaaaaa",
+//│     "bbbbbbbbbbbbbbbb",
+//│     "ccccccccccccccccc",
+//│     "dddddddddddddddddd"
+//│   ])
+//│ ])))
+
+

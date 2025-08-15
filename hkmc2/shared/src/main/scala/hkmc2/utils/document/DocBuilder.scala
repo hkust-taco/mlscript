@@ -57,7 +57,7 @@ case class DocBuilder(NEST_COUNT: Int = DEFAULT_NEST_COUNT) {
   /** Inserts curly braces around documents appended by the function passed in argument, after appending document `pre` */
   def bracesAfter(pre: Document) = {
     this += pre :: " "
-    braces _
+    braces
   }
 
   /** Inserts a line comment */

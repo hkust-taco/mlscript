@@ -22,11 +22,7 @@ Foo is Foo
 //│ JS (unsanitized):
 //│ let scrut1;
 //│ scrut1 = globalThis.Object.freeze(new Foo1());
-//│ if (scrut1 instanceof Foo1) {
-//│   true
-//│ } else {
-//│   false
-//│ }
+//│ if (scrut1 instanceof Foo1) { true } else { false }
 //│ = true
 
 new Foo
@@ -204,10 +200,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.203: 	  val x = 1
+//│ ║  l.199: 	  val x = 1
 //│ ║         	      ^^^^^
 //│ ╟── defined here
-//│ ║  l.204: 	  val x = 2
+//│ ║  l.200: 	  val x = 2
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -225,10 +221,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.226: 	  let x = 2
+//│ ║  l.222: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.225: 	  val x = 1
+//│ ║  l.221: 	  val x = 1
 //│ ╙──       	      ^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -252,7 +248,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.253: 	class Foo with val x = 1
+//│ ║  l.249: 	class Foo with val x = 1
 //│ ╙──       	                   ^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;

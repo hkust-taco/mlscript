@@ -55,7 +55,7 @@ fun code(ls) = foldl of
 fun collect(n, xs) = if
   n === 0 then Nil
   xs is Nil then Nil
-  else take(n, xs) :: collect(n, drop(n, xs))
+  else take(n, xs) :: collect(n, leave(n, xs))
 
 fun size(n) = intDiv(listLen(string_of_z(n)) * 47, 100)
 

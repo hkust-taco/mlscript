@@ -61,9 +61,7 @@ fun foo() =
 //│       tmp2 = x + 1;
 //│       x = tmp2;
 //│       return runtime.safeCall(lambda2(x))
-//│     } else {
-//│       tmp3 = runtime.Unit;
-//│     }
+//│     } else { tmp3 = runtime.Unit; }
 //│     break;
 //│   }
 //│   return tmp3

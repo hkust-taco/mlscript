@@ -137,11 +137,7 @@ if foo is Foo then 1 else 0
 //│ let foo1, tmp1;
 //│ tmp1 = globalThis.Object.freeze(new Foo3.class());
 //│ foo1 = tmp1;
-//│ if (foo1 instanceof Foo3.class) {
-//│   1
-//│ } else {
-//│   0
-//│ }
+//│ if (foo1 instanceof Foo3.class) { 1 } else { 0 }
 //│ = 1
 //│ foo = Foo()
 //│ Type: Int

@@ -486,7 +486,7 @@ extends Importer:
       scoped("ucs:desugared"):
         log(s"Desugared:\n${des.prettyPrint}")
       Term.IfLike(Keyword.`if`, des)
-    case InfixApp(lhs, kw @ (Keyword.`then` | Keyword.`with`), rhs) =>
+    case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
       Term.Error
@@ -667,6 +667,8 @@ extends Importer:
       Term.Throw(subterm(body))
     case PrefixApp(Keyword.`do`, kwLoc, body) =>
       Blk(subterm(body) :: Nil, unit)
+    case PrefixApp(Keyword.`drop`, kwLoc, body) =>
+      Term.Drop(subterm(body))
     case Region(id: Ident, body) =>
       val sym = VarSymbol(id)
       given Ctx = ctx + (id.name -> sym)

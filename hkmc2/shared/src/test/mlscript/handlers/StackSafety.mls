@@ -76,9 +76,7 @@ hi(0)
 //│   return hi(0)
 //│ });
 //│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
-//│ if (res instanceof runtime.EffectSig.class) {
-//│   res = runtime.topLevelEffect(res, false);
-//│ }
+//│ if (res instanceof runtime.EffectSig.class) { res = runtime.topLevelEffect(res, false); }
 //│ res
 //│ = 0
 
@@ -169,9 +167,7 @@ sum(10000)
 //│   return sum1(10000)
 //│ });
 //│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (res1 instanceof runtime.EffectSig.class) {
-//│   res1 = runtime.topLevelEffect(res1, false);
-//│ }
+//│ if (res1 instanceof runtime.EffectSig.class) { res1 = runtime.topLevelEffect(res1, false); }
 //│ res1
 //│ = 50005000
 
@@ -298,11 +294,7 @@ fun max(a, b) = if a < b then b else a
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
-//│   if (scrut === true) {
-//│     return b
-//│   } else {
-//│     return a
-//│   }
+//│   if (scrut === true) { return b } else { return a }
 //│ };
 
 

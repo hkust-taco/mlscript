@@ -8,11 +8,7 @@ fun foo() = if false do foo()
 //│ foo = function foo() {
 //│   let scrut;
 //│   scrut = false;
-//│   if (scrut === true) {
-//│     return foo()
-//│   } else {
-//│     return runtime.Unit
-//│   }
+//│   if (scrut === true) { return foo() } else { return runtime.Unit }
 //│ };
 
 :sjs
@@ -72,10 +68,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.72: 	let foo = 1
+//│ ║  l.68: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.73: 	fun foo(x) = foo
+//│ ║  l.69: 	fun foo(x) = foo
 //│ ╙──      	    ^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;

@@ -13,7 +13,7 @@ let Predef1;
       constructor() {
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
         Object.defineProperty(this, "class", {
-        value: Symbols
+          value: Symbols
         })
       }
       toString() { return runtime.render(this); }

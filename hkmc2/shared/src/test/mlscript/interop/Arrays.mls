@@ -14,9 +14,7 @@ arr.map(_ === false)
 arr.map((e, ...) => e === false)
 //│ JS (unsanitized):
 //│ let lambda1;
-//│ lambda1 = (undefined, function (e, ..._) {
-//│   return e === false
-//│ });
+//│ lambda1 = (undefined, function (e, ..._) { return e === false });
 //│ runtime.safeCall(arr.map(lambda1))
 //│ = [false, true]
 
@@ -24,9 +22,7 @@ arr.map((e, ...) => e === false)
 arr.map((_, ...) => 1)
 //│ JS (unsanitized):
 //│ let lambda2;
-//│ lambda2 = (undefined, function (_, ..._1) {
-//│   return 1
-//│ });
+//│ lambda2 = (undefined, function (_, ..._1) { return 1 });
 //│ runtime.safeCall(arr.map(lambda2))
 //│ = [1, 1]
 
@@ -62,14 +58,14 @@ Array(1)
 :e
 Array()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.63: 	Array()
+//│ ║  l.59: 	Array()
 //│ ╙──      	     ^^
 //│ = []
 
 :e
 Array(1, 2, 3)
 //│ ╔══[ERROR] Expected 1 arguments, got 3
-//│ ║  l.70: 	Array(1, 2, 3)
+//│ ║  l.66: 	Array(1, 2, 3)
 //│ ╙──      	     ^^^^^^^^^
 //│ = [1, 2, 3]
 

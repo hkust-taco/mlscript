@@ -59,10 +59,10 @@ print of Tuple.get([1, 2, 3, 4], -1)
 print of Tuple.get([1, 2, 3, 4], 5)
 //│ ═══[RUNTIME ERROR] RangeError: Tuple.get: index out of bounds
 
-print of Str.drop("hello, world", 2)
+print of Str.leave("hello, world", 2)
 //│ > llo, world
 
-print of Str.drop("hello, world", -2)
+print of Str.leave("hello, world", -2)
 //│ > ld
 
 print of Str.get("hello, world", 2)

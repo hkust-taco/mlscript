@@ -26,7 +26,7 @@ fun test(a) =
 //│     return globalThis.Object.freeze(new Inner.class(b1));
 //│   };
 //│   Object.defineProperty(Inner1, "class", {
-//│   enumerable: true,
+//│     enumerable: true,
 //│     value: class Inner {
 //│       constructor(b) {
 //│         let tmp;
@@ -34,13 +34,22 @@ fun test(a) =
 //│         tmp = Predef.print(a);
 //│       }
 //│       f(c) {
-//│         return globalThis.Object.freeze([ a, this.b, c ])
+//│         return globalThis.Object.freeze([
+//│           a,
+//│           this.b,
+//│           c
+//│         ])
 //│       } 
 //│       g(d) {
 //│         let h;
 //│         const this$Inner = this;
 //│         h = function h(e) {
-//│           return globalThis.Object.freeze([ a, this$Inner.b, d, e ])
+//│           return globalThis.Object.freeze([
+//│             a,
+//│             this$Inner.b,
+//│             d,
+//│             e
+//│           ])
 //│         };
 //│         return h(d)
 //│       }
@@ -77,11 +86,14 @@ fun test(a) =
 //│     return globalThis.Object.freeze(new C1.class(b1));
 //│   };
 //│   Object.defineProperty(C11, "class", {
-//│   enumerable: true,
+//│     enumerable: true,
 //│     value: class C1 {
 //│       constructor(b) {
 //│         this.b = b;
-//│         Predef.print(globalThis.Object.freeze([ a, this.b ]));
+//│         Predef.print(globalThis.Object.freeze([
+//│           a,
+//│           this.b
+//│         ]));
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C1", ["b"]]; 
@@ -91,11 +103,14 @@ fun test(a) =
 //│     return globalThis.Object.freeze(new C2.class(b1));
 //│   };
 //│   Object.defineProperty(C21, "class", {
-//│   enumerable: true,
+//│     enumerable: true,
 //│     value: class C2 {
 //│       constructor(b) {
 //│         this.b = b;
-//│         Predef.print(globalThis.Object.freeze([ a, this.b ]));
+//│         Predef.print(globalThis.Object.freeze([
+//│           a,
+//│           this.b
+//│         ]));
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C2", ["b"]]; 

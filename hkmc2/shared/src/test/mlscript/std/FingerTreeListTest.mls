@@ -105,10 +105,11 @@ if xs is
 //│   rest = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
 //│   a = first0;
 //│   ls = rest;
-//│   globalThis.Object.freeze([ a, ls ])
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│   globalThis.Object.freeze([
+//│     a,
+//│     ls
+//│   ])
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = [1, [2, 3]]
 
 fun addUntilN(xs, n) =

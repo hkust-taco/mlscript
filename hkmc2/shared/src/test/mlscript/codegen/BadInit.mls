@@ -23,7 +23,7 @@ object Bar with
 //│       static [definitionMetadata] = ["module", "Baz"]; 
 //│     });
 //│     Object.defineProperty(this, "class", {
-//│     value: Bar
+//│       value: Bar
 //│     })
 //│   }
 //│   toString() { return runtime.render(this); }

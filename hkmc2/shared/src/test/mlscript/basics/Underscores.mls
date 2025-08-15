@@ -63,9 +63,7 @@ print(_)
 let test = _.f(0, _, 2)
 //│ JS (unsanitized):
 //│ let test, test1;
-//│ test1 = function test(_0, _1) {
-//│   return runtime.safeCall(_0.f(0, _1, 2))
-//│ };
+//│ test1 = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
 //│ test = test1;
 //│ test = fun test
 
@@ -100,11 +98,7 @@ _ is Int
 //│ JS (unsanitized):
 //│ let lambda8;
 //│ lambda8 = (undefined, function (_0) {
-//│   if (globalThis.Number.isInteger(_0)) {
-//│     return true
-//│   } else {
-//│     return false
-//│   }
+//│   if (globalThis.Number.isInteger(_0)) { return true } else { return false }
 //│ });
 //│ lambda8
 //│ = fun
@@ -144,11 +138,11 @@ let mkObj = x: _, y: _, z: 3
 //│ ═══[ERROR] Illegal position for '_' placeholder.
 //│ mkObj = fun mkObj
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'y'
-//│ ║  l.143: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.137: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                  ^
 //│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
 //│ ╔══[COMPILATION ERROR] No definition found in scope for 'z'
-//│ ║  l.143: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.137: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                        ^
 //│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
 

@@ -317,6 +317,7 @@ class ParseRules(using State):
         exprOrBlk(ParseRule(s"`do` body")(end(()))):
           case (body, ()) => Tree.PrefixApp(`do`, N, body)
         *),
+    prefixed(`drop`),
     prefixed(`not`),
     prefixed(`new!`),
     prefixed(`return`),

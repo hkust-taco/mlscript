@@ -161,12 +161,12 @@ fun taking(xs, n) =
 
 fun withMax(n) = _ taking(n)
 
-fun dropping(xs, n) =
+fun leaving(xs, n) =
   filtering of xs, _ =>
     set n -= 1
     n < 0
 
-fun withoutAtLeast(n) = _ dropping(n)
+fun withoutAtLeast(n) = _ leaving(n)
 
 fun zippingWithIndex(xs) =
   let i = 0

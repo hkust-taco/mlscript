@@ -31,11 +31,7 @@ fun foo(h): module M =
 //│     static [definitionMetadata] = ["module", "A"]; 
 //│   });
 //│   scrut = false;
-//│   if (scrut === true) {
-//│     return A2
-//│   } else {
-//│     return A3
-//│   }
+//│   if (scrut === true) { return A2 } else { return A3 }
 //│ };
 
 

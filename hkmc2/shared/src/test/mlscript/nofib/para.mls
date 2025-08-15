@@ -20,7 +20,7 @@ fun break_(p, xs) = if xs is
 
 fun isSpace(c) = c === " "
 
-fun words(s) = if dropWhile(isSpace, s) is
+fun words(s) = if leaveWhile(isSpace, s) is
   Nil then Nil
   h :: t and
     break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
@@ -103,7 +103,7 @@ fun tile(ws, a_b) = if a_b is
   [m :: ms, n] then
     let l = n - m
     if splitAt(l, ws) is [ws1, ws2] then
-      ws1 :: tile(ws2, [drop(l, m :: ms), m])
+      ws1 :: tile(ws2, [leave(l, m :: ms), m])
 
 fun null__(a_b) = if a_b is [Nil, Nil] then true else false
 
