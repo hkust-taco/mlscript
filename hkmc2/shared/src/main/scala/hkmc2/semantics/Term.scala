@@ -44,7 +44,7 @@ sealed trait ResolvableImpl:
    */
   private var expansion: Opt[Opt[Term]] = N
 
-  def duplicate: Term = t match
+  def duplicate: Resolvable = t match
     case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym)
     case t: Term.App => t.copy()(t.tree, t.sym, t.resSym)
     case t: Term.TyApp => t.copy()(t.sym)

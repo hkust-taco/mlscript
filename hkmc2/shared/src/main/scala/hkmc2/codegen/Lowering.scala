@@ -259,7 +259,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
     
-    t.instantiate match
+    t.instantiated match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       warnStmt
@@ -382,7 +382,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def conclude(fr: Path) = lowerCall(fr, isMlsFun, arg, t.toLoc)(k)
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
       // * function is not called again with f. See below `Sel` and `SelProj` cases.
-      f.instantiate match
+      f.instantiated match
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
       case t if t.resolvedSymbol.isDefined && (t.resolvedSymbol.get is ctx.builtins.debug.printStack) =>
