@@ -645,7 +645,7 @@ class Resolver(tl: TraceLogger)
          * 
          * @return (1) A lambda accepting a term, applying the implicit
          * arguments and performing eta-expansion on the term, and
-         * return the result. (2) A list of parameter lists that are not
+         * return the result. (2) The residual parameter lists that are not
          * consumed by this resolution.
          */
         def expand(pss: Ls[ParamList], lam: Term => Term, bod: Term => Term): (Term => Term, Ls[ParamList]) =
