@@ -181,6 +181,7 @@ enum Term extends Statement:
    */
   def resolvedSymbol: Opt[Symbol] =
     // TODO: encode mutable symbols into expansions
+    // FIXME: @Harry pls clean up this mess
     this match
       case r: Resolvable if r.hasExpansion => r.instantiate
       case t => t
