@@ -49,9 +49,6 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
   lazy val emptyAlt = alts.collectFirst { case e: Alt.End[?] => e.a }
   
   lazy val kwAlts = alts.collect { case alt: Alt.Kw[rst, A] => alt.kw.name -> alt }.toMap
-  // * `kwAltsTODO` below is a temporary workaround; all uses should eventually be replaced by `kwAlts`
-  lazy val kwAltsTODO = alts.collect { case alt: Alt.Kw[rst, A] => alt.kw.name ->
-    alt.rest.map(rst => alt.k(Keywrd(alt.kw), rst)) }.toMap
 
   def getKwAlt(k: Keyword): Opt[RefinedKw[A, k.type]] =
     kwAlts.get(k.name).asInstanceOf
@@ -210,7 +207,7 @@ class ParseRules(using State):
           ParseRule(s"'${kw.name}' block")(end(()))
         )(discard)
       )
-    ) { case (kw, body) => IfLike(kw.kw, N/* TODO */, body) }
+    ) { case (kw, body) => IfLike(kw, body) }
   
   def typeAliasLike(kw: Keyword, kind: TypeDefKind): Alt[TypeDef] =
     keepKw(kw):
@@ -300,10 +297,11 @@ class ParseRules(using State):
         Blk(ParseRule("`else` expression")(end(())))(discard)
       )
     ) { case (kwrd, tree) => PrefixApp(kwrd, tree) },
-    discardKw(`case`): // TODO keep kw
+    keepKw(`case`):
       ParseRule("`case` keyword")(
-        exprOrBlk(ParseRule("`case` branches")(end(())))((body, _: Unit) => Case(N/* TODO */, body))*
+        exprOrBlk(ParseRule("`case` branches")(end(())))((body, _: Unit) => body)*
       )
+    .map { case (kw, body) => Case(kw, body) }
     ,
     keepKw(`region`):
       ParseRule("`region` keyword"):

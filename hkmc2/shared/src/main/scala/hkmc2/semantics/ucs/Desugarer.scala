@@ -46,12 +46,12 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   /** Keep track of the locations where `do` and `then` are used as connectives. */
   private val kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
   
-  private def reportInconsistentConnectives(kw: Keyword, kwLoc: Opt[Loc]): Unit =
+  private def reportInconsistentConnectives(kw: Keywrd[?]): Unit =
     log(kwLocSets)
     (kwLocSets._1.headOption, kwLocSets._2.headOption) match
       case (Some(doLoc), Some(thenLoc)) =>
         raise(ErrorReport(
-          msg"Mixed use of `do` and `then` in the `${kw.name}` expression." -> kwLoc
+          msg"Mixed use of `do` and `then` in the `${kw.kw.name}` expression." -> kw.toLoc
             :: msg"Keyword `then` is used here." -> S(thenLoc)
             :: msg"Keyword `do` is used here." -> S(doLoc) :: Nil
         ))
@@ -673,13 +673,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
     val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
-    reportInconsistentConnectives(Keyword.`case`, tree.kwLoc)
+    reportInconsistentConnectives(tree.kw)
     topmost ++ topmostDefault
   
   /** Desugar `if` and `while` expressions. */
   def apply(tree: IfLike)(using Ctx): Split =
     val topmost = termSplit(tree.split, identity)(Split.End)(ctx)
-    reportInconsistentConnectives(tree.kw, tree.kwLoc)
+    reportInconsistentConnectives(tree.kw)
     topmost ++ topmostDefault
   
   /** Desugar `is` and `and` shorthands. */

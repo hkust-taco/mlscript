@@ -168,10 +168,10 @@ fun badanno: outer
 :e
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[ERROR] Only one outer variable can be bound.
-//│ ║  l.167: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal forall annotation.
-//│ ║  l.167: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
@@ -215,13 +215,13 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.211: 	fun foo(r1) =
+//│ ║  l.213: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.212: 	  region r2 in
+//│ ║  l.214: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.215: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    foo(r2)
+//│ ║  l.216: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
@@ -237,13 +237,13 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r22  <:  outer
 //│ ╙── because: cannot constrain  ¬outer  <:  outer
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.211: 	fun foo(r1) =
+//│ ║  l.213: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.212: 	  region r2 in
+//│ ║  l.214: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.213: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.215: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.214: 	    foo(r2)
+//│ ║  l.216: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo

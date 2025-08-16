@@ -274,8 +274,8 @@ class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 extends Importer:
   import tl.*
   
-  def mkLetBinding(sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
-    LetDecl(sym, annotations) :: DefineVar(sym, rhs) :: Nil
+  def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
+    LetDecl(sym, annotations).withLocOf(kw) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
@@ -350,13 +350,13 @@ extends Importer:
       Term.Lit(lit)
     case d: Def =>
       subterm(Block(d :: Unt() :: Nil))
-    case LetLike(Keywrd(`let`), lhs, rhso, S(bod)) =>
-      subterm(Block(LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, rhso, N) :: bod :: Nil))
-    case LetLike(Keywrd(`let`), lhs, rhso, N) =>
+    case LetLike(kw @ Keywrd(`let`), lhs, rhso, S(bod)) =>
+      subterm(Block(LetLike(kw, lhs, rhso, N) :: bod :: Nil))
+    case LetLike(kw @ Keywrd(`let`), lhs, rhso, N) =>
       raise(ErrorReport(
         msg"Expected a body for let bindings in expression position" ->
           tree.toLoc :: Nil))
-      block(LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, rhso, N) :: Nil, hasResult = true)._1
+      block(LetLike(kw, lhs, rhso, N) :: Nil, hasResult = true)._1
     case LetLike(Keywrd(`set`), lhs, S(rhs), N) =>
       Term.Assgn(subterm(lhs), subterm(rhs))
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
@@ -630,11 +630,11 @@ extends Importer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
-    case tree @ IfLike(kw, _, split) =>
+    case tree @ IfLike(kw, split) =>
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${desugared.prettyPrint}")
-      Term.IfLike(kw, desugared)
+      Term.IfLike(kw.kw, desugared)
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(_, branches) =>
@@ -949,7 +949,7 @@ extends Importer:
             RcdField(Term.Error, rhs_t) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)
-      case (hd @ LetLike(Keywrd(`let`)/* TODO: insert loc */, Apps(id: Ident, tups), rhso, N)) :: sts
+      case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         reportUnusedAnnotations
         val sym =
@@ -962,14 +962,14 @@ extends Importer:
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
               InfixApp(_, Keyword.`=>`, _)
-            mkLetBinding(sym, term(rrhs), annotations) reverse_::: acc
+            mkLetBinding(kw, sym, term(rrhs), annotations) reverse_::: acc
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
-            LetDecl(sym, annotations) :: acc
+            LetDecl(sym, annotations).withLocOf(kw) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
-      case (tree @ LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, _, N)) :: sts =>
+      case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Nil, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>

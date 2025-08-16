@@ -17,8 +17,7 @@ if
   x is A and y is B and c is Z then 1
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:
@@ -46,8 +45,7 @@ if
   x is A and (y is B and c is Z) then 1
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:

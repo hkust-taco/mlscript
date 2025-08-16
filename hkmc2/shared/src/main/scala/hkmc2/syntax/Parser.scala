@@ -644,8 +644,7 @@ abstract class Parser(
               err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
               errExpr
           bs.foldRight(body) {
-            // TODO: Insert Loc
-            case ((v, r), acc) => Quoted(LetLike(Keywrd(`let`), v, S(Unquoted(r)), S(Unquoted(acc))))
+            case ((v, r), acc) => Quoted(LetLike(new Keywrd(`let`).withLoc(S(l0)), v, S(Unquoted(r)), S(Unquoted(acc))))
           }
         case (IDENT("if", _), l0) :: _ =>
           consume
@@ -656,7 +655,7 @@ abstract class Parser(
               val ele = simpleExprImpl(prec, allowNewlines = false)
               term match
                 case InfixApp(lhs, Keyword.`then`, rhs) =>
-                  Quoted(IfLike(Keyword.`if`, S(l0), Block(
+                  Quoted(IfLike(new Keywrd(Keyword.`if`).withLoc(S(l0)), Block(
                     InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) ::
                       PrefixApp(new Keywrd(Keyword.`else`).withLoc(S(l1)), Unquoted(ele)) :: Nil
                   )))

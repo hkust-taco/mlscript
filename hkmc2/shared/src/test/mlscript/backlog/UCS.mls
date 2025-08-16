@@ -10,7 +10,7 @@ while
     arrMatches
   do
     print(arrMatches)
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(LetLike(Keywrd(keyword 'let'),Ident(arrMatches),Some(BoolLit(true)),None), Ident(arrMatches)))),keyword 'do',Block(List(App(Ident(print),Tup(List(Ident(arrMatches))))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(Keywrd(keyword 'while'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(arrMatches),Some(BoolLit(true)),None), Ident(arrMatches)))),keyword 'do',Block(List(App(Ident(print),Tup(List(Ident(arrMatches))))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 // ——— ——— ———
 

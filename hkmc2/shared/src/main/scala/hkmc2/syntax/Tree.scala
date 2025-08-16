@@ -88,10 +88,10 @@ enum Tree extends AutoLocated:
   case LexicalNew(body: Opt[Tree], rft: Opt[Block]) // * New as it is parsed, with its weird precedence – eg (new C)(123)
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
   case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, kwLoc: Opt[Loc], split: Tree)
+  case IfLike(kw: Keywrd[Keyword.IfLike], split: Tree)
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
-  case Case(kwLoc: Opt[Loc], branches: Tree)
+  case Case(kw: Keywrd[Keyword.`case`.type], branches: Tree)
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Effectful(eff: Tree, body: Tree)
@@ -137,7 +137,7 @@ enum Tree extends AutoLocated:
     case LexicalNew(body, rft) => body.toList ::: rft.toList
     case ProperNew(body, rft) => body.toList ::: rft.toList
     case DynamicNew(body) => body :: Nil
-    case IfLike(_, _, split) => split :: Nil
+    case IfLike(_, split) => split :: Nil
     case Case(_, bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
@@ -192,8 +192,8 @@ enum Tree extends AutoLocated:
     case LexicalNew(body, _) => "new"
     case ProperNew(body, _) => "new"
     case DynamicNew(body) => "dynamic new"
-    case IfLike(Keyword.`if`, _, split) => "if expression"
-    case IfLike(Keyword.`while`, _, split) => "while expression"
+    case IfLike(Keywrd(Keyword.`if`), split) => "if expression"
+    case IfLike(Keywrd(Keyword.`while`), split) => "while expression"
     case Case(_, branches) => "case"
     case Region(name, body) => "region"
     case RegRef(reg, value) => "region reference"

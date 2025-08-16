@@ -309,8 +309,7 @@ fun f(x) = if x
 //│     rhs = Tup of Ls of 
 //│       Ident of "x"
 //│   rhs = S of IfLike:
-//│     kw = keyword 'if'
-//│     kwLoc = N
+//│     kw = Keywrd of keyword 'if'
 //│     split = OpSplit:
 //│       lhs = Ident of "x"
 //│       ops_rhss = Ls of 
@@ -360,9 +359,9 @@ fun f(x) = if x
   foo(A) then a
   bar(B) then b
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.359: 	fun f(x) = if x
+//│ ║  l.358: 	fun f(x) = if x
 //│ ║         	              ^
-//│ ║  l.360: 	  foo(A) then a
+//│ ║  l.359: 	  foo(A) then a
 //│ ╙──       	^^
 
 
