@@ -35,7 +35,7 @@ fun f(val x) = x
 (...val x) => x
 //│ ╔══[ERROR] Expected a valid parameter, found spread
 //│ ║  l.35: 	(...val x) => x
-//│ ╙──      	        ^
+//│ ╙──      	    ^^^^^
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.35: 	(...val x) => x
 //│ ╙──      	              ^

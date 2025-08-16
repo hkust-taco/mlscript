@@ -45,7 +45,7 @@ new Object with { val x = 1 }
 new Object with { val x = 1 } with { val y = 1 }
 //│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.45: 	new Object with { val x = 1 } with { val y = 1 }
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 let obj =
@@ -98,6 +98,6 @@ new Foo(123) with
 new Foo(123) with 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
 //│ ║  l.98: 	new Foo(123) with 1
-//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 
 

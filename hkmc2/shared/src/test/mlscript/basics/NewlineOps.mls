@@ -74,7 +74,7 @@ let r = 10 in r
 -1
 //│ Parsed tree:
 //│ LetLike:
-//│   kw = keyword 'let'
+//│   kw = Keywrd of keyword 'let'
 //│   lhs = Ident of "r"
 //│   rhs = S of IntLit of 10
 //│   body = S of Ident of "r"
@@ -103,7 +103,7 @@ let r = id(10)
 !(r)
 //│ Parsed tree:
 //│ LetLike:
-//│   kw = keyword 'let'
+//│   kw = Keywrd of keyword 'let'
 //│   lhs = Ident of "r"
 //│   rhs = S of App:
 //│     lhs = Ident of "id"

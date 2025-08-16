@@ -48,7 +48,7 @@ data class Oops2()
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] a is not a valid member in class Oops2
 //│ ║  l.45: 	(new Oops2()).Oops2#a()
-//│ ╙──      	     ^^^^^^^^^^^^^^^^
+//│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
 

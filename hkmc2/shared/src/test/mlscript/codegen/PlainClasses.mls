@@ -253,7 +253,7 @@ class Foo with
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
 //│ ║  l.253: 	class Foo with val x = 1
-//│ ╙──       	                   ^^^^^
+//│ ╙──       	               ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;
 //│ Foo16 = class Foo15 {

@@ -55,7 +55,7 @@ enum Tree extends AutoLocated:
   case Unt()
   case Ident(name: Str)
   case Pun(eql: Bool, id: Ident) // `=ident` (eql) or `:ident` (!eql)
-  case Keywrd[+K <: Keyword](kw: K)
+  case Keywrd[+K <: Keyword & Singleton](kw: K)
   case IntLit(value: BigInt)             extends Tree with Literal
   case DecLit(value: BigDecimal)         extends Tree with Literal
   case StrLit(value: Str)                extends Tree with Literal
@@ -63,7 +63,7 @@ enum Tree extends AutoLocated:
   case BoolLit(value: Bool)              extends Tree with Literal
   case Bra(k: BracketKind, inner: Tree)
   case Block(stmts: Ls[Tree])(using State) extends Tree with semantics.BlockImpl
-  case LetLike(kw: Keyword.letLike, lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
+  case LetLike(kw: Keywrd[Keyword.LetLike], lhs: Tree, rhs: Opt[Tree], body: Opt[Tree])
   case Hndl(lhs: Tree, cls: Tree, defs: Tree, body: Opt[Tree])
   case Def(lhs: Tree, rhs: Tree)
   case TermDef(k: TermDefKind, head: Tree, rhs: Opt[Tree]) extends Tree with TermDefImpl
@@ -340,7 +340,7 @@ object Tree:
       case App(lhs, TyTup(targs)) => S(lhs, targs)
       case _ => N
   
-  extension [T <: Keyword](kw: Tree.Keywrd[T])
+  extension [T <: Keyword & Singleton](kw: Tree.Keywrd[T])
     def name = kw.kw.name
 
 /**

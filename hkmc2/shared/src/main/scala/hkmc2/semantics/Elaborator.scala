@@ -350,16 +350,16 @@ extends Importer:
       Term.Lit(lit)
     case d: Def =>
       subterm(Block(d :: Unt() :: Nil))
-    case LetLike(`let`, lhs, rhso, S(bod)) =>
-      subterm(Block(LetLike(`let`, lhs, rhso, N) :: bod :: Nil))
-    case LetLike(`let`, lhs, rhso, N) =>
+    case LetLike(Keywrd(`let`), lhs, rhso, S(bod)) =>
+      subterm(Block(LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, rhso, N) :: bod :: Nil))
+    case LetLike(Keywrd(`let`), lhs, rhso, N) =>
       raise(ErrorReport(
         msg"Expected a body for let bindings in expression position" ->
           tree.toLoc :: Nil))
-      block(LetLike(`let`, lhs, rhso, N) :: Nil, hasResult = true)._1
-    case LetLike(`set`, lhs, S(rhs), N) =>
+      block(LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, rhso, N) :: Nil, hasResult = true)._1
+    case LetLike(Keywrd(`set`), lhs, S(rhs), N) =>
       Term.Assgn(subterm(lhs), subterm(rhs))
-    case LetLike(`set`, lhs, S(rhs), S(bod)) =>
+    case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
       lhs match
       case id: Ident =>
@@ -949,7 +949,7 @@ extends Importer:
             RcdField(Term.Error, rhs_t) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)
-      case (hd @ LetLike(`let`, Apps(id: Ident, tups), rhso, N)) :: sts
+      case (hd @ LetLike(Keywrd(`let`)/* TODO: insert loc */, Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
         reportUnusedAnnotations
         val sym =
@@ -969,7 +969,7 @@ extends Importer:
             LetDecl(sym, annotations) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
-      case (tree @ LetLike(`let`, lhs, _, N)) :: sts =>
+      case (tree @ LetLike(Keywrd(`let`)/* TODO: insert loc */, lhs, _, N)) :: sts =>
         raise(ErrorReport(msg"Unsupported let binding shape" -> tree.toLoc :: Nil))
         go(sts, Nil, Term.Error :: acc)
       case Def(lhs, rhs) :: sts =>

@@ -34,7 +34,7 @@ in
   foo(h)
 //│ ╔══[ERROR] Unsupported handle binding shape
 //│ ║  l.31: 	handle 1 = 1 with
-//│ ║        	       ^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^
 //│ ║  l.32: 	  fun f()(r) = r(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.33: 	in
@@ -60,7 +60,7 @@ in
 ) + 1
 //│ ╔══[ERROR] Unsupported handle binding shape
 //│ ║  l.57: 	  handle h = Eff with
-//│ ║        	         ^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	    fun f()(r) = r(0)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	    fun g(a)()(r) = r(1)

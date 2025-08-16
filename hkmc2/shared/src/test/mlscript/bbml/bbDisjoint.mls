@@ -159,7 +159,9 @@ fun anno2: [outer] -> Int ->{outer} Int
 
 :e
 fun badanno: outer
-//│ ═══[ERROR] Illegal outer reference.
+//│ ╔══[ERROR] Illegal outer reference.
+//│ ║  l.161: 	fun badanno: outer
+//│ ╙──       	             ^^^^^
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
 

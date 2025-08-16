@@ -280,10 +280,10 @@ let x = 0
 //│ x = 0
 
 set x += 1; ()
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Unt())),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(Keywrd(keyword 'set'),OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Unt())),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
 [x, set x += 1; x]
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(keyword 'set',OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Ident(x))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ /!!!\ Uncaught error: scala.MatchError: LetLike(Keywrd(keyword 'set'),OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Ident(x))),None,None) (of class hkmc2.syntax.Tree$LetLike)
 
 // ——— ——— ———
 

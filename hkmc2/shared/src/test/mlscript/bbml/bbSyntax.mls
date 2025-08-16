@@ -53,7 +53,7 @@ foo(42).Bar#baz(42)
 
 let x = 42 in x + 0
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(42)),Some(OpApp(Ident(x),Ident(+),List(IntLit(0)))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(42)),Some(OpApp(Ident(x),Ident(+),List(IntLit(0)))))
 
 fun id(x) = x
 //│ Parsed:
@@ -77,11 +77,11 @@ f of false
 
 let bar = new Bar(42)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(42))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(bar),Some(App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(42))))),None)
 
 let bar = new Bar2(1, 1)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(1), IntLit(1))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(bar),Some(App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(1), IntLit(1))))),None)
 
 new Bar(0)
 //│ Parsed:
@@ -183,7 +183,7 @@ g`(`1, `2)
 
 `let x = `42 `in x
 //│ Parsed:
-//│ 	Quoted(LetLike(keyword 'let',Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
+//│ 	Quoted(LetLike(Keywrd(keyword 'let'),Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
 
 `if x `== `0.0 then `1.0 else x
 //│ Parsed:
@@ -208,7 +208,7 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !(r)
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(LetLike(keyword 'let',Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(keyword 'let',Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Bra(Round,Ident(r))))))))))))
+//│ 	Region(Ident(x),Block(List(LetLike(Keywrd(keyword 'let'),Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(Keywrd(keyword 'let'),Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Bra(Round,Ident(r))))))))))))
 
 !(r) + 1
 //│ Parsed:

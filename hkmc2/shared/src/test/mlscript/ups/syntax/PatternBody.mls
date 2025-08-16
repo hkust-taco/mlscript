@@ -63,7 +63,7 @@ pattern PlainList(pattern T) = (null => Nil) | ([T as hd, PlainList(T) as tl] =>
 //│ ╙──      	      ^^
 //│ ╔══[ERROR] Illegal type declaration in term position.
 //│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
-//│ ╙──      	                            ^
+//│ ╙──      	                    ^^^^^^^^^
 //│ ╔══[ERROR] Name not found: tl
 //│ ║  l.60: 	[T as hd, PlainList(pattern T) as tl]
 //│ ╙──      	                                  ^^

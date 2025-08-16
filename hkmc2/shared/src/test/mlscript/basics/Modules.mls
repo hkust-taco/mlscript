@@ -13,7 +13,7 @@ module Foo with
 module Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of module definition (should be a block; found term definition).
 //│ ║  l.13: 	module Foo with val x = 1
-//│ ╙──      	                    ^^^^^
+//│ ╙──      	                ^^^^^^^^^
 
 :e
 Foo.x

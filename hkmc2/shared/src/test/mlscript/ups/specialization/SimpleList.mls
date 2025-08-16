@@ -147,7 +147,9 @@ pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
 //│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
-//│ ╙── The variable is missing from this sub-pattern.
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
+//│ ╙──       	                  ^^^^
 
 null is @compile List
 //│ = true

@@ -58,7 +58,9 @@ f.y
 
 :e
 let f = mut new Foo
-//│ ═══[ERROR] Illegal position for 'mut' modifier.
+//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ║  l.60: 	let f = mut new Foo
+//│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
 
 :re

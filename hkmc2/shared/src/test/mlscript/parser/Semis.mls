@@ -12,31 +12,31 @@ a; b; c
 
 let a = 1; 2
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(OpApp(IntLit(1),Ident(;),List(IntLit(2)))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(OpApp(IntLit(1),Ident(;),List(IntLit(2)))),None)
 
 let a = (1; 2)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(Bra(Round,OpApp(IntLit(1),Ident(;),List(IntLit(2))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(Bra(Round,OpApp(IntLit(1),Ident(;),List(IntLit(2))))),None)
 
 let a = { 1; 2 }
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(Block(List(OpApp(IntLit(1),Ident(;),List(IntLit(2)))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(Block(List(OpApp(IntLit(1),Ident(;),List(IntLit(2)))))),None)
 
 let a = 1 in 2
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(IntLit(2)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(IntLit(1)),Some(IntLit(2)))
 
 let a = 1 in 2; 3
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(OpApp(IntLit(2),Ident(;),List(IntLit(3)))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(IntLit(1)),Some(OpApp(IntLit(2),Ident(;),List(IntLit(3)))))
 
 let a = 1 in (2; 3)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(Bra(Round,OpApp(IntLit(2),Ident(;),List(IntLit(3))))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(IntLit(1)),Some(Bra(Round,OpApp(IntLit(2),Ident(;),List(IntLit(3))))))
 
 let a = 1 in { 2; 3 }
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(Block(List(OpApp(IntLit(2),Ident(;),List(IntLit(3)))))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(IntLit(1)),Some(Block(List(OpApp(IntLit(2),Ident(;),List(IntLit(3)))))))
 
 1; id(2)
 //│ Parsed:

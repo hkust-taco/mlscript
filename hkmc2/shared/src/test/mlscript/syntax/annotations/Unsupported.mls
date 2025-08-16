@@ -13,7 +13,7 @@ open Str
 //│ ║       	 ^^^^^
 //│ ╟── Annotations are not supported on open terms.
 //│ ║  l.10: 	open Str
-//│ ╙──      	     ^^^
+//│ ╙──      	^^^^^^^^
 
 :w
 @debug 0

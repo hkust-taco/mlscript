@@ -37,6 +37,9 @@ def discardKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Rest] =
 def keepKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Keywrd[kw.type] -> Rest] = 
   Alt.Kw(kw)(rest)((k, rest) => k -> rest)
 
+// Refine the type of `kw` in `Alt.Kw` to be exactly `K`.
+type RefinedKw[+A, K <: Keyword] = Alt.Kw[?, A] & { val kw: K }
+
 class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)
@@ -49,8 +52,8 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
   // * `kwAltsTODO` below is a temporary workaround; all uses should eventually be replaced by `kwAlts`
   lazy val kwAltsTODO = alts.collect { case alt: Alt.Kw[rst, A] => alt.kw.name ->
     alt.rest.map(rst => alt.k(Keywrd(alt.kw), rst)) }.toMap
-  
-  def getKwAlt(k: Keyword): Opt[Alt.Kw[?, A] & { val kw: k.type }] =
+
+  def getKwAlt(k: Keyword): Opt[RefinedKw[A, k.type]] =
     kwAlts.get(k.name).asInstanceOf
   
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
@@ -144,8 +147,8 @@ class ParseRules(using State):
         case (head, ()) =>
           TypeDef(k, head, N)
   
-  def letLike(kw: Keyword.letLike) = 
-    discardKw(kw): // TODO keep kw
+  def letLike(kw: Keyword.LetLike) = 
+    keepKw(kw)(
       ParseRule(s"'${kw.name}' binding keyword")(
         Expr(
           ParseRule(s"'${kw.name}' binding head")(
@@ -172,14 +175,13 @@ class ParseRules(using State):
             ,
             end(N -> N)
           )
-        ) { case (lhs, (rhs, body)) => LetLike(kw, lhs, rhs, body) }
-        ,
-        // Blk(
-        //   ParseRule("let block"):
-        //     Kw(`class`):
-        //       typeDeclBody
-        // ) { case (lhs, body) => Let(lhs, lhs, body) }
+        ) {
+          case (lhs, (rhs, body)) => (lhs, rhs, body)
+        }
       )
+    ).map {
+      case (kw, (lhs, rhs, body)) => LetLike(kw, lhs, rhs, body)
+    }
   
   def ifLike(kw: `if`.type | `while`.type): Alt[Tree] =
     Kw(kw)(
@@ -211,7 +213,7 @@ class ParseRules(using State):
     ) { case (kw, body) => IfLike(kw.kw, N/* TODO */, body) }
   
   def typeAliasLike(kw: Keyword, kind: TypeDefKind): Alt[TypeDef] =
-    discardKw(kw): // TODO keep kw
+    keepKw(kw):
       ParseRule(s"${kind.desc} declaration"):
         Expr(
           ParseRule(s"${kind.desc} head")(
@@ -225,12 +227,15 @@ class ParseRules(using State):
             end(N),
           )
         ) { (lhs, rhs) => TypeDef(kind, lhs, rhs) }
+    .map {
+      case (kw, t) => t.mkLocWith(kw)
+    }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of expression", omitAltsStr = true)(
     letLike(`let`),
     letLike(`set`),
     
-    discardKw(`handle`): // TODO keep kw
+    keepKw(`handle`):
       ParseRule("'handle' binding keyword"):
         Expr(
           ParseRule("'handle' binding head"):
@@ -251,8 +256,9 @@ class ParseRules(using State):
                       )
                 ) { case (rhs, (S(defs), body)) => (rhs, defs, body) }
         ) { case (lhs, (rhs, defs, body)) => Hndl(lhs, rhs, defs, body) }
+    .map { case (kw, h) => h.mkLocWith(kw) }
     ,
-    discardKw(`new`): // TODO keep kw
+    keepKw(`new`):
       val withRefinement = discardKw(`with`)(
           ParseRule("'new' body")(
             Blk(ParseRule("'new' expression")(end(()))) { case (res: Block // FIXME: can it be something else?
@@ -268,6 +274,7 @@ class ParseRules(using State):
           ))((body, rfto) => LexicalNew(S(body), rfto))
         )*
       )
+    .map { case (kw, nu) => nu.mkLocWith(kw) }
     ,
     Kw(`in`)(
       ParseRule("modifier keyword `in`"):
@@ -298,7 +305,7 @@ class ParseRules(using State):
         exprOrBlk(ParseRule("`case` branches")(end(())))((body, _: Unit) => Case(N/* TODO */, body))*
       )
     ,
-    discardKw(`region`): // TODO keep kw
+    keepKw(`region`):
       ParseRule("`region` keyword"):
         Expr(
           ParseRule("`region` declaration"):
@@ -308,19 +315,24 @@ class ParseRules(using State):
                 Blk(ParseRule("'region' block")(end(())))((body, _: Unit) => body)
               )
         ) { case (name, body) => Region(name, body) }
+    .map { case (kw, r) => r.mkLocWith(kw) }
     ,
-    discardKw(`outer`): // TODO keep kw
+    keepKw(`outer`):
       ParseRule("outer binding operator")(
         Expr(
           ParseRule("`outer` binding name")(end(()))
         ){ (body, _: Unit) => Outer(S(body)) },
         end(Outer(N))
-      ),
-    discardKw(`constructor`): // TODO keep kw
+      )
+    .map { case (kw, o) => o.mkLocWith(kw) }
+    ,
+    keepKw(`constructor`):
       ParseRule("constructor keyword"):
         Blk(
           ParseRule(s"constructor block")(end(()))
-        ) { case (body, _) => Tree.Constructor(body) },
+        ) { case (body, _) => Constructor(body) }
+    .map { case (kw, c) => c.mkLocWith(kw) }
+    ,
     Kw(`fun`)(termDefBody(Fun))(extendLoc),
     Kw(`val`)(termDefBody(ImmutVal))(extendLoc),
     Kw(`using`)(termDefBody(Ins))(extendLoc),
@@ -330,11 +342,13 @@ class ParseRules(using State):
     Kw(`trait`)(typeDeclBody(Trt))(extendLoc),
     Kw(`module`)(typeDeclBody(Mod))(extendLoc),
     Kw(`object`)(typeDeclBody(Obj))(extendLoc),
-    discardKw(`open`): // TODO keep kw
+    keepKw(`open`):
       ParseRule("'open' keyword")(
         exprOrBlk(ParseRule("'open' declaration")(end(()))){
-          case (body, _) => Open(body)}*),
-    modified(`abstract`, discardKw(`class`)(typeDeclBody(Cls))), // TODO keep kw
+          case (body, _) => Open(body)}*)
+    .map { case (kw, o) => o.mkLocWith(kw) }
+    ,
+    modified(`abstract`, keepKw(`class`)(typeDeclBody(Cls)).map { case (kw, c) => c.mkLocWith(kw) }),
     Kw(`mut`)(ParseRule(s"'mut' keyword")(standaloneExprOrBlk*)) {
       case (kw, body) => Tree.Modified(kw, body)
     },

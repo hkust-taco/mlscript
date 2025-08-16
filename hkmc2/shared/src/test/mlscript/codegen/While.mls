@@ -261,7 +261,9 @@ while print("Hello World"); false
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.259: 	  then 0(0)
 //│ ╙──       	  ^^^^
-//│ ═══[ERROR] Unrecognized term split (false literal).
+//│ ╔══[ERROR] Unrecognized term split (false literal).
+//│ ║  l.259: 	  then 0(0)
+//│ ╙──       	^^
 //│ > let scrut7;try { tmp37: while (true) {   scrut7 = runtime.checkCall(Predef.print("Hello World"));   throw globalThis.Object.freeze(new globalThis.Error("match error"))   break; } block$res28 = runtime.Unit; undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                                                                                                                           ^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected token 'break'
@@ -271,12 +273,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.270: 	while { print("Hello World"), false }
+//│ ║  l.272: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.271: 	  then 0(0)
+//│ ║  l.273: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.272: 	  else 1
+//│ ║  l.274: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -286,14 +288,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.284: 	    print("Hello World")
+//│ ║  l.286: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.285: 	    false
+//│ ║  l.287: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.286: 	  then 0(0)
+//│ ║  l.288: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.287: 	  else 1
+//│ ║  l.289: 	  else 1
 //│ ╙──       	  ^^^^
 
 

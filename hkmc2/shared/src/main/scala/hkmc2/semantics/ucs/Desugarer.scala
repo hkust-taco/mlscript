@@ -194,7 +194,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   def termSplit(trees: Ls[Tree], finish: Term => Term): Split => Sequel =
     trees.foldRight(default): (t, elabFallback) =>
       t match
-      case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
+      case LetLike(Keywrd(`let`), ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
         pre = s"termSplit: let ${ident.name} = $termTree",
         post = (res: Split) => s"termSplit: let >>> $res"
       ):
@@ -283,7 +283,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
         rhss.foldRight(Function.const(fallback): Sequel): (branch, elabFallback) =>
           branch match
-          case LetLike(`let`, pat, termTree, N) => ctx =>
+          case LetLike(Keywrd(`let`), pat, termTree, N) => ctx =>
             val ident = pat match // TODO handle patterns and rm special cases
               case ident: Ident => ident
               case und: Under => new Ident("_").withLocOf(und)
@@ -385,7 +385,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch.deparenthesized match
-      case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
+      case LetLike(Keywrd(`let`), ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
           val sym = VarSymbol(ident)

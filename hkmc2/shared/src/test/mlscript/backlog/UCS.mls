@@ -10,7 +10,7 @@ while
     arrMatches
   do
     print(arrMatches)
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(LetLike(keyword 'let',Ident(arrMatches),Some(BoolLit(true)),None), Ident(arrMatches)))),keyword 'do',Block(List(App(Ident(print),Tup(List(Ident(arrMatches))))))) (of class hkmc2.syntax.Tree$InfixApp)
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IfLike(keyword 'while',None,Block(List(LetLike(Keywrd(keyword 'let'),Ident(arrMatches),Some(BoolLit(true)),None), Ident(arrMatches)))),keyword 'do',Block(List(App(Ident(print),Tup(List(Ident(arrMatches))))))) (of class hkmc2.syntax.Tree$InfixApp)
 
 // ——— ——— ———
 
@@ -23,7 +23,9 @@ if
   arrMatches !== null
   do
     ()
-//│ ═══[ERROR] Unrecognized term split (null).
+//│ ╔══[ERROR] Unrecognized term split (null).
+//│ ║  l.23: 	  arrMatches !== null
+//│ ╙──      	                 ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // * This one works:
@@ -57,14 +59,14 @@ if
   true do
     print("ok")
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.56: 	  and
+//│ ║  l.58: 	  and
 //│ ║        	     ^
-//│ ║  l.57: 	  true do
+//│ ║  l.59: 	  true do
 //│ ╙──      	^^
 //│ ╔══[ERROR] Unrecognized term split (‹erroneous syntax›).
-//│ ║  l.56: 	  and
+//│ ║  l.58: 	  and
 //│ ║        	     ^
-//│ ║  l.57: 	  true do
+//│ ║  l.59: 	  true do
 //│ ╙──      	^^
 //│ > ok
 
@@ -104,23 +106,23 @@ if 1 + 1
     * 2 == 1 then "A"
     |> id is r then r
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ║         	        ^^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ║         	           ^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ╙──       	           ^
 //│ ═══[ERROR] Unrecognized term split (reference term).
 //│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.103: 	    * 2 == 4 then "X"
+//│ ║  l.105: 	    * 2 == 4 then "X"
 //│ ╙──       	      ^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -131,7 +133,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator 'do')
-//│ ║  l.132: 	  Some of [process, rest] do "hi"
+//│ ║  l.134: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -181,10 +183,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.182: 	    Tuple(...elements) then elements
+//│ ║  l.184: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
-//│ ║  l.182: 	    Tuple(...elements) then elements
+//│ ║  l.184: 	    Tuple(...elements) then elements
 //│ ╙──       	             ^^^^^^^^
 //│ foo = fun foo
 
@@ -202,21 +204,21 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.201: 	fun foo(x) = if x is Foo.
+//│ ║  l.203: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.201: 	fun foo(x) = if x is Foo.
+//│ ║  l.203: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split (operator split).
-//│ ║  l.211: 	fun foo(x) = if x is Foo
+//│ ║  l.213: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.212: 	  .Bar then "Bar"
+//│ ║  l.214: 	  .Bar then "Bar"
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.213: 	  .Foo then "Foo"
+//│ ║  l.215: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———

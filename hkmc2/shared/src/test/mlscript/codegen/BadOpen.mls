@@ -9,19 +9,19 @@ module Foo with
 (open Foo { x })
 //│ ╔══[ERROR] Illegal position for 'open' statement.
 //│ ║  l.9: 	(open Foo { x })
-//│ ╙──     	      ^^^^^^^^^
+//│ ╙──     	 ^^^^^^^^^^^^^^
 
 :e
 (((open Foo { x })))
 //│ ╔══[ERROR] Illegal position for 'open' statement.
 //│ ║  l.15: 	(((open Foo { x })))
-//│ ╙──      	        ^^^^^^^^^
+//│ ╙──      	   ^^^^^^^^^^^^^^
 
 :e
 (open Foo { x }) + 1
 //│ ╔══[ERROR] Illegal position for 'open' statement.
 //│ ║  l.21: 	(open Foo { x }) + 1
-//│ ╙──      	      ^^^^^^^^^
+//│ ╙──      	 ^^^^^^^^^^^^^^
 
 :e
 open Foo { y }

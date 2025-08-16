@@ -21,7 +21,7 @@ pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
 //│ ║  l.20: 	pattern Rep0(pattern A, B, C)(head) =
-//│ ║        	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.21: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (application).
