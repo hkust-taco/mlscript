@@ -88,7 +88,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
           mut = true,
           state.cls,
-          Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+          Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil))
         .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
         .ret(state.res.asPath))
   private def functionHandlerCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme, debugNme)
@@ -104,7 +104,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
-    Value.Lit(Tree.StrLit(msg)) :: Nil)
+    Value.Lit(Tree.StrLit(msg)).asArg :: Nil)
   )
   
   object PureCall:
@@ -206,8 +206,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           case StateTransition(uid) => uid
           case _ => freshId()
         
-        val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(afterEnd = S(restId))))
-        val dfltParts = dflt.map(blkk => go(blkk)(afterEnd = S(restId)))
+        val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
+        val dfltParts = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
 
         val states_ = restParts.states ::: armsParts.flatMap(_._2.states)
         val states = dfltParts match
@@ -273,11 +273,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val PartRet(restNew, restParts) = go(rest)
         restNew match
           case StateTransition(uid) => 
-            val PartRet(subNew, subParts) = go(sub)(afterEnd = S(uid))
+            val PartRet(subNew, subParts) = go(sub)(using afterEnd = S(uid))
             PartRet(subNew, subParts ::: restParts)
           case _ =>
             val restId = freshId()
-            val PartRet(subNew, subParts) = go(sub)(afterEnd = S(restId))
+            val PartRet(subNew, subParts) = go(sub)(using afterEnd = S(restId))
             PartRet(subNew, BlockState(restId, restNew, N) :: subParts ::: restParts)
 
       case Define(defn, rest) => 
@@ -314,7 +314,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
       FlowSymbol(s.nme) -> Instantiate(mut = true, localVarInfoPath,
-        Value.Lit(Tree.StrLit(s.nme)) :: s.asPath :: Nil
+        Value.Lit(Tree.StrLit(s.nme)).asArg :: s.asPath.asArg :: Nil
       )
     val startSym = FlowSymbol("prev")
     val thisInfo = FlowSymbol("thisInfo")
@@ -327,8 +327,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
       .assign(thisInfo, Instantiate(mut = true, fnLocalsPath,
-          Value.Lit(Tree.StrLit(h.debugInfo.debugNme))
-            :: Value.Arr(mut = false, localsInfo.map(v => v._1.asPath.asArg))
+          Value.Lit(Tree.StrLit(h.debugInfo.debugNme)).asArg
+            :: Value.Arr(mut = false, localsInfo.map(v => v._1.asPath.asArg)).asArg
             :: Nil
         ))
       .assign(TempSymbol(N, ""), Call(startSym.asPath.selSN("push"), thisInfo.asPath.asArg :: Nil)(false, false))
@@ -356,6 +356,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def firstPass(b: Block)(using HandlerCtx): Block =
     val getLocalsSym = ctx.builtins.debug.getLocals
     val transformer = new BlockTransformerShallow(SymbolSubst()):
+      // FIXME: there is a HUGE amount of error-prone, maintenance-heavy manually duplicated code in there to refactor
       override def applyBlock(b: Block) = b match
         case b: HandleBlock =>
           val rest = applyBlock(b.rest)
@@ -377,7 +378,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
           val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyPath)
+          val args2 = args.mapConserve(applyArg)
           val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
           ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case _ => super.applyBlock(b)
@@ -391,7 +392,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case c @ Instantiate(mut, cls, args) =>
           val res = freshTmp("res")
           val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyPath)
+          val args2 = args.mapConserve(applyArg)
           val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
           ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case r => super.applyResult2(r)(k)
@@ -456,7 +457,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val handlerBody = translateBlock(h.body, Set.empty, HandlerCtx(false, true,
       s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), state => blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent,
-          Instantiate(mut = true, state.cls, Value.Lit(Tree.IntLit(state.uid)) :: Nil))
+          Instantiate(mut = true, state.cls, Value.Lit(Tree.IntLit(state.uid)).asArg :: Nil))
         .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>

@@ -361,7 +361,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             args.map(super.applyArg(_))
             handleCalledBms(l)
           case Instantiate(mut, InstSel(l), args) =>
-            args.map(super.applyPath(_))
+            args.map(super.applyArg)
             handleCalledBms(l)
           case _ => super.applyResult(r)
         

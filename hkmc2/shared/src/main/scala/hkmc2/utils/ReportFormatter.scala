@@ -37,7 +37,7 @@ class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
       var globalLineNum = blockLineNum
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
         val isLast = msgNum =:= lastMsgNum
-        val msgStr = msg.showIn(sctx)
+        val msgStr = msg.showIn(using sctx)
         if msgNum =:= 0 then output(headStr + msgStr)
         else if loco.isEmpty && diag.allMsgs.size =:= 1 then
           if !onlyOneLine then output("╙──")

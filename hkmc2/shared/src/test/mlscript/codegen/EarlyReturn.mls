@@ -25,9 +25,7 @@ fun f(x) =
 //│   if (scrut === true) {
 //│     tmp = Predef.print("whoops");
 //│     return 0
-//│   } else {
-//│     tmp1 = runtime.Unit;
-//│   }
+//│   } else { tmp1 = runtime.Unit; }
 //│   return x + 1
 //│ };
 

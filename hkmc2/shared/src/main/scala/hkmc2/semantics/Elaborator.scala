@@ -486,7 +486,7 @@ extends Importer:
       scoped("ucs:desugared"):
         log(s"Desugared:\n${des.prettyPrint}")
       Term.IfLike(Keyword.`if`, des)
-    case InfixApp(lhs, kw @ (Keyword.`then` | Keyword.`with`), rhs) =>
+    case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
       Term.Error
@@ -595,10 +595,8 @@ extends Importer:
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
       
-    case DynamicNew(Apps(c, argss)) =>
-      Term.New(subterm(c, inAppPrefix = inAppPrefix), argss.map{
-        case Tup(args) =>
-          args.map(subterm(_))}, N).withLocOf(tree)
+    case DynamicNew(Apps(c, args)) =>
+      Term.New(subterm(c, inAppPrefix = inAppPrefix), args.map(subterm(_)), N).withLocOf(tree)
     // case New(c, rfto) =>
     //   assert(rfto.isEmpty)
     //   Term.New(cls(subterm(c), inAppPrefix = inAppPrefix), params.map(subterm(_)), bodo).withLocOf(tree)
@@ -611,16 +609,14 @@ extends Importer:
             // TODO make context with var symbols for class parameters
             ObjBody(block(rft, hasResult = false)._1)
       body match
-      case S(Apps(c, argss)) =>
+      case S(Apps(c, args)) =>
         val (mut, c2) = c match
           case Modified(Keywrd(Keyword.`mut`), c) => (true, c)
           case c => (false, c)
         val inner = new Term.New(
           cls(subterm(c2), // * Note: we'll catch bad `new` targets during type checking
             inAppPrefix = true), 
-          argss.map{
-            case Tup(args) =>
-              args.map(subterm(_))},
+          args.map(subterm(_)),
           bodo
         ).withLocOf(tree)
         if mut then Term.Mut(inner) else inner
@@ -671,8 +667,8 @@ extends Importer:
       Term.Throw(subterm(body)).withLocOf(tree)
     case PrefixApp(Keywrd(Keyword.`do`), body) =>
       Blk(subterm(body) :: Nil, unit).withLocOf(tree)
-    case TypeDef(Mod, head, N) =>
-      subterm(head)
+    case PrefixApp(Keywrd(Keyword.`drop`), body) =>
+      Term.Drop(subterm(body)).withLocOf(tree)
     case Region(id: Ident, body) =>
       val sym = VarSymbol(id)
       given Ctx = ctx + (id.name -> sym)
@@ -1017,7 +1013,12 @@ extends Importer:
                 res
               // * Elaborate signature
               val st = td.annotatedResultType.orElse(newSignatureTrees.get(id.name))
-              val s = st.map(term(_)(using newCtx))
+              val s = st.map:
+                // unwrap possible module modifier
+                // e.g, `fun f: module M`
+                //              ^^^^^^
+                case TypeDef(Mod, st, N) => term(st)(using newCtx)
+                case st => term(st)(using newCtx)
               val b = if ctx.mode != Mode.Light
                 then rhs.map(term(_)(using newCtx))
                 else S(Term.Missing)
@@ -1035,10 +1036,10 @@ extends Importer:
               val r = FlowSymbol(s"‹result of ${sym}›")
               
               val mfn = st match
-                // TypeDef(Mod, _, N, N) indicates if the function marks
+                // st.isModified(Mod) indicates if the function marks
                 // its result as "module". e.g, `fun f: module M`
                 //                                      ^^^^^^
-                case S(TypeDef(Mod, _, N)) => 
+                case S(st) if st.isModified(Mod) => 
                   Modulefulness.ofSign(s)(true)
                 case _ =>
                   Modulefulness.none

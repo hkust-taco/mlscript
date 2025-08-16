@@ -50,7 +50,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
           if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then
             lhs.constructor
           else
-            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
+            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).resolve
         case _ => lhs.constructor
       lhs.copy(constructor)(lhs.tree, lhs.output)
   
@@ -322,7 +322,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
-    val call = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(fld(scrutinee)), s"result of unapply")
+    val call = app(sel(ctorTerm, "unapply").resolve, tup(fld(scrutinee)), s"result of unapply")
     val split = tempLet("patternParamMatchResult", call): resultSymbol =>
       if outputSymbols.isEmpty then
         // No need to destruct the result.
@@ -376,7 +376,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
       (if extractionArgs.isEmpty then N else S(extractionArgs), patternArgs)
     // Place pattern arguments first, then the scrutinee.
     val unapplyArgs = patternArguments.map(_._1.safeRef |> fld) :+ fld(scrutinee)
-    val unapplyCall = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(unapplyArgs*), s"result of unapply")
+    val unapplyCall = app(sel(ctorTerm, "unapply").resolve, tup(unapplyArgs*), s"result of unapply")
     val split = buildPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
       extractionArgsOpt match
         case N =>

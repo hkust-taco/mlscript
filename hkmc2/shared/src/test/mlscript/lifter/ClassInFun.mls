@@ -222,9 +222,7 @@ f() + f() + f()
 //│   return tmp3 + tmp4
 //│ };
 //│ tmp = handleBlock$();
-//│ if (tmp instanceof runtime.EffectSig.class) {
-//│   tmp = runtime.topLevelEffect(tmp, false);
-//│ }
+//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
 //│ tmp
 //│ = 3
 
@@ -271,9 +269,7 @@ f(1).get()
 //│     static [definitionMetadata] = ["class", "Test", []]; 
 //│   }
 //│ });
-//│ f1 = function f(x) {
-//│   return Test$(false, x)
-//│ };
+//│ f1 = function f(x) { return Test$(false, x) };
 //│ tmp1 = f1(1);
 //│ runtime.safeCall(tmp1.get())
 //│ = 1
@@ -690,7 +686,7 @@ f(2).get()
 //│     return globalThis.Object.freeze(new Test.class());
 //│   };
 //│   Object.defineProperty(Test10, "class", {
-//│   enumerable: true,
+//│     enumerable: true,
 //│     value: class Test9 {
 //│       constructor() {}
 //│       get() {

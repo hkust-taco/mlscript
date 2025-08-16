@@ -25,9 +25,7 @@ if false then 0
 //│ scrut = false;
 //│ if (scrut === true) {
 //│   0
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
@@ -45,9 +43,7 @@ foo()
 //│   scrut1 = false;
 //│   if (scrut1 === true) {
 //│     return 0
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

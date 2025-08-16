@@ -356,6 +356,7 @@ class ParseRules(using State):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },
+    prefixed(`drop`),
     prefixed(`not`),
     prefixed(`new!`),
     prefixed(`return`),

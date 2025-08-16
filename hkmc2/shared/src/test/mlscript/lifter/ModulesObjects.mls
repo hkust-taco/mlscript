@@ -51,11 +51,7 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ };
-//│ foo1 = function foo(y) {
-//│   let tmp;
-//│   tmp = M$(false, y);
-//│   return runtime.safeCall(tmp.foo())
-//│ };
+//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return runtime.safeCall(tmp.foo()) };
 //│ foo1(10)
 
 
@@ -254,7 +250,7 @@ M.A().get
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
 //│     Object.defineProperty(this.A, "class", {
-//│     enumerable: true,
+//│       enumerable: true,
 //│       value: class A5 {
 //│         constructor() {}
 //│         get get() {
@@ -349,7 +345,7 @@ M.A(2).newB.newA_B(3).newB.get
 //│       return globalThis.Object.freeze(new A.class(x1));
 //│     };
 //│     Object.defineProperty(this.A, "class", {
-//│     enumerable: true,
+//│       enumerable: true,
 //│       value: class A7 {
 //│         constructor(x) {
 //│           this.x = x;

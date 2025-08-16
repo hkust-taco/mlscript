@@ -88,6 +88,10 @@ fun mkStr(...xs) =
   fold((acc, x) => assert(x is Str); acc + x) of ...xs
 
 
+// Return the implicit instance of type T from the current scope.
+// Analogous to the `summon` function in Scala.
+fun use[T](using instance: T) = instance
+
 
 // This binds the handler in body, which means body can raise effects in handler
 fun enterHandleBlock(handler, body) =
@@ -98,6 +102,4 @@ fun enterHandleBlock(handler, body) =
 fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
 
-// Return the implicit instance of type T from the current scope.
-// Analogous to the `summon` function in Scala.
-fun use[T](using instance: T) = instance
+

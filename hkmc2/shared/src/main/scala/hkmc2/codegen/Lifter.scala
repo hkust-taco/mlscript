@@ -424,7 +424,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case Call(Value.Ref(_: BlockMemberSymbol), args) =>
           args.foreach(applyArg)
         case Instantiate(mut, InstSel(_), args) =>
-          args.foreach(applyPath)
+          args.foreach(applyArg)
         case _ => super.applyResult(r)
       
       override def applyDefn(defn: Defn): Unit = defn match
@@ -587,7 +587,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           ctx.bmsReqdInfo.get(l) match
           case Some(info) if !ctx.isModOrObj(l) =>
             val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
-            val newArgs = args.map(applyPath(_)).map(_.asArg)
+            val newArgs = args.map(applyArg)
             Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
           case _ => super.applyResult(r)
         // if possible, directly create the bms and replace the result with it
@@ -664,7 +664,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => // has args
               blockBuilder
-                .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(d.sym, ctx).map(_.value)))
+                .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(d.sym, ctx)))
                 .rest(applyBlock(rest))
             case None => // has no args
               blockBuilder
@@ -896,7 +896,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Nil => (S(extraSyms), Nil)
               case Some(value) => (paramSyms, auxSyms.appended(extraSyms))
             
-            val paramArgs = newParamSyms.getOrElse(Nil).map(_.asPath)
+            val paramArgs = newParamSyms.getOrElse(Nil).map(_.asPath.asArg)
             
             inline def toPaths(l: List[Local]) = l.map(_.asPath)
             
@@ -1087,7 +1087,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
       val paramsList = varsList.map: s =>
-        if paramsSet.contains(s) then s.asPath else Value.Lit(Tree.UnitLit(true))
+        (if paramsSet.contains(s) then s.asPath else Value.Lit(Tree.UnitLit(true))).asArg
       // moved when the capture is instantiated
       val bod = blockBuilder
         .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes

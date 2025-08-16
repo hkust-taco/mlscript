@@ -426,7 +426,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Instantiate(
         false,
         Select(Value.Ref(sym), Tree.Ident("class")), args) =>
-        bPaths(args):
+        bArgs(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
@@ -473,7 +473,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             summon[Ctx].def_acc += jpdef
             Node.Case(e, casesList, defaultCase)
       case Return(res, implct) => bResult(res)(x => Node.Result(Ls(x)))
-      case Throw(Instantiate(false, Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
+      case Throw(Instantiate(false, Select(Value.Ref(_), ident),
+          Ls(Arg(N, Value.Lit(Tree.StrLit(e))))))
+      if ident.name === "Error" =>
         Node.Panic(e)
       case Label(label, body, rest) => TODO("Label not supported")
       case Break(label) => TODO("Break not supported")

@@ -54,7 +54,7 @@ module M with
 //│       return globalThis.Object.freeze(new D.class());
 //│     };
 //│     Object.defineProperty(this.D, "class", {
-//│     enumerable: true,
+//│       enumerable: true,
 //│       value: class D {
 //│         constructor() {}
 //│         toString() { return runtime.render(this); }

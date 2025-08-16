@@ -72,6 +72,7 @@ object Keyword:
   val thenPrec = nextPrec
   val `then` = Keyword("then", thenPrec, thenPrec)
   val `do` = Keyword("do", thenPrec, thenPrec)
+  val `drop` = Keyword("drop", thenPrec, thenPrec)
   
   val `else` = Keyword("else", nextPrec, curPrec)
   val `fun` = Keyword("fun", N, N)
@@ -150,7 +151,7 @@ object Keyword:
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
   type Prefix =
-    `do`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
+    `do`.type | `drop`.type | `not`.type | `new!`.type | `else`.type | `return`.type | `throw`.type | `import`.type
   
   type Infix =
     `is`.type | `:`.type | `->`.type | `=>`.type | `extends`.type | `restricts`.type | `as`.type | `do`.type | `where`.type | `with`.type |

@@ -237,6 +237,9 @@ package object utils {
   
   def checkless[A, B](pf: Paf[A, B]): A => B = pf
   
+  private val _id: Any => Any = x => x
+  def id[A]: A => A = _id.asInstanceOf[A => A]
+  
   
   def closeOver[A](xs: Set[A])(f: A => Set[A]): Set[A] =
     closeOverCached(Set.empty, xs)(f)

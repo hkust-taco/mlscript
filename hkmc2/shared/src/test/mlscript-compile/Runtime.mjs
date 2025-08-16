@@ -28,7 +28,7 @@ let Runtime1;
     const Unit$class = class Unit {
       constructor() {
         Object.defineProperty(this, "class", {
-        value: Unit
+          value: Unit
         })
       }
       toString() {
@@ -45,7 +45,7 @@ let Runtime1;
       return globalThis.Object.freeze(new EffectHandle.class(_reified1));
     };
     Object.defineProperty(this.EffectHandle, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class EffectHandle {
         #_reified;
         constructor(_reified) {
@@ -73,7 +73,7 @@ let Runtime1;
       return globalThis.Object.freeze(new MatchResult.class(output1, bindings1));
     };
     Object.defineProperty(this.MatchResult, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class MatchResult {
         constructor(output, bindings) {
           this.output = output;
@@ -87,7 +87,7 @@ let Runtime1;
       return globalThis.Object.freeze(new MatchFailure.class(errors1));
     };
     Object.defineProperty(this.MatchFailure, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class MatchFailure {
         constructor(errors) {
           this.errors = errors;
@@ -156,7 +156,7 @@ let Runtime1;
       static take(string2, n) {
         return string2.slice(0, n)
       } 
-      static drop(string3, n1) {
+      static leave(string3, n1) {
         return runtime.safeCall(string3.slice(n1))
       }
       static toString() { return runtime.render(this); }
@@ -217,7 +217,7 @@ let Runtime1;
     const FatalEffect$class = class FatalEffect {
       constructor() {
         Object.defineProperty(this, "class", {
-        value: FatalEffect
+          value: FatalEffect
         })
       }
       toString() { return runtime.render(this); }
@@ -227,7 +227,7 @@ let Runtime1;
     const PrintStackEffect$class = class PrintStackEffect {
       constructor() {
         Object.defineProperty(this, "class", {
-        value: PrintStackEffect
+          value: PrintStackEffect
         })
       }
       toString() { return runtime.render(this); }
@@ -238,7 +238,7 @@ let Runtime1;
       return globalThis.Object.freeze(new FunctionContFrame.class(next1));
     };
     Object.defineProperty(this.FunctionContFrame, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class FunctionContFrame {
         constructor(next) {
           this.next = next;
@@ -251,7 +251,7 @@ let Runtime1;
       return globalThis.Object.freeze(new HandlerContFrame.class(next1, nextHandler1, handler1));
     };
     Object.defineProperty(this.HandlerContFrame, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class HandlerContFrame {
         constructor(next, nextHandler, handler) {
           this.next = next;
@@ -266,7 +266,7 @@ let Runtime1;
       return globalThis.Object.freeze(new ContTrace.class(next1, last1, nextHandler1, lastHandler1, resumed1));
     };
     Object.defineProperty(this.ContTrace, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class ContTrace {
         constructor(next, last, nextHandler, lastHandler, resumed) {
           this.next = next;
@@ -283,7 +283,7 @@ let Runtime1;
       return globalThis.Object.freeze(new EffectSig.class(contTrace1, handler1, handlerFun1));
     };
     Object.defineProperty(this.EffectSig, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class EffectSig {
         constructor(contTrace, handler, handlerFun) {
           this.contTrace = contTrace;
@@ -303,7 +303,7 @@ let Runtime1;
       return globalThis.Object.freeze(new FnLocalsInfo.class(fnName1, locals1));
     };
     Object.defineProperty(this.FnLocalsInfo, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class FnLocalsInfo {
         constructor(fnName, locals) {
           this.fnName = fnName;
@@ -317,7 +317,7 @@ let Runtime1;
       return globalThis.Object.freeze(new LocalVarInfo.class(localName1, value1));
     };
     Object.defineProperty(this.LocalVarInfo, "class", {
-    enumerable: true,
+      enumerable: true,
       value: class LocalVarInfo {
         constructor(localName, value) {
           this.localName = localName;
@@ -335,7 +335,7 @@ let Runtime1;
     const StackDelayHandler$class = class StackDelayHandler {
       constructor() {
         Object.defineProperty(this, "class", {
-        value: StackDelayHandler
+          value: StackDelayHandler
         })
       }
       delay() {
@@ -432,7 +432,10 @@ let Runtime1;
   } 
   static printRaw(x2) {
     let tmp;
-    tmp = Runtime.render(x2, globalThis.Object.freeze({ "indent": 2, "breakLength": 76 }));
+    tmp = Runtime.render(x2, globalThis.Object.freeze({
+      indent: 2,
+      breakLength: 76
+    }));
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static raisePrintStackEffect(showLocals) {
@@ -681,9 +684,13 @@ let Runtime1;
       vis2 = tmp3;
       tmp4 = globalThis.Object.freeze(new globalThis.Map());
       hl2 = tmp4;
-      tmp5 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([ contTrace.last ])));
+      tmp5 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([
+        contTrace.last
+      ])));
       tmp6 = hl2.set("last", tmp5);
-      tmp7 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([ contTrace.lastHandler ])));
+      tmp7 = globalThis.Object.freeze(new globalThis.Set(globalThis.Object.freeze([
+        contTrace.lastHandler
+      ])));
       tmp8 = hl2.set("last-handler", tmp7);
       tmp9 = Runtime.showFunctionContChain(contTrace.next, hl2, vis2, 0);
       tmp10 = runtime.safeCall(globalThis.console.log(tmp9));

@@ -52,9 +52,8 @@ object Printer:
       doc"set $docLhs = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
     case AssignField(lhs, nme, rhs, rest) =>
       doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
-    case Define(defn, rest) => {
+    case Define(defn, rest) =>
       doc"define ${mkDocument(defn)} in # ${mkDocument(rest)}"
-    }
     case End("") => doc"end"
     case End(msg) => doc"end ${msg}"
   

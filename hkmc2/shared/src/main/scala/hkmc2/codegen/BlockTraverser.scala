@@ -54,7 +54,7 @@ class BlockTraverser:
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
-    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyPath)
+    case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match

@@ -30,7 +30,7 @@ data class Outer(a, b) with
 //│         return globalThis.Object.freeze(new Inner.class(c1));
 //│       };
 //│       Object.defineProperty(this.Inner, "class", {
-//│       enumerable: true,
+//│         enumerable: true,
 //│         value: class Inner {
 //│           constructor(c) {
 //│             let tmp3, tmp4, tmp5;
@@ -41,7 +41,11 @@ data class Outer(a, b) with
 //│             Predef.print(tmp5);
 //│           }
 //│           i1(d) {
-//│             return globalThis.Object.freeze([ this$Outer.b, this.c, d ])
+//│             return globalThis.Object.freeze([
+//│               this$Outer.b,
+//│               this.c,
+//│               d
+//│             ])
 //│           }
 //│           toString() { return runtime.render(this); }
 //│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 

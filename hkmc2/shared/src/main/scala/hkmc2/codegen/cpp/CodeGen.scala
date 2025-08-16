@@ -287,13 +287,13 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
     val sorted = ListBuffer.empty[ClassInfo]
     given Ordering[Local] with
       def compare(x: Local, y: Local): Int = x.nme.compareTo(y.nme)
-    var work = degree.filter(_._2 === 0).keys.toSortedSet()
+    var work = degree.filter(_._2 === 0).keys.toSortedSet
     while work.nonEmpty do
       val node = work.head
       work -= node
       prog.classes.find(x => (x.symbol) === node).foreach(sorted.addOne)
       removeNode(node)
-      val next = degree.filter(_._2 === 0).keys.toSortedSet()
+      val next = degree.filter(_._2 === 0).keys.toSortedSet
       work ++= next
     if depgraph.nonEmpty then
       val cycle = depgraph.keys.mkString(", ")

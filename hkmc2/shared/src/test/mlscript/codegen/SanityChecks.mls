@@ -258,7 +258,7 @@ if M.A(1).y is
 //│       return globalThis.Object.freeze(new A.class(...args1));
 //│     };
 //│     Object.defineProperty(this.A, "class", {
-//│     enumerable: true,
+//│       enumerable: true,
 //│       value: class A {
 //│         constructor(x1) {
 //│           this.x = x1;
@@ -286,13 +286,7 @@ if M.A(1).y is
 //│ scrut = selRes2;
 //│ x = scrut;
 //│ scrut1 = x == 1;
-//│ if (scrut1 === true) {
-//│   block$res13 = x;
-//│   undefined
-//│ } else {
-//│   block$res13 = 0;
-//│   undefined
-//│ }
+//│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 

@@ -56,3 +56,18 @@ new Foo
 //│ = Foo
 
 
+let xs = [1,2,3]
+//│ xs = [1, 2, 3]
+
+data class Foo(a,b,c)
+
+new Foo(...xs)
+//│ = Foo(1, 2, 3)
+
+new Foo(...[1, 2])
+//│ = Foo(1, 2, undefined)
+
+new Foo(...[1, 2, 3, 4])
+//│ = Foo(1, 2, 3)
+
+

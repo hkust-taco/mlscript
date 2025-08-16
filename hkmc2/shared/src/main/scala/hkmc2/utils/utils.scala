@@ -34,8 +34,8 @@ trait ProductWithExtraInfo extends Product:
 
 extension (t: Product)
   def showAsTree(using post: Product => String = Function.const("")): String =
-    showAsTree(false)
-  def showAsTree(inTailPos: Bool)(using post: Product => String): String =
+    showAsTree(false, id(_))
+  def showAsTree(inTailPos: Bool, pre: PartialFunction[Product, Product])(using post: Product => String): String =
     def aux(v: Any, inTailPos: Bool = false): String = v match
       case Some(v) => "S of " + aux(v)
       case None => "N"
@@ -63,31 +63,24 @@ extension (t: Product)
         val (el, _, ec) = origin.fph.getLineColAt(end)
         s"Loc at :$sl:$sc-$el:$ec"
       
-      case t: Product => t.showAsTree(inTailPos)
+      case t: Product => t.showAsTree(inTailPos, pre)
       case v => v.toString
-    val postfix = post(t)
-    val midfix = t match
+    
+    val tt = pre.applyOrElse(t, identity)
+    val postfix = post(tt)
+    val midfix = tt match
       case t: ProductWithExtraInfo => t.extraInfo match
         case "" => ""
         case str => "{" + str + "}"
       case _ => ""
-    val prefix = t.productPrefix + midfix + (if postfix.isEmpty then "" else s" ($postfix)")
+    val prefix = tt.productPrefix + midfix + (if postfix.isEmpty then "" else s" ($postfix)")
     
-    val productArity = t match
-      case t: Resolvable if t.iargsLs.forall(_.nonEmpty) => t.productArity + 1
-      case _ => t.productArity
-    
-    productArity match
+    tt.productArity match
       case 0 => prefix
-      case 1 => prefix + " of " + aux(t.productElement(0))
+      case 1 => prefix + " of " + aux(tt.productElement(0))
       case a =>
-        var args = t.productIterator.zipWithIndex.map:
-          case (v, i) => t.productElementName(i) + " = " + aux(v, t.isInstanceOf[ProductWithTail] && i === a - 1)
-        t match
-          case t: Resolvable if t.iargsLs.forall(_.nonEmpty) =>
-            args = args ++ Iterator:
-              "iargsLs = " + aux(t.iargsLs)
-          case _ =>
+        var args = tt.productIterator.zipWithIndex.map:
+          case (v, i) => tt.productElementName(i) + " = " + aux(v, tt.isInstanceOf[ProductWithTail] && i === a - 1)
         prefix + locally:
           if inTailPos then ": \\\n" + args.mkString("\n")
           else ":\n" + args.mkString("\n").indent("  ")

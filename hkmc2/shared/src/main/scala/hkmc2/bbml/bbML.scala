@@ -166,7 +166,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
     case _ =>
       ty.symbol.flatMap(_.asTpe) match
       case S(cls: (ClassSymbol | TypeAliasSymbol)) => typeAndSubstType(Term.TyApp(ty, Nil)(N), pol)
-      case S(_) => error(msg"${ty.symbol.get.getClass.toString()} is not a valid type" -> ty.toLoc :: Nil)
+      // case S(_) => error(msg"${ty.symbol.get.getClass.toString()} is not a valid type" -> ty.toLoc :: Nil)
       case N => error(msg"Invalid type" -> ty.toLoc :: Nil) // TODO
 
   private def genPolyType(tvs: Ls[QuantVar], outer: InfVar, body: => GeneralType)(using ctx: BbCtx, cctx: CCtx) =
@@ -510,13 +510,17 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case t @ Term.App(lhs, Term.Tup(rhs)) =>
         val (funTy, lhsEff) = typeCheck(lhs)
         app((funTy, lhsEff), rhs, t)
-      case Term.New(cls, argss, N) =>
+      case Term.New(cls, args, N) =>
         cls.symbol.flatMap(_.asCls.flatMap(_.defn)) match
         case S(clsDfn: ClassDef.Parameterized) =>
           require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
-          require(argss.length <= 1)
-          val args = argss.headOr(Nil)
-          if args.length != clsDfn.params.params.length then
+          val argsList = args match
+            case Nil => Nil
+            case Term.Tup(elems) :: Nil => elems.map:
+              case PlainFld(term) => term
+              case _ => ???
+            case _ => ???
+          if argsList.length != clsDfn.params.params.length then
             (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
           else
             val map = HashMap[Uid[Symbol], TypeArg]()
@@ -533,7 +537,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
             }
             val effBuff = ListBuffer.empty[Type]
             require(clsDfn.paramsOpt.forall(_.restParam.isEmpty))
-            args.iterator.zip(clsDfn.params.params).foreach {
+            argsList.iterator.zip(clsDfn.params.params).foreach {
               case (arg, Param(sign = S(sign))) =>
                 val (ty, eff) = ascribe(arg, typeAndSubstType(sign, pol = true)(using map.toMap))
                 effBuff += eff

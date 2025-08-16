@@ -74,7 +74,7 @@ fun isLower(c) = let x = c.charCodeAt(0) in (x >= 97 and x <= 122)
 
 fun toLower(c) = if isUpper(c) then String.fromCharCode(c.charCodeAt(0) + 32) else c
 
-fun words(s) = if dropWhile(x => x === " ", s) is
+fun words(s) = if leaveWhile(x => x === " ", s) is
   Nil then Nil
   s_ and
     break_(x => x === " ", s_) is [w, s__] then w :: words(s__)

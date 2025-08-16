@@ -5,6 +5,7 @@ package js
 import mlscript.utils.*, shorthands.*
 import utils.*
 import document.*
+import document.Document.{braced, bracketed}
 
 import hkmc2.Message.MessageContext
 import hkmc2.syntax.{Tree, MutVal, ImmutVal}
@@ -15,6 +16,7 @@ import hkmc2.codegen.Value.Lam
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
 import hkmc2.semantics.Elaborator.ctx
+import hkmc2.syntax.Tree.{IntLit, StrLit}
 
 
 // TODO factor some logic for other codegen backends
@@ -84,9 +86,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def argument(a: Arg)(using Raise, Scope): Document =
     val spd = a.spread match
-      case S(true) => "..."
-      case S(false) => s"$runtimeVar.Tuple.split, "
-      case N => ""
+      case S(true) => doc"..."
+      case S(false) => doc"$runtimeVar.Tuple.split, "
+      case N => doc""
     doc"${spd}${result(a.value)}"
   
   def operand(a: Arg)(using Raise, Scope): Document =
@@ -100,8 +102,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def escapeField(s: Str, defaultPrefix: Str): Document =
     if JSBuilder.isValidFieldName(s) then doc"$defaultPrefix$s"
     else s.toIntOption match
-      case S(index) => s"[$index]"
-      case N => s"[${JSBuilder.makeStringLiteral(s)}]"
+      case S(index) => doc"[$index]"
+      case N => doc"[${JSBuilder.makeStringLiteral(s)}]"
   
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(sym) => summon[Scope].findThis_!(sym)
@@ -151,35 +153,39 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         if isValidFieldName(name)
         then doc".$name"
         else name.toIntOption match
-          case S(index) => s"[$index]"
-          case N => s"[${makeStringLiteral(name)}]"
+          case S(index) => doc"[$index]"
+          case N => doc"[${makeStringLiteral(name)}]"
       }"
     case DynSelect(qual, fld, ai) =>
       if ai
       then doc"${result(qual)}.at(${result(fld)})"
       else doc"${result(qual)}[${result(fld)}]"
     case Instantiate(mut, cls, as) =>
-      val inner = doc"new ${result(cls)}(${as.map(result).mkDocument(", ")})"
-      if mut then inner else s"$freeze(${inner})"
-    case Value.Arr(mut, es) if es.isEmpty => if mut then "[]" else s"$freeze([])"
+      val inner = doc"new ${result(cls)}(${as.map(argument).mkDocument(", ")})"
+      if mut then inner else doc"$freeze(${inner})"
+    case Value.Arr(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
     case Value.Arr(mut, es) =>
       val inner =
         val lazyConcat = es.exists(!_.spread.getOrElse(true))
         if lazyConcat
         then doc"$runtimeVar.Tuple.lazyConcat(${es.map(argument).mkDocument(doc", ")})"
-        else doc"[ #{  # ${es.map(argument).mkDocument(doc", # ")} #}  # ]"
-      if mut then inner else s"$freeze(${inner})"
+        else bracketed("[", "]", insertBreak = true):
+          es.map(argument).mkDocument(doc", # ")
+      if mut then inner else doc"$freeze(${inner})"
     case Value.Rcd(mut, Nil) =>
-      if mut then "{}" else s"$freeze({})"
+      if mut then "{}" else doc"$freeze({})"
     case Value.Rcd(mut, flds) =>
-      val inner = doc"{ #  #{ ${
-          flds.map:
-            case RcdArg(S(idx), v) =>
-              doc"${result(idx)}: ${result(v)}"
-            case RcdArg(N, v) => doc"...${result(v)}"
-          .mkDocument(", ")
-        } #}  # }"
-      if mut then inner else s"$freeze(${inner})"
+      val inner = bracketed(pre = "{", post = "}", insertBreak = true):
+        flds.map:
+          case RcdArg(S(Value.Lit(IntLit(idx))), v) =>
+            doc"${idx.toString}: ${result(v)}"
+          case RcdArg(S(Value.Lit(StrLit(idx))), v) =>
+            doc"${if isValidIdentifier(idx) then idx else s"\"$idx\""}: ${result(v)}"
+          case RcdArg(S(idx), v) =>
+            doc"[${result(idx)}]: ${result(v)}"
+          case RcdArg(N, v) => doc"...${result(v)}"
+        .mkDocument(doc", # ")
+      if mut then inner else doc"$freeze(${inner})"
   
   def returningTerm(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     def mkSemi = if endSemi then ";" else ""
@@ -299,52 +305,52 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 })"
             
             val clsJS = doc"class ${scope.lookup_!(isym)}${
-                par.map(p => s" extends ${result(p)}").getOrElse("")
-              } { #{ ${
-                privs
-              } # $ctorOrStatic $ctorBod${
-                if checkSelections && !isModule
-                then mtds
-                  .flatMap:
-                    case td @ FunDefn(_, _, ps :: pss, bod) => S:
-                      doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
-                        runtimeVar
-                      }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
-                        makeStringLiteral(sym.nme)
-                      }); }"
-                    case _ => N
-                  .mkDocument(" ")
-                else doc""
-              }${
-                mtds.map: 
-                  case td @ FunDefn(_, _, ps :: pss, bod) =>
-                    val result = pss.foldRight(bod):
-                      case (ps, block) => 
-                        Return(Lam(ps, block), false)
-                    val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
-                    doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
-                  case td @ FunDefn(_, _, Nil, bod) =>
-                    doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
-                .mkDocument(" ")
-              }${
-                // If this class has a `toString` implementation, then delegate
-                // `prettyPrint` to `toString`.
-                if mtds.exists(_.sym.nme == "toString") then doc""" # [${
-                  getVar(State.prettyPrintSymbol)
-                }]() { return this.toString(); }"""
-                // Call the `render` function in the default `toString` method.
-                else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
-              }${
-                doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
-                  kind.desc.escaped}, ${sym.nme.escaped}${
-                  if (kind is syntax.Cls) && paramsOpt.isDefined then
-                    doc", [${ctorParams.map { (p, _) => p.decl match
-                      case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
-                      case S(_) | N => doc"null"
-                    }.mkDocument(", ")}]"
+                par.map(p => doc" extends ${result(p)}").getOrElse("")
+              } " :: braced:
+                
+                privs :/: ctorOrStatic :: " " :: ctorBod :: {
+                  if checkSelections && !isModule
+                  then mtds
+                    .flatMap:
+                      case td @ FunDefn(_, _, ps :: pss, bod) => S:
+                        doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
+                          runtimeVar
+                        }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
+                          makeStringLiteral(sym.nme)
+                        }); }"
+                      case _ => N
+                    .mkDocument(" ")
                   else doc""
-                }]; """
-              } #}  # }"
+                } :: {
+                  mtds.map: 
+                    case td @ FunDefn(_, _, ps :: pss, bod) =>
+                      val result = pss.foldRight(bod):
+                        case (ps, block) => 
+                          Return(Lam(ps, block), false)
+                      val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
+                      doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
+                    case td @ FunDefn(_, _, Nil, bod) =>
+                      doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
+                  .mkDocument(" ")
+                } :: {
+                  // If this class has a `toString` implementation, then delegate
+                  // `prettyPrint` to `toString`.
+                  if mtds.exists(_.sym.nme == "toString") then doc""" # [${
+                    getVar(State.prettyPrintSymbol)
+                  }]() { return this.toString(); }"""
+                  // Call the `render` function in the default `toString` method.
+                  else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
+                } :: {
+                  doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
+                    kind.desc.escaped}, ${sym.nme.escaped}${
+                    if (kind is syntax.Cls) && paramsOpt.isDefined then
+                      doc", [${ctorParams.map { (p, _) => p.decl match
+                        case S(Param(flags = FldFlags(isVal = true))) => doc"${p.name.escaped}"
+                        case S(_) | N => doc"null"
+                      }.mkDocument(", ")}]"
+                    else doc""
+                  }]; """
+              }
             
             if (kind is syntax.Mod) || (kind is syntax.Obj) || (kind is syntax.Pat) then
               lazy val clsTmp = outerScope.allocateName(new semantics.TempSymbol(N, sym.nme+"$class"))
@@ -432,9 +438,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
-        case Case.Field(n, safe = false) =>
+        case Case.Field(name = n, safe = false) =>
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
-        case Case.Field(n, safe = true) =>
+        case Case.Field(name = n, safe = true) =>
           doc""""${n.name}" in $sd"""
       val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
       val t = tl.foldLeft(h)((acc, arm) =>
@@ -466,9 +472,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
-      doc" # ${getVar(lbl)}: while (true) { #{ ${
-        returningTerm(bod, endSemi = false)
-      } # break; #}  # }${returningTerm(rst, endSemi)}"
+      doc" # ${getVar(lbl)}: while (true) " :: braced {
+          returningTerm(bod, endSemi = true) :/: doc"break;"
+      } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
       doc" # try ${ braced(returningTerm(sub, endSemi = false)) } finally ${
@@ -561,16 +567,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
     block(t, endSemi)
   
-  def braced(t: Document)(using Raise, Scope): Document =
-    if t.isEmpty then
-      doc"{}"
-    else
-      doc"{ #{ ${t} #}  # }"
-  
   def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
-    doc"Object.defineProperty(${target}, ${prop.escaped}, { #  #{ ${
-      if enumerable then doc"enumerable: true, # " else doc""
-    }value: ${value} #}  # })"
+    doc"Object.defineProperty(${target}, ${prop.escaped}, ${
+      bracketed("{", "}", insertBreak = true):
+        (if enumerable then doc"enumerable: true, # " else doc"") :: doc"value: ${value}"
+    })"
   
   def setupFunction(name: Option[Str], params: ParamList, body: Block)
       (using Raise, Scope): (Document, Document) =

@@ -133,7 +133,7 @@ match found with
 using fnd = match fnd with
   | None -> ("???", false)
   | Some(r) -> (r id "!!!", r id true)
-//│ use: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
+//│ using: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
 
 using found
 //│ res: ("!!!" | "???", Bool,)

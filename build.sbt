@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.6.1"
+val scala3Version = "3.7.2"
 val directoryWatcherVersion = "0.18.0"
 
 ThisBuild / scalaVersion     := "2.13.14"
@@ -36,6 +36,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
+    // scalacOptions ++= Seq("-language:experimental.modularity"), // https://docs.scala-lang.org/scala3/reference/experimental/modularity.html
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,

@@ -1,0 +1,38 @@
+:js
+
+
+123 \print()
+//│ > 123
+
+123 \tuple()
+//│ = [123]
+
+
+tuple(123, 456)
+//│ = [123, 456]
+
+123 \tuple(456)
+//│ = [123, 456]
+
+123 \tuple of 456
+//│ = [123, 456]
+
+123 \tuple @ 456
+//│ = [123, 456]
+
+123 |> (tuple(_, 456))
+//│ = [123, 456]
+
+// * Maybe later support this syntax?
+:pe
+:re
+123 |> tuple(., 456)
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.29: 	123 |> tuple(., 456)
+//│ ╙──      	             ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.29: 	123 |> tuple(., 456)
+//│ ╙──      	             ^
+//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+
+

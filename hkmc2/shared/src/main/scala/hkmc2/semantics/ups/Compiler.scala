@@ -400,10 +400,10 @@ object Compiler:
   def reference(symbol: ClassSymbol | ModuleSymbol | PatternSymbol)(using tl: TL)(using Ctx, State): Opt[Term] =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
-      case ref: Ref => ref.withIArgs(Nil)
+      case ref: Ref => ref.resolve
       case sel: SynthSel =>
         fillImplicitArgs(sel.prefix)
-        sel.withIArgs(Nil)
+        sel.resolve
       case _: Term => term
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
       elem.symbol.flatMap(_.asClsLike).collectFirst:
@@ -431,7 +431,7 @@ object Compiler:
       // If the `symbol` is a virtual class, then do not select `class`.
       symbol match
         case s: ClassSymbol if !(ctx.builtins.virtualClasses contains s) =>
-          SynthSel(term, Ident("class"))(S(s)).withIArgs(Nil)
+          SynthSel(term, Ident("class"))(S(s)).resolve
         case _: (ClassSymbol | ModuleSymbol | PatternSymbol) => term
   
   import Pattern.*

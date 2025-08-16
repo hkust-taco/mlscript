@@ -106,7 +106,7 @@ class TypeChecker(using Raise, Elaborator.State):
   
   case class CCtx(path: Ls[L])
   
-  def constrain(lhs: P, rhs: C): Unit = constrain(lhs, Nil, Nil, rhs)(CCtx(Nil))
+  def constrain(lhs: P, rhs: C): Unit = constrain(lhs, Nil, Nil, rhs)(using CCtx(Nil))
   
   // def constrain(lhs: P, path: Path, rhs: C): Unit = (lhs, rhs) match
   def constrain(lhs: P, exits: Ls[L.Exit], enter: Ls[L.Enter], rhs: C)(implicit cctx: CCtx): Unit = (lhs, rhs) match

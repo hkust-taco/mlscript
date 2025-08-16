@@ -34,10 +34,9 @@ list1 is Unique(pattern _)
 list1 is Unique(pattern (Num as x) => x.toString().length)
 //│ = false
 
-:todo // This looks legit, but doesn't work.
 fun addProperty(obj, k, v) = (...obj, (k): v)
 addProperty of (a: 1), "b", 2
-//│ = {a: 1, k: 2}
+//│ = {a: 1, b: 2}
 
 // A workaround for the above issue.
 fun addProperty(obj, k, v) =

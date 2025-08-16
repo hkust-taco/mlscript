@@ -177,7 +177,7 @@ data object Cls(x) with
 //│   constructor(x1) {
 //│     this.x = x1;
 //│     Object.defineProperty(this, "class", {
-//│     value: Cls
+//│       value: Cls
 //│     })
 //│   }
 //│   get huh() {
@@ -293,14 +293,8 @@ fun baz = 1
 fun bar() = baz
 //│ JS (unsanitized):
 //│ let bar, baz;
-//│ baz = function baz() {
-//│   return 1
-//│ };
-//│ bar = function bar() {
-//│   let tmp7;
-//│   tmp7 = baz();
-//│   return tmp7
-//│ };
+//│ baz = function baz() { return 1 };
+//│ bar = function bar() { let tmp7; tmp7 = baz(); return tmp7 };
 
 // ——— ——— ———
 
@@ -309,13 +303,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.310: 	open Stack { ::, Nil }
+//│ ║  l.304: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.316: 	open Stack { (::), Nil }
+//│ ║  l.310: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -323,7 +317,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.324: 	1 :: Nil
+//│ ║  l.318: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -334,9 +328,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.334: 	mkStr of ... // hello
+//│ ║  l.328: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.335: 	"oops"
+//│ ║  l.329: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -359,22 +353,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.354: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.360: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.354: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                          ^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.369: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.363: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.375: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.369: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -408,10 +402,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.408: 	  let bar(x: Str): Str = x + x
+//│ ║  l.402: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.409: 	  bar("test")
+//│ ║  l.403: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -452,7 +446,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.453: 	data class Foo(mut x)
+//│ ║  l.447: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———

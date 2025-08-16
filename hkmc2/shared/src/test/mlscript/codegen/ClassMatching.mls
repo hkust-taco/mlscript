@@ -15,9 +15,7 @@ if Some(0) is Some(x) then x
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 
@@ -33,9 +31,7 @@ if s is
 //│   param01 = s.value;
 //│   x1 = param01;
 //│   x1
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 if s is
@@ -64,9 +60,7 @@ x => if x is Some(x) then x
 //│     param04 = x3.value;
 //│     x4 = param04;
 //│     return x4
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
 //│ = fun
@@ -136,11 +130,7 @@ fun f(x) = if x is
 //│     } else {
 //│       return Predef.print("oops")
 //│     }
-//│   } else if (x3 instanceof None1.class) {
-//│     return "ok"
-//│   } else {
-//│     return Predef.print("oops")
-//│   }
+//│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
 //│ };
 
 f(Some(0))
@@ -177,9 +167,7 @@ fun f(x) = if x is
 //│     a = param04;
 //│     b = param1;
 //│     return a + b
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 f(Some(123))
@@ -208,9 +196,7 @@ fun f(x) = print of if x is
 //│     }
 //│   } else if (x3 instanceof None1.class) {
 //│     tmp9 = "ok";
-//│   } else {
-//│     tmp9 = "oops";
-//│   }
+//│   } else { tmp9 = "oops"; }
 //│   return Predef.print(tmp9)
 //│ };
 

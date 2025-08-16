@@ -102,7 +102,7 @@ class BlockTransformer(subst: SymbolSubst):
       if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
     case Instantiate(mut, cls, args) =>
       val cls2 = applyPath(cls)
-      val args2 = args.mapConserve(applyPath)
+      val args2 = args.mapConserve(applyArg)
       if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
     case p: Path => applyPath(p)
   

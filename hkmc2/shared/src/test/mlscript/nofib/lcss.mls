@@ -35,11 +35,11 @@ fun algc(m, n, xs, ys) = if
   else
     let m2 = intDiv(m, 2)
     let xs1 = take(m2, xs)
-    let xs2 = drop(m2, xs)
+    let xs2 = leave(m2, xs)
     let l1 = algb(xs1, ys)
     let l2 = reverse(algb(reverse(xs2), reverse(ys)))
     let k = findk(0, 0, -1, zip(l1, l2))
-    compose(algc(m2, k, xs1, take(k, ys)), (algc(m-m2, n-k, xs2, drop(k, ys))))
+    compose(algc(m2, k, xs1, take(k, ys)), (algc(m-m2, n-k, xs2, leave(k, ys))))
 
 fun lcss(xs, ys) = algc(listLen(xs), listLen(ys), xs, ys)(Nil)
 

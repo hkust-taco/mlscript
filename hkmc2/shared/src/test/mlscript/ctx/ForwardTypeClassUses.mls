@@ -32,7 +32,7 @@ module Example with
 test
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.27: 	fun test = M.mtd()
-//│ ║        	           ^^^^^^^
+//│ ║        	           ^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.29: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
@@ -50,7 +50,7 @@ module Example with
 test
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.45: 	fun test = Example.foo().mtd()
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^
+//│ ║        	           ^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.47: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^

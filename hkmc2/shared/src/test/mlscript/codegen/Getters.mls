@@ -130,9 +130,7 @@ fun test() =
 //│ let test1;
 //│ test1 = function test() {
 //│   let whoops, tmp1;
-//│   whoops = function whoops() {
-//│     return 42
-//│   };
+//│   whoops = function whoops() { return 42 };
 //│   tmp1 = whoops();
 //│   return tmp1
 //│ };
@@ -207,9 +205,7 @@ fun a() =
 //│   };
 //│   c = function c() {
 //│     let d, tmp2, tmp3;
-//│     d = function d() {
-//│       return 2
-//│     };
+//│     d = function d() { return 2 };
 //│     tmp2 = b();
 //│     tmp3 = d();
 //│     return tmp2 + tmp3
@@ -238,9 +234,7 @@ fun b() =
 //│   };
 //│   d = function d() {
 //│     let c1, tmp3;
-//│     c1 = function c() {
-//│       return 2
-//│     };
+//│     c1 = function c() { return 2 };
 //│     tmp3 = c1();
 //│     return tmp3
 //│   };

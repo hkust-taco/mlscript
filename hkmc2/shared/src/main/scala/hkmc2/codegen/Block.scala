@@ -459,7 +459,7 @@ sealed abstract class Result extends AutoLocated:
 
   protected def children: List[Located] = this match
     case Call(fun, args) => fun :: args.map(_.value)
-    case Instantiate(mut, cls, args) => cls :: args
+    case Instantiate(mut, cls, args) => cls :: args.map(_.value)
     case Select(qual, name) => qual :: name :: Nil
     case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
     case Value.Ref(l) => Nil
@@ -472,7 +472,7 @@ sealed abstract class Result extends AutoLocated:
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match
     case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
-    case Instantiate(mut, cls, args) => args.flatMap(_.subBlocks)
+    case Instantiate(mut, cls, args) => args.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
     case Value.Lam(params, body) => body :: Nil
     case Value.Arr(mut, elems) => elems.flatMap(_.value.subBlocks)
@@ -480,7 +480,7 @@ sealed abstract class Result extends AutoLocated:
   
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
-    case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.freeVars).toSet
+    case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.value.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
@@ -493,7 +493,7 @@ sealed abstract class Result extends AutoLocated:
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
-    case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.freeVarsLLIR).toSet
+    case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
     case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
     case Value.Ref(l: MemberSymbol[?]) => l.defn match
@@ -517,13 +517,13 @@ type Local = Symbol
  * after handler is lowered does not have any effect on the code generation. */
 case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
 
-case class Instantiate(mut: Bool, cls: Path, args: Ls[Path]) extends Result
+case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 
 sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
   def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
-  def asArg = Arg(N, this)
+  def asArg = Arg(spread = N, this)
 
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:
   def extraInfo: Str = symbol.mkString
