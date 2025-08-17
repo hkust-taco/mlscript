@@ -590,8 +590,8 @@ extends Importer:
       )
     case tree @ Tup(TermDef(Ins, f, N) :: fs) =>
       Term.CtxTup((f :: fs).map(fld(_)))(tree)
-    case Modified(Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
-      Term.Mut(Term.Tup(fields.map(fld(_)))(tree))
+    case Modified(kw @ Keywrd(Keyword.`mut`), tree @ Tup(fields)) =>
+      Term.Mut(Term.Tup(fields.map(fld(_)))(tree)).mkLocWith(kw)
     case tree @ Tup(fields) =>
       Term.Tup(fields.map(fld(_)))(tree)
       
@@ -663,12 +663,12 @@ extends Importer:
         raise:
           ErrorReport(msg"Return statements are not allowed in this context." -> tree.toLoc :: Nil)
         Term.Error
-    case PrefixApp(Keywrd(Keyword.`throw`), body) =>
-      Term.Throw(subterm(body)).withLocOf(tree)
-    case PrefixApp(Keywrd(Keyword.`do`), body) =>
-      Blk(subterm(body) :: Nil, unit).withLocOf(tree)
-    case PrefixApp(Keywrd(Keyword.`drop`), body) =>
-      Term.Drop(subterm(body)).withLocOf(tree)
+    case PrefixApp(kw @ Keywrd(Keyword.`throw`), body) =>
+      Term.Throw(subterm(body)).mkLocWith(kw)
+    case PrefixApp(kw @ Keywrd(Keyword.`do`), body) =>
+      Blk(subterm(body) :: Nil, unit).mkLocWith(kw)
+    case PrefixApp(kw @ Keywrd(Keyword.`drop`), body) =>
+      Term.Drop(subterm(body)).mkLocWith(kw)
     case Region(id: Ident, body) =>
       val sym = VarSymbol(id)
       given Ctx = ctx + (id.name -> sym)
@@ -962,7 +962,7 @@ extends Importer:
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
-            LetDecl(sym, annotations).withLocOf(kw) :: acc
+            LetDecl(sym, annotations).mkLocWith(kw) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
       case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>

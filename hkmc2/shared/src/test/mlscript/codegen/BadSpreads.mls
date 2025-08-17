@@ -24,13 +24,13 @@ fun f = ..., 1
 fun foo(a, ...b, c) = [a, ...b, c]
 //│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
 //│ ║  l.24: 	fun foo(a, ...b, c) = [a, ...b, c]
-//│ ╙──      	              ^
+//│ ╙──      	           ^^^^
 
 :e
 fun foo(a, ...b, c) = [a, ...b]
 //│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
 //│ ║  l.30: 	fun foo(a, ...b, c) = [a, ...b]
-//│ ╙──      	              ^
+//│ ╙──      	           ^^^^
 
 :re
 foo(1, 2, 3)
@@ -58,6 +58,6 @@ fun foo(1) = 2
 fun foo(...1) = 2
 //│ ╔══[ERROR] Expected a valid parameter, found spread
 //│ ║  l.58: 	fun foo(...1) = 2
-//│ ╙──      	           ^
+//│ ╙──      	        ^^^^
 
 

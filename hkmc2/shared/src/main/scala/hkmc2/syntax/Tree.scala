@@ -150,7 +150,7 @@ enum Tree extends AutoLocated:
     case Open(bod) => bod :: Nil
     case OpenIn(opened, body) => opened :: body :: Nil
     case Def(lhs, rhs) => lhs :: rhs :: Nil
-    case Spread(_, body) => body.toList
+    case Spread(kw, body) => kw :: body.toList
     case Annotated(annotation, target) => annotation :: target :: Nil
     case Constructor(decl) => decl :: Nil
     case MemberProj(cls, name) => cls :: Nil

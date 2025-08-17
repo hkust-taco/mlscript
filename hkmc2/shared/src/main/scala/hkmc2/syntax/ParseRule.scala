@@ -37,9 +37,6 @@ def discardKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Rest] =
 def keepKw[Rest](kw: Keyword)(rest: ParseRule[Rest]): Alt[Keywrd[kw.type] -> Rest] = 
   Alt.Kw(kw)(rest)((k, rest) => k -> rest)
 
-// Refine the type of `kw` in `Alt.Kw` to be exactly `K`.
-type RefinedKw[+A, K <: Keyword] = Alt.Kw[?, A] & { val kw: K }
-
 class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)

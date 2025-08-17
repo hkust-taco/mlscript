@@ -201,10 +201,10 @@ let foo =
     Tuple(...elements) then elements
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.201: 	    Tuple(...elements) then elements
-//│ ╙──       	             ^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.201: 	    Tuple(...elements) then elements
-//│ ╙──       	             ^^^^^^^^
+//│ ╙──       	          ^^^^^^^^^^^
 //│ foo = fun foo
 
 foo(Tuple(1, 2, 3))

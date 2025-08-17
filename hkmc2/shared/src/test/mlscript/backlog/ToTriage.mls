@@ -354,10 +354,10 @@ Foo(1, 2, 3).args
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
 //│ ║  l.354: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                          ^^^^
+//│ ╙──       	                       ^^^^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.354: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                          ^^^^
+//│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]

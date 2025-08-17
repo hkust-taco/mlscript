@@ -81,7 +81,7 @@ sum2(arr)
 fun f(..xs) = xs
 //│ ╔══[ERROR] Lazy spread parameters not allowed.
 //│ ║  l.81: 	fun f(..xs) = xs
-//│ ╙──      	        ^^
+//│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)

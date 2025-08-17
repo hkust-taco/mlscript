@@ -136,7 +136,7 @@ abstract class Parser(
   
   object PrefixRule:
     def unapply(t: IDENT): Opt[(Keyword, ParseRule[Tree])] = t match
-      // * the Loc of this Keywrd is added later
+      // * the Loc of this Keywrd is added at the call site
       case KEYWORD(kw) => prefixRules.getKwAlt(kw, N).map: subRule =>
         kw -> subRule
       case _ => N
