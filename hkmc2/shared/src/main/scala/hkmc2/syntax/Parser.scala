@@ -136,9 +136,9 @@ abstract class Parser(
   
   object PrefixRule:
     def unapply(t: IDENT): Opt[(Keyword, ParseRule[Tree])] = t match
-      case KEYWORD(kw) => prefixRules.getKwAlt(kw).map: kwAlt =>
-        // TODO: Loc?
-        kw -> kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw), rst))
+      // * the Loc of this Keywrd is added later
+      case KEYWORD(kw) => prefixRules.getKwAlt(kw, N).map: subRule =>
+        kw -> subRule
       case _ => N
   
   protected def doPrintDbg(msg: => Str): Unit
@@ -316,20 +316,19 @@ abstract class Parser(
       Keyword.all.get(id.name) match
       case S(kw) =>
         consume
-        rule.getKwAlt(kw) match
-        case S(kwAlt) =>
-          val rest = kwAlt.rest.map(a => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), a))
+        rule.getKwAlt(kw, S(loc)) match
+        case S(subRule) =>
           yeetSpaces match
-          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if rest.blkAlt.isEmpty =>
+          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
-            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(rest, Nil, allowNewlines)) // FIXME allowNewlines?
+            val blk = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule, Nil, allowNewlines)) // FIXME allowNewlines?
             if blk.isEmpty then
-              err(msg"Expected ${rest.whatComesAfter} ${rest.mkAfterStr}; found end of block instead" -> S(loc) :: Nil)
+              err(msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found end of block instead" -> S(loc) :: Nil)
               errExpr
             blk.map(annotations.annotate) ::: blockContOf(rule)
           case _ =>
             val p = kw.rightPrec.getOrElse(CommaPrecNext)
-            val res = parseRule(p, rest, allowNewlines = allowNewlines).getOrElse(errExpr)
+            val res = parseRule(p, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
             annotations.annotate(exprCont(res, CommaPrecNext, allowNewlines = allowNewlines)) :: blockContOf(rule)
         case N =>
           
@@ -340,17 +339,17 @@ abstract class Parser(
             yeetSpaces match
             case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ =>
               consume
-              prefixRules.getKwAlt(kw) match
-              case S(kwAlt) if kwAlt.rest.blkAlt.isEmpty =>
+              prefixRules.getKwAlt(kw, S(loc)) match
+              case S(subRule) if subRule.blkAlt.isEmpty =>
                 rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
-                  p.blockOf(kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kwAlt.kw).withLoc(S(loc)), rst)).map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
+                  p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)), annotations, allowNewlines)
                 } ++ blockContOf(rule)
               case _ =>
                 TODO(cur)
             case _ =>
-              prefixRules.getKwAlt(kw) match
-              case S(kwAlt) =>
-                val e = parseRule(CommaPrecNext, kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), rst)), allowNewlines = allowNewlines).getOrElse(errExpr)
+              prefixRules.getKwAlt(kw, S(loc)) match
+              case S(subRule) =>
+                val e = parseRule(CommaPrecNext, subRule, allowNewlines = allowNewlines).getOrElse(errExpr)
                 annotations.annotate(parseRule(CommaPrecNext, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res)).getOrElse(errExpr)) :: blockContOf(rule)
               case N =>
                 // TODO dedup?
@@ -415,26 +414,26 @@ abstract class Parser(
         // encountering `:` should lead to parsing an expr (likely a pun)
         tryParseExp(prec, tok, loc, rule, allowNewlines = allowNewlines)
       case S(kw) =>
-        rule.getKwAlt(kw) match
-        case S(kwAlt) =>
-          if verbose then printDbg(s"$$ proceed with rule: ${kwAlt.rest.name}")
+        rule.getKwAlt(kw, S(loc)) match
+        case S(subRule) =>
+          if verbose then printDbg(s"$$ proceed with rule: ${subRule.name}")
           consume
           yeetSpaces match
-          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if kwAlt.rest.blkAlt.isEmpty =>
+          case (tok @ BRACKETS(_: Indent_Curly, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
             rec(toks, S(tok.innerLoc), tok.describe)
-              .concludeWith(_.parseRule(kw.rightPrec.getOrElse(CommaPrecNext), kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), rst)), allowNewlines = true))
+              .concludeWith(_.parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = true))
           case _ =>
-            parseRule(kw.rightPrec.getOrElse(CommaPrecNext), kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), rst)), allowNewlines = allowNewlines)
+            parseRule(kw.rightPrec.getOrElse(CommaPrecNext), subRule, allowNewlines = allowNewlines)
         case N =>
           if verbose then printDbg(s"$$ cannot find a rule starting with: ${id.name}")
           rule.exprAlt match
           case S(exprAlt) =>
             consume
-            prefixRules.getKwAlt(kw) match
-            case S(kwAlt) =>
+            prefixRules.getKwAlt(kw, S(loc)) match
+            case S(subRule) =>
               val e = exprCont(
-                parseRule(kw.rightPrecOrMin, kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), rst)), allowNewlines = allowNewlines)
+                parseRule(kw.rightPrecOrMin, subRule, allowNewlines = allowNewlines)
                   .getOrElse(errExpr), prec, allowNewlines = allowNewlines)
               parseRule(prec, exprAlt.rest, allowNewlines = allowNewlines).map(res => exprAlt.k(e, res))
             case N =>
@@ -726,10 +725,10 @@ abstract class Parser(
       case Nil => false
       case (_: NEWLINE_COMMA | SPACE, _) :: _ => consume; true
       case (KEYWORD(kw), loc) :: _ if kw isnt Keyword.__ =>
-        prefixRules.getKwAlt(kw) match
-        case S(kwAlt) =>
+        prefixRules.getKwAlt(kw, S(loc)) match
+        case S(subRule) =>
           consume
-          parseRule(CommaPrecNext, kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(loc)), rst)), allowNewlines = false).getOrElse(errExpr)
+          parseRule(CommaPrecNext, subRule, allowNewlines = false).getOrElse(errExpr)
         case N => expr(0, allowNewlines = false)
       case _ => expr(0, allowNewlines = false)
     item match
@@ -1138,11 +1137,11 @@ abstract class Parser(
       
       case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>
         if verbose then printDbg(s"$$ found keyword: ${kw.name} (${kw.leftPrecOrMin})")
-        infixRules.getKwAlt(kw) match
-          case S(kwAlt) =>
+        infixRules.getKwAlt(kw, S(l0)) match
+          case S(subRule) =>
             consume
-            if verbose then printDbg(s"$$ proceed with rule: ${kwAlt.rest.name}")
-            kwAlt.rest.map(rst => kwAlt.k(new Keywrd(kw).withLoc(S(l0)), rst)).exprAlt match
+            if verbose then printDbg(s"$$ proceed with rule: ${subRule.name}")
+            subRule.exprAlt match
               case S(exprAlt) =>
                 if verbose then printDbg("$ parsing the right-hand side")
                 val rhs = expr(kw.rightPrecOrMin, allowNewlines = allowNewlines)
@@ -1151,7 +1150,7 @@ abstract class Parser(
                 .getOrElse(errExpr)
               case N =>
                 // TODO other alts...?
-                err(msg"Expected ${kwAlt.rest.whatComesAfter} ${kwAlt.rest.mkAfterStr}; found ${kw.name} instead" -> S(l0) :: Nil)
+                err(msg"Expected ${subRule.whatComesAfter} ${subRule.mkAfterStr}; found ${kw.name} instead" -> S(l0) :: Nil)
                 acc
           case _ => acc
       case _ =>

@@ -273,8 +273,8 @@ while print("Hello World"); false
 //│ ║  l.270: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal).
-//│ ║  l.270: 	  then 0(0)
-//│ ╙──       	^^
+//│ ║  l.269: 	while print("Hello World"); false
+//│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
 

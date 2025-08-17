@@ -50,8 +50,9 @@ class ParseRule[+A](val name: Str, val omitAltsStr: Bool = false)(val alts: Alt[
   
   lazy val kwAlts = alts.collect { case alt: Alt.Kw[rst, A] => alt.kw.name -> alt }.toMap
 
-  def getKwAlt(k: Keyword): Opt[RefinedKw[A, k.type]] =
-    kwAlts.get(k.name).asInstanceOf
+  def getKwAlt(k: Keyword, loc: Opt[Loc]) =
+    kwAlts.get(k.name).map: kwAlt => 
+      kwAlt.rest.map(a => kwAlt.k(new Keywrd(k.asInstanceOf[kwAlt.kw.type]).withLoc(loc), a))
   
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
   lazy val blkAlt = alts.collectFirst { case alt: Alt.Blk[rst, A] => alt }
