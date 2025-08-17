@@ -319,7 +319,7 @@ enum Tree extends AutoLocated:
     case td @ Tree.TermDef(m, head, N) =>
       (td.extension.isEmpty && td.withPart.isEmpty && m == modifier) || head.isModified(modifier)
     case Modified(Keywrd(m), body) =>
-      modifier is m || body.isModified(modifier)
+      (modifier is m) || body.isModified(modifier)
     case _ =>
       false
 
