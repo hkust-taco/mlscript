@@ -275,7 +275,7 @@ extends Importer:
   import tl.*
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
-    LetDecl(sym, annotations).withLocOf(kw) :: DefineVar(sym, rhs) :: Nil
+    LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
