@@ -327,7 +327,7 @@ object Tree:
   val DummyApp: App = App(Dummy, Dummy) // TODO change the places where this is used
   val DummyTup: Tup = Tup(Dummy :: Nil)
   def DummyTypeDef(k: TypeDefKind)(using State): TypeDef =
-    Tree.TypeDef(syntax.Cls, Tree.Dummy, N)
+    Tree.TypeDef(k, Tree.Dummy, N)
   object Block:
     def mk(stmts: Ls[Tree])(using State): Tree = stmts match
       case Nil => UnitLit(false)
