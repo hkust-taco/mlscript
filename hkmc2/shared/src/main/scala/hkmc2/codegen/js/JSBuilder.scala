@@ -236,10 +236,6 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds, privFlds, pubFlds, preCtor, ctor) =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
-            val ctorFields = ctorParams.filter: p =>
-              p._1.decl match
-              case S(Param(flags = FldFlags(isVal = true))) => true
-              case _ => false
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
             
             val isModule = kind is syntax.Mod

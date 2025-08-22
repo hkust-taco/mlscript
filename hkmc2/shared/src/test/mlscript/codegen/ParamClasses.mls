@@ -186,8 +186,8 @@ class Foo(x, val y, z, val z, z) with
   print("this.z = " + this.z)
 //│ JS (unsanitized):
 //│ let Foo7;
-//│ Foo7 = function Foo(x1, y1, z3, z, z1) {
-//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z3, z, z1));
+//│ Foo7 = function Foo(x1, y1, z3, z4, z5) {
+//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z3, z4, z5));
 //│ };
 //│ Object.defineProperty(Foo7, "class", {
 //│   enumerable: true,
@@ -239,8 +239,8 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ JS (unsanitized):
 //│ let Foo9;
-//│ Foo9 = function Foo(z2, z) {
-//│   return globalThis.Object.freeze(new Foo.class(z2, z));
+//│ Foo9 = function Foo(z2, z3) {
+//│   return globalThis.Object.freeze(new Foo.class(z2, z3));
 //│ };
 //│ Object.defineProperty(Foo9, "class", {
 //│   enumerable: true,
