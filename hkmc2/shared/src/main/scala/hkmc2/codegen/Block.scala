@@ -241,9 +241,13 @@ sealed abstract class Block extends Product with AutoLocated:
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
-          if (newPreCtor is c.preCtor) && (newCtor is c.ctor)
+          val newMethods = c.methods.mapConserve:
+            case f@FunDefn(owner, sym, params, body) =>
+              val newBody = body.flattened
+              if newBody is body then f else f.copy(body = newBody)
+          if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
-          else c.copy(preCtor = newPreCtor, ctor = newCtor)
+          else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
       
       val newRest = rest.flatten(k)
       if (newDefn is defn) && (newRest is rest)
