@@ -99,6 +99,7 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
       // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
       baseScp.bindings += Elaborator.State.importSymbol -> "import"
+      baseScp.existingNames += "import"
       val nestedScp = baseScp.nest
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)

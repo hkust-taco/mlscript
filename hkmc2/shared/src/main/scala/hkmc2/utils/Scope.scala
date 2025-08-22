@@ -1,7 +1,7 @@
 package hkmc2
 package utils
 
-import scala.collection.mutable.{Map => MutMap}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -25,6 +25,8 @@ import hkmc2.codegen.js.JSBuilder
 class Scope
     (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str])
     (using State):
+  
+  val existingNames = MutSet.empty[Str]
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
@@ -84,9 +86,9 @@ class Scope
     case S(outer) =>
       (if outer.thisProxyAccessed then S(outer.thisProxy) else N, res)
   
-  // TODO more efficient!
+  
   def inScope(name: Str): Bool =
-    bindings.valuesIterator.contains(name) || parent.exists(_.inScope(name))
+    existingNames.contains(name) || parent.exists(_.inScope(name))
   
   def lookup(l: Local): Opt[Str] =
     // curThis.filter(_ is l).map(_ => thisProxy) orElse
@@ -123,6 +125,7 @@ class Scope
         (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
     
     bindings += l -> name
+    existingNames += name
     
     name
 
