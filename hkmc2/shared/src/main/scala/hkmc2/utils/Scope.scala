@@ -23,10 +23,10 @@ import hkmc2.codegen.js.JSBuilder
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
   * to an inner symbol (e.g., class or module). */
 class Scope
-    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str])
+    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
     (using State):
   
-  val existingNames = MutSet.empty[Str]
+  private val existingNames = MutSet.empty[Str]
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
@@ -44,6 +44,10 @@ class Scope
     raise(InternalError(msg"`this` not in scope: ${thisSym.toString}" -> N :: Nil,
       source = Diagnostic.Source.Compilation))
     die
+  
+  def addToBindings(symbol: Local, name: String) =
+    bindings += symbol -> name
+    existingNames += name
   
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
@@ -124,8 +128,7 @@ class Scope
         // Try realBase with an integer.
         (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
     
-    bindings += l -> name
-    existingNames += name
+    addToBindings(l, name)
     
     name
 
