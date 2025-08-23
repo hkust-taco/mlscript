@@ -120,7 +120,7 @@ case class Scope
   
   def allocateName(l: Local, prefix: Str = "", shadow: Bool = false): Str =
     
-    // Maybe useful later?
+    // * May be useful later?
     /* 
     val base: Str = l match
       case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) =/= 0 =>
