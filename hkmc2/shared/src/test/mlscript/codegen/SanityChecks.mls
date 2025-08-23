@@ -102,8 +102,8 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls1 = function Cls(x1, y1) {
-//│   return globalThis.Object.freeze(new Cls.class(x1, y1));
+//│ Cls1 = function Cls(x, y) {
+//│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
 //│ Object.defineProperty(Cls1, "class", {
 //│   enumerable: true,
@@ -133,8 +133,8 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls3 = function Cls(...args1) {
-//│   return globalThis.Object.freeze(new Cls.class(...args1));
+//│ Cls3 = function Cls(...args) {
+//│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
 //│ Object.defineProperty(Cls3, "class", {
 //│   enumerable: true,
@@ -169,8 +169,8 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ Cls5 = function Cls(...args1) {
-//│   return globalThis.Object.freeze(new Cls.class(...args1));
+//│ Cls5 = function Cls(...args) {
+//│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
 //│ Object.defineProperty(Cls5, "class", {
 //│   enumerable: true,
@@ -254,8 +254,8 @@ if M.A(1).y is
 //│ (class M {
 //│   static {
 //│     M1 = M;
-//│     this.A = function A(...args1) {
-//│       return globalThis.Object.freeze(new A.class(...args1));
+//│     this.A = function A(...args) {
+//│       return globalThis.Object.freeze(new A.class(...args));
 //│     };
 //│     Object.defineProperty(this.A, "class", {
 //│       enumerable: true,

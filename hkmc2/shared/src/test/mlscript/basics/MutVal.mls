@@ -34,8 +34,8 @@ O.gy
 class Foo(x, val y, mut val z)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1, y1, z1) {
-//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z1));
+//│ Foo1 = function Foo(x, y, z) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y, z));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,

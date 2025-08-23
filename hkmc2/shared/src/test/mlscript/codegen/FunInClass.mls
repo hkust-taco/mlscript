@@ -22,8 +22,8 @@ fun test(a) =
 //│ let test1;
 //│ test1 = function test(a) {
 //│   let Inner1;
-//│   Inner1 = function Inner(b1) {
-//│     return globalThis.Object.freeze(new Inner.class(b1));
+//│   Inner1 = function Inner(b) {
+//│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
 //│   Object.defineProperty(Inner1, "class", {
 //│     enumerable: true,
@@ -82,8 +82,8 @@ fun test(a) =
 //│ let test2;
 //│ test2 = function test(a) {
 //│   let C11, C21, tmp1, tmp2;
-//│   C11 = function C1(b1) {
-//│     return globalThis.Object.freeze(new C1.class(b1));
+//│   C11 = function C1(b) {
+//│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
 //│   Object.defineProperty(C11, "class", {
 //│     enumerable: true,
@@ -99,8 +99,8 @@ fun test(a) =
 //│       static [definitionMetadata] = ["class", "C1", ["b"]]; 
 //│     }
 //│   });
-//│   C21 = function C2(b1) {
-//│     return globalThis.Object.freeze(new C2.class(b1));
+//│   C21 = function C2(b) {
+//│     return globalThis.Object.freeze(new C2.class(b));
 //│   };
 //│   Object.defineProperty(C21, "class", {
 //│     enumerable: true,
@@ -138,8 +138,8 @@ data class Foo(a) with
 Foo(123)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(a1) {
-//│   return globalThis.Object.freeze(new Foo.class(a1));
+//│ Foo1 = function Foo(a) {
+//│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,
@@ -177,8 +177,8 @@ data class Bar(x) with
 Bar(1)
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ Bar1 = function Bar(x1) {
-//│   return globalThis.Object.freeze(new Bar.class(x1));
+//│ Bar1 = function Bar(x) {
+//│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
 //│ Object.defineProperty(Bar1, "class", {
 //│   enumerable: true,

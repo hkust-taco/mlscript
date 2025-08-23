@@ -38,8 +38,8 @@ Foo.class
 data class Foo(a)
 //│ JS (unsanitized):
 //│ let Foo3;
-//│ Foo3 = function Foo(a1) {
-//│   return globalThis.Object.freeze(new Foo.class(a1));
+//│ Foo3 = function Foo(a) {
+//│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
 //│ Object.defineProperty(Foo3, "class", {
 //│   enumerable: true,
@@ -77,8 +77,8 @@ foo(27)
 data class Foo(a, b)
 //│ JS (unsanitized):
 //│ let Foo5;
-//│ Foo5 = function Foo(a1, b1) {
-//│   return globalThis.Object.freeze(new Foo.class(a1, b1));
+//│ Foo5 = function Foo(a, b) {
+//│   return globalThis.Object.freeze(new Foo.class(a, b));
 //│ };
 //│ Object.defineProperty(Foo5, "class", {
 //│   enumerable: true,
@@ -145,8 +145,8 @@ data class Inner(c) with
   print(c)
 //│ JS (unsanitized):
 //│ let Inner1;
-//│ Inner1 = function Inner(c1) {
-//│   return globalThis.Object.freeze(new Inner.class(c1));
+//│ Inner1 = function Inner(c) {
+//│   return globalThis.Object.freeze(new Inner.class(c));
 //│ };
 //│ Object.defineProperty(Inner1, "class", {
 //│   enumerable: true,
@@ -186,8 +186,8 @@ class Foo(x, val y, z, val z, z) with
   print("this.z = " + this.z)
 //│ JS (unsanitized):
 //│ let Foo7;
-//│ Foo7 = function Foo(x1, y1, z3, z4, z5) {
-//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z3, z4, z5));
+//│ Foo7 = function Foo(x, y, z, z1, z2) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
 //│ Object.defineProperty(Foo7, "class", {
 //│   enumerable: true,
@@ -239,8 +239,8 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ JS (unsanitized):
 //│ let Foo9;
-//│ Foo9 = function Foo(z2, z3) {
-//│   return globalThis.Object.freeze(new Foo.class(z2, z3));
+//│ Foo9 = function Foo(z, z1) {
+//│   return globalThis.Object.freeze(new Foo.class(z, z1));
 //│ };
 //│ Object.defineProperty(Foo9, "class", {
 //│   enumerable: true,

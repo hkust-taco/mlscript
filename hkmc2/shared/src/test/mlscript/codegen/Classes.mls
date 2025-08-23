@@ -7,8 +7,8 @@
 data class Foo(arguments)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(arguments2) {
-//│   return globalThis.Object.freeze(new Foo.class(arguments2));
+//│ Foo1 = function Foo(arguments1) {
+//│   return globalThis.Object.freeze(new Foo.class(arguments1));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,
@@ -25,8 +25,8 @@ data class Foo(arguments)
 data class Foo(eval)
 //│ JS (unsanitized):
 //│ let Foo3;
-//│ Foo3 = function Foo(eval2) {
-//│   return globalThis.Object.freeze(new Foo.class(eval2));
+//│ Foo3 = function Foo(eval1) {
+//│   return globalThis.Object.freeze(new Foo.class(eval1));
 //│ };
 //│ Object.defineProperty(Foo3, "class", {
 //│   enumerable: true,
@@ -43,8 +43,8 @@ data class Foo(eval)
 data class Foo(static)
 //│ JS (unsanitized):
 //│ let Foo5;
-//│ Foo5 = function Foo(static2) {
-//│   return globalThis.Object.freeze(new Foo.class(static2));
+//│ Foo5 = function Foo(static1) {
+//│   return globalThis.Object.freeze(new Foo.class(static1));
 //│ };
 //│ Object.defineProperty(Foo5, "class", {
 //│   enumerable: true,
@@ -61,8 +61,8 @@ data class Foo(static)
 data class Foo(v')
 //│ JS (unsanitized):
 //│ let Foo7;
-//│ Foo7 = function Foo(v$_1) {
-//│   return globalThis.Object.freeze(new Foo.class(v$_1));
+//│ Foo7 = function Foo(v$_) {
+//│   return globalThis.Object.freeze(new Foo.class(v$_));
 //│ };
 //│ Object.defineProperty(Foo7, "class", {
 //│   enumerable: true,

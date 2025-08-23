@@ -194,8 +194,8 @@ x + y
 //│   h$this = runtime.safeCall(h(capture));
 //│   return Tuple1(g$this, h$this)
 //│ };
-//│ Tuple1 = function Tuple(a1, b1) {
-//│   return globalThis.Object.freeze(new Tuple.class(a1, b1));
+//│ Tuple1 = function Tuple(a, b) {
+//│   return globalThis.Object.freeze(new Tuple.class(a, b));
 //│ };
 //│ Object.defineProperty(Tuple1, "class", {
 //│   enumerable: true,

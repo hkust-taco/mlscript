@@ -11,8 +11,8 @@ data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
-//│ Lol1 = function Lol(h1) {
-//│   return globalThis.Object.freeze(new Lol.class(h1));
+//│ Lol1 = function Lol(h) {
+//│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
 //│ Object.defineProperty(Lol1, "class", {
 //│   enumerable: true,

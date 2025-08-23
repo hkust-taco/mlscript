@@ -23,8 +23,8 @@ data class Foo(x) with
     val y = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) {
-//│   return globalThis.Object.freeze(new Foo.class(x1));
+//│ Foo1 = function Foo(x) {
+//│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,

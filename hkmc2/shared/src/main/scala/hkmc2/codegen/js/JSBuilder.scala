@@ -253,7 +253,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val privs =
               val scp = isym.asInstanceOf[InnerSymbol].privatesScope
               val privDecls = allPrivFlds.map: fld =>
-                  val nme = scp.allocateName(fld)
+                  val nme = scp.allocateOrGetName(fld)
                   doc" # $mtdPrefix#$nme;"
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
                 doc" # get ${escapeField(valSym.name, "")}() { return ${getVar(letSym)}; }" ::
@@ -323,7 +323,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                       val result = pss.foldRight(bod):
                         case (ps, block) => 
                           Return(Lam(ps, block), false)
-                      val (params, bodyDoc) = setupFunction(some(td.sym.nme), ps, result)
+                      val (params, bodyDoc) = scope.nest.givenIn:
+                        setupFunction(S(td.sym.nme), ps, result)
                       doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
                     case td @ FunDefn(_, _, Nil, bod) =>
                       doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
@@ -368,7 +369,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 case Some(value) => value :: auxParams
               
               val fun = paramsAll match
-                case ps_ :: pss_ if paramsOpt.isDefined =>
+                case ps_ :: pss_ if paramsOpt.isDefined => outerScope.nest.givenIn:
                   val (ps, _) = setupFunction(some(sym.nme), ps_, End())
                   val pss = pss_.map(setupFunction(N, _, End())._1)
                   val paramsDoc = pss.foldLeft(doc"($ps)"):
@@ -689,7 +690,7 @@ trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
     if instrument then
       val paramsList = params.params.map(p => Scope.scope.allocateName(p.sym))
       val paramRest = params.restParam.map(p => Scope.scope.allocateName(p.sym))
-      val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol)
+      val paramsStr = Scope.scope.allocateName(functionParamVarargSymbol, shadow = true)
       val functionName = JSBuilder.makeStringLiteral(name.fold("")(n => s"${JSBuilder.escapeStringCharacters(n)}"))
       val checkArgsNum = doc"\n$runtimeVar.checkArgs($functionName, ${params.paramCountLB}, ${params.paramCountUB.toString}, $paramsStr.length);"
       val paramsAssign = paramsList.zipWithIndex.map{(nme, i) =>

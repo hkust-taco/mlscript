@@ -21,8 +21,9 @@ import hkmc2.codegen.js.JSBuilder
   * When `curThis` is Some(None), it means the scope rebinds `this`
   * to something unknown, following JavaScript's inane `this` handling in `function`s.
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
-  * to an inner symbol (e.g., class or module). */
-class Scope
+  * to an inner symbol (e.g., class or module).
+  * Note: I made `Scope` a case class just so that it can benefit from `printAsTree`. */
+case class Scope
     (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
     (using State):
   
@@ -45,7 +46,8 @@ class Scope
       source = Diagnostic.Source.Compilation))
     die
   
-  def addToBindings(symbol: Local, name: String) =
+  def addToBindings(symbol: Local, name: String, shadow: Bool) =
+    if !shadow then assert(lookup(symbol).isEmpty, (symbol, this.showAsTree))
     bindings += symbol -> name
     existingNames += name
   
@@ -112,7 +114,11 @@ class Scope
         source = Diagnostic.Source.Compilation))
       l.nme
   
-  def allocateName(l: Local, prefix: Str = ""): Str =
+  // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)
+  def allocateOrGetName(l: Local, prefix: Str = ""): Str =
+    lookup(l).getOrElse(allocateName(l, prefix = prefix))
+  
+  def allocateName(l: Local, prefix: Str = "", shadow: Bool = false): Str =
     
     val base: Str = l match
       case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) === 0 =>
@@ -128,7 +134,7 @@ class Scope
         // Try realBase with an integer.
         (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
     
-    addToBindings(l, name)
+    addToBindings(l, name, shadow = shadow)
     
     name
 

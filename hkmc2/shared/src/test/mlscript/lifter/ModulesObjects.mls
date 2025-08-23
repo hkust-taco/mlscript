@@ -174,8 +174,8 @@ data class A(x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ };
-//│ A1 = function A(x1) {
-//│   return globalThis.Object.freeze(new A.class(x1));
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
 //│ };
 //│ Object.defineProperty(A1, "class", {
 //│   enumerable: true,
@@ -311,8 +311,8 @@ M.A(2).newB.newA_B(3).newB.get
 //│   return tmp10
 //│ };
 //│ B2 = function B() {
-//│   return (A$instance$01) => {
-//│     return globalThis.Object.freeze(new B.class()(A$instance$01));
+//│   return (A$instance$0) => {
+//│     return globalThis.Object.freeze(new B.class()(A$instance$0));
 //│   }
 //│ };
 //│ Object.defineProperty(B2, "class", {
@@ -341,8 +341,8 @@ M.A(2).newB.newA_B(3).newB.get
 //│   static {
 //│     M21 = M20;
 //│     let scrut;
-//│     this.A = function A(x1) {
-//│       return globalThis.Object.freeze(new A.class(x1));
+//│     this.A = function A(x) {
+//│       return globalThis.Object.freeze(new A.class(x));
 //│     };
 //│     Object.defineProperty(this.A, "class", {
 //│       enumerable: true,

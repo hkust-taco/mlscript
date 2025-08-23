@@ -51,10 +51,10 @@ module Test with
 //│   static test1(x) {
 //│     return test1(x)
 //│   } 
-//│   static test2(x1) {
+//│   static test2(x) {
 //│     return globalThis.Object.freeze([
 //│       Test.a,
-//│       x1
+//│       x
 //│     ])
 //│   }
 //│   static toString() { return runtime.render(this); }

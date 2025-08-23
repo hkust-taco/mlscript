@@ -18,9 +18,9 @@ data class A(x) with
 //│   tmp1 = tmp(A$instance$0);
 //│   return tmp1
 //│ };
-//│ B1 = function B(y1) {
-//│   return (A$instance$01) => {
-//│     return globalThis.Object.freeze(new B.class(y1)(A$instance$01));
+//│ B1 = function B(y) {
+//│   return (A$instance$0) => {
+//│     return globalThis.Object.freeze(new B.class(y)(A$instance$0));
 //│   }
 //│ };
 //│ Object.defineProperty(B1, "class", {
@@ -43,8 +43,8 @@ data class A(x) with
 //│     static [definitionMetadata] = ["class", "B", ["y"]]; 
 //│   }
 //│ });
-//│ A1 = function A(x1) {
-//│   return globalThis.Object.freeze(new A.class(x1));
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
 //│ };
 //│ Object.defineProperty(A1, "class", {
 //│   enumerable: true,

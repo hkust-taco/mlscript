@@ -62,8 +62,8 @@ false
 data class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x2) {
-//│   return globalThis.Object.freeze(new Foo.class(x2));
+//│ Foo1 = function Foo(x1) {
+//│   return globalThis.Object.freeze(new Foo.class(x1));
 //│ };
 //│ Object.defineProperty(Foo1, "class", {
 //│   enumerable: true,

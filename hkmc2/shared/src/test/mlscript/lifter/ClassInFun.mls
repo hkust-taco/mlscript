@@ -246,8 +246,8 @@ f(1).get()
 //│   return tmp3
 //│ };
 //│ Test1 = function Test() {
-//│   return (x$01) => {
-//│     return globalThis.Object.freeze(new Test.class()(x$01));
+//│   return (x$0) => {
+//│     return globalThis.Object.freeze(new Test.class()(x$0));
 //│   }
 //│ };
 //│ Object.defineProperty(Test1, "class", {
@@ -317,9 +317,9 @@ f(1, 2).get()
 //│   tmp4 = tmp3(used1$0);
 //│   return tmp4
 //│ };
-//│ Test3 = function Test(a1) {
-//│   return (used1$01) => {
-//│     return globalThis.Object.freeze(new Test.class(a1)(used1$01));
+//│ Test3 = function Test(a) {
+//│   return (used1$0) => {
+//│     return globalThis.Object.freeze(new Test.class(a)(used1$0));
 //│   }
 //│ };
 //│ Object.defineProperty(Test3, "class", {
@@ -449,8 +449,8 @@ f(1)
 //│   return tmp6
 //│ };
 //│ A1 = function A() {
-//│   return (f$capture$01) => {
-//│     return globalThis.Object.freeze(new A.class()(f$capture$01));
+//│   return (f$capture$0) => {
+//│     return globalThis.Object.freeze(new A.class()(f$capture$0));
 //│   }
 //│ };
 //│ Object.defineProperty(A1, "class", {
@@ -521,8 +521,8 @@ f().foo()
 //│   return tmp7
 //│ };
 //│ Good1 = function Good() {
-//│   return (x$11, y$21, z$31, f$capture$01) => {
-//│     return globalThis.Object.freeze(new Good.class()(x$11, y$21, z$31, f$capture$01));
+//│   return (x$1, y$2, z$3, f$capture$0) => {
+//│     return globalThis.Object.freeze(new Good.class()(x$1, y$2, z$3, f$capture$0));
 //│   }
 //│ };
 //│ Object.defineProperty(Good1, "class", {
@@ -571,8 +571,8 @@ f().foo()
 //│   return tmp7
 //│ };
 //│ Bad1 = function Bad() {
-//│   return (f$capture$01) => {
-//│     return globalThis.Object.freeze(new Bad.class()(f$capture$01));
+//│   return (f$capture$0) => {
+//│     return globalThis.Object.freeze(new Bad.class()(f$capture$0));
 //│   }
 //│ };
 //│ Object.defineProperty(Bad1, "class", {
