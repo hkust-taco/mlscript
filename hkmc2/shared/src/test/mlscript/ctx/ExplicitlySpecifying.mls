@@ -79,7 +79,7 @@ f(using 32)
 f(using 32)(8)
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
 //│ ║  l.79: 	f(using 32)(8)
-//│ ║        	^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.63: 	fun f(using i: Int)(j: Int)(using k: Int)(l: Num): Int = i + j + k + l
 //│ ║        	                                  ^^^^^^

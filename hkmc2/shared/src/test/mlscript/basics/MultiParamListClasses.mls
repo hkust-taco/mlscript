@@ -79,9 +79,9 @@ let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ JS (unsanitized):
 //│ let f, f1;
 //│ f1 = function f(x, y) {
-//│   let tmp3;
-//│   tmp3 = Foo7(x, y);
-//│   return runtime.safeCall(tmp3(instance$Ident$_Int$_))
+//│   let tmp4;
+//│   tmp4 = Foo7(x, y);
+//│   return runtime.safeCall(tmp4(instance$Ident$_Int$_))
 //│ };
 //│ f = f1;
 //│ f = fun f
