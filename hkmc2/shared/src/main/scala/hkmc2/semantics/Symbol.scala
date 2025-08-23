@@ -99,7 +99,7 @@ abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name)
   var decl: Opt[Declaration] = N
 
 class TempSymbol(val trm: Opt[Term], dbgNme: Str = "tmp")(using State) extends BlockLocalSymbol(dbgNme) with LocalSymbol:
-  val nameHints: MutSet[Str] = MutSet.empty
+  // val nameHints: MutSet[Str] = MutSet.empty // * May be useful later?
   override def toLoc: Option[Loc] = trm.flatMap(_.toLoc)
   override def toString: Str = s"$$${super.toString}"
   override def subst(using s: SymbolSubst): TempSymbol = s.mapTempSym(this)

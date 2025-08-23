@@ -120,10 +120,14 @@ case class Scope
   
   def allocateName(l: Local, prefix: Str = "", shadow: Bool = false): Str =
     
+    // Maybe useful later?
+    /* 
     val base: Str = l match
-      case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) === 0 =>
+      case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) =/= 0 =>
         prefix + tmp.nameHints.head
       case _ => if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
+    */
+    val base = if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     
     val realBase = Scope.replaceInvalidCharacters(base)
     
