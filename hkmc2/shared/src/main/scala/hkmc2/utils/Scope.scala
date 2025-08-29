@@ -100,21 +100,19 @@ case class Scope
     // curThis.filter(_ is l).map(_ => thisProxy) orElse
     bindings.get(l).orElse(parent.flatMap(_.lookup(l)))
   
-  def lookup_!(l: Local)(using Raise): Str =
+  def lookup_!(l: Local, loc: Opt[Loc])(using Raise): Str =
     lookup(l).getOrElse:
-      // Prevent long-winded error messages which quote the entire definition.
-      val loc = l match
+      // * Prevent long-winded error messages which quote the entire definition.
+      val extraLoc = l match
         case sym: semantics.BlockMemberSymbol =>
           sym.trees.collectFirst:
             case t: syntax.Tree.TypeDef => t.head.toLoc
-          // .flatten.orElse(l.toLoc)
-          .flatten
+          .flatten.orElse(l.toLoc)
         case other => other.toLoc
-      raise(ErrorReport(msg"No definition found in scope for '${l.nme}'" -> l.toLoc ::
-          (if loc.isEmpty then Nil else msg"which is introduced here" -> loc :: Nil),
+      raise(ErrorReport(msg"No definition found in scope for member '${l.nme}'" -> loc ::
+          (if extraLoc.isEmpty then Nil else msg"which references the symbol introduced here" -> extraLoc :: Nil),
         extraInfo = Some(l -> l.getClass -> this),
         source = Diagnostic.Source.Compilation))
-      
       l.nme
   
   // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)

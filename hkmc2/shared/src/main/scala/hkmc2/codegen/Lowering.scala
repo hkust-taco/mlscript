@@ -350,7 +350,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(Value.Lam(paramLists.head, bodyBlock))
+          return k(Value.Lam(paramLists.head, bodyBlock).withLocOf(ref))
         if sym.unary then
           val t1 = new Tree.Ident("arg")
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
@@ -365,38 +365,38 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(Value.Lam(paramLists.head, bodyBlock))
+          return k(Value.Lam(paramLists.head, bodyBlock).withLocOf(ref))
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.hasDeclareModifier.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs)).resolve)(k)
+          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs)).withLocOf(ref).resolve)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list
           // * (non-local functions are compiled into getter methods selected on some prefix)
           if td.params.isEmpty then
             val l = new TempSymbol(S(t))
-            return Assign(l, Call(Value.Ref(bs), Nil)(true, true), k(Value.Ref(l)))
+            return Assign(l, Call(Value.Ref(bs).withLocOf(ref), Nil)(true, true), k(Value.Ref(l)))
         case S(_) => ()
         case N => () // TODO panic here; can only lower refs to elab'd symbols
       case _ => ()
       warnStmt
-      k(subst(Value.Ref(sym)))
-    case st.App(Ref(sym: BuiltinSymbol), arg) =>
+      k(subst(Value.Ref(sym).withLocOf(ref)))
+    case st.App(ref @ Ref(sym: BuiltinSymbol), arg) =>
       arg match
       case st.Tup(Nil) =>
         if !sym.nullary then raise:
           ErrorReport(
             msg"Expected arguments for builtin operator '${sym.nme}'" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
-        k(Value.Ref(sym))
+        k(Value.Ref(sym).withLocOf(ref))
       case st.Tup(Fld(FldFlags.benign(), arg, N) :: Nil) =>
         if !sym.unary then raise:
           ErrorReport(
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(Value.Ref(sym), Arg(N, ar) :: Nil)(true, false))
+          k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar) :: Nil)(true, false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -413,7 +413,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             )(true, false))
           else
             subTerm_nonTail(arg2): ar2 =>
-              k(Call(Value.Ref(sym), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
+              k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -453,10 +453,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym))
+          conclude(Select(p, nme)(sel.sym).withLocOf(sel))
       case sel @ SelProj(prefix, _, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym))
+          conclude(Select(p, nme)(sel.sym).withLocOf(sel))
       case _ => subTerm(f)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
       if !lowerHandlers then
@@ -592,7 +592,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                       Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
                     case (param, arg) :: args =>
                       val (cse, blk) = mkArgs(args)
-                      (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
+                      (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
                   mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
                 ctor.symbol.flatMap(_.asClsOrMod) match
                   case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>

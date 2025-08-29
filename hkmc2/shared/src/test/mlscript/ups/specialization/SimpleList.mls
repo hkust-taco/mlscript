@@ -71,7 +71,7 @@ pattern D_0 = Box(Box(Box) | Box(Bowl))
 
 :todo
 pattern D_1 = Box(Box(Bowl) | Box)
-//│ ═══[COMPILATION ERROR] No definition found in scope for 'output'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'output'
 
 pattern D_2 = Box(Bowl | Bowl | Bowl)
 

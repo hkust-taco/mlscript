@@ -566,7 +566,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Constructor(target, Nil, N) =>
         log(s"target.symbol: ${target.symbol}")
         log(s"target.symbol.flatMap(_.asPat): ${target.symbol.flatMap(_.asPat)}")
-        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference)
+        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference(_, target.toLoc))
       case _ => N
     log(s"term: ${term}")
     term.getOrElse:

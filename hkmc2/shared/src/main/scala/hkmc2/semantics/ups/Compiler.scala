@@ -36,7 +36,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       case index: Int => s"p_$index"
     /** Convert the field name to an `Ident`. */
     def asIdent: Ident = field match
-      case id: Ident => id
+      case id: Ident => new Ident(id.name)
       case index: Int => Ident(index.toString)
   
   extension (head: Head)
@@ -44,7 +44,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     def toFlatPattern: FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)(Nil)
       case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        FlatPattern.ClassLike(reference(sym).getOrElse(Term.Error), N, Nil)
+        FlatPattern.ClassLike(reference(sym, head.toLoc).getOrElse(Term.Error), N, Nil)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
       case sym: ClassLikeSymbol => sym.nme
@@ -361,7 +361,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
       (makeConsequent, alternative) => Split.Let(
         sym = transformSymbol,
-        term = Term.Lam(params, Blk(letBindings, term)),
+        term = Term.Lam(params, Blk(letBindings, term.clone)),
         tail = makeSplit(
           // The `outputSymbol` is the output of `pattern`.
           //                vvvvvvvvvvvv
@@ -397,7 +397,7 @@ object Compiler:
   
   /** Perform a reverse lookup for a term that references a symbol in the
    *  current context. */
-  def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol)(using tl: TL)(using Ctx, State): Opt[Term] =
+  def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol, loc: Opt[Loc])(using tl: TL)(using Ctx, State): Opt[Term] =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
       case ref: Ref => ref.resolve
@@ -408,11 +408,7 @@ object Compiler:
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
       elem.symbol.flatMap(_.asClsLike).collectFirst:
         // Check the element's symbol.
-        case `symbol` =>
-          val id = symbol match
-            case symbol: PatternSymbol => symbol.id
-            case symbol: (ClassSymbol | ModuleOrObjectSymbol) => symbol.id
-          S(elem.ref(id))
+        case `symbol` => S(elem.ref(new Ident(symbol.nme)).withLoc(loc))
         // Look up the symbol in module members.
         case module: ModuleOrObjectSymbol =>
           val moduleRef = module.defn.get.bsym.ref()

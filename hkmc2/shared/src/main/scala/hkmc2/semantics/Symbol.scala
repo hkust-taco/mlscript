@@ -203,6 +203,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
 
 end BlockMemberSymbol
 
+
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
   var defn: Opt[Defn] = N

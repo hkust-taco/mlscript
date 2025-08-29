@@ -179,20 +179,21 @@ abstract class LlirPrinting:
 class LlirPrinter(using Raise, hkmc2.utils.Scope) extends LlirPrinting:
   import hkmc2.utils.*
   import hkmc2.semantics.Elaborator.State
-
+  import Scope.scope
+  
   def getVar(l: Local): String = l match
     case ts: hkmc2.semantics.TermSymbol =>
       ts.owner match
-      case S(owner) => summon[Scope].lookup_!(ts)
-      case N => summon[Scope].lookup_!(ts)
+      case S(owner) => scope.lookup_!(ts, N)
+      case N => scope.lookup_!(ts, N)
     case ts: hkmc2.semantics.InnerSymbol =>
-      summon[Scope].lookup_!(ts)
-    case _ => summon[Scope].lookup_!(l)
+      scope.lookup_!(ts, N)
+    case _ => scope.lookup_!(l, N)
   def allocIfNew(l: Local): String =
-    summon[Scope].lookup(l) match
+    scope.lookup(l) match
       case S(_) => getVar(l)
       case N =>
-        summon[Scope].allocateName(l)
+        scope.allocateName(l)
   override def mkDocument(local: Local): Document = allocIfNew(local)
         
 object LlirDebugPrinter extends LlirPrinting:

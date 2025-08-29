@@ -28,17 +28,21 @@ sealed abstract class Block extends Product with AutoLocated:
     case _: End => true
     case _ => false
   
+  // * Note: this function is used to piece together a location;
+  // * for the location to be valid, we should NOT have it include children whose location
+  // * is from some different place (with a different Origin), such as the location attached to symbols.
+  // * That's whym for example, we're not adding the `lhs` of `Assign` to the children list.
   protected def children: Ls[Located] = this match
     case Match(scrut, arms, dflt, rest) => scrut :: arms.map(_._2) ++ dflt.toList :+ rest
     case Return(res, implct) => res :: Nil
     case Throw(exc) => exc :: Nil
-    case Label(label, body, rest) => label :: body :: rest :: Nil
-    case Break(label) => label :: Nil
-    case Continue(label) => label :: Nil
+    case Label(label, body, rest) => body :: rest :: Nil
+    case Break(label) => Nil
+    case Continue(label) => Nil
     case Begin(sub, rest) => sub :: rest :: Nil
     case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
-    case Assign(lhs, rhs, rest) => lhs :: rhs :: rest :: Nil
-    case AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block) => lhs :: nme :: rhs :: rest :: Nil
+    case Assign(lhs, rhs, rest) =>  rhs :: rest :: Nil
+    case AssignField(lhs, nme, rhs, rest) => lhs :: nme :: rhs :: rest :: Nil
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs :: fld :: rhs :: rest :: Nil
     case Define(FunDefn(owner, sym, params, body), rest) => sym :: (params :+ body :+ rest)
     case Define(ValDefn(tsym, sym, rhs), rest) => tsym :: sym :: rhs :: rest :: Nil
@@ -505,7 +509,11 @@ enum Case:
 sealed trait TrivialResult extends Result
 
 sealed abstract class Result extends AutoLocated:
-
+// // * Used for debugging locations:
+// sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
+//   def extraInfo: Str = toLoc.toString
+  
+  // * Note: see the note in for Block#children.
   protected def children: List[Located] = this match
     case Call(fun, args) => fun :: args.map(_.value)
     case Instantiate(mut, cls, args) => cls :: args.map(_.value)

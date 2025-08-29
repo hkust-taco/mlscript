@@ -64,24 +64,24 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       source = Diagnostic.Source.Compilation))
     doc" # ${mkErr(errMsg)};"
   
-  def getVar(l: Local)(using Raise, Scope): Document = l match
+  def getVar(l: Local, loc: Opt[Loc])(using Raise, Scope): Document = l match
     case ts: semantics.TermSymbol =>
       ts.owner match
       case S(owner) =>
-        doc"${getVar(owner)}${
+        doc"${getVar(owner, loc)}${
           if (ts.k is syntax.LetBind) && !owner.isInstanceOf[semantics.TopLevelSymbol]
-          then ".#" + owner.privatesScope.lookup_!(ts)
+          then ".#" + owner.privatesScope.lookup_!(ts, loc)
           else fieldSelect(ts.id.name)
         }"
-      case N => summon[Scope].lookup_!(ts)
+      case N => scope.lookup_!(ts, loc)
     case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined => // FIXME: currently, objects have a ModuleSymbol...
       // * Module self-references use the module name itself instead of `this`
-      summon[Scope].lookup_!(ts)
+      scope.lookup_!(ts, loc)
     case ts: semantics.InnerSymbol =>
-      summon[Scope].findThis_!(ts)
-    case _ => summon[Scope].lookup_!(l)
+      scope.findThis_!(ts)
+    case _ => scope.lookup_!(l, loc)
   
-  def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol)
+  def runtimeVar(using Raise, Scope): Document = getVar(State.runtimeSymbol, N)
   
   def argument(a: Arg)(using Raise, Scope): Document =
     val spd = a.spread match
@@ -105,13 +105,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case N => doc"[${JSBuilder.makeStringLiteral(s)}]"
   
   def result(r: Result)(using Raise, Scope): Document = r match
-    case Value.This(sym) => summon[Scope].findThis_!(sym)
+    case Value.This(sym) => scope.findThis_!(sym)
     case Value.Lit(Tree.StrLit(value)) => makeStringLiteral(value)
     case Value.Lit(lit) => lit.idStr
     case Value.Ref(l: BuiltinSymbol) =>
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
-    case Value.Ref(l) => getVar(l)
+    case Value.Ref(l) => getVar(l, r.toLoc)
     
     case Call(Value.Ref(l: BuiltinSymbol), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
@@ -192,7 +192,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case _: HandleBlock =>
       errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
     case Assign(l, r, rst) =>
-      doc" # ${getVar(l)} = ${result(r)};${returningTerm(rst, endSemi)}"
+      doc" # ${getVar(l, t.toLoc // TODO: improve location
+        )} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignDynField(p, f, ai, r, rst) =>
@@ -207,7 +208,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         // * in which case it has no owner and is just a glorified local variable rather than a field.
         tsym.owner match
         case N =>
-          doc"${getVar(sym)} = ${result(p)};${returningTerm(rst, endSemi)}"
+          doc"${getVar(sym, sym.toLoc)} = ${result(p)};${returningTerm(rst, endSemi)}"
         case S(owner) =>
           doc"${mkThis(owner)}${fieldSelect(sym.nme)} = ${result(p)};${returningTerm(rst, endSemi)}"
       case defn: (FunDefn | ClsLikeDefn) =>
@@ -230,10 +231,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             if sym.nameIsMeaningful then
               // If the name is not valid JavaScript identifiers, do not use it in the generated function.
               val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-              doc"${getVar(sym)} = function $nme($params) ${ braced(bodyDoc) };"
+              doc"${getVar(sym, sym.toLoc)} = function $nme($params) ${ braced(bodyDoc) };"
             else
               // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
-              doc"${getVar(sym)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${getVar(sym, sym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo)
@@ -268,9 +269,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 val nme = isym.privatesScope.allocateOrGetName(fld)
                 doc" # $mtdPrefix#$nme;"
               val accessors = mutPubFields.flatMap: (valSym, letSym) =>
-                doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")}() { return ${getVar(letSym)}; }" ::
-                  doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")}(value) { ${getVar(letSym)} = value; }" ::
-                  Nil
+                doc" # ${mtdPrefix}get ${escapeField(valSym.name, "")
+                  }() { return ${getVar(letSym, letSym.toLoc)}; }"
+                :: doc" # ${mtdPrefix}set ${escapeField(valSym.name, "")
+                  }(value) { ${getVar(letSym, letSym.toLoc)} = value; }"
+                :: Nil
               (privDecls ::: accessors).mkDocument(doc"")
             
             val modDoc = modo match
@@ -298,7 +301,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}${
                 kind match
                 case syntax.Obj =>
-                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym)}")}"
+                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")}"
                 case _ => ""
               }"
             
@@ -326,7 +329,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             val ctorBod = {
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
-                  val v = getVar(isym)
+                  val v = getVar(isym, isym.toLoc)
                   val rhs = if (kind is syntax.Obj) || (kind is syntax.Pat)
                     then doc"$freeze(new $v)"
                     else v
@@ -334,10 +337,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   case S(owner) =>
                     doc" # ${result(Value.Ref(owner))}.${sym.nme}$extraPath = $rhs"
                   case N =>
-                    doc" # ${getVar(sym)}$extraPath = $rhs"
+                    doc" # ${getVar(sym, sym.toLoc)}$extraPath = $rhs"
               } :/: ctorHead :: " " :: braced(ctorAux)
             
-            val clsJS = doc"class ${scope.lookup_!(isym)}${
+            val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${
                   val ext = result(p)
                   p match
@@ -366,12 +369,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   // * If this class has a `toString` implementation, then delegate
                   // * `prettyPrint` to `toString`.
                   if mtds.exists(_.sym.nme == "toString") then doc""" # [${
-                    getVar(State.prettyPrintSymbol)
+                    getVar(State.prettyPrintSymbol, N)
                   }]() { return this.toString(); }"""
                   // * Call the `render` function in the default `toString` method.
                   else doc" # ${mtdPrefix}toString() { return $runtimeVar.render(this); }"
                 } :: {
-                  doc""" # static [${getVar(State.definitionMetadataSymbol)}] = [${
+                  doc""" # static [${getVar(State.definitionMetadataSymbol, N)}] = [${
                     kind.desc.escaped}, ${sym.nme.escaped}${
                     if (kind is syntax.Cls) && paramsOpt.isDefined then
                       doc", [${ctorParams.map { (p, _) => p.decl match
@@ -420,7 +423,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               case N =>
                 fun match
                 case S(f) =>
-                  doc"${getVar(sym)} = ${f}; # $freeze($clsJS);"
+                  doc"${getVar(sym, sym.toLoc)} = ${f}; # $freeze($clsJS);"
                 case N =>
                   doc"$freeze(${clsJS});"
         
@@ -482,17 +485,17 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
-      doc" # break ${getVar(lbl)}${mkSemi}"
-    
+      doc" # break ${getVar(lbl, t.toLoc)}${mkSemi}"
+      
     case Continue(lbl) =>
-      doc" # continue ${getVar(lbl)}${mkSemi}"
-    
+      doc" # continue ${getVar(lbl, t.toLoc)}${mkSemi}"
+      
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
-      doc" # ${getVar(lbl)}: while (true) " :: braced {
+      doc" # ${getVar(lbl, lbl.toLoc)}: while (true) " :: braced {
           returningTerm(bod, endSemi = true) :/: doc"break;"
       } :: returningTerm(rst, endSemi)
       
@@ -549,8 +552,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)
-    doc"""const ${getVar(State.definitionMetadataSymbol)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
-      :/: doc"""const ${getVar(State.prettyPrintSymbol)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
+    doc"""const ${getVar(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
+      :/: doc"""const ${getVar(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
       :/: programBody(p, exprt, wd)
   
   def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
@@ -564,17 +567,17 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       val relPath = if path.startsWith("/")
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
-      doc"""import ${getVar(i._1)} from "${relPath}";"""
+      doc"""import ${getVar(i._1, N)} from "${relPath}";"""
     imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
       exprt match
-        case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym)}; export default ${sym.nme};\n"
+        case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""
       )
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
-      doc"""${getVar(i._1)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
+      doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVars.toSeq) ->
       (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
   
