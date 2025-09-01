@@ -50,7 +50,7 @@ print("Hi")
 //│     lhs = $tmp
 //│     rhs = Call:
 //│       fun = Select{member:print}:
-//│         qual = Ref of member:module:Predef
+//│         qual = Ref of member:Predef
 //│         name = Ident of "print"
 //│       args = Ls of 
 //│         Arg:

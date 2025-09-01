@@ -25,7 +25,7 @@ M.foo
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{module:M}:
-//│     prefix = Ref of member:module:M
+//│     prefix = Ref{member:M} of member:M
 //│     nme = Ident of "foo"
 
 M.bar
@@ -33,7 +33,7 @@ M.bar
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{module:M}:
-//│     prefix = Ref of member:module:M
+//│     prefix = Ref{member:M} of member:M
 //│     nme = Ident of "bar"
 
 M.baz
@@ -41,7 +41,7 @@ M.baz
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{member:baz}:
-//│     prefix = Ref of member:module:M
+//│     prefix = Ref{member:M} of member:M
 //│     nme = Ident of "baz"
 
 M.baz()
@@ -50,7 +50,7 @@ M.baz()
 //│   stats = Nil
 //│   res = App{module:M}:
 //│     lhs = Sel{member:baz}:
-//│       prefix = Ref of member:module:M
+//│       prefix = Ref{member:M} of member:M
 //│       nme = Ident of "baz"
 //│     rhs = Tup of Nil
 
@@ -62,7 +62,7 @@ M.foo.bar.baz()
 //│     lhs = Sel{member:baz}:
 //│       prefix = Sel{module:M}:
 //│         prefix = Sel{module:M}:
-//│           prefix = Ref of member:module:M
+//│           prefix = Ref{member:M} of member:M
 //│           nme = Ident of "foo"
 //│         nme = Ident of "bar"
 //│       nme = Ident of "baz"
@@ -74,7 +74,7 @@ M.that.that
 //│   stats = Nil
 //│   res = Sel{module:M}:
 //│     prefix = Sel{module:N}:
-//│       prefix = Ref of member:module:M
+//│       prefix = Ref{member:M} of member:M
 //│       nme = Ident of "that"
 //│     nme = Ident of "that"
 
@@ -88,7 +88,7 @@ M.that.that.that.that.that.that
 //│         prefix = Sel{module:N}:
 //│           prefix = Sel{module:M}:
 //│             prefix = Sel{module:N}:
-//│               prefix = Ref of member:module:M
+//│               prefix = Ref{member:M} of member:M
 //│               nme = Ident of "that"
 //│             nme = Ident of "that"
 //│           nme = Ident of "that"
@@ -101,7 +101,7 @@ R.foo
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{member:foo}:
-//│     prefix = Ref of member:module:R
+//│     prefix = Ref{member:R} of member:R
 //│     nme = Ident of "foo"
 
 R.foo()
@@ -110,7 +110,7 @@ R.foo()
 //│   stats = Nil
 //│   res = App:
 //│     lhs = Sel{member:foo}:
-//│       prefix = Ref of member:module:R
+//│       prefix = Ref{member:R} of member:R
 //│       nme = Ident of "foo"
 //│     rhs = Tup of Nil
 
@@ -121,7 +121,7 @@ R.foo()()
 //│   res = App{module:N}:
 //│     lhs = App:
 //│       lhs = Sel{member:foo}:
-//│         prefix = Ref of member:module:R
+//│         prefix = Ref{member:R} of member:R
 //│         nme = Ident of "foo"
 //│       rhs = Tup of Nil
 //│     rhs = Tup of Nil
@@ -134,7 +134,7 @@ R.foo()()()
 //│     lhs = App{module:N}:
 //│       lhs = App:
 //│         lhs = Sel{member:foo}:
-//│           prefix = Ref of member:module:R
+//│           prefix = Ref{member:R} of member:R
 //│           nme = Ident of "foo"
 //│         rhs = Tup of Nil
 //│       rhs = Tup of Nil
@@ -152,7 +152,7 @@ R.bar
 //│     lhs = App:
 //│       lhs = App:
 //│         lhs = Sel{member:bar}:
-//│           prefix = Ref of member:module:R
+//│           prefix = Ref{member:R} of member:R
 //│           nme = Ident of "bar"
 //│         rhs = Tup of Ls of 
 //│           Fld:
@@ -206,7 +206,7 @@ R.bar[Int]
 //│       lhs = App:
 //│         lhs = TyApp{member:bar}:
 //│           lhs = Sel{member:bar}:
-//│             prefix = Ref of member:module:R
+//│             prefix = Ref{member:R} of member:R
 //│             nme = Ident of "bar"
 //│           targs = Ls of 
 //│             Ref{member:Int} of member:Int

@@ -4,7 +4,6 @@ import hkmc2.semantics.*
 
 class SymbolSubst:
   def mapBlockMemberSym(s: BlockMemberSymbol): BlockMemberSymbol = s
-  def mapDisambBlockMemberSym[Defn <: Definition](s: DisambBlockMemberSymbol[Defn]): DisambBlockMemberSymbol[Defn] = s
   def mapFlowSym(s: FlowSymbol): FlowSymbol = s
   def mapTempSym(s: TempSymbol): TempSymbol = s
   def mapVarSym(s: VarSymbol): VarSymbol = s

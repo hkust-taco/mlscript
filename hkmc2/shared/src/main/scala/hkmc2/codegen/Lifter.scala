@@ -101,8 +101,6 @@ object Lifter:
   object RefOfBms:
     def unapply(p: Path) = p match
       case Value.Ref(l: BlockMemberSymbol) => S(l)
-      // FIXME: DisambBlockMemberSymbol workaround
-      case Value.Ref(l: DisambBlockMemberSymbol[?]) => S(l.bsym)
       case s @ Select(_, _) => s.symbol match
         case Some(value: BlockMemberSymbol) => S(value)
         case _ => N
@@ -111,11 +109,7 @@ object Lifter:
   object InstSel:
     def unapply(p: Path) = p match
       case Value.Ref(l: BlockMemberSymbol) => S(l)
-      // FIXME: DisambBlockMemberSymbol workaround
-      case Value.Ref(l: DisambBlockMemberSymbol[?]) => S(l.bsym)
       case s @ Select(Value.Ref(l: BlockMemberSymbol), Tree.Ident("class")) => S(l)
-      // FIXME: DisambBlockMemberSymbol workaround
-      case s @ Select(Value.Ref(l: DisambBlockMemberSymbol[?]), Tree.Ident("class")) => S(l.bsym)
       case _ => N
   
   def modOrObj(d: Defn) = d match
@@ -185,10 +179,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def getCapturePath(b: BlockMemberSymbol) = capturePaths.get(b)
     def getLocalClosPath(l: Local) = lookup(l).flatMap(capturePaths.get(_))
     def getLocalCaptureSym(l: Local) = localCaptureSyms.get(l)
-    def getLocalPath(l: Local) = l match
-      // FIXME: DisambBlockMemberSymbol workaround
-      case l: DisambBlockMemberSymbol[?] => localPaths.get(l.bsym)
-      case _ => localPaths.get(l)
+    def getLocalPath(l: Local) = localPaths.get(l)
     def resolveIsymPath(l: InnerSymbol) = getIsymPath(companionMap.getOrElse(l, l))
     def getIsymPath(l: InnerSymbol) = isymPaths.get(l)
     def getIgnoredBmsPath(b: BlockMemberSymbol) = ignoredBmsPaths.get(b)
@@ -445,9 +436,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       
       override def applyResult(r: Result): Unit = r match
         case Call(Value.Ref(_: BlockMemberSymbol), args) =>
-          args.foreach(applyArg)
-        // FIXME: DisambBlockMemberSymbol workaround
-        case Call(Value.Ref(_: DisambBlockMemberSymbol[?]), args) =>
           args.foreach(applyArg)
         case Instantiate(mut, InstSel(_), args) =>
           args.foreach(applyArg)

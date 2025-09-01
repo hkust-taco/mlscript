@@ -318,12 +318,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       // * This case is currently triggered for code such as `f(using 42)`
       args(fs)(args => k(Value.Arr(mut = false, args)))
     case ref @ st.Ref(sym) =>
-      // FIXME: DisambBlockMemberSymbol workaround
-      val bms = sym match
-        case bs: BlockMemberSymbol => bs
-        case dbs: DisambBlockMemberSymbol[?] => dbs.bsym
-        case sym => sym
-      bms match
+      sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
         return fail:
           ErrorReport(
@@ -371,12 +366,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
           return k(Value.Lam(paramLists.head, bodyBlock))
-      case sym: (BlockMemberSymbol | DisambBlockMemberSymbol[?]) =>
-        // TODO: Ideally, all lowering-facing symbols should be disambiguiated...
-        val (bs, defn) = sym match
-          case bs: BlockMemberSymbol => bs -> bs.defn
-          case dbs: DisambBlockMemberSymbol[?] => dbs.bsym -> dbs.sym.defn
-        defn match
+      case bs: BlockMemberSymbol =>
+        bs.defn match
         case S(d) if d.hasDeclareModifier.isDefined =>
           return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs)).resolve)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
@@ -824,7 +815,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.UnitLit(false)) :: Nil)(r2 =>
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
-    case SynthSel(Ref(sym: (BlockMemberSymbol | DisambBlockMemberSymbol[?])), name) => // Multi-file cross-stage references
+    case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
       (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
           val l1, l2 = new TempSymbol(N)

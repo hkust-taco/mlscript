@@ -201,25 +201,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def subst(using sub: SymbolSubst): BlockMemberSymbol = sub.mapBlockMemberSym(this)
 
-  def disamb[Defn <: Definition](sym: DisambSymbol[Defn]): DisambBlockMemberSymbol[Defn] =
-    DisambBlockMemberSymbol(this, sym)
-
 end BlockMemberSymbol
-
-type DisambSymbol[Defn <: Definition] = MemberSymbol[Defn] & InnerSymbol
-
-class DisambBlockMemberSymbol[Defn <: Definition]
-        (val bsym: BlockMemberSymbol, val sym: DisambSymbol[Defn])(using State)
-        extends Symbol:
-  
-  def nme: Str = bsym.nme
-  def toLoc: Option[Loc] = bsym.toLoc
-  
-  override def toString: Str = s"member:${sym}${State.dbgUid(uid)}"
-  
-  def subst(using sub: SymbolSubst): DisambBlockMemberSymbol[Defn] = sub.mapDisambBlockMemberSym(this)
-  
-end DisambBlockMemberSymbol
 
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str

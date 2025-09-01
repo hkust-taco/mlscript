@@ -774,10 +774,6 @@ class Resolver(tl: TraceLogger)
           log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
           withSym(t, bsym)
           expand2DotClass(lhs, expect = Expect.Module(N))
-          lhs.expanded match
-            case ref @ Term.Ref(bsym: BlockMemberSymbol) => ref.expand:
-              S(bsym.disamb(mdef.sym).ref(ref.tree))
-            case _ => ()
           log(s"Resolved symbol for ${t}: ${bsym}")
         case N => 
           withSym(t, ErrorSymbol(id.name, Tree.Dummy))

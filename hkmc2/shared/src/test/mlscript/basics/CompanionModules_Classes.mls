@@ -60,7 +60,7 @@ C.empty
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{member:empty}:
-//│     prefix = Ref of member:module:C
+//│     prefix = Ref{member:C} of member:C
 //│     nme = Ident of "empty"
 //│ = 1
 
