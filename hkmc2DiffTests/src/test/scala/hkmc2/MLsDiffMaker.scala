@@ -266,8 +266,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     showResolvedTree.get.foreach: post =>
       case class Unexpanded(origin: Resolvable)
       val pre: PartialFunction[Product, Product] = 
-        case t: Resolvable if t.hasExpansion => t.instantiate
-        case t: Resolvable => Unexpanded(t.duplicate.resolve)
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
       output(s"Resolved tree:")
       output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     

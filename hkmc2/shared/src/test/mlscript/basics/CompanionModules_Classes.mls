@@ -10,8 +10,8 @@ C()
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Unexpanded of App:
-//│     lhs = Unexpanded of Ref{member:C} of member:C
+//│   res = App:
+//│     lhs = Ref{member:C} of member:C
 //│     rhs = Tup of Nil
 //│ = C()
 
@@ -22,7 +22,7 @@ new C
 //│   stats = Nil
 //│   res = New:
 //│     cls = SynthSel{class:C}:
-//│       prefix = Unexpanded of Ref{member:C} of member:C
+//│       prefix = Ref{member:C} of member:C
 //│       nme = Ident of "class"
 //│     args = Nil
 //│     rft = N
@@ -36,9 +36,9 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Unexpanded of Sel{member:empty}:
+//│   res = Sel{member:empty}:
 //│     prefix = SynthSel{module:C}:
-//│       prefix = Unexpanded of Ref{member:C} of member:C
+//│       prefix = Ref{member:C} of member:C
 //│       nme = Ident of "class"
 //│     nme = Ident of "empty"
 //│ = 1
@@ -59,7 +59,7 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Unexpanded of Sel{member:empty}:
+//│   res = Sel{member:empty}:
 //│     prefix = Ref of member:module:C
 //│     nme = Ident of "empty"
 //│ = 1
