@@ -108,7 +108,11 @@ sealed trait ResolvableImpl:
   def typeDefn: Opt[ClassLikeDef] = defn match
     case S(td: ClassLikeDef) => S(td)
     case _ => N
-
+  
+  def singletonDefn: Opt[ModuleOrObjectDef] = defn match
+    case S(td: ModuleOrObjectDef) => S(td)
+    case _ => N
+  
   def moduleDefn: Opt[ModuleOrObjectDef] = defn match
     case S(td @ ModuleOrObjectDef(kind = Mod)) => S(td)
     case _ => N

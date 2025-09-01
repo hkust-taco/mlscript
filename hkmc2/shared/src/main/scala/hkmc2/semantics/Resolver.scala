@@ -765,7 +765,7 @@ class Resolver(tl: TraceLogger)
     t match
     case t @ AnySel(lhs: Resolvable, id) =>
       log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-      lhs.moduleDefn.foreach: mdef =>
+      lhs.singletonDefn.foreach: mdef =>
         val fsym = mdef.body.members.get(id.name)
         fsym match
         case S(fldSym) => 
