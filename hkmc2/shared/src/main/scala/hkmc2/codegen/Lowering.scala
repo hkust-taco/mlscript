@@ -60,7 +60,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     def instantiated = t match
       case r: Resolvable =>
         tl.trace[Term](s"Expanding term ${r}", post = t => s"~> ${t}"):
-          r.instantiate
+          r.expanded
       case t => t
   
   val lowerHandlers: Bool = config.effectHandlers.isDefined

@@ -493,7 +493,7 @@ class Resolver(tl: TraceLogger)
     * TyApp `f`.
     */
   def resolve(t: Resolvable, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
-  trace[(Opt[CallableDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t.instantiate}"):
+  trace[(Opt[CallableDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t.expanded}"):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = t match
       // Note: the arguments of the App are traversed later because the
@@ -774,7 +774,7 @@ class Resolver(tl: TraceLogger)
           log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
           withSym(t, bsym)
           expand2DotClass(lhs, expect = Expect.Module(N))
-          lhs.instantiate match
+          lhs.expanded match
             case ref @ Term.Ref(bsym: BlockMemberSymbol) => ref.expand:
               S(bsym.disamb(mdef.sym).ref(ref.tree))
             case _ => ()

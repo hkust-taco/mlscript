@@ -58,8 +58,8 @@ sealed trait ResolvableImpl:
     case S(S(expansion)) => showDbg + "{~>" + expansion.show + "}"
     case _ => showDbg
   
-  def instantiate: Term = expansion match
-    case S(S(t: Resolvable)) => t.instantiate
+  def expanded: Term = expansion match
+    case S(S(t: Resolvable)) => t.expanded
     case S(S(t)) => t
     case S(N) => this
     case N => this
@@ -218,7 +218,7 @@ enum Term extends Statement:
     // TODO: encode mutable symbols into expansions
     // FIXME: @Harry pls clean up this mess
     this match
-      case r: Resolvable if r.hasExpansion => r.instantiate
+      case r: Resolvable if r.hasExpansion => r.expanded
       case t => t
     match
       case ref: Ref => ref.resSym
