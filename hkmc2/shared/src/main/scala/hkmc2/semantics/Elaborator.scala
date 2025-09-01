@@ -1304,11 +1304,7 @@ extends Importer:
                 ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), annotations, comp)
               clsSym.defn = S(cd)
               cd
-        if defn.isPrincipalOverload then
-          //* At this point Sometimes, `sym.defn` *should* be empty, but it might not be due to an erroneous overload,
-          // * which would have triggered an error already.
-          // assert(sym.defn.isEmpty, (defn, sym.defn))
-          sym.defn = S(defn)
+        sym.defn = S(defn)
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)

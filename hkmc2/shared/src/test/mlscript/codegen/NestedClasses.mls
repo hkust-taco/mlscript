@@ -33,12 +33,8 @@ object D extends Foo.C(123) with
 //│ > 123
 //│ > 123
 
-:fixme
 object D extends Foo.C(123) with
   print(this.x)
-//│ ╔══[ERROR] Object 'D' does not contain member 'x'
-//│ ║  l.38: 	  print(this.x)
-//│ ╙──      	        ^^^^^^
 //│ > 123
 
 

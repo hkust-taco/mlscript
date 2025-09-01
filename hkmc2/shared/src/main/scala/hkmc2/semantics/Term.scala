@@ -95,7 +95,7 @@ sealed trait ResolvableImpl:
   def hasExpansion = expansion.isDefined
   
   def defn: Opt[Definition] = resolvedSymbol match
-    case S(sym: MemberSymbol[?]) => sym.defn.map(_.asPrincipalDefn)
+    case S(sym: MemberSymbol[?]) => sym.defn
     case _ => N
   
   def callableDefn: Opt[CallableDefinition] = defn.flatMap:
@@ -109,7 +109,9 @@ sealed trait ResolvableImpl:
     case S(td: ClassLikeDef) => S(td)
     case _ => N
 
-  def moduleDefn: Opt[ModuleOrObjectDef] = defn.flatMap(_.asOverloadModuleDefn)
+  def moduleDefn: Opt[ModuleOrObjectDef] = defn match
+    case S(td @ ModuleOrObjectDef(kind = Mod)) => S(td)
+    case _ => N
 
 object Resolvable:
   case class CallableDefinition(
@@ -573,32 +575,6 @@ sealed abstract class Definition extends Declaration with Statement:
   val annotations: Ls[Annot]
   def hasDeclareModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
-  
-  /** Whether this definition is the "representative" definition of a set of overloaded definitions,
-    * or the sole definition, if it is not overloaded.
-    * We should consider the ordering terms > classes/objects/types > modules, for this purpose. */
-  def isPrincipalOverload: Bool = this match
-    case cls: ModuleOrObjectDef => cls.companion.isEmpty
-    case _ => true
-  
-  def asPrincipalDefn: Definition = this match
-    case defn: ClassDef => defn.companion match
-      case S(comSym) => comSym.defn.getOrElse:
-        lastWords(s"No definition found for companion ${comSym} of ${defn.sym}.")
-      case N =>
-        this
-    case defn: ModuleOrObjectDef => defn.companion match
-      case S(comSym) => comSym.defn.getOrElse:
-        lastWords(s"No definition found for companion ${comSym} of ${defn.sym}.")
-      case N =>
-        this
-    case _ =>
-      this
-  
-  def asOverloadModuleDefn: Opt[ModuleOrObjectDef] = this match
-    case defn: ClassDef => defn.companion.flatMap(_.defn).flatMap(_.asOverloadModuleDefn)
-    case defn: ModuleOrObjectDef => S(defn)
-    case _ => N
 
 sealed trait CompanionValue extends Definition
 
