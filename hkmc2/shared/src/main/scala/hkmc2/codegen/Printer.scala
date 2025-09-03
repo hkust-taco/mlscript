@@ -36,9 +36,9 @@ object Printer:
       doc"match ${mkDocument(scrut)} #{  # ${docCases} # else #{  # ${docDefault} #}  #}  # in # ${mkDocument(rest)}"
     case Return(res, implct) => doc"return ${mkDocument(res)}"
     case Throw(exc) => doc"throw ${mkDocument(exc)}"
-    case Label(label, body, rest) =>
+    case Label(label, loop, body, rest) =>
       val l2 = summon[Scope].allocateName(label)
-      doc"label $l2 = ${mkDocument(body)} in # ${mkDocument(rest)}"
+      doc"labelled ${if loop then "loop" else "block"} $l2 = ${mkDocument(body)} in # ${mkDocument(rest)}"
     case Break(label) =>
       doc"break ${getVar(label)}"
     case Continue(label) =>

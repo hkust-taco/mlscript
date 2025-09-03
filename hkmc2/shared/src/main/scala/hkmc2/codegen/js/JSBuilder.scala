@@ -461,14 +461,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Continue(lbl) =>
       doc" # continue ${getVar(lbl)}${mkSemi}"
     
-    case Label(lbl, bod, rst) =>
+    case Label(lbl, loop, bod, rst) =>
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
-      doc" # ${getVar(lbl)}: while (true) { #{ ${
+      doc" # ${getVar(lbl)}:${if loop then doc" while (true)" else ""} { #{ ${
         returningTerm(bod, endSemi = false)
-      } # break; #}  # }${returningTerm(rst, endSemi)}"
+      }${if loop then doc" # break;" else ""} #}  # }${returningTerm(rst, endSemi)}"
       
     case TryBlock(sub, fin, rst) =>
       doc" # try ${ braced(returningTerm(sub, endSemi = false)) } finally ${

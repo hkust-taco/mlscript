@@ -20,6 +20,17 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
+  var duplicated: Bool = false
+  
+  def duplicate: Split =
+    val copy = this match
+      case Cons(head, tail) => Cons(head, tail.duplicate)
+      case Let(name, term, tail) => Let(name, term, tail.duplicate)
+      case Else(default) => Else(default)
+      case End => End
+    if copy != End then copy.duplicated = true
+    copy
+  
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull
     case Split.Let(_, _, tail) => tail.isFull
@@ -110,16 +121,22 @@ object Split:
        *  @param isFirst whether this is the first and frontmost branch
        *  @param isTopLevel whether this is the top-level split
        */
-      def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines = s match
-        case Split.Cons(head, tail) => (branch(head, isTopLevel) match
-          case (n, line) :: tail => (n, line) :: tail
-          case Nil => Nil
-        ) ::: split(tail, false, isTopLevel)
-        case Split.Let(nme, rhs, tail) =>
-          (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
-        case Split.Else(t) =>
-          (if isFirst && !isTopLevel then "" else "else") #: term(t)
-        case Split.End => Nil
+      def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines =
+        val lines = s match
+          case Split.Cons(head, tail) => (branch(head, isTopLevel) match
+            case (n, line) :: tail => (n, line) :: tail
+            case Nil => Nil
+          ) ::: split(tail, false, isTopLevel)
+          case Split.Let(nme, rhs, tail) =>
+            (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
+          case Split.Else(t) =>
+            (if isFirst && !isTopLevel then "" else "else") #: term(t)
+          case Split.End => Nil
+        if s.duplicated then lines.map:
+          case (n, line) if !line.endsWith("// duplicated") => (n, s"$line // duplicated")
+          case other => other
+        else
+          lines
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:

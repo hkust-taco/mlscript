@@ -486,23 +486,30 @@ let Runtime1;
                 tmp2 = loc;
               }
               loc1 = tmp2;
-              if (showLocals1 === true) {
-                scrut2 = curLocals.locals.length > 0;
-                if (scrut2 === true) {
-                  lambda = (undefined, function (l) {
-                    let tmp22, tmp23;
-                    tmp22 = l.localName + "=";
-                    tmp23 = Rendering.render(l.value);
-                    return tmp22 + tmp23
-                  });
-                  tmp3 = runtime.safeCall(curLocals.locals.map(lambda));
-                  tmp4 = runtime.safeCall(tmp3.join(", "));
-                  tmp5 = " with locals: " + tmp4;
-                } else {
-                  tmp5 = "";
+              split_root$: {
+                split_1$: {
+                  if (showLocals1 === true) {
+                    scrut2 = curLocals.locals.length > 0;
+                    if (scrut2 === true) {
+                      lambda = (undefined, function (l) {
+                        let tmp22, tmp23;
+                        tmp22 = l.localName + "=";
+                        tmp23 = Rendering.render(l.value);
+                        return tmp22 + tmp23
+                      });
+                      tmp3 = runtime.safeCall(curLocals.locals.map(lambda));
+                      tmp4 = runtime.safeCall(tmp3.join(", "));
+                      tmp5 = " with locals: " + tmp4;
+                      break split_root$
+                    } else {
+                      break split_1$
+                    }
+                  } else {
+                    break split_1$
+                  }
                 }
-              } else {
                 tmp5 = "";
+                break split_root$
               }
               localsMsg = tmp5;
               tmp6 = "\n\tat " + curLocals.fnName;
@@ -773,18 +780,24 @@ let Runtime1;
     let prevHandlerFrame, scrut, scrut1, scrut2, handlerFrame, saved, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
     prevHandlerFrame = cur2.contTrace;
     tmp7: while (true) {
-      scrut = prevHandlerFrame.nextHandler !== null;
-      if (scrut === true) {
-        scrut1 = prevHandlerFrame.nextHandler.handler !== cur2.handler;
-        if (scrut1 === true) {
-          prevHandlerFrame = prevHandlerFrame.nextHandler;
-          tmp = runtime.Unit;
-          continue tmp7
-        } else {
-          tmp = runtime.Unit;
+      split_root$: {
+        split_1$: {
+          scrut = prevHandlerFrame.nextHandler !== null;
+          if (scrut === true) {
+            scrut1 = prevHandlerFrame.nextHandler.handler !== cur2.handler;
+            if (scrut1 === true) {
+              prevHandlerFrame = prevHandlerFrame.nextHandler;
+              tmp = runtime.Unit;
+              continue tmp7
+            } else {
+              break split_1$
+            }
+          } else {
+            break split_1$
+          }
         }
-      } else {
         tmp = runtime.Unit;
+        break split_root$
       }
       break;
     }

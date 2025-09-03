@@ -20,7 +20,7 @@ fun test(x, p) = if x is
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "foo"
 //│ >      x is 0 then "bar"
-//│ >      else "qax"
+//│ >      else "qax" // duplicated
 //│ >    else "qax"
 
 fun test(x, p) = if x is
@@ -33,7 +33,7 @@ fun test(x, p) = if x is
 //│ >      let $scrut = p#666(x#666)
 //│ >      $scrut is true then "foo"
 //│ >      x is "lol" then "bar"
-//│ >      else "qax"
+//│ >      else "qax" // duplicated
 //│ >    else "qax"
 
 test("test", _ => true)
@@ -60,7 +60,7 @@ fun test(x, p) = if x is
 //│ >      $scrut is true then "great"
 //│ >      x is 2.71828 then "E"
 //│ >      x is 3.14159 then "PI"
-//│ >      else "other"
+//│ >      else "other" // duplicated
 //│ >    else "other"
 
 fun test(x, p) = if x is

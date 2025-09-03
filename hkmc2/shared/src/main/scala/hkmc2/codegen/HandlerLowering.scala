@@ -227,7 +227,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               Match(scrut, newArms, dfltParts.map(_.head), StateTransition(restId)),
               BlockState(restId, restParts.head, N) :: states
             )
-      case l @ Label(label, body, rest) =>
+      case l @ Label(label, _, body, rest) =>
         val startId = freshId() // start of body
 
         val PartRet(restNew, restParts) = go(rest)
@@ -559,7 +559,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       End()
     )
 
-    val lbl = blockBuilder.label(loopLbl, mainMatchBlk).rest(End())
+    val lbl = blockBuilder.label(loopLbl, loop = true, mainMatchBlk).rest(End())
     
     val resumedVal = VarSymbol(Tree.Ident("value$"))
 

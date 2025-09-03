@@ -28,7 +28,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case Match(scrut, arms, dflt, rest) => scrut :: arms.map(_._2) ++ dflt.toList :+ rest
     case Return(res, implct) => res :: Nil
     case Throw(exc) => exc :: Nil
-    case Label(label, body, rest) => label :: body :: rest :: Nil
+    case Label(label, _, body, rest) => label :: body :: rest :: Nil
     case Break(label) => label :: Nil
     case Continue(label) => label :: Nil
     case Begin(sub, rest) => sub :: rest :: Nil
@@ -65,7 +65,7 @@ sealed abstract class Block extends Product with AutoLocated:
     // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
-    case Label(lbl, bod, rst) => bod.definedVars ++ rst.definedVars
+    case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -77,7 +77,7 @@ sealed abstract class Block extends Product with AutoLocated:
       1 + arms.map(_._2.size).sum + dflt.map(_.size).getOrElse(0) + rst.size
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
-    case Label(_, bod, rst) => 1 + bod.size + rst.size
+    case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
   
   // TODO conserve if no changes
@@ -92,7 +92,7 @@ sealed abstract class Block extends Product with AutoLocated:
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
       Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, body, rest) => Label(label, body, rest.mapTail(f))
+    case Label(label, loop, body, rest) => Label(label, loop, body.mapTail(f), rest.mapTail(f))
     case af @ AssignField(lhs, nme, rhs, rest) =>
       AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
     case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
@@ -107,7 +107,7 @@ sealed abstract class Block extends Product with AutoLocated:
         (pat, arm) => arm.freeVars -- pat.freeVars
     case Return(res, implct) => res.freeVars
     case Throw(exc) => exc.freeVars
-    case Label(label, body, rest) => (body.freeVars - label) ++ rest.freeVars 
+    case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
     case Break(label) => Set(label)
     case Continue(label) => Set(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
@@ -127,7 +127,7 @@ sealed abstract class Block extends Product with AutoLocated:
         (pat, arm) => arm.freeVarsLLIR -- pat.freeVarsLLIR
     case Return(res, implct) => res.freeVarsLLIR
     case Throw(exc) => exc.freeVarsLLIR
-    case Label(label, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
+    case Label(label, _, body, rest) => (body.freeVarsLLIR - label) ++ rest.freeVarsLLIR 
     case Break(label) => Set.empty
     case Continue(label) => Set.empty
     case Begin(sub, rest) => sub.freeVarsLLIR ++ rest.freeVarsLLIR
@@ -149,7 +149,7 @@ sealed abstract class Block extends Product with AutoLocated:
     case AssignDynField(_, _, _, rhs, rest) => rhs.subBlocks ::: rest :: Nil
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
     case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
-    case Label(_, body, rest) => body :: rest :: Nil
+    case Label(_, _, body, rest) => body :: rest :: Nil
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
@@ -194,12 +194,12 @@ sealed abstract class Block extends Product with AutoLocated:
       then this
       else Match(scrut, newArms, newDflt, newRest)
 
-    case Label(label, body, rest) =>
+    case Label(label, loop, body, rest) =>
       val newBody = body.flattened
       val newRest = rest.flatten(k)
       if (newBody is body) && (newRest is rest)
       then this
-      else Label(label, newBody, newRest)
+      else Label(label, loop, newBody, newRest)
       
     case Begin(sub, rest) =>
       sub.flatten(_ => rest.flatten(k))
@@ -280,7 +280,7 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: Local, body: Block, rest: Block) extends Block
+case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Block
 
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
@@ -559,7 +559,7 @@ extension (k: Block => Block)
   def end = k.rest(End())
   def ifthen(scrut: Path, cse: Case, trm: Block, els: Opt[Block] = N): Block => Block =
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
-  def label(label: Local, body: Block) = k.chain(Label(label, body, _))
+  def label(label: Local, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)

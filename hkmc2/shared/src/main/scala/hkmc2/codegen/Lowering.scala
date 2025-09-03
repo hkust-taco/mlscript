@@ -59,7 +59,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   val lowerHandlers: Bool = config.effectHandlers.isDefined
   val lift: Bool = config.liftDefns.isDefined
 
-  private lazy val unreachableFn =
+  lazy val unreachableFn =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(N)
   
   def unit: Path =
@@ -444,143 +444,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val l = new TempSymbol(N)
         Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
     
-    /* 
-    case t @ st.If(Split.Let(sym, trm, tail)) =>
-      // term(st.Blk(semantics.LetDecl(sym) :: semantics.DefineVar(sym, trm) :: Nil, st.If(tail)(t.normalized)))(k)
-      term(trm): r =>
-        Assign(sym, r, term(st.If(tail)(t.normalized))(k))
-    
-    // TODO rm
-    case st.If(Split.Cons(
-      Branch(scrut, Pattern.LitPat(tru @ Tree.BoolLit(true)), Split.Else(thn)),
-      restSplit
-    )) =>
-      
-      val elseBranch = restSplit match
-        case Split.Else(els) => S(els)
-        case Split.Nil => N
-      
-      elseBranch match
-      case S(els) if k.isInstanceOf[Ret] =>
-        subTerm(scrut): sr =>
-          // Match(sr, Case.Lit(tru) -> term(thn)(k) :: Nil,
-          //   Some(term(els)(k)), 
-          //   Unreachable
-          // )
-          Match(sr, Case.Lit(tru) -> term(thn)(k) :: Nil,
-            N, 
-            term(els)(k)
-          )
-      case _ =>
-        val l = new TempSymbol(S(t))
-        subTerm(scrut): sr =>
-            Match(sr, Case.Lit(tru) -> subTerm(thn)(r => Assign(l, r, End())) :: Nil,
-              elseBranch.map(els => subTerm(els)(r => Assign(l, r, End()))),
-              k(Value.Ref(l))
-            )
-    */
     
     case iftrm: st.OldIfLike =>
-      
-      tl.log(s"${iftrm.kw} $iftrm")
-      
-      val isIf = iftrm.kw match
-        case syntax.Keyword.`if` => true
-        case syntax.Keyword.`while` => false
-      val isWhile = !isIf
-      
-      var usesResTmp = false
-      lazy val l =
-        usesResTmp = true
-        new TempSymbol(S(t))
-      
-      lazy val lbl =
-        new TempSymbol(S(t))
-      
-      def go(split: Split, topLevel: Bool)(using Subst): Block = split match
-        case Split.Let(sym, trm, tl) =>
-          term_nonTail(trm): r =>
-            Assign(sym, r, go(tl, topLevel))
-        case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
-          subTerm_nonTail(scrut): sr =>
-            tl.log(s"Binding scrut $scrut to $sr (${summon[Subst].map})")
-            // val cse = 
-            def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
-                S(go(restSplit, topLevel = true)),
-                End()
-              )
-            pat match
-              case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> go(tail, topLevel = false))
-              case FlatPattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
-                /** Make a continuation that creates the match. */
-                def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
-                  val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
-                  // Normalization should reject cases where the user provides
-                  // more sub-patterns than there are actual class parameters.
-                  assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-                  def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
-                    case Nil =>
-                      Case.Cls(ctorSym, st) -> go(tail, topLevel = false)
-                    case (param, arg) :: args =>
-                      val (cse, blk) = mkArgs(args)
-                      (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
-                  mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
-                ctor.symbol.flatMap(_.asClsOrMod) match
-                  case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>
-                    // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
-                    // not exist at runtime. If we do lowering on `trm`, backends
-                    // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
-                    // In this case the second parameter of `Case.Cls` will not be used.
-                    // So we do not elaborate `ctor` when the `cls` is virtual
-                    // and use it `Predef.unreachable` here.
-                    k(cls, Nil)(unreachableFn)
-                  case S(cls: ClassSymbol) => subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
-                  case S(mod: ModuleSymbol) => subTerm_nonTail(ctor)(k(mod, Nil))
-                  case N =>
-                    // Normalization have already checked the constructor
-                    // resolves to a class or module. Branches with unresolved
-                    // constructors should have been removed.
-                    lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
-              case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> go(tail, topLevel = false))
-              case FlatPattern.Record(entries) =>
-                val objectSym = ctx.builtins.Object
-                mkMatch( // checking that we have an object
-                  Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-                  entries.foldRight(go(tail, topLevel = false)):
-                    case ((fieldName, fieldSymbol), blk) =>
-                      mkMatch(
-                        Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                        Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
-                      )
-                )
-        case Split.Else(els) =>
-          if k.isInstanceOf[TailOp] && isIf then term_nonTail(els)(k)
-          else
-            term_nonTail(els): r =>
-              Assign(l, r,
-                if isWhile && !topLevel then Continue(lbl)
-                else End()
-              )
-        case Split.End =>
-          Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
-            Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
-      
-      val normalize = ucs.Normalization()
-      val normalized = tl.scoped("ucs:normalize"):
-        normalize(iftrm.desugared)
-      tl.scoped("ucs:normalized"):
-        tl.log(s"Normalized:\n${normalized.prettyPrint}")
-
-      if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
-      else
-        val body = if isWhile
-          then Label(lbl, go(normalized, topLevel = true), End())
-          else go(normalized, topLevel = true)
-        Begin(
-          body,
-          if usesResTmp then k(Value.Ref(l))
-          else k(unit) // * it seems this currently never happens
-        )
+      ucs.Normalization(this)(iftrm)(k)
       
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)

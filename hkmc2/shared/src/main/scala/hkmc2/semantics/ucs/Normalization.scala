@@ -8,10 +8,12 @@ import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
 import utils.*
 import FlatPattern.Argument
-import ups.Instantiator
-import hkmc2.semantics.ups.NaiveCompiler
+import codegen.Lowering
+import ups.{Instantiator, NaiveCompiler}
+import collection.mutable.{Map as MutMap}
 
-class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
+
+class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
   import Normalization.*, Mode.*, FlatPattern.MatchMode
   import tl.*
 
@@ -132,7 +134,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // TODO(ucs): deduplicate [1]
         val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
-          normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
+          normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern)))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
         Branch(scrutinee, pattern, whenTrue) ~: whenFalse
       case pattern @ FlatPattern.ClassLike(ctor, argsOpt, mode, _) =>
@@ -171,7 +173,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
             validateMatchMode(ctor, cls, mode)
             if validateClassPattern(ctor, cls, ensureArguments(argsOpt)) then // TODO(ucs): deduplicate [1]
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
-                normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
+                normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
@@ -180,7 +182,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
             validateMatchMode(ctor, mod, mode)
             if validateObjectPattern(pattern, mod, argsOpt) then // TODO(ucs): deduplicate [1]
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
-                normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
+                normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
@@ -210,9 +212,9 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
     case Split.Let(v, rhs, tail) =>
       log(s"LET: $v")
       Split.Let(v, rhs, normalizeImpl(tail)(using vs + v))
-    case Split.Else(default) =>
+    case split @ Split.Else(default) =>
       log(s"DFLT: ${default.showDbg}")
-      Split.Else(default)
+      split
     case Split.End => Split.End
   
   /** Check whether the number of parameters in class-like patterns matches the
@@ -593,6 +595,164 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
         case (acc, (l, r)) if l.scrutinee === r.scrutinee => acc
         case (acc, (l, r)) => innermost => Split.Let(r.scrutinee, l.scrutinee.safeRef, acc(innermost))
     case (_, _) => identity
+  
+  import codegen.*, lowering.{term_nonTail, subTerm_nonTail, unreachableFn}
+  
+  /** Collect terms that appear in multiple `Split.Else` branches. We will share
+   *  the corresponding blocks to avoid code duplication. */
+  private def collectSharedConsequents(split: Split): List[(Term, TempSymbol)] =
+    val counts: MutMap[Term, (Int, Int)] = MutMap.empty
+    def rec(s: Split): Unit = s match
+      case Split.End => ()
+      case Split.Else(els) => counts.updateWith(els):
+        case S((n, count)) => S((n, count + 1))
+        case N => S((counts.size + 1, 1))
+      case Split.Let(_, _, tail) => rec(tail)
+      case Split.Cons(Branch(_, _, cons), tail) => rec(cons); rec(tail)
+    rec(split)
+    counts.iterator.filter(_._2._2 > 1).toSeq.sortBy(_._2._1).zipWithIndex.map:
+      case ((term, _), i) => (term, new TempSymbol(S(term), s"split_${i + 1}$$"))
+    .toList
+  
+  private def lowerSplit(
+      split: Split,
+      sharedConsequents: Map[Term, TempSymbol],
+      cont: (Result => Block) \/ (Bool => Result => Block),
+      topLevel: Bool
+  )(using Subst): Block = split match
+    case Split.Let(sym, trm, tl) =>
+      term_nonTail(trm): r =>
+        Assign(sym, r, lowerSplit(tl, sharedConsequents, cont, topLevel))
+    case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
+      subTerm_nonTail(scrut): sr =>
+        tl.log(s"Binding scrut $scrut to $sr (${summon[Subst].map})") 
+        def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
+            S(lowerSplit(restSplit, sharedConsequents, cont, topLevel = true)),
+            End()
+          )
+        pat match
+          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, sharedConsequents, cont, topLevel = false))
+          case FlatPattern.ClassLike(ctor, argsOpt, _mode, _refined) =>
+            /** Make a continuation that creates the match. */
+            def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
+              val args = argsOpt.map(_.map(_.scrutinee)).getOrElse(Nil)
+              // Normalization should reject cases where the user provides
+              // more sub-patterns than there are actual class parameters.
+              assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
+              def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
+                case Nil =>
+                  Case.Cls(ctorSym, st) -> lowerSplit(tail, sharedConsequents, cont, topLevel = false)
+                case (param, arg) :: args =>
+                  val (cse, blk) = mkArgs(args)
+                  (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
+              mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+            ctor.symbol.flatMap(_.asClsOrMod) match
+              case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>
+                // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
+                // not exist at runtime. If we do lowering on `trm`, backends
+                // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
+                // In this case the second parameter of `Case.Cls` will not be used.
+                // So we do not elaborate `ctor` when the `cls` is virtual
+                // and use it `Predef.unreachable` here.
+                k(cls, Nil)(unreachableFn)
+              case S(cls: ClassSymbol) =>
+                subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
+              case S(mod: ModuleSymbol) =>
+                subTerm_nonTail(ctor)(k(mod, Nil))
+              case N =>
+                // Normalization have already checked the constructor
+                // resolves to a class or module. Branches with unresolved
+                // constructors should have been removed.
+                lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
+          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, sharedConsequents, cont, topLevel = false))
+          case FlatPattern.Record(entries) =>
+            val objectSym = ctx.builtins.Object
+            mkMatch( // checking that we have an object
+              Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
+              entries.foldRight(lowerSplit(tail, sharedConsequents, cont, topLevel = false)):
+                case ((fieldName, fieldSymbol), blk) =>
+                  mkMatch(
+                    Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
+                    Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                  )
+            )
+    case Split.Else(els) => sharedConsequents.get(els) match
+      case S(label) => Break(label)
+      case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
+    case Split.End =>
+      Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
+        Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
+  
+  import syntax.Keyword.{`if`, `while`}
+  
+  def apply(t: Term.OldIfLike)(k: Result => Block)(using Subst): Block =
+    var usesResTmp = false
+    // The symbol of the temporary variable for the result of the `if`-like term.
+    // It will be created in one of the following situations.
+    // 1. The continuation `k` is not a tail operation.
+    // 2. There are shared consequents in the `if`-like term.
+    // 3. The term is a `while` and the result is used.
+    lazy val l =
+      usesResTmp = true
+      new TempSymbol(S(t))
+    // The symbol for the loop label if the term is a `while`.
+    lazy val loopLabel = new TempSymbol(S(t))
+    val normalized = tl.scoped("ucs:normalize"):
+      normalize(t.desugared)(using VarSet())
+    tl.scoped("ucs:normalized"):
+      tl.log(s"Normalized:\n${normalized.prettyPrint}")
+    // Collect consequents that are shared in more than one branch.
+    val sharedConsequents = collectSharedConsequents(normalized)
+    lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
+    lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
+    val cont =
+      if t.kw === `while` then
+        // If the term is a `while`, the action of `else` branches depends on
+        // whether the the enclosing split is at the top level or not.
+        R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else Continue(loopLabel)))
+      else if sharedConsequents.isEmpty then
+        if k.isInstanceOf[TailOp] then
+          // If there are no shared consequents and the continuation is a tail
+          // operation, we can call it directly.
+          L(k)
+        else
+          // Otherwise, if the continuation is not a tail operation, we should
+          // save the result in a temporary variable and call the continuation
+          // in the end.
+          L((r: Result) => Assign(l, r, End()))
+      else
+        // When there are shared consequents, we are forced to save the result
+        // in the temporary variable nevertheless. Note that `cont` only gets
+        // called for non-shared consequents, so we should break to the end of
+        // the entire split after the assignment.
+        L(breakRoot)
+    // The main block contains the lowered split, where each shared consequent
+    // is replaced with a `Break` to the corresponding label.
+    val mainBlock = lowerSplit(normalized, sharedConsequents.toMap, cont, topLevel = true)
+    // Wrap the main block in a labelled block for each shared consequent. The
+    // `rest` of each `Label` is the lowered consequent plus a `Break` to the
+    // end of the entire `if` term. Otherwise, it will fall through to the outer
+    // consequent, which is the wrong semantics.
+    val wrappedBlock = if sharedConsequents.isEmpty then mainBlock else
+      sharedConsequents.foldRight(mainBlock):
+        case ((term, label), innerBlock) =>
+          Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
+    // If there are shared consequents, we need a wrap the entire block in a
+    // `Label` so that `Break`s in the shared consequents can jump to the end.
+    val body = if sharedConsequents.isEmpty then wrappedBlock else
+      Label(rootBreakLabel, false, wrappedBlock, End())
+    // Embed the `body` into `Label` if the term is a `while`.
+    lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
+    val resultBlock =
+      if t.kw === `while` then
+        Begin(Label(loopLabel, true, body, End()), rest)
+      else if sharedConsequents.isEmpty && k.isInstanceOf[TailOp] then
+        body
+      else
+        Begin(body, rest)
+    scoped("ucs:lowered"):
+      log(s"Lowered:\n${resultBlock.showAsTree}")
+    resultBlock
 end Normalization
 
 object Normalization:
@@ -627,7 +787,8 @@ object Normalization:
       entries.forall { (fieldName, _) => clsParams.exists {
         case Param(flags = FldFlags(isVal = isVal), sym = sym) => isVal && fieldName === sym.id
       }}
-    case (_: FlatPattern, _: FlatPattern)  => false
+    // case (Class(cs1: ClassSymbol), Class(cs2: ClassSymbol)) => true
+    case (_: FlatPattern, _: FlatPattern) => false
 
   final case class VarSet(declared: Set[BlockLocalSymbol]):
     def +(nme: BlockLocalSymbol): VarSet = copy(declared + nme)

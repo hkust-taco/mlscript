@@ -475,7 +475,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Return(res, implct) => bResult(res)(x => Node.Result(Ls(x)))
       case Throw(Instantiate(false, Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
         Node.Panic(e)
-      case Label(label, body, rest) => TODO("Label not supported")
+      case Label(label, loop, body, rest) => TODO("Label not supported")
       case Break(label) => TODO("Break not supported")
       case Continue(label) => TODO("Continue not supported")
       case Begin(sub, rest) =>
@@ -543,7 +543,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case Match(scrut, arms, dflt, rest) => applyBlock(rest)
         case Return(res, implct) =>
         case Throw(exc) =>
-        case Label(label, body, rest) => applyBlock(rest)
+        case Label(label, _, body, rest) => applyBlock(rest)
         case Break(label) =>
         case Continue(label) =>
         case Begin(sub, rest) => applyBlock(rest)

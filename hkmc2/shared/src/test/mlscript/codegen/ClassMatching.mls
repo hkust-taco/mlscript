@@ -126,21 +126,30 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x3) {
-//│   let param04, x4, scrut2;
-//│   if (x3 instanceof Some1.class) {
-//│     param04 = x3.value;
-//│     x4 = param04;
-//│     scrut2 = x4 > 0;
-//│     if (scrut2 === true) {
-//│       return 42
-//│     } else {
-//│       return Predef.print("oops")
+//│   let param04, x4, scrut2, tmp5;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x3 instanceof Some1.class) {
+//│         param04 = x3.value;
+//│         x4 = param04;
+//│         scrut2 = x4 > 0;
+//│         if (scrut2 === true) {
+//│           tmp5 = 42;
+//│           break split_root$
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (x3 instanceof None1.class) {
+//│         tmp5 = "ok";
+//│         break split_root$
+//│       } else {
+//│         break split_1$
+//│       }
 //│     }
-//│   } else if (x3 instanceof None1.class) {
-//│     return "ok"
-//│   } else {
-//│     return Predef.print("oops")
+//│     tmp5 = Predef.print("oops");
+//│     break split_root$
 //│   }
+//│   return tmp5
 //│ };
 
 f(Some(0))
@@ -199,17 +208,25 @@ fun f(x) = print of if x is
 //│ let f6;
 //│ f6 = function f(x3) {
 //│   let param04, tmp9;
-//│   if (x3 instanceof Some1.class) {
-//│     param04 = x3.value;
-//│     if (param04 === 0) {
-//│       tmp9 = "0";
-//│     } else {
-//│       tmp9 = "oops";
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x3 instanceof Some1.class) {
+//│         param04 = x3.value;
+//│         if (param04 === 0) {
+//│           tmp9 = "0";
+//│           break split_root$
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (x3 instanceof None1.class) {
+//│         tmp9 = "ok";
+//│         break split_root$
+//│       } else {
+//│         break split_1$
+//│       }
 //│     }
-//│   } else if (x3 instanceof None1.class) {
-//│     tmp9 = "ok";
-//│   } else {
 //│     tmp9 = "oops";
+//│     break split_root$
 //│   }
 //│   return Predef.print(tmp9)
 //│ };
