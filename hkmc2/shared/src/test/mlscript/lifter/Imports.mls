@@ -8,9 +8,12 @@ module A with
   fun f(x) = x is Option.Some
 //│ JS (unsanitized):
 //│ let A1;
-//│ (class A {
+//│ globalThis.Object.freeze(class A {
 //│   static {
-//│     A1 = A;
+//│     A1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
 //│   }
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
@@ -19,7 +22,7 @@ module A with
 //│       return false
 //│     }
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "A"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 

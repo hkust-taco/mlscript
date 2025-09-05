@@ -15,9 +15,7 @@ if Some(0) is Some(x) then x
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 
@@ -33,9 +31,7 @@ if s is
 //│   param01 = s.value;
 //│   x1 = param01;
 //│   x1
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 if s is
@@ -64,9 +60,7 @@ x => if x is Some(x) then x
 //│     param04 = x3.value;
 //│     x4 = param04;
 //│     return x4
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
 //│ = fun
@@ -127,8 +121,8 @@ fun f(x) = if x is
 //│ let f4;
 //│ f4 = function f(x3) {
 //│   let param04, x4, scrut2, tmp5;
-//│   split_root$: {
-//│     split_1$: {
+//│   split_root$:  {
+//│     split_1$:  {
 //│       if (x3 instanceof Some1.class) {
 //│         param04 = x3.value;
 //│         x4 = param04;
@@ -142,12 +136,12 @@ fun f(x) = if x is
 //│       } else if (x3 instanceof None1.class) {
 //│         tmp5 = "ok";
 //│         break split_root$
-//│       } else {
-//│         break split_1$
-//│       }
+//│       } else { break split_1$ }
+//│       
 //│     }
 //│     tmp5 = Predef.print("oops");
-//│     break split_root$
+//│     break split_root$;
+//│     
 //│   }
 //│   return tmp5
 //│ };
@@ -186,9 +180,7 @@ fun f(x) = if x is
 //│     a = param04;
 //│     b = param1;
 //│     return a + b
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 f(Some(123))
@@ -208,8 +200,8 @@ fun f(x) = print of if x is
 //│ let f6;
 //│ f6 = function f(x3) {
 //│   let param04, tmp9;
-//│   split_root$: {
-//│     split_1$: {
+//│   split_root$:  {
+//│     split_1$:  {
 //│       if (x3 instanceof Some1.class) {
 //│         param04 = x3.value;
 //│         if (param04 === 0) {
@@ -221,12 +213,12 @@ fun f(x) = print of if x is
 //│       } else if (x3 instanceof None1.class) {
 //│         tmp9 = "ok";
 //│         break split_root$
-//│       } else {
-//│         break split_1$
-//│       }
+//│       } else { break split_1$ }
+//│       
 //│     }
 //│     tmp9 = "oops";
-//│     break split_root$
+//│     break split_root$;
+//│     
 //│   }
 //│   return Predef.print(tmp9)
 //│ };

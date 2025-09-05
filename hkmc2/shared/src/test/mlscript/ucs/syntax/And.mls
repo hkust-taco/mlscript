@@ -21,8 +21,7 @@ if x
   and y then z
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = InfixApp:
 //│       lhs = Ident of "x"
@@ -36,8 +35,7 @@ if x
   else d
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = Block of Ls of 
 //│     InfixApp:
 //│       lhs = InfixApp:
@@ -47,16 +45,14 @@ if x
 //│       kw = keyword 'then'
 //│       rhs = Ident of "z"
 //│     PrefixApp:
-//│       kw = keyword 'else'
-//│       kwLoc = N
+//│       kw = Keywrd of keyword 'else'
 //│       rhs = Ident of "d"
 
 if x is
   A and y then z
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -75,8 +71,7 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -105,8 +100,7 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -139,14 +133,13 @@ if x is
     B then z
   B then C
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.138: 	    and v is
+//│ ║  l.132: 	    and v is
 //│ ║         	            ^
-//│ ║  l.139: 	    B then z
+//│ ║  l.133: 	    B then z
 //│ ╙──       	^^^^
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -179,8 +172,7 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'
@@ -218,8 +210,7 @@ if x is
   B then C
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = Ident of "x"
 //│     kw = keyword 'is'

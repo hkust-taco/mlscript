@@ -30,7 +30,7 @@ bmi of weight: 70, height: 1.75
 bmi of weight: 70
 //│ ═══[RUNTIME ERROR] Error: match error
 
-// This pattern is useful becuase it turns a pattern into a function that
+// This pattern is useful because it turns a pattern into a function that
 // returns `Some` if the pattern matches, and `None` otherwise.
 pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
 
@@ -40,9 +40,6 @@ fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then val
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╔══[ERROR] Unrecognized pattern (application)
-//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
-//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern (application).
 //│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -101,9 +98,9 @@ fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.101: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
-//│ ╙──       	                                              ^
+//│ ╔══[ERROR] Cannot use this reference without resolved definition as a pattern
+//│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
+//│ ╙──      	                                              ^
 
 pattern IntegerLiteral =
   ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)

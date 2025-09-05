@@ -81,7 +81,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[ERROR] Expected six arguments, but found only three arguments.
 //│ ║  l.81: 	fun test(x) = if x is Test(_, _, _) then "ok"
-//│ ╙──      	                      ^^^^
+//│ ╙──      	                           ^^^^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 

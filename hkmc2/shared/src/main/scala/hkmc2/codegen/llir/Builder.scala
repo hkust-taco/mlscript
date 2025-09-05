@@ -10,6 +10,7 @@ import mlscript.utils.shorthands.*
 import utils.*
 import document.*
 import Message.MessageContext
+import Scope.scope
 
 import syntax.Tree
 import semantics.*
@@ -80,10 +81,10 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
 
   private def allocIfNew(l: Local)(using Raise, Scope): String =
     trace[Str](s"allocIfNew begin: $l", x => s"allocIfNew end: $x"):
-      if summon[Scope].lookup(l).isDefined then
+      if scope.lookup(l).isDefined then
         getVar_!(l)
       else
-        summon[Scope].allocateName(l)
+        scope.allocateName(l)
 
   private def getVar_!(l: Local)(using Raise, Scope): String =
     trace[Str](s"getVar_! begin", x => s"getVar_! end: $x"):
@@ -96,8 +97,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case ts: semantics.BlockMemberSymbol => // this means it's a locally-defined member
         ts.nme
       case ts: semantics.InnerSymbol =>
-        summon[Scope].findThis_!(ts)
-      case _ => summon[Scope].lookup_!(l)
+        scope.findThis_!(ts)
+      case _ => scope.lookup_!(l, N)
 
   private def symMap(s: Local)(using ctx: Ctx)(using Raise, Scope) =
     ctx.findName(s)
@@ -213,7 +214,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def bClsLikeDef(e: ClsLikeDefn)(using ctx: Ctx)(using Raise, Scope): ClassInfo =
     trace[ClassInfo](s"bClsLikeDef begin", x => s"bClsLikeDef end: ${x.show}"):
       val ClsLikeDefn(
-        _own, isym, _sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) = e
+        _own, isym, _sym, kind, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor, mod) = e
       if !ctx.isTopLevel then
         bErrStop(msg"Non top-level definition ${isym.toString()} not supported")
       else
@@ -426,7 +427,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Instantiate(
         false,
         Select(Value.Ref(sym), Tree.Ident("class")), args) =>
-        bPaths(args):
+        bArgs(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
@@ -473,7 +474,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             summon[Ctx].def_acc += jpdef
             Node.Case(e, casesList, defaultCase)
       case Return(res, implct) => bResult(res)(x => Node.Result(Ls(x)))
-      case Throw(Instantiate(false, Select(Value.Ref(_), ident), Ls(Value.Lit(Tree.StrLit(e))))) if ident.name === "Error" =>
+      case Throw(Instantiate(false, Select(Value.Ref(_), ident),
+          Ls(Arg(N, Value.Lit(Tree.StrLit(e))))))
+      if ident.name === "Error" =>
         Node.Panic(e)
       case Label(label, loop, body, rest) => TODO("Label not supported")
       case Break(label) => TODO("Break not supported")
@@ -516,7 +519,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   def registerClasses(b: Block)(using ctx: Ctx)(using Raise, Scope): Ctx =
     b match
     case Define(cd @ ClsLikeDefn(_own, isym, sym, kind, _paramsOpt, auxParams,
-        parentSym, methods, privateFields, publicFields, preCtor, ctor), rest) =>
+        parentSym, methods, privateFields, publicFields, preCtor, ctor, mod), rest) =>
       if !auxParams.isEmpty then
         bErrStop(msg"The class ${sym.nme} has auxiliary parameters, which are not yet supported")
       val c = bClsLikeDef(cd)

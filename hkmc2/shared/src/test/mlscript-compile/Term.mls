@@ -4,7 +4,7 @@ import "path"
 import "url"
 
 import "./Predef.mls"
-import "./Str.mls"
+import "./StrOps.mls"
 
 open Predef
 
@@ -72,7 +72,7 @@ class Context(val names: Map, val bindings: Map, val dependencies: Set, val prin
   fun get(sym) =
     if bindings.has(sym) then bindings.get(sym)
     else if printOnly then sym.name
-    else throw Error(Str.concat("Invalid binding name ", sym.name))
+    else throw Error(StrOps.concat("Invalid binding name ", sym.name))
   fun nest = Context(names, new Map(bindings), dependencies, printOnly)
   fun add(sym) =
     let fn = freshName(sym.name)
@@ -84,11 +84,11 @@ class Context(val names: Map, val bindings: Map, val dependencies: Set, val prin
       names.set(name, 0)
     let i = names.get(name)
     names.set(name, i + 1)
-    Str.concat of name, "_", i.toString()
+    StrOps.concat of name, "_", i.toString()
 
 
 fun indent(str, ind, keepLeading) =
-  let res = str.split("\n").map(s => Str.concat(ind, s)).join("\n")
+  let res = str.split("\n").map(s => StrOps.concat(ind, s)).join("\n")
   if keepLeading then res
   else res.substring(ind.length)
 
@@ -96,8 +96,8 @@ fun showStmt(s, ctx) =
   if s is
     LetDecl(sym) then
       let freshName = ctx.add(sym)
-      Str.concat("let ", freshName)
-    DefineVar(sym, value) then Str.concat of ctx.get(sym), " = ", show(value, ctx)
+      StrOps.concat("let ", freshName)
+    DefineVar(sym, value) then StrOps.concat of ctx.get(sym), " = ", show(value, ctx)
 
 
 fun showPattern(p, ctx) =
@@ -108,20 +108,20 @@ fun showPattern(p, ctx) =
 
 fun paren(t, ctx) =
   if (t is Ref) || (t is CSRef) || (t is Lit) || (t is Sel) then show(t, ctx)
-  else Str.concat of "(", show(t, ctx), ")"
+  else StrOps.concat of "(", show(t, ctx), ")"
 
 
 fun showSplit(s, ctx, isCont) =
   if s is
     Cons(Branch(scrut, ptrn, cont), tail) then
-      Str.concat of show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false)
+      StrOps.concat of show(scrut, ctx), " is ", showPattern(ptrn, ctx), " then ", showSplit(cont, ctx, true), "\n", showSplit(tail, ctx, false)
     Let(sym, term, split) then
       let nest = ctx.nest
       let freshName = nest.add(sym)
-      Str.concat of "let ", freshName, " = ", show(term, nest), "\n", showSplit(split, nest, false)
+      StrOps.concat of "let ", freshName, " = ", show(term, nest), "\n", showSplit(split, nest, false)
     Else(term) then
       if isCont then show(term, ctx)
-      else Str.concat of "else ", show(term, ctx)
+      else StrOps.concat of "else ", show(term, ctx)
     End then ""
 
 
@@ -134,17 +134,17 @@ fun show(t, ctx) =
       name
     Lit(lit) then lit.toString()
     Builtin(name) then name
-    Sel(prefix, name) then Str.concat of paren(prefix, ctx), ".", name
-    App(lhs, rhs) then Str.concat of paren(lhs, ctx), show(rhs, ctx)
-    Tup(fields) then Str.concat of "(", fields.map(t => show(t, ctx)).join(", "), ")"
+    Sel(prefix, name) then StrOps.concat of paren(prefix, ctx), ".", name
+    App(lhs, rhs) then StrOps.concat of paren(lhs, ctx), show(rhs, ctx)
+    Tup(fields) then StrOps.concat of "(", fields.map(t => show(t, ctx)).join(", "), ")"
     Lam(params, body) then
       let nest = ctx.nest
       let freshParams = params.map(s => nest.add(s))
-      Str.concat of "(", freshParams.join(", "), ") =>\n", indent(show(body, nest), "  ", true)
+      StrOps.concat of "(", freshParams.join(", "), ") =>\n", indent(show(body, nest), "  ", true)
     Blk(stats, res) then
       let nest = ctx.nest
-      Str.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
-    IfLike(Keyword.If, split) then Str.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
+      StrOps.concat of stats.map(s => showStmt(s, nest)).join("\n"), "\n", show(res, nest)
+    IfLike(Keyword.If, split) then StrOps.concat of "if \n", indent(showSplit(split, ctx, false), "  ", true)
     // TODO: other terms
 
 fun print(t) =
@@ -153,20 +153,20 @@ fun print(t) =
 
 
 fun genImport(base, p) =
-  Str.concat of "import \"./", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
+  StrOps.concat of "import \"./", path.relative(base, url.fileURLToPath(p)).slice(0, -4), ".mls\""
 
 
 fun codegen(t, file) =
   let ctx = Context(new Map(), new Map(), new Set(), false)
   let moduleName = path.parse(file).name
   let fullpath = path.join of process.cwd(), file
-  let code = Str.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"
+  let code = StrOps.concat of "module ", moduleName, " with ...\nfun res =\n", indent(show(t, ctx), "  ", true), "\n"
   let dependencies =
     Array.from(ctx.dependencies).map(s => genImport(path.dirname(fullpath), s))
   if not fs.existsSync(file) do
     fs.writeFileSync(file, "", "utf8")
   let originData = fs.readFileSync(file, "utf8")
-  let newData = Str.concat of dependencies.join("\n"), "\n", code
+  let newData = StrOps.concat of dependencies.join("\n"), "\n", code
   if newData != originData do
     fs.writeFileSync(file, newData, "utf8")
 

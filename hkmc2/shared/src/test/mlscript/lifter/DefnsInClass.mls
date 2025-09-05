@@ -18,48 +18,48 @@ data class A(x) with
 //│   tmp1 = tmp(A$instance$0);
 //│   return tmp1
 //│ };
-//│ B1 = function B(y1) {
-//│   return (A$instance$01) => {
-//│     return globalThis.Object.freeze(new B.class(y1)(A$instance$01));
+//│ B1 = function B(y) {
+//│   return (A$instance$0) => {
+//│     return globalThis.Object.freeze(new B.class(y)(A$instance$0));
 //│   }
 //│ };
-//│ Object.defineProperty(B1, "class", {
-//│   enumerable: true,
-//│   value: class B {
-//│     #A$instance$0;
-//│     get A$instance$0() { return this.#A$instance$0; }
-//│     set A$instance$0(value) { this.#A$instance$0 = value; }
-//│     constructor(y) {
-//│       return (A$instance$0) => {
-//│         this.A$instance$0 = A$instance$0;
-//│         this.y = y;
-//│         return this;
-//│       }
-//│     }
-//│     getB() {
-//│       return this.A$instance$0.x + this.y
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "B", ["y"]]; 
+//│ globalThis.Object.freeze(class B {
+//│   static {
+//│     B1.class = this
 //│   }
+//│   constructor(y) {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       this.y = y;
+//│       return this;
+//│     }
+//│   }
+//│   #A$instance$0;
+//│   get A$instance$0() { return this.#A$instance$0; }
+//│   set A$instance$0(value) { this.#A$instance$0 = value; }
+//│   getB() {
+//│     return this.A$instance$0.x + this.y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B", ["y"]]; 
 //│ });
-//│ A1 = function A(x1) {
-//│   return globalThis.Object.freeze(new A.class(x1));
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ Object.defineProperty(A1, "class", {
-//│   enumerable: true,
-//│   value: class A {
-//│     constructor(x) {
-//│       this.x = x;
-//│     }
-//│     getA() {
-//│       let tmp;
-//│       tmp = B$(false, this, 2);
-//│       return runtime.safeCall(tmp.getB())
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1.class = this
 //│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   getA() {
+//│     let tmp;
+//│     tmp = B$(false, this, 2);
+//│     return runtime.safeCall(tmp.getB())
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│ });
 
 :expect 3
@@ -82,7 +82,10 @@ class A with
 //│     return g$(A$instance)
 //│   }
 //│ };
-//│ A3 = class A2 {
+//│ globalThis.Object.freeze(class A2 {
+//│   static {
+//│     A3 = this
+//│   }
 //│   constructor() {
 //│     let g$this;
 //│     g$this = runtime.safeCall(g(this));
@@ -90,7 +93,7 @@ class A with
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
-//│ };
+//│ });
 //│ tmp1 = globalThis.Object.freeze(new A3());
 //│ runtime.safeCall(tmp1.x())
 //│ = 2

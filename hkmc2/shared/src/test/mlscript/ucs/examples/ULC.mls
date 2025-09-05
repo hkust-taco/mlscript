@@ -163,7 +163,7 @@ let alphabet = Iter.toStack("abcdefghijklmnopqrstuvwxyz")
 showList of alphabet
 //│ = "[a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z]"
 
-fun nextVar[T](n: Int, alphabet: Stack.T[T], used: Stack.T[Str]): Option.T[Str] =
+fun nextVar[T](n: Int, alphabet: Stack[T], used: Stack[Str]): Option[Str] =
   fun enumerate(n, acc, alphabet) =
     if n <= 0 then
       let x = reverse(acc) Iter.fromStack() Iter.joined("")

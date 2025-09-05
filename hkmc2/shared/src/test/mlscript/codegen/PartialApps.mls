@@ -209,7 +209,7 @@ _ - _ of 1, 2
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.208: 	|> (1)
 //│ ╙──       	   ^^^
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 |> (1, _ - 2)
 //│ = -1

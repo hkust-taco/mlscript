@@ -14,7 +14,10 @@ class Test with
   print(foo())
 //│ JS (unsanitized):
 //│ let Test1;
-//│ Test1 = class Test {
+//│ globalThis.Object.freeze(class Test {
+//│   static {
+//│     Test1 = this
+//│   }
 //│   constructor() {
 //│     let tmp;
 //│     tmp = foo();
@@ -22,7 +25,7 @@ class Test with
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
-//│ };
+//│ });
 
 new Test
 //│ > 3

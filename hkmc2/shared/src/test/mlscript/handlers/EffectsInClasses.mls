@@ -11,81 +11,84 @@ data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
-//│ Lol1 = function Lol(h1) {
-//│   return globalThis.Object.freeze(new Lol.class(h1));
+//│ Lol1 = function Lol(h) {
+//│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
-//│ Object.defineProperty(Lol1, "class", {
-//│   enumerable: true,
-//│   value: class Lol {
-//│     constructor(h) {
-//│       let tmp, res, Cont$ctor$Lol$1;
-//│       const this$Lol = this;
-//│       Cont$ctor$Lol$1 = class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
-//│         constructor(pc) {
-//│           let tmp1;
-//│           tmp1 = super(null);
-//│           this.pc = pc;
-//│         }
-//│         resume(value$) {
-//│           if (this.pc === 0) {
-//│             tmp = value$;
-//│           } else if (this.pc === 1) {
-//│             res = value$;
-//│           }
-//│           contLoop: while (true) {
-//│             if (this.pc === 2) {
-//│               return this$Lol
-//│             } else if (this.pc === 3) {
-//│               res = Predef.print(tmp);
-//│               if (res instanceof runtime.EffectSig.class) {
-//│                 this.pc = 1;
-//│                 res.contTrace.last.next = this;
-//│                 res.contTrace.last = this;
-//│                 return res
-//│               }
-//│               this.pc = 1;
-//│               continue contLoop
-//│             } else if (this.pc === 4) {
-//│               tmp = runtime.safeCall(this$Lol.h.perform("k"));
-//│               if (tmp instanceof runtime.EffectSig.class) {
-//│                 this.pc = 0;
-//│                 tmp.contTrace.last.next = this;
-//│                 tmp.contTrace.last = this;
-//│                 return tmp
-//│               }
-//│               this.pc = 0;
-//│               continue contLoop
-//│             } else if (this.pc === 0) {
-//│               this.pc = 3;
-//│               continue contLoop
-//│             } else if (this.pc === 1) {
-//│               this.pc = 2;
-//│               continue contLoop
-//│             }
-//│             break;
-//│           }
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
-//│       };
-//│       this.h = h;
-//│       tmp = runtime.safeCall(this.h.perform("k"));
-//│       if (tmp instanceof runtime.EffectSig.class) {
-//│         tmp.contTrace.last.next = new Cont$ctor$Lol$1(0);
-//│         tmp.contTrace.last = tmp.contTrace.last.next;
-//│         return tmp
-//│       }
-//│       res = Predef.print(tmp);
-//│       if (res instanceof runtime.EffectSig.class) {
-//│         res.contTrace.last.next = new Cont$ctor$Lol$1(1);
-//│         res.contTrace.last = res.contTrace.last.next;
-//│         return res
-//│       }
-//│       res;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Lol", ["h"]]; 
+//│ globalThis.Object.freeze(class Lol {
+//│   static {
+//│     Lol1.class = this
 //│   }
+//│   constructor(h) {
+//│     let tmp, res, Cont$ctor$Lol$1;
+//│     const this$Lol = this;
+//│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│       static {
+//│         Cont$ctor$Lol$1 = this
+//│       }
+//│       constructor(pc) {
+//│         let tmp1;
+//│         tmp1 = super(null);
+//│         this.pc = pc;
+//│       }
+//│       resume(value$) {
+//│         if (this.pc === 0) {
+//│           tmp = value$;
+//│         } else if (this.pc === 1) {
+//│           res = value$;
+//│         }
+//│         contLoop:  while (true) {
+//│           if (this.pc === 2) {
+//│             return this$Lol
+//│           } else if (this.pc === 3) {
+//│             res = Predef.print(tmp);
+//│             if (res instanceof runtime.EffectSig.class) {
+//│               this.pc = 1;
+//│               res.contTrace.last.next = this;
+//│               res.contTrace.last = this;
+//│               return res
+//│             }
+//│             this.pc = 1;
+//│             continue contLoop
+//│           } else if (this.pc === 4) {
+//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
+//│             if (tmp instanceof runtime.EffectSig.class) {
+//│               this.pc = 0;
+//│               tmp.contTrace.last.next = this;
+//│               tmp.contTrace.last = this;
+//│               return tmp
+//│             }
+//│             this.pc = 0;
+//│             continue contLoop
+//│           } else if (this.pc === 0) {
+//│             this.pc = 3;
+//│             continue contLoop
+//│           } else if (this.pc === 1) {
+//│             this.pc = 2;
+//│             continue contLoop
+//│           }
+//│           break;
+//│         }
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
+//│     });
+//│     this.h = h;
+//│     tmp = runtime.safeCall(this.h.perform("k"));
+//│     if (tmp instanceof runtime.EffectSig.class) {
+//│       tmp.contTrace.last.next = new Cont$ctor$Lol$1(0);
+//│       tmp.contTrace.last = tmp.contTrace.last.next;
+//│       return tmp
+//│     }
+//│     res = Predef.print(tmp);
+//│     if (res instanceof runtime.EffectSig.class) {
+//│       res.contTrace.last.next = new Cont$ctor$Lol$1(1);
+//│       res.contTrace.last = res.contTrace.last.next;
+//│       return res
+//│     }
+//│     res;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│ });
 
 

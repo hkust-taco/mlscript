@@ -14,10 +14,10 @@ fun foo: Int -> Int
 //│ ╔══[ERROR] Multiple declarations of symbol 'foo'
 //│ ╟── declared here
 //│ ║  l.12: 	fun foo: Int -> Int
-//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── declared here
 //│ ║  l.13: 	fun foo: Int -> Int
-//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
@@ -26,16 +26,16 @@ fun id(y) = y
 //│ ╔══[ERROR] Multiple definitions of symbol 'id'
 //│ ╟── defined here
 //│ ║  l.24: 	fun id(x) = x
-//│ ║        	    ^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.25: 	fun id(y) = y
-//│ ╙──      	    ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
-//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ╔══[ERROR] Type error in reference without resolved definition with expected type Int
 //│ ║  l.37: 	fun bar(x) = let t = x + 1 in "aaa"
 //│ ║        	                     ^
 //│ ╙── because: cannot constrain  Str  <:  Int
@@ -59,7 +59,7 @@ add(1, 2) as Int
 
 :e
 add(0, 0) as Str
-//│ ╔══[ERROR] Type error in application with expected type Str
+//│ ╔══[ERROR] Type error in application without resolved definition with expected type Str
 //│ ║  l.61: 	add(0, 0) as Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
@@ -89,11 +89,11 @@ high(x => x)
 
 :e
 high(x => x + 1)
-//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ╔══[ERROR] Type error in reference without resolved definition with expected type Int
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^
 //│ ╙── because: cannot constrain  A  <:  Int
-//│ ╔══[ERROR] Type error in application with expected type A
+//│ ╔══[ERROR] Type error in application without resolved definition with expected type A
 //│ ║  l.91: 	high(x => x + 1)
 //│ ║        	          ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A

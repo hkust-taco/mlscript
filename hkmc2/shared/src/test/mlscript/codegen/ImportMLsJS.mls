@@ -2,22 +2,33 @@
 
 
 import "../../mlscript-compile/Option.mjs"
-//│ Option = module Option {
+//│ Option = class Option {
 //│   Some: fun Some { class: class Some },
 //│   None: None,
 //│   Both: fun Both { class: class Both },
-//│   unsafe: module unsafe
+//│   unsafe: class unsafe
 //│ }
 
 
+:e
 Option.isDefined(new Option.Some(1))
+//│ ╔══[ERROR] Expected a statically known class; found selection without resolved definition.
+//│ ║  l.14: 	Option.isDefined(new Option.Some(1))
+//│ ║        	                     ^^^^^^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ = true
+
+Option.isDefined(new! Option.Some(1))
+//│ = true
+
+Option.isDefined(new! Option.Some.class(1))
 //│ = true
 
 Option.isDefined(Option.None)
 //│ = false
 
 
-(new Option.Some(1)) Option.isDefined()
+(new! Option.Some(1)) Option.isDefined()
 //│ = true
 
 Option.None Option.isDefined()
@@ -27,10 +38,10 @@ Option.None Option.isDefined()
 Option.None
 //│ = None
 
-new Option.Some(1)
+new! Option.Some(1)
 //│ = Some(1)
 
-new Option.Both(1, 2)
+new! Option.Both(1, 2)
 //│ = Both(1, 2)
 
 
@@ -38,7 +49,7 @@ Option.None
 //│ = None
 
 // * This used to misbehave due to inadequately handling the weird precedence of `new`
-new Option.Some(1)
+new! Option.Some(1)
 //│ = Some(1)
 
 

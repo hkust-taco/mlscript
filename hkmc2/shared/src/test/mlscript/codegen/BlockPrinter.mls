@@ -20,8 +20,8 @@ let x = if x == 0 then 1 else 0
 let x = x + 1
 //│ Pretty Lowered:
 //│  
-//│ set x2 = 1 in
-//│ set scrut = ==(x2, 0) in
+//│ set x1 = 1 in
+//│ set scrut = ==(x1, 0) in
 //│ match scrut
 //│   true =>
 //│     set tmp = 1 in
@@ -30,9 +30,9 @@ let x = x + 1
 //│     set tmp = 0 in
 //│     end
 //│ in
-//│ set x3 = tmp in
-//│ set tmp1 = +(x3, 1) in
-//│ set x4 = tmp1 in
+//│ set x2 = tmp in
+//│ set tmp1 = +(x2, 1) in
+//│ set x3 = tmp1 in
 //│ set block$res3 = undefined in
 //│ end
 //│ x = 1

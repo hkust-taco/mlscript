@@ -11,7 +11,7 @@ let
 
 let x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),None,None)
 
 :pe
 let x =
@@ -23,12 +23,12 @@ let x =
 
 let x = y
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(Ident(y)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Ident(y)),None)
 
 let x =
   y
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(Block(List(Ident(y)))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Block(List(Ident(y)))),None)
 
 :pe
 let x = y in
@@ -40,7 +40,7 @@ let x = y in
 
 let x = y in z
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(Ident(y)),Some(Ident(z)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Ident(y)),Some(Ident(z)))
 
 :pe
 let x = y class
@@ -48,18 +48,18 @@ let x = y class
 //│ ║  l.46: 	let x = y class
 //│ ╙──      	          ^^^^^
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(Ident(y)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Ident(y)),None)
 
 let x
   = 1
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)
 
 // * Note: this used to parse as an operator application...
 let x
 = 1
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)
 
 // * Note: this used to parse as an operator application...
 :pe
@@ -85,7 +85,7 @@ let {}
 
 let ()
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Unt(),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Unt(),None,None)
 
 :pe
 let // a
@@ -120,61 +120,61 @@ let
 let x = y
 foo
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(Ident(y)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(Ident(y)),None)
 //│ 	Ident(foo)
 
 
 let
   x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),None,None)
 
 let
   x
   y
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),None,None)
-//│ 	LetLike(keyword 'let',Ident(y),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(y),None,None)
 
 let
   x, y
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),None,None)
-//│ 	LetLike(keyword 'let',Ident(y),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),None,None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(y),None,None)
 
 let
   x = 1
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)
 
 let
   x = 1 in x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x)))
 
 let
   x = 1
   in x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x)))
 
 let x = 1
 in x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x)))
 
 let x = 1
   in x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x)))
 
 // Awkward... parses `in x` as a separate statement
 let
   x = 1
 in x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None)
-//│ 	Modified(keyword 'in',None,Ident(x))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None)
+//│ 	Modified(Keywrd(keyword 'in'),Ident(x))
 
 :pe
 let
@@ -188,16 +188,16 @@ in x
 //│ Parsed:
 //│ 	Error()
 //│ 	Def(Ident(x),IntLit(1))
-//│ 	Modified(keyword 'in',None,Ident(x))
+//│ 	Modified(Keywrd(keyword 'in'),Ident(x))
 
 
 let a in b
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),None,Some(Ident(b)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),None,Some(Ident(b)))
 
 let a = 1 in b
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(a),Some(IntLit(1)),Some(Ident(b)))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(a),Some(IntLit(1)),Some(Ident(b)))
 
 
 :pe
@@ -213,44 +213,44 @@ let
 let x = 1 in
   x
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x)))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x)))))
 
 let x = 1 in
   x
   y
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x), Ident(y)))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x), Ident(y)))))
 
 x => let x = 1 in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
 
 x => let x = 1 in
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x))))))
 
 x => let x = 1
   in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
 
 x =>
   let x = 1
   in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))))
 
 x =>
   let x = 1
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), Ident(x))))
 
 x => let x = 1
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(keyword 'let',Ident(x),Some(Jux(IntLit(1),Block(List(Ident(x))))),None))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(Jux(IntLit(1),Block(List(Ident(x))))),None))
 
 
 :pe

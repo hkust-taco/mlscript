@@ -14,9 +14,7 @@ arr.map(_ === false)
 arr.map((e, ...) => e === false)
 //│ JS (unsanitized):
 //│ let lambda1;
-//│ lambda1 = (undefined, function (e, ..._) {
-//│   return e === false
-//│ });
+//│ lambda1 = (undefined, function (e, ..._) { return e === false });
 //│ runtime.safeCall(arr.map(lambda1))
 //│ = [false, true]
 
@@ -24,21 +22,23 @@ arr.map((e, ...) => e === false)
 arr.map((_, ...) => 1)
 //│ JS (unsanitized):
 //│ let lambda2;
-//│ lambda2 = (undefined, function (_, ..._1) {
-//│   return 1
-//│ });
+//│ lambda2 = (undefined, function (_, ..._1) { return 1 });
 //│ runtime.safeCall(arr.map(lambda2))
 //│ = [1, 1]
 
 :e
 arr.map((..., ...) => 1)
-//│ ═══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.30: 	arr.map((..., ...) => 1)
+//│ ╙──      	         ^^^
 //│ = [1, 1]
 
 :e
 :re
 arr.map((..., e) => e)
-//│ ═══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.38: 	arr.map((..., e) => e)
+//│ ╙──      	         ^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 3
 
 arr.map(pass1(_ === false))

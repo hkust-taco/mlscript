@@ -11,40 +11,40 @@ mut
 
 mut x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Ident(x))
+//│ 	Modified(Keywrd(keyword 'mut'),Ident(x))
 
 mut
   x
   y
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(Ident(x), Ident(y))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(Ident(x), Ident(y))))
 
 mut let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))
+//│ 	Modified(Keywrd(keyword 'mut'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None))
 
 mut
   let x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None))))
 
 mut
   let x = 1
   in x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))))
 
 mut
   let x = 1
   let y = 2
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), LetLike(keyword 'let',Ident(y),Some(IntLit(2)),None))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(2)),None))))
 
 mut
   let
     x = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None))))
 
 mut
   let
@@ -52,20 +52,20 @@ mut
   let
     y = 1
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), LetLike(keyword 'let',Ident(y),Some(IntLit(1)),None))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(1)),None))))
 
 mut
   let
     x = 1
     y = 2
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None), LetLike(keyword 'let',Ident(y),Some(IntLit(2)),None))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(2)),None))))
 
 mut
   let
     x = 1 in x
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))))
 
 mut
   let
@@ -73,7 +73,7 @@ mut
   let
     y = 2 in y
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,Block(List(LetLike(keyword 'let',Ident(x),Some(IntLit(1)),Some(Ident(x))), LetLike(keyword 'let',Ident(y),Some(IntLit(2)),Some(Ident(y))))))
+//│ 	Modified(Keywrd(keyword 'mut'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))), LetLike(Keywrd(keyword 'let'),Ident(y),Some(IntLit(2)),Some(Ident(y))))))
 
 // TODO currently we only look at the next token to see if it's an indented block...
 :fixme
@@ -84,6 +84,6 @@ mut let
 //│ ║  l.82: 	  y = 2
 //│ ╙──      	  ^
 //│ Parsed:
-//│ 	Modified(keyword 'mut',None,LetLike(keyword 'let',Ident(x),Some(IntLit(1)),None))
+//│ 	Modified(Keywrd(keyword 'mut'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None))
 
 

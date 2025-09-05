@@ -30,7 +30,7 @@ Mod.|>>
 //│ ╔══[ERROR] Name not found: .|>>
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	   ^^^^
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'Mod'.
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	^^^
 

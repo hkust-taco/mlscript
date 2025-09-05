@@ -159,7 +159,10 @@ if true do
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
 //│   let f, h, scrut, res, Cont$handleBlock$h$11, Handler$h$12;
-//│   Handler$h$12 = class Handler$h$11 extends Effect1 {
+//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
+//│     static {
+//│       Handler$h$12 = this
+//│     }
 //│     constructor() {
 //│       let tmp12;
 //│       tmp12 = super();
@@ -171,9 +174,12 @@ if true do
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│   };
+//│   });
 //│   h = new Handler$h$12();
-//│   Cont$handleBlock$h$11 = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$handleBlock$h$11 = this
+//│     }
 //│     constructor(pc) {
 //│       let tmp12;
 //│       tmp12 = super(null);
@@ -183,7 +189,7 @@ if true do
 //│       if (this.pc === 0) {
 //│         res = value$;
 //│       }
-//│       contLoop: while (true) {
+//│       contLoop:  while (true) {
 //│         if (this.pc === 1) {
 //│           break contLoop
 //│         } else if (this.pc === 2) {
@@ -204,7 +210,7 @@ if true do
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
-//│   };
+//│   });
 //│   f = function f() {
 //│     return 3
 //│   };
@@ -231,11 +237,11 @@ module A with
   data class Effect(x) with
     fun test() = x
     fun perform(arg)
+
 handle h = A.Effect(3) with
-  fun perform()(k) =
-    this.test()
+  fun perform()(k) = 0
 h.perform()
-//│ = 3
+//│ = 0
 
 fun f(perform) =
   handle h = Effect with

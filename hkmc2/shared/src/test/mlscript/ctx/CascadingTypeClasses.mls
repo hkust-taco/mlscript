@@ -18,7 +18,7 @@ using Foo[Baz] = new Foo
 foo[Baz]
 //│ ╔══[ERROR] Cannot query instance of type Baz (type parameter A) for call: 
 //│ ║  l.18: 	foo[Baz]
-//│ ║        	^^^^^^^
+//│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.9: 	fun foo[A](using Foo[A], A) = 42
 //│ ║       	                         ^

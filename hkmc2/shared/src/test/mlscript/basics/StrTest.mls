@@ -1,8 +1,15 @@
 :js
 
-import "../../mlscript-compile/Str.mls"
+import "../../mlscript-compile/StrOps.mls"
 
-open Str
+open StrOps
+
+
+:sjs
+"a" is Str
+//│ JS (unsanitized):
+//│ let scrut; scrut = "a"; if (typeof scrut === 'string') { true } else { false }
+//│ = true
 
 
 concat of "a", "b", "c"
@@ -20,7 +27,7 @@ concat of
 :e
 (~)("a", "b", "c")
 //│ ╔══[ERROR] Expected 2 arguments, got 3
-//│ ║  l.21: 	(~)("a", "b", "c")
+//│ ║  l.28: 	(~)("a", "b", "c")
 //│ ╙──      	   ^^^^^^^^^^^^^^^
 //│ = "ab"
 
@@ -28,21 +35,21 @@ concat of
 :e
 (~)("a")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.29: 	(~)("a")
+//│ ║  l.36: 	(~)("a")
 //│ ╙──      	   ^^^^^
 //│ = "aundefined"
 
 :ge
 ~"a"
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.36: 	~"a"
+//│ ║  l.43: 	~"a"
 //│ ╙──      	 ^^^
 
 
 :ge
 ~("a", "b")
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
-//│ ║  l.43: 	~("a", "b")
+//│ ║  l.50: 	~("a", "b")
 //│ ╙──      	       ^^^
 
 
@@ -50,10 +57,10 @@ concat of
 :ge
 ~ of "a", "b"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'of' keyword instead
-//│ ║  l.51: 	~ of "a", "b"
+//│ ║  l.58: 	~ of "a", "b"
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.51: 	~ of "a", "b"
+//│ ║  l.58: 	~ of "a", "b"
 //│ ╙──      	     ^^^
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
 
@@ -68,10 +75,10 @@ test("a", "b", "c")
 //│ = "abc!"
 
 
-"a" Str.concat2("b")
+"a" StrOps.concat2("b")
 //│ = "ab"
 
-"a" Str.concat2 of "b"
+"a" StrOps.concat2 of "b"
 //│ = "ab"
 
 

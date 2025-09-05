@@ -120,7 +120,7 @@ fun test(x) =
   B().get
 test(2)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
-//│ ═══[WARNING] Cannot yet lift class/module `B` as it extends an unliftable class.
+//│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
 //│ = 2
 
 :expect 2
@@ -133,6 +133,16 @@ A(2).f()
 //│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:expect 2
+module M with
+  let x = 2
+  fun f() =
+    fun g() = x
+    g
+M.f()()
+//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '()'
 
 /// The following are related to modules and objects. ///
 
@@ -158,19 +168,11 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
-//│ ║  l.154: 	  module M with
-//│ ║         	         ^^^^^^
-//│ ║  l.155: 	    fun foo() =
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.156: 	      set y = 2
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.157: 	      x + y
-//│ ╙──       	^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'M$'
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M is not defined
+//│ ═══[RUNTIME ERROR] ReferenceError: M$ is not defined
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 
@@ -192,11 +194,16 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for 'Foo$'
-//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
+//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ║  l.194: 	  class Bar extends Foo
+//│ ║         	                    ^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
+:w
 fun f =
   module M with
     fun g =
@@ -204,12 +211,6 @@ fun f =
       h
   M.g
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for 'M'
-//│ ║  l.201: 	  module M with
-//│ ║         	         ^^^^^^
-//│ ║  l.202: 	    fun g =
-//│ ║         	^^^^^^^^^^^
-//│ ║  l.203: 	      fun h = M.g
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.204: 	      h
-//│ ╙──       	^^^^^^^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:M
+
+

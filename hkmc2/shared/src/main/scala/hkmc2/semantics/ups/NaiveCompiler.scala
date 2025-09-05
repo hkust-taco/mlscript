@@ -499,7 +499,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     val ps = PlainParamList(patternInputs :+ scrutParam)
     TermDefinition(Fun, sym, tsym, ps :: Nil, N, N,
       S(Term.OldIfLike(Keyword.`if`, topmost)), FlowSymbol(s"‹unapply-result›"),
-      TermDefFlags.empty, Modulefulness.none, Nil)
+      TermDefFlags.empty, Modulefulness.none, Nil, N)
   
   /** Translate a list of extractor/matching functions for the given pattern.
    *  There are currently two functions: `unapply` and `unapplyStringPrefix`.
@@ -566,7 +566,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Constructor(target, Nil, N) =>
         log(s"target.symbol: ${target.symbol}")
         log(s"target.symbol.flatMap(_.asPat): ${target.symbol.flatMap(_.asPat)}")
-        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference)
+        target.symbol.flatMap(_.asPat).flatMap(Compiler.reference(_, target.toLoc))
       case _ => N
     log(s"term: ${term}")
     term.getOrElse:

@@ -44,9 +44,9 @@ fun readInt(s) =
   fun readInt_(n, cs) = if cs is
     c :: cs_ and
       isDigit(c) then readInt_(n * 10 + c.codePointAt(0) - 48, cs_)
-      else let s_ = dropWhile(isSpace, c :: cs) in [n, s_]
+      else let s_ = leaveWhile(isSpace, c :: cs) in [n, s_]
     else
-      let s_ = dropWhile(isSpace, cs) in [n, s_]
+      let s_ = leaveWhile(isSpace, cs) in [n, s_]
   readInt_(0, s)
 
 fun join(t1, t2, j) = if

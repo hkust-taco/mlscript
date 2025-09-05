@@ -5,23 +5,23 @@
 //│ Type: ⊤
 data class Foo
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,Ident(Foo),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,Ident(Foo),None))
 
 data class Bar(x: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None))
 
 data class Bar2(x: Int, y: Int)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None))
 
 data class Baz[A]
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(Ident(Baz),TyTup(List(Ident(A)))),None))
 
 data class BazBaz[A](f: A -> A)
 //│ Parsed:
-//│ 	Modified(keyword 'data',None,TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None))
+//│ 	Modified(Keywrd(keyword 'data'),TypeDef(Cls,App(App(Ident(BazBaz),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None))
 
 Baz[Int]
 //│ Parsed:
@@ -29,15 +29,15 @@ Baz[Int]
 
 Baz[in Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Modified(keyword 'in',None,Ident(Int)))))
+//│ 	App(Ident(Baz),TyTup(List(Modified(Keywrd(keyword 'in'),Ident(Int)))))
 
 Baz[out Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Modified(keyword 'out',None,Ident(Int)))))
+//│ 	App(Ident(Baz),TyTup(List(Modified(Keywrd(keyword 'out'),Ident(Int)))))
 
 Baz[in Int out Int]
 //│ Parsed:
-//│ 	App(Ident(Baz),TyTup(List(Tup(List(Modified(keyword 'in',None,Ident(Int)), Modified(keyword 'out',None,Ident(Int)))))))
+//│ 	App(Ident(Baz),TyTup(List(Tup(List(Modified(Keywrd(keyword 'in'),Ident(Int)), Modified(Keywrd(keyword 'out'),Ident(Int)))))))
 
 t.Bar#x
 //│ Parsed:
@@ -53,7 +53,7 @@ foo(42).Bar#baz(42)
 
 let x = 42 in x + 0
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(x),Some(IntLit(42)),Some(OpApp(Ident(x),Ident(+),List(IntLit(0)))))
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(42)),Some(OpApp(Ident(x),Ident(+),List(IntLit(0)))))
 
 fun id(x) = x
 //│ Parsed:
@@ -77,11 +77,11 @@ f of false
 
 let bar = new Bar(42)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(42))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(bar),Some(App(LexicalNew(Some(Ident(Bar)),None),Tup(List(IntLit(42))))),None)
 
 let bar = new Bar2(1, 1)
 //│ Parsed:
-//│ 	LetLike(keyword 'let',Ident(bar),Some(App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(1), IntLit(1))))),None)
+//│ 	LetLike(Keywrd(keyword 'let'),Ident(bar),Some(App(LexicalNew(Some(Ident(Bar2)),None),Tup(List(IntLit(1), IntLit(1))))),None)
 
 new Bar(0)
 //│ Parsed:
@@ -122,33 +122,33 @@ fun id: [A] -> A -> A
 
 x => if x == 0 then 1 else x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(Ident(x),Ident(==),List(IntLit(0))),keyword 'then',IntLit(1)), PrefixApp(keyword 'else',None,Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(OpApp(Ident(x),Ident(==),List(IntLit(0))),keyword 'then',IntLit(1)), PrefixApp(Keywrd(keyword 'else'),Ident(x))))))
 
 if 1 < 2 then 1 else 0
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(IntLit(1),Ident(<),List(IntLit(2))),keyword 'then',IntLit(1)), PrefixApp(keyword 'else',None,IntLit(0)))))
+//│ 	IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(OpApp(IntLit(1),Ident(<),List(IntLit(2))),keyword 'then',IntLit(1)), PrefixApp(Keywrd(keyword 'else'),IntLit(0)))))
 
 if false then 0 else 42
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(BoolLit(false),keyword 'then',IntLit(0)), PrefixApp(keyword 'else',None,IntLit(42)))))
+//│ 	IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(BoolLit(false),keyword 'then',IntLit(0)), PrefixApp(Keywrd(keyword 'else'),IntLit(42)))))
 
 if 24 then false else true
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(IntLit(24),keyword 'then',BoolLit(false)), PrefixApp(keyword 'else',None,BoolLit(true)))))
+//│ 	IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(IntLit(24),keyword 'then',BoolLit(false)), PrefixApp(Keywrd(keyword 'else'),BoolLit(true)))))
 
 if x then true else false
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(Ident(x),keyword 'then',BoolLit(true)), PrefixApp(keyword 'else',None,BoolLit(false)))))
+//│ 	IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(Ident(x),keyword 'then',BoolLit(true)), PrefixApp(Keywrd(keyword 'else'),BoolLit(false)))))
 
 if 1 is Int then 1 else 0
 //│ Parsed:
-//│ 	IfLike(keyword 'if',None,Block(List(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)), PrefixApp(keyword 'else',None,IntLit(0)))))
+//│ 	IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)), PrefixApp(Keywrd(keyword 'else'),IntLit(0)))))
 
 fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ Parsed:
-//│ 	TermDef(Fun,Ident(fact),Some(Case(None,Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',OpApp(Ident(n),Ident(*),List(App(Ident(fact),Tup(List(OpApp(Ident(n),Ident(-),List(IntLit(1))))))))))))))
+//│ 	TermDef(Fun,Ident(fact),Some(Case(Keywrd(keyword 'case'),Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',OpApp(Ident(n),Ident(*),List(App(Ident(fact),Tup(List(OpApp(Ident(n),Ident(-),List(IntLit(1))))))))))))))
 
 
 `42
@@ -183,16 +183,16 @@ g`(`1, `2)
 
 `let x = `42 `in x
 //│ Parsed:
-//│ 	Quoted(LetLike(keyword 'let',Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
+//│ 	Quoted(LetLike(Keywrd(keyword 'let'),Ident(x),Some(Unquoted(Quoted(IntLit(42)))),Some(Unquoted(Ident(x)))))
 
 `if x `== `0.0 then `1.0 else x
 //│ Parsed:
-//│ 	Quoted(IfLike(keyword 'if',Some(Loc(1,3,bbSyntax.mls:+188)),Block(List(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))), PrefixApp(keyword 'else',None,Unquoted(Ident(x)))))))
+//│ 	Quoted(IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))), PrefixApp(Keywrd(keyword 'else'),Unquoted(Ident(x)))))))
 
 
 x `=> if 0 == 0 then x else `0
 //│ Parsed:
-//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfLike(keyword 'if',None,Block(List(InfixApp(OpApp(IntLit(0),Ident(==),List(IntLit(0))),keyword 'then',Ident(x)), PrefixApp(keyword 'else',None,Quoted(IntLit(0)))))))))
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfLike(Keywrd(keyword 'if'),Block(List(InfixApp(OpApp(IntLit(0),Ident(==),List(IntLit(0))),keyword 'then',Ident(x)), PrefixApp(Keywrd(keyword 'else'),Quoted(IntLit(0)))))))))
 
 region x in 42
 //│ Parsed:
@@ -208,7 +208,7 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !(r)
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(LetLike(keyword 'let',Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(keyword 'let',Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Bra(Round,Ident(r))))))))))))
+//│ 	Region(Ident(x),Block(List(LetLike(Keywrd(keyword 'let'),Ident(r),Some(RegRef(Ident(x),IntLit(42))),Some(LetLike(Keywrd(keyword 'let'),Ident(t),Some(OpApp(Ident(r),Ident(:=),List(IntLit(0)))),Some(App(Ident(!),Tup(List(Bra(Round,Ident(r))))))))))))
 
 !(r) + 1
 //│ Parsed:

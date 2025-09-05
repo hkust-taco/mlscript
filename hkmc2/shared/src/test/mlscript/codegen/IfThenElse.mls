@@ -13,9 +13,7 @@ let f = x => if x then print("ok") else print("ko")
 //│ lambda = (undefined, function (x) {
 //│   if (x === true) {
 //│     return Predef.print("ok")
-//│   } else {
-//│     return Predef.print("ko")
-//│   }
+//│   } else { return Predef.print("ko") }
 //│ });
 //│ tmp = lambda;
 //│ f = tmp;

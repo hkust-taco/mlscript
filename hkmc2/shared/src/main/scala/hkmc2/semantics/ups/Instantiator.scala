@@ -78,7 +78,8 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Constructor(target, patternArguments, arguments) => target.symbol match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
-      case S(symbol) => symbol.asClsOrMod.orElse(symbol.asPat) match
+      // Recursively instantiate the arguments of constructor patterns.
+      case S(symbol) => symbol.asClsLike match
         case S(symbol: ClassSymbol) =>
           val keyedArguments = symbol.defn.get.paramsOpt match
             case S(ParamList(_, params, _)) => arguments match
@@ -88,7 +89,10 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
                     msg"But ${arguments.size} arguments were provided." -> Loc(arguments))
                 S(params.iterator.zip(arguments).flatMap:
                   case (param, argument) if param.flags.isVal =>
-                    S(param.sym.id -> instantiate(argument))
+                    // The names are not from the source and are retrieved from
+                    // parameters in class definitions. Therefore, no `Loc`
+                    // should be attached.
+                    S(new Ident(param.sym.id.name) -> instantiate(argument))
                   case (param, argument) =>
                     error(msg"Parameter `${param.sym.nme}` is not accessible." -> param.toLoc)
                     N
@@ -100,7 +104,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
                 error(msg"Class `${symbol.nme}` has no parameters." -> Loc(arguments))
                 N
           ClassLike(symbol, keyedArguments)
-        case S(symbol: ModuleSymbol) =>
+        case S(symbol: ModuleOrObjectSymbol) =>
           arguments match
             case N => ClassLike(symbol, N)
             case S(arguments) => error(

@@ -27,7 +27,6 @@ class Expr[A] with
 
 data class Lit(n: Int)
 data class Add(lhs: Expr, rhs: Expr)
-
 type Expr = Lit | Add
 
 
@@ -37,7 +36,7 @@ enum Expr =
   | Lit(n: Int)
   | Add(lhs: Expr, rhs: Expr)
 //│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: juxtaposition
-//│ ║  l.36: 	enum Expr =
+//│ ║  l.35: 	enum Expr =
 //│ ╙──      	^^^^^^^^^
 
 

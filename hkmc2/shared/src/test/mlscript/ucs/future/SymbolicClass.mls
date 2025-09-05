@@ -25,17 +25,27 @@ fun map(f, xs) = if xs is
 
 
 // TODO?
+:e
 :re
 :sjs
 new 1 :: 2
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.31: 	new 1 :: 2
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ let tmp; tmp = globalThis.Object.freeze(new 1()); Cons1(tmp, 2)
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not a constructor
 
 // TODO?
+:e
 :re
 :sjs
 new (1 :: 2)
+//│ ╔══[ERROR] Expected a statically known class; found application without resolved definition.
+//│ ║  l.44: 	new (1 :: 2)
+//│ ║        	     ^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ let tmp1; tmp1 = Cons1(1, 2); globalThis.Object.freeze(new tmp1())
 //│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor

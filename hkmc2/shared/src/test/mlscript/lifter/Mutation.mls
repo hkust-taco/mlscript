@@ -21,13 +21,16 @@ fun foo() =
 //│     return bar$(foo$capture2)
 //│   }
 //│ };
-//│ foo$capture1 = class foo$capture {
+//│ globalThis.Object.freeze(class foo$capture {
+//│   static {
+//│     foo$capture1 = this
+//│   }
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
-//│ };
+//│ });
 //│ foo = function foo() {
 //│   let tmp, capture, bar$this;
 //│   capture = new foo$capture1(null);
@@ -82,13 +85,7 @@ fun foo() =
   bar
 //│ JS (unsanitized):
 //│ let bar3, foo3;
-//│ bar3 = function bar() {
-//│   let x;
-//│   x = undefined;
-//│   return x
-//│ };
-//│ foo3 = function foo() {
-//│   return bar3
-//│ };
+//│ bar3 = function bar() { let x; x = undefined; return x };
+//│ foo3 = function foo() { return bar3 };
 
 

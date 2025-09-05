@@ -3,16 +3,10 @@ import "./Predef.mls"
 open Predef
 
 
-// TODO
-// type Option[A] = Option.Some(A) | Option.None
-
+type Option[A] = Option.{ Some(A) | None }
 
 module Option with ...
 
-
-// See https://github.com/hkust-taco/mlscript/pull/295#discussion_r2029692230
-// TODO support type/module overloading
-type T[A]
 
 data class Some[T](value)
 object None
@@ -36,3 +30,5 @@ module unsafe with
   fun get(opt) = if opt is
     Some(value) then value
     None then throw Error("None.get")
+
+

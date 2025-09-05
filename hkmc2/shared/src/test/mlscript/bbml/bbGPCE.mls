@@ -64,7 +64,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, (z => body(y, z)(n - 1))
-//│ ╔══[ERROR] Type error in application with expected type CodeBase[out Int, out G, ?]
+//│ ╔══[ERROR] Type error in application without resolved definition with expected type CodeBase[out Int, out G, ?]
 //│ ║  l.66: 	  n then bind of x `+ y, (z => body(y, z)(n - 1))
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[in ⊥ out 'cde, in ⊥ out 'ctx ∨ 'ctx1, in ⊥ out ⊤]  <:  CodeBase[in ⊥ out Int, in ⊥ out G, in ⊥ out ⊤]

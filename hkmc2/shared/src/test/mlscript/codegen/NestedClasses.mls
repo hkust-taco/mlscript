@@ -16,7 +16,29 @@ let c = Foo.C
 c(123)
 //│ = C(123)
 
+:e
 new c(123)
+//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ║  l.20: 	new c(123)
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ = C(123)
+
+new! c(123)
+//│ = C(123)
+
+object D extends Foo.C(123) with
+  print(this!x)
+  print(id(this).x)
+//│ > 123
+//│ > 123
+
+:e
+object D extends Foo.C(123) with
+  print(this.x)
+//│ ╔══[ERROR] Object 'D' does not contain member 'x'
+//│ ║  l.38: 	  print(this.x)
+//│ ╙──      	        ^^^^^^
+//│ > 123
 
 

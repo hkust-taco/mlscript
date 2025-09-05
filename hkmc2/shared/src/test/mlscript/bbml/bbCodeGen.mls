@@ -62,18 +62,18 @@ false
 data class Foo(x: Int)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x2) {
-//│   return globalThis.Object.freeze(new Foo.class(x2));
+//│ Foo1 = function Foo(x1) {
+//│   return globalThis.Object.freeze(new Foo.class(x1));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
-//│   enumerable: true,
-//│   value: class Foo {
-//│     constructor(x1) {
-//│       this.x = x1;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
 //│   }
+//│   constructor(x1) {
+//│     this.x = x1;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│ });
 //│ Type: ⊤
 
@@ -137,11 +137,7 @@ if foo is Foo then 1 else 0
 //│ let foo1, tmp1;
 //│ tmp1 = globalThis.Object.freeze(new Foo3.class());
 //│ foo1 = tmp1;
-//│ if (foo1 instanceof Foo3.class) {
-//│   1
-//│ } else {
-//│   0
-//│ }
+//│ if (foo1 instanceof Foo3.class) { 1 } else { 0 }
 //│ = 1
 //│ foo = Foo()
 //│ Type: Int

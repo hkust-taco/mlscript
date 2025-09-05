@@ -5,18 +5,17 @@ open Predef
 
 import "../../Char.mls"
 import "../../Stack.mls"
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Iter.mls"
 
 import "./Token.mls"
 
 open Stack
-open Str
+open StrOps
 open Option { Some, None}
 open Token { LiteralKind, LineLookupTable }
 
-type StackType = Stack.Cons | Stack.Nil
 type TokenType = Token.Token
 type Opt[T] = Some[T] | None
 
@@ -26,7 +25,7 @@ class Location(start: Int, end: Int)
 
 class Message(description: Str, location: Location)
 
-class Report(messages: StackType[Message])
+class Report(messages: Stack[Message])
 
 pattern IdentifierStart = Char.Letter | "_"
 
@@ -215,7 +214,7 @@ fun lex(str: Str, options) =
         [idx'', Token.decimal(integer ~ "." ~ fraction, idx)]
       else [idx', Token.integer(integer, idx)]
   
-  fun scan(idx: Int, acc: StackType[TokenType]): StackType[TokenType] =
+  fun scan(idx: Int, acc: Stack[TokenType]): Stack[TokenType] =
     fun go(idx: Int, tok: TokenType) = if
       options.noWhitespace and tok is
         Token.Comment then scan(idx, acc)

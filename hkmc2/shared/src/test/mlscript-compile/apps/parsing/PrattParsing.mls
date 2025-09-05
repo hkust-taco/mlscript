@@ -2,6 +2,7 @@ import "../../Predef.mls"
 import "../../Stack.mls"
 import "../../Option.mls"
 import "../../Iter.mls"
+import "../../StrOps.mls"
 import "./Lexer.mls"
 import "./Token.mls"
 import "./Expr.mls"
@@ -33,12 +34,12 @@ fun parse(tokens) =
       expected Token.same(actual) then
         consume
         result
-      else result Expr.withErr of Str.concat of
+      else result Expr.withErr of StrOps.concat of
         "Expected token "
         expected Token.summary()
         ", but found "
         actual Token.summary() 
-    None then result Expr.withErr of Str.concat of
+    None then result Expr.withErr of StrOps.concat of
       "Expected token "
       expected Token.summary()
       ", but found end of input"

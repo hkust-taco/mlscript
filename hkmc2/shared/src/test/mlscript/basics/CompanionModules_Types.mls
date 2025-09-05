@@ -1,0 +1,20 @@
+:js
+
+
+type Foo = Int
+module Foo with
+  val default: Foo = 123
+
+Foo.default
+//│ = 123
+
+
+data class Cons[A](head: A, tail: List[A])
+object Nil
+type List[A] = Cons[A]
+module List with
+  fun map[A, B](f: A -> B, xs: List[A]): List[B] = if xs is
+      Nil then Nil
+      Cons(head, tail) then Cons(f(head), map(f, tail))
+
+

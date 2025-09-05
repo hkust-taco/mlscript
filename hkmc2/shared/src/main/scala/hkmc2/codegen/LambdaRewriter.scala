@@ -8,7 +8,9 @@ import hkmc2.semantics.*
 import semantics.Elaborator.State
 
 object LambdaRewriter:
+  
   def desugar(b: Block)(using State) =
+    
     def rewriteOneBlk(b: Block) = b match
       case Assign(lhs, Value.Lam(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
         val newSym = BlockMemberSymbol(lhs.nme, Nil,
@@ -30,7 +32,7 @@ object LambdaRewriter:
             case _ => super.applyValue(v)
         val blk = lambdaRewriter.applyBlock(b)
         (blk, lambdasList)
-
+    
     val transformer = new BlockTransformer(SymbolSubst()):
       override def applyBlock(b: Block): Block =
         val (newBlk, lambdasList) = rewriteOneBlk(b)
@@ -40,4 +42,7 @@ object LambdaRewriter:
         val ret = lambdaDefns.foldLeft(newBlk):
           case (acc, defn) => Define(defn, acc)
         super.applyBlock(ret)
+    
     transformer.applyBlock(b)
+  
+

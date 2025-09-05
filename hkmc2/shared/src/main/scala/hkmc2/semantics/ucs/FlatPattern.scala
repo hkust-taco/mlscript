@@ -104,7 +104,7 @@ object FlatPattern:
   
   /** A class-like pattern whose symbol is resolved to a module. */
   object Module:
-    def unapply(p: FlatPattern): Opt[ModuleSymbol] = p match
+    def unapply(p: FlatPattern): Opt[ModuleOrObjectSymbol] = p match
       case p: FlatPattern.ClassLike => p.constructor.symbol.flatMap(_.asModOrObj)
       case _ => N
   

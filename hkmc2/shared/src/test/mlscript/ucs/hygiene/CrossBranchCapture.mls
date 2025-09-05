@@ -10,9 +10,6 @@ fun process(e) =
 //│ ╔══[ERROR] Name not found: n
 //│ ║  l.9: 	    Numb(m) then n
 //│ ╙──     	                 ^
-//│ ╔══[ERROR] Name not found: n
-//│ ║  l.9: 	    Numb(m) then n
-//│ ╙──     	                 ^
 
 
 :re
@@ -45,10 +42,7 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[ERROR] Name not found: n
-//│ ║  l.44: 	    Pair(Vec(xs), Vec(ys)) then n
-//│ ╙──      	                                ^
-//│ ╔══[ERROR] Name not found: n
-//│ ║  l.44: 	    Pair(Vec(xs), Vec(ys)) then n
+//│ ║  l.41: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
 
 

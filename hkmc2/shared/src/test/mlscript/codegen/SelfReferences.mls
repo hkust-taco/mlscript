@@ -6,34 +6,41 @@ module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ (class Foo {
+//│ globalThis.Object.freeze(class Foo {
 //│   static {
-//│     Foo1 = Foo;
+//│     Foo1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.self = Foo1;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "Foo"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
 
 Foo.self
-//│ = module Foo { self: ref'1 } as ref'1
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 module Foo with
   val self: module Foo = this
 
 Foo.self
-//│ = module Foo { self: ref'1 } as ref'1
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 :e
 module Foo with
   val self = this
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'Foo'.
+//│ ║  l.36: 	  val self = this
+//│ ║        	             ^^^^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.
 
 Foo.self
-//│ = module Foo { self: ref'1 } as ref'1
+//│ = class Foo { self: ref'1 } as ref'1
 
 
 object Foo with
@@ -43,25 +50,42 @@ Foo.self
 //│ = Foo { self: ref'1, class: object Foo } as ref'1
 
 
-:todo // * Initialization error
+module Foo with
+  val foo = 1
+  print(Foo.foo)
+//│ > 1
+
+// * This should be an initialization error
+:fixme
 :sjs
 object Foo with
-  val self = Foo
+  val self = id(Foo)
 //│ JS (unsanitized):
-//│ let Foo9;
-//│ const Foo$class1 = class Foo8 {
+//│ let Foo11;
+//│ globalThis.Object.freeze(class Foo10 {
+//│   static {
+//│     Foo11 = globalThis.Object.freeze(new this)
+//│   }
 //│   constructor() {
-//│     this.self = Foo9;
+//│     let tmp;
+//│     tmp = Predef.id(Foo11);
+//│     this.self = tmp;
 //│     Object.defineProperty(this, "class", {
-//│     value: Foo8
+//│       value: Foo10
 //│     })
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Foo"]; 
-//│ }; Foo9 = globalThis.Object.freeze(new Foo$class1);
+//│ });
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
-:re
-Foo.self
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'self' yielded 'undefined'
+
+// * This should be an initialization error
+// * (leaking a partially-initialized module)
+:fixme
+object Foo with
+  val self = id(Foo)
+  val lateInit = 1
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

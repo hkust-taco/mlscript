@@ -4,8 +4,18 @@
 
 object None
 fun testCtor1() = None
+
+:e
+:ge
 fun testCtor2() = new None
+//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'None'.
+//│ ║  l.10: 	fun testCtor2() = new None
+//│ ║        	                      ^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[COMPILATION ERROR] Unsupported kind of Instantiate
+//│ Stopped due to an error during the Llir generation
 
 class A(x)
 fun testCtor1() = A(1)
 fun testCtor2() = new A(1)
+

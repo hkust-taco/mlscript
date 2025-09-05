@@ -1,0 +1,45 @@
+:js
+
+
+:sjs
+drop id(2 + 2)
+//│ JS (unsanitized):
+//│ let tmp, tmp1; tmp = 2 + 2; tmp1 = Predef.id(tmp); runtime.Unit
+
+
+:sjs
+drop { a: 0, b: 1 }
+//│ JS (unsanitized):
+//│ let a, b; a = 0; b = 1; runtime.Unit
+
+:sjs
+let discard = drop _
+//│ JS (unsanitized):
+//│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
+//│ discard = fun discard
+
+discard of { a: 0, b: 1 }
+
+
+// * Notice the difference in how these are parsed:
+:pt
+drop
+  id
+  id
+do
+  id
+  id
+//│ Parsed tree:
+//│ PrefixApp:
+//│   kw = Keywrd of keyword 'drop'
+//│   rhs = Ident of "id"
+//│ PrefixApp:
+//│   kw = Keywrd of keyword 'drop'
+//│   rhs = Ident of "id"
+//│ PrefixApp:
+//│   kw = Keywrd of keyword 'do'
+//│   rhs = Block of Ls of 
+//│     Ident of "id"
+//│     Ident of "id"
+
+

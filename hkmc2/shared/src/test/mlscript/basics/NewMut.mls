@@ -58,11 +58,18 @@ f.y
 
 :e
 let f = mut new Foo
-//│ ═══[ERROR] Illegal position for 'mut' modifier.
+//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ║  l.60: 	let f = mut new Foo
+//│ ╙──      	        ^^^
 //│ f = Foo { x: 0 }
 
+:e
 :re
 new mut Foo.x
+//│ ╔══[ERROR] Expected a statically known class; found selection without resolved definition.
+//│ ║  l.68: 	new mut Foo.x
+//│ ║        	        ^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 

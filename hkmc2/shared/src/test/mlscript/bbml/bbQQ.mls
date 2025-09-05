@@ -98,7 +98,7 @@ run(1)
 
 :e
 x `=> run(x)
-//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
+//│ ╔══[ERROR] Type error in reference without resolved definition with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.100: 	x `=> run(x)
 //│ ║         	          ^
 //│ ╟── because: cannot constrain  CodeBase['x, x, ⊥]  <:  CodeBase[in ⊥ out 'T, ⊥, in ⊥ out ⊤]
@@ -107,7 +107,7 @@ x `=> run(x)
 
 :e
 `let x = `42 `in run(x)
-//│ ╔══[ERROR] Type error in reference with expected type CodeBase[out 'T, ⊥, ?]
+//│ ╔══[ERROR] Type error in reference without resolved definition with expected type CodeBase[out 'T, ⊥, ?]
 //│ ║  l.109: 	`let x = `42 `in run(x)
 //│ ║         	                     ^
 //│ ╟── because: cannot constrain  CodeBase['cde, x, ⊥]  <:  CodeBase[in ⊥ out 'T, ⊥, in ⊥ out ⊤]

@@ -8,7 +8,7 @@ module Playground with
   pattern ZeroOne = Zero ~ One
 
 Playground
-//│ = module Playground {
+//│ = class Playground {
 //│   Zero: pattern Zero,
 //│   DoubleZero: pattern DoubleZero,
 //│   ZeroOne: pattern ZeroOne

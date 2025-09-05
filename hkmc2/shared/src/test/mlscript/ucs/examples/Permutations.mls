@@ -1,7 +1,7 @@
 :js
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Iter.mls"
-import "../../../mlscript-compile/Str.mls"
+import "../../../mlscript-compile/StrOps.mls"
 
 open Stack
 

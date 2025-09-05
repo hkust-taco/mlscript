@@ -34,24 +34,24 @@ O.gy
 class Foo(x, val y, mut val z)
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1, y1, z1) {
-//│   return globalThis.Object.freeze(new Foo.class(x1, y1, z1));
+//│ Foo1 = function Foo(x, y, z) {
+//│   return globalThis.Object.freeze(new Foo.class(x, y, z));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
-//│   enumerable: true,
-//│   value: class Foo {
-//│     #x;
-//│     #z;
-//│     get z() { return this.#z; }
-//│     set z(value) { this.#z = value; }
-//│     constructor(x, y, z) {
-//│       this.#x = x;
-//│       this.y = y;
-//│       this.z = z;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", [null, "y", "z"]]; 
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
 //│   }
+//│   constructor(x, y, z) {
+//│     this.#x = x;
+//│     this.y = y;
+//│     this.z = z;
+//│   }
+//│   #x;
+//│   #z;
+//│   get z() { return this.#z; }
+//│   set z(value) { this.#z = value; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", [null, "y", "z"]]; 
 //│ });
 
 let f = Foo(1, 2, 3)

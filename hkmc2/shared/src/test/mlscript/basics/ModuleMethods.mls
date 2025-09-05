@@ -7,7 +7,7 @@ module MM[T]
 
 :e
 fun f(m: M)
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module definition 'M'.
 //│ ║  l.9: 	fun f(m: M)
 //│ ║       	         ^
 //│ ╙── Non-module parameter must have a non-module type.
@@ -16,7 +16,7 @@ fun f(m)
 
 :e
 f(M)
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.18: 	f(M)
 //│ ║        	  ^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -37,7 +37,7 @@ f(M)
 
 :e
 fun f[T](module m: T)
-//│ ╔══[ERROR] Expected a module, found non-moduleful reference.
+//│ ╔══[ERROR] Expected a module type; found reference without resolved definition.
 //│ ║  l.39: 	fun f[T](module m: T)
 //│ ║        	                   ^
 //│ ╙── Module parameter must have a module type.
@@ -60,18 +60,18 @@ fun assertNonMM[T](m)
 
 :e
 fun f() = M
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.62: 	fun f() = M
 //│ ║        	          ^
 //│ ╙── Function must be marked as returning a 'module' in order to return a module.
 
 :e
 fun f(): M = M
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module definition 'M'.
 //│ ║  l.69: 	fun f(): M = M
 //│ ║        	         ^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.69: 	fun f(): M = M
 //│ ║        	             ^
 //│ ╙── Function must be marked as returning a 'module' in order to return a module.
@@ -80,7 +80,7 @@ fun f(): module M = M
 
 :e
 assertNonM(f())
-//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
 //│ ║  l.82: 	assertNonM(f())
 //│ ║        	           ^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -89,7 +89,7 @@ assertM(f())
 
 :e
 fun f4[T](): module T = M
-//│ ╔══[ERROR] Expected a module, found non-moduleful reference.
+//│ ╔══[ERROR] Expected a module type; found reference without resolved definition.
 //│ ║  l.91: 	fun f4[T](): module T = M
 //│ ║        	                    ^
 //│ ╙── Function marked as returning a 'module' must have a module return type.
@@ -98,7 +98,7 @@ fun f[T](): module MM[T] = MM[T]
 
 :e
 assertNonM(f[Int]())
-//│ ╔══[ERROR] Unexpected moduleful application.
+//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'MM'.
 //│ ║  l.100: 	assertNonM(f[Int]())
 //│ ║         	           ^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -109,14 +109,14 @@ assertM(f[Int]())
 :todo
 :e
 fun f3() = return M
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.111: 	fun f3() = return M
 //│ ╙──       	                  ^
 
 :todo
 :e
 fun f3() = (() => M)()
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.118: 	fun f3() = (() => M)()
 //│ ╙──       	                  ^
 
@@ -125,7 +125,7 @@ fun f3() = (() => M)()
 :e
 :effectHandlers
 fun f3() = (() => return M)()
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.127: 	fun f3() = (() => return M)()
 //│ ╙──       	                         ^
 
@@ -135,7 +135,7 @@ fun f3() = (() => return M)()
 
 :e
 fun f(module m: M) = m
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference without resolved definition.
 //│ ║  l.137: 	fun f(module m: M) = m
 //│ ║         	                     ^
 //│ ╙── Function must be marked as returning a 'module' in order to return a module.
@@ -148,7 +148,7 @@ fun f(module m: M): module M = m
 
 :e
 val v = M
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
 //│ ║  l.150: 	val v = M
 //│ ║         	        ^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.

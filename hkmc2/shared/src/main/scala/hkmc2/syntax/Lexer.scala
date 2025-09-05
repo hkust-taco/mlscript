@@ -371,7 +371,8 @@ class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
         go(j, IDENT(n, false))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        if (n === "." || n === "!") && j < length
+        if n === "." && j >= length then go(j, PERIOD) // * There is no other character to parse after `.`
+        else if (n === "." || n === "!") && j < length
         then
           inline def mkSelect(str: Str) = SELECT(str, n === "!")
           val nc = bytes(j)
@@ -582,8 +583,8 @@ object Lexer:
   
   def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
-    case (COMMA, _) => ","
-    case (PERIOD, _) => "."
+    case (COMMA, _) => "`,`"
+    case (PERIOD, _) => "`.`"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"

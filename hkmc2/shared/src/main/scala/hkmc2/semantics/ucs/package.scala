@@ -16,9 +16,9 @@ package object ucs:
   extension (symbol: Symbol)
     /** Create a `Ref` that does not have any implicit arguments. We need this
      *  function because we generate a lot of `Ref`s after implicit resolution.
-     *  Writing `.withIArgs(Nil)` is too verbose.
+     *  Writing `.resolve` is too verbose.
      */
-    def safeRef: Term.Ref = symbol.ref().withIArgs(Nil)
+    def safeRef: Term.Ref = symbol.ref().resolve
   
   /** A helper extractor for matching the tree of `x | y`. */  
   object extractors:

@@ -40,6 +40,8 @@ declare module source with
     name: Str
     file: Str
 
+declare class Array[T](val length: Int): Array[T]
+
 declare object Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
   // Otherwise, it would be wrapped in `runtime.safeCall`, which accesses the

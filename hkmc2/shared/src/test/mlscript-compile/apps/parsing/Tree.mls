@@ -2,7 +2,7 @@ import "../../Iter.mls"
 import "../../Predef.mls"
 import "../../Stack.mls"
 import "../../Option.mls"
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "./Keywords.mls"
 import "./Token.mls"
 
@@ -12,8 +12,6 @@ open Option { Some, None }
 open Token { LiteralKind, BracketKind }
 open Keywords { opPrec, INT_MAX }
 
-type StackT[A] = Stack.Cons[A] | Stack.Nil
-
 //  _____
 // |_   _| __ ___  ___
 //   | || '__/ _ \/ _ \
@@ -22,8 +20,8 @@ type StackT[A] = Stack.Cons[A] | Stack.Nil
 //
 // ====================
 
-module Tree with
-  abstract class Tree
+abstract class Tree
+module Tree with  
   
   module DefineKind with
     data class Let(recursive: Bool)
@@ -43,16 +41,16 @@ module Tree with
       Ident(name: Str, symbolic: Bool) extends Tree
       Underscore() extends Tree
       Modified(modifier, subject) extends Tree
-      Tuple(trees: StackT) extends Tree
-      Sequence(trees: StackT) extends Tree
+      Tuple(trees: Stack[Tree]) extends Tree
+      Sequence(trees: Stack[Tree]) extends Tree
       Literal(kind, value) extends Tree
-      Match(scrutinee: Tree, branches: StackT) extends Tree
-      Lambda(params: StackT, body: Tree) extends Tree
+      Match(scrutinee: Tree, branches: Stack[Tree]) extends Tree
+      Lambda(params: Stack[Tree], body: Tree) extends Tree
       App(callee: Tree, argument: Tree) extends Tree
       Infix(op: Keywords.Keyword, lhs: Tree, rhs: Tree) extends Tree
       // `items` is separated by `and`
-      Define(kind: DefineKind.DefineKind, items: StackT[[Tree, Tree]]) extends Tree
-      LetIn(bindings: StackT, body: Tree) extends Tree
+      Define(kind: DefineKind.DefineKind, items: Stack[[Tree, Tree]]) extends Tree
+      LetIn(bindings: Stack[Tree], body: Tree) extends Tree
       While(cond: Tree, body: Tree) extends Tree
       For(head: Tree, start: Tree, end: Tree, body: Tree) extends Tree
       // For `if`-`then`-`else`. The last part is optional.
@@ -131,7 +129,7 @@ module Tree with
           field
       Infix(op, lhs, rhs) then fold(+) of
         go(lhs), " ", go(op), " ", go(rhs)
-      Define(Directive, [name, value] :: Nil) then Str.concat of
+      Define(Directive, [name, value] :: Nil) then StrOps.concat of
         "#", go(name), " ", go(value)
       Define(kind, items) then mkStr of
         if kind is

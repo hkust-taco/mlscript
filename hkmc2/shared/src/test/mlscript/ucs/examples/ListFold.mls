@@ -2,11 +2,11 @@
 
 import "../../../mlscript-compile/Stack.mls"
 import "../../../mlscript-compile/Option.mls"
-import "../../../mlscript-compile/Str.mls"
+import "../../../mlscript-compile/StrOps.mls"
 
 open Stack
 open Option
-open Str
+open StrOps
 
 fun (|>) pipe(x, f) = f(x)
 
@@ -27,10 +27,10 @@ fun join(sep) =
   fun aux(acc, xs) =
     if xs is
       Nil then acc
-      Cons(x, xs') then aux(acc ~ sep ~ Str.from(x), xs')
+      Cons(x, xs') then aux(acc ~ sep ~ StrOps.from(x), xs')
   (xs) =>
     if xs is
-      Cons(x, xs') then aux(Str.from(x), xs')
+      Cons(x, xs') then aux(StrOps.from(x), xs')
       Nil then ""
 
 join(", ")(1 :: 2 :: 3 :: Nil)

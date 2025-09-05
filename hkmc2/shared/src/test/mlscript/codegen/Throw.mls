@@ -43,11 +43,7 @@ f(false)
 //│ JS (unsanitized):
 //│ let f3;
 //│ f3 = function f(x) {
-//│   if (x === true) {
-//│     throw globalThis.Error("x")
-//│   } else {
-//│     throw globalThis.Error("y")
-//│   }
+//│   if (x === true) { throw globalThis.Error("x") } else { throw globalThis.Error("y") }
 //│ };
 //│ f3(false)
 //│ ═══[RUNTIME ERROR] Error: y

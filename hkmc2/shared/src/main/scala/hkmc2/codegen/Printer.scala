@@ -29,6 +29,7 @@ object Printer:
         case Case.Lit(lit) => doc"${lit.idStr}"
         case Case.Cls(cls, path) => doc"${cls.nme}"
         case Case.Tup(len, inf) => doc"tuple$len"
+        case _ => TODO(c)
       val docCases = arms
         .map{ case (c, b) => doc"${case_doc(c)} => #{  # ${mkDocument(b)} #} " }
         .mkDocument(sep = doc" # ")
@@ -52,11 +53,11 @@ object Printer:
       doc"set $docLhs = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
     case AssignField(lhs, nme, rhs, rest) =>
       doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
-    case Define(defn, rest) => {
+    case Define(defn, rest) =>
       doc"define ${mkDocument(defn)} in # ${mkDocument(rest)}"
-    }
     case End("") => doc"end"
     case End(msg) => doc"end ${msg}"
+    case _ => TODO(blk)
   
   def mkDocument(defn: Defn)(using Raise, Scope): Document = defn match
     case FunDefn(own, sym, params, body) =>
@@ -65,7 +66,9 @@ object Printer:
       doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${tsym.nme} = ${mkDocument(rhs)}"
-    case ClsLikeDefn(own, _, sym, k, paramsOpt, auxParams, parentSym, methods, privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, _, sym, k, paramsOpt, auxParams, parentSym, methods,
+        privateFields, publicFields, preCtor, ctor, mod)
+    =>
       def optFldBody(t: semantics.TermDefinition) =
         t.body match
           case Some(x) => doc" = ..."
@@ -107,6 +110,7 @@ object Printer:
       val docQual = mkDocument(qual)
       doc"${docQual}.${name.name}"
     case x: Value => mkDocument(x)
+    case _ => TODO(path)
 
   def mkDocument(result: Result)(using Raise, Scope): Document = result match
     case Call(fun, args) => doc"${mkDocument(fun)}(${args.map(mkDocument).mkString(", ")})"
@@ -114,10 +118,10 @@ object Printer:
       doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkString(", ")})"
     case x: Path => mkDocument(x)
   
-  def mkDocument(prog: Program)(using Raise, Scope): Document = {
+  def mkDocument(prog: Program)(using Raise, Scope): Document = summon[Scope].nest.givenIn:
     val docImports = prog.imports.map:
       case (local, path) =>
         val docLocal = summon[Scope].allocateName(local)
         doc"import ${docLocal}"
     doc" ${docImports.mkDocument(sep = doc" # ")} # ${mkDocument(prog.main)}"
-  }
+  

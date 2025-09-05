@@ -1,0 +1,136 @@
+:js
+
+
+:pe
+.
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.5: 	.
+//│ ╙──     	^
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.5: 	.
+//│ ╙──     	^
+
+:pe
+. //
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.14: 	. //
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.14: 	. //
+//│ ╙──      	^
+
+
+:fixme
+id(.)
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.24: 	id(.)
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.24: 	id(.)
+//│ ╙──      	   ^
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+
+fun incr = _ + 1
+fun add = _ + _
+
+passTo(2, incr)()
+//│ = 3
+
+// TODO disallow
+:breakme
+passTo(2, incr(_))()
+//│ = 3
+
+passTo(2, incr @ _)()
+//│ = 3
+
+:fixme
+passTo(2, incr(.) @ _)()
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.49: 	passTo(2, incr(.) @ _)()
+//│ ╙──      	               ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.49: 	passTo(2, incr(.) @ _)()
+//│ ╙──      	               ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+
+:breakme
+passTo(2, (incr(_)) @ _)()
+//│ = 3
+
+:breakme
+passTo(2, add(_, 2))()
+//│ = 4
+
+:fixme
+passTo(2, add(., 2))()
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.67: 	passTo(2, add(., 2))()
+//│ ╙──      	              ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.67: 	passTo(2, add(., 2))()
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+
+:breakme
+passTo(1, incr(_) + _)(2)
+//│ = 4
+
+:breakme
+passTo(1, (incr(_)) @ _ + _)(2)
+//│ = 4
+
+passTo(1, (add(_, 1)) @ _ + _)(2)
+//│ = 4
+
+:fixme
+passTo(1, incr(.) @ _ + _)(2)
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.88: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ╙──      	               ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.88: 	passTo(1, incr(.) @ _ + _)(2)
+//│ ╙──      	               ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+
+:fixme
+passTo(1, add(., 1) @ _ + _)(2)
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.98: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──      	              ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.98: 	passTo(1, add(., 1) @ _ + _)(2)
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+
+
+:breakme
+:sjs
+let f = add(_, 1)
+//│ JS (unsanitized):
+//│ let f, f1; f1 = function f(_0) { let tmp17; tmp17 = add(); return tmp17(_0, 1) }; f = f1;
+//│ f = fun f
+
+:fixme
+let f = add(., 1)
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.116: 	let f = add(., 1)
+//│ ╙──       	            ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.116: 	let f = add(., 1)
+//│ ╙──       	            ^
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
+//│ f = undefined
+
+:fixme
+f(1)
+//│ ═══[RUNTIME ERROR] TypeError: f2 is not a function
+
+let f = add of _, 1
+//│ f = fun f
+
+f(1)
+//│ = 2
+
+

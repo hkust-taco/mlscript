@@ -179,13 +179,16 @@ x + y
 //│     return h$(f$capture2)
 //│   }
 //│ };
-//│ f$capture1 = class f$capture {
+//│ globalThis.Object.freeze(class f$capture {
+//│   static {
+//│     f$capture1 = this
+//│   }
 //│   constructor(a0$) {
 //│     this.a0$ = a0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ };
+//│ });
 //│ f5 = function f() {
 //│   let capture, g$this, h$this;
 //│   capture = new f$capture1(null);
@@ -194,19 +197,19 @@ x + y
 //│   h$this = runtime.safeCall(h(capture));
 //│   return Tuple1(g$this, h$this)
 //│ };
-//│ Tuple1 = function Tuple(a1, b1) {
-//│   return globalThis.Object.freeze(new Tuple.class(a1, b1));
+//│ Tuple1 = function Tuple(a, b) {
+//│   return globalThis.Object.freeze(new Tuple.class(a, b));
 //│ };
-//│ Object.defineProperty(Tuple1, "class", {
-//│   enumerable: true,
-//│   value: class Tuple {
-//│     constructor(a, b) {
-//│       this.a = a;
-//│       this.b = b;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Tuple", ["a", "b"]]; 
+//│ globalThis.Object.freeze(class Tuple {
+//│   static {
+//│     Tuple1.class = this
 //│   }
+//│   constructor(a, b) {
+//│     this.a = a;
+//│     this.b = b;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Tuple", ["a", "b"]]; 
 //│ });
 //│ tmp = f5();
 //│ ret = tmp;
@@ -314,13 +317,16 @@ f(1, 2, 1000)
 //│     return h$2(f$capture6)
 //│   }
 //│ };
-//│ f$capture5 = class f$capture4 {
+//│ globalThis.Object.freeze(class f$capture4 {
+//│   static {
+//│     f$capture5 = this
+//│   }
 //│   constructor(mutated0$) {
 //│     this.mutated0$ = mutated0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ };
+//│ });
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp15, tmp16, tmp17, capture;
 //│   capture = new f$capture5(mutated);
@@ -388,13 +394,9 @@ f(2)
 //│   }
 //│ };
 //│ h3 = function h(arg) {
-//│   return (n) => {
-//│     return h$3(arg, n)
-//│   }
+//│   return (n) => { return h$3(arg, n) }
 //│ };
-//│ f10 = function f(arg) {
-//│   return h$3(arg, 5)
-//│ };
+//│ f10 = function f(arg) { return h$3(arg, 5) };
 //│ f10(2)
 //│ = 2
 
@@ -418,12 +420,8 @@ g()
 //│ f14 = function f() {
 //│   return 3
 //│ };
-//│ h4 = function h() {
-//│   return 3
-//│ };
-//│ g12 = function g() {
-//│   return h4()
-//│ };
+//│ h4 = function h() { return 3 };
+//│ g12 = function g() { return h4() };
 //│ g12()
 //│ = 3
 
@@ -465,13 +463,16 @@ g()(1)
 //│     return f$1(g$capture2, x1)
 //│   }
 //│ };
-//│ g$capture1 = class g$capture {
+//│ globalThis.Object.freeze(class g$capture {
+//│   static {
+//│     g$capture1 = this
+//│   }
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
-//│ };
+//│ });
 //│ g13 = function g() {
 //│   let capture;
 //│   capture = new g$capture1(null);
@@ -543,10 +544,7 @@ fun f(x, cond) =
 //│   x1 = 2;
 //│   if (cond === true) {
 //│     return runtime.safeCall(lambda(x1))
-//│   } else {
-//│     x1 = 3;
-//│     return runtime.safeCall(lambda1(x1))
-//│   }
+//│   } else { x1 = 3; return runtime.safeCall(lambda1(x1)) }
 //│ };
 
 :sjs
@@ -572,13 +570,16 @@ f()
 //│     return f$2(f$capture16)
 //│   }
 //│ };
-//│ f$capture15 = class f$capture14 {
+//│ globalThis.Object.freeze(class f$capture14 {
+//│   static {
+//│     f$capture15 = this
+//│   }
 //│   constructor(x0$) {
 //│     this.x0$ = x0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ };
+//│ });
 //│ f20 = function f() {
 //│   let tmp19, capture;
 //│   capture = new f$capture15(null);
@@ -617,20 +618,19 @@ fun f(es, vs) =
 //│   }
 //│   return tmp19
 //│ };
-//│ A1 = class A {
-//│   #v$_$0;
-//│   get ["v'$0"]() { return this.#v$_$0; }
-//│   set ["v'$0"](value) { this.#v$_$0 = value; }
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1 = this
+//│   }
 //│   constructor(v$_$0) {
 //│     this["v'$0"] = v$_$0;
 //│     this.fld = this["v'$0"];
 //│   }
+//│   #v$_$0;
+//│   get ["v'$0"]() { return this.#v$_$0; }
+//│   set ["v'$0"](value) { this.#v$_$0 = value; }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
-//│ };
-//│ f23 = function f(es, vs) {
-//│   let v$_;
-//│   v$_ = es;
-//│   return A$(false, v$_)
-//│ };
+//│ });
+//│ f23 = function f(es, vs) { let v$_; v$_ = es; return A$(false, v$_) };
 

@@ -102,7 +102,7 @@ class BlockTransformer(subst: SymbolSubst):
       if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
     case Instantiate(mut, cls, args) =>
       val cls2 = applyPath(cls)
-      val args2 = args.mapConserve(applyPath)
+      val args2 = args.mapConserve(applyArg)
       if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
     case p: Path => applyPath(p)
   
@@ -155,11 +155,24 @@ class BlockTransformer(subst: SymbolSubst):
     if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
       then defn else ValDefn(tsym2, sym2, rhs2)
   
+  def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
+    val isym2 = defn.isym.subst
+    val methods2 = defn.methods.mapConserve(applyFunDefn)
+    val privateFields2 = defn.privateFields.mapConserve(_.subst)
+    val publicFields2 = defn.publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+    val ctor2 = applySubBlock(defn.ctor)
+    if (methods2 is defn.methods) &&
+        (privateFields2 is defn.privateFields) &&
+        (publicFields2 is defn.publicFields) &&
+        (ctor2 is defn.ctor)
+      then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)
+    
   def applyDefn(defn: Defn): Defn = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
-      privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+        privateFields, publicFields, preCtor, ctor, mod)
+    =>
       val own2 = own.mapConserve(_.subst)
       val isym2 = isym.subst
       val sym2 = sym.subst
@@ -171,6 +184,7 @@ class BlockTransformer(subst: SymbolSubst):
       val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
       val preCtor2 = applySubBlock(preCtor)
       val ctor2 = applySubBlock(ctor)
+      val mod2 = mod.mapConserve(applyObjBody)
       if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
           (paramsOpt2 is paramsOpt) &&
           (auxParams2 is auxParams) &&
@@ -178,9 +192,10 @@ class BlockTransformer(subst: SymbolSubst):
           (methods2 is methods) &&
           (privateFields2 is privateFields) &&
           (publicFields2 is publicFields) &&
-          (preCtor2 is preCtor) && (ctor2 is ctor)
+          (preCtor2 is preCtor) && (ctor2 is ctor) &&
+          (mod2 is mod)
         then defn else ClsLikeDefn(own2, isym2, sym2, k, paramsOpt2, 
-          auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2)
+          auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2)
   
   def applyArg(arg: Arg): Arg =
     val val2 = applyPath(arg.value)

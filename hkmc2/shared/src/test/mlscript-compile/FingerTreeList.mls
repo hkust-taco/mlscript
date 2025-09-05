@@ -53,7 +53,7 @@ class FingerTree[T] extends IterableBase with
       return Empty
     FingerTreeList.dropLeftRight(beg, len - end)(this)
 
-object Empty extends FingerTree[T] with
+object Empty extends FingerTree[Nothing] with
   fun toString() = "[" + this joined(", ") + "]"
 
 class Single[T](val e: T) extends FingerTree[T] with

@@ -10,9 +10,11 @@
 (1)as(Int)
 //│ = 1
 
-:fixme // shouldn't allow using `Int` in term position
+:ge // Shouldn't allow using `Int` in term position
 1 : Int
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.14: 	1 : Int
+//│ ╙──      	    ^^^
 
 
 :sjs

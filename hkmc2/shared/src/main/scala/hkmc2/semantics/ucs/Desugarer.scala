@@ -27,7 +27,7 @@ object Desugarer:
     val tupleLast: HashMap[Int, BlockLocalSymbol] = HashMap.empty
 end Desugarer
 
-class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
+class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, Config, UnderCtx):
   import Desugarer.*, elaborator.term, elaborator.subterm, elaborator.tl, tl.*
   
   // A few helper methods to select useful functions from the runtime.
@@ -46,12 +46,12 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   /** Keep track of the locations where `do` and `then` are used as connectives. */
   private val kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
   
-  private def reportInconsistentConnectives(kw: Keyword, kwLoc: Opt[Loc]): Unit =
+  private def reportInconsistentConnectives(kw: Keywrd[?]): Unit =
     log(kwLocSets)
     (kwLocSets._1.headOption, kwLocSets._2.headOption) match
       case (Some(doLoc), Some(thenLoc)) =>
         raise(ErrorReport(
-          msg"Mixed use of `do` and `then` in the `${kw.name}` expression." -> kwLoc
+          msg"Mixed use of `do` and `then` in the `${kw.kw.name}` expression." -> kw.toLoc
             :: msg"Keyword `then` is used here." -> S(thenLoc)
             :: msg"Keyword `do` is used here." -> S(doLoc) :: Nil
         ))
@@ -194,20 +194,20 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   def termSplit(trees: Ls[Tree], finish: Term => Term): Split => Sequel =
     trees.foldRight(default): (t, elabFallback) =>
       t match
-      case LetLike(`let`, ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
+      case LetLike(Keywrd(`let`), ident @ Ident(_), S(termTree), N) => fallback => ctx => trace(
         pre = s"termSplit: let ${ident.name} = $termTree",
         post = (res: Split) => s"termSplit: let >>> $res"
       ):
         val sym = VarSymbol(ident)
         val fallbackCtx = ctx + (ident.name -> sym)
         Split.Let(sym, term(termTree)(using ctx), elabFallback(fallback)(fallbackCtx)).withLocOf(t)
-      case PrefixApp(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+      case PrefixApp(Keywrd(Keyword.`do`), computation) => fallback => ctx => trace(
         pre = s"termSplit: do $computation",
         post = (res: Split) => s"termSplit: else >>> $res"
       ):
         val sym = TempSymbol(N, "doTemp")
         Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx)).withLocOf(t)
-      case PrefixApp(Keyword.`else`, elsLoc, default) => fallback => ctx => trace(
+      case PrefixApp(Keywrd(Keyword.`else`), default) => fallback => ctx => trace(
         pre = s"termSplit: else $default",
         post = (res: Split) => s"termSplit: else >>> $res"
       ):
@@ -283,7 +283,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
       nominate(ctx, finish(term(lhs)(using ctx))): vs =>
         rhss.foldRight(Function.const(fallback): Sequel): (branch, elabFallback) =>
           branch match
-          case LetLike(`let`, pat, termTree, N) => ctx =>
+          case LetLike(Keywrd(`let`), pat, termTree, N) => ctx =>
             val ident = pat match // TODO handle patterns and rm special cases
               case ident: Ident => ident
               case und: Under => new Ident("_").withLocOf(und)
@@ -292,13 +292,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
               val sym = VarSymbol(ident)
               val fallbackCtx = ctx + (ident.name -> sym)
               Split.Let(sym, term(termTree)(using ctx), elabFallback(fallbackCtx))
-          case PrefixApp(Keyword.`do`, doLoc, computation) => ctx => trace(
+          case PrefixApp(Keywrd(Keyword.`do`), computation) => ctx => trace(
             pre = s"termSplit: do $computation",
             post = (res: Split) => s"termSplit: do >>> $res"
           ):
             val sym = TempSymbol(N, "doTemp")
             Split.Let(sym, term(computation)(using ctx), elabFallback(ctx))
-          case PrefixApp(Keyword.`else`, elsLoc, default) => ctx =>
+          case PrefixApp(Keywrd(Keyword.`else`), default) => ctx =>
             // TODO: report `rest` as unreachable
             Split.default(term(default)(using ctx))
           case rawRhs => ctx =>
@@ -307,7 +307,8 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
             log(s"rhs: $rhs")
             termSplit(rhs, identity)(elabFallback(ctx))(ctx)
     case _ => fallback => _ =>
-      raise(ErrorReport(msg"Unrecognized term split (${tree.describe})." -> tree.toLoc :: Nil))
+      raise(ErrorReport(msg"Unrecognized term split (${tree.describe})." -> tree.toLoc :: Nil,
+        extraInfo = S(tree)))
       fallback.withoutLoc // Hacky... a loc is always added for the result
   
   /** Given a elaborated scrutinee, give it a name and add it to the context.
@@ -384,7 +385,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
       // Terminology: _fallback_ refers to subsequent branches, _backup_ refers
       // to the backup plan passed from the parent split.
       branch.deparenthesized match
-      case LetLike(`let`, ident @ Ident(_), termTree, N) => backup => ctx =>
+      case LetLike(Keywrd(`let`), ident @ Ident(_), termTree, N) => backup => ctx =>
         termTree match
         case S(termTree) =>
           val sym = VarSymbol(ident)
@@ -393,13 +394,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
         case N =>
           raise(ErrorReport(msg"Pattern matching with `let` must have a term." -> branch.toLoc :: Nil))
           backup
-      case PrefixApp(Keyword.`do`, doLoc, computation) => fallback => ctx => trace(
+      case PrefixApp(Keywrd(Keyword.`do`), computation) => fallback => ctx => trace(
         pre = s"patternSplit (do) <<< $computation",
         post = (res: Split) => s"patternSplit: else >>> $res"
       ):
         val sym = TempSymbol(N, "doTemp")
         Split.Let(sym, term(computation)(using ctx), elabFallback(fallback)(ctx))
-      case PrefixApp(Keyword.`else`, elsLoc, body) => backup => ctx => trace(
+      case PrefixApp(Keywrd(Keyword.`else`), body) => backup => ctx => trace(
         pre = s"patternSplit (else) <<< $tree",
         post = (res: Split) => s"patternSplit (else) >>> ${res.showDbg}"
       ):
@@ -510,7 +511,7 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
         // 2. A variable number of middle patterns indicated by `..`.
         // 3. A fixed number of trailing patterns.
         val (lead, rest) = args.foldLeft[(Ls[Tree], Opt[(Keyword.Ellipsis, Opt[Tree], Ls[Tree])])]((Nil, N)):
-          case ((lead, N), Spread(kw, _, patOpt)) => (lead, S((kw, patOpt, Nil)))
+          case ((lead, N), Spread(kw, patOpt)) => (lead, S((kw.kw, patOpt, Nil)))
           case ((lead, N), pat) => (lead :+ pat, N)
           case ((lead, S((kw: Keyword.Ellipsis, rest, last))), pat) => (lead, S((kw, rest, last :+ pat)))
         // `wrap`: add let bindings for tuple elements
@@ -672,13 +673,13 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, UnderCtx):
   /** Desugar `case` expressions. */
   def apply(tree: Case, scrut: VarSymbol)(using Ctx): Split =
     val topmost = patternSplit(tree.branches, scrut)(Split.End)(ctx)
-    reportInconsistentConnectives(Keyword.`case`, tree.kwLoc)
+    reportInconsistentConnectives(tree.kw)
     topmost ++ topmostDefault
   
   /** Desugar `if` and `while` expressions. */
   def apply(tree: IfLike)(using Ctx): Split =
     val topmost = termSplit(tree.split, identity)(Split.End)(ctx)
-    reportInconsistentConnectives(tree.kw, tree.kwLoc)
+    reportInconsistentConnectives(tree.kw)
     topmost ++ topmostDefault
   
   /** Desugar `is` and `and` shorthands. */

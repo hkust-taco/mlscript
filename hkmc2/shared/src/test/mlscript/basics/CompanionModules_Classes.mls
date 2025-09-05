@@ -1,0 +1,117 @@
+:js
+
+
+class C()
+module C with
+  val empty = 1
+
+:rt
+C()
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = App:
+//│     lhs = Ref{member:C} of member:C
+//│     rhs = Tup of Nil
+//│ = C()
+
+:rt
+new C
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = New:
+//│     cls = SynthSel{class:C}:
+//│       prefix = Ref{member:C} of member:C
+//│       nme = Ident of "class"
+//│     args = Nil
+//│     rft = N
+//│ = C()
+
+new C()
+//│ = C()
+
+:rt
+C.empty
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{member:empty}:
+//│     prefix = SynthSel{module:C}:
+//│       prefix = Ref{member:C} of member:C
+//│       nme = Ident of "class"
+//│     nme = Ident of "empty"
+//│ = 1
+
+:breakme // TODO: should be an error, down the line, when we resolve all selections statically
+:e
+:re
+id(C).empty
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'empty' yielded 'undefined'
+
+
+class C
+module C with
+  val empty = 1
+
+:rt
+C.empty
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel{member:empty}:
+//│     prefix = Ref{member:C} of member:C
+//│     nme = Ident of "empty"
+//│ = 1
+
+
+class Test with
+  fun hi = Test.ans
+module Test with
+  val ans = 42
+  fun test = new Test
+
+Test.test.hi
+//│ = 42
+
+
+mut val state = 10
+//│ state = 10
+
+// * The order of evaluation of modules matters;
+// * they should not be moved to their companion classes (the opposite should happen)
+:sjs
+class Foo() with // the class definition is moved to the location of its companion
+  fun foo = state
+set state += 1
+module Foo with
+  val res = Foo().foo
+//│ JS (unsanitized):
+//│ let Foo1, tmp1;
+//│ tmp1 = state + 1;
+//│ state = tmp1;
+//│ Foo1 = function Foo() {
+//│   return globalThis.Object.freeze(new Foo.class());
+//│ };
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
+//│   }
+//│   constructor() {}
+//│   static {
+//│     let tmp2;
+//│     tmp2 = Foo1();
+//│     this.res = tmp2.foo;
+//│   }
+//│   get foo() {
+//│     return state;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│ });
+
+:expect 11
+Foo.res
+//│ = 11
+
+

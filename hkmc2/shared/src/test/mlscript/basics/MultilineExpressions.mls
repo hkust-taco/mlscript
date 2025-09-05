@@ -66,8 +66,7 @@ if 1 + 2
   * 3 then 0
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = OpApp:
 //│       lhs = IntLit of 1
@@ -86,9 +85,7 @@ if 1 + 2
 //│ scrut = 1 + tmp17;
 //│ if (scrut === true) {
 //│   0
-//│ } else {
-//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :pt
@@ -97,8 +94,7 @@ if 1 * 2
   + 3 then 0
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = InfixApp:
 //│     lhs = OpApp:
 //│       lhs = OpApp:
@@ -120,30 +116,23 @@ if 1 + 2
   * 3 then 0
   + 4 then 1
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.121: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ║         	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.120: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.121: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ║         	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.120: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.119: 	if 1 + 2
+//│ ║  l.115: 	if 1 + 2
 //│ ║         	       ^
-//│ ║  l.120: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.121: 	  + 4 then 1
-//│ ╙──       	^^^^^
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.119: 	if 1 + 2
-//│ ║         	       ^
-//│ ║  l.120: 	  * 3 then 0
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.121: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ╙──       	^^^^^
 
 :pt
@@ -153,8 +142,7 @@ if (1 + 2)
   + 4 then 1
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = OpSplit:
 //│     lhs = Bra:
 //│       k = Round

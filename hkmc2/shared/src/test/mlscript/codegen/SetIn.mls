@@ -32,14 +32,7 @@ set x += 1 in print(x)
 //│ JS (unsanitized):
 //│ let old, tmp2, tmp3, tmp4;
 //│ old = x1;
-//│ try {
-//│   tmp3 = x1 + 1;
-//│   x1 = tmp3;
-//│   tmp4 = Predef.print(x1);
-//│   tmp2 = tmp4;
-//│ } finally {
-//│   x1 = old;
-//│ }
+//│ try { tmp3 = x1 + 1; x1 = tmp3; tmp4 = Predef.print(x1); tmp2 = tmp4; } finally { x1 = old; }
 //│ tmp2
 //│ > 2
 

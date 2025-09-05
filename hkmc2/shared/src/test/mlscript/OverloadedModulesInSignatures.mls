@@ -1,0 +1,113 @@
+:js
+
+
+class ClsMod with
+  val whoami = "class"
+module ClsMod with
+  val whoami = "module"
+
+type TypMod = Int
+module TypMod with
+  val whoami = "module"
+
+:fixme
+fun TrmMod = 42
+module TrmMod with
+  val whoami = "module"
+//│ ╔══[ERROR] Not yet supported: overloading of function 'TrmMod'
+//│ ║  l.14: 	fun TrmMod = 42
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── with module of the same name
+//│ ║  l.15: 	module TrmMod with
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	  val whoami = "module"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+
+fun f: ClsMod = 42
+
+fun f: module ClsMod = ClsMod
+
+fun f: TypMod = 42
+
+fun f: module TypMod = TypMod
+
+:e
+fun f: TrmMod = 42
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module definition 'TrmMod'.
+//│ ║  l.35: 	fun f: TrmMod = 42
+//│ ║        	       ^^^^^^
+//│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
+
+// * FIXME: Should compile to term (function) `TrmMod` rather than module `TrmMod`
+:sjs
+fun f = TrmMod
+//│ JS (unsanitized):
+//│ let f5; f5 = function f() { return TrmMod1 };
+
+:fixme
+:expect 42
+f
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'class TrmMod { whoami: "module" }'
+//│ = class TrmMod { whoami: "module" }
+
+:sjs
+fun f: module TrmMod = TrmMod
+//│ JS (unsanitized):
+//│ let f6; f6 = function f() { return TrmMod1 };
+
+fun assertModule(module m: ClsMod): module ClsMod = m
+
+assertModule(ClsMod).whoami
+//│ = "module"
+
+assertModule(TypMod).whoami
+//│ = "module"
+
+assertModule(TrmMod).whoami
+//│ = "module"
+
+
+fun assertNonModule(m) = m
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+:breakme
+assertNonModule(ClsMod).whoami
+//│ = "module"
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+:breakme
+assertNonModule(TypMod).whoami
+//│ = "module"
+
+// FIXME: should not resolve to module's `.whoami`, hence should be an error
+:breakme
+assertNonModule(TrmMod).whoami
+//│ = "module"
+
+
+type Foo[A] = Int
+module Foo
+
+:e
+fun f(x: Foo): Foo = x
+//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ║  l.92: 	fun f(x: Foo): Foo = x
+//│ ╙──      	         ^^^
+//│ ╔══[ERROR] Expected 1 type arguments, got none
+//│ ║  l.92: 	fun f(x: Foo): Foo = x
+//│ ╙──      	               ^^^
+
+fun f(x: Foo[Int]): Foo[Int] = x
+
+fun f(module x: Foo): module Foo = x
+
+:e
+fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──       	                ^^^^^^^^
+//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ╙──       	                                  ^^^^^^^^
+
+

@@ -19,8 +19,7 @@ if f(x) ==
   2 then 3
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = OpApp:
 //│     lhs = App:
 //│       lhs = Ident of "f"
@@ -54,8 +53,7 @@ if x +
     8 then 9
 //│ Parsed tree:
 //│ IfLike:
-//│   kw = keyword 'if'
-//│   kwLoc = N
+//│   kw = Keywrd of keyword 'if'
 //│   split = OpApp:
 //│     lhs = Ident of "x"
 //│     op = Ident of "+"
@@ -92,8 +90,7 @@ if x +
 //│                     kw = keyword 'then'
 //│                     rhs = IntLit of 9
 //│                   PrefixApp:
-//│                     kw = keyword 'else'
-//│                     kwLoc = N
+//│                     kw = Keywrd of keyword 'else'
 //│                     rhs = IntLit of 42
 //│               InfixApp:
 //│                 lhs = IntLit of 8

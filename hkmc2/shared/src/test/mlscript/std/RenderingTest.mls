@@ -163,7 +163,7 @@ renderAsStr of Foo
 set Foo.bar = (direction: "vertical")
 
 renderAsStr of Foo
-//│ = "class Foo { bar: {direction: \"vertical\"} }"
+//│ = "class Foo"
 
 class Bar extends Foo
 

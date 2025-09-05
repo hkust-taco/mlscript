@@ -25,6 +25,9 @@ fun id: [A] -> A -> A => x = x
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.21: 	fun id: [A] -> A -> A => x = x
 //│ ╙──      	                             ^
+//│ ╔══[ERROR] Expected a type, got function literal
+//│ ║  l.21: 	fun id: [A] -> A -> A => x = x
+//│ ╙──      	                    ^
 //│ ═══[ERROR] Function definition shape not yet supported for id
 //│ Type: ⊤
 

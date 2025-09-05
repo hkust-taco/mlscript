@@ -245,7 +245,7 @@ enum Pattern extends AutoLocated:
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
-   *  map becuase we want to replace variables. */
+   *  map because we want to replace variables. */
   lazy val variables: Variables = this match
     case Constructor(_, _, arguments) => arguments.fold(Variables.empty)(_.variables)
     case Composition(false, left, right) => left.variables ++ right.variables

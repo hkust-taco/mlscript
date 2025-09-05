@@ -51,19 +51,19 @@ trait NewDesugarer:
     .getOrElse(End)
   
   /** Handle the common cases of branches in splits. */
-  protected def branch(using Ctx): PartialFunction[Tree, (Ctx, SimpleSplit)] =
+  protected def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(`let`, ident: Ident, S(rhsTree), N) =>
       val symbol = VarSymbol(ident)
       val head = Head.Let(symbol, term(rhsTree)) 
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
-    case PrefixApp(`do`, _, rhsTree) =>
+    case PrefixApp(Keywrd(`do`), rhsTree) =>
       val symbol = TempSymbol(N, "unused")
       (ctx, Head.Let(symbol, term(rhsTree)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
-    case PrefixApp(`else`, _, elseTree) => (ctx, Else(term(elseTree)))
+    case PrefixApp(Keywrd(`else`), elseTree) => (ctx, Else(term(elseTree)))
   
   protected def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
     val z = (ctx, Ls[(Term, Pattern)]())

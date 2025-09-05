@@ -9,13 +9,16 @@ fun test(a) =
 //│ let test;
 //│ test = function test(a) {
 //│   let C1;
-//│   C1 = class C {
+//│   globalThis.Object.freeze(class C {
+//│     static {
+//│       C1 = this
+//│     }
 //│     constructor() {
 //│       this.x = a;
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C"]; 
-//│   };
+//│   });
 //│   return globalThis.Object.freeze(new C1())
 //│ };
 
@@ -37,19 +40,19 @@ fun test(x) =
 //│ let test2;
 //│ test2 = function test(x) {
 //│   let Foo2, tmp;
-//│   Foo2 = function Foo(a1, b1) {
-//│     return globalThis.Object.freeze(new Foo.class(a1, b1));
+//│   Foo2 = function Foo(a, b) {
+//│     return globalThis.Object.freeze(new Foo.class(a, b));
 //│   };
-//│   Object.defineProperty(Foo2, "class", {
-//│   enumerable: true,
-//│     value: class Foo1 {
-//│       constructor(a, b) {
-//│         this.a = a;
-//│         this.b = b;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
+//│   globalThis.Object.freeze(class Foo1 {
+//│     static {
+//│       Foo2.class = this
 //│     }
+//│     constructor(a, b) {
+//│       this.a = a;
+//│       this.b = b;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Foo", ["a", "b"]]; 
 //│   });
 //│   tmp = x + 1;
 //│   return Foo2(x, tmp)
@@ -65,7 +68,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.66: 	test()
+//│ ║  l.69: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

@@ -5,19 +5,22 @@
 module None
 //│ JS (unsanitized):
 //│ let None1;
-//│ (class None {
+//│ globalThis.Object.freeze(class None {
 //│   static {
-//│     None1 = None;
+//│     None1 = this
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "None"]; 
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "None"]; 
 //│ });
 
 :sjs
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = module None
+//│ = class None
 
 :sjs
 :re
@@ -26,11 +29,23 @@ None()
 //│ runtime.safeCall(None1())
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor None cannot be invoked without 'new'
 
-:sjs
+:e
 new None
+//│ ╔══[ERROR] Expected a statically known class; found reference denoting module definition 'None'.
+//│ ║  l.33: 	new None
+//│ ║        	    ^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ = None
+
+:sjs
+:e
+new! None
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'None'.
+//│ ║  l.42: 	new! None
+//│ ╙──      	     ^^^^
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new None1())
-//│ = module None
+//│ = None
 
 
 :sjs
@@ -41,32 +56,40 @@ module M with
   val y = x + 1
 //│ JS (unsanitized):
 //│ let M1;
-//│ (class M {
+//│ globalThis.Object.freeze(class M {
 //│   static {
-//│     M1 = M;
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     let tmp;
-//│     this.C = class C {
+//│     globalThis.Object.freeze(class C {
+//│       static {
+//│         M.C = this
+//│       }
 //│       constructor() {}
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "C"]; 
-//│     };
+//│     });
 //│     this.D = function D() {
 //│       return globalThis.Object.freeze(new D.class());
 //│     };
-//│     Object.defineProperty(this.D, "class", {
-//│     enumerable: true,
-//│       value: class D {
-//│         constructor() {}
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "D", []]; 
+//│     globalThis.Object.freeze(class D {
+//│       static {
+//│         M.D.class = this
 //│       }
+//│       constructor() {}
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "D", []]; 
 //│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "M"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
 M.C
@@ -88,8 +111,8 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.89: 	M.oops
-//│ ╙──      	 ^^^^^
+//│ ║  l.112: 	M.oops
+//│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
@@ -101,20 +124,25 @@ module M with
   val m: module M = M
 //│ JS (unsanitized):
 //│ let M3;
-//│ (class M2 {
+//│ globalThis.Object.freeze(class M2 {
 //│   static {
-//│     M3 = M2;
+//│     M3 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.m = M3;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "M"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
 :sjs
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = module M { m: ref'1 } as ref'1
+//│ = class M { m: ref'1 } as ref'1
 
 
 

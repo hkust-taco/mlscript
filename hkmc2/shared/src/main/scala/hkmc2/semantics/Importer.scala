@@ -15,7 +15,7 @@ class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(path: Str): Import =
+  def importPath(path: Str)(using Config): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     

@@ -12,9 +12,7 @@ fun nonsense(xs) = if xs is
 //│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 0, 0));
 //│     ys = rest;
 //│     return ys
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 nonsense([])
@@ -41,9 +39,7 @@ fun lead_and_last(xs) = if xs is
 //│     return x + y
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 lead_and_last(["foo", "bar"])
@@ -86,9 +82,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│     }
 //│   } else if (runtime.Tuple.isArrayLike(xs) && xs.length === 0) {
 //│     return 0
-//│   } else {
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 fun hack(tupleSlice) = if tupleSlice is

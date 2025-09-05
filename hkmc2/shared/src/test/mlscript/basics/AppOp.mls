@@ -81,7 +81,7 @@ pipeInto of 1, inc
 
 :re
 pipeInto @ 1, inc
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
 pipeInto(1, _) @ inc
 //│ = fun

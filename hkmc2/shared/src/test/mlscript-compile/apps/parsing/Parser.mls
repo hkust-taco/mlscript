@@ -23,7 +23,7 @@ open Keywords { opPrecOpt }
 open Rules { termRule, typeRule, declRule, syntaxKinds }
 
 type Opt[A] = Some[A] | None
-type TreeT = Tree.Tree
+type TreeT = Tree
 type StackT[A] = Stack.Cons[A] | Stack.Nil
 
 module Parser with ...

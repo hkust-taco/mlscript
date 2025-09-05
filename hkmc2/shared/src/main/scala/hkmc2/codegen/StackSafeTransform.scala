@@ -118,32 +118,41 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         case _: Call | _: Instantiate => trivial = false
         case _ => ()
     trivial
-
-  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = 
+  
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =
     val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
-      parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
+      parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
     ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
+      owner, isym, sym, k, paramsOpt, auxParams, parentPath,
+      methods.map(rewriteFn),
+      privateFields,
       publicFields, rewriteBlk(preCtor),
-      if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor)
+      rewriteBlk(ctor),
+      mod.map(rewriteObjBody(_, isTopLevel)),
+    )
+  
+  def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
+    ClsLikeBody(
+      defn.isym,
+      defn.methods.map(rewriteFn),
+      defn.privateFields,
+      defn.publicFields,
+      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor),
     )
 
   def rewriteBlk(blk: Block) =
-    var usedDepth = false
-    lazy val curDepth =
-      usedDepth = true
+    val curDepth =
       TempSymbol(None, "curDepth")
     val newBody = transform(blk, curDepth)
-
     if isTrivial(blk) then
       newBody
     else
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
-        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+        .assign(curDepth, stackDepthPath)
         .assign(resSym, Call(checkDepthPath, Nil)(true, true))
         .rest(newBody)
-     
+  
   def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

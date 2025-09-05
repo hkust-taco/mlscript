@@ -1,0 +1,53 @@
+:js
+
+
+object Foo
+
+:fixme // Support?
+new Foo
+//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ║  l.7: 	new Foo
+//│ ║       	    ^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
+
+:re
+new! Foo
+//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
+
+:fixme // Support?
+new! Foo.class
+//│ ╔══[ERROR] Object 'Foo' does not contain member 'class'
+//│ ║  l.19: 	new! Foo.class
+//│ ╙──      	        ^^^^^^
+//│ = Foo
+
+new! Foo!class
+//│ = Foo
+
+:fixme // Support?
+object Bar extends Foo
+//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ║  l.29: 	object Bar extends Foo
+//│ ║        	                   ^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
+
+:e
+:re
+object Bar extends Foo!class
+//│ ╔══[ERROR] Expected a statically known class; found dynamic selection.
+//│ ║  l.38: 	object Bar extends Foo!class
+//│ ║        	                   ^^^^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot redefine property: class
+
+:fixme // Support?
+object Bar extends! Foo!class
+//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ║  l.46: 	object Bar extends! Foo!class
+//│ ║        	                  ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value (...args) => {   runtime.checkArgs("", 1, true, args.length);   let arg = args[0];   return ! arg } is not a constructor or null
+
+

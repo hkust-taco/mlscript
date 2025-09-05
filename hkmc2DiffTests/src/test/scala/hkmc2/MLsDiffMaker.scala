@@ -7,6 +7,7 @@ import utils.*
 
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
+import hkmc2.semantics.Resolvable
 
 import semantics.Elaborator.Ctx
 
@@ -143,13 +144,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     if file != preludeFile then
       given Config = mkConfig
       processTrees(
-        PrefixApp(`import`, N, StrLit(predefFile.toString))
+        PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
         :: Nil)
     if importQQ.isSet then
       given Config = mkConfig
       processTrees(
-        PrefixApp(`import`, N, StrLit(termFile.toString)) :: Nil)
+        PrefixApp(Keywrd(`import`), StrLit(termFile.toString)) :: Nil)
     super.init()
   
   
@@ -256,14 +257,20 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+    given Ctx = curCtx
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
     showResolvedTree.get.foreach: post =>
+      case class Unexpanded(origin: Resolvable)
+      val pre: PartialFunction[Product, Product] = 
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
       output(s"Resolved tree:")
-      output(trm.showAsTree(using post))
+      output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     
     if typeCheck.isSet then
       val typer = typing.TypeChecker()

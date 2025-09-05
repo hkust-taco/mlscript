@@ -1,0 +1,132 @@
+:js
+
+
+:e
+class Foo
+class Foo
+//│ ╔══[ERROR] Multiple definitions of symbol 'Foo'
+//│ ╟── defined here
+//│ ║  l.5: 	class Foo
+//│ ║       	^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.6: 	class Foo
+//│ ╙──     	^^^^^^^^^
+
+:e
+class Foo
+object Foo
+//│ ╔══[ERROR] Illegal overloading of class 'Foo'
+//│ ║  l.16: 	class Foo
+//│ ║        	^^^^^^^^^
+//│ ╟── with object of the same name
+//│ ║  l.17: 	object Foo
+//│ ╙──      	^^^^^^^^^^
+
+:e
+object Foo
+class Foo
+//│ ╔══[ERROR] Illegal overloading of class 'Foo'
+//│ ║  l.27: 	class Foo
+//│ ║        	^^^^^^^^^
+//│ ╟── with object of the same name
+//│ ║  l.26: 	object Foo
+//│ ╙──      	^^^^^^^^^^
+
+:e
+fun Foo = 1
+object Foo
+//│ ╔══[ERROR] Illegal overloading of function 'Foo'
+//│ ║  l.36: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with object of the same name
+//│ ║  l.37: 	object Foo
+//│ ╙──      	^^^^^^^^^^
+
+// * Note that this does not report an error at the moment:
+fun Foo: Int
+object Foo
+
+:e
+fun Foo = 1
+object Foo
+class Foo
+//│ ╔══[ERROR] Illegal overloading of function 'Foo'
+//│ ║  l.50: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with object of the same name
+//│ ║  l.51: 	object Foo
+//│ ╙──      	^^^^^^^^^^
+//│ ╔══[ERROR] Not yet supported: overloading of function 'Foo'
+//│ ║  l.50: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.52: 	class Foo
+//│ ╙──      	^^^^^^^^^
+//│ ╔══[ERROR] Illegal overloading of class 'Foo'
+//│ ║  l.52: 	class Foo
+//│ ║        	^^^^^^^^^
+//│ ╟── with object of the same name
+//│ ║  l.51: 	object Foo
+//│ ╙──      	^^^^^^^^^^
+
+
+// TODO: support
+:e
+class Foo
+fun Foo = 1
+//│ ╔══[ERROR] Not yet supported: overloading of function 'Foo'
+//│ ║  l.76: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.75: 	class Foo
+//│ ╙──      	^^^^^^^^^
+
+// TODO: support
+:e
+fun Foo = 1
+module Foo
+//│ ╔══[ERROR] Not yet supported: overloading of function 'Foo'
+//│ ║  l.86: 	fun Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with module of the same name
+//│ ║  l.87: 	module Foo
+//│ ╙──      	^^^^^^^^^^
+
+// TODO: support
+:e
+val Foo = 1
+module Foo
+//│ ╔══[ERROR] Not yet supported: overloading of value 'Foo'
+//│ ║  l.97: 	val Foo = 1
+//│ ║        	^^^^^^^^^^^
+//│ ╟── with module of the same name
+//│ ║  l.98: 	module Foo
+//│ ╙──      	^^^^^^^^^^
+//│ Foo = class Foo
+
+
+:e
+fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ╔══[ERROR] Symbolic name '**' of definition 'f1' is already used
+//│ ║  l.109: 	fun (**) f1(a, b) = "[" + a + " * " + b + "]"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── by sibling member 'f2'
+//│ ║  l.110: 	fun (**) f2(a, b) = "(" + a + " + " + b + ")"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+1 ** 2
+//│ = "(1 + 2)"
+
+:e
+fun (**) t() = 0
+fun (++) t() = 1
+//│ ╔══[ERROR] Multiple definitions of symbol 't'
+//│ ╟── defined here
+//│ ║  l.122: 	fun (**) t() = 0
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── defined here
+//│ ║  l.123: 	fun (++) t() = 1
+//│ ╙──       	^^^^^^^^^^^^^^^^
+
+

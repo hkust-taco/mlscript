@@ -49,10 +49,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         case S(mem: BlockMemberSymbol) =>
           // If the class is declaration-only, we do not need to select the
           // class.
-          if !mem.hasLiftedClass || mem.defn.exists(_.isDeclare.isDefined) then
+          if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then
             lhs.constructor
           else
-            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).withIArgs(Nil)
+            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).resolve
         case _ => lhs.constructor
       lhs.copy(constructor)(lhs.tree, lhs.output)
   
@@ -166,7 +166,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               case S(_) | N =>
                 error(msg"Cannot use this ${ctor.describe} as a pattern" -> ctor.toLoc)
                 normalizeImpl(alternative)
-          case S(S(cls: (ClassSymbol | ModuleSymbol))) if mode.isInstanceOf[MatchMode.StringPrefix] =>
+          case S(S(cls: (ClassSymbol | ModuleOrObjectSymbol))) if mode.isInstanceOf[MatchMode.StringPrefix] =>
             // Match classes and modules are disallowed in the string mode.
             normalizeImpl(alternative)
           case S(S(cls: ClassSymbol)) =>
@@ -178,7 +178,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
               log("BROKEN"); normalizeImpl(alternative)
-          case S(S(mod: ModuleSymbol)) =>
+          case S(S(mod: ModuleOrObjectSymbol)) =>
             validateMatchMode(ctor, mod, mode)
             if validateObjectPattern(pattern, mod, argsOpt) then // TODO(ucs): deduplicate [1]
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
@@ -229,7 +229,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // from the class definitions.
     val (classHead, paramsOpt) = ctorSymbol.defn match
       case N => lastWords(s"Class ${ctorSymbol.name} does not have a definition")
-      case S(cd) => ctorSymbol.id -> cd.paramsOpt
+      // Use the constructor pattern's location for error reporting.
+      case S(cd) => new Tree.Ident(ctorSymbol.name).withLoc(ctorTerm.toLoc) -> cd.paramsOpt
     paramsOpt match
       case S(paramList) => argsOpt match
         case S(args) =>
@@ -276,7 +277,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           case N => true
   
   /** Check whether the object pattern has an argument list. */
-  private def validateObjectPattern(pattern: FlatPattern.ClassLike, mod: ModuleSymbol, argsOpt: Opt[Ls[FlatPattern.Argument]]): Bool = argsOpt match
+  private def validateObjectPattern(pattern: FlatPattern.ClassLike, mod: ModuleOrObjectSymbol, argsOpt: Opt[Ls[FlatPattern.Argument]]): Bool = argsOpt match
     case S(Nil) =>
       // This means the pattern has an unnecessary parameter list.
       error(msg"`${mod.name}` is an object." -> mod.id.toLoc,
@@ -301,7 +302,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   /** Warn about inappropriate annotations used on class or object patterns. */
   private def validateMatchMode(
       ctorTerm: Term,
-      ctorSymbol: ClassSymbol | ModuleSymbol,
+      ctorSymbol: ClassSymbol | ModuleOrObjectSymbol,
       mode: MatchMode
   ): Unit = mode match
     case MatchMode.Default | _: MatchMode.StringPrefix => ()
@@ -324,7 +325,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
-    val call = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(fld(scrutinee)), s"result of unapply")
+    val call = app(sel(ctorTerm, "unapply").resolve, tup(fld(scrutinee)), s"result of unapply")
     val split = tempLet("patternParamMatchResult", call): resultSymbol =>
       if outputSymbols.isEmpty then
         // No need to destruct the result.
@@ -378,7 +379,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       (if extractionArgs.isEmpty then N else S(extractionArgs), patternArgs)
     // Place pattern arguments first, then the scrutinee.
     val unapplyArgs = patternArguments.map(_._1.safeRef |> fld) :+ fld(scrutinee)
-    val unapplyCall = app(sel(ctorTerm, "unapply").withIArgs(Nil), tup(unapplyArgs*), s"result of unapply")
+    val unapplyCall = app(sel(ctorTerm, "unapply").resolve, tup(unapplyArgs*), s"result of unapply")
     val split = buildPatternArguments(patternArguments, tempLet("matchResult", unapplyCall): resultSymbol =>
       extractionArgsOpt match
         case N =>
@@ -644,7 +645,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                   Case.Cls(ctorSym, st) -> lowerSplit(tail, sharedConsequents, cont, topLevel = false)
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, param.id/*FIXME incorrect Ident?*/)(S(param)), blk))
+                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             ctor.symbol.flatMap(_.asClsOrMod) match
               case S(cls: ClassSymbol) if ctx.builtins.virtualClasses contains cls =>
@@ -657,7 +658,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 k(cls, Nil)(unreachableFn)
               case S(cls: ClassSymbol) =>
                 subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
-              case S(mod: ModuleSymbol) =>
+              case S(mod: ModuleOrObjectSymbol) =>
                 subTerm_nonTail(ctor)(k(mod, Nil))
               case N =>
                 // Normalization have already checked the constructor
@@ -681,7 +682,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
     case Split.End =>
       Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
-        Value.Lit(syntax.Tree.StrLit("match error")) :: Nil)) // TODO add failed-match scrutinee info
+        Value.Lit(syntax.Tree.StrLit("match error")).asArg :: Nil)) // TODO add failed-match scrutinee info
   
   import syntax.Keyword.{`if`, `while`}
   

@@ -13,17 +13,13 @@ Foo(42).x
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
-//│       lhs = Ref:
-//│         sym = member:Foo
-//│         iargsLs = N
+//│       lhs = Ref of member:Foo
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
 //│           term = Lit of IntLit of 42
 //│           asc = N
-//│       iargsLs = N
 //│     nme = Ident of "x"
-//│     iargsLs = N
 //│ = 42
 
 
@@ -37,11 +33,8 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref:
-//│       sym = foo
-//│       iargsLs = N
+//│     prefix = Ref of foo
 //│     nme = Ident of "x"
-//│     iargsLs = N
 //│ = 42
 
 
@@ -52,11 +45,8 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref:
-//│       sym = foo
-//│       iargsLs = N
+//│     prefix = Ref of foo
 //│     nme = Ident of "y"
-//│     iargsLs = N
 //│ = 42
 
 
@@ -82,13 +72,9 @@ case
 //│       kw = keyword 'if'
 //│       desugared = Cons:
 //│         head = Branch:
-//│           scrutinee = Ref:
-//│             sym = caseScrut
-//│             iargsLs = N
+//│           scrutinee = Ref of caseScrut
 //│           pattern = ClassLike:
-//│             constructor = Ref:
-//│               sym = member:Foo
-//│               iargsLs = N
+//│             constructor = Ref of member:Foo
 //│             arguments = S of Ls of 
 //│               Term:
 //│                 scrutinee = $param0
@@ -97,12 +83,8 @@ case
 //│             refined = false
 //│           continuation = Let:
 //│             sym = a
-//│             term = Ref:
-//│               sym = $param0
-//│               iargsLs = N
-//│             tail = Else of Ref:
-//│               sym = a
-//│               iargsLs = N
+//│             term = Ref of $param0
+//│             tail = Else of Ref of a
 //│         tail = End
 //│ Lowered:
 //│ Program:
@@ -147,7 +129,9 @@ case
 //│             qual = Ref of globalThis:globalThis
 //│             name = Ident of "Error"
 //│           args = Ls of 
-//│             Lit of StrLit of "match error"
+//│             Arg:
+//│               spread = N
+//│               value = Lit of StrLit of "match error"
 //│         rest = End of ""
 //│     rest = Assign: \
 //│     lhs = $block$res

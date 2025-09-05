@@ -37,25 +37,24 @@ foo(10)
 //│   }
 //│   return tmp
 //│ };
-//│ M3 = class M2 {
-//│   #y$0;
-//│   get y$0() { return this.#y$0; }
-//│   set y$0(value) { this.#y$0 = value; }
+//│ globalThis.Object.freeze(class M2 {
+//│   static {
+//│     M3 = this
+//│   }
 //│   constructor(y$0) {
 //│     this.y$0 = y$0;
 //│   }
+//│   #y$0;
+//│   get y$0() { return this.#y$0; }
+//│   set y$0(value) { this.#y$0 = value; }
 //│   foo() {
 //│     this.y$0 = 2;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
-//│ };
-//│ foo1 = function foo(y) {
-//│   let tmp;
-//│   tmp = M$(false, y);
-//│   return runtime.safeCall(tmp.foo())
-//│ };
+//│ });
+//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return runtime.safeCall(tmp.foo()) };
 //│ foo1(10)
 
 
@@ -120,31 +119,37 @@ fun foo(x, y) =
 //│     return foo3$(M6, x, foo$capture4)
 //│   }
 //│ };
-//│ M5 = class M4 {
+//│ globalThis.Object.freeze(class M4 {
+//│   static {
+//│     M5 = this
+//│   }
+//│   constructor(x$1, foo$capture$0) {
+//│     this.foo$capture$0 = foo$capture$0;
+//│     this.x$1 = x$1;
+//│   }
 //│   #foo$capture$0;
 //│   #x$1;
 //│   get foo$capture$0() { return this.#foo$capture$0; }
 //│   set foo$capture$0(value) { this.#foo$capture$0 = value; }
 //│   get x$1() { return this.#x$1; }
 //│   set x$1(value) { this.#x$1 = value; }
-//│   constructor(x$1, foo$capture$0) {
-//│     this.foo$capture$0 = foo$capture$0;
-//│     this.x$1 = x$1;
-//│   }
 //│   foo2() {
 //│     this.foo$capture$0.y0$ = 2;
 //│     return this.x$1 + this.foo$capture$0.y0$
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
-//│ };
-//│ foo$capture3 = class foo$capture2 {
+//│ });
+//│ globalThis.Object.freeze(class foo$capture2 {
+//│   static {
+//│     foo$capture3 = this
+//│   }
 //│   constructor(y0$) {
 //│     this.y0$ = y0$;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
-//│ };
+//│ });
 //│ foo4 = function foo(x, y) {
 //│   let tmp2, M$1, capture;
 //│   capture = new foo$capture3(y);
@@ -165,35 +170,38 @@ data class A(x) with
   fun getA() = M.getB()
 //│ JS (unsanitized):
 //│ let M7, A1;
-//│ M7 = class M6 {
-//│   #A$instance$0;
-//│   get A$instance$0() { return this.#A$instance$0; }
-//│   set A$instance$0(value) { this.#A$instance$0 = value; }
+//│ globalThis.Object.freeze(class M6 {
+//│   static {
+//│     M7 = this
+//│   }
 //│   constructor(A$instance$0) {
 //│     this.A$instance$0 = A$instance$0;
 //│   }
+//│   #A$instance$0;
+//│   get A$instance$0() { return this.#A$instance$0; }
+//│   set A$instance$0(value) { this.#A$instance$0 = value; }
 //│   getB() {
 //│     return this.A$instance$0.x
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ A1 = function A(x1) {
-//│   return globalThis.Object.freeze(new A.class(x1));
-//│ };
-//│ Object.defineProperty(A1, "class", {
-//│   enumerable: true,
-//│   value: class A {
-//│     constructor(x) {
-//│       this.x = x;
-//│       this.M$ = globalThis.Object.freeze(new M7(this));
-//│     }
-//│     getA() {
-//│       return this.M$.getB()
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1.class = this
 //│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│     this.M$ = globalThis.Object.freeze(new M7(this));
+//│   }
+//│   getA() {
+//│     return this.M$.getB()
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│ });
 
 :expect 2
@@ -246,25 +254,30 @@ module M with
 M.A().get
 //│ JS (unsanitized):
 //│ let M17, tmp5;
-//│ (class M16 {
+//│ globalThis.Object.freeze(class M16 {
 //│   static {
-//│     M17 = M16;
+//│     M17 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     let scrut, tmp6;
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
-//│     Object.defineProperty(this.A, "class", {
-//│     enumerable: true,
-//│       value: class A5 {
-//│         constructor() {}
-//│         get get() {
-//│           return M17.x + M16.x;
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "A", []]; 
+//│     globalThis.Object.freeze(class A5 {
+//│       static {
+//│         M16.A.class = this
 //│       }
+//│       constructor() {}
+//│       get get() {
+//│         return M17.x + M16.x;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", []]; 
 //│     });
-//│     scrut = runtime.safeCall(M16.A());
+//│     scrut = M16.A();
 //│     if (scrut instanceof M16.A.class) {
 //│       tmp6 = 2;
 //│     } else {
@@ -272,10 +285,10 @@ M.A().get
 //│     }
 //│     this.x = tmp6;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "M"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp5 = runtime.safeCall(M17.A());
+//│ tmp5 = M17.A();
 //│ tmp5.get
 //│ = 4
 
@@ -291,6 +304,7 @@ M.B().get
 
 // newA should reference the class symbol
 // newA_B should reference the BlockMemberSymbol
+// note: no warning because A is not lifted
 :lift
 :sjs
 module M with
@@ -315,54 +329,59 @@ M.A(2).newB.newA_B(3).newB.get
 //│   return tmp10
 //│ };
 //│ B2 = function B() {
-//│   return (A$instance$01) => {
-//│     return globalThis.Object.freeze(new B.class()(A$instance$01));
+//│   return (A$instance$0) => {
+//│     return globalThis.Object.freeze(new B.class()(A$instance$0));
 //│   }
 //│ };
-//│ Object.defineProperty(B2, "class", {
-//│   enumerable: true,
-//│   value: class B1 {
-//│     #A$instance$0;
-//│     get A$instance$0() { return this.#A$instance$0; }
-//│     set A$instance$0(value) { this.#A$instance$0 = value; }
-//│     constructor() {
-//│       return (A$instance$0) => {
-//│         this.A$instance$0 = A$instance$0;
-//│         return this;
-//│       }
-//│     }
-//│     get get() {
-//│       return this.A$instance$0.x;
-//│     } 
-//│     newA_B(y) {
-//│       return runtime.safeCall(M21.A(y))
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "B", []]; 
-//│   }
-//│ });
-//│ (class M20 {
+//│ globalThis.Object.freeze(class B1 {
 //│   static {
-//│     M21 = M20;
+//│     B2.class = this
+//│   }
+//│   constructor() {
+//│     return (A$instance$0) => {
+//│       this.A$instance$0 = A$instance$0;
+//│       return this;
+//│     }
+//│   }
+//│   #A$instance$0;
+//│   get A$instance$0() { return this.#A$instance$0; }
+//│   set A$instance$0(value) { this.#A$instance$0 = value; }
+//│   get get() {
+//│     return this.A$instance$0.x;
+//│   } 
+//│   newA_B(y) {
+//│     return M21.A(y)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B", []]; 
+//│ });
+//│ globalThis.Object.freeze(class M20 {
+//│   static {
+//│     M21 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     let scrut;
-//│     this.A = function A(x1) {
-//│       return globalThis.Object.freeze(new A.class(x1));
+//│     this.A = function A(x) {
+//│       return globalThis.Object.freeze(new A.class(x));
 //│     };
-//│     Object.defineProperty(this.A, "class", {
-//│     enumerable: true,
-//│       value: class A7 {
-//│         constructor(x) {
-//│           this.x = x;
-//│         }
-//│         get newA() {
-//│           return runtime.safeCall(M20.A(42));
-//│         } 
-//│         get newB() {
-//│           return B$(false, this);
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│     globalThis.Object.freeze(class A7 {
+//│       static {
+//│         M20.A.class = this
 //│       }
+//│       constructor(x) {
+//│         this.x = x;
+//│       }
+//│       get newA() {
+//│         return M20.A(42);
+//│       } 
+//│       get newB() {
+//│         return B$(false, this);
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", ["x"]]; 
 //│     });
 //│     scrut = 0;
 //│     if (scrut instanceof M20.A.class) {
@@ -371,10 +390,10 @@ M.A(2).newB.newA_B(3).newB.get
 //│       false
 //│     }
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "M"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp7 = runtime.safeCall(M21.A(2));
+//│ tmp7 = M21.A(2);
 //│ tmp8 = runtime.safeCall(tmp7.newB.newA_B(3));
 //│ tmp8.newB.get
 //│ = 3
@@ -404,9 +423,14 @@ module A with
 //│ lambda = (undefined, function () {
 //│   return A10.g
 //│ });
-//│ (class A9 {
+//│ globalThis.Object.freeze(class A9 {
 //│   static {
-//│     A10 = A9;
+//│     A10 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     A9.f();
 //│   }
 //│   static get g() {
@@ -415,8 +439,8 @@ module A with
 //│   static get f() {
 //│     return lambda;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "A"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 
 module A with
@@ -447,9 +471,14 @@ A.x
 //│     return h$(f$member)
 //│   }
 //│ };
-//│ (class A15 {
+//│ globalThis.Object.freeze(class A15 {
 //│   static {
-//│     A16 = A15;
+//│     A16 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     let f, g2, tmp9, tmp10, tmp11;
 //│     f = function f() {
 //│       return 1
@@ -462,13 +491,14 @@ A.x
 //│     tmp11 = tmp9 + tmp10;
 //│     this.x = tmp11;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "A"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 //│ A16.x
 //│ = 2
 
 // private fields in modules
+:sjs
 :fixme
 module A with
   let x = 1
@@ -477,6 +507,29 @@ module A with
     nested()
 A.mtd
 //│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
+//│ JS (unsanitized):
+//│ let nested, A18;
+//│ nested = function nested() {
+//│   return A18.x
+//│ };
+//│ globalThis.Object.freeze(class A17 {
+//│   static {
+//│     A18 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static #x;
+//│   static {
+//│     A17.#x = 1;
+//│   }
+//│   static get mtd() {
+//│     return nested();
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ A18.mtd
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
