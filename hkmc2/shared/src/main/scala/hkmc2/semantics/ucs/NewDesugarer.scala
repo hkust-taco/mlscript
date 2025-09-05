@@ -59,8 +59,7 @@ trait NewDesugarer:
       ((ctx + (ident.name -> symbol)), head ~: End)
     // Interleaved-`do` statements like `{ x is A then 0; do log(1); ... }`.
     case PrefixApp(Keywrd(`do`), rhsTree) =>
-      val symbol = TempSymbol(N, "unused")
-      (ctx, Head.Let(symbol, term(rhsTree)) ~: End)
+      (ctx, Head.Let(TempSymbol(N, "unused"), term(rhsTree)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
     case PrefixApp(Keywrd(`else`), elseTree) => (ctx, Else(term(elseTree)))
@@ -109,7 +108,7 @@ trait NewDesugarer:
       (ctx, split)
     // Unrecognized term split.
     case _ =>
-      // error(msg"Unrecognized term split (${t.describe})" -> t.toLoc)
+      error(msg"Unrecognized term split (${t.describe})" -> t.toLoc)
       (ctx, Else(Term.Error))
   
   protected def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =

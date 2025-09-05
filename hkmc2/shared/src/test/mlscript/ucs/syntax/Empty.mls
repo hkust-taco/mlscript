@@ -29,6 +29,9 @@ if
 //│ ╔══[ERROR] Unrecognized term split (let).
 //│ ║  l.28: 	  let x
 //│ ╙──      	      ^
+//│ ╔══[ERROR] Unrecognized term split (let)
+//│ ║  l.28: 	  let x
+//│ ╙──      	      ^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

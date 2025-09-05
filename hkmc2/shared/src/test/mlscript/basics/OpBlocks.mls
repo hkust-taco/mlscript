@@ -363,6 +363,11 @@ fun f(x) = if x
 //│ ║         	              ^
 //│ ║  l.359: 	  foo(A) then a
 //│ ╙──       	^^
+//│ ╔══[ERROR] Unrecognized term split (juxtaposition)
+//│ ║  l.358: 	fun f(x) = if x
+//│ ║         	              ^
+//│ ║  l.359: 	  foo(A) then a
+//│ ╙──       	^^
 
 
 if 0
