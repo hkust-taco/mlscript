@@ -13,6 +13,9 @@ while false or false do print("ok")
 //│ ╔══[ERROR] Logical `or` is not yet supported.
 //│ ║  l.12: 	while false or false do print("ok")
 //│ ╙──      	      ^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Logical `or` is not yet supported.
+//│ ║  l.12: 	while false or false do print("ok")
+//│ ╙──      	      ^^^^^^^^^^^^^^
 
 
 fun test(x) =
@@ -51,7 +54,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.52: 	true or test(42)
+//│ ║  l.55: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

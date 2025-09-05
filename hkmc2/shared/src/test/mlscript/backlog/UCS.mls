@@ -108,6 +108,13 @@ if
 //│ ╔══[ERROR] Unrecognized term split (true literal).
 //│ ║  l.97: 	  and true
 //│ ╙──      	      ^^^^
+//│ ╔══[ERROR] Unexpected infix use of keyword 'do' here
+//│ ║  l.98: 	  let x = 1
+//│ ║        	          ^
+//│ ║  l.99: 	  and true do
+//│ ║        	^^^^^^^^^^^^^
+//│ ║  l.100: 	    print("ok")
+//│ ╙──       	^^^^^^^^^^^^^^^
 
 // ——— ——— ———
 
@@ -123,23 +130,23 @@ if 1 + 1
     * 2 == 1 then "A"
     |> id is r then r
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ║         	        ^^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Unexpected literal in this operator split inner position
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ║         	           ^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ╙──       	           ^
 //│ ═══[ERROR] Unrecognized term split (reference without resolved definition term).
 //│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.122: 	    * 2 == 4 then "X"
+//│ ║  l.129: 	    * 2 == 4 then "X"
 //│ ╙──       	      ^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -150,7 +157,7 @@ class Some(val v)
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator 'do')
-//│ ║  l.151: 	  Some of [process, rest] do "hi"
+//│ ║  l.158: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
@@ -200,10 +207,10 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.201: 	    Tuple(...elements) then elements
+//│ ║  l.208: 	    Tuple(...elements) then elements
 //│ ╙──       	          ^^^^^^^^^^^
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
-//│ ║  l.201: 	    Tuple(...elements) then elements
+//│ ║  l.208: 	    Tuple(...elements) then elements
 //│ ╙──       	          ^^^^^^^^^^^
 //│ foo = fun foo
 
@@ -221,21 +228,21 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.220: 	fun foo(x) = if x is Foo.
+//│ ║  l.227: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.220: 	fun foo(x) = if x is Foo.
+//│ ║  l.227: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split (operator split).
-//│ ║  l.230: 	fun foo(x) = if x is Foo
+//│ ║  l.237: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.231: 	  .Bar then "Bar"
+//│ ║  l.238: 	  .Bar then "Bar"
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.232: 	  .Foo then "Foo"
+//│ ║  l.239: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———

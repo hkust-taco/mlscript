@@ -624,9 +624,9 @@ extends Importer with ucs.NewDesugarer:
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${desugared.prettyPrint}")
-      // val ssss = this.split(split)
-      // scoped("ucs:nu"):
-      //   log(s"Split:\n${ssss.prettyPrint}")
+      scoped("ucs:nu"):
+        val ssss = this.split(split)
+        log(s"Split:\n${ssss.prettyPrint}")
       Term.OldIfLike(kw.kw, desugared)
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))

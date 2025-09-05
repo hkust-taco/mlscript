@@ -53,7 +53,7 @@ trait NewDesugarer:
   /** Handle the common cases of branches in splits. */
   protected def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
-    case LetLike(`let`, ident: Ident, S(rhsTree), N) =>
+    case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
       val symbol = VarSymbol(ident)
       val head = Head.Let(symbol, term(rhsTree)) 
       ((ctx + (ident.name -> symbol)), head ~: End)
