@@ -16,6 +16,7 @@ import Message.MessageContext
 import scala.annotation.tailrec
 import hkmc2.semantics.Resolver.ICtx.Instance
 import hkmc2.semantics.Term.SynthSel
+import hkmc2.semantics.Resolver.TypSym
 
 object Resolver:
   
@@ -158,6 +159,17 @@ object Resolver:
     val empty = ICtx(N, Map.empty, Map.empty)
     
   def ictx(using ICtx) = summon[ICtx]
+  
+  object TypSym:
+    def unapply(t: Resolvable): Opt[TypeSymbol] = t match
+      case t: Term.Sel => t.typSym
+      case t: Term.SynthSel => t.typSym
+      case t: Term.App => t.typSym
+      case t: Term.TyApp => t.typSym
+      case t: Term.Ref => t.typSym
+      case _ => None
+  
+end Resolver
 
 /**
   * Resolver for the module system.
@@ -279,7 +291,7 @@ class Resolver(tl: TraceLogger)
         case _: Expect.Class => bsym.asCls
       sym.foreach: sym =>
         if sym isnt ctx.builtins.Array then
-          t.expand(S(SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym))))
+          t.expand(S(SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym), S(sym))))
     case _ =>
       ()
   
@@ -768,8 +780,8 @@ class Resolver(tl: TraceLogger)
     
     // FIXME: set typSym for other terms
     def withTypSym(r: Resolvable, sym: TypeSymbol) = r match
-      case t: Term.Sel => t.sym = S(sym)
-      case t: Term.SynthSel => t.sym = S(sym)
+      case t: Term.Sel => t.typSym = S(sym)
+      case t: Term.SynthSel => t.typSym = S(sym)
       case t: Term.App => t.typSym = S(sym)
       case t: Term.TyApp => t.typSym = S(sym)
       case t: Term.Ref => t.typSym = S(sym)
@@ -797,11 +809,31 @@ class Resolver(tl: TraceLogger)
     case _ =>
     
     t match
-    case t @ Apps(base: Resolvable, ass) => base.termDefn match
-      case S(lhsDefn) if lhsDefn.params.length == ass.length =>
+    case t @ Apps(base: Resolvable, ass) => 
+      base.decl match
+      // TODO: Handle class / object annotations.
+      case S(lhsDefn: TermDefinition) if lhsDefn.params.length == ass.length =>
         val sym = lhsDefn.modulefulness.msym
         log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
         sym.map(withTypSym(t, _))
+        log(s"Resolved symbol for ${t}: ${sym}")
+      
+      // TODO: Handle class / object annotations.
+      case S(lhsDefn: Param) if ass.isEmpty =>
+        val sym = lhsDefn.modulefulness.msym
+        log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
+        sym.map(withTypSym(t, _))
+      
+      // TODO: Handle constructors.
+      case S(lhsDefn: ClassDef) if ass.isEmpty =>
+        val sym = lhsDefn.sym
+        log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
+        withTypSym(t, sym)
+        log(s"Resolved symbol for ${t}: ${sym}")
+      case S(lhsDefn: ModuleOrObjectDef) if ass.isEmpty =>
+        val sym = lhsDefn.sym
+        log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
+        withTypSym(t, sym)
         log(s"Resolved symbol for ${t}: ${sym}")
       case _ =>
     case _ =>
@@ -1023,7 +1055,8 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t => t.resolvedSymbol.exists(checkSym)
+      case t @ TypSym(tsym) => checkSym(tsym)
+      case _ => false
   
   def evalsToStaticClass(t: Term): Bool =
     t.resolvedSymbol match

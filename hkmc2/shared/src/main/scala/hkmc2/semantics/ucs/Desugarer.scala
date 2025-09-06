@@ -32,10 +32,10 @@ class Desugarer(elaborator: Elaborator)(using Ctx, Raise, State, Config, UnderCt
   
   // A few helper methods to select useful functions from the runtime.
   private def selectTuple: Term.SynthSel =
-    Term.SynthSel(State.runtimeSymbol.ref(), Ident("Tuple"))(N)
-  private def tupleSlice = Term.SynthSel(selectTuple, Ident("slice"))(N)
-  private def tupleLazySlice = Term.SynthSel(selectTuple, Ident("lazySlice"))(N)
-  private def tupleGet = Term.SynthSel(selectTuple, Ident("get"))(N)
+    Term.SynthSel(State.runtimeSymbol.ref(), Ident("Tuple"))(N, N)
+  private def tupleSlice = Term.SynthSel(selectTuple, Ident("slice"))(N, N)
+  private def tupleLazySlice = Term.SynthSel(selectTuple, Ident("lazySlice"))(N, N)
+  private def tupleGet = Term.SynthSel(selectTuple, Ident("get"))(N, N)
   private def callTupleGet(t: Term, i: Int, s: FlowSymbol): Term =
     val args = PlainFld(t) :: PlainFld(Term.Lit(IntLit(BigInt(i)))) :: Nil
     Term.App(tupleGet, Term.Tup(args)(DummyTup))(DummyApp, N, s)

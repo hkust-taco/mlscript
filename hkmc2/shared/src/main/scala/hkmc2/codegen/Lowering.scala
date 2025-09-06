@@ -369,7 +369,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.hasDeclareModifier.isDefined =>
-          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs)).withLocOf(ref).resolve)(k)
+          return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
           // * Local functions with no parameter lists are getters
           // * and are lowered to functions with an empty parameter list

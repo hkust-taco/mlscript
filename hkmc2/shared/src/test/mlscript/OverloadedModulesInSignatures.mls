@@ -41,6 +41,12 @@ fun f: TrmMod = 42
 // * FIXME: Should compile to term (function) `TrmMod` rather than module `TrmMod`
 :sjs
 fun f = TrmMod
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverse (Resolver.scala:363)
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'TrmMod'.
+//│ ║  l.43: 	fun f = TrmMod
+//│ ║        	        ^^^^^^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
 //│ JS (unsanitized):
 //│ let f5; f5 = function f() { return TrmMod1 };
 
@@ -77,11 +83,23 @@ assertNonModule(ClsMod).whoami
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
 :breakme
 assertNonModule(TypMod).whoami
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverse (Resolver.scala:363)
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'TypMod'.
+//│ ║  l.85: 	assertNonModule(TypMod).whoami
+//│ ║        	                ^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = "module"
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
 :breakme
 assertNonModule(TrmMod).whoami
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverse (Resolver.scala:363)
+//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'TrmMod'.
+//│ ║  l.96: 	assertNonModule(TrmMod).whoami
+//│ ║        	                ^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = "module"
 
 
@@ -91,11 +109,11 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.92: 	fun f(x: Foo): Foo = x
-//│ ╙──      	         ^^^
+//│ ║  l.110: 	fun f(x: Foo): Foo = x
+//│ ╙──       	         ^^^
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.92: 	fun f(x: Foo): Foo = x
-//│ ╙──      	               ^^^
+//│ ║  l.110: 	fun f(x: Foo): Foo = x
+//│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
 
@@ -104,10 +122,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.123: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.123: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

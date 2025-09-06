@@ -54,8 +54,8 @@ sealed trait ResolvableImpl:
       case t: Term.Ref => t.copy()(t.tree, t.refNum, t.typSym)
       case t: Term.App => t.copy()(t.tree, t.typSym, t.resSym)
       case t: Term.TyApp => t.copy()(t.typSym)
-      case t: Term.Sel => t.copy()(t.sym)
-      case t: Term.SynthSel => t.copy()(t.sym)
+      case t: Term.Sel => t.copy()(t.sym, t.typSym)
+      case t: Term.SynthSel => t.copy()(t.sym, t.typSym)
     .withLocOf(this)
     .asInstanceOf
   
@@ -98,6 +98,11 @@ sealed trait ResolvableImpl:
   def dontResolve: this.type = this // TODO rm
   
   def hasExpansion = expansion.isDefined
+  
+  def decl: Opt[Declaration] = resolvedSymbol match
+    case S(sym: BlockLocalSymbol) => sym.decl
+    case S(sym: MemberSymbol[?]) => sym.defn
+    case _ => N
   
   def defn: Opt[Definition] = resolvedSymbol match
     case S(sym: MemberSymbol[?]) => sym.defn
@@ -172,11 +177,16 @@ enum Term extends Statement:
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
-  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
-  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
-  case TyApp(lhs: Term, targs: Ls[Term])(var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
-  case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term, ResolvableImpl
-  case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term, ResolvableImpl
+  case Ref(sym: Symbol)
+    (val tree: Tree.Ident, val refNum: Int, var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+  case App(lhs: Term, rhs: Term)
+    (val tree: Tree.App, var typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
+  case TyApp(lhs: Term, targs: Ls[Term])
+    (var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+  case Sel(prefix: Term, nme: Tree.Ident)
+    (var sym: Opt[FieldSymbol], var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+  case SynthSel(prefix: Term, nme: Tree.Ident)
+    (var sym: Opt[FieldSymbol], var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
@@ -241,11 +251,11 @@ enum Term extends Statement:
       case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
-    Sel(this, id)(sym)
+    Sel(this, id)(sym, N)
   def selNoSym(nme: Str, synth: Bool = false): Sel | SynthSel =
     val id = new Tree.Ident(nme)
     if synth
-    then SynthSel(this, id)(N)
+    then SynthSel(this, id)(N, N)
     else sel(id, N)
   
   def app(args: Term*)(using State) =
@@ -264,8 +274,8 @@ enum Term extends Statement:
     case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.typSym)
     case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.typSym, term.resSym)
     case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.typSym)
-    case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym)
-    case term @ SynthSel(prefix, nme) => SynthSel(prefix.clone, Tree.Ident(nme.name))(term.sym)
+    case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typSym)
+    case term @ SynthSel(prefix, nme) => SynthSel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typSym)
     case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.clone, fld.clone, arrayIdx)
     case term @ Tup(fields) => Tup(fields.map {
       case f: Fld => f.copy(term = f.term.clone, asc = f.asc.map(_.clone))

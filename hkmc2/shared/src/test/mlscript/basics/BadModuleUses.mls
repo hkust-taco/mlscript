@@ -96,7 +96,7 @@ module A with
 module B with
   val a: module A = A
 print(B.a)
-//│ ╔══[ERROR] Unexpected moduleful selection denoting module definition 'A'.
+//│ ╔══[ERROR] Unexpected moduleful selection denoting value definition 'a'.
 //│ ║  l.98: 	print(B.a)
 //│ ╙──      	      ^^^
 //│ > class A
