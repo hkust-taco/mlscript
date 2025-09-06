@@ -52,8 +52,8 @@ sealed trait ResolvableImpl:
   def duplicate: this.type =
     this.match
       case t: Term.Ref => t.copy()(t.tree, t.refNum, t.typSym)
-      case t: Term.App => t.copy()(t.tree, t.sym, t.resSym)
-      case t: Term.TyApp => t.copy()(t.sym)
+      case t: Term.App => t.copy()(t.tree, t.typSym, t.resSym)
+      case t: Term.TyApp => t.copy()(t.typSym)
       case t: Term.Sel => t.copy()(t.sym)
       case t: Term.SynthSel => t.copy()(t.sym)
     .withLocOf(this)
@@ -173,8 +173,8 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
-  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
-  case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[Symbol]) extends Term, ResolvableImpl
+  case App(lhs: Term, rhs: Term)(val tree: Tree.App, var typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
+  case TyApp(lhs: Term, targs: Ls[Term])(var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term, ResolvableImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
@@ -236,8 +236,8 @@ enum Term extends Statement:
       case sel: Sel => sel.sym
       case sel: SynthSel => sel.sym
       case sel: SelProj => sel.sym
-      case app: App => app.sym
-      case tyApp: TyApp => tyApp.sym
+      case app: App => app.typSym
+      case tyApp: TyApp => tyApp.typSym
       case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -262,8 +262,8 @@ enum Term extends Statement:
     case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
     case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
     case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.typSym)
-    case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.sym, term.resSym)
-    case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.sym)
+    case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.typSym, term.resSym)
+    case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.typSym)
     case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym)
     case term @ SynthSel(prefix, nme) => SynthSel(prefix.clone, Tree.Ident(nme.name))(term.sym)
     case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.clone, fld.clone, arrayIdx)

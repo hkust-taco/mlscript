@@ -765,15 +765,13 @@ class Resolver(tl: TraceLogger)
     def withSym(r: Resolvable, sym: FieldSymbol) = r match
       case t: Term.Sel => t.sym = S(sym)
       case t: Term.SynthSel => t.sym = S(sym)
-      case t: Term.App => t.sym = S(sym)
-      case t: Term.TyApp => t.sym = S(sym)
     
     // FIXME: set typSym for other terms
     def withTypSym(r: Resolvable, sym: TypeSymbol) = r match
       case t: Term.Sel => t.sym = S(sym)
       case t: Term.SynthSel => t.sym = S(sym)
-      case t: Term.App => t.sym = S(sym)
-      case t: Term.TyApp => t.sym = S(sym)
+      case t: Term.App => t.typSym = S(sym)
+      case t: Term.TyApp => t.typSym = S(sym)
       case t: Term.Ref => t.typSym = S(sym)
     
     t match
@@ -812,8 +810,9 @@ class Resolver(tl: TraceLogger)
     // If a type application was not resolved to take implicit
     // arguments, then its result symbol is the same as the symbol of its
     // LHS.
-    case t: Term.TyApp if t.sym.isEmpty =>
-      t.sym = t.lhs.resolvedSymbol
+    case t: Term.TyApp if t.typSym.isEmpty =>
+      // FIXME: asInstanceOf
+      t.typSym = t.lhs.resolvedSymbol.asInstanceOf
     case _ =>
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
