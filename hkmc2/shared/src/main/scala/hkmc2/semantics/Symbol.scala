@@ -239,7 +239,7 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
 
 
 /** A TypeSymbol that is not an alias. */
-type BaseTypeSymbol = ClassSymbol
+type BaseTypeSymbol = ClassSymbol | ModuleOrObjectSymbol
 
 type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
 

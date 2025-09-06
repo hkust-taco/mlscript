@@ -51,7 +51,7 @@ sealed trait ResolvableImpl:
 
   def duplicate: this.type =
     this.match
-      case t: Term.Ref => t.copy()(t.tree, t.refNum, t.resSym)
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, t.typSym)
       case t: Term.App => t.copy()(t.tree, t.sym, t.resSym)
       case t: Term.TyApp => t.copy()(t.sym)
       case t: Term.Sel => t.copy()(t.sym)
@@ -172,7 +172,7 @@ enum Term extends Statement:
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
-  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var resSym: Opt[Symbol]) extends Term, ResolvableImpl
+  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int, var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case App(lhs: Term, rhs: Term)(val tree: Tree.App, var sym: Opt[FieldSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])(var sym: Opt[Symbol]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)(var sym: Opt[FieldSymbol]) extends Term, ResolvableImpl
@@ -232,7 +232,7 @@ enum Term extends Statement:
       case r: Resolvable if r.hasExpansion => r.expanded
       case t => t
     match
-      case ref: Ref => ref.resSym
+      case ref: Ref => ref.symbol
       case sel: Sel => sel.sym
       case sel: SynthSel => sel.sym
       case sel: SelProj => sel.sym
@@ -261,7 +261,7 @@ enum Term extends Statement:
     case Lit(Tree.DecLit(value)) => Lit(Tree.DecLit(value))
     case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
     case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
-    case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.resSym)
+    case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.typSym)
     case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.sym, term.resSym)
     case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.sym)
     case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym)
@@ -380,7 +380,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case _ => desc
   
   def extraInfo: Str = this match
-    case ref: Ref if ref.resSym.isEmpty => ""
+    case ref: Ref => ""
     case r: Resolvable => r.resolvedSymbol.mkString
     case r: SelProj => r.symbol.mkString
     case _ => ""

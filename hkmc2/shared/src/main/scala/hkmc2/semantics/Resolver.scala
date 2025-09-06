@@ -767,7 +767,14 @@ class Resolver(tl: TraceLogger)
       case t: Term.SynthSel => t.sym = S(sym)
       case t: Term.App => t.sym = S(sym)
       case t: Term.TyApp => t.sym = S(sym)
-      case t: Term.Ref => t.resSym = S(sym)
+    
+    // FIXME: set typSym for other terms
+    def withTypSym(r: Resolvable, sym: TypeSymbol) = r match
+      case t: Term.Sel => t.sym = S(sym)
+      case t: Term.SynthSel => t.sym = S(sym)
+      case t: Term.App => t.sym = S(sym)
+      case t: Term.TyApp => t.sym = S(sym)
+      case t: Term.Ref => t.typSym = S(sym)
     
     t match
     case t @ AnySel(lhs: Resolvable, id) =>
@@ -792,22 +799,16 @@ class Resolver(tl: TraceLogger)
     case _ =>
     
     t match
-    case t @ Apps(base: Resolvable, ass) =>
-      base.termDefn match
-        case S(lhsDefn) if lhsDefn.params.length == ass.length =>
-          val sym = lhsDefn.modulefulness.msym
-          log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
-          sym.map(withSym(t, _))
-          log(s"Resolved symbol for ${t}: ${sym}")
-        case _ =>
+    case t @ Apps(base: Resolvable, ass) => base.termDefn match
+      case S(lhsDefn) if lhsDefn.params.length == ass.length =>
+        val sym = lhsDefn.modulefulness.msym
+        log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
+        sym.map(withTypSym(t, _))
+        log(s"Resolved symbol for ${t}: ${sym}")
+      case _ =>
     case _ =>
     
     t match
-    // If a reference was not resolved to take implicit arguments or
-    // return some module type, then its result symbol is the same as
-    // the symbol it refers to.
-    case t: Term.Ref if t.resSym.isEmpty =>
-      t.resSym = S(t.sym)
     // If a type application was not resolved to take implicit
     // arguments, then its result symbol is the same as the symbol of its
     // LHS.

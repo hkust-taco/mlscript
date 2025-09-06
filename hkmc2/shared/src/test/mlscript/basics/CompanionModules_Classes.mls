@@ -11,7 +11,7 @@ C()
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = Ref{member:C} of member:C
+//│     lhs = Ref of member:C
 //│     rhs = Tup of Nil
 //│ = C()
 
@@ -22,7 +22,7 @@ new C
 //│   stats = Nil
 //│   res = New:
 //│     cls = SynthSel{class:C}:
-//│       prefix = Ref{member:C} of member:C
+//│       prefix = Ref of member:C
 //│       nme = Ident of "class"
 //│     args = Nil
 //│     rft = N
@@ -38,7 +38,7 @@ C.empty
 //│   stats = Nil
 //│   res = Sel{member:empty}:
 //│     prefix = SynthSel{module:C}:
-//│       prefix = Ref{member:C} of member:C
+//│       prefix = Ref of member:C
 //│       nme = Ident of "class"
 //│     nme = Ident of "empty"
 //│ = 1
@@ -60,7 +60,7 @@ C.empty
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel{member:empty}:
-//│     prefix = Ref{member:C} of member:C
+//│     prefix = Ref of member:C
 //│     nme = Ident of "empty"
 //│ = 1
 
