@@ -734,8 +734,8 @@ class Resolver(tl: TraceLogger)
   
   /**
    * Resolve the symbol for a resolvable term, which was not resolved by
-   * the elaborator due to unready or missing definitions. Disambiguate
-   * `BlockMemberSymbol`s to concrete ones by checking the `expect` parameter.
+   * the elaborator due to unready definitions. After the symbol
+   * resolution, the term is expanded into the same term, 
    *
    * In particular, for Sel and SynthSel terms, it checks the definition
    * of the prefix (note that the prefix should be resolved before this
@@ -746,11 +746,18 @@ class Resolver(tl: TraceLogger)
    * parameters as an App, even for a generalized "App" that has no
    * parameter list (in order to handle implicit applications), and
    * resolves the symbol for the result of this App.
-   * 
+   *
    * This also expands the LHS `Foo` of a selection to `Foo.class` if
    * the selection is selecting a static member from a lifted module.
    */
   def resolveSymbol(t: Resolvable)(using ictx: ICtx): Unit =
+    // If the term has an expansion already, it is likely that there is
+    // an internal error because otherwise we should resolve the symbol
+    // of the expansion instead.
+    if t.hasExpansion then lastWords:
+      s"resolveSymbol: term ${t} already has an expansion ~> ${t.expanded}, " +
+      s"thus the resolver cannot resolve its symbol"
+    
     // The symbol resolution already failed in the elaborator. We will
     // not try to resolve it again in the resolver.
     if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) then return
