@@ -80,7 +80,7 @@ fun f(): module M = M
 
 :e
 assertNonM(f())
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application without resolved definition.
 //│ ║  l.82: 	assertNonM(f())
 //│ ║        	           ^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -98,7 +98,7 @@ fun f[T](): module MM[T] = MM[T]
 
 :e
 assertNonM(f[Int]())
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'MM'.
+//│ ╔══[ERROR] Unexpected moduleful application without resolved definition.
 //│ ║  l.100: 	assertNonM(f[Int]())
 //│ ║         	           ^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.

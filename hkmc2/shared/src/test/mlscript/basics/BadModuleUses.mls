@@ -17,7 +17,7 @@ module Example with
 
 :e
 let m = Example.foo()
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application without resolved definition.
 //│ ║  l.19: 	let m = Example.foo()
 //│ ╙──      	        ^^^^^^^^^^^^^
 //│ m = class M
@@ -33,7 +33,7 @@ Example.foo()
 
 :e
 id(Example.foo())
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application without resolved definition.
 //│ ║  l.35: 	id(Example.foo())
 //│ ║        	   ^^^^^^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -44,7 +44,7 @@ Example.foo().mtd()
 
 :e
 Example.foo() + 1
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application without resolved definition.
 //│ ║  l.46: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = "class M {   static {     M1 = this   }   constructor() {     runtime.Unit;   }   static mtd(...args) {     runtime.checkArgs(\"mtd\", 0, true, args.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"];  }1"

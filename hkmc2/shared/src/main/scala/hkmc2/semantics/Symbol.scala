@@ -93,7 +93,13 @@ abstract class Symbol(using State) extends Located:
       case S(defn: TypeLikeDef) => S(defn.bsym)
       case S(defn: TermDefinition) => S(defn.sym)
       case N => N
-  
+
+  def asPrincipal = asCls orElse
+    asObj orElse
+    asAls orElse
+    asPat orElse
+    asMod
+
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
     case _ => false

@@ -19,10 +19,7 @@ module N with
 
 :expect 1
 bar
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:203)
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'fun'
-//│ = fun
+//│ = 1
 
 
 :e
@@ -34,10 +31,10 @@ module Example with
   fun foo(): module M = M
 test
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.30: 	fun test = M.mtd()
+//│ ║  l.27: 	fun test = M.mtd()
 //│ ║        	           ^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.32: 	  fun mtd()(using n: Int) = n
+//│ ║  l.29: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
@@ -52,10 +49,10 @@ module Example with
   fun foo(): module M = M
 test
 //│ ╔══[ERROR] Cannot query instance of type Int for call: 
-//│ ║  l.48: 	fun test = Example.foo().mtd()
+//│ ║  l.45: 	fun test = Example.foo().mtd()
 //│ ║        	           ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.50: 	  fun mtd()(using n: Int) = n
+//│ ║  l.47: 	  fun mtd()(using n: Int) = n
 //│ ║        	                  ^^^^^^
 //│ ╙── Missing instance: Expected: Int; Available: Str
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0

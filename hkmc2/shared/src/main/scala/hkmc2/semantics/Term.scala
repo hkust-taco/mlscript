@@ -7,6 +7,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 import Elaborator.State
+import hkmc2.semantics.Resolver.TypSym
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -99,32 +100,19 @@ sealed trait ResolvableImpl:
   
   def hasExpansion = expansion.isDefined
   
-  def decl: Opt[Declaration] = resolvedSymbol match
-    case S(sym: BlockLocalSymbol) => sym.decl
+  def defn: Opt[Definition] = resolvedSym match
     case S(sym: MemberSymbol[?]) => sym.defn
     case _ => N
   
-  def defn: Opt[Definition] = resolvedSymbol match
-    case S(sym: MemberSymbol[?]) => sym.defn
+  def typDefn = resolvedTypSym match
+    case S(tsym) => tsym.defn
     case _ => N
   
   def callableDefn: Opt[CallableDefinition] = defn.flatMap:
     CallableDefinition.fromDefn(_)
   
-  def termDefn: Opt[TermDefinition] = defn match
-    case S(td: TermDefinition) => S(td)
-    case _ => N
-  
-  def typeDefn: Opt[ClassLikeDef] = defn match
-    case S(td: ClassLikeDef) => S(td)
-    case _ => N
-  
-  def singletonDefn: Opt[ModuleOrObjectDef] = defn match
+  def singletonDefn: Opt[ModuleOrObjectDef] = typDefn match
     case S(td: ModuleOrObjectDef) => S(td)
-    case _ => N
-  
-  def moduleDefn: Opt[ModuleOrObjectDef] = defn match
-    case S(td @ ModuleOrObjectDef(kind = Mod)) => S(td)
     case _ => N
 
 object Resolvable:
@@ -235,20 +223,27 @@ enum Term extends Statement:
    * The symbol representing the evaluation result of the term. This
    * symbol is resolved during the resolution stage.
    */
-  def resolvedSymbol: Opt[Symbol] =
-    // TODO: encode mutable symbols into expansions
-    // FIXME: @Harry pls clean up this mess
-    this match
-      case r: Resolvable if r.hasExpansion => r.expanded
-      case t => t
-    match
-      case ref: Ref => ref.symbol
-      case sel: Sel => sel.sym
-      case sel: SynthSel => sel.sym
-      case sel: SelProj => sel.sym
-      case app: App => app.typSym
-      case tyApp: TyApp => tyApp.typSym
-      case _ => N
+  def resolvedSym: Opt[Symbol] = this match
+    case r: Resolvable if r.hasExpansion => r.expanded
+    case t => t
+  match
+    case ref: Ref => ref.symbol
+    case sel: Sel => sel.sym
+    case sel: SynthSel => sel.sym
+    case sel: SelProj => sel.sym
+    case app: TyApp => app.lhs.symbol
+    case _ => N
+  
+  def resolvedTypSym: Opt[TypeSymbol] = this match
+    case r: Resolvable if r.hasExpansion => r.expanded
+    case t => t
+  match
+    case ref: Ref => ref.typSym
+    case app: App => app.typSym
+    case tyapp: TyApp => tyapp.typSym
+    case sel: Sel => sel.typSym
+    case sel: SynthSel => sel.typSym
+    case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
     Sel(this, id)(sym, N)
@@ -390,8 +385,10 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case _ => desc
   
   def extraInfo: Str = this match
-    case ref: Ref => ""
-    case r: Resolvable => r.resolvedSymbol.mkString
+    case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTypSym.isDefined => (
+        r.resolvedSym.map(s => s"sym=${s}") ::
+        r.resolvedTypSym.map(s => s"typ=${s}") :: Nil
+      ).flatten.mkString(",")
     case r: SelProj => r.symbol.mkString
     case _ => ""
   

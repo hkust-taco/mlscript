@@ -140,7 +140,7 @@ object Pattern:
     self: Pattern.Constructor =>
     
     /** Get the resolved symbol of the target term. */
-    def symbol: Opt[Symbol] = self.target.resolvedSymbol
+    def symbol: Opt[Symbol] = self.target.resolvedSym
     
     /** Expect the `symbol` to be set. */
     def symbol_! : Symbol = symbol.getOrElse:
