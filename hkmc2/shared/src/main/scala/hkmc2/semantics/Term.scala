@@ -60,6 +60,24 @@ sealed trait ResolvableImpl:
     .withLocOf(this)
     .asInstanceOf
   
+  def withSym(sym: FieldSymbol): this.type = 
+    this.match
+      case t: Term.Sel => t.copy()(S(sym), t.typSym)
+      case t: Term.SynthSel => t.copy()(S(sym), t.typSym)
+      case _ => lastWords(s"Cannot attach a symbol to a non-selection term: ${this.show}")
+    .withLocOf(this)
+    .asInstanceOf
+  
+  def withTypSym(typSym: TypeSymbol): this.type = 
+    this.match
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typSym))
+      case t: Term.App => t.copy()(t.tree, S(typSym), t.resSym)
+      case t: Term.TyApp => t.copy()(S(typSym))
+      case t: Term.Sel => t.copy()(t.sym, S(typSym))
+      case t: Term.SynthSel => t.copy()(t.sym, S(typSym))
+    .withLocOf(this)
+    .asInstanceOf
+  
   override def show: Str = expansion match
     case S(S(expansion)) => showDbg + "{~>" + expansion.show + "}"
     case _ => showDbg
@@ -69,6 +87,14 @@ sealed trait ResolvableImpl:
     case S(S(t)) => t
     case S(N) => this
     case N => this
+  
+  def expandedIn[T](in: Term => T): T =
+    in(expanded)
+  
+  def expandedResolvableIn[T](in: Resolvable => T): T =
+    expanded match
+      case r: Resolvable => in(r)
+      case t => lastWords(s"Expected a resolvable term, but got ${t.show}.")
 
   /** 
    * Expanding a term to another, which can be later retrieved by the
@@ -90,7 +116,7 @@ sealed trait ResolvableImpl:
     // `expansion.get =/= newExpansion`: Waiting for @Luyu to revamp the
     // desugaring stage so that no same term occurs in different places.
     if this.expansion.isDefined && this.expansion.get =/= expansion then
-      lastWords(s"Cannot expand the term ${this.show} multiple times (to different expansions).")
+      lastWords(s"Cannot expand the term ${this.show} multiple times (to different expansions ${expansion.get.show}).")
     
     this.expansion = S(expansion)
     this
@@ -166,15 +192,15 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Ref(sym: Symbol)
-    (val tree: Tree.Ident, val refNum: Int, var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val tree: Tree.Ident, val refNum: Int, val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, var typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
+    (val tree: Tree.App, val typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])
-    (var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
-    (var sym: Opt[FieldSymbol], var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val sym: Opt[FieldSymbol], val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
-    (var sym: Opt[FieldSymbol], var typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val sym: Opt[FieldSymbol], val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
@@ -224,18 +250,18 @@ enum Term extends Statement:
    * symbol is resolved during the resolution stage.
    */
   def resolvedSym: Opt[Symbol] = this match
-    case r: Resolvable if r.hasExpansion => r.expanded
+    case r: Resolvable => r.expanded
     case t => t
   match
     case ref: Ref => ref.symbol
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym
     case sel: SelProj => sel.sym
-    case app: TyApp => app.lhs.symbol
+    case app: TyApp => app.lhs.resolvedSym
     case _ => N
   
   def resolvedTypSym: Opt[TypeSymbol] = this match
-    case r: Resolvable if r.hasExpansion => r.expanded
+    case r: Resolvable => r.expanded
     case t => t
   match
     case ref: Ref => ref.typSym
