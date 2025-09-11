@@ -34,13 +34,13 @@ x
 :todo
 using Int -> Int = id
 use[Int -> Int](123)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹error› (type parameter T) for call: 
 //│ ║  l.36: 	use[Int -> Int](123)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
 //│ ║        	                 ^^^^^^^^^^^
-//│ ╙── Missing instance: Expected: ‹unspecified› (type parameter T); Available: Int, Str
+//│ ╙── Missing instance: Expected: ‹error› (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
@@ -82,7 +82,7 @@ use{[Some[Int]].value}
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -94,7 +94,7 @@ use{[Some[Int]].value}
 :e
 :re
 use([Some[Int]].value)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
 //│ ║  l.96: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -113,7 +113,7 @@ f[Int]
 :e
 :re
 f
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
 //│ ║  l.115: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
