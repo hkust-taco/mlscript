@@ -82,7 +82,7 @@ use{[Some[Int]].value}
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.81: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -94,7 +94,7 @@ use{[Some[Int]].value}
 :e
 :re
 use([Some[Int]].value)
-//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.96: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
@@ -113,7 +113,7 @@ f[Int]
 :e
 :re
 f
-//│ ╔══[ERROR] Cannot query instance of type ⊤ (type parameter T) for call: 
+//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
 //│ ║  l.115: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 

@@ -65,13 +65,20 @@ object Resolver:
         case Type.App(base, _) => base
         case _ => t
     extension (lhs: Type)
+      private def =:= (rhs: Type): Bool = lhs <= rhs && rhs <= lhs
       private def <= (rhs: Type): Bool = (lhs, rhs) match
         case (_, Type.Top) => true
+        
+        // If LHS/RHS is unspecified (not substituted into a concrete type),
+        // we consider LHS/RHS is always a subtype of LHS/RHS.
+        case (lhs: Type.Ref, rhs @ Type.Ref(_: VarSymbol)) => true
+        case (lhs @ Type.Ref(_: VarSymbol), rhs: Type.Ref) => true
+        
         case (lhs: Type.Ref, rhs: Type.Ref) => lhs === rhs // TODO: subtyping
         case (lhs: Type.App, rhs: Type.App) =>
           lhs.base <= rhs.base
           && (lhs.args.length == rhs.args.length)
-          && (lhs.args zip rhs.args).forall((a, b) => a <= b)
+          && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
         case (lhs: Type.App, rhs) =>
           lhs.base <= rhs
         case (lhs, rhs: Type.App) =>
@@ -88,24 +95,24 @@ object Resolver:
         case (lhs, rhs: Type.Neg) => ???
         case (lhs, rhs: Type.Union) => lhs <= rhs.lhs || lhs <= rhs.rhs
         case (lhs, rhs: Type.Inter) => lhs <= rhs.lhs && lhs <= rhs.rhs
-        case (lhs: Type.Wildcard, rhs: Type.Wildcard) => ???
         case (lhs, rhs) => lhs === rhs
 
     def query(q: Type): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
-      def subst(q: Type) = q.subst:
-        case Type.Ref(sym: VarSymbol) => tEnv(sym)
-        case ty => ty
-      val qq = subst(q)
-      (q, qq) match
-        case (q: Type.Ref, qq @ Type.Top) => L:
+      q match
+        case q @ Type.Ref(sym: VarSymbol) if !tEnv.contains(sym) => L:
           msg"Illegal query for an unspecified type variable ${q.show}." -> N :: Nil
-        case _ => iEnv.getOrElse(qq.key, Nil)
-          .find: (ty, _instance) =>
-            ty <= qq
-          .map: (_ty, instance) =>
-            instance
-          .toRight:
-            msg"Missing instance: Expected: ${showTy(q)}; Available: ${showEnv}" -> N :: Nil
+        case q => 
+          q.subst:
+            case ty @ Type.Ref(sym: VarSymbol) => tEnv.getOrElse(sym, ty)
+            case ty => ty
+          .into: qq =>
+            iEnv.getOrElse(qq.key, Nil)
+              .find: (ty, _instance) =>
+                ty <= qq
+              .map: (_ty, instance) =>
+                instance
+              .toRight:
+                msg"Missing instance: Expected: ${showTy(q)}; Available: ${showEnv}" -> N :: Nil
     
     def showEnv: Str =
       iEnv.values
@@ -116,7 +123,7 @@ object Resolver:
     
     def showTy(ty: Type): Str = ty match
       case Type.Ref(sym: VarSymbol) =>
-        s"${tEnv.get(sym).getOrElse(Type.Top).show} (type parameter ${ty.show})"
+        s"${tEnv.get(sym).map(_.show).getOrElse("‹unspecified›")} (type parameter ${ty.show})"
       case _ => 
         s"${ty.show}"
   
@@ -146,7 +153,7 @@ object Resolver:
     
     case class Instance(sym: Symbol)
     
-    val empty = ICtx(N, Map.empty, Map.empty.withDefault(_ => Type.Top))
+    val empty = ICtx(N, Map.empty, Map.empty)
     
   def ictx(using ICtx) = summon[ICtx]
   
@@ -564,8 +571,8 @@ class Resolver(tl: TraceLogger)
                   case _ => ictx
             case (S(tparams), N) => tparams.foldLeft(ictx): 
               case (ictx, tparam) => 
-                log(s"Resolving App with type arg ${tparam.sym} = ${Type.Top}")
-                ictx.withTypeArg(tparam.sym, Type.Top)
+                log(s"Resolving App with type arg ${tparam.sym} unspecified")
+                ictx
             case (N, _) => ictx
           newICtx
         case N =>
