@@ -10,6 +10,7 @@ import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
 import syntax.Keyword.{`if`}
 import Elaborator.State
 import Resolvable.*
+import typing.Type
 
 import Message.MessageContext
 import scala.annotation.tailrec

@@ -1,7 +1,8 @@
 package hkmc2
-package semantics
+package typing
 
 import mlscript.utils.*, shorthands.*
+import semantics.{TypeSymbol, VarSymbol}
 
 object Type:
 end Type
