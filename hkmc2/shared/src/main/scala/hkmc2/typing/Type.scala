@@ -10,6 +10,7 @@ end Type
 sealed trait TypeArg:
   def subst(f: PartialFunction[Type.Ref, Type]): this.type
   def show: Str
+  def showDbg: Str
   
   def ub = this match
     case Wildcard(_, out) => out
@@ -46,6 +47,23 @@ enum Type extends TypeArg:
     case Inter(l, r) =>
       s"(${l.show} ∧ ${r.show})"
   
+  override def showDbg: Str = this match
+    case Error => "‹error›"
+    case Top => "⊤"
+    case Bot => "⊥"
+    case Ref(sym, Nil) => s"${sym}"
+    case Ref(sym, args) =>
+      s"${sym}[${args.map(_.showDbg).mkString(", ")}]"
+    case Fun(args, ret, eff) =>
+      val effStr = eff.map(e => s" ! ${e.showDbg}").getOrElse("")
+      s"(${args.map(_.showDbg).mkString(", ")}) -> ${ret.showDbg}$effStr"
+    case Neg(t) =>
+      s"¬${t.showDbg}"
+    case Union(l, r) =>
+      s"(${l.showDbg} ∨ ${r.showDbg})"
+    case Inter(l, r) =>
+      s"(${l.showDbg} ∧ ${r.showDbg})"
+  
   override def subst(f: PartialFunction[Ref, Type]): this.type =
     this.match
       case Error => Error
@@ -65,6 +83,10 @@ enum Type extends TypeArg:
         Inter(l.subst(f), r.subst(f))
     .asInstanceOf[this.type]
   
+  def symbol: Opt[TypeSymbol | VarSymbol] = this match
+    case Ref(sym, _) => S(sym)
+    case _ => N
+  
 end Type
 
 case class Wildcard(in: Type, out: Type) extends TypeArg:
@@ -74,7 +96,10 @@ case class Wildcard(in: Type, out: Type) extends TypeArg:
   
   override def show: Str =
     s"? <: ${out.show} >: ${in.show}"
-
+  
+  override def showDbg: Str =
+    s"? <: ${out.showDbg} >: ${in.showDbg}"
+  
 end Wildcard
 
 

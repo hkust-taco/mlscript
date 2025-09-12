@@ -85,7 +85,9 @@ abstract class Symbol(using State) extends Located:
   
   def asClsLike: Opt[ClassSymbol | ModuleOrObjectSymbol | PatternSymbol] =
     (asCls: Opt[ClassSymbol | ModuleOrObjectSymbol | PatternSymbol]) orElse asModOrObj orElse asPat
-  def asTpe: Opt[TypeSymbol] = asCls orElse asAls
+  def asTpe: Opt[TypeSymbol] = asCls
+    .orElse[TypeSymbol](asModOrObj)
+    .orElse[TypeSymbol](asAls)
   
   def asBlkMember: Opt[BlockMemberSymbol] = this match
     case mem: BlockMemberSymbol => S(mem)

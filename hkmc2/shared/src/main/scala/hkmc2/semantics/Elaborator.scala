@@ -1585,12 +1585,10 @@ extends Importer:
   class VarianceTraverser(var changed: Bool = true) extends Traverser:
     override def traverseType(pol: Pol)(trm: Term): Unit = trm match
       case Term.TyApp(lhs, targs) =>
-        lhs.symbol.flatMap(sym => sym.asTpe orElse sym.asMod orElse sym.asObj) match
+        lhs.symbol.flatMap(sym => sym.asTpe) match
           case S(sym: ClassSymbol) =>
             sym.defn match
             case S(td: ClassDef) =>
-              if td.tparams.sizeCompare(targs) =/= 0 then
-                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
               td.tparams.zip(targs).foreach:
                 case (tp, targ) =>
                   if !tp.isContravariant then traverseType(pol)(targ)
@@ -1600,8 +1598,6 @@ extends Importer:
           case S(sym: ModuleOrObjectSymbol) =>
             sym.defn match
             case S(td: ModuleOrObjectDef) =>
-              if td.tparams.sizeCompare(targs) =/= 0 then
-                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
               td.tparams.zip(targs).foreach:
                 case (tp, targ) =>
                   if !tp.isContravariant then traverseType(pol)(targ)
@@ -1612,8 +1608,6 @@ extends Importer:
             // TODO dedup with above...
             sym.defn match
             case S(td: semantics.TypeDef) =>
-              if td.tparams.sizeCompare(targs) =/= 0 then
-                raise(ErrorReport(msg"Wrong number of type arguments" -> trm.toLoc :: Nil)) // TODO BE
               td.tparams.zip(targs).foreach:
                 case (tp, targ) =>
                   if !tp.isContravariant then traverseType(pol)(targ)

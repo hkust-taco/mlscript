@@ -16,7 +16,6 @@ import Message.MessageContext
 import scala.annotation.tailrec
 import hkmc2.semantics.Resolver.ICtx.Instance
 import hkmc2.semantics.Term.SynthSel
-import hkmc2.semantics.Resolver.TypSym
 
 object Resolver:
   
@@ -156,14 +155,6 @@ object Resolver:
     
   def ictx(using ICtx) = summon[ICtx]
   
-  object TypSym:
-    def unapply(t: Resolvable): Opt[TypeSymbol] = t match
-      case t: Term.Sel => t.typSym
-      case t: Term.SynthSel => t.typSym
-      case t: Term.App => t.typSym
-      case t: Term.TyApp => t.typSym
-      case t: Term.Ref => t.typSym
-  
 end Resolver
 
 /**
@@ -286,7 +277,7 @@ class Resolver(tl: TraceLogger)
         case _: Expect.Class => bsym.asCls
       sym.foreach: sym =>
         if sym isnt ctx.builtins.Array then
-          t.expand(S(SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym), S(sym))))
+          t.expand(S(SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym), S(Type.Ref(sym, Nil)))))
     case _ =>
       ()
   
@@ -502,7 +493,7 @@ class Resolver(tl: TraceLogger)
   def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](
     s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", 
-    _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typSym = ${t.resolvedTypSym})"
+    _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = 
@@ -547,7 +538,7 @@ class Resolver(tl: TraceLogger)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
-      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typSym = ${t.resolvedTypSym}: ${defn}")
+      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}: ${defn}")
       
       // Fill the context with possibly the type arguments information.
       val newICtx2 = newICtx1.givenIn:
@@ -765,7 +756,7 @@ class Resolver(tl: TraceLogger)
   def resolveSymbol(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
-    _ => s"-> (sym = ${t.resolvedSym}, typSym = ${t.resolvedTypSym})"
+    _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // If the term has an expansion already, it is likely that there is
     // an internal error because otherwise we should resolve the symbol
@@ -816,8 +807,9 @@ class Resolver(tl: TraceLogger)
                 extraInfo = S(mdef))
       case _ =>
     
+    // * Type Resolution
     t.expandedResolvableIn: t =>
-      log(s"Attempt to resolve typSym for ${t}, sym = ${t.resolvedSym} defn = ${t.defn}")
+      log(s"Attempt to resolve typ for ${t}, sym = ${t.resolvedSym} defn = ${t.defn}")
       t match
       case t @ Apps(base: Resolvable, ass) => 
         base.resolvedSym match
@@ -833,29 +825,34 @@ class Resolver(tl: TraceLogger)
         match
         // TODO: Handle class / object annotations.
         case S(lhsDefn: TermDefinition) if lhsDefn.params.length === ass.length =>
-          log(s"Resolving typSym for ${t}")
-          val sym = lhsDefn.modulefulness.msym
-          sym.foreach(sym => t.expand(S(t.withTypSym(sym))))
-          log(s"Resolved typSym for ${t}: ${sym}")
+          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
+          val ty = lhsDefn.modulefulness.msym.map(Type.Ref(_, Nil))
+          ty.foreach(ty => t.expand(S(t.withTyp(ty))))
+          log(s"Resolved typ for ${t}: ${ty}")
         
         // TODO: Handle class / object annotations.
         case S(lhsDefn: Param) if ass.isEmpty =>
-          log(s"Resolving typSym for ${t}")
-          val sym = lhsDefn.modulefulness.msym
-          sym.foreach(sym => t.expand(S(t.withTypSym(sym))))
-          log(s"Resolved typSym for ${t}: ${sym}")
+          log(s"Resolving typ for ${t}: decl = ${lhsDefn}")
+          val ty = lhsDefn.modulefulness.msym.map(Type.Ref(_, Nil))
+          ty.foreach(ty => t.expand(S(t.withTyp(ty))))
+          log(s"Resolved typ for ${t}: ${ty}")
         
         // TODO: Handle constructors.
         case S(lhsDefn: ClassDef) if ass.isEmpty =>
-          val sym = lhsDefn.sym
-          log(s"Resolving typSym for ${t}: defn = ${lhsDefn}")
-          t.expand(S(t.withTypSym(sym)))
-          log(s"Resolved typSym for ${t}: ${sym}")
+          val ty = Type.Ref(lhsDefn.sym, Nil)
+          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
+          t.expand(S(t.withTyp(ty)))
+          log(s"Resolved typ for ${t}: ${ty}")
         case S(lhsDefn: ModuleOrObjectDef) if ass.isEmpty =>
-          val sym = lhsDefn.sym
-          log(s"Resolving typSym for ${t}: defn = ${lhsDefn}")
-          t.expand(S(t.withTypSym(sym)))
-          log(s"Resolved typSym for ${t}: ${sym}")
+          val ty = Type.Ref(lhsDefn.sym, Nil)
+          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
+          t.expand(S(t.withTyp(ty)))
+          log(s"Resolved typ for ${t}: ${ty}")
+        case S(lhsDefn: TypeDef) if ass.isEmpty =>
+          val ty = Type.Ref(lhsDefn.sym, Nil)
+          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
+          t.expand(S(t.withTyp(ty)))
+          log(s"Resolved typ for ${t}: ${ty}")
         case _ =>
       case _ =>
     
@@ -864,8 +861,8 @@ class Resolver(tl: TraceLogger)
       // If a type application was not resolved to take implicit
       // arguments, then its result symbol is the same as the symbol of its
       // LHS.
-      case t: Term.TyApp if t.typSym.isEmpty =>
-        t.lhs.resolvedTypSym.foreach(sym => t.expand(S(t.withTypSym(sym))))
+      case t: Term.TyApp if t.typ.isEmpty =>
+        t.lhs.resolvedTyp.foreach(typ => t.expand(S(t.withTyp(typ))))
       case _ =>
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
@@ -960,7 +957,7 @@ class Resolver(tl: TraceLogger)
       case expect: Module => t.asModulefulType match
         case S(m) => checkTypeArity(m)
         case N => raise:
-          log(s"Error: no moduelful type defn in ${t.resolvedTypSym}, ${t.resolvedTypSym.flatMap(_.asBlkMember).map(_.trees)}")
+          log(s"Error: no moduelful type defn in ${t.resolvedTyp}, ${t.resolvedTyp.flatMap(_.symbol).flatMap(_.asBlkMember).map(_.trees)}")
           ErrorReport(msg"Expected a module type; found ${t.describe}." -> t.toLoc
             :: expect.message)
       case expect: NonModule => t.asNonModulefulType match
@@ -968,13 +965,13 @@ class Resolver(tl: TraceLogger)
         case S(S(_)) => ()
         case S(N) => ()
         case N => raise:
-          log(s"Error: no non-moduleful type defn in ${t.resolvedTypSym}, ${t.resolvedTypSym.flatMap(_.asBlkMember).map(_.trees)}")
+          log(s"Error: no non-moduleful type defn in ${t.resolvedTyp}, ${t.resolvedTyp.flatMap(_.symbol).flatMap(_.asBlkMember).map(_.trees)}")
           ErrorReport(msg"Expected a non-module type; found ${t.describe}." -> t.toLoc
             :: expect.message)
       case expect: Class => t.asStaticClassType match
         case S(c) => checkTypeArity(c)
         case N => raise:
-          log(s"Error: no statically resolable class defn in ${t.resolvedTypSym.flatMap(_.asBlkMember).map(_.trees)}")
+          log(s"Error: no statically resolable class defn in ${t.resolvedTyp.flatMap(_.symbol).flatMap(_.asBlkMember).map(_.trees)}")
           ErrorReport(msg"Expected a statically resolvable class; found ${t.describe}." -> t.toLoc
             :: expect.message)
       case _ => ()
@@ -1061,18 +1058,20 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t: Resolvable => t.resolvedTypSym match
-        case S(tsym) => checkSym(tsym)
+      case t: Resolvable => t.resolvedTyp match
+        case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
         case N => false
       case _ => false
   
   def evalsToStaticClass(t: Term): Bool =
-    t.resolvedTypSym match
-      case S(sym) => sym.asCls.isDefined
+    t.resolvedTyp match
+      case S(ty) => ty.symbol match
+        case S(sym: TypeSymbol) => sym.asCls.isDefined
+        case _ => false
       case N => false
   
   extension (t: Term)
-    def asModulefulType: Opt[ModuleOrObjectSymbol] = t.resolvedTypSym match
+    def asModulefulType: Opt[ModuleOrObjectSymbol] = t.resolvedTyp.flatMap(_.symbol) match
       case S(sym: FieldSymbol) =>
         sym.asMod
       case _ =>
@@ -1080,13 +1079,13 @@ object ModuleChecker:
     
     def asNonModulefulType: Opt[Opt[Symbol]] = t.resolvedSym match
       case S(sym: FieldSymbol) =>
-        (sym.asTpe orElse sym.asObj).map(S(_))
+        (sym.asCls orElse sym.asObj orElse sym.asAls).map(S(_))
       case S(sym: VarSymbol) if isTypeParam(sym) =>
         S(S(sym))
       case _ =>
         S(N)
     
-    def asStaticClassType: Opt[ClassSymbol] = t.resolvedTypSym match
+    def asStaticClassType: Opt[ClassSymbol] = t.resolvedTyp.flatMap(_.symbol) match
       case S(sym: FieldSymbol) =>
         sym.asCls
       case _ =>

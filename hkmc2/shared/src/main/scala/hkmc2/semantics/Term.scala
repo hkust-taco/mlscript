@@ -7,7 +7,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 import Elaborator.State
-import hkmc2.semantics.Resolver.TypSym
+import hkmc2.typing.Type
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -52,29 +52,29 @@ sealed trait ResolvableImpl:
 
   def duplicate: this.type =
     this.match
-      case t: Term.Ref => t.copy()(t.tree, t.refNum, t.typSym)
-      case t: Term.App => t.copy()(t.tree, t.typSym, t.resSym)
-      case t: Term.TyApp => t.copy()(t.typSym)
-      case t: Term.Sel => t.copy()(t.sym, t.typSym)
-      case t: Term.SynthSel => t.copy()(t.sym, t.typSym)
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, t.typ)
+      case t: Term.App => t.copy()(t.tree, t.typ, t.resSym)
+      case t: Term.TyApp => t.copy()(t.typ)
+      case t: Term.Sel => t.copy()(t.sym, t.typ)
+      case t: Term.SynthSel => t.copy()(t.sym, t.typ)
     .withLocOf(this)
     .asInstanceOf
   
   def withSym(sym: FieldSymbol): this.type = 
     this.match
-      case t: Term.Sel => t.copy()(S(sym), t.typSym)
-      case t: Term.SynthSel => t.copy()(S(sym), t.typSym)
+      case t: Term.Sel => t.copy()(S(sym), t.typ)
+      case t: Term.SynthSel => t.copy()(S(sym), t.typ)
       case _ => lastWords(s"Cannot attach a symbol to a non-selection term: ${this.show}")
     .withLocOf(this)
     .asInstanceOf
   
-  def withTypSym(typSym: TypeSymbol): this.type = 
+  def withTyp(typ: Type): this.type = 
     this.match
-      case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typSym))
-      case t: Term.App => t.copy()(t.tree, S(typSym), t.resSym)
-      case t: Term.TyApp => t.copy()(S(typSym))
-      case t: Term.Sel => t.copy()(t.sym, S(typSym))
-      case t: Term.SynthSel => t.copy()(t.sym, S(typSym))
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typ))
+      case t: Term.App => t.copy()(t.tree, S(typ), t.resSym)
+      case t: Term.TyApp => t.copy()(S(typ))
+      case t: Term.Sel => t.copy()(t.sym, S(typ))
+      case t: Term.SynthSel => t.copy()(t.sym, S(typ))
     .withLocOf(this)
     .asInstanceOf
   
@@ -130,9 +130,11 @@ sealed trait ResolvableImpl:
     case S(sym: MemberSymbol[?]) => sym.defn
     case _ => N
   
-  def typDefn = resolvedTypSym match
-    case S(tsym) => tsym.defn
-    case _ => N
+  def typDefn = resolvedTyp match
+    case S(typ) => typ.symbol match
+      case S(sym: TypeSymbol) => sym.defn
+      case _ => N
+    case N => N
   
   def callableDefn: Opt[CallableDefinition] = defn.flatMap:
     CallableDefinition.fromDefn(_)
@@ -192,15 +194,15 @@ enum Term extends Statement:
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Ref(sym: Symbol)
-    (val tree: Tree.Ident, val refNum: Int, val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val tree: Tree.Ident, val refNum: Int, val typ: Opt[Type]) extends Term, ResolvableImpl
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typSym: Opt[TypeSymbol], val resSym: FlowSymbol) extends Term, ResolvableImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])
-    (val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val typ: Opt[Type]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typSym: Opt[TypeSymbol]) extends Term, ResolvableImpl
+    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
@@ -260,15 +262,15 @@ enum Term extends Statement:
     case app: TyApp => app.lhs.resolvedSym
     case _ => N
   
-  def resolvedTypSym: Opt[TypeSymbol] = this match
+  def resolvedTyp: Opt[Type] = this match
     case r: Resolvable => r.expanded
     case t => t
   match
-    case ref: Ref => ref.typSym
-    case app: App => app.typSym
-    case tyapp: TyApp => tyapp.typSym
-    case sel: Sel => sel.typSym
-    case sel: SynthSel => sel.typSym
+    case ref: Ref => ref.typ
+    case app: App => app.typ
+    case tyapp: TyApp => tyapp.typ
+    case sel: Sel => sel.typ
+    case sel: SynthSel => sel.typ
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -292,11 +294,11 @@ enum Term extends Statement:
     case Lit(Tree.DecLit(value)) => Lit(Tree.DecLit(value))
     case Lit(Tree.BoolLit(value)) => Lit(Tree.BoolLit(value))
     case Lit(Tree.UnitLit(value)) => Lit(Tree.UnitLit(value))
-    case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.typSym)
-    case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.typSym, term.resSym)
-    case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.typSym)
-    case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typSym)
-    case term @ SynthSel(prefix, nme) => SynthSel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typSym)
+    case term @ Ref(sym) => Ref(sym)(Tree.Ident(term.tree.name), term.refNum, term.typ)
+    case term @ App(lhs, rhs) => App(lhs.clone, rhs.clone)(term.tree, term.typ, term.resSym)
+    case term @ TyApp(lhs, targs) => TyApp(lhs.clone, targs.map(_.clone))(term.typ)
+    case term @ Sel(prefix, nme) => Sel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typ)
+    case term @ SynthSel(prefix, nme) => SynthSel(prefix.clone, Tree.Ident(nme.name))(term.sym, term.typ)
     case DynSel(prefix, fld, arrayIdx) => DynSel(prefix.clone, fld.clone, arrayIdx)
     case term @ Tup(fields) => Tup(fields.map {
       case f: Fld => f.copy(term = f.term.clone, asc = f.asc.map(_.clone))
@@ -411,9 +413,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case _ => desc
   
   def extraInfo: Str = this match
-    case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTypSym.isDefined => (
+    case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTyp.isDefined => (
         r.resolvedSym.map(s => s"sym=${s}") ::
-        r.resolvedTypSym.map(s => s"typ=${s}") :: Nil
+        r.resolvedTyp.map(s => s"typ=${s.showDbg}") :: Nil
       ).flatten.mkString(",")
     case r: SelProj => r.symbol.mkString
     case _ => ""
