@@ -8,7 +8,7 @@ object Type:
 end Type
 
 sealed trait TypeArg:
-  def subst(f: Type.Ref => Type): this.type
+  def subst(f: PartialFunction[Type.Ref, Type]): this.type
   def show: Str
   
   def ub = this match
@@ -23,8 +23,7 @@ enum Type extends TypeArg:
   case Error
   case Top
   case Bot
-  case Ref(sym: TypeSymbol | VarSymbol)
-  case App(base: Type, args: Ls[TypeArg])
+  case Ref(sym: TypeSymbol | VarSymbol, args: Ls[TypeArg])
   case Fun(args: Ls[Type], ret: Type, eff: Opt[Type])
   case Neg(t: Type)
   case Union(lhs: Type, rhs: Type)
@@ -34,9 +33,9 @@ enum Type extends TypeArg:
     case Error => "‹error›"
     case Top => "⊤"
     case Bot => "⊥"
-    case Ref(sym) => sym.nme
-    case App(base, args) =>
-      s"${base.show}[${args.map(_.show).mkString(", ")}]"
+    case Ref(sym, Nil) => sym.nme
+    case Ref(sym, args) =>
+      s"${sym.nme}[${args.map(_.show).mkString(", ")}]"
     case Fun(args, ret, eff) =>
       val effStr = eff.map(e => s" ! ${e.show}").getOrElse("")
       s"(${args.map(_.show).mkString(", ")}) -> ${ret.show}$effStr"
@@ -47,15 +46,15 @@ enum Type extends TypeArg:
     case Inter(l, r) =>
       s"(${l.show} ∧ ${r.show})"
   
-  override def subst(f: Ref => Type): this.type =
+  override def subst(f: PartialFunction[Ref, Type]): this.type =
     this.match
       case Error => Error
       case Top => Top
       case Bot => Bot
-      case ref @ Ref(sym) =>
+      case ref: Ref if f.isDefinedAt(ref) =>
         f(ref)
-      case App(base, args) =>
-        App(base.subst(f), args.map(_.subst(f)))
+      case ref: Ref =>
+        Ref(ref.sym, ref.args.map(_.subst(f)))
       case Fun(args, ret, eff) =>
         Fun(args.map(_.subst(f)), ret.subst(f), eff.map(_.subst(f)))
       case Neg(t) =>
@@ -70,7 +69,7 @@ end Type
 
 case class Wildcard(in: Type, out: Type) extends TypeArg:
   
-  override def subst(f: Type.Ref => Type): this.type =
+  override def subst(f: PartialFunction[Type.Ref, Type]): this.type =
     Wildcard(in.subst(f), out.subst(f)).asInstanceOf
   
   override def show: Str =

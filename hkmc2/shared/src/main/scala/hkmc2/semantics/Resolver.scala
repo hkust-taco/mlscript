@@ -62,7 +62,7 @@ object Resolver:
     
     extension (t: Type)
       private def key: Type = t match
-        case Type.App(base, _) => base
+        case Type.Ref(base, _) => Type.Ref(base, Nil)
         case _ => t
     extension (lhs: Type)
       private def =:= (rhs: Type): Bool = lhs <= rhs && rhs <= lhs
@@ -71,18 +71,13 @@ object Resolver:
         
         // If LHS/RHS is unspecified (not substituted into a concrete type),
         // we consider LHS/RHS is always a subtype of LHS/RHS.
-        case (lhs: Type.Ref, rhs @ Type.Ref(_: VarSymbol)) => true
-        case (lhs @ Type.Ref(_: VarSymbol), rhs: Type.Ref) => true
+        case (lhs: Type.Ref, rhs @ Type.Ref(_: VarSymbol, Nil)) => true
+        case (lhs @ Type.Ref(_: VarSymbol, Nil), rhs: Type.Ref) => true
         
-        case (lhs: Type.Ref, rhs: Type.Ref) => lhs === rhs // TODO: subtyping
-        case (lhs: Type.App, rhs: Type.App) =>
-          lhs.base <= rhs.base
+        case (lhs: Type.Ref, rhs: Type.Ref) =>
+          lhs.sym === rhs.sym // TODO: subtyping for Ref
           && (lhs.args.length == rhs.args.length)
           && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
-        case (lhs: Type.App, rhs) =>
-          lhs.base <= rhs
-        case (lhs, rhs: Type.App) =>
-          lhs <= rhs.base
         case (lhs: Type.Fun, rhs: Type.Fun) =>
           (lhs.args.length == rhs.args.length)
           && (lhs.args zip rhs.args).forall((a, b) => b <= a) // contravariant
@@ -99,12 +94,14 @@ object Resolver:
 
     def query(q: Type): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
       q match
-        case q @ Type.Ref(sym: VarSymbol) if !tEnv.contains(sym) => L:
+        case q @ Type.Ref(sym: VarSymbol, args) if !tEnv.contains(sym) => L:
           msg"Illegal query for an unspecified type variable ${q.show}." -> N :: Nil
-        case q => 
+        case q =>
           q.subst:
-            case ty @ Type.Ref(sym: VarSymbol) => tEnv.getOrElse(sym, ty)
-            case ty => ty
+            case ty @ Type.Ref(sym: VarSymbol, Nil) =>
+              tEnv.getOrElse(sym, ty)
+            case ty @ Type.Ref(sym: VarSymbol, args) =>
+              lastWords(s"Unsupported substitution with type arguments")
           .into: qq =>
             iEnv.getOrElse(qq.key, Nil)
               .find: (ty, _instance) =>
@@ -122,8 +119,10 @@ object Resolver:
         .mkStringOr(", ", els = "‹none available›")
     
     def showTy(ty: Type): Str = ty match
-      case Type.Ref(sym: VarSymbol) =>
+      case Type.Ref(sym: VarSymbol, Nil) =>
         s"${tEnv.get(sym).map(_.show).getOrElse("‹unspecified›")} (type parameter ${ty.show})"
+      case Type.Ref(sym: VarSymbol, args) =>
+        s"${tEnv.get(sym).map(_.show).getOrElse("‹unspecified›")}${args.map(_.show).mkString("[", ", ", "]")} (type parameter ${ty.show})"
       case _ => 
         s"${ty.show}"
   
@@ -984,9 +983,13 @@ class Resolver(tl: TraceLogger)
   def resolveType(t: Term): Type = t match
       // If the term is a type application, e.g., T[A, ...], resolve the
       // type constructor and arguments respectively.
-      case Term.TyApp(con, args) =>
-        Type.App(resolveType(con), args.map(resolveType(_)))
-
+      case Term.TyApp(con, args) => resolveType(con) match
+        case Type.Ref(sym, Nil) =>
+          Type.Ref(sym, args.map(resolveType(_)))
+        case _ =>
+          raise(ErrorReport(msg"Expected a type constructor, got ${t.describe}" -> t.toLoc :: Nil))
+          Type.Error
+      
       // Complex types are not supported.
       // TODO: Handle complex types.
       case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup) =>
@@ -996,10 +999,10 @@ class Resolver(tl: TraceLogger)
       case _ => t.symbol match
         // A VarSymbol is probably a type parameter.
         case S(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) =>
-          Type.Ref(sym)
+          Type.Ref(sym, Nil)
         case S(sym) => sym.asTpe match
           case S(tsym) =>
-            Type.Ref(tsym)
+            Type.Ref(tsym, Nil)
           case N =>
             raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
             Type.Error
