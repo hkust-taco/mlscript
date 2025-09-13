@@ -30,6 +30,9 @@ enum Type extends TypeArg:
   case Union(lhs: Type, rhs: Type)
   case Inter(lhs: Type, rhs: Type)
   
+  // A placeholder for types that are not yet implemented.
+  case NotImplemented
+  
   override def show: Str = this match
     case Error => "‹error›"
     case Top => "⊤"
@@ -46,6 +49,7 @@ enum Type extends TypeArg:
       s"(${l.show} ∨ ${r.show})"
     case Inter(l, r) =>
       s"(${l.show} ∧ ${r.show})"
+    case NotImplemented => "‹not implemented›"
   
   override def showDbg: Str = this match
     case Error => "‹error›"
@@ -63,6 +67,7 @@ enum Type extends TypeArg:
       s"(${l.showDbg} ∨ ${r.showDbg})"
     case Inter(l, r) =>
       s"(${l.showDbg} ∧ ${r.showDbg})"
+    case NotImplemented => "‹not implemented›"
   
   override def subst(f: PartialFunction[Ref, Type]): this.type =
     this.match
@@ -81,6 +86,7 @@ enum Type extends TypeArg:
         Union(l.subst(f), r.subst(f))
       case Inter(l, r) =>
         Inter(l.subst(f), r.subst(f))
+      case NotImplemented => NotImplemented
     .asInstanceOf[this.type]
   
   def symbol: Opt[TypeSymbol | VarSymbol] = this match

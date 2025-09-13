@@ -49,6 +49,7 @@ object Resolver:
   ):
     
     def +(typ: Type, ins: Symbol): ICtx = typ match
+      case Type.NotImplemented => lastWords("Cannot add instance with a not-yet implemented type.")
       case Type.Error => this
       case _ => copy(iEnv = 
         iEnv + (typ.key -> ((typ -> ICtx.Instance(ins)) :: iEnv.getOrElse(typ.key, Nil)))  
@@ -91,6 +92,7 @@ object Resolver:
 
     def query(q: Type): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
       q match
+        case Type.NotImplemented => lastWords("Cannot resolve instance for a not-yet implemented type.")
         case q @ Type.Ref(sym: VarSymbol, args) if !tEnv.contains(sym) => L:
           msg"Illegal query for an unspecified type variable ${q.show}." -> N :: Nil
         case q =>
@@ -1000,17 +1002,17 @@ class Resolver(tl: TraceLogger)
           Type.Error
       
       case Term.Lit(_) => if expect.module 
-        then raiseError 
-        else Type.Error // TODO: Support Lit
+        then raiseError
+        else Type.NotImplemented // TODO: Support Lit
       case Term.UnitVal() => if expect.module
-        then raiseError 
-        else Type.Error // TODO: Support UnitVal
+        then raiseError
+        else Type.NotImplemented // TODO: Support UnitVal
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
-        then raiseError 
-        else Type.Error // TODO: Support Lit with operator
+        then raiseError
+        else Type.NotImplemented // TODO: Support Lit with operator
       case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup | Term.Lit) => if expect.module
-        then raiseError 
-        else Type.Error // TODO: Support complex types
+        then raiseError
+        else Type.NotImplemented // TODO: Support complex types
       
       // Otherwise, resolve the term directly.
       case _ => t.resolvedSym match
