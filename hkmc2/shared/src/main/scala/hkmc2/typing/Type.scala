@@ -4,9 +4,6 @@ package typing
 import mlscript.utils.*, shorthands.*
 import semantics.{TypeSymbol, VarSymbol}
 
-object Type:
-end Type
-
 sealed trait TypeArg:
   def subst(f: PartialFunction[Type.Ref, Type]): this.type
   def show: Str
