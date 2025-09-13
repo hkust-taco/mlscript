@@ -947,14 +947,18 @@ class Resolver(tl: TraceLogger)
       raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
       return
     
-    // * Resolve the symbol of the term.
+    val typ = resolveSign(t, expect = expect)
+    
+    // * Resolve the symbol and type of the term.
     t match
-      case t: Resolvable => resolveSymbol(t, prefer = expect)
+      case t: Resolvable =>
+        resolveSymbol(t, prefer = expect)
+        t.expandedResolvableIn(_.withTyp(typ))
       case _ => ()
     
     // * Check if the term satisfies the expectation.
     // * Check the arity of type params/args.
-    resolveSign(t, expect = expect).into: 
+    typ match 
       case Type.Ref(sym: TypeSymbol, targs) if !inAppPrefix =>
         sym.defn.flatMap(CallableDefinition.fromDefn(_)).foreach: 
           case CallableDefinition(tparams = tparams) =>
@@ -976,19 +980,26 @@ class Resolver(tl: TraceLogger)
    * type that it represents.
    */
   def resolveSign(t: Term, expect: Expect): Type = 
-    def raiseError = 
+    def raiseError(sym: Opt[Symbol] = N) =
+      val defnMsg = sym match
+        case S(sym: FieldSymbol) => sym.defn match
+          case S(defn: TermDefinition) => s" denoting ${defn.k.desc} '${defn.sym.nme}'"
+          case S(defn: ClassLikeDef) => s" denoting ${defn.kind.desc} '${defn.sym.nme}'"
+          case _ => ""
+        case _ => ""
+      
       expect match
       case expect: Module => raise:
-        ErrorReport(msg"Expected a module type; found ${t.describe}." -> t.toLoc
+        ErrorReport(msg"Expected a module type; found ${t.describe}${defnMsg}." -> t.toLoc
           :: expect.message)
       case expect: Class => raise:
-        ErrorReport(msg"Expected a statically resolvable class; found ${t.describe}." -> t.toLoc
+        ErrorReport(msg"Expected a statically resolvable class; found ${t.describe}${defnMsg}." -> t.toLoc
           :: expect.message)
       case expect: NonModule => raise:
-        ErrorReport(msg"Expected a non-module type; found ${t.describe}." -> t.toLoc
+        ErrorReport(msg"Expected a non-module type; found ${t.describe}${defnMsg}." -> t.toLoc
           :: expect.message)
       case _ => raise:
-        ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil)
+        ErrorReport(msg"Expected a type, got ${t.describe}${defnMsg}" -> t.toLoc :: Nil)
       Type.Error
     
     t match
@@ -1002,16 +1013,16 @@ class Resolver(tl: TraceLogger)
           Type.Error
       
       case Term.Lit(_) => if expect.module 
-        then raiseError
+        then raiseError()
         else Type.NotImplemented // TODO: Support Lit
       case Term.UnitVal() => if expect.module
-        then raiseError
+        then raiseError()
         else Type.NotImplemented // TODO: Support UnitVal
       case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
-        then raiseError
+        then raiseError()
         else Type.NotImplemented // TODO: Support Lit with operator
       case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup | Term.Lit) => if expect.module
-        then raiseError
+        then raiseError()
         else Type.NotImplemented // TODO: Support complex types
       
       // Otherwise, resolve the term directly.
@@ -1019,19 +1030,19 @@ class Resolver(tl: TraceLogger)
         // A VarSymbol is probably a type parameter.
         case S(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) =>
           if expect.module 
-          then raiseError
+          then raiseError(S(sym))
           else Type.Ref(sym, Nil)
         case S(tsym) =>
           val dtsym = expect match
-          case expect: Module => tsym.asMod.getOrElse(raiseError)
-          case expect: Class => tsym.asCls.getOrElse(raiseError)
-          case expect: NonModule => tsym.asNonModTpe.getOrElse(raiseError)
-          case _ => tsym.asTpe.getOrElse(raiseError)
+          case expect: Module => tsym.asMod.getOrElse(raiseError(S(tsym)))
+          case expect: Class => tsym.asCls.getOrElse(raiseError(S(tsym)))
+          case expect: NonModule => tsym.asNonModTpe.getOrElse(raiseError(S(tsym)))
+          case _ => tsym.asTpe.getOrElse(raiseError(S(tsym)))
           dtsym match
             case dtsym: TypeSymbol => Type.Ref(dtsym, Nil)
             case _ => Type.Error
         case N =>
-          raise(ErrorReport(msg"Expected a type, got ${t.describe} without symbol" -> t.toLoc :: Nil))
+          raise(ErrorReport(msg"Expected a type, got a non-type ${t.describe}" -> t.toLoc :: Nil))
           Type.Error
 
 end Resolver

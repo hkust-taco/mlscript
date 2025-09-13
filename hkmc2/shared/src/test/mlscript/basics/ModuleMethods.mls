@@ -7,7 +7,7 @@ module MM[T]
 
 :e
 fun f(m: M)
-//│ ╔══[ERROR] Expected a non-module type; found reference.
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'M'.
 //│ ║  l.9: 	fun f(m: M)
 //│ ║       	         ^
 //│ ╙── Non-module parameter must have a non-module type.
@@ -67,7 +67,7 @@ fun f() = M
 
 :e
 fun f(): M = M
-//│ ╔══[ERROR] Expected a non-module type; found reference.
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'M'.
 //│ ║  l.69: 	fun f(): M = M
 //│ ║        	         ^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
