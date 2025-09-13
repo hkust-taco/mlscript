@@ -566,11 +566,11 @@ class Resolver(tl: TraceLogger)
                 raise(ErrorReport(msg"Expected ${tparams.length.toString()} type arguments, " +
                   msg"got ${targs.length.toString()}" -> t.toLoc :: Nil))
               (tparams zip targs).foldLeft(ictx):
-                case (ictx, (tparam, targ)) => (tparam.sym, resolveSign(targ, expect = Any)) match
-                  case (sym: VarSymbol, typ) =>
-                    log(s"Resolving App with type arg ${sym} = $typ")
-                    ictx.withTypeArg(sym, typ)
-                  case _ => ictx
+                case (ictx, (tparam, targ)) => 
+                  val sym = tparam.sym
+                  val typ = resolveSign(targ, expect = Any)
+                  log(s"Resolving App with type arg ${sym} = $typ")
+                  ictx.withTypeArg(sym, typ)
             case (S(tparams), N) => tparams.foldLeft(ictx): 
               case (ictx, tparam) => 
                 log(s"Resolving App with type arg ${tparam.sym} unspecified")
