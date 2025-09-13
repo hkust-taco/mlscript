@@ -400,16 +400,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Try(body, finallyDo) => "try expression"
       case s => TODO(s)
     this match
-      case self: Resolvable =>
-        self.defn match
-        case S(df: TermDefinition) =>
-          s"${desc} denoting ${df.k.desc} definition '${df.sym.nme}'"
-        case S(df: ClassLikeDef) =>
-          s"${desc} denoting ${df.kind.desc} definition '${df.sym.nme}'"
-        case S(df: TypeDef) =>
-          s"${desc} denoting type definition '${df.sym.nme}'"
-        case N =>
-          s"${desc} without resolved definition"
+      case self: Resolvable => self.resolvedTyp match
+        case S(typ) => s"${desc} of type ${typ.show}"
+        case N => desc
       case _ => desc
   
   def extraInfo: Str = this match

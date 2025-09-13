@@ -30,7 +30,7 @@ open StrOps
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ║        	 ^^^^^
-//│ ╟── Such annotations are not supported on application without resolved definition terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.29: 	@debug 1 + 2
 //│ ╙──      	       ^^^^^
 //│ = 3
@@ -40,7 +40,7 @@ open StrOps
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ║        	  ^^^^^
-//│ ╟── Such annotations are not supported on application without resolved definition terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.39: 	(@debug 1 + 2)
 //│ ╙──      	        ^^^^^
 //│ = 3
@@ -86,7 +86,7 @@ id(@Log 5)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ║        	 ^
-//│ ╟── Such annotations are not supported on application without resolved definition terms.
+//│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.82: 	@1 + 2 class Qux
 //│ ╙──      	   ^^^
 //│ = 2

@@ -8,7 +8,7 @@ fun testCtor1() = None
 :e
 :ge
 fun testCtor2() = new None
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'None'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type None.
 //│ ║  l.10: 	fun testCtor2() = new None
 //│ ║        	                      ^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

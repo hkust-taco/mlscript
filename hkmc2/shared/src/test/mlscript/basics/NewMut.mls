@@ -66,7 +66,7 @@ let f = mut new Foo
 :e
 :re
 new mut Foo.x
-//│ ╔══[ERROR] Expected a statically known class; found selection without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found selection.
 //│ ║  l.68: 	new mut Foo.x
 //│ ║        	        ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

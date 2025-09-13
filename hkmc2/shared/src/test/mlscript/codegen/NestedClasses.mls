@@ -18,7 +18,7 @@ c(123)
 
 :e
 new c(123)
-//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found reference.
 //│ ║  l.20: 	new c(123)
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

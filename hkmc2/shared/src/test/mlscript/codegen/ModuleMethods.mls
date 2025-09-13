@@ -27,7 +27,7 @@ s(123)
 
 :e
 Example |>. s(123)
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'Example'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type Example.
 //│ ║  l.29: 	Example |>. s(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.

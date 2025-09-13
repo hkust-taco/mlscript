@@ -98,7 +98,7 @@ fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
-//│ ╔══[ERROR] Cannot use this reference without resolved definition as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
 //│ ╙──      	                                              ^
 

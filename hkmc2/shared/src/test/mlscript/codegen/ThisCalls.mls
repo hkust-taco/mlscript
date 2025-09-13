@@ -45,7 +45,7 @@ g(123)
 
 :e
 Example |>. g(123)
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'Example'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type Example.
 //│ ║  l.47: 	Example |>. g(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.

@@ -137,7 +137,7 @@ if 1 + 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
 //│ ║  l.122: 	    * 2 == 4 then "X"
 //│ ╙──       	           ^
-//│ ═══[ERROR] Unrecognized term split (reference without resolved definition term).
+//│ ═══[ERROR] Unrecognized term split (reference term).
 //│ ╔══[ERROR] Unrecognized term split (integer literal).
 //│ ║  l.122: 	    * 2 == 4 then "X"
 //│ ╙──       	      ^

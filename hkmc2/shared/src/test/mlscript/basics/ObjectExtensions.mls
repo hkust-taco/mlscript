@@ -5,7 +5,7 @@ object Foo
 
 :fixme // Support?
 new Foo
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
 //│ ║  l.7: 	new Foo
 //│ ║       	    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -27,7 +27,7 @@ new! Foo!class
 
 :fixme // Support?
 object Bar extends Foo
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
 //│ ║  l.29: 	object Bar extends Foo
 //│ ║        	                   ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -44,7 +44,7 @@ object Bar extends Foo!class
 
 :fixme // Support?
 object Bar extends! Foo!class
-//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found reference.
 //│ ║  l.46: 	object Bar extends! Foo!class
 //│ ║        	                  ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

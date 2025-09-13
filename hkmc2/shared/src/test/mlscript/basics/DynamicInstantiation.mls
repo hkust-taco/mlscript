@@ -49,7 +49,7 @@ new! (id(C))
 :e
 :re
 new id(C)
-//│ ╔══[ERROR] Expected a statically known class; found selection denoting function definition 'id'.
+//│ ╔══[ERROR] Expected a statically known class; found selection.
 //│ ║  l.51: 	new id(C)
 //│ ║        	    ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -57,7 +57,7 @@ new id(C)
 
 :e
 new (id(C))
-//│ ╔══[ERROR] Expected a statically known class; found application without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found application.
 //│ ║  l.59: 	new (id(C))
 //│ ║        	     ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

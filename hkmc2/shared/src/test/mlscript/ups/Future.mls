@@ -93,10 +93,10 @@ pattern Digits = "0" to "9" ~ (Digits | "")
 
 :todo // Extraction parameters.
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╔══[ERROR] Cannot use this reference denoting function definition 'foo' as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.95: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                                   ^^^
-//│ ╔══[ERROR] Cannot use this reference denoting function definition 'foo' as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.95: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ ╙──      	                                   ^^^
 

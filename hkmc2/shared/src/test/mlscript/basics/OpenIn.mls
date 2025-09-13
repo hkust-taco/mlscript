@@ -33,7 +33,7 @@ StrOps.~
 //│ ╔══[ERROR] Name not found: .~
 //│ ║  l.29: 	StrOps.~
 //│ ╙──      	      ^^
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'StrOps'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type StrOps.
 //│ ║  l.29: 	StrOps.~
 //│ ╙──      	^^^^^^
 
