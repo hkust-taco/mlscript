@@ -1,5 +1,6 @@
 
-class Foo
+class Foo with
+  val foo: Foo = new Foo
 
 // * TODO: new-expression should also be resolvable for its type
 :rt
@@ -30,6 +31,57 @@ foo
 //│ Blk:
 //│   stats = Nil
 //│   res = Ref{sym=member:foo,typ=class:Foo} of member:foo
+
+:rt
+foo.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref{sym=member:foo,typ=class:Foo} of member:foo
+//│     nme = Ident of "foo"
+
+class Foo2[A, B] with
+  val foo: Foo2[Int, Str] = new Foo2
+
+// * TODO: new-expression should also be resolvable for its type
+:rt
+new Foo2
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = New:
+//│     cls = Ref{sym=member:Foo2} of member:Foo2
+//│     args = Nil
+//│     rft = N
+
+// * dynamic new-expression shouldn't be resolvable because of dynamic nature
+:rt
+new! Foo2
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = DynNew:
+//│     cls = Ref{sym=member:Foo2} of member:Foo2
+//│     args = Nil
+
+val foo: Foo2[Str, Int] = new Foo2
+
+:rt
+foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:foo,typ=class:Foo2[class:Str, class:Int]} of member:foo
+
+:rt
+foo.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref{sym=member:foo,typ=class:Foo2[class:Str, class:Int]} of member:foo
+//│     nme = Ident of "foo"
 
 :rt
 fun f(x: Foo) = x
