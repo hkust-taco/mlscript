@@ -268,7 +268,7 @@ enum Term extends Statement:
   match
     case ref: Ref => ref.typ
     case app: App => app.typ
-    case tyapp: TyApp => tyapp.typ
+    case app: TyApp => app.typ
     case sel: Sel => sel.typ
     case sel: SynthSel => sel.typ
     case _ => N

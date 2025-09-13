@@ -145,6 +145,13 @@ object Resolver:
       case _: Class => "Class"
       case _: Any => "Any"
   
+  object Expect:
+    def fromModulefulness(mf: Modulefulness): Expect =
+      if mf.modified then
+        Expect.Module(N)
+      else
+        Expect.NonModule(N)
+  
   object ICtx:
     
     case class Instance(sym: Symbol)
@@ -341,7 +348,7 @@ class Resolver(tl: TraceLogger)
     // later.
     
     val evalsToModule = ModuleChecker.evalsToModule(t, prefer = expect)
-    val evalsToStaticClass = ModuleChecker.evalsToStaticClass(t)
+    val evalsToStaticClass = ModuleChecker.isStaticClass(t)
     log(s"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
     
     if expect.`module` && !evalsToModule then
@@ -505,6 +512,7 @@ class Resolver(tl: TraceLogger)
           case _ => 
             resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
         resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         result
       case Term.App(lhs, _) =>
         traverse(lhs, expect = Any)
@@ -514,6 +522,7 @@ class Resolver(tl: TraceLogger)
         resolve(lhs, prefer = prefer, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
         targs.foreach(traverse(_, expect = Any))
         resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.TyApp(lhs, targs) =>
         traverse(lhs, expect = Any)
@@ -523,6 +532,7 @@ class Resolver(tl: TraceLogger)
       case AnySel(pre: Resolvable, id) =>
         resolve(pre, prefer = prefer, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
         resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case AnySel(pre, id) =>
         traverse(pre, expect = Any)
@@ -530,9 +540,11 @@ class Resolver(tl: TraceLogger)
       
       case Term.Ref(_: BlockMemberSymbol) =>
         resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.Ref(_) =>
         resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
@@ -722,7 +734,9 @@ class Resolver(tl: TraceLogger)
             val expansion = expansionFn(t.duplicate)
             t.expand(S(expansion))
             expansion match // * expansion may change the semantics, thus symbol is also changed
-            case r: Resolvable => resolveSymbol(r, prefer = prefer)
+            case r: Resolvable => 
+              resolveSymbol(r, prefer = prefer)
+              resolveType(r, prefer = prefer)
             case _ => ()
           
           (S(defn.copy(params = pss)), ictx)
@@ -759,31 +773,20 @@ class Resolver(tl: TraceLogger)
     // If the term has an expansion already, it is likely that there is
     // an internal error because otherwise we should resolve the symbol
     // of the expansion instead.
-    // if t.hasExpansion then lastWords:
-    //   s"resolveSymbol: term ${t} already has an expansion ~> ${t.expanded}, " +
-    //   s"thus the resolver cannot resolve its symbol"
+    /*
+    if t.hasExpansion then lastWords:
+      s"resolveSymbol: term ${t} already has an expansion ~> ${t.expanded}, " +
+      s"thus the resolver cannot resolve its symbol"
+    */
     // * We can't perform the check because of UCS and handler reusing terms.
-
-    // The symbol resolution already failed in the elaborator. We will
-    // not try to resolve it again in the resolver.
-    if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) then return
-    
-    def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
-      case _: Module => bms.asMod
-      case _: Class => bms.asCls
-      case _: NonModule => 
-        val trmSym = bms.defn match
-        case S(defn: TermDefinition) => S(defn.tsym)
-        case _ => N
-        trmSym orElse bms.asPrincipal
-      case _: Any => bms.defn match
-        case S(defn: TermDefinition) => S(defn.tsym)
-        case S(defn: ClassDef) => S(defn.sym)
-        case S(defn: ModuleOrObjectDef) => S(defn.sym)
-        case _ => N
     
     t.expandedResolvableIn: t =>
-      t.match
+      t match
+      
+      // The symbol resolution already failed in the elaborator. We will
+      // not try to resolve it again in the resolver.
+      case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
+      
       case t @ AnySel(lhs: Resolvable, id) => lhs.expandedResolvableIn: lhs =>
         log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
         lhs.singletonDefn.foreach: mdef =>
@@ -804,13 +807,37 @@ class Resolver(tl: TraceLogger)
                 msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
                 extraInfo = S(mdef))
       case _ =>
-    
-    // * Type Resolution
-    t.expandedResolvableIn: t =>
-      log(s"Attempt to resolve typ for ${t}, sym = ${t.resolvedSym} defn = ${t.defn}")
+  
+  /**
+   * Resolve the type for a resolvable term representing an expression
+   * (as opposed to a term representing a type, i.e., signature). The
+   * resolvable term should should already be symbol-resolved by
+   * `resolveSymbol`. After this type resolution, the resolvable term is
+   * expanded into a copy of the term with the `typ` field set to the
+   * resolved type.
+   */
+  def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
+    trace[Unit](
+      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
+      _ => s"-> typ = ${t.resolvedTyp})"
+    ):
+      def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
+        case _: Module => bms.asMod
+        case _: Class => bms.asCls
+        case _: NonModule => 
+          val trmSym = bms.defn match
+          case S(defn: TermDefinition) => S(defn.tsym)
+          case _ => N
+          trmSym orElse bms.asPrincipal
+        case _: Any => bms.defn match
+          case S(defn: TermDefinition) => S(defn.tsym)
+          case S(defn: ClassDef) => S(defn.sym)
+          case S(defn: ModuleOrObjectDef) => S(defn.sym)
+          case _ => N
+      
       t match
       case t @ Apps(base: Resolvable, ass) => 
-        base.resolvedSym match
+        val decl = base.resolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
             log(s"Disambiguate ${bms} into ${disambBms} (defn = ${disambBms.map(_.defn)})")
@@ -820,48 +847,20 @@ class Resolver(tl: TraceLogger)
           case S(bls: BlockLocalSymbol) => bls.decl
           case S(fs: FieldSymbol) => fs.defn
           case _ => N
-        match
-        // TODO: Handle class / object annotations.
-        case S(lhsDefn: TermDefinition) if lhsDefn.params.length === ass.length =>
-          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
-          val ty = lhsDefn.modulefulness.msym.map(Type.Ref(_, Nil))
+        log(s"Declaration: ${decl}")
+        decl match
+        case S(defn: TermDefinition) if defn.params.length === ass.length =>
+          val ty = defn.sign.map(resolveSign(_, expect = Expect.fromModulefulness(defn.modulefulness)))
           ty.foreach(ty => t.expand(S(t.withTyp(ty))))
-          log(s"Resolved typ for ${t}: ${ty}")
-        
-        // TODO: Handle class / object annotations.
-        case S(lhsDefn: Param) if ass.isEmpty =>
-          log(s"Resolving typ for ${t}: decl = ${lhsDefn}")
-          val ty = lhsDefn.modulefulness.msym.map(Type.Ref(_, Nil))
+        case S(defn: Param) if ass.isEmpty =>
+          val ty = defn.sign.map(resolveSign(_, expect = Expect.fromModulefulness(defn.modulefulness)))
           ty.foreach(ty => t.expand(S(t.withTyp(ty))))
-          log(s"Resolved typ for ${t}: ${ty}")
-        
-        // TODO: Handle constructors.
-        case S(lhsDefn: ClassDef) if ass.isEmpty =>
-          val ty = Type.Ref(lhsDefn.sym, Nil)
-          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
+        case S(defn: ModuleOrObjectDef) if ass.isEmpty =>
+          val ty = Type.Ref(defn.sym, Nil)
           t.expand(S(t.withTyp(ty)))
-          log(s"Resolved typ for ${t}: ${ty}")
-        case S(lhsDefn: ModuleOrObjectDef) if ass.isEmpty =>
-          val ty = Type.Ref(lhsDefn.sym, Nil)
-          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
-          t.expand(S(t.withTyp(ty)))
-          log(s"Resolved typ for ${t}: ${ty}")
-        case S(lhsDefn: TypeDef) if ass.isEmpty =>
-          val ty = Type.Ref(lhsDefn.sym, Nil)
-          log(s"Resolving typ for ${t}: defn = ${lhsDefn}")
-          t.expand(S(t.withTyp(ty)))
-          log(s"Resolved typ for ${t}: ${ty}")
         case _ =>
       case _ =>
-    
-    t.expandedResolvableIn: t =>
-      t match
-      // If a type application was not resolved to take implicit
-      // arguments, then its result symbol is the same as the symbol of its
-      // LHS.
-      case t: Term.TyApp if t.typ.isEmpty =>
-        t.lhs.resolvedTyp.foreach(typ => t.expand(S(t.withTyp(typ))))
-      case _ =>
+  end resolveType
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
     log(s"Resolving implicit argument, expecting a ${p.sign}")
@@ -1089,9 +1088,4 @@ object ModuleChecker:
         case N => false
       case _ => false
   
-  def evalsToStaticClass(t: Term): Bool =
-    t.resolvedTyp match
-      case S(ty) => ty.symbol match
-        case S(sym: TypeSymbol) => sym.asCls.isDefined
-        case _ => false
-      case N => false
+  def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)

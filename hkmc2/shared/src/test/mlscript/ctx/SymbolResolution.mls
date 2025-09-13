@@ -157,17 +157,17 @@ R.bar
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             term = Ref{sym=member:instance$Ident(Int),typ=class:Int} of member:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           term = Ref{sym=member:instance$Ident(Num),typ=class:Num} of member:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         term = Ref{sym=member:instance$Ident(Str),typ=class:Str} of member:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this Ref should be M because of the implicit application
@@ -182,17 +182,17 @@ foo
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             term = Ref{sym=member:instance$Ident(Int),typ=class:Int} of member:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           term = Ref{sym=member:instance$Ident(Num),typ=class:Num} of member:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         term = Ref{sym=member:instance$Ident(Str),typ=class:Str} of member:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
@@ -209,21 +209,21 @@ R.bar[Int]
 //│             prefix = Ref{sym=member:R,typ=module:R} of member:R
 //│             nme = Ident of "bar"
 //│           targs = Ls of 
-//│             Ref{sym=member:Int,typ=class:Int} of member:Int
+//│             Ref{sym=member:Int} of member:Int
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             term = Ref{sym=member:instance$Ident(Int),typ=class:Int} of member:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           term = Ref{sym=member:instance$Ident(Num),typ=class:Num} of member:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         term = Ref{sym=member:instance$Ident(Str),typ=class:Str} of member:instance$Ident(Str)
 //│         asc = N
 
 // the symbol of this TyApp should be M because of the implicit application
@@ -238,19 +238,19 @@ foo[Int]
 //│         lhs = TyApp{sym=member:foo}:
 //│           lhs = Ref{sym=member:foo} of member:foo
 //│           targs = Ls of 
-//│             Ref{sym=member:Int,typ=class:Int} of member:Int
+//│             Ref{sym=member:Int} of member:Int
 //│         rhs = Tup of Ls of 
 //│           Fld:
 //│             flags = ()
-//│             term = Ref{sym=member:instance$Ident(Int)} of member:instance$Ident(Int)
+//│             term = Ref{sym=member:instance$Ident(Int),typ=class:Int} of member:instance$Ident(Int)
 //│             asc = N
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
-//│           term = Ref{sym=member:instance$Ident(Num)} of member:instance$Ident(Num)
+//│           term = Ref{sym=member:instance$Ident(Num),typ=class:Num} of member:instance$Ident(Num)
 //│           asc = N
 //│     rhs = Tup of Ls of 
 //│       Fld:
 //│         flags = ()
-//│         term = Ref{sym=member:instance$Ident(Str)} of member:instance$Ident(Str)
+//│         term = Ref{sym=member:instance$Ident(Str),typ=class:Str} of member:instance$Ident(Str)
 //│         asc = N

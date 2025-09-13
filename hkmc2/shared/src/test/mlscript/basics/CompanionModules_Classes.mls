@@ -22,7 +22,7 @@ new C
 //│   stats = Nil
 //│   res = New:
 //│     cls = SynthSel{sym=class:C,typ=class:C}:
-//│       prefix = Ref{sym=member:C,typ=class:C} of member:C
+//│       prefix = Ref{sym=member:C} of member:C
 //│       nme = Ident of "class"
 //│     args = Nil
 //│     rft = N
