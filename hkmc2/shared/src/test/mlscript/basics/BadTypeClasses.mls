@@ -19,7 +19,6 @@ M.f
 //│ ║        	              ^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 
-
 :todo // support literal type
 using 42 = 42
 use[42]
