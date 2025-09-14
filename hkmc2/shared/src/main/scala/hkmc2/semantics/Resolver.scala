@@ -63,8 +63,8 @@ object Resolver:
         case Type.Ref(base, _) => Type.Ref(base, Nil)
         case _ => t
     extension (lhs: Type)
-      private def =:= (rhs: Type): Bool = lhs <= rhs && rhs <= lhs
-      private def <= (rhs: Type): Bool = (lhs, rhs) match
+      private def =:= (rhs: Type): Bool = lhs <:< rhs && rhs <:< lhs
+      private def <:< (rhs: Type): Bool = (lhs, rhs) match
         case (_, Type.Top) => true
         
         // If LHS/RHS is unspecified (not substituted into a concrete type),
@@ -78,16 +78,16 @@ object Resolver:
           && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
         case (lhs: Type.Fun, rhs: Type.Fun) =>
           (lhs.args.length == rhs.args.length)
-          && (lhs.args zip rhs.args).forall((a, b) => b <= a) // contravariant
-          && (lhs.ret <= rhs.ret) // covariant
+          && (lhs.args zip rhs.args).forall((a, b) => b <:< a) // contravariant
+          && (lhs.ret <:< rhs.ret) // covariant
           && (lhs.eff, rhs.eff).match
             case (N, N) => true
-            case (S(le), S(re)) => le <= re // covariant
+            case (S(le), S(re)) => le <:< re // covariant
             case _ => false
         case (lhs: Type.Neg, rhs) => ???
         case (lhs, rhs: Type.Neg) => ???
-        case (lhs, rhs: Type.Union) => lhs <= rhs.lhs || lhs <= rhs.rhs
-        case (lhs, rhs: Type.Inter) => lhs <= rhs.lhs && lhs <= rhs.rhs
+        case (lhs, rhs: Type.Union) => lhs <:< rhs.lhs || lhs <:< rhs.rhs
+        case (lhs, rhs: Type.Inter) => lhs <:< rhs.lhs && lhs <:< rhs.rhs
         case (lhs, rhs) => lhs === rhs
 
     def query(q: Type): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
@@ -104,7 +104,7 @@ object Resolver:
           .into: qq =>
             iEnv.getOrElse(qq.key, Nil)
               .find: (ty, _instance) =>
-                ty <= qq
+                ty <:< qq
               .map: (_ty, instance) =>
                 instance
               .toRight:
