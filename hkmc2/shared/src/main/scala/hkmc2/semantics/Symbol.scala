@@ -99,6 +99,14 @@ abstract class Symbol(using State) extends Located:
       case S(defn: TermDefinition) => S(defn.sym)
       case N => N
 
+  /** 
+   * Get the symbol as the "representative" symbol of a set of
+   * overloaded definitions, or the sole definition, if it is not
+   * overloaded. 
+   *
+   * We should consider the ordering terms > classes/objects/types >
+   * modules, for this purpose.
+   * */
   def asPrincipal =
     asCls orElse
     asObj orElse
