@@ -99,7 +99,8 @@ abstract class Symbol(using State) extends Located:
       case S(defn: TermDefinition) => S(defn.sym)
       case N => N
 
-  def asPrincipal = asCls orElse
+  def asPrincipal =
+    asCls orElse
     asObj orElse
     asAls orElse
     asPat orElse
