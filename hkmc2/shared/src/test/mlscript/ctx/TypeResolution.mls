@@ -13,7 +13,7 @@ new Foo
 //│     args = Nil
 //│     rft = N
 
-// * TODO: new-expression should also be resolvable for its type
+// * TODO: dynamic new-expression should also be resolvable for its type
 :rt
 new! Foo
 //│ Resolved tree:
