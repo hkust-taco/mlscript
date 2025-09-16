@@ -66,9 +66,6 @@ fun foo(expr1) =
 //│ ╔══[PARSE ERROR] Unexpected identifier here
 //│ ║  l.60: 	  is Error(b) then b
 //│ ╙──      	     ^^^^^
-//│ ╔══[ERROR] Unrecognized term split (identifier).
-//│ ║  l.59: 	  if expr1
-//│ ╙──      	     ^^^^^
 //│ ╔══[ERROR] Unrecognized term split (identifier)
 //│ ║  l.59: 	  if expr1
 //│ ╙──      	     ^^^^^

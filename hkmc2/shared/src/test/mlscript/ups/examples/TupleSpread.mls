@@ -74,13 +74,7 @@ pattern StackLike = ([] => Nil) | ([x, ...StackLike as xs] => x :: xs)
 [1, 2, 3, 4, 5] is StackLike(1 :: 2 :: 3 :: 4 :: 5 :: Nil)
 //│ = true
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 [1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
-//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
-//│ ║  l.80: 	[1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = true
 
 :expect false

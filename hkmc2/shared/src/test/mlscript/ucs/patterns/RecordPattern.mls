@@ -45,9 +45,6 @@ let f = case
 //│ ╔══[ERROR] Name not found: a
 //│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.44: 	  { a: 1 } then a
-//│ ╙──      	                ^
 //│ f = fun
 
 // * OTOH, note that `a` is bound here
@@ -67,10 +64,10 @@ let r = {x: 2, y : 4}
 if r is
   {x:a, y:a} then a
 //│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.68: 	  {x:a, y:a} then a
+//│ ║  l.65: 	  {x:a, y:a} then a
 //│ ║        	          ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.68: 	  {x:a, y:a} then a
+//│ ║  l.65: 	  {x:a, y:a} then a
 //│ ╙──      	     ^
 //│ = 4
 
@@ -186,4 +183,3 @@ is_object(is_object)
 
 :todo
 fun is_record_alt(x) = x is {}
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: encountered empty block

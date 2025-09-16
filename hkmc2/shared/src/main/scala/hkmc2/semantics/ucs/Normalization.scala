@@ -693,13 +693,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // Because the new desugaring logic will cause problems in the compile test,
     // all the test files will then be affected. This is not what I want to see.
     // I want to check and fix the problems file by file.
-    val newSplit = Split.from(t.ssss)
+    val newSplit = t.split.getExpandedSplit
     scoped("ucs:desugared"):
-      log(s"The simple split before desugaring:\n${t.ssss.prettyPrint}")
+      log(s"The simple split before desugaring:\n${t.split.prettyPrint}")
     scoped("ucs:desugared"):
       log(s"Split expanded from the simple split:\n${newSplit.prettyPrint}")
-    val inputSplit = if config.useNewDesugaring then newSplit else t.desugared
-    this(inputSplit, t.kw, S(t), k)
+    this(newSplit, t.kw, S(t), k)
   
   def apply(t: Term.SynthIf)(k: Result => Block)(using Config, Subst): Block =
     this(t.split, `if`, S(t), k)

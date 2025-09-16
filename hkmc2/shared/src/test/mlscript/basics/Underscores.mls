@@ -96,31 +96,16 @@ test({f: print}, 1)
 print(inc(_))
 //│ > fun
 
-:sjs
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 _ is Int
-//│ JS (unsanitized):
-//│ let lambda8;
-//│ lambda8 = (undefined, function (_0, _1) {
-//│   if (globalThis.Number.isInteger(_0)) { return true } else { return false }
-//│ });
-//│ lambda8
 //│ = fun
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 let f = _ is Int
 [f(1), f("1")]
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
+//│ = [true, false]
 //│ f = fun f
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 [1, "a", 3, true] filtering(_ is Int) toArray()
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ = [1, 3]
 
 42 is _
 //│ = true
@@ -147,17 +132,17 @@ mkObj(1, 2)
 :re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[ERROR] Illegal position for '_' placeholder.
-//│ ║  l.148: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.133: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ mkObj = fun mkObj
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.148: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.133: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                  ^
 //│ ═══[RUNTIME ERROR] ReferenceError: y is not defined
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.148: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.133: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                        ^
 //│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
 

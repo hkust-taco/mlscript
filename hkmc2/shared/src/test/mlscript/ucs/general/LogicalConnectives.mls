@@ -6,18 +6,12 @@ true or true
 //│ ╔══[ERROR] Logical `or` is not yet supported.
 //│ ║  l.5: 	true or true
 //│ ╙──     	^^^^^^^^^^^^
-//│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.5: 	true or true
-//│ ╙──     	^^^^^^^^^^^^
 //│ = true
 
 :fixme
 while false or false do print("ok")
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.15: 	while false or false do print("ok")
-//│ ╙──      	      ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.15: 	while false or false do print("ok")
+//│ ║  l.12: 	while false or false do print("ok")
 //│ ╙──      	      ^^^^^^^^^^^^^^
 
 
@@ -55,10 +49,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.56: 	true or test(42)
-//│ ╙──      	^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.56: 	true or test(42)
+//│ ║  l.50: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

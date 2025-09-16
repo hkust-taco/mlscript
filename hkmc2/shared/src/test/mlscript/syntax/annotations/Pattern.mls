@@ -4,54 +4,39 @@ open annotations { compile }
 
 class Box()
 
-:w
+// Now the `@compile` annotation applies to all patterns, while before it could
+// only be used for pattern symbols. Now it expands and compiles the following
+// pattern.
+
 fun foo(x) = if x is @compile Box then "yes" else "no"
-//│ ╔══[WARNING] `@compile` cannot be used on class instance patterns.
-//│ ║  l.8: 	fun foo(x) = if x is @compile Box then "yes" else "no"
-//│ ║       	                      ^^^^^^^
-//│ ╙── Note: The `@compile` annotation is for compiling pattern definitions.
 
 object Singleton
 
-:w
 fun foo(x) = if x is @compile Singleton then "yes" else "no"
-//│ ╔══[WARNING] `@compile` cannot be used on object instance patterns.
-//│ ║  l.17: 	fun foo(x) = if x is @compile Singleton then "yes" else "no"
-//│ ║        	                      ^^^^^^^
-//│ ╙── Note: The `@compile` annotation is for compiling pattern definitions.
 
-:e
+
 fun foo(x) = if x is @compile 42 then "yes" else "no"
-//│ ╔══[ERROR] Unrecognized pattern (annotated)
-//│ ║  l.24: 	fun foo(x) = if x is @compile 42 then "yes" else "no"
-//│ ╙──      	                      ^^^^^^^^^^
 
 object do_not_compile
 
 :w
 fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.32: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
+//│ ║  l.23: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ║        	                      ^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.32: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
+//│ ║  l.23: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
 //│ ╙──      	                                     ^^^
-//│ ╔══[WARNING] This annotation is not supported on class instance patterns.
-//│ ║  l.32: 	fun foo(x) = if x is @do_not_compile Box then "yes" else "no"
-//│ ╙──      	                      ^^^^^^^^^^^^^^
 
 :w
 :e
 fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╔══[ERROR] Name not found: name_not_found
-//│ ║  l.45: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
-//│ ╙──      	                      ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Name not found: name_not_found
-//│ ║  l.45: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ║  l.33: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                      ^^^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation is not supported here.
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.45: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
+//│ ║  l.33: 	fun foo(x) = if x is @name_not_found Box then "yes" else "no"
 //│ ╙──      	                                     ^^^
 
 pattern Box' = Box
@@ -61,12 +46,9 @@ fun foo(x) = if x is @compile Box' then "yes" else "no"
 :w
 fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.62: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ║  l.47: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ║        	                      ^^^^^^^^^^^^^^
 //│ ╟── Note: Patterns only support the `@compile` annotation.
-//│ ║  l.62: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
+//│ ║  l.47: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
 //│ ╙──      	                                     ^^^^
-//│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.62: 	fun foo(x) = if x is @do_not_compile Box' then "yes" else "no"
-//│ ║        	                      ^^^^^^^^^^^^^^
-//│ ╙── Note: Patterns (like `Box'`) only support the `@compile` annotation.
+

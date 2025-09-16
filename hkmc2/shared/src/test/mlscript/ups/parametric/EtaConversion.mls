@@ -24,7 +24,7 @@ fun foo(x) = x is Nullable(pattern Char.Letter)
 //│ Normalized:
 //│ >  if
 //│ >    let $patternArgument0$ = (member:Char#0.)Letter‹member:Letter›
-//│ >    let $matchResult = (member:Nullable#666.)unapply($patternArgument0$#0, x#1)
+//│ >    let $matchResult = (member:Nullable#666.)unapply($patternArgument0$#0, x#0)
 //│ >    $matchResult is $runtime.MatchResult.class then true
 //│ >    else false
 

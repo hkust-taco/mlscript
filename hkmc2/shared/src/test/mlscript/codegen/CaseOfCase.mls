@@ -17,10 +17,10 @@ fun test(x) =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test(x) {
-//│   let param0, v, scrut, param01, v1, tmp, tmp1;
+//│   let v, scrut, v1, argument0$, argument0$1, tmp, tmp1;
 //│   if (x instanceof Some1.class) {
-//│     param0 = x.value;
-//│     v = param0;
+//│     argument0$1 = x.value;
+//│     v = argument0$1;
 //│     tmp = v + 1;
 //│     tmp1 = Some1(tmp);
 //│   } else if (x instanceof None1.class) {
@@ -30,8 +30,8 @@ fun test(x) =
 //│   }
 //│   scrut = tmp1;
 //│   if (scrut instanceof Some1.class) {
-//│     param01 = scrut.value;
-//│     v1 = param01;
+//│     argument0$ = scrut.value;
+//│     v1 = argument0$;
 //│     return Predef.print(v1)
 //│   } else if (scrut instanceof None1.class) {
 //│     return Predef.print("none")

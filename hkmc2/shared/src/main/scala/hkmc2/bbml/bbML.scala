@@ -73,7 +73,7 @@ object BbCtx:
 end BbCtx
 
 
-class BBTyper(using elState: Elaborator.State, tl: TL):
+class BBTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
@@ -258,7 +258,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val res = freshVar(new TempSymbol(S(blk), "ctx"))(using ctx)
       constrain(bodyCtx, sk | res)
       (bodyTy, rhsCtx | res, rhsEff | bodyEff)
-    case Term.IfLike(Keyword.`if`, Split.Let(_, cond, Split.Cons(Branch(_, FlatPattern.Lit(BoolLit(true)), Split.Else(cons)), Split.Else(alts))), _) =>
+    case Term.IfLike(Keyword.`if`, SimpleSplit.IfThenElse(cond, cons, alts)) =>
       val (condTy, condCtx, condEff) = typeCode(cond)
       val (consTy, consCtx, consEff) = typeCode(cons)
       val (altsTy, altsCtx, altsEff) = typeCode(alts)
@@ -363,8 +363,8 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       given BbCtx = nextCtx
       constrain(ascribe(term, skolemize(pt))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
-    case (Term.IfLike(Keyword.`if`, branches, _), ty) => // * propagate
-      typeSplit(branches, S(ty))
+    case (Term.IfLike(Keyword.`if`, split), ty) => // * propagate
+      typeSplit(split.getExpandedSplit, S(ty))
     case (Term.Asc(term, ty), rhs) =>
       ascribe(term, typeType(ty))
       ascribe(term, rhs)
@@ -550,7 +550,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       case Term.Asc(term, ty) =>
         val res = typeType(ty)(using ctx)
         ascribe(term, res)
-      case Term.IfLike(Keyword.`if`, branches, _) => typeSplit(branches, N)
+      case Term.IfLike(Keyword.`if`, split) => typeSplit(split.getExpandedSplit, N)
       case reg @ Term.Region(sym, body) =>
         val sk = freshReg(sym)(using ctx)
         val nestCtx = ctx.nestReg(sk)

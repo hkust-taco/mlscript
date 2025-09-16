@@ -184,7 +184,7 @@ enum Term extends Statement:
   // I know the name `ssss` is ugly! For now, the old and new desugarers exist
   // together. Once I remove the old desugarer, `ssss` will replace `desugared`
   // and become the normal `Split`.
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split, ssss: SimpleSplit)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: SimpleSplit)
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
    *  split are correctly resolved. In the future, we might look for a way to
@@ -284,7 +284,7 @@ enum Term extends Statement:
       case f: Fld => f.copy(term = f.term.clone, asc = f.asc.map(_.clone))
       case s: Spd => s.copy(term = s.term.clone)
     })(term.tree)
-    case IfLike(kw, desugared, ssss) => IfLike(kw, desugared, ssss) // desugared is Split, which is immutable
+    case IfLike(kw, split) => IfLike(kw, split)
     case Lam(params, body) => Lam(params, body.clone)
     case FunTy(lhs, rhs, eff) => FunTy(lhs.clone, rhs.clone, eff.map(_.clone))
     case Forall(tvs, outer, body) => Forall(tvs, outer, body.clone)
@@ -349,8 +349,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case DynSel(o, f, _) => "dynamic selection"
       case Tup(fields) => "tuple literal"
       case CtxTup(fields) => "contextual tuple literal"
-      case IfLike(Keyword.`if`, body, _) => "`if` expression"
-      case IfLike(Keyword.`while`, body, _) => "`while` expression"
+      case IfLike(Keyword.`if`, _) => "`if` expression"
+      case IfLike(Keyword.`while`, _) => "`while` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -409,7 +409,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Tup(fields) => fields.flatMap(_.subTerms)
     case Mut(und) => und :: Nil
     case CtxTup(fields) => fields.flatMap(_.subTerms)
-    case IfLike(_, body, _) => body.subTerms
+    case IfLike(_, split) => split.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Rcd(mut, stats) => stats.flatMap(_.subTerms)
@@ -459,7 +459,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
     case t: App => treeOrSubterms(t.tree)
-    case IfLike(kw, desug, _) => desug :: Nil
+    case IfLike(_, split) => split :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
@@ -495,7 +495,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
-    case IfLike(kw, body, _) => s"${kw.name} { ${body.showDbg} }"
+    case IfLike(kw, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>

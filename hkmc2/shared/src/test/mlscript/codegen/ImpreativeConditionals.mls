@@ -14,9 +14,6 @@ fun f(x) =
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
 //│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	           ^^^^^^
-//│ ╔══[ERROR] Unrecognized term split (integer literal).
-//│ ║  l.12: 	  if x < 0 return 0
-//│ ╙──      	         ^
 //│ ╔══[ERROR] Unrecognized term split (integer literal)
 //│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	         ^
@@ -28,13 +25,13 @@ fun hasZeroElement(xs) =
     Cons(hd, tl) do set xs = tl
     Nil return false
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
-//│ ║  l.27: 	    Cons(0, tl) return true
+//│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	                ^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern split (integer literal).
-//│ ║  l.27: 	    Cons(0, tl) return true
+//│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	         ^
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.27: 	    Cons(0, tl) return true
+//│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
 
 

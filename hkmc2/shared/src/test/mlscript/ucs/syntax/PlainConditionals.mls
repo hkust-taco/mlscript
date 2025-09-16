@@ -34,11 +34,6 @@ fun foo(x) = f(x) and g(x) and h(x)
 fun foo(x) = x is
   Pair
   Int
-//│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.35: 	  Pair
-//│ ║        	  ^^^^
-//│ ║  l.36: 	  Int
-//│ ╙──      	^^^^^
 //│ ╔══[ERROR] Unexpected record property pattern.
 //│ ║  l.35: 	  Pair
 //│ ╙──      	  ^^^^
@@ -50,16 +45,11 @@ fun foo(x) = x is
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.51: 	  Pair(a, b) and a > b
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.52: 	  Int
-//│ ╙──      	^^^^^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.51: 	  Pair(a, b) and a > b
+//│ ║  l.46: 	  Pair(a, b) and a > b
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.52: 	  Int
+//│ ║  l.47: 	  Int
 //│ ╙──      	  ^^^
 
 

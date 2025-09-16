@@ -272,7 +272,7 @@ import Elaborator.*
 
 class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 (using val raise: Raise, val state: State)
-extends Importer with ucs.NewDesugarer:
+extends Importer with ucs.SplitElaborator:
   import tl.*
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
@@ -468,13 +468,7 @@ extends Importer with ucs.NewDesugarer:
       Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
-      val des = new ucs.Desugarer(this)(tree)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${des.prettyPrint}")
-      val ssss = shorthandSplit(tree)
-      scoped("ucs:nu"):
-        log(s"Desugared:\n${ssss.prettyPrint}")
-      Term.IfLike(Keyword.`if`, des, ssss)
+      Term.IfLike(Keyword.`if`, shorthandSplit(tree))
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -623,25 +617,14 @@ extends Importer with ucs.NewDesugarer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
-    case tree: IfLike =>
-      val desugared = new ucs.Desugarer(this)(tree)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${desugared.prettyPrint}")
-      val ssss = scoped("ucs:nu"):
-        val ssss = this.split(tree)
-        log(s"Split:\n${ssss.prettyPrint}")
-        ssss
-      Term.IfLike(tree.kw.kw, desugared, ssss)
+    case tree: IfLike => Term.IfLike(tree.kw.kw, split(tree))
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
-    case tree @ Case(_, branches) =>
+    case tree: Case =>
       val scrut = VarSymbol(Ident("caseScrut"))
-      val des = new ucs.Desugarer(this)(tree, scrut)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${des.prettyPrint}")
-      Term.Lam(PlainParamList(
-          Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-        ), Term.IfLike(Keyword.`if`, des, caseSplit(scrut, tree)))
+      val body = Term.IfLike(Keyword.`if`, caseSplit(scrut, tree))
+      val params = Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
+      Term.Lam(PlainParamList(params), body)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -1419,8 +1402,8 @@ extends Importer with ucs.NewDesugarer:
       case N => N
   
   def pattern(t: Tree): Ctxl[Pattern] =
-    import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ups.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
+    import ucs.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
+    import ups.SplitCompiler.isInvalidStringBounds, ucs.extractors.to
     given TraceLogger = tl
     /** Resolve an identifier. We need to perform a very preliminary check to
      *  determine whether this identifier refers to a pattern, a class, an

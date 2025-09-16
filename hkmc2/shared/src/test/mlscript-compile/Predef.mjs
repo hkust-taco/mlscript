@@ -124,10 +124,10 @@ globalThis.Object.freeze(class Predef {
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
       len = rest.length;
-      scrut1 = len == 0;
-      if (scrut1 === true) {
+      scrut = len == 0;
+      if (scrut === true) {
         return first
       } else {
         tmp = len - 1;
@@ -135,8 +135,8 @@ globalThis.Object.freeze(class Predef {
         tmp1 = runtime.safeCall(rest.at(i));
         init = tmp1;
         tmp6: while (true) {
-          scrut = i > 0;
-          if (scrut === true) {
+          scrut1 = i > 0;
+          if (scrut1 === true) {
             tmp2 = i - 1;
             i = tmp2;
             tmp3 = runtime.safeCall(rest.at(i));

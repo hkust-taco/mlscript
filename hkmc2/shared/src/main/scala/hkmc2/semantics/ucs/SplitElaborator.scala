@@ -6,20 +6,19 @@ import mlscript.utils.*, shorthands.*
 import syntax.{Keyword, Tree}, Tree.*
 import Keyword.{`and`, `do`, `else`, `if`, `is`, `let`, `or`, `then`}
 import Elaborator.{Ctx, Ctxl, UnderCtx, ctx}, SimpleSplit.*
-import Desugarer.{Ctor, unapply}, Message.MessageContext
+import Message.MessageContext
 import collection.mutable.SortedSet
 import utils.TL
 
-object NewDesugarer:
+object SplitElaborator:
   /** A scrutinee is a function that returns a reference to the symbol. */
   type Reference = () => Term.Ref
   
   type Connective = `do`.type | `then`.type
 
-import NewDesugarer.*
+import SplitElaborator.*
 
-/** TODO: Remove after we remove the `Desugarer`. */
-trait NewDesugarer:
+trait SplitElaborator:
   self: Elaborator =>
   
   import tl.*
@@ -198,11 +197,11 @@ trait NewDesugarer:
             case R(tree) => Else(term(tree))
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>
-      // error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
+      error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
       Else(Term.Error)
   
   extension (term: Term)
-    inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
+    private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
       term match
         // If the term is already a reference, we can re-reference its symbol.
         case Term.Ref(symbol) => continuation(() => symbol.ref())
@@ -211,7 +210,7 @@ trait NewDesugarer:
           val symbol = TempSymbol(N, "scrut")
           Head.Let(symbol, term) ~: continuation(() => symbol.ref())
   
-  type TT = (Tree, Tree)
+  private type TT = (Tree, Tree)
   
   /** Decompose a `Tree` of conjunct matches. The tree is from the same line in
    *  the source code and followed by a `then`, or `and` with a continued line.
@@ -236,7 +235,7 @@ trait NewDesugarer:
    *          type `::[T]` (instead of `List[T]`) so that the head element
    *          can be retrieved in a type-safe manner
    */
-  def disaggregate(tree: Tree): ::[TT] =
+  private def disaggregate(tree: Tree): ::[TT] =
     def go(tree: Tree, acc: TT => ::[TT]): () => ::[TT] = tree match
       case lhs `and` rhs  => go(lhs, ::(_, go(rhs, acc)()))
       case lhs `or` rhs   =>

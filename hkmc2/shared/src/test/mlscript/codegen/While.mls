@@ -197,13 +197,13 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let param0, param1, h, tl, tmp28;
+//│   let tl, h, argument0$, argument1$, tmp28;
 //│   tmp29: while (true) {
 //│     if (ls instanceof Cons1.class) {
-//│       param0 = ls.hd;
-//│       param1 = ls.tl;
-//│       h = param0;
-//│       tl = param1;
+//│       argument0$ = ls.hd;
+//│       argument1$ = ls.tl;
+//│       tl = argument1$;
+//│       h = argument0$;
 //│       ls = tl;
 //│       tmp28 = Predef.print(h);
 //│       continue tmp29
@@ -277,9 +277,6 @@ while print("Hello World"); false
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
 //│ ║  l.275: 	  then 0(0)
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unrecognized term split (false literal).
-//│ ║  l.274: 	while print("Hello World"); false
-//│ ╙──       	                            ^^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
 //│ ║  l.274: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
@@ -291,12 +288,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.290: 	while { print("Hello World"), false }
+//│ ║  l.287: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.291: 	  then 0(0)
+//│ ║  l.288: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.292: 	  else 1
+//│ ║  l.289: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -306,14 +303,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.304: 	    print("Hello World")
+//│ ║  l.301: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.305: 	    false
+//│ ║  l.302: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.306: 	  then 0(0)
+//│ ║  l.303: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.307: 	  else 1
+//│ ║  l.304: 	  else 1
 //│ ╙──       	  ^^^^
 
 

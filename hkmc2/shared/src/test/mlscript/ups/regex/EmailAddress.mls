@@ -42,21 +42,15 @@ pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(pattern Char.Letter)
 id of _ is 0
 //│ = fun
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 [".com", ".hk", ".fr", ".cn"]
   Iter.mapping of _ is DomainSuffixFragment
   Iter.folded of true, _ && _
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ = true
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 [".", ".a", "com"]
   Iter.mapping of _ is DomainSuffixFragment
   Iter.folded of false, _ || _
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ = false
 
 pattern DomainSuffix = Rep1(pattern DomainSuffixFragment)
 
@@ -85,13 +79,10 @@ let emails = [
   "simple123@abc.xyz"
 ]
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 emails
   Iter.mapping of _ is Email
   Iter.folded of true, _ && _
-//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
+//│ = true
 
 open Stack
 

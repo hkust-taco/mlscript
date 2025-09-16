@@ -33,9 +33,9 @@ val isDefined = case
 //│ JS (unsanitized):
 //│ let isDefined1, tmp1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
-//│   let param0;
+//│   let argument0$;
 //│   if (caseScrut instanceof Some1.class) {
-//│     param0 = caseScrut.value;
+//│     argument0$ = caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
@@ -121,16 +121,10 @@ fun keepIfGreaterThan(x, y) =
 let isDefined2 = _ is Some
 //│ isDefined2 = fun isDefined2
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 Some(1) isDefined2()
-//│ ═══[RUNTIME ERROR] Error: Function 'isDefined2' expected 2 arguments but got 1
+//│ = true
 
-:fixme
-// Don't worry! This is caused by two UCS desugarers running in parallel, and it
-// will be fixed in the next commit.
 Some(1) |> isDefined2
-//│ ═══[RUNTIME ERROR] Error: Function 'isDefined2' expected 2 arguments but got 1
+//│ = true
 
 

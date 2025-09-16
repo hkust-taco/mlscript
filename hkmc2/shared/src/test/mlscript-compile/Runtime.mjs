@@ -593,7 +593,7 @@ globalThis.Object.freeze(class Runtime {
     return msg
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, lambda;
+    let result, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, lambda;
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
       tmp1 = tmp + cont.pc;
@@ -612,12 +612,12 @@ globalThis.Object.freeze(class Runtime {
       });
       tmp2 = lambda;
       tmp3 = runtime.safeCall(hl.forEach(tmp2));
-      scrut1 = runtime.safeCall(vis.has(cont));
-      if (scrut1 === true) {
+      scrut = runtime.safeCall(vis.has(cont));
+      if (scrut === true) {
         tmp4 = reps + 1;
         reps = tmp4;
-        scrut2 = reps > 10;
-        if (scrut2 === true) {
+        scrut1 = reps > 10;
+        if (scrut1 === true) {
           throw globalThis.Error("10 repeated continuation frame (loop?)")
         } else {
           tmp5 = runtime.Unit;
@@ -632,8 +632,8 @@ globalThis.Object.freeze(class Runtime {
       tmp9 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
       return tmp8 + tmp9
     } else {
-      scrut = cont === null;
-      if (scrut === true) {
+      scrut2 = cont === null;
+      if (scrut2 === true) {
         return "(null)"
       } else {
         return "(NOT CONT)"
@@ -641,7 +641,7 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static showHandlerContChain(cont, hl, vis, reps) {
-    let scrut, result, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, lambda;
+    let result, scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, lambda;
     if (cont instanceof Runtime.HandlerContFrame.class) {
       result = cont.handler.constructor.name;
       lambda = (undefined, function (m, marker) {
@@ -658,12 +658,12 @@ globalThis.Object.freeze(class Runtime {
       });
       tmp = lambda;
       tmp1 = runtime.safeCall(hl.forEach(tmp));
-      scrut1 = runtime.safeCall(vis.has(cont));
-      if (scrut1 === true) {
+      scrut = runtime.safeCall(vis.has(cont));
+      if (scrut === true) {
         tmp2 = reps + 1;
         reps = tmp2;
-        scrut2 = reps > 10;
-        if (scrut2 === true) {
+        scrut1 = reps > 10;
+        if (scrut1 === true) {
           throw globalThis.Error("10 repeated continuation frame (loop?)")
         } else {
           tmp3 = runtime.Unit;
@@ -678,8 +678,8 @@ globalThis.Object.freeze(class Runtime {
       tmp7 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
       return tmp6 + tmp7
     } else {
-      scrut = cont === null;
-      if (scrut === true) {
+      scrut2 = cont === null;
+      if (scrut2 === true) {
         return "(null)"
       } else {
         return "(NOT HANDLER CONT)"

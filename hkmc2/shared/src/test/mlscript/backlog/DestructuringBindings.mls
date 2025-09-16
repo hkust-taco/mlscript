@@ -24,17 +24,5 @@ fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╔══[ERROR] Name not found: d
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                                             ^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                             ^
-//│ ╔══[ERROR] Name not found: c
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                  ^
-//│ ╔══[ERROR] Name not found: b
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                        ^
-//│ ╔══[ERROR] Name not found: d
-//│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╙──     	                                             ^
 
 

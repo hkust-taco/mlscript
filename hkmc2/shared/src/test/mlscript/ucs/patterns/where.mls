@@ -57,12 +57,6 @@ fun baz(p) = p is
 //│ ╔══[ERROR] Name not found: b
 //│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                               ^
-//│ ╔══[ERROR] Name not found: a
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
-//│ ╙──      	                           ^
-//│ ╔══[ERROR] Name not found: b
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
-//│ ╙──      	                               ^
 
 :fixme
 // :ucs normalized
@@ -76,12 +70,12 @@ pattern Positive = ((Int as x) where x > 0) => x
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, $tmp -> tmp, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res4, $Term -> Term, $block$res -> block$res5, $tmp -> tmp1, $block$res -> block$res12, $block$res -> block$res6, $tmp -> tmp2, member:foo -> foo, $block$res -> block$res, member:Pair -> Pair1, $block$res -> block$res13, class:Pair -> Pair, member:Predef -> Predef, $block$res -> block$res14, $tmp -> tmp7, $block$res -> block$res15, $tmp -> tmp8, member:baz -> baz, $block$res -> block$res7, $block$res -> block$res1, member:orderedPair -> orderedPair, $block$res -> block$res8, $tmp -> tmp3, $block$res -> block$res16, $block$res -> block$res9, $tmp -> tmp4, $block$res -> block$res2, $block$res -> block$res10, $tmp -> tmp5, member:Positive -> Positive1, pattern:Positive -> Positive, $block$res -> block$res11, $tmp -> tmp6, member:bar -> bar, $block$res -> block$res17)
+//│           bindings = HashMap($block$res -> block$res4, $block$res -> block$res13, $runtime -> runtime, $block$res -> block$res5, $definitionMetadata -> definitionMetadata, $tmp -> tmp1, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $tmp -> tmp7, $block$res -> block$res6, $tmp -> tmp2, member:foo -> foo, $block$res -> block$res15, $tmp -> tmp8, member:baz -> baz, $block$res -> block$res, $block$res -> block$res7, $block$res -> block$res16, member:Pair -> Pair1, class:Pair -> Pair, member:Predef -> Predef, member:Positive -> Positive1, $block$res -> block$res8, pattern:Positive -> Positive, $tmp -> tmp3, $block$res -> block$res1, $block$res -> block$res9, $block$res -> block$res17, $tmp -> tmp4, member:orderedPair -> orderedPair, $block$res -> block$res10, $tmp -> tmp5, $block$res -> block$res11, $tmp -> tmp6, $block$res -> block$res2, member:bar -> bar, $block$res -> block$res12, $block$res -> block$res3, $tmp -> tmp)
 //│         curThis = S of S of pattern:Positive
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(input -> input, $args -> args)
+//│       bindings = HashMap($args -> args, input -> input)
 //│     curThis = N
-//│     bindings = HashMap($transform -> transform, $guardResult -> guardResult, $output -> output, $transformResult -> transformResult, x -> x, $split_1$ -> split_1$, $tmp -> tmp9, $split_root$ -> split_root$, member:lambda -> lambda)
+//│     bindings = HashMap(x -> x, $split_1$ -> split_1$, $tmp -> tmp9, $split_root$ -> split_root$, member:lambda -> lambda, $transform -> transform, $guardResult -> guardResult, $output -> output, $transformResult -> transformResult)
 //│   curThis = S of N
 //│   bindings = HashMap())

@@ -321,8 +321,7 @@ class Resolver(tl: TraceLogger)
           case SimpleSplit.Else(default) =>
             traverse(default, expect = Any)
           case SimpleSplit.End =>
-        split(t.desugared)
-        simpleSplit(t.ssss)
+        simpleSplit(t.split)
         
       case Term.Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         traverse(rhs, expect = Class(S("The 'handle' keyword requires a statically known class.")))
@@ -1028,7 +1027,7 @@ object ModuleChecker:
     
     t match
       case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
-      case Term.IfLike(`if`, split, _) => split.results.exists(evalsToModule(_, prefer = prefer))
+      case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
       case t => t.resolvedSymbol.exists(checkSym)
   
   def evalsToStaticClass(t: Term): Bool =

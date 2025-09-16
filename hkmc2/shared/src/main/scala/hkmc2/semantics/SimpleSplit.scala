@@ -1,9 +1,12 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*, syntax.*
+import mlscript.utils.*, shorthands.*, syntax.*, Tree.BoolLit
+import utils.TL, Elaborator.{Ctx, State}
 
 enum SimpleSplit extends AutoLocated with ProductWithTail:
+  import SimpleSplit.Head
+  
   case Cons(branch: SimpleSplit.Head, tail: SimpleSplit)
   case Else(default: Term)
   case End
@@ -26,7 +29,34 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     case Else(default) => List(default)
     case End => Nil
   
+  def subTerms: Ls[Term] = this match
+    case Cons(branch, tail) => branch.subTerms ::: tail.subTerms
+    case Else(default) => default :: Nil
+    case End => Nil
+  
+  def showDbg: Str = this match
+    case Cons(branch, tail) => s"${branch.showDbg}; ${tail.showDbg}"
+    case Else(default) => s"else ${default.showDbg}"
+    case End => ""
+  
   def prettyPrint: Str = SimpleSplit.prettyPrint(this)
+  
+  /** Get the results of all branches. */
+  def results: Ls[Term] =
+    def go(acc: Ls[Term], split: SimpleSplit): Ls[Term] = split match
+      case Cons(_: Head.Let, tail) => go(acc, tail)
+      case Cons(Head.Match(_, _, consequent), alternative) =>
+        go(go(acc, consequent), alternative)
+      case Else(default) => default :: acc
+      case End => acc
+    go(Nil, this).reverse
+  
+  private var _expandedSplit: Opt[Split] = N
+  
+  def getExpandedSplit(using TL, Ctx, State, Raise): Split = _expandedSplit.getOrElse:
+    val split = Split.from(this)
+    _expandedSplit = S(split)
+    split
 
 object SimpleSplit:
   /** Note: The order of the given `heads` must be reversed: later branches
@@ -35,10 +65,35 @@ object SimpleSplit:
     heads.foldLeft(default.fold(End)(Else(_))):
       case (tail, head) => Cons(head, tail)
   
+  object IfThenElse:
+    def unapply(split: SimpleSplit): Opt[(Term, Term, Term)] = split match
+      case Cons(
+          Head.Let(binding, condition),
+          Cons(Head.Match(
+            scrutinee,
+            Pattern.Literal(BoolLit(true)), Else(consequent)),
+            Else(alternative))
+      ) if scrutinee.sym === binding => S((condition, consequent, alternative))
+      case _ => N
+  
   /** Represents a single branch of a simple split. */
   enum Head extends AutoLocated:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: BlockLocalSymbol, term: Term)
+    
+    def subTerms: Ls[Term] = this match
+      case Match(scrutinee, pattern, consequent) =>
+        scrutinee :: pattern.subTerms ::: consequent.subTerms
+      case Let(_, term) => term :: Nil
+    
+    def showDbg: Str = this match
+      case Match(scrutinee, pattern, consequent) =>
+        val consequentStr = consequent match
+          case Cons(_, _) => s"and ${consequent.showDbg}"
+          case Else(default) => s"then ${default.showDbg}"
+          case End => "then {}"
+        s"${scrutinee.showDbg} is ${pattern.showDbg} ${consequentStr}"
+      case Let(binding, term) => s"let ${binding.nme} = ${term.showDbg}"
     
     protected def children: List[Located] = this match
       case Match(scrutinee, pattern, consequent) =>
@@ -89,14 +144,7 @@ object SimpleSplit:
         case SimpleSplit.Else(t) =>
           (if isFirst && !isTopLevel then "" else "else") #: term(t)
         case SimpleSplit.End => Nil
-      def term(t: Statement): Lines = t match
-        // case Term.Blk(stmts, term) =>
-        //   stmts.iterator.concat(Iterator.single(term)).flatMap:
-        //     case DefineVar(sym, Term.IfLike(Keyword.`if`, splt)) =>
-        //       s"$sym = if" #: split(splt, true, true)
-        //     case stmt => (0, stmt.showDbg) :: Nil
-        //   .toList
-        case t: Statement => (0, t.showDbg) :: Nil
+      def term(t: Statement): Lines = (0, t.showDbg) :: Nil
       def branch(b: Head.Match, isTopLevel: Bool): Lines =
         val Head.Match(scrutinee, pattern, consequent) = b
         val lines = split(consequent, true, false)

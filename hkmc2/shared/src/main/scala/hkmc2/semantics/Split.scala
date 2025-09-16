@@ -91,11 +91,11 @@ object Split:
   import Elaborator.{Ctx, State}
   import utils.{tl, TL}
   import collection.mutable.{Map as MutMap}
-  import ups.NaiveCompiler, NaiveCompiler.{MakeConsequent, Scrut, SymbolScrut}
+  import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
   import Term.Ref
   
   def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
-    val compiler = new NaiveCompiler()
+    val compiler = new SplitCompiler()
     val scrutCache = MutMap.empty[Ref, Scrut]
     def go(split: SS): Split = split match
       case SS.Cons(branch, tail) => branch match
@@ -163,12 +163,12 @@ object Split:
         else
           lines
       def term(t: Statement): Lines = t match
-        case Term.Blk(stmts, term) =>
-          stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.IfLike(Keyword.`if`, splt, _)) =>
-              s"$sym = if" #: split(splt, true, true)
-            case stmt => (0, stmt.showDbg) :: Nil
-          .toList
+        // case Term.Blk(stmts, term) =>
+        //   stmts.iterator.concat(Iterator.single(term)).flatMap:
+        //     case DefineVar(sym, Term.IfLike(Keyword.`if`, split)) =>
+        //       s"$sym = if" #: split(splt, true, true)
+        //     case stmt => (0, stmt.showDbg) :: Nil
+        //   .toList
         case t: Statement => (0, t.showDbg) :: Nil
       def branch(b: Branch, isTopLevel: Bool): Lines =
         val Branch(scrutinee, pattern, consequent) = b
