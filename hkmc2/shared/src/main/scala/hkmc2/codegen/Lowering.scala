@@ -514,8 +514,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
     
     
-    case iftrm: st.OldIfLike =>
-      ucs.Normalization(this)(iftrm)(k)
+    case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
+    
+    case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
       
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
@@ -737,7 +738,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           .rest(setupTerm("Blk", Value.Arr(mut = false,
             (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
       }
-    case OldIfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
+    case IfLike(syntax.Keyword.`if`, split, _) => quoteSplit(split): r =>
       val l = new TempSymbol(N)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
@@ -776,11 +777,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (Ls[FunDefn], Ls[BlockMemberSymbol -> TermSymbol], Ls[TermSymbol], Block) =
     val compiler = new ups.NaiveCompiler
     val methods = compiler.compilePattern(defn)
-    val mtds = methods
-      .flatMap: td =>
-        td.body.map: bod =>
-          val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
-          FunDefn(td.owner, td.sym, paramLists, bodyBlock)
+    // We only need `owner`, `sym`, `params` and `body`
+    val mtds = methods.map:
+      case (sym, params, split) =>
+        val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, split, S(sym.nme))
+        FunDefn(N, sym, paramLists, bodyBlock)
     (mtds, Nil, Nil, End())
   
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
@@ -887,6 +888,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
+  
+  /** Same as the other overload, but expect the body to be a `Split`. */
+  def setupFunctionDef(paramLists: List[ParamList], bodySplit: Split, name: Option[Str])
+      (using Subst): (List[ParamList], Block) =
+    (paramLists, ucs.Normalization(this)(bodySplit)(Ret))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:

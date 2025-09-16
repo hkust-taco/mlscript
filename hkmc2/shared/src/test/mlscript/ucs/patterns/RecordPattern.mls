@@ -45,6 +45,9 @@ let f = case
 //│ ╔══[ERROR] Name not found: a
 //│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.44: 	  { a: 1 } then a
+//│ ╙──      	                ^
 //│ f = fun
 
 // * OTOH, note that `a` is bound here
@@ -58,10 +61,18 @@ let rcd =
 
 :js
 let r = {x: 2, y : 4}
+//│ r = {x: 2, y: 4}
+
+:e
 if r is
   {x:a, y:a} then a
+//│ ╔══[ERROR] Duplicate pattern variable.
+//│ ║  l.68: 	  {x:a, y:a} then a
+//│ ║        	          ^
+//│ ╟── The previous definition is as follows.
+//│ ║  l.68: 	  {x:a, y:a} then a
+//│ ╙──      	     ^
 //│ = 4
-//│ r = {x: 2, y: 4}
 
 
 let rr = {x: {y:10, z:100}, t:1000}

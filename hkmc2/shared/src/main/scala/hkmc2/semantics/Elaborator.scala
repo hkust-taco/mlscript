@@ -471,7 +471,10 @@ extends Importer with ucs.NewDesugarer:
       val des = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${des.prettyPrint}")
-      Term.OldIfLike(Keyword.`if`, des)
+      val ssss = shorthandSplit(tree)
+      scoped("ucs:nu"):
+        log(s"Desugared:\n${ssss.prettyPrint}")
+      Term.IfLike(Keyword.`if`, des, ssss)
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -620,14 +623,15 @@ extends Importer with ucs.NewDesugarer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
-    case tree @ IfLike(kw, split) =>
+    case tree: IfLike =>
       val desugared = new ucs.Desugarer(this)(tree)
       scoped("ucs:desugared"):
         log(s"Desugared:\n${desugared.prettyPrint}")
-      scoped("ucs:nu"):
-        val ssss = this.split(split)
+      val ssss = scoped("ucs:nu"):
+        val ssss = this.split(tree)
         log(s"Split:\n${ssss.prettyPrint}")
-      Term.OldIfLike(kw.kw, desugared)
+        ssss
+      Term.IfLike(tree.kw.kw, desugared, ssss)
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(_, branches) =>
@@ -637,7 +641,7 @@ extends Importer with ucs.NewDesugarer:
         log(s"Desugared:\n${des.prettyPrint}")
       Term.Lam(PlainParamList(
           Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-        ), Term.OldIfLike(Keyword.`if`, des))
+        ), Term.IfLike(Keyword.`if`, des, caseSplit(scrut, tree)))
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -1418,6 +1422,28 @@ extends Importer with ucs.NewDesugarer:
     import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
     import ups.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
     given TraceLogger = tl
+    /** Resolve an identifier. We need to perform a very preliminary check to
+     *  determine whether this identifier refers to a pattern, a class, an
+     *  object, or creates a new binding.
+     * 
+     *  TODO TODO: This routine is insufficient to look up definitions defined
+     *  later in the program. */
+    def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = scoped("ucs:pattern:resolution"):
+      log(s"resolve ${id}")
+      ctx.get(id.name) match
+      case S(elem) =>
+        log("has elem!")
+        elem.symbol.flatMap:
+          case vs: VarSymbol => vs.decl match
+            case S(d) if d.isPatternConstructor => S(elem.ref(id))
+            case S(_) | N => N
+          case sym: Symbol => sym.asCls.orElse(sym.asObj).orElse(sym.asPat) match
+            case S(_) => S(elem.ref(id))
+            case N => N
+      case N =>
+        state.builtinOpsMap.get(id.name) match
+        case S(bi) => S(bi.ref(id))
+        case N => N
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
@@ -1509,6 +1535,9 @@ extends Importer with ucs.NewDesugarer:
           case N => go(p) binds id // Fallback to alias.
         // `p as q` where `q` is not an identifier is elaborated into chain.
         case _: Tree => Chain(go(p), go(q))
+      case p where t =>
+        val q = go(p)
+        Guarded(q, term(t)(using ctx ++ q.variables.allocate))
       case Under() => Pattern.Wildcard()
       // Singleton blocks like `{1}`.
       case Block(p :: Nil) => go(p)

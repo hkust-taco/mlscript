@@ -25,14 +25,6 @@ object Pattern:
   
   import InvalidReason.*
   
-  extension (aliases: Ls[Pattern.Alias])
-    /** Allocate the symbol for the variable. This should be called in the
-     *  elaborator and before elaborating the term from `Transform`. */
-    def allocate(id: Ident)(using State): VarSymbol =
-      val symbol = VarSymbol(id)
-      aliases.foreach(_.symbol = symbol)
-      symbol
-  
   /** A set of variables that present in a pattern.
    *  
    *  These variables are represented by `Tree.Ident` because not every identifier
@@ -51,13 +43,23 @@ object Pattern:
     /** Allocate symbols for all variables. */
     def allocate(using State, TraceLogger): Seq[(Str, VarSymbol)] =
       varMap.iterator.map: (name, aliases) =>
-        tl.scoped("ucs:translation"):
-          tl.log(s"allocating symbols for variable: ${name}")
-        val symbol = VarSymbol(Ident(name)) // Location is lost.
+        // We need to assign the same symbol to the same name. But I realize
+        // that the following cases will break this constraint: `(x where x > 0)
+        // | (x where x < 0)`. In both alternatives, `x` needs to be allocated
+        // in advanced, but at the level of the disjunction, `x` needs to be
+        // assigned to the same variable. This represents an edge case which
+        // needs to be fixed later.
+        val symbols = aliases.iterator.flatMap(_.symbolOption).toSet
+        // TODO: The above edge case would fail the following assertion.
+        assert(symbols.size <= 1)
+        // If no symbol had been created before, create a new symbol now.
+        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name)))
         aliases.foreach: alias =>
-          tl.scoped("ucs:translation"):
-            tl.log(s"allocated symbol for alias: ${alias.showDbg}")
-          alias.symbol = symbol
+          // For guarded patterns (`p where t`), the variables in `p` have to be
+          // allocated before `t` is elaborated. In that case, we don't need to
+          // allocate the variables in `p` again when the variables of pattern
+          // containing `p` are allocated.
+          if alias.symbolOption.isEmpty then alias.symbol = symbol
         (name, symbol)
       .toSeq
     
@@ -85,6 +87,12 @@ object Pattern:
             duplicated ++= aliases.map(_ -> Duplicated(previous.map(_.id)))
             (name, aliases),
         invalidVars ::: that.invalidVars ::: duplicated.toList)
+    
+    /** For debugging purpose only. */
+    def display: Str = varMap.iterator.map:
+      case (key, aliases) =>
+        key + " -> " + aliases.iterator.map(_.id.name).mkString(", ")
+    .mkString("{", "; ", "}")
     
     /** Intersect two variable sets and move variables that are only present in
      *  one side to the invalid variables. This method considers `this` as the
@@ -236,12 +244,18 @@ enum Pattern extends AutoLocated:
   
   case Annotated(pattern: Pattern, annotations: Vector[Term])
   
+  /** A pattern that comes with an extra condition. It works in a way similar to
+   *  `and` in split. */
+  case Guarded(pattern: Pattern, guard: Term)
+  
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
   inline def annotate(annotation: Term): Pattern.Annotated = this match
     case Annotated(pattern, annotations) =>
       Annotated(pattern, annotations :+ annotation)
     case _ => Annotated(this, Vector(annotation))
+  
+  inline def withGuard(guard: Term) = Pattern.Guarded(this, guard)
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
@@ -264,6 +278,7 @@ enum Pattern extends AutoLocated:
     case alias @ Alias(pattern, _) => pattern.variables + alias
     case Chain(first, second) => first.variables ++ second.variables
     case Annotated(pattern, _) => pattern.variables
+    case Guarded(pattern, _) => pattern.variables
   
   def children: Ls[Located] = this match
     case Constructor(target, patternArguments, arguments) =>
@@ -282,6 +297,7 @@ enum Pattern extends AutoLocated:
     case Alias(pattern, alias) => pattern :: alias :: Nil
     case Transform(pattern, transform) => pattern :: transform :: Nil
     case Annotated(pattern, annotations) => pattern :: annotations.toList
+    case Guarded(pattern, guard) => pattern.children :+ guard
   
   def subTerms: Ls[Term] = this match
     case Constructor(target, patternArguments, arguments) =>
@@ -297,6 +313,7 @@ enum Pattern extends AutoLocated:
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, transform) => pattern.subTerms :+ transform
     case Annotated(pattern, annotations) => pattern.subTerms ::: annotations.toList
+    case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
   def describe: Str = this match
     case Constructor(_, _, _) => "constructor"
@@ -313,12 +330,13 @@ enum Pattern extends AutoLocated:
     case Alias(_, _) => "alias"
     case Transform(_, _) => "transform"
     case Annotated(_, _) => "annotated pattern"
+    case Guarded(_, _) => "guarded pattern"
   
   private def showDbgWithPar =
     val addPar = this match
       case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation | Annotated) => false
       case Alias(Wildcard(), _) => false
-      case _: (Alias | Composition | Transform | Range | Concatenation | Chain) => true
+      case _: (Alias | Composition | Transform | Range | Concatenation | Chain | Guarded) => true
     if addPar then s"(${showDbg})" else showDbg
   
   def showDbg: Str = this match
@@ -350,3 +368,4 @@ enum Pattern extends AutoLocated:
     case Transform(pattern, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
     case Annotated(pattern, annotations) =>
       annotations.iterator.map(_.showDbg).mkString("@", " @", " ") + pattern.showDbgWithPar
+    case Guarded(pattern, guard) => pattern.showDbg + " where " + guard.showDbg

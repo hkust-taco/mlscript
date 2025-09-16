@@ -174,6 +174,9 @@ Some(1) is
 //│ ╔══[ERROR] Unrecognized pattern (infix operator 'do')
 //│ ║  l.173: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'do').
+//│ ║  l.173: 	  Some of [process, rest] do "hi"
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
 // ——— ——— ———
@@ -222,10 +225,16 @@ let foo =
   case
     Tuple(...elements) then elements
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.223: 	    Tuple(...elements) then elements
+//│ ║  l.226: 	    Tuple(...elements) then elements
 //│ ╙──       	          ^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (spread).
+//│ ║  l.226: 	    Tuple(...elements) then elements
+//│ ╙──       	          ^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: elements
+//│ ║  l.226: 	    Tuple(...elements) then elements
+//│ ╙──       	                            ^^^^^^^^
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
-//│ ║  l.223: 	    Tuple(...elements) then elements
+//│ ║  l.226: 	    Tuple(...elements) then elements
 //│ ╙──       	          ^^^^^^^^^^^
 //│ foo = fun foo
 
@@ -243,21 +252,21 @@ fun foo(x) = if x is Foo.
   Bar then "Bar"
   Foo then "Foo"
 //│ ╔══[PARSE ERROR] Expected end of input; found period instead
-//│ ║  l.242: 	fun foo(x) = if x is Foo.
+//│ ║  l.251: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                        ^
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
-//│ ║  l.242: 	fun foo(x) = if x is Foo.
+//│ ║  l.251: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
   .Foo then "Foo"
 //│ ╔══[ERROR] Unrecognized pattern split (operator split).
-//│ ║  l.252: 	fun foo(x) = if x is Foo
+//│ ║  l.261: 	fun foo(x) = if x is Foo
 //│ ║         	                     ^^^
-//│ ║  l.253: 	  .Bar then "Bar"
+//│ ║  l.262: 	  .Bar then "Bar"
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.254: 	  .Foo then "Foo"
+//│ ║  l.263: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
 
 // ——— ——— ———

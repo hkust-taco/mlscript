@@ -181,9 +181,15 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
-  @deprecated("Use IfLike instead")
-  case OldIfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: SimpleSplit)
+  // I know the name `ssss` is ugly! For now, the old and new desugarers exist
+  // together. Once I remove the old desugarer, `ssss` will replace `desugared`
+  // and become the normal `Split`.
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split, ssss: SimpleSplit)
+  /** `If` expressions synthesized by the pattern compiler. It should only be
+   *  created and used in `Lowering`. One must make sure that all terms in the
+   *  split are correctly resolved. In the future, we might look for a way to
+   *  remove `SynthIf` by generating IR `Match` blocks directly. */
+  case SynthIf(split: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -278,7 +284,7 @@ enum Term extends Statement:
       case f: Fld => f.copy(term = f.term.clone, asc = f.asc.map(_.clone))
       case s: Spd => s.copy(term = s.term.clone)
     })(term.tree)
-    case IfLike(kw, desugared) => IfLike(kw, desugared) // desugared is Split, which is immutable
+    case IfLike(kw, desugared, ssss) => IfLike(kw, desugared, ssss) // desugared is Split, which is immutable
     case Lam(params, body) => Lam(params, body.clone)
     case FunTy(lhs, rhs, eff) => FunTy(lhs.clone, rhs.clone, eff.map(_.clone))
     case Forall(tvs, outer, body) => Forall(tvs, outer, body.clone)
@@ -343,8 +349,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case DynSel(o, f, _) => "dynamic selection"
       case Tup(fields) => "tuple literal"
       case CtxTup(fields) => "contextual tuple literal"
-      case OldIfLike(Keyword.`if`, body) => "`if` expression"
-      case OldIfLike(Keyword.`while`, body) => "`while` expression"
+      case IfLike(Keyword.`if`, body, _) => "`if` expression"
+      case IfLike(Keyword.`while`, body, _) => "`while` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -403,7 +409,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Tup(fields) => fields.flatMap(_.subTerms)
     case Mut(und) => und :: Nil
     case CtxTup(fields) => fields.flatMap(_.subTerms)
-    case OldIfLike(_, body) => body.subTerms
+    case IfLike(_, body, _) => body.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Rcd(mut, stats) => stats.flatMap(_.subTerms)
@@ -453,7 +459,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
     case t: App => treeOrSubterms(t.tree)
-    case OldIfLike(kw, desug) => desug :: Nil
+    case IfLike(kw, desug, _) => desug :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
@@ -489,7 +495,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
-    case OldIfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
+    case IfLike(kw, body, _) => s"${kw.name} { ${body.showDbg} }"
+    case SynthIf(split) => s"if { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
@@ -645,6 +652,13 @@ case class Import(sym: Symbol, file: Str) extends Statement
 
 sealed abstract class Declaration:
   val sym: Symbol
+  
+  /** Whether this can be used at the constructor position in pattern. */
+  def isPatternConstructor: Bool = this match
+    case _: (TermDefinition | TypeDef | TyParam) => false
+    case d: ModuleOrObjectDef => d.kind isnt Mod
+    case _: (PatternDef | ClassDef) => true
+    case p: Param => p.flags.pat
 
 sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]

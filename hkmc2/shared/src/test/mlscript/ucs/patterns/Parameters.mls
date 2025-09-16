@@ -81,7 +81,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[ERROR] Expected six arguments, but found only three arguments.
 //│ ║  l.81: 	fun test(x) = if x is Test(_, _, _) then "ok"
-//│ ╙──      	                           ^^^^^^^
+//│ ╙──      	                      ^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 
@@ -116,18 +116,14 @@ fun foo(x) = if x is A() then 0
 //│ ╔══[ERROR] `A` is an object.
 //│ ║  l.112: 	object A
 //│ ║         	       ^
-//│ ╟── Its pattern cannot have an argument list.
-//│ ║  l.115: 	fun foo(x) = if x is A() then 0
-//│ ╙──       	                     ^^^
+//│ ╙── Its pattern cannot have an argument list.
 
 :e
 fun foo(x) = if x is A(y) then y
 //│ ╔══[ERROR] `A` is an object.
 //│ ║  l.112: 	object A
 //│ ║         	       ^
-//│ ╟── Its pattern cannot have arguments.
-//│ ║  l.124: 	fun foo(x) = if x is A(y) then y
-//│ ╙──       	                     ^^^^
+//│ ╙── Its pattern cannot have arguments.
 
 0 is Foo
 //│ = false

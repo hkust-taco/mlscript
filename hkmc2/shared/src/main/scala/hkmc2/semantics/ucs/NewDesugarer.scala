@@ -5,41 +5,93 @@ package ucs
 import mlscript.utils.*, shorthands.*
 import syntax.{Keyword, Tree}, Tree.*
 import Keyword.{`and`, `do`, `else`, `if`, `is`, `let`, `or`, `then`}
-import Elaborator.{Ctx, Ctxl, ctx}, SimpleSplit.*
-import Desugarer.{unapply}, Message.MessageContext
+import Elaborator.{Ctx, Ctxl, UnderCtx, ctx}, SimpleSplit.*
+import Desugarer.{Ctor, unapply}, Message.MessageContext
+import collection.mutable.SortedSet
 import utils.TL
 
 object NewDesugarer:
   /** A scrutinee is a function that returns a reference to the symbol. */
   type Reference = () => Term.Ref
+  
+  type Connective = `do`.type | `then`.type
 
 import NewDesugarer.*
 
 /** TODO: Remove after we remove the `Desugarer`. */
 trait NewDesugarer:
   self: Elaborator =>
-    
+  
+  import tl.*
+  
   private given TL = tl
   
-  object `~>`:
+  private given Ordering[Loc] = Ordering.by(l => (l.spanStart, l.spanEnd))
+  
+  /** Keep track of the locations where `do` and `then` are used as connectives. */
+  private var kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
+  
+  private def reportInconsistentConnectives(kw: Keywrd[?]): Unit =
+    (kwLocSets._1.headOption, kwLocSets._2.headOption) match
+      case (Some(doLoc), Some(thenLoc)) =>
+        raise(ErrorReport(
+          msg"Mixed use of `do` and `then` in the `${kw.kw.name}` expression." -> kw.toLoc
+            :: msg"Keyword `then` is used here." -> S(thenLoc)
+            :: msg"Keyword `do` is used here." -> S(doLoc) :: Nil
+        ))
+      case _ => ()
+  
+  private def topmostDefault: SimpleSplit =
+    if kwLocSets._1.nonEmpty then SimpleSplit.Else(Term.UnitVal()) else SimpleSplit.End
+  
+  private object `~>`:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
       case lhs `and` rhs => S((lhs, L(rhs)))
-      case lhs `then` rhs => S((lhs, R(rhs)))
-      case lhs `do` rhs => S((lhs, R(rhs)))
+      case lhs `then` rhs => kwLocSets._2 ++= tree.toLoc; S((lhs, R(rhs)))
+      case lhs `do` rhs => kwLocSets._1 ++= tree.toLoc; S((lhs, R(rhs)))
       case _ => N
   
-  private val reject = (mkAlt: Ctx => SimpleSplit) => End
+  private def withScopedConnectives(kw: Keywrd[?])(evaluate: => SimpleSplit): SimpleSplit =
+    val savedKwLocSets = kwLocSets
+    kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
+    val split = evaluate
+    val result = split ~~: topmostDefault
+    reportInconsistentConnectives(kw)
+    kwLocSets = savedKwLocSets
+    result
   
   /** Transform trees into a UCS split. */
-  protected def split(t: Tree): Ctxl[SimpleSplit] = t match
-    case block: Block => termSplit(block.desugStmts, identity)
-    case other: Tree => termSplit(Ls(other), identity)
+  protected def split(t: IfLike): Ctxl[SimpleSplit] =
+    withScopedConnectives(t.kw):
+      t.split match
+        case block: Block => termSplit(block.desugStmts, identity)
+        case other: Tree => termSplit(Ls(other), identity)
+  
+  /** Elaborate `case` expressions */
+  protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[SimpleSplit] =
+    withScopedConnectives(tree.kw):
+      patternBranch(() => scrut.ref(), tree.branches, identity)
+  
+  /** Elaborate shorthand expressions. */
+  protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
+    val affirmative = Else(Term.Lit(BoolLit(true)))
+    val split = tree match
+      case lhs is rhs => subterm(lhs).reference: scrut =>
+        val (firstPatternTree, _) :: matches = disaggregate(rhs)
+        val firstPattern = self.pattern(firstPatternTree)
+        // firstPattern.variables.report
+        (ctx ++ firstPattern.variables.allocate).givenIn:
+          val split = expandMatches(matches)(affirmative)
+          Head.Match(scrut(), firstPattern, split) ~: End
+      case matches =>
+        expandMatches(disaggregate(matches))(affirmative)
+    split ~~: Else(Term.Lit(BoolLit(false)))
   
   /** Desugar a list of trees as a term split. The returned function takes a
     * function, which takes a `Ctx` and returns a `SimpleSplit` representing
     * the _alternative_ split, and returns a `SimpleSplit` representing the
     * split of the given trees. */
-  protected def termSplit(ts: Ls[Tree], mk: Term => Term): Ctxl[SimpleSplit] =
+  private def termSplit(ts: Ls[Tree], mk: Term => Term): Ctxl[SimpleSplit] =
     val (_, splits) = ts.foldLeft((ctx, Ls[SimpleSplit]())):
       case ((curCtx, splits), t) =>
         termBranch(t, mk)(using curCtx).mapSecond(_ :: splits)
@@ -51,7 +103,7 @@ trait NewDesugarer:
     .getOrElse(End)
   
   /** Handle the common cases of branches in splits. */
-  protected def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
+  private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
     // Interleaved-`let` bindings like `{ x is A then 0; let x = 1; ... }`.
     case LetLike(Keywrd(`let`), ident: Ident, S(rhsTree), N) =>
       val symbol = VarSymbol(ident)
@@ -64,13 +116,14 @@ trait NewDesugarer:
     // stop and still have to elaborate the remaining trees.
     case PrefixApp(Keywrd(`else`), elseTree) => (ctx, Else(term(elseTree)))
   
-  protected def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
+  private def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
     val z = (ctx, Ls[(Term, Pattern)]())
     // Elaborate the term and the pattern in each match.
     val (innerCtx, matches) = matchesTree.foldLeft(z):
       case ((curCtx, matches), (scrutineeTree, patternTree)) =>
         val scrutinee = term(scrutineeTree)(using curCtx)
         val pattern = self.pattern(patternTree)(using curCtx)
+        pattern.variables.report
         val resCtx = curCtx ++ pattern.variables.allocate
         (resCtx, (scrutinee, pattern) :: matches)
     // As `matches` is reversed, we should process it from the left.
@@ -80,15 +133,22 @@ trait NewDesugarer:
           Head.Match(scrutineeRef(), pattern, innerSplit) ~: End
     split
   
-  protected def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
+  private def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
     case block: Block => (ctx, termSplit(block.desugStmts, mk))
-    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs)))
+    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs, identity)))
     // Several matches followed by `and`, `do`, or `then`.
     case matchesTree ~> consequent =>
-      val split = expandMatches(disaggregate(matchesTree)):
+      val (coda, patternTree) :: matches = disaggregate(matchesTree)
+      def innerSplit(using ctx: Ctx) = expandMatches(matches):
         consequent match
-          case L(tree) => termSplit(Ls(tree), mk)
+          case L(tree) => termSplit(Ls(tree), identity)
           case R(tree) => Else(term(tree))
+      val split = coda match
+        case Under() => innerSplit
+        case coda => mk(term(coda)).reference: scrutinee =>
+          val pattern = self.pattern(patternTree)
+          val innerCtx = ctx ++ pattern.variables.allocate
+          Head.Match(scrutinee(), pattern, innerSplit(using innerCtx)) ~: End
       (ctx, split)
     // Handle splits on binary operators.
     case OpApp(lhs, ident: Ident, rhss) =>
@@ -109,23 +169,27 @@ trait NewDesugarer:
     // Unrecognized term split.
     case _ =>
       error(msg"Unrecognized term split (${t.describe})" -> t.toLoc)
-      (ctx, Else(Term.Error))
+      (ctx, End)
   
-  protected def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =
+  private def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =
     branch.appOrElse(rhs): rhsTree => 
       termBranch(rhsTree.splitOn(Trm(scrutinee())), identity)
   
-  private def patternBranch(scrutinee: Reference, t: Tree): Ctxl[SimpleSplit] = t match
+  private def patternBranch(scrutinee: Reference, t: Tree, mk: Tree => Tree): Ctxl[SimpleSplit] = t match
     case block: Block =>
       val (_, splits) = block.desugStmts.foldLeft((ctx, Ls[SimpleSplit]())):
         case ((curCtx, splits), t) =>
           branch(using curCtx).lift(t).getOrElse:
-            (curCtx, patternBranch(scrutinee, t)(using curCtx))
+            (curCtx, patternBranch(scrutinee, t, mk)(using curCtx))
           .mapSecond(_ :: splits)
       concatenate(splits)
+    case App(ctor: Ctor, Tup(rhss)) =>
+      val nl = (t: Tree) => mk(App(ctor, Tup(t :: Nil)))
+      patternBranch(scrutinee, Block(rhss), nl)
     case patternAndMatches ~> consequentTree =>
       val (firstPatternTree, _) :: matches = disaggregate(patternAndMatches)
-      val firstPattern = self.pattern(firstPatternTree)
+      val firstPattern = self.pattern(mk(firstPatternTree))
+      firstPattern.variables.report
       (ctx ++ firstPattern.variables.allocate).givenIn:
         val split = expandMatches(matches):
           consequentTree match

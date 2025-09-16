@@ -86,6 +86,31 @@ extension (split: Split)
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
+  
+  import SimpleSplit as SS
+  import Elaborator.{Ctx, State}
+  import utils.{tl, TL}
+  import collection.mutable.{Map as MutMap}
+  import ups.NaiveCompiler, NaiveCompiler.{MakeConsequent, Scrut, SymbolScrut}
+  import Term.Ref
+  
+  def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
+    val compiler = new NaiveCompiler()
+    val scrutCache = MutMap.empty[Ref, Scrut]
+    def go(split: SS): Split = split match
+      case SS.Cons(branch, tail) => branch match
+        case SS.Head.Match(ref, pattern, consequent) =>
+          lazy val alternative = go(tail)
+          val makeConsequent: MakeConsequent = (output, bindings) =>
+            bindings.iterator.foldLeft(go(consequent)):
+              case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
+          compiler.makeMatchSplit
+            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern)
+            (makeConsequent, alternative)
+        case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
+      case SS.Else(default) => Else(default)
+      case SS.End => End
+    go(rootSplit)
 
   private object prettyPrint:
     /** Represents lines with indentations. */
@@ -140,7 +165,7 @@ object Split:
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.OldIfLike(Keyword.`if`, splt)) =>
+            case DefineVar(sym, Term.IfLike(Keyword.`if`, splt, _)) =>
               s"$sym = if" #: split(splt, true, true)
             case stmt => (0, stmt.showDbg) :: Nil
           .toList

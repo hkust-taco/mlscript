@@ -19,6 +19,15 @@ pattern Rounded = (Num as value) => Math.round(value)
 //│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
 
+:fixme
+// Don't worry! This is caused by two UCS desugarers running in parallel, and it
+// will be fixed in the next commit.
+(weight: 70, height: 1.75) is CalculateBMI as Rounded(23)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
+//│ ║  l.25: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(23)
+//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = true
+
 pattern RoundedBMI = CalculateBMI as Rounded
 
 fun bmi(record) = if record is RoundedBMI as value then value
@@ -40,10 +49,10 @@ fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then val
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╔══[ERROR] Unrecognized pattern (application)
-//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ║  l.50: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (application).
-//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ║  l.50: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 bmi of weight: 70, height: 1.75
@@ -101,9 +110,15 @@ fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
-//│ ╔══[ERROR] Cannot use this reference without resolved definition as a pattern
-//│ ║  l.101: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
-//│ ╙──       	                                              ^
+
+parseIntegerLiteral of "0xFF"
+//│ = Some(255)
+
+parseIntegerLiteral of "0b11111111"
+//│ = Some(255)
+
+parseIntegerLiteral of "0o377"
+//│ = Some(255)
 
 pattern IntegerLiteral =
   ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)

@@ -44,6 +44,22 @@ val f = case
 //│ >    let res = "other"
 //│ >    let $doTemp = (member:Predef#666.)print‹member:print›(res#666)
 //│ >    else res#666
+//│ The simple split before desugaring:
+//│ >  if
+//│ >    caseScrut is 0 then "null"
+//│ >    let $unused = member:console#666.log("non-null")
+//│ >    caseScrut is 1 then "unit"
+//│ >    let res = "other"
+//│ >    let $unused = (member:Predef#666.)print‹member:print›(res#666)
+//│ >    caseScrut is _ then res#666
+//│ Split expanded from the simple split:
+//│ >  if
+//│ >    caseScrut is 0 then "null"
+//│ >    let $unused = member:console#666.log("non-null")
+//│ >    caseScrut is 1 then "unit"
+//│ >    let res = "other"
+//│ >    let $unused = (member:Predef#666.)print‹member:print›(res#666)
+//│ >    else res#666
 //│ f = fun
 
 f(0)

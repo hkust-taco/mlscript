@@ -68,7 +68,7 @@ case
 //│           sign = N
 //│           modulefulness = Modulefulness of N
 //│       restParam = N
-//│     body = OldIfLike:
+//│     body = IfLike:
 //│       kw = keyword 'if'
 //│       desugared = Cons:
 //│         head = Branch:
@@ -85,6 +85,18 @@ case
 //│             sym = a
 //│             term = Ref of $param0
 //│             tail = Else of Ref of a
+//│         tail = End
+//│       ssss = Cons:
+//│         branch = Match:
+//│           scrutinee = Ref of caseScrut
+//│           pattern = Constructor:
+//│             target = Ref of member:Foo
+//│             patternArguments = Nil
+//│             arguments = S of Ls of 
+//│               Alias:
+//│                 pattern = Wildcard
+//│                 id = Ident of "a"
+//│           consequent = Else of Ref of a
 //│         tail = End
 //│ Lowered:
 //│ Program:

@@ -39,16 +39,28 @@ fun foo(x) = x is
 //│ ║        	  ^^^^
 //│ ║  l.36: 	  Int
 //│ ╙──      	^^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.35: 	  Pair
+//│ ╙──      	  ^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.36: 	  Int
+//│ ╙──      	  ^^^
 
 :e
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
 //│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.45: 	  Pair(a, b) and a > b
+//│ ║  l.51: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	  Int
+//│ ║  l.52: 	  Int
 //│ ╙──      	^^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.51: 	  Pair(a, b) and a > b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.52: 	  Int
+//│ ╙──      	  ^^^
 
 
 fun foo(x) = x is Pair(a, b) | Int

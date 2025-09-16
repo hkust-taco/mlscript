@@ -127,6 +127,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     outputSymbols.foldRight(split):
       // Can we use `Subst` to transform the inner split?
       case (symbol, innerSplit) => Split.Let(symbol, scrutinee, innerSplit)
+    // split // TODO TODO: rm this function
   
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
@@ -153,7 +154,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                     error(msg"Pattern parameters cannot be applied." -> ctor.toLoc)
                   mode match
                     case MatchMode.Default =>
-                      normalizeExtractorPatternParameter(scrutinee, ctor, pattern.output, consequent, alternative)
+                      normalizeExtractorPatternParameter(scrutinee, ctor, param, pattern.output, consequent, alternative)
                     case sp: MatchMode.StringPrefix =>
                       log(s"symbol name is ${symbol.nme}")
                       normalizeStringPrefixPattern(scrutinee, ctor, N, sp, pattern.output, consequent, alternative)
@@ -321,12 +322,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   private def normalizeExtractorPatternParameter(
       scrutinee: Term.Ref,
       ctorTerm: Term,
+      param: Param,
       outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
     val call = app(sel(ctorTerm, "unapply").resolve, tup(fld(scrutinee)), s"result of unapply")
-    val split = tempLet("patternParamMatchResult", call): resultSymbol =>
+    val split = tempLet(s"matchResult_${param.sym.name}", call): resultSymbol =>
       if outputSymbols.isEmpty then
         // No need to destruct the result.
         Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
@@ -686,7 +688,26 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   import syntax.Keyword.{`if`, `while`}
   
-  def apply(t: Term.OldIfLike)(k: Result => Block)(using Subst): Block =
+  def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using Subst): Block =
+    // === TEMPORARY CODE WARNING ===
+    // Because the new desugaring logic will cause problems in the compile test,
+    // all the test files will then be affected. This is not what I want to see.
+    // I want to check and fix the problems file by file.
+    val newSplit = Split.from(t.ssss)
+    scoped("ucs:desugared"):
+      log(s"The simple split before desugaring:\n${t.ssss.prettyPrint}")
+    scoped("ucs:desugared"):
+      log(s"Split expanded from the simple split:\n${newSplit.prettyPrint}")
+    val inputSplit = if config.useNewDesugaring then newSplit else t.desugared
+    this(inputSplit, t.kw, S(t), k)
+  
+  def apply(t: Term.SynthIf)(k: Result => Block)(using Config, Subst): Block =
+    this(t.split, `if`, S(t), k)
+  
+  def apply(split: Split)(k: Result => Block)(using Config, Subst): Block =
+    this(split, `if`, N, k)
+  
+  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using Config, Subst) =
     var usesResTmp = false
     // The symbol of the temporary variable for the result of the `if`-like term.
     // It will be created in one of the following situations.
@@ -695,11 +716,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // 3. The term is a `while` and the result is used.
     lazy val l =
       usesResTmp = true
-      new TempSymbol(S(t))
+      new TempSymbol(t)
     // The symbol for the loop label if the term is a `while`.
-    lazy val loopLabel = new TempSymbol(S(t))
+    lazy val loopLabel = new TempSymbol(t)
     val normalized = tl.scoped("ucs:normalize"):
-      normalize(t.desugared)(using VarSet())
+      normalize(inputSplit)(using VarSet())
     tl.scoped("ucs:normalized"):
       tl.log(s"Normalized:\n${normalized.prettyPrint}")
     // Collect consequents that are shared in more than one branch.
@@ -707,7 +728,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
     val cont =
-      if t.kw === `while` then
+      if kw === `while` then
         // If the term is a `while`, the action of `else` branches depends on
         // whether the the enclosing split is at the top level or not.
         R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else Continue(loopLabel)))
@@ -745,7 +766,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
     val resultBlock =
-      if t.kw === `while` then
+      if kw === `while` then
         Begin(Label(loopLabel, true, body, End()), rest)
       else if sharedConsequents.isEmpty && k.isInstanceOf[TailOp] then
         body

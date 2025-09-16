@@ -11,12 +11,12 @@ x => if x is Pair(A, B) then 1
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   let param0, param1;
+//│   let argument0$, argument1$;
 //│   if (x instanceof Pair1.class) {
-//│     param0 = x.a;
-//│     param1 = x.b;
-//│     if (param0 instanceof A1) {
-//│       if (param1 instanceof B1) {
+//│     argument0$ = x.a;
+//│     argument1$ = x.b;
+//│     if (argument0$ instanceof A1) {
+//│       if (argument1$ instanceof B1) {
 //│         return 1
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
@@ -38,18 +38,18 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(x) {
-//│   let param0, param1;
+//│   let argument0$, argument1$;
 //│   if (x instanceof Pair1.class) {
-//│     param0 = x.a;
-//│     param1 = x.b;
-//│     if (param0 instanceof A1) {
-//│       if (param1 instanceof A1) {
+//│     argument0$ = x.a;
+//│     argument1$ = x.b;
+//│     if (argument0$ instanceof A1) {
+//│       if (argument1$ instanceof A1) {
 //│         return 1
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
-//│     } else if (param0 instanceof B1) {
-//│       if (param1 instanceof B1) {
+//│     } else if (argument0$ instanceof B1) {
+//│       if (argument1$ instanceof B1) {
 //│         return 2
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))

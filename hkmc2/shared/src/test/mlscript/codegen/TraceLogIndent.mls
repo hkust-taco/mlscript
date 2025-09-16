@@ -13,6 +13,9 @@ fun g(z) =
 //│ ╔══[ERROR] Expected 2 arguments, got 1
 //│ ║  l.11: 	    z == 0 then plus(0)
 //│ ╙──      	                    ^^^
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.11: 	    z == 0 then plus(0)
+//│ ╙──      	                    ^^^
 
 fun f(x, y)(z) =
   x + y + g(z)

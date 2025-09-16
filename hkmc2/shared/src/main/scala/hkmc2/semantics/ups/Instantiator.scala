@@ -27,6 +27,13 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
    *  patterns that need to be instantiated. */
   val thingsToDo: MutQueue[Instantiation] = MutQueue.empty
   
+  /** Instantiate an anonymous pattern. */
+  def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
+    // TODO: We should not pass an empty map to the `instantiate` method if the
+    // caller is from the `NaiveCompiler`.
+    val entryPoint = instantiate(pattern)(using Map.empty)
+    (entryPoint, runInstantiationLoop)
+  
   /** Instantiate a pattern and patterns used in it. */
   def apply(
     symbol: PatternSymbol,
@@ -35,6 +42,10 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   ): (Pat, Context) = scoped("ucs:instantiation"):
     val entryPoint = Instantiation(symbol, arguments.map(instantiate(_)(using Map.empty)))(useSiteLoc)
     val result = schedule(entryPoint)
+    (Synonym(result), runInstantiationLoop)
+  
+  /** Run the loop to recursively instantiate needed patterns. */
+  private def runInstantiationLoop: Context =
     while thingsToDo.nonEmpty do
       val instantiation = thingsToDo.dequeue()
       val defn = instantiation.symbol.defn.get
@@ -58,10 +69,10 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
         progress += (instantiation -> S(instantiated))
     // Finally, return the synonym representing the entry point pattern and all
     // instantiated pattern definitions.
-    val definitions = progress.view.mapValues:
-      _.getOrElse(lastWords("The pattern is expected to be instantiated."))
-    .toMap
-    (Synonym(result), Context(definitions))
+    Context:
+      progress.view.mapValues:
+        _.getOrElse(lastWords("The pattern is expected to be instantiated."))
+      .toMap
   
   /** Add the instantiation to the queue if it has not been instantiated yet. */
   def schedule(instantiation: Instantiation): Instantiation =
@@ -70,7 +81,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       thingsToDo.enqueue(instantiation)
     else
       log(s"Already instantiated ${instantiation.showDbg}")
-    progress(instantiation) 
+    progress(instantiation)
     instantiation
   
   /** Instantiate the given pattern with a substitution map. */
