@@ -472,7 +472,7 @@ globalThis.Object.freeze(class Runtime {
   } 
   static topLevelEffect(tr, debug) {
     let scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-    tmp6:  while (true) {
+    tmp6: while (true) {
       scrut = tr.handler === Runtime.PrintStackEffect;
       if (scrut === true) {
         tmp = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
@@ -500,11 +500,11 @@ globalThis.Object.freeze(class Runtime {
     curHandler = tr.contTrace;
     atTail = true;
     if (debug === true) {
-      tmp20:  while (true) {
+      tmp20: while (true) {
         scrut = curHandler !== null;
         if (scrut === true) {
           cur = curHandler.next;
-          tmp21:  while (true) {
+          tmp21: while (true) {
             scrut1 = cur !== null;
             if (scrut1 === true) {
               locals = cur.getLocals;
@@ -518,8 +518,8 @@ globalThis.Object.freeze(class Runtime {
                 tmp2 = loc;
               }
               loc1 = tmp2;
-              split_root$:  {
-                split_1$:  {
+              split_root$: {
+                split_1$: {
                   if (showLocals === true) {
                     scrut2 = curLocals.locals.length > 0;
                     if (scrut2 === true) {
@@ -539,11 +539,9 @@ globalThis.Object.freeze(class Runtime {
                   } else {
                     break split_1$
                   }
-                  
                 }
                 tmp5 = "";
                 break split_root$;
-                
               }
               localsMsg = tmp5;
               tmp6 = "\n\tat " + curLocals.fnName;
@@ -733,7 +731,7 @@ globalThis.Object.freeze(class Runtime {
       tmp9 = Runtime.showFunctionContChain(contTrace.next, hl, vis, 0);
       tmp10 = runtime.safeCall(globalThis.console.log(tmp9));
       cur = contTrace.nextHandler;
-      tmp15:  while (true) {
+      tmp15: while (true) {
         scrut2 = cur !== null;
         if (scrut2 === true) {
           tmp11 = Runtime.showHandlerContChain(cur, hl, vis, 0);
@@ -794,7 +792,7 @@ globalThis.Object.freeze(class Runtime {
   } 
   static handleEffects(cur) {
     let nxt, scrut, tmp, tmp1, tmp2;
-    tmp3:  while (true) {
+    tmp3: while (true) {
       if (cur instanceof Runtime.EffectSig.class) {
         tmp = Runtime.handleEffect(cur);
         nxt = tmp;
@@ -817,9 +815,9 @@ globalThis.Object.freeze(class Runtime {
   static handleEffect(cur) {
     let prevHandlerFrame, scrut, scrut1, scrut2, handlerFrame, saved, scrut3, scrut4, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
     prevHandlerFrame = cur.contTrace;
-    tmp7:  while (true) {
-      split_root$:  {
-        split_1$:  {
+    tmp7: while (true) {
+      split_root$: {
+        split_1$: {
           scrut = prevHandlerFrame.nextHandler !== null;
           if (scrut === true) {
             scrut1 = prevHandlerFrame.nextHandler.handler !== cur.handler;
@@ -833,11 +831,9 @@ globalThis.Object.freeze(class Runtime {
           } else {
             break split_1$
           }
-          
         }
         tmp = runtime.Unit;
         break split_root$;
-        
       }
       break;
     }
@@ -897,7 +893,7 @@ globalThis.Object.freeze(class Runtime {
     let cont, handlerCont, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4;
     cont = contTrace.next;
     handlerCont = contTrace.nextHandler;
-    tmp5:  while (true) {
+    tmp5: while (true) {
       if (cont instanceof Runtime.FunctionContFrame.class) {
         tmp = runtime.safeCall(cont.resume(value));
         value = tmp;
@@ -973,7 +969,7 @@ globalThis.Object.freeze(class Runtime {
     Runtime.stackHandler = Runtime.StackDelayHandler;
     tmp = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f);
     result = tmp;
-    tmp3:  while (true) {
+    tmp3: while (true) {
       scrut = Runtime.stackResume !== null;
       if (scrut === true) {
         saved = Runtime.stackResume;

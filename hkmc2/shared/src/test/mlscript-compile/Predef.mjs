@@ -134,7 +134,7 @@ globalThis.Object.freeze(class Predef {
         i = tmp;
         tmp1 = runtime.safeCall(rest.at(i));
         init = tmp1;
-        tmp6:  while (true) {
+        tmp6: while (true) {
           scrut = i > 0;
           if (scrut === true) {
             tmp2 = i - 1;

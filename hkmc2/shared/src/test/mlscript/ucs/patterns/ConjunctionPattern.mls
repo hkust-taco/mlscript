@@ -31,16 +31,14 @@ fun foo(v) =
 //│ let foo;
 //│ foo = function foo(v) {
 //│   let tmp2;
-//│   split_root$2:  {
-//│     split_1$2:  {
+//│   split_root$2: {
+//│     split_1$2: {
 //│       if (v instanceof A1.class) {
 //│         break split_1$2
 //│       } else { break split_1$2 }
-//│       
 //│     }
 //│     tmp2 = 0;
 //│     break split_root$2;
-//│     
 //│   }
 //│   return tmp2
 //│ };

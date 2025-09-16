@@ -188,7 +188,7 @@ str
 //│               if (this.pc === 7) {
 //│                 tmp13 = value$;
 //│               }
-//│               contLoop:  while (true) {
+//│               contLoop: while (true) {
 //│                 if (this.pc === 8) {
 //│                   tmp13 = runtime.safeCall(k(arg));
 //│                   if (tmp13 instanceof runtime.EffectSig.class) {
@@ -240,7 +240,7 @@ str
 //│         if (this.pc === 6) {
 //│           tmp11 = value$;
 //│         }
-//│         contLoop:  while (true) {
+//│         contLoop: while (true) {
 //│           if (this.pc === 6) {
 //│             return tmp11
 //│           }
@@ -276,7 +276,7 @@ str
 //│                 if (this.pc === 4) {
 //│                   tmp15 = value$;
 //│                 }
-//│                 contLoop:  while (true) {
+//│                 contLoop: while (true) {
 //│                   if (this.pc === 5) {
 //│                     tmp15 = runtime.safeCall(k(arg));
 //│                     if (tmp15 instanceof runtime.EffectSig.class) {
@@ -333,7 +333,7 @@ str
 //│           } else if (this.pc === 1) {
 //│             res7 = value$;
 //│           }
-//│           contLoop:  while (true) {
+//│           contLoop: while (true) {
 //│             if (this.pc === 3) {
 //│               tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
 //│               if (tmp12 instanceof runtime.EffectSig.class) {

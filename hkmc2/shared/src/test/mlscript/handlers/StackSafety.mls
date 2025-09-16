@@ -36,7 +36,7 @@ hi(0)
 //│       if (this.pc === 0) {
 //│         stackDelayRes = value$;
 //│       }
-//│       contLoop:  while (true) {
+//│       contLoop: while (true) {
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {
@@ -112,7 +112,7 @@ sum(10000)
 //│       } else if (this.pc === 1) {
 //│         tmp1 = value$;
 //│       }
-//│       contLoop:  while (true) {
+//│       contLoop: while (true) {
 //│         if (this.pc === 0) {
 //│           scrut = n == 0;
 //│           if (scrut === true) {

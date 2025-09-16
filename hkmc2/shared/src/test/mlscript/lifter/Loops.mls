@@ -55,7 +55,7 @@ fun foo() =
 //│ foo2 = function foo() {
 //│   let x, scrut, tmp2, tmp3;
 //│   x = 1;
-//│   tmp4:  while (true) {
+//│   tmp4: while (true) {
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp2 = x + 1;

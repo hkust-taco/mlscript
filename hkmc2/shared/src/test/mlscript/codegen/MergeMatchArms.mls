@@ -59,8 +59,8 @@ if a is
   C then 3
 //│ JS (unsanitized):
 //│ let tmp;
-//│ split_root$:  {
-//│   split_1$:  {
+//│ split_root$: {
+//│   split_1$: {
 //│     if (a instanceof A1.class) {
 //│       if (b instanceof A1.class) {
 //│         tmp = 1;
@@ -78,11 +78,9 @@ if a is
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     
 //│   }
 //│   tmp = 2;
 //│   break split_root$;
-//│   
 //│ }
 //│ tmp
 //│ = 2

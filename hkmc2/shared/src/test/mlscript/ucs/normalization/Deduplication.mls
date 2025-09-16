@@ -39,8 +39,8 @@ if x is
   else ""
 //│ JS (unsanitized):
 //│ let tmp2;
-//│ split_root$:  {
-//│   split_1$:  {
+//│ split_root$: {
+//│   split_1$: {
 //│     if (x === 0) {
 //│       if (y === 0) {
 //│         if (z === 0) {
@@ -62,11 +62,9 @@ if x is
 //│       tmp2 = "1";
 //│       break split_root$
 //│     } else { break split_1$ }
-//│     
 //│   }
 //│   tmp2 = "";
 //│   break split_root$;
-//│   
 //│ }
 //│ tmp2
 //│ = "000"
@@ -82,8 +80,8 @@ let qqq = if x is
   else ""
 //│ JS (unsanitized):
 //│ let qqq, tmp3;
-//│ split_root$1:  {
-//│   split_1$1:  {
+//│ split_root$1: {
+//│   split_1$1: {
 //│     if (x === 0) {
 //│       if (y === 0) {
 //│         if (z === 0) {
@@ -105,11 +103,9 @@ let qqq = if x is
 //│       tmp3 = "1";
 //│       break split_root$1
 //│     } else { break split_1$1 }
-//│     
 //│   }
 //│   tmp3 = "";
 //│   break split_root$1;
-//│   
 //│ }
 //│ qqq = tmp3;
 //│ qqq = "000"
@@ -125,8 +121,8 @@ print of if x is
   else ""
 //│ JS (unsanitized):
 //│ let tmp4;
-//│ split_root$2:  {
-//│   split_1$2:  {
+//│ split_root$2: {
+//│   split_1$2: {
 //│     if (x === 0) {
 //│       if (y === 0) {
 //│         if (z === 0) {
@@ -148,11 +144,9 @@ print of if x is
 //│       tmp4 = "1";
 //│       break split_root$2
 //│     } else { break split_1$2 }
-//│     
 //│   }
 //│   tmp4 = "";
 //│   break split_root$2;
-//│   
 //│ }
 //│ Predef.print(tmp4)
 //│ > 000
@@ -171,8 +165,8 @@ fun foo(x, y, z) =
 //│ let foo;
 //│ foo = function foo(x1, y1, z1) {
 //│   let tmp5;
-//│   split_root$3:  {
-//│     split_1$3:  {
+//│   split_root$3: {
+//│     split_1$3: {
 //│       if (x1 === 0) {
 //│         if (y1 === 0) {
 //│           if (z1 === 0) {
@@ -194,11 +188,9 @@ fun foo(x, y, z) =
 //│         tmp5 = "1";
 //│         break split_root$3
 //│       } else { break split_1$3 }
-//│       
 //│     }
 //│     tmp5 = "";
 //│     break split_root$3;
-//│     
 //│   }
 //│   return tmp5
 //│ };
@@ -218,10 +210,10 @@ print of if
   else "___"
 //│ JS (unsanitized):
 //│ let tmp5;
-//│ split_root$3:  {
-//│   split_1$3:  {
-//│     split_2$:  {
-//│       split_3$:  {
+//│ split_root$3: {
+//│   split_1$3: {
+//│     split_2$: {
+//│       split_3$: {
 //│         if (x === 0) {
 //│           if (y === 0) {
 //│             if (z === 0) {
@@ -256,19 +248,15 @@ print of if
 //│             break split_2$
 //│           }
 //│         }
-//│         
 //│       }
 //│       tmp5 = "_2_";
 //│       break split_root$3;
-//│       
 //│     }
 //│     tmp5 = "___";
 //│     break split_root$3;
-//│     
 //│   }
 //│   tmp5 = "0_1";
 //│   break split_root$3;
-//│   
 //│ }
 //│ Predef.print(tmp5)
 //│ > 000
@@ -287,10 +275,10 @@ fun foo(x, y, z) = if
 //│ let foo1;
 //│ foo1 = function foo(x1, y1, z1) {
 //│   let tmp6;
-//│   split_root$4:  {
-//│     split_1$4:  {
-//│       split_2$1:  {
-//│         split_3$1:  {
+//│   split_root$4: {
+//│     split_1$4: {
+//│       split_2$1: {
+//│         split_3$1: {
 //│           if (x1 === 0) {
 //│             if (y1 === 0) {
 //│               if (z1 === 0) {
@@ -325,19 +313,15 @@ fun foo(x, y, z) = if
 //│               break split_2$1
 //│             }
 //│           }
-//│           
 //│         }
 //│         tmp6 = "_2_";
 //│         break split_root$4;
-//│         
 //│       }
 //│       tmp6 = "___";
 //│       break split_root$4;
-//│       
 //│     }
 //│     tmp6 = "0_1";
 //│     break split_root$4;
-//│     
 //│   }
 //│   return tmp6
 //│ };
@@ -359,8 +343,8 @@ fun foo(x, y, z) = if x is
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
 //│   let value, tmp6;
-//│   split_root$4:  {
-//│     split_1$4:  {
+//│   split_root$4: {
+//│     split_1$4: {
 //│       if (x1 === 0) {
 //│         if (y1 === 0) {
 //│           if (z1 === 0) {
@@ -384,12 +368,10 @@ fun foo(x, y, z) = if x is
 //│       } else {
 //│         break split_1$4
 //│       }
-//│       
 //│     }
 //│     value = "hello";
 //│     tmp6 = expensive_call(value);
 //│     break split_root$4;
-//│     
 //│   }
 //│   return tmp6
 //│ };
