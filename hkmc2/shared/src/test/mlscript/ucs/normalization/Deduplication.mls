@@ -375,3 +375,86 @@ fun foo(x, y, z) = if x is
 //│   }
 //│   return tmp6
 //│ };
+
+class A
+class B
+class C
+
+:sjs
+fun foo(x, y, z) =
+  if x is A then "Hello"
+  else "Goodbye"
+//│ JS (unsanitized):
+//│ let foo3;
+//│ foo3 = function foo(x1, y1, z1) {
+//│   if (x1 instanceof A1) { return "Hello" } else { return "Goodbye" }
+//│ };
+
+:sjs
+fun foo(x, y, z) =
+  if x is A and y is B and z is C then "Hello"
+  else "Goodbye"
+//│ JS (unsanitized):
+//│ let foo4;
+//│ foo4 = function foo(x1, y1, z1) {
+//│   let tmp6;
+//│   split_root$4: {
+//│     split_1$4: {
+//│       if (x1 instanceof A1) {
+//│         if (y1 instanceof B1) {
+//│           if (z1 instanceof C1) {
+//│             tmp6 = "Hello";
+//│             break split_root$4
+//│           } else {
+//│             break split_1$4
+//│           }
+//│         } else {
+//│           break split_1$4
+//│         }
+//│       } else { break split_1$4 }
+//│     }
+//│     tmp6 = "Goodbye";
+//│     break split_root$4;
+//│   }
+//│   return tmp6
+//│ };
+
+// Before the deduplication is introduced:
+// let foo;
+// foo = function foo(x1, y, z) {
+//   if (x1 instanceof A1) {
+//     if (y instanceof B1) {
+//       if (z instanceof C1) {
+//         return "Hello"
+//       } else { return "Goodbye" }
+//     } else { return "Goodbye" }
+//   } else { return "Goodbye" }
+// };
+
+:sjs
+fun foo(x, y, z) =
+  if x is A and y is B and z is C then "Hello"
+//│ JS (unsanitized):
+//│ let foo5;
+//│ foo5 = function foo(x1, y1, z1) {
+//│   if (x1 instanceof A1) {
+//│     if (y1 instanceof B1) {
+//│       if (z1 instanceof C1) {
+//│         return "Hello"
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       }
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };
+
+:sjs
+let y = if true then 1 else 2
+//│ JS (unsanitized):
+//│ let y1, scrut3, tmp6;
+//│ scrut3 = true;
+//│ if (scrut3 === true) { tmp6 = 1; } else { tmp6 = 2; }
+//│ y1 = tmp6;
+//│ y = 1
