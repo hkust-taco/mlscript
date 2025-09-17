@@ -74,17 +74,19 @@ trait SplitElaborator:
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
     val affirmative = Else(Term.Lit(BoolLit(true)))
-    val split = tree match
-      case lhs is rhs => subterm(lhs).reference: scrut =>
-        val (firstPatternTree, _) :: matches = disaggregate(rhs)
-        val firstPattern = self.pattern(firstPatternTree)
-        // firstPattern.variables.report
-        (ctx ++ firstPattern.variables.allocate).givenIn:
-          val split = expandMatches(matches)(affirmative)
-          Head.Match(scrut(), firstPattern, split) ~: End
-      case matches =>
-        expandMatches(disaggregate(matches))(affirmative)
-    split ~~: Else(Term.Lit(BoolLit(false)))
+    val negative = Else(Term.Lit(BoolLit(false)))
+    val (scrutinee, pattern) :: matches = disaggregate(tree)
+    subterm(scrutinee).reference: scrutinee =>
+      lazy val innerSplit: Ctxl[SimpleSplit] = expandMatches(matches)(affirmative)
+      pattern match
+        case Block(trees) => trees.foldRight(negative):
+          case (pattern, alternative) =>
+            Head.Match(scrutinee(), self.pattern(pattern), innerSplit) ~: alternative
+        case _ =>
+          val firstPattern = self.pattern(pattern)
+          firstPattern.variables.report
+          (ctx ++ firstPattern.variables.allocate).givenIn:
+            Head.Match(scrutinee(), firstPattern, innerSplit) ~: negative
   
   /** Desugar a list of trees as a term split. The returned function takes a
     * function, which takes a `Ctx` and returns a `SimpleSplit` representing
