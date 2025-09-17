@@ -20,7 +20,7 @@ case class Program(
 )
 
 
-sealed abstract class Block extends Product with AutoLocated:
+sealed abstract class Block extends Product:
   
   def ~(that: Block): Block = Begin(this, that)
   
@@ -28,36 +28,6 @@ sealed abstract class Block extends Product with AutoLocated:
     case _: End => true
     case _ => false
   
-  // * Note: this function is used to piece together a location;
-  // * for the location to be valid, we should NOT have it include children whose location
-  // * is from some different place (with a different Origin), such as the location attached to symbols.
-  // * That's whym for example, we're not adding the `lhs` of `Assign` to the children list.
-  protected def children: Ls[Located] = this match
-    case Match(scrut, arms, dflt, rest) => scrut :: arms.map(_._2) ++ dflt.toList :+ rest
-    case Return(res, implct) => res :: Nil
-    case Throw(exc) => exc :: Nil
-    case Label(label, body, rest) => body :: rest :: Nil
-    case Break(label) => Nil
-    case Continue(label) => Nil
-    case Begin(sub, rest) => sub :: rest :: Nil
-    case TryBlock(sub, finallyDo, rest) => sub :: finallyDo :: rest :: Nil
-    case Assign(lhs, rhs, rest) =>  rhs :: rest :: Nil
-    case AssignField(lhs, nme, rhs, rest) => lhs :: nme :: rhs :: rest :: Nil
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs :: fld :: rhs :: rest :: Nil
-    case Define(FunDefn(owner, sym, params, body), rest) => sym :: (params :+ body :+ rest)
-    case Define(ValDefn(tsym, sym, rhs), rest) => tsym :: sym :: rhs :: rest :: Nil
-    case Define(ClsLikeDefn(owner, isym, sym, k, paramsOpt, aux, parentSym, methods,
-        privFlds, pubFlds, preCtor, ctor, stat), rest)
-    =>
-      isym :: sym :: paramsOpt.toList ++ aux ++ parentSym.toList ++
-        methods.flatMap(_.subBlocks) ++
-        stat.iterator.flatMap(_.subBlocks) ++
-        privFlds ++ pubFlds.flatMap(f => f._1 :: f._2 :: Nil) ++ preCtor.subBlocks ++ ctor.subBlocks :+ rest
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      lhs :: res :: par :: args ++ handlers.flatMap: handler =>
-        handler.sym :: handler.resumeSym :: (handler.params :+ handler.body)
-      :+ body :+ rest
-    case End(msg) => Nil
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
@@ -513,7 +483,10 @@ sealed abstract class Result extends AutoLocated:
 // sealed abstract class Result extends AutoLocated with ProductWithExtraInfo:
 //   def extraInfo: Str = toLoc.toString
   
-  // * Note: see the note in for Block#children.
+  // * Note: this function is used to piece together a location;
+  // * for the location to be valid, we should NOT have it include children whose location
+  // * is from some different place (with a different Origin), such as the location attached to symbols.
+  // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
   protected def children: List[Located] = this match
     case Call(fun, args) => fun :: args.map(_.value)
     case Instantiate(mut, cls, args) => cls :: args.map(_.value)
@@ -522,7 +495,7 @@ sealed abstract class Result extends AutoLocated:
     case Value.Ref(l) => Nil
     case Value.This(sym) => Nil
     case Value.Lit(lit) => lit :: Nil
-    case Value.Lam(params, body) => params :: body :: Nil
+    case Value.Lam(params, body) => params :: Nil
     case Value.Arr(mut, elems) => elems.map(_.value)
     case Value.Rcd(mut, elems) => elems.map(_.value)
   

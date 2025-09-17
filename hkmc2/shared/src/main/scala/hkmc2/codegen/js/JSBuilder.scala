@@ -192,7 +192,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case _: HandleBlock =>
       errStmt(msg"This code requires effect handler instrumentation but was compiled without it.")
     case Assign(l, r, rst) =>
-      doc" # ${getVar(l, t.toLoc // TODO: improve location
+      doc" # ${getVar(l, l.toLoc // TODO: improve location
         )} = ${result(r)};${returningTerm(rst, endSemi)}"
     case AssignField(p, n, r, rst) =>
       doc" # ${result(p)}${fieldSelect(n.name)} = ${result(r)};${returningTerm(rst, endSemi)}"
@@ -485,10 +485,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc" # throw ${result(res)}${mkSemi}"
     
     case Break(lbl) =>
-      doc" # break ${getVar(lbl, t.toLoc)}${mkSemi}"
+      doc" # break ${getVar(lbl, lbl.toLoc)}${mkSemi}"
       
     case Continue(lbl) =>
-      doc" # continue ${getVar(lbl, t.toLoc)}${mkSemi}"
+      doc" # continue ${getVar(lbl, lbl.toLoc)}${mkSemi}"
       
     case Label(lbl, bod, rst) =>
       scope.allocateName(lbl)
