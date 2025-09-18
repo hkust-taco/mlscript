@@ -59,7 +59,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) => patterns
     case Not(pattern) => pattern :: Nil
     case Rename(pattern, name) => pattern :: Nil
-    case Extract(pattern, term) => pattern :: term :: Nil
+    case Extract(pattern, _, term) => pattern :: term :: Nil
     case Synonym(pattern) => pattern.symbol :: pattern.arguments
   
   lazy val symbols: Ls[VarSymbol] = this match
@@ -77,7 +77,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       patterns.find(_ != Never).fold(Nil)(_.symbols)
     case Not(_) => Nil
     case Rename(pattern, name) => name :: pattern.symbols
-    case Extract(_, _) => Nil
+    case Extract(_, _, _) => Nil
   
   /** Apply a partial function to every node in the pattern tree. Replace each
    *  node with the result of the partial function. If the partial function is
@@ -90,7 +90,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) => Or[L](patterns.map(_.map(f)))
     case Not(pattern) => Not[L](pattern.map(f))
     case Rename(pattern, name) => Rename[L](pattern.map(f), name)
-    case Extract(pattern, term) => Extract[L](pattern.map(f), term)
+    case Extract(pattern, correspondence, term) =>
+      Extract[L](pattern.map(f), correspondence, term)
   
   /** A simplified reduce for ``Pattern``.
     * It is designed to be used when we want to
@@ -106,7 +107,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
     case Not(pattern) => pattern.reduce(merge)(f)
     case Rename(pattern, _) => pattern.reduce(merge)(f)
-    case Extract(pattern, _) => pattern.reduce(merge)(f)
+    case Extract(pattern, _, _) => pattern.reduce(merge)(f)
 
   def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
     case Literal(lit) => Set(lit)
@@ -179,9 +180,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
     case Rename(pattern, name) => Rename(pattern.simplify, name)
-    case Extract(pattern, term) => pattern.simplify match
+    case Extract(pattern, correspondence, term) => pattern.simplify match
       case `Never` => Never // Lift up `Never`. Let the caller reduce it.
-      case simplified => Extract(simplified, term)
+      case simplified => Extract(simplified, correspondence, term)
     case Synonym(sym) => this
   
   /** Expand the pattern by replacing any top-level synonym with its body.
@@ -237,7 +238,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Not(pattern) => s"!${pattern.showDbg}"
     case Rename(Or(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"
-    case Extract(pattern, term) => s"${pattern.showDbg} => ${term.showDbg}"
+    case Extract(pattern, _, term) => s"${pattern.showDbg} => ${term.showDbg}"
     case Synonym(sym) => sym.showDbg
 
 object Pattern:
@@ -288,7 +289,19 @@ object Pattern:
   final case class Or[+K <: Kind.Complete](patterns: List[Pattern[K]]) extends Pattern[K]
   final case class Not[+K <: Kind.Complete](pattern: Pattern[K]) extends Pattern[K]
   final case class Rename[+K <: Kind.Complete](pattern: Pattern[K], name: VarSymbol) extends Pattern[K]
-  final case class Extract[+K <: Kind.Complete](pattern: Pattern[K], term: Term) extends Pattern[K]
+  /**
+    * Similar to `Pattern.Transform`.
+    *
+    * @param pattern The pattern to be matched against.
+    * @param correspondence The correspondence between symbols in the pattern
+    *        and symbols in the transformation term.
+    * @param term The term to be applied to the extracted values.
+    */
+  final case class Extract[+K <: Kind.Complete](
+      pattern: Pattern[K],
+      correspondence: Map[VarSymbol, VarSymbol],
+      term: Term
+  ) extends Pattern[K]
   
   val Wildcard = Or(Nil)
   

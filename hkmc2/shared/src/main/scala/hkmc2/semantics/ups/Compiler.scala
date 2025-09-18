@@ -347,17 +347,20 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     case Rename(pattern, name) =>
       // We should add those fields to a context.
       completePattern(pattern, scrutinee, subScrutinees, name :: aliases)
-    case Extract(pattern, term) =>
+    case Extract(pattern, correspondence, term) =>
       // The symbol representing the transform function, which should be
       // declared at the outermost level.
       val transformSymbol = TempSymbol(N, "transform")
       // The transform function takes a single record as the argument.
       val bindingsSymbol = VarSymbol(Ident("args"))
       val params = paramList(param(bindingsSymbol))
-      // We then bind the variables to fields of the record.
+      // Because we pass the extracted values using recoreds. We need to bind
+      // each property to its corresponding variable which is accessible from
+      // then `term`.
       val letBindings = pattern.symbols.flatMap: symbol =>
-        LetDecl(symbol, Nil) ::
-        DefineVar(symbol, sel(bindingsSymbol.safeRef, symbol.name)) :: Nil
+        val termSymbol = correspondence(symbol)
+        LetDecl(termSymbol, Nil) ::
+        DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil
       val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
       (makeConsequent, alternative) => Split.Let(
         sym = transformSymbol,

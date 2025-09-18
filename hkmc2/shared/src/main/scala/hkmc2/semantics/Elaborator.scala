@@ -1431,9 +1431,19 @@ extends Importer with ucs.SplitElaborator:
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
       val pattern = go(lhs)
-      val termCtx = ctx ++ pattern.variables.allocate
+      val variables = pattern.variables.allocate
+      // - `contextEntries` will be added to the context
+      // - `correspondence` is mapping from symbols representing variables
+      //   in the pattern to symbols for parameters to be used in the `term`.
+      val (contextEntries, correspondence) = variables.iterator.map:
+        case (name, symbol) =>
+          // We must create a symbol specifically for `Param` to avoid
+          // repetitively declare symbols in `Scope` during code generation.
+          val parameterSymbol = VarSymbol(new Ident(symbol.name))
+          (name -> parameterSymbol, symbol -> parameterSymbol)
+      .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.
-      Transform(pattern, term(rhs)(using termCtx))
+      Transform(pattern, correspondence, term(rhs)(using ctx ++ contextEntries))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
       // We are accumulating two components: the leading patterns, the spred

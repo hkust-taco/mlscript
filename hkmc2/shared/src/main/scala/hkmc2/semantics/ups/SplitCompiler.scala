@@ -310,7 +310,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             (output, bindings) =>
               makeConsequent(output, bindings + (symbol -> output)),
             alternative)
-      case Transform(pattern, transform) =>
+      case Transform(pattern, parameters, transform) =>
         // We should first create a local function that transforms the captured
         // values. So far, `pattern`'s variables should be bound to symbols.
         // Thus, we can make a parameter list from the symbols. Then, we make
@@ -318,8 +318,9 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         // `pattern` might be translated to many branches, making a lambda term
         // in advance reduces code duplication.
         val symbols = pattern.variables.symbols
-        val params = symbols.map:
-          Param(FldFlags.empty, _, N, Modulefulness.none)
+        val params = parameters.map:
+          case (_, parameterSymbol) =>
+            Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
         val lambdaSymbol = new TempSymbol(N, "transform")
         // Next, we need to elaborate the pattern into a split. Note that
         // `makeMatchSplit` returns a function that takes a split as the
@@ -530,14 +531,16 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
               (output, remains, bindings) =>
                 makeConsequent(output, remains, bindings + (symbol -> output)),
               alternative)
-    case Transform(pattern, transform) =>
+    case Transform(pattern, parameters, transform) =>
       val make = makeStringPrefixMatchSplit(scrutinee, pattern)
       make.whenAccept:
         // Declare the lambda function at the outermost level. Even if there are
         // multiple disjunctions in the consequent, we will not need to repeat
         // the `transform` term.
         val symbols = pattern.variables.symbols
-        val params = symbols.map(Param(FldFlags.empty, _, N, Modulefulness.none))
+        val params = parameters.map:
+          case (_, parameterSymbol) =>
+            Param(FldFlags.empty, parameterSymbol, N, Modulefulness.none)
         val lambdaSymbol = new TempSymbol(N, "transform")
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,

@@ -238,9 +238,13 @@ enum Pattern extends AutoLocated:
   case Alias(pattern: Pattern, id: Ident) extends Pattern with AliasImpl
   
   /** A pattern that matches the same value as other pattern, with an additional
-   *  function applied to the bound variables in the pattern.
+    * function applied to the bound variables in the pattern.
+    *
+    * @param pattern The pattern to be matched against.
+    * @param parameters A map from the variable symbols to parameter symbols.
+    * @param transform The term that should be applied to the extracted values.
    */
-  case Transform(pattern: Pattern, transform: Term)
+  case Transform(pattern: Pattern, parameters: Ls[(VarSymbol, VarSymbol)], transform: Term)
   
   case Annotated(pattern: Pattern, annotations: Vector[Term])
   
@@ -295,7 +299,7 @@ enum Pattern extends AutoLocated:
       case (name, pattern) => name :: pattern.children
     case Chain(first, second) => first :: second :: Nil
     case Alias(pattern, alias) => pattern :: alias :: Nil
-    case Transform(pattern, transform) => pattern :: transform :: Nil
+    case Transform(pattern, _, transform) => pattern :: transform :: Nil
     case Annotated(pattern, annotations) => pattern :: annotations.toList
     case Guarded(pattern, guard) => pattern.children :+ guard
   
@@ -311,7 +315,7 @@ enum Pattern extends AutoLocated:
     case Record(fields) => fields.flatMap(_._2.subTerms)
     case Chain(first, second) => first.subTerms ::: second.subTerms
     case Alias(pattern, _) => pattern.subTerms
-    case Transform(pattern, transform) => pattern.subTerms :+ transform
+    case Transform(pattern, _, transform) => pattern.subTerms :+ transform
     case Annotated(pattern, annotations) => pattern.subTerms ::: annotations.toList
     case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
@@ -328,7 +332,7 @@ enum Pattern extends AutoLocated:
     case Record(_) => "record"
     case Chain(_, _) => "chain"
     case Alias(_, _) => "alias"
-    case Transform(_, _) => "transform"
+    case Transform(_, _, _) => "transform"
     case Annotated(_, _) => "annotated pattern"
     case Guarded(_, _) => "guarded pattern"
   
@@ -365,7 +369,7 @@ enum Pattern extends AutoLocated:
     case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
-    case Transform(pattern, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
+    case Transform(pattern, _, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
     case Annotated(pattern, annotations) =>
       annotations.iterator.map(_.showDbg).mkString("@", " @", " ") + pattern.showDbgWithPar
     case Guarded(pattern, guard) => pattern.showDbg + " where " + guard.showDbg

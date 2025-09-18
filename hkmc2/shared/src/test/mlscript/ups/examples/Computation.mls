@@ -32,40 +32,32 @@ Celsius(-40) is ToFahrenheit(Fahrenheit(-40))
 Fahrenheit(-40) is ToCelsius(Celsius(-40))
 //│ = true
 
-:global
-:todo
-
-// This is to be fixed in the next commit. I spent some time on solving this but
-// got no results.
-
 fun toFahrenheit(c) =
   if c is (@compile ToFahrenheit) as output then output else "What's this?"
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(Computation.mls:+9, Computation.mls:+41),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,input,None,Modulefulness(None))),None)),Match(Ref(input),List((Cls(class:Celsius,Select(Ref(member:Celsius),Ident(class))),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(empty))))),Assign($emptyRecord$,Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($tmp)))),Match(Ref(input),List((Cls(class:Object,Ref(builtin:Object)),Match(Ref(input),List((Field(Ident(value),true),Assign($value,Select(Ref(input),Ident(value)),Assign($tmp,Call(Ref($matcher1$),List(Arg(None,Ref($value)))),End())))),Some(Assign($tmp,Ref($emptyRecord$),End())),End()))),Some(Assign($tmp,Ref($emptyRecord$),End())),Assign(value,Ref($tmp),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(c,Select(Ref(args),Ident(c)),Assign($tmp,Call(Ref(builtin:*),List(Arg(None,Ref(c)), Arg(None,Lit(IntLit(9))))),Assign($tmp,Call(Ref(builtin:/),List(Arg(None,Ref($tmp)), Arg(None,Lit(IntLit(5))))),Assign($tmp,Call(Ref(builtin:+),List(Arg(None,Ref($tmp)), Arg(None,Lit(IntLit(32))))),Return(Call(Ref(member:Fahrenheit),List(Arg(None,Ref($tmp)))),false)))))),Assign($tmp,Ref(member:lambda),Assign($transform,Ref($tmp),Assign($result1$,Select(Ref(value),Ident(p_1)),Match(Ref($result1$),List((Cls(class:MatchResult,Select(Select(Ref($runtime),Ident(MatchResult)),Ident(class))),Assign($output1$,Select(Ref($result1$),Ident(output)),Assign($bindings,Select(Ref($result1$),Ident(bindings)),Assign($fieldBindings,Rcd(false,List(RcdArg(Some(Lit(StrLit(c))),Ref($output1$)))),Assign($transformResult,Call(Ref($transform),List(Arg(None,Rcd(false,List(RcdArg(None,Ref($bindings)), RcdArg(None,Ref($fieldBindings))))))),Assign($bindings,Rcd(false,List()),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchResult)),List(Arg(None,Ref($transformResult)), Arg(None,Ref($bindings)))),End())))))))),Some(Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(f,Select(Ref(args),Ident(f)),Return(Ref(f),false))),Assign($transform,Ref(member:lambda),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(never))))),End())))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false)))))))))))), (Cls(class:Fahrenheit,Select(Ref(member:Fahrenheit),Ident(class))),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(f,Select(Ref(args),Ident(f)),Return(Ref(f),false))),Assign($transform,Ref(member:lambda),Assign($transformResult,Call(Ref($transform),List(Arg(None,Rcd(false,List(RcdArg(Some(Lit(StrLit(f))),Ref(input))))))),Assign($bindings,Rcd(false,List()),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchResult)),List(Arg(None,Ref($transformResult)), Arg(None,Ref($bindings)))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false))))))))),Some(Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(f,Select(Ref(args),Ident(f)),Return(Ref(f),false))),Assign($transform,Ref(member:lambda),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(never))))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false)))))),End())),Assign($tmp,Ref(member:lambda),Assign($matcher__ToFahrenheit$,Ref($tmp),Assign($matchRecord,Call(Ref($matcher__ToFahrenheit$),List(Arg(None,Ref(c)))),Assign($matchResult,Select(Ref($matchRecord),Ident(p_0)),Match(Ref($matchResult),List((Cls(class:MatchResult,Select(Select(Ref($runtime),Ident(MatchResult)),Ident(class))),Assign($patternOutput,Select(Ref($matchResult),Ident(output)),Assign($bindings,Select(Ref($matchResult),Ident(bindings)),Assign(output,Ref($patternOutput),Return(Ref(output),false)))))),Some(Return(Lit(StrLit(What's this?)),false)),End())))))))
 
 toFahrenheit of Celsius(100)
-//│ ═══[RUNTIME ERROR] ReferenceError: toFahrenheit is not defined
+//│ = Fahrenheit(212)
 
 toFahrenheit of Fahrenheit(100)
-//│ ═══[RUNTIME ERROR] ReferenceError: toFahrenheit is not defined
+//│ = Fahrenheit(100)
 
 toFahrenheit of Celsius(-40)
-//│ ═══[RUNTIME ERROR] ReferenceError: toFahrenheit is not defined
+//│ = Fahrenheit(-40)
 
 toFahrenheit of "Cheers!"
-//│ ═══[RUNTIME ERROR] ReferenceError: toFahrenheit is not defined
+//│ = "What's this?"
 
 fun toCelsius(f) =
   if f is (@compile ToCelsius) as output then output else "What's this?"
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(Computation.mls:+13, Computation.mls:+57),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,input,None,Modulefulness(None))),None)),Match(Ref(input),List((Cls(class:Fahrenheit,Select(Ref(member:Fahrenheit),Ident(class))),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(empty))))),Assign($emptyRecord$,Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($tmp)))),Match(Ref(input),List((Cls(class:Object,Ref(builtin:Object)),Match(Ref(input),List((Field(Ident(value),true),Assign($value,Select(Ref(input),Ident(value)),Assign($tmp,Call(Ref($matcher1$),List(Arg(None,Ref($value)))),End())))),Some(Assign($tmp,Ref($emptyRecord$),End())),End()))),Some(Assign($tmp,Ref($emptyRecord$),End())),Assign(value,Ref($tmp),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(f,Select(Ref(args),Ident(f)),Assign($tmp,Call(Ref(builtin:-),List(Arg(None,Ref(f)), Arg(None,Lit(IntLit(32))))),Assign($tmp,Call(Ref(builtin:*),List(Arg(None,Ref($tmp)), Arg(None,Lit(IntLit(5))))),Assign($tmp,Call(Ref(builtin:/),List(Arg(None,Ref($tmp)), Arg(None,Lit(IntLit(9))))),Return(Call(Ref(member:Celsius),List(Arg(None,Ref($tmp)))),false)))))),Assign($tmp,Ref(member:lambda),Assign($transform,Ref($tmp),Assign($result1$,Select(Ref(value),Ident(p_1)),Match(Ref($result1$),List((Cls(class:MatchResult,Select(Select(Ref($runtime),Ident(MatchResult)),Ident(class))),Assign($output1$,Select(Ref($result1$),Ident(output)),Assign($bindings,Select(Ref($result1$),Ident(bindings)),Assign($fieldBindings,Rcd(false,List(RcdArg(Some(Lit(StrLit(f))),Ref($output1$)))),Assign($transformResult,Call(Ref($transform),List(Arg(None,Rcd(false,List(RcdArg(None,Ref($bindings)), RcdArg(None,Ref($fieldBindings))))))),Assign($bindings,Rcd(false,List()),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchResult)),List(Arg(None,Ref($transformResult)), Arg(None,Ref($bindings)))),End())))))))),Some(Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(c,Select(Ref(args),Ident(c)),Return(Ref(c),false))),Assign($transform,Ref(member:lambda),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(never))))),End())))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false)))))))))))), (Cls(class:Celsius,Select(Ref(member:Celsius),Ident(class))),Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(c,Select(Ref(args),Ident(c)),Return(Ref(c),false))),Assign($transform,Ref(member:lambda),Assign($transformResult,Call(Ref($transform),List(Arg(None,Rcd(false,List(RcdArg(Some(Lit(StrLit(c))),Ref(input))))))),Assign($bindings,Rcd(false,List()),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchResult)),List(Arg(None,Ref($transformResult)), Arg(None,Ref($bindings)))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false))))))))),Some(Define(FunDefn(None,member:lambda,List(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None)),Assign(c,Select(Ref(args),Ident(c)),Return(Ref(c),false))),Assign($transform,Ref(member:lambda),Assign($tmp,Call(Select(Ref($runtime),Ident(MatchFailure)),List(Arg(None,Lit(StrLit(never))))),Assign($p_0$,Ref($tmp),Return(Rcd(false,List(RcdArg(Some(Lit(StrLit(p_0))),Ref($p_0$)))),false)))))),End())),Assign($tmp,Ref(member:lambda),Assign($matcher__ToCelsius$,Ref($tmp),Assign($matchRecord,Call(Ref($matcher__ToCelsius$),List(Arg(None,Ref(f)))),Assign($matchResult,Select(Ref($matchRecord),Ident(p_0)),Match(Ref($matchResult),List((Cls(class:MatchResult,Select(Select(Ref($runtime),Ident(MatchResult)),Ident(class))),Assign($patternOutput,Select(Ref($matchResult),Ident(output)),Assign($bindings,Select(Ref($matchResult),Ident(bindings)),Assign(output,Ref($patternOutput),Return(Ref(output),false)))))),Some(Return(Lit(StrLit(What's this?)),false)),End())))))))
 
 toCelsius of Fahrenheit(100)
-//│ ═══[RUNTIME ERROR] ReferenceError: toCelsius is not defined
+//│ = Celsius(37.77777777777778)
 
 toCelsius of Celsius(100)
-//│ ═══[RUNTIME ERROR] ReferenceError: toCelsius is not defined
+//│ = Celsius(100)
 
 toCelsius of "Cheers!"
-//│ ═══[RUNTIME ERROR] ReferenceError: toCelsius is not defined
+//│ = "What's this?"
 
 pattern HourAM = (0 => 12) | (1 ..= 11)
 pattern HourPM = 12 | (((13 ..= 23) as hour) => hour - 12)

@@ -69,10 +69,10 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
         progress += (instantiation -> S(instantiated))
     // Finally, return the synonym representing the entry point pattern and all
     // instantiated pattern definitions.
-    Context:
-      progress.view.mapValues:
-        _.getOrElse(lastWords("The pattern is expected to be instantiated."))
-      .toMap
+    val definitions = progress.view.mapValues:
+      _.getOrElse(lastWords("The pattern is expected to be instantiated."))
+    .toMap
+    new Context(definitions)
   
   /** Add the instantiation to the queue if it has not been instantiated yet. */
   def schedule(instantiation: Instantiation): Instantiation =
@@ -159,4 +159,5 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       case N => instantiate(pattern)
       case S(symbol) => Rename(instantiate(pattern), symbol)
     // Pattern arguments are accessible throughout the pattern.
-    case SP.Transform(pattern, transform) => Extract(instantiate(pattern), transform)
+    case SP.Transform(pattern, parameters, transform) =>
+      Extract(instantiate(pattern), parameters.toMap, transform)
