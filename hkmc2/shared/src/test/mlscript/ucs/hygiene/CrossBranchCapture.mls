@@ -58,15 +58,16 @@ fun process(e) =
 //│ ╙──      	              ^
 
 
+// * TODO: we might want to accept this and compare the two values for equality
 :e
 fun process(e) =
   if e is
     Pair(Numb(n), Numb(n)) then n
 //│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.64: 	    Pair(Numb(n), Numb(n)) then n
+//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
 //│ ║        	                       ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.64: 	    Pair(Numb(n), Numb(n)) then n
+//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
 //│ ╙──      	              ^
 
 process(Pair(Numb(1), Numb(2)))
