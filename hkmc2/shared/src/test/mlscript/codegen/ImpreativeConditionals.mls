@@ -33,5 +33,7 @@ fun hasZeroElement(xs) =
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
+//│ ╔══[WARNING] This else clause makes the following branches unreachable.
+//│ ╙── This branch is unreachable.
 
 

@@ -12,14 +12,14 @@ fun find(t, v) = if t is
   Node(v', l, r) and
     v < v' then find(l, v)
     v > v' then find(r, v)
-    _ then Some(v)
+    else Some(v)
   Empty then None
 
 fun insert(t, v) = if t is
   Node(v', l, r) and
     v < v' then Node(v', insert(l, v), r)
     v > v' then Node(v', l, insert(r, v))
-    _ then t
+    else t
   Empty then Node(v, Empty, Empty)
 
 find(Empty, 0)

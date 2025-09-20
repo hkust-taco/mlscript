@@ -34,7 +34,7 @@ fun insert(t, v) = if t is
   Node(v', l, r) and
     v < v' then Node(v', insert(l, v), r)
     v > v' then Node(v', l, insert(r, v))
-    _ then t
+    else t
   Empty then Node(v, Empty, Empty)
 
 fun insert'(t, v) = if t is
@@ -100,7 +100,7 @@ fun contains(t, v) = if t is
   Node(v', l, r) and
     v < v' then contains(l, v)
     v > v' then contains(r, v)
-    _ then true
+    else true
   Empty then false
 
 // Writing tests like this is very interesting.
@@ -316,7 +316,7 @@ fun removeGte(t, v) =
     Node(v', l, r) and
       v < v' then removeGte(l, v)
       v > v' then Node(v', l, removeGte(r, v))
-      _ then l // lucky case
+      else l // lucky case
     Empty then Empty
 
 removeGte(Empty, 0) |> show
@@ -395,7 +395,7 @@ fun removeRange(t, begin, end) =
     Node(v, l, r) and
       begin > v then Node(v, l, removeRange(r, begin, end))
       end <= v then Node(v, removeRange(l, begin, end), r)
-      _ then merge(removeGte(l, begin), removeLt(r, end))
+      else merge(removeGte(l, begin), removeLt(r, end))
     Empty then Empty
 
 example2 |> show

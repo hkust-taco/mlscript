@@ -22,6 +22,12 @@ fun checkZeroOneTwo(x) = if x is
 //│ ╔══[ERROR] Unrecognized pattern split (annotated).
 //│ ║  l.14: 	  @compile Two then 2
 //│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] This else clause makes the following branches unreachable.
+//│ ╟── This branch is unreachable.
+//│ ╟── This branch is unreachable.
+//│ ╟── This branch is unreachable.
+//│ ║  l.15: 	  else ()
+//│ ╙──      	       ^^
 //│ Normalized:
 //│ >  if else <error>
 
@@ -40,7 +46,7 @@ pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 :todo
 let res = "1" is @compile ManyZero
 //│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.37: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ║  l.43: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res = false
 

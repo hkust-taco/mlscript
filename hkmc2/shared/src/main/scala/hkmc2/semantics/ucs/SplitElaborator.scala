@@ -9,6 +9,7 @@ import Elaborator.{Ctx, Ctxl, UnderCtx, ctx}, SimpleSplit.*
 import Message.MessageContext
 import collection.mutable.SortedSet
 import utils.TL
+import scala.annotation.tailrec
 
 object SplitElaborator:
   /** A scrutinee is a function that returns a reference to the symbol. */
@@ -16,6 +17,8 @@ object SplitElaborator:
   
   type Connective = `do`.type | `then`.type
 
+  private val termNoop: Term => Term = identity
+  private val treeNoop: Tree => Tree = identity
 import SplitElaborator.*
 
 trait SplitElaborator:
@@ -63,13 +66,13 @@ trait SplitElaborator:
   protected def split(t: IfLike): Ctxl[SimpleSplit] =
     withScopedConnectives(t.kw):
       t.split match
-        case block: Block => termSplit(block.desugStmts, identity)
-        case other: Tree => termSplit(Ls(other), identity)
+        case block: Block => termSplit(block.desugStmts, termNoop)
+        case other: Tree => termSplit(Ls(other), termNoop)
   
   /** Elaborate `case` expressions */
   protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[SimpleSplit] =
     withScopedConnectives(tree.kw):
-      patternBranch(() => scrut.ref(), tree.branches, identity)
+      patternBranch(() => scrut.ref(), tree.branches, treeNoop)
   
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
@@ -98,10 +101,38 @@ trait SplitElaborator:
         termBranch(t, mk)(using curCtx).mapSecond(_ :: splits)
     concatenate(splits)
   
+  /** Concatenate a sequence of splits and report warning for splits that come
+    * after a split which ends with an `else` branch. */
   private def concatenate(splits: Ls[SimpleSplit]): SimpleSplit =
-    splits.reduceOption:
-      case (inner, outer) => outer ~~: inner
-    .getOrElse(End)
+    // The first element is a list of branches. The second element is
+    // - `N` if no `else` branch has been found; or
+    // - `S((default, unreachables))` if `default` is the first `else` branch
+    //   in the split and all splits thereafter will be added to `unreachables`.
+    val z: (Ls[Head], Opt[(Term, Ls[SimpleSplit])]) = (Nil, N)
+    val (reachables, elseRest) = splits.reverseIterator.foldLeft(z):
+      // This is the case when we haven't found an `else` branch yet.
+      case ((branches, N), split) =>
+        @tailrec
+        def go(acc: Ls[Head], split: SimpleSplit): (Ls[Head], Opt[Term]) =
+          split match
+            case Cons(branch, tail) => go(branch :: acc, tail)
+            case Else(default) => (acc, S(default))
+            case End => (acc, N)
+        go(branches, split).mapSecond(_.map(_ -> (Nil: Ls[SimpleSplit])))
+      case ((branches, S((default, unreachables))), split) =>
+        (branches, S((default, split :: unreachables)))
+    // Report unreachables splits.
+    elseRest match
+      case S((default, unreachables)) =>
+        val messages = unreachables.reverseIterator.map: split =>
+          msg"This branch is unreachable." -> split.toLoc
+        .toList
+        if messages.nonEmpty then
+          raise(WarningReport((msg"This else clause makes the following branches unreachable." -> default.toLoc :: messages)))
+      case N => ()
+    // Reconstruct the split from the reachable `heads`.
+    reachables.foldLeft(elseRest.fold(SimpleSplit.End)(_._1 |> SimpleSplit.Else)):
+      case (innerSplit, branch) => branch ~: innerSplit
   
   /** Handle the common cases of branches in splits. */
   private def branch(using Ctx): Cfg[PartialFunction[Tree, (Ctx, SimpleSplit)]] =
@@ -136,16 +167,16 @@ trait SplitElaborator:
   
   private def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
     case block: Block => (ctx, termSplit(block.desugStmts, mk))
-    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs, identity)))
+    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs, treeNoop)))
     // Several matches followed by `and`, `do`, or `then`.
     case matchesTree ~> consequent =>
       val (coda, patternTree) :: matches = disaggregate(matchesTree)
       def innerSplit(using ctx: Ctx) = expandMatches(matches):
         consequent match
-          case L(tree) => termSplit(Ls(tree), identity)
+          case L(tree) => termSplit(Ls(tree), termNoop)
           case R(tree) => Else(term(tree))
       val split = coda match
-        case Under() => innerSplit
+        case Under() if mk isnt termNoop => innerSplit
         case coda => mk(term(coda)).reference: scrutinee =>
           val pattern = self.pattern(patternTree)
           val innerCtx = ctx ++ pattern.variables.allocate
@@ -174,7 +205,7 @@ trait SplitElaborator:
   
   private def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =
     branch.appOrElse(rhs): rhsTree => 
-      termBranch(rhsTree.splitOn(Trm(scrutinee())), identity)
+      termBranch(rhsTree.splitOn(Trm(scrutinee())), termNoop)
   
   private def patternBranch(scrutinee: Reference, t: Tree, mk: Tree => Tree): Ctxl[SimpleSplit] = t match
     case block: Block =>
@@ -195,7 +226,7 @@ trait SplitElaborator:
         val split = expandMatches(matches):
           consequentTree match
             case L(tree) =>
-              termSplit(Ls(tree), identity)
+              termSplit(Ls(tree), termNoop)
             case R(tree) => Else(term(tree))
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>

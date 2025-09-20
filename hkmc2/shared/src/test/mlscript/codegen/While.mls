@@ -177,7 +177,9 @@ if x
 //│ >  if
 //│ >    x is true and
 //│ >      y is true then 0
-//│ >      else 1
+//│ >      let $scrut = λ(Param(‹›,_0,None,Modulefulness(None)), ). _0#0
+//│ >      $scrut is true then 1
+//│ >      else 42 // duplicated
 //│ >    else 42
 //│ = 42
 
@@ -197,20 +199,20 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let tl, h, argument0$, argument1$, tmp28;
-//│   tmp29: while (true) {
+//│   let tl, h, argument0$, argument1$, tmp29;
+//│   tmp30: while (true) {
 //│     if (ls instanceof Cons1.class) {
 //│       argument0$ = ls.hd;
 //│       argument1$ = ls.tl;
 //│       tl = argument1$;
 //│       h = argument0$;
 //│       ls = tl;
-//│       tmp28 = Predef.print(h);
-//│       continue tmp29
-//│     } else { tmp28 = Predef.print("Done!"); }
+//│       tmp29 = Predef.print(h);
+//│       continue tmp30
+//│     } else { tmp29 = Predef.print("Done!"); }
 //│     break;
 //│   }
-//│   return tmp28
+//│   return tmp29
 //│ };
 
 f(0)
@@ -248,20 +250,20 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37;
-//│ tmp38: while (true) {
-//│   split_root$: {
-//│     split_1$: {
+//│ let tmp38;
+//│ tmp39: while (true) {
+//│   split_root$1: {
+//│     split_1$1: {
 //│       if (x3 instanceof Object) {
-//│         break split_1$
-//│       } else { break split_1$ }
+//│         break split_1$1
+//│       } else { break split_1$1 }
 //│     }
-//│     tmp37 = runtime.Unit;
-//│     break split_root$;
+//│     tmp38 = runtime.Unit;
+//│     break split_root$1;
 //│   }
 //│   break;
 //│ }
-//│ tmp37
+//│ tmp38
 
 
 // ——— FIXME: ———
@@ -275,10 +277,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.275: 	  then 0(0)
+//│ ║  l.277: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.274: 	while print("Hello World"); false
+//│ ║  l.276: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -288,12 +290,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.287: 	while { print("Hello World"), false }
+//│ ║  l.289: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.288: 	  then 0(0)
+//│ ║  l.290: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.289: 	  else 1
+//│ ║  l.291: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -303,14 +305,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.301: 	    print("Hello World")
+//│ ║  l.303: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.302: 	    false
+//│ ║  l.304: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.303: 	  then 0(0)
+//│ ║  l.305: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.304: 	  else 1
+//│ ║  l.306: 	  else 1
 //│ ╙──       	  ^^^^
 
 
