@@ -34,13 +34,10 @@ true and test(42)
 //│       if (scrut7 === true) {
 //│         tmp4 = true;
 //│         break split_root$3
-//│       } else {
-//│         break split_1$3
-//│       }
+//│       } else { break split_1$3 }
 //│     } else { break split_1$3 }
 //│   }
 //│   tmp4 = false;
-//│   break split_root$3;
 //│ }
 //│ tmp4
 //│ > 42
@@ -49,7 +46,7 @@ true and test(42)
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.50: 	true or test(42)
+//│ ║  l.47: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

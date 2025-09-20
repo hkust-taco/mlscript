@@ -42,7 +42,6 @@ fun foo(v) =
 //│       } else { break split_1$2 }
 //│     }
 //│     tmp2 = 0;
-//│     break split_root$2;
 //│   }
 //│   return tmp2
 //│ };

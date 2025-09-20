@@ -541,7 +541,6 @@ globalThis.Object.freeze(class Runtime {
                   }
                 }
                 tmp5 = "";
-                break split_root$;
               }
               localsMsg = tmp5;
               tmp6 = "\n\tat " + curLocals.fnName;
@@ -833,7 +832,6 @@ globalThis.Object.freeze(class Runtime {
           }
         }
         tmp = runtime.Unit;
-        break split_root$;
       }
       break;
     }

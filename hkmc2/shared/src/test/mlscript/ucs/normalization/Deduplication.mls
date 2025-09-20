@@ -64,7 +64,6 @@ if x is
 //│     } else { break split_1$ }
 //│   }
 //│   tmp2 = "";
-//│   break split_root$;
 //│ }
 //│ tmp2
 //│ = "000"
@@ -105,7 +104,6 @@ let qqq = if x is
 //│     } else { break split_1$1 }
 //│   }
 //│   tmp3 = "";
-//│   break split_root$1;
 //│ }
 //│ qqq = tmp3;
 //│ qqq = "000"
@@ -146,7 +144,6 @@ print of if x is
 //│     } else { break split_1$2 }
 //│   }
 //│   tmp4 = "";
-//│   break split_root$2;
 //│ }
 //│ Predef.print(tmp4)
 //│ > 000
@@ -190,7 +187,6 @@ fun foo(x, y, z) =
 //│       } else { break split_1$3 }
 //│     }
 //│     tmp5 = "";
-//│     break split_root$3;
 //│   }
 //│   return tmp5
 //│ };
@@ -256,7 +252,6 @@ print of if
 //│     break split_root$3;
 //│   }
 //│   tmp5 = "0_1";
-//│   break split_root$3;
 //│ }
 //│ Predef.print(tmp5)
 //│ > 000
@@ -321,7 +316,6 @@ fun foo(x, y, z) = if
 //│       break split_root$4;
 //│     }
 //│     tmp6 = "0_1";
-//│     break split_root$4;
 //│   }
 //│   return tmp6
 //│ };
@@ -365,13 +359,10 @@ fun foo(x, y, z) = if x is
 //│       } else if (x1 === 1) {
 //│         tmp6 = "1";
 //│         break split_root$4
-//│       } else {
-//│         break split_1$4
-//│       }
+//│       } else { break split_1$4 }
 //│     }
 //│     value = "hello";
 //│     tmp6 = expensive_call(value);
-//│     break split_root$4;
 //│   }
 //│   return tmp6
 //│ };
@@ -420,13 +411,10 @@ fun foo(x, y, z) =
 //│           } else {
 //│             break split_1$4
 //│           }
-//│         } else {
-//│           break split_1$4
-//│         }
+//│         } else { break split_1$4 }
 //│       } else { break split_1$4 }
 //│     }
 //│     tmp6 = "Goodbye";
-//│     break split_root$4;
 //│   }
 //│   return tmp6
 //│ };

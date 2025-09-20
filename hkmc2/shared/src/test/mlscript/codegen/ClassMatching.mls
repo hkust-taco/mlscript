@@ -139,7 +139,6 @@ fun f(x) = if x is
 //│       } else { break split_1$ }
 //│     }
 //│     tmp6 = Predef.print("oops");
-//│     break split_root$1;
 //│   }
 //│   return tmp6
 //│ };
@@ -211,12 +210,9 @@ fun f(x) = print of if x is
 //│       } else if (x3 instanceof None1.class) {
 //│         tmp10 = "ok";
 //│         break split_root$1
-//│       } else {
-//│         break split_1$
-//│       }
+//│       } else { break split_1$ }
 //│     }
 //│     tmp10 = "oops";
-//│     break split_root$1;
 //│   }
 //│   return Predef.print(tmp10)
 //│ };

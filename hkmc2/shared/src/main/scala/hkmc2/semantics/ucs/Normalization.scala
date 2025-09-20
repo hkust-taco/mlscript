@@ -694,14 +694,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   import syntax.Keyword.{`if`, `while`}
   
   def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using Subst): Block =
-    // === TEMPORARY CODE WARNING ===
-    // Because the new desugaring logic will cause problems in the compile test,
-    // all the test files will then be affected. This is not what I want to see.
-    // I want to check and fix the problems file by file.
     val newSplit = t.split.getExpandedSplit
     scoped("ucs:desugared"):
       log(s"The simple split before desugaring:\n${t.split.prettyPrint}")
-    scoped("ucs:desugared"):
       log(s"Split expanded from the simple split:\n${newSplit.prettyPrint}")
     this(newSplit, t.kw, S(t), k)
   
@@ -731,6 +726,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     given labels: Labels = createLabelsForDuplicatedBranches(normalized)
     lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
+    lazy val assignResult = (r: Result) => Assign(l, r, End())
     val cont =
       if kw === `while` then
         // If the term is a `while`, the action of `else` branches depends on
@@ -745,7 +741,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           // Otherwise, if the continuation is not a tail operation, we should
           // save the result in a temporary variable and call the continuation
           // in the end.
-          L((r: Result) => Assign(l, r, End()))
+          L(assignResult)
       else
         // When there are shared consequents, we are forced to save the result
         // in the temporary variable nevertheless. Note that `cont` only gets
@@ -760,10 +756,17 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // `rest` of each `Label` is the lowered consequent plus a `Break` to the
       // end of the entire `if` term. Otherwise, it will fall through to the outer
       // consequent, which is the wrong semantics.
-      val innerBlock: Block = if labels.consequents.isEmpty then innermostBlock else
-        labels.consequents.foldRight(innermostBlock):
-          case ((term, label), innerBlock) =>
-            Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
+      val innerBlock: Block = labels.consequents match
+        case Nil => innermostBlock
+        case all @ (head :: tail) =>
+          def wrap(consequents: Ls[(Term, TempSymbol)]): Block =
+            consequents.foldRight(innermostBlock):
+              case ((term, label), innerBlock) =>
+                Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
+          // There is no need to generate `break` for the outermost split.
+          if labels.default.isEmpty then
+            Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
+          else wrap(all)
       labels.default match
         case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
         case N => innerBlock

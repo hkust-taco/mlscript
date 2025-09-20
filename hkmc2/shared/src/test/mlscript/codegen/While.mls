@@ -259,7 +259,6 @@ while x is {} do()
 //│       } else { break split_1$1 }
 //│     }
 //│     tmp38 = runtime.Unit;
-//│     break split_root$1;
 //│   }
 //│   break;
 //│ }
@@ -277,10 +276,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.277: 	  then 0(0)
+//│ ║  l.276: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.276: 	while print("Hello World"); false
+//│ ║  l.275: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -290,12 +289,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.289: 	while { print("Hello World"), false }
+//│ ║  l.288: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.290: 	  then 0(0)
+//│ ║  l.289: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.291: 	  else 1
+//│ ║  l.290: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -305,14 +304,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.303: 	    print("Hello World")
+//│ ║  l.302: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.304: 	    false
+//│ ║  l.303: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.305: 	  then 0(0)
+//│ ║  l.304: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.306: 	  else 1
+//│ ║  l.305: 	  else 1
 //│ ╙──       	  ^^^^
 
 
