@@ -223,6 +223,8 @@ trait SplitElaborator:
     case App(ctor: Ctor, Tup(rhss)) =>
       val nl = (t: Tree) => mk(App(ctor, Tup(t :: Nil)))
       patternBranch(scrutinee, Block(rhss), nl)
+    case Annotated(annotation, target) =>
+      patternBranch(scrutinee, target, Annotated(annotation, _) |> mk)
     case patternAndMatches ~> consequentTree =>
       val (firstPatternTree, _) :: matches = disaggregate(patternAndMatches)
       val firstPattern = self.pattern(mk(firstPatternTree))
