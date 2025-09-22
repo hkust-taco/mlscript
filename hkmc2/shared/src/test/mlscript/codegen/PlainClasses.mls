@@ -97,7 +97,7 @@ let t = test()
 
 :e
 new t
-//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found reference.
 //│ ║  l.99: 	new t
 //│ ║        	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -114,7 +114,7 @@ new! t
 
 :e
 new t()
-//│ ╔══[ERROR] Expected a statically known class; found reference without resolved definition.
+//│ ╔══[ERROR] Expected a statically known class; found reference.
 //│ ║  l.116: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

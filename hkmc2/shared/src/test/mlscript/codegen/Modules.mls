@@ -31,7 +31,7 @@ None()
 
 :e
 new None
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting module definition 'None'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type None.
 //│ ║  l.33: 	new None
 //│ ║        	    ^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -40,7 +40,7 @@ new None
 :sjs
 :e
 new! None
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'None'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type None.
 //│ ║  l.42: 	new! None
 //│ ╙──      	     ^^^^
 //│ JS (unsanitized):

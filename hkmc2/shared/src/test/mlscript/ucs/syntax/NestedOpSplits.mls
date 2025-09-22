@@ -10,13 +10,13 @@ fun f(x) =
 //│ The simple split before desugaring:
 //│ >  if
 //│ >    let $scrut = 1
-//│ >    let $scrut = builtin:==#0(x#0, builtin:+#0($scrut#0, 2))
+//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0
 //│ >    else 1
 //│ Split expanded from the simple split:
 //│ >  if
 //│ >    let $scrut = 1
-//│ >    let $scrut = builtin:==#0(x#0, builtin:+#0($scrut#0, 2))
+//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0
 //│ >    else 1
 

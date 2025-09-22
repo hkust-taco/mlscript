@@ -39,19 +39,19 @@ val f = case
 //│ The simple split before desugaring:
 //│ >  if
 //│ >    caseScrut is 0 then "null"
-//│ >    let $unused = member:console#666.log("non-null")
+//│ >    let $unused = member:console.log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $unused = (member:Predef#666.)print‹member:print›(res#666)
-//│ >    caseScrut is _ then res#666
+//│ >    let $unused = (member:Predef.)print‹member:print›(res)
+//│ >    caseScrut is _ then res
 //│ Split expanded from the simple split:
 //│ >  if
 //│ >    caseScrut is 0 then "null"
-//│ >    let $unused = member:console#666.log("non-null")
+//│ >    let $unused = member:console.log("non-null")
 //│ >    caseScrut is 1 then "unit"
 //│ >    let res = "other"
-//│ >    let $unused = (member:Predef#666.)print‹member:print›(res#666)
-//│ >    else res#666
+//│ >    let $unused = (member:Predef.)print‹member:print›(res)
+//│ >    else res
 //│ f = fun
 
 f(0)

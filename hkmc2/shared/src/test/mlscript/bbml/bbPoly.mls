@@ -23,11 +23,11 @@ id
 
 :e
 (x => x + 1) as [A] -> A -> A
-//│ ╔══[ERROR] Type error in reference without resolved definition with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.25: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^
 //│ ╙── because: cannot constrain  A  <:  Int
-//│ ╔══[ERROR] Type error in application without resolved definition with expected type A
+//│ ╔══[ERROR] Type error in application with expected type A
 //│ ║  l.25: 	(x => x + 1) as [A] -> A -> A
 //│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Int  <:  A

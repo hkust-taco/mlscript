@@ -364,7 +364,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
       (makeConsequent, alternative) => Split.Let(
         sym = transformSymbol,
-        term = Term.Lam(params, Blk(letBindings, term.clone)),
+        term = Term.Lam(params, Blk(letBindings, term.mkClone)),
         tail = makeSplit(
           // The `outputSymbol` is the output of `pattern`.
           //                vvvvvvvvvvvv
@@ -418,7 +418,7 @@ object Compiler:
           module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
             case (key, S(`symbol`)) =>
               val memberSymbol = symbol.defn.get.bsym
-              SynthSel(moduleRef, Ident(key))(S(memberSymbol))
+              SynthSel(moduleRef, Ident(key))(S(memberSymbol), N)
       .flatten
     @tailrec def go(ctx: Ctx): Opt[Term] =
       ctx.env.values.iterator.map(findSymbol).firstSome match
@@ -430,7 +430,7 @@ object Compiler:
       // If the `symbol` is a virtual class, then do not select `class`.
       symbol match
         case s: ClassSymbol if !(ctx.builtins.virtualClasses contains s) =>
-          SynthSel(term, Ident("class"))(S(s)).resolve
+          SynthSel(term, Ident("class"))(S(s), N).resolve
         case _: (ClassSymbol | ModuleOrObjectSymbol | PatternSymbol) => term
   
   import Pattern.*

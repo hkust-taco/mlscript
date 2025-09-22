@@ -34,7 +34,7 @@ Foo.self
 :e
 module Foo with
   val self = this
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'Foo'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type Foo.
 //│ ║  l.36: 	  val self = this
 //│ ║        	             ^^^^
 //│ ╙── Value must be marked as returning a 'module' in order to return a module.

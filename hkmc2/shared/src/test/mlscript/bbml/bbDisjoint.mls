@@ -59,7 +59,7 @@ naive_helper
 :e
 region x in
   naive_helper(x)
-//│ ╔══[ERROR] Type error in reference without resolved definition with expected type 'r1
+//│ ╔══[ERROR] Type error in reference with expected type 'r1
 //│ ║  l.61: 	  naive_helper(x)
 //│ ║        	               ^
 //│ ╟── because: cannot constrain  Region[x]  <:  'r1
@@ -70,7 +70,7 @@ region x in
 //│ ╟── because: cannot constrain  ⊤  <:  'reg1
 //│ ╟── because: cannot constrain  ⊤  <:  'reg1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ ╔══[ERROR] Type error in reference without resolved definition with expected type 'r1
+//│ ╔══[ERROR] Type error in reference with expected type 'r1
 //│ ║  l.61: 	  naive_helper(x)
 //│ ║        	               ^
 //│ ╟── because: cannot constrain  Region[x]  <:  'r1
@@ -127,7 +127,7 @@ region x in
 :e
 region x in
   (region y in let t = helper(x) in 42) as [A] -> Int
-//│ ╔══[ERROR] Type error in reference without resolved definition with expected type 'r1
+//│ ╔══[ERROR] Type error in reference with expected type 'r1
 //│ ║  l.129: 	  (region y in let t = helper(x) in 42) as [A] -> Int
 //│ ║         	                              ^
 //│ ╟── because: cannot constrain  Region[x]  <:  'r1

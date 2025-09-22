@@ -60,7 +60,7 @@ class Importer:
           val res = p.parseAll(p.block(allowNewlines = true))
           val resBlk = new syntax.Tree.Block(res)
           
-          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal
+          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
           val elab = Elaborator(tl, file / os.up, prelude)
           elab.importFrom(resBlk)
           

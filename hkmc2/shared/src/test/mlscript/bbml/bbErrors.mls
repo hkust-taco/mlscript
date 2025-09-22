@@ -5,7 +5,7 @@
 //│ Type: ⊤
 
 2(2)
-//│ ╔══[ERROR] Type error in application without resolved definition
+//│ ╔══[ERROR] Type error in application
 //│ ║  l.7: 	2(2)
 //│ ║       	^^^^
 //│ ╙── because: cannot constrain  Int  <:  (Int) ->{'eff} ('app)
@@ -36,7 +36,7 @@ Oops().Oops#a()
 //│ ╔══[ERROR] Identifier `Oops` does not name a known class symbol.
 //│ ║  l.35: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
-//│ ╔══[ERROR] Not a valid class: reference denoting function definition 'Oops'
+//│ ╔══[ERROR] Not a valid class: reference
 //│ ║  l.35: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
@@ -65,7 +65,7 @@ inc("oops")
 
 fun inc(x) = x + 1
 inc as Int
-//│ ╔══[ERROR] Type error in reference denoting function definition 'inc' with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
 //│ ║  l.67: 	inc as Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  ('x) ->{⊥} (Int)  <:  Int

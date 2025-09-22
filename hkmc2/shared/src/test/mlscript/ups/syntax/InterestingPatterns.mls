@@ -10,7 +10,7 @@ pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 
 :ucs ups
 pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl
-//│ elaborated pattern body: member:Nil => 0 ∨ member:Cons(member:Int as hd, member:SumList as tl) => builtin:+#0(hd#666, tl#666)
+//│ elaborated pattern body: member:Nil => 0 ∨ member:Cons(member:Int as hd, member:SumList as tl) => builtin:+(hd, tl)
 
 // Flatten the nested tuples. Note that it makes use of biased union.
 pattern Flatten = ([Flatten as hd, ...Flatten as tl] => Array.concat(hd, tl)) | _
@@ -28,12 +28,12 @@ pattern CountTree(pattern P) =
 // Match a 2x2 matrix and return its transpose.
 :ucs ups
 pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
-//│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a#666, c#666], [b#666, d#666]]
+//│ elaborated pattern body: null => null ∨ [[a, b], [c, d]] => [[a, c], [b, d]]
 
 // Return the middle element of a list. It won't match if the length is even.
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
-//│ elaborated pattern body: [x] => x#666 ∨ [x, ...member:Middle as m, y] => m#666
+//│ elaborated pattern body: [x] => x ∨ [x, ...member:Middle as m, y] => m
 
 // Return the leaves of a tree.
 pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)

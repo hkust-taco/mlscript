@@ -10,12 +10,10 @@ import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
 import syntax.Keyword.{`if`}
 import Elaborator.State
 import Resolvable.*
-import Resolver.ICtx.Type
+import typing.Type
 
 import Message.MessageContext
 import scala.annotation.tailrec
-import hkmc2.semantics.Resolver.ICtx.Instance
-import hkmc2.semantics.Term.SynthSel
 
 object Resolver:
   
@@ -46,53 +44,71 @@ object Resolver:
    */
   case class ICtx(
     parent: Opt[ICtx], 
-    iEnv: Map[Type.Sym, Ls[(Type, ICtx.Instance)]],
+    iEnv: Map[Type, Ls[(Type, ICtx.Instance)]],
     tEnv: Map[VarSymbol, Type]
   ):
     
-    def +(typ: Type.Specified, sym: Symbol): ICtx =
-      val newLs = (typ -> ICtx.Instance(sym)) :: iEnv.getOrElse(typ.toSym, Nil)
-      val newEnv = iEnv + (typ.toSym -> newLs)
-      copy(iEnv = newEnv)
+    def +(typ: Type, ins: Symbol): ICtx = typ match
+      case Type.NotImplemented => lastWords("Cannot add instance with a not-yet implemented type.")
+      case Type.Error => this
+      case _ => copy(iEnv = 
+        iEnv + (typ.key -> ((typ -> ICtx.Instance(ins)) :: iEnv.getOrElse(typ.key, Nil)))  
+      )
     
     def withTypeArg(param: VarSymbol, arg: Type): ICtx =
       copy(tEnv = tEnv + (param -> arg))
-        
-    def get(query: Type.Specified): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
-      def resolveTpe(tpe: Type.Specified): Opt[Type.Sym] = tpe.toSym match
-        case tpe @ Type.Sym(sym: VarSymbol) => tEnv.get(sym) match
-          // Specified type variable. Resolve it recursively.
-          case S(tpe: Type.Specified) => resolveTpe(tpe)
-          // Unspecified type variable. Reject it.
-          case S(Type.Unspecified) => N
-          // Unbound type variable. Just use it.
-          case N => S(tpe)
-        case tpe => S(tpe)
-      resolveTpe(query) match
-        case S(tpe) => iEnv.getOrElse(tpe, Nil)
-          .find: (typ, _) => 
-            compare(query, typ)
-          .map: (_, instance) => 
-            instance
-          .toRight:
-            msg"Missing instance: Expected: ${describeType(query)}; Available: ${showEnv}" -> N :: Nil
-        case N => L:
-          msg"Illegal query for an unspecified type variable ${query.show}." -> N :: Nil
-        
     
-    private def compare(a: Type, b: Type): Boolean = (a, b) match
-      case (Type.Unspecified, _) => true
-      case (_, Type.Unspecified) => true
-      case (a: Type.Sym, b: Type.Sym) if a == b => true
-      case (a @ Type.Sym(aSym: VarSymbol), b) if tEnv contains aSym => 
-        compare(tEnv(aSym), b)
-      case (a, b @ Type.Sym(bSym: VarSymbol)) if tEnv contains bSym => 
-        compare(a, tEnv(bSym))
-      case (Type.App(qSym, qArgs), Type.App(tSym, tArgs)) =>
-        compare(qSym, tSym) && 
-        (qArgs.length == tArgs.length) && 
-        (qArgs zip tArgs).forall((a, b) => compare(a, b))
-      case _ => false
+    extension (t: Type)
+      private def key: Type = t match
+        case Type.Ref(base, _) => Type.Ref(base, Nil)
+        case _ => t
+    extension (lhs: Type)
+      private def =:= (rhs: Type): Bool = lhs <:< rhs && rhs <:< lhs
+      private def <:< (rhs: Type): Bool = (lhs, rhs) match
+        case (_, Type.Top) => true
+        
+        // If LHS/RHS is unspecified (not substituted into a concrete type),
+        // we consider LHS/RHS is always a subtype of LHS/RHS.
+        case (lhs: Type.Ref, rhs @ Type.Ref(_: VarSymbol, Nil)) => true
+        case (lhs @ Type.Ref(_: VarSymbol, Nil), rhs: Type.Ref) => true
+        
+        case (lhs: Type.Ref, rhs: Type.Ref) =>
+          lhs.sym === rhs.sym // TODO: subtyping for Ref
+          && (lhs.args.length == rhs.args.length)
+          && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
+        case (lhs: Type.Fun, rhs: Type.Fun) =>
+          (lhs.args.length == rhs.args.length)
+          && (lhs.args zip rhs.args).forall((a, b) => b <:< a) // contravariant
+          && (lhs.ret <:< rhs.ret) // covariant
+          && (lhs.eff, rhs.eff).match
+            case (N, N) => true
+            case (S(le), S(re)) => le <:< re // covariant
+            case _ => false
+        case (lhs: Type.Neg, rhs) => ???
+        case (lhs, rhs: Type.Neg) => ???
+        case (lhs, rhs: Type.Union) => lhs <:< rhs.lhs || lhs <:< rhs.rhs
+        case (lhs, rhs: Type.Inter) => lhs <:< rhs.lhs && lhs <:< rhs.rhs
+        case (lhs, rhs) => lhs === rhs
+
+    def query(q: Type): Ls[Message -> Opt[Loc]] \/ ICtx.Instance =
+      q match
+        case Type.NotImplemented => lastWords("Cannot resolve instance for a not-yet implemented type.")
+        case q @ Type.Ref(sym: VarSymbol, args) if !tEnv.contains(sym) => L:
+          msg"Illegal query for an unspecified type variable ${q.show}." -> N :: Nil
+        case q =>
+          q.subst:
+            case ty @ Type.Ref(sym: VarSymbol, Nil) =>
+              tEnv.getOrElse(sym, ty)
+            case ty @ Type.Ref(sym: VarSymbol, args) =>
+              lastWords(s"Unsupported substitution with type arguments")
+          .into: qq =>
+            iEnv.getOrElse(qq.key, Nil)
+              .find: (ty, _instance) =>
+                ty <:< qq
+              .map: (_ty, instance) =>
+                instance
+              .toRight:
+                msg"Missing instance: Expected: ${showTy(q)}; Available: ${showEnv}" -> N :: Nil
     
     def showEnv: Str =
       iEnv.values
@@ -101,11 +117,13 @@ object Resolver:
         .distinct
         .mkStringOr(", ", els = "‹none available›")
     
-    def describeType(tpe: Type): Str = tpe match
-      case Type.Sym(sym: VarSymbol) =>
-        s"${tEnv.get(sym).getOrElse(Type.Unspecified).show} (type parameter ${tpe.show})"
+    def showTy(ty: Type): Str = ty match
+      case Type.Ref(sym: VarSymbol, Nil) =>
+        s"${tEnv.get(sym).map(_.show).getOrElse("‹unspecified›")} (type parameter ${ty.show})"
+      case Type.Ref(sym: VarSymbol, args) =>
+        s"${tEnv.get(sym).map(_.show).getOrElse("‹unspecified›")}${args.map(_.show).mkString("[", ", ", "]")} (type parameter ${ty.show})"
       case _ => 
-        s"${tpe.show}"
+        s"${ty.show}"
   
   enum Expect:
     case Module(reason: Opt[Message])
@@ -122,42 +140,29 @@ object Resolver:
     def `module` = isInstanceOf[Module]
     def `class` = isInstanceOf[Class]
     def nonModule = isInstanceOf[NonModule]
+    
+    override def toString: Str = this match
+      case _: Module => "Module"
+      case _: NonModule => "NonModule"
+      case _: Class => "Class"
+      case _: Any => "Any"
+  
+  object Expect:
+    def fromModulefulness(mf: Modulefulness): Expect =
+      if mf.modified then
+        Expect.Module(N)
+      else
+        Expect.NonModule(N)
   
   object ICtx:
     
-    enum Type:
-      /** 
-       * A symbol type, can be either concrete (a type symbol) or
-       * abstract (a var symbol representing a type param).
-       */
-      case Sym(sym: BaseTypeSymbol | VarSymbol)
-      /**
-       * An application of a symbol type to a list of type arguments.
-       */
-      case App(t: Sym, typeArgs: Ls[Type])
-      /**
-       * A type that is not specified. This is for when the type is not
-       * known because no type inference is done.
-       */
-      case Unspecified
-      
-      def show: Str = this match
-        case Sym(sym) => sym.id.name
-        case App(t, args) => s"${t.show}[${args.map(_.show).mkString(", ")}]"
-        case Unspecified => "‹unspecified›"
-    
-    object Type:
-      type Specified = Sym | App
-      extension (t: Specified)
-        def toSym: Sym = t match
-          case sym: Sym => sym
-          case App(sym, _) => sym
-    
-    final case class Instance(sym: Symbol)
+    case class Instance(sym: Symbol)
     
     val empty = ICtx(N, Map.empty, Map.empty)
     
   def ictx(using ICtx) = summon[ICtx]
+  
+end Resolver
 
 /**
   * Resolver for the module system.
@@ -272,14 +277,14 @@ class Resolver(tl: TraceLogger)
       traverseStmts(rest)(using newICtx)
     
   
-  def expand2DotClass(t: Resolvable, expect: Expect.Module | Expect.Class) = t.resolvedSymbol match
+  def expand2DotClass(t: Resolvable, expect: Expect.Module | Expect.Class) = t.resolvedSym match
     case S(bsym: BlockMemberSymbol) if bsym.hasLiftedClass => 
       val sym = expect match
         case _: Expect.Module => bsym.asMod
         case _: Expect.Class => bsym.asCls
       sym.foreach: sym =>
         if sym isnt ctx.builtins.Array then
-          t.expand(S(SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym))))
+          t.expand(S(Term.SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym), S(Type.Ref(sym, Nil)))))
     case _ =>
       ()
   
@@ -335,10 +340,12 @@ class Resolver(tl: TraceLogger)
         rft.foreach((sym, bdy) => traverseBlock(bdy.blk))
       
       case t: Resolvable =>
-        resolve(t, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
-        expect match
+        resolve(t, prefer = expect, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
+        t.expanded match
+        case t: Resolvable => expect match
           case expect: Expect.Class => expand2DotClass(t, expect = expect)
           case _ =>
+        case _ =>
       
       case _ =>
         t.subTerms.foreach(traverse(_, expect = NonModule(N)))
@@ -354,12 +361,14 @@ class Resolver(tl: TraceLogger)
     // known classes, it might require checking other definitions also
     // later.
     
-    val evalsToStaticClass = ModuleChecker.evalsToStaticClass(t)
+    val evalsToModule = ModuleChecker.evalsToModule(t, prefer = expect)
+    val evalsToStaticClass = ModuleChecker.isStaticClass(t)
+    log(s"Checking ${t}: expect ${expect}, evalsToModule = ${evalsToModule}, evalsToStaticClass = ${evalsToStaticClass}")
     
-    if expect.`module` && !evalsToModule(t, prefer = expect) then
+    if expect.`module` && !evalsToModule then
       raise(ErrorReport(msg"Expected a module; found non-moduleful ${t.describe}." -> t.toLoc 
         :: expect.message))
-    if expect.nonModule && evalsToModule(t, prefer = expect) && !evalsToStaticClass then
+    if expect.nonModule && evalsToModule && !evalsToStaticClass then
       raise(ErrorReport(msg"Unexpected moduleful ${t.describe}." -> t.toLoc 
         :: expect.message))
     
@@ -386,9 +395,8 @@ class Resolver(tl: TraceLogger)
         .foldLeft(ictx): (ictx, ps) => 
           ps.params.foldLeft(ictx): (ictx, p) => 
             p.sign match
-              case S(sign) => resolveType(sign) match
-                case N => ictx
-                case S(tpe) => ictx + (tpe, p.sym)
+              case S(sign) =>
+                ictx + (resolveSign(sign, expect = Any), p.sym)
               case N =>
                 // The type signature should be present because of the syntax of contextual parameter.
                 lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
@@ -398,7 +406,7 @@ class Resolver(tl: TraceLogger)
       
       pss.foreach(_.allParams.foreach(traverseParam(_)))
       tps.getOrElse(Nil).flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
-      sign.foreach(traverseType(_,
+      sign.foreach(traverseSign(_,
         expect = if modulefulness.modified
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' must have a module return type."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to have a module return type."))
@@ -422,11 +430,9 @@ class Resolver(tl: TraceLogger)
         .foldLeft(ictx): (ictx, ps) => 
           ps.params.foldLeft(ictx): (ictx, p) => 
             p.sign match
-              case S(sign) => resolveType(sign) match
-                case N => ictx
-                case S(tpe) =>
-                  val sym = p.fldSym.getOrElse(die)
-                  ictx + (tpe, sym)
+              case S(sign) => 
+                val sym = p.fldSym.getOrElse(die)
+                ictx + (resolveSign(sign, expect = Any), sym)
               case N =>
                 // The type signature should be present because of the syntax of contextual parameter.
                 lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
@@ -447,9 +453,8 @@ class Resolver(tl: TraceLogger)
         case N =>
           // By the syntax of instance defintiion, the type signature should be present.
           lastWords(s"No type signature for instance definition ${defn.showDbg} at ${defn.toLoc}")
-        case S(sign) => resolveType(sign) match
-          case N => ictx
-          case S(typ) => ictx + (typ, sym)
+        case S(sign) => 
+          ictx + (resolveSign(sign, expect = Any), sym)
     
     // Case: Fun/Val definition. 
     case defn @ TermDefinition(k = Fun | ImmutVal | MutVal) =>
@@ -504,28 +509,34 @@ class Resolver(tl: TraceLogger)
     * be resolved on the the TyApp `f[Int]`, but not on the base of the
     * TyApp `f`.
     */
-  def resolve(t: Resolvable, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
-  trace[(Opt[CallableDefinition], ICtx)](s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", _ => s"~> ${t.expanded}"):
+  def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
+  trace[(Opt[CallableDefinition], ICtx)](
+    s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", 
+    _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+  ):
     // Resolve the sub-resolvable-terms of the term. 
-    val (defn, newICtx1) = t match
+    val (defn, newICtx1) = 
+      t match
       // Note: the arguments of the App are traversed later because the
       // definition is required.
       case Term.App(lhs: Resolvable, args) =>
         val result = args match
           case t @ Term.CtxTup(_) => 
-            resolve(lhs, inAppPrefix = true, inCtxPrefix = true, inTyPrefix = inTyPrefix)
+            resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = true, inTyPrefix = inTyPrefix)
           case _ => 
-            resolve(lhs, inAppPrefix = true, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
-        resolveSymbol(t)
+            resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
+        resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         result
       case Term.App(lhs, _) =>
         traverse(lhs, expect = Any)
         (t.callableDefn, ictx)
       
       case Term.TyApp(lhs: Resolvable, targs) =>
-        resolve(lhs, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
+        resolve(lhs, prefer = prefer, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
         targs.foreach(traverse(_, expect = Any))
-        resolveSymbol(t)
+        resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.TyApp(lhs, targs) =>
         traverse(lhs, expect = Any)
@@ -533,221 +544,227 @@ class Resolver(tl: TraceLogger)
         (t.callableDefn, ictx)
       
       case AnySel(pre: Resolvable, id) =>
-        resolve(pre, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
-        resolveSymbol(t)
+        resolve(pre, prefer = prefer, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+        resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case AnySel(pre, id) =>
         traverse(pre, expect = Any)
         (t.callableDefn, ictx)
       
       case Term.Ref(_: BlockMemberSymbol) =>
-        resolveSymbol(t)
+        resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.Ref(_) =>
-        resolveSymbol(t)
+        resolveSymbol(t, prefer = prefer)
+        resolveType(t, prefer = prefer)
         (N, ictx)
     
-    log(s"Resolving resolvable (sym = ${t.resolvedSymbol}): ${defn}")
-    
-    // Fill the context with possibly the type arguments information.
-    val newICtx2 = newICtx1.givenIn:
-      defn match
-      case S(defn) =>
-        val tparams: Opt[Ls[Param]] = defn.tparams
-        val targs: Opt[Ls[Term]] = t match
-          case Term.TyApp(lhs, targs) => S(targs)
-          case _ => N
-        val newICtx = (tparams, targs) match
-          case (S(tparams), S(targs)) =>
-            if tparams.length != targs.length then
-              raise(ErrorReport(msg"Expected ${tparams.length.toString()} type arguments, " +
-                msg"got ${targs.length.toString()}" -> t.toLoc :: Nil))
-            (tparams zip targs).foldLeft(ictx):
-              case (ictx, (tparam, targ)) => (tparam.sym, resolveType(targ)) match
-                case (sym: VarSymbol, S(typ)) =>
+    t.expandedResolvableIn: t =>
+      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}: ${defn}")
+      
+      // Fill the context with possibly the type arguments information.
+      val newICtx2 = newICtx1.givenIn:
+        defn match
+        case S(defn) =>
+          val tparams: Opt[Ls[Param]] = defn.tparams
+          val targs: Opt[Ls[Term]] = t match
+            case Term.TyApp(lhs, targs) => S(targs)
+            case _ => N
+          val newICtx = (tparams, targs) match
+            case (S(tparams), S(targs)) =>
+              if tparams.length != targs.length then
+                raise(ErrorReport(msg"Expected ${tparams.length.toString()} type arguments, " +
+                  msg"got ${targs.length.toString()}" -> t.toLoc :: Nil))
+              (tparams zip targs).foldLeft(ictx):
+                case (ictx, (tparam, targ)) => 
+                  val sym = tparam.sym
+                  val typ = resolveSign(targ, expect = Any)
                   log(s"Resolving App with type arg ${sym} = $typ")
                   ictx.withTypeArg(sym, typ)
-                case _ => ictx
-          case (S(tparams), N) => tparams.foldLeft(ictx): 
-            case (ictx, tparam) => 
-              log(s"Resolving App with type arg ${tparam.sym} = ${Type.Unspecified}")
-              ictx.withTypeArg(tparam.sym, Type.Unspecified)
-          case (N, _) => ictx
-        newICtx
-      case N =>
-        ictx
-    
-    // Resolve the implicit arguments.
-    newICtx2.givenIn:
-      // Create a new term definition for App terms. The new term
-      // definition is for handling partial applications. 
-      //
-      // For example: In `fun f(a)(b) = 42`, f's definition should
-      // indicate that it accepts two argument lists; f(42)'s definition
-      // should indicate that it accepts one argument list; f(42)(43)'s
-      // definition should indicate that it accepts zero argument lists.
-      //
-      // Currently, only parameters are processed for these new term
-      // definitions. The type parameters and result type are kept
-      // as-is. In the future we may take them into consideration as
-      // well.
-      val newDefn: Opt[CallableDefinition] = t match
-        case Term.App(lhs, as) => defn match
-          case S(defn @ CallableDefinition(params = ps :: pss)) =>
-            val (argCountUB, argCountLB) = as match
-            // Tup: regular arguments
-            case tup: (Term.Tup | Term.CtxTup) => 
-              val fields = tup match
-                case Term.Tup(fs) => fs
-                case Term.CtxTup(fs) => fs
-              (
-                !fields.exists(_.isInstanceOf[Spd]),
-                (
-                  fields.count:
-                    case Fld(asc = S(_)) => false
-                    case _: Fld => true
-                    case _: Spd => false
-                ) + (
-                  fields.collectFirst:
-                    case Fld(asc = S(_)) => 1
-                  .getOrElse(0)
-                )
-              )
-            // Other: spread arguments
-            case _ => (false, 0)
-            
-            (ps.paramCountUB, argCountUB) match
-              case (true, true) => if ps.paramCountLB != argCountLB then
-                raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
-                  msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
-              case (true, false) => if ps.paramCountLB < argCountLB then
-                raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
-                  msg"got at least ${argCountLB.toString()}" -> as.toLoc :: Nil))
-              case (false, true) => if ps.paramCountLB > argCountLB then
-                raise(ErrorReport(msg"Expected at least ${ps.paramCountLB.toString()} arguments, " +
-                  msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
-              case (false, false) => ()
-            
-            /**
-             * Zip (pair) a list of parameter and a list of arguments.
-             *
-             * If there are some spread parameters, we are not able to
-             * pair all the parameters and arguments statically. We will
-             * try to pair as many as possible.
-             */
-            @tailrec
-            def zip(ps: Ls[Param], as: Ls[Elem], recordArgs: Ls[Fld], beforeSpread: Bool): Ls[Fld] = (ps, as) match
-              // The spread argument takes all the remaining arguments.
-              case (ps, (a: Spd) :: as) =>
-                traverse(a.term, expect = NonModule(N))
-                zip(ps, as, recordArgs, false)
-              case (ps, a :: as) if !beforeSpread =>
-                a.subTerms.foreach(traverse(_, expect = NonModule(N)))
-                zip(ps, as, recordArgs, false)
-              
-              // Pair the parameter and the argument.
-              case (p :: ps, (a @ Fld(asc = N)) :: as) =>
-                traverse(a.term, 
-                  // note: we accept regular arguments for module parameters
-                  expect = if p.modulefulness.isModuleful
-                    then Any
-                    else NonModule(S(msg"Module argument passed to a non-module parameter."))
-                )
-                zip(ps, as, recordArgs, true)
-              
-              // Record Arguments. They are pushed to the last parameter.
-              case (_, (a @ Fld(asc = S(_))) :: as) =>
-                zip(ps, as, a :: recordArgs, true)
-              
-              // If there are more parameters, there must be a spread
-              // argument, or some record arguments before.
-              case (p :: ps, Nil) =>
-                recordArgs.reverse
-                
-              // If there are more arguments, all of them go to `restParam`.
-              case (Nil, a :: as) =>
-                a.subTerms.foreach(traverse(_, expect = NonModule(N)))
-                zip(Nil, as, recordArgs, beforeSpread)
-              
-              case (Nil, Nil) => 
-                recordArgs.reverse
-            end zip
-            
-            // Application arguments that are not tuples represent spreads, as in `f(...arg)`
-            val args = as match
-              case Term.Tup(args) => args
-              case Term.CtxTup(args) => args
-              case spd => Spd(true, spd) :: Nil
-            
-            // The lhs of the App is already traversed by the recursive
-            // `traverse` or `resolve` at the beginning.
-            val recordArgs = zip(ps.params, args, Nil, true)
-            recordArgs.foreach:
-              _.subTerms.foreach(traverse(_, expect = NonModule(N)))
-            S(defn.copy(params = pss))
-          case _ =>
-            traverse(as, expect = NonModule(N))
-            N
-        case _ => defn
+            case (S(tparams), N) => tparams.foldLeft(ictx): 
+              case (ictx, tparam) => 
+                log(s"Resolving App with type arg ${tparam.sym} unspecified")
+                ictx
+            case (N, _) => ictx
+          newICtx
+        case N =>
+          ictx
       
       // Resolve the implicit arguments.
-      newDefn match
-      case S(defn) if !inCtxPrefix && !inTyPrefix =>
-        /**
-         * Resolve all possible implicit arguments and perform eta-expansion.
-         * 
-         * @return (1) A lambda accepting a term, applying the implicit
-         * arguments and performing eta-expansion on the term, and
-         * return the result. (2) The residual parameter lists that are not
-         * consumed by this resolution.
-         */
-        def expand(pss: Ls[ParamList], lam: Term => Term, bod: Term => Term): (Term => Term, Ls[ParamList]) =
-          pss match
-            // The current parameter list is not a using clause, and
-            // there are more using clauses in later parameter lists,
-            // so perform eta-expansion.
-            case (ps @ ParamList(
-              flags = ParamListFlags(ctx = false)
-            )) :: pss if !inAppPrefix && pss.exists(_.flags.ctx) =>
-              val as = ps.params.map(p => Fld(p.flags, p.sym.ref().dontResolve, N))
-            //   val as = ps.params.map(p => Fld(p.flags, p.sym.ref().resolve, N))
-              val newLam = (t: Term) => 
-                lam(Term.Lam(ps, t))
-              val newBod = (t: Term) =>
-                Term.App(bod(t), Term.Tup(as)(DummyTup))(DummyApp, N, FlowSymbol("implicit app")).dontResolve
-              expand(pss, newLam, newBod)
-            // The current parameter list is a using clause, so resolve
-            // implicit arguments from the context.
-            case (ps @ ParamList(
-              flags = ParamListFlags(ctx = true)
-            )) :: pss =>
-              val as = ps.params.map(resolveArg(_)(t))
-              val newBod = (t: Term) =>
-                Term.App(bod(t), Term.Tup(as)(DummyTup))(DummyApp, N, FlowSymbol("implicit app")).dontResolve
-              expand(pss, lam, newBod)
+      newICtx2.givenIn:
+        // Create a new term definition for App terms. The new term
+        // definition is for handling partial applications. 
+        //
+        // For example: In `fun f(a)(b) = 42`, f's definition should
+        // indicate that it accepts two argument lists; f(42)'s definition
+        // should indicate that it accepts one argument list; f(42)(43)'s
+        // definition should indicate that it accepts zero argument lists.
+        //
+        // Currently, only parameters are processed for these new term
+        // definitions. The type parameters and result type are kept
+        // as-is. In the future we may take them into consideration as
+        // well.
+        val newDefn: Opt[CallableDefinition] = t match
+          case Term.App(lhs, as) => defn match
+            case S(defn @ CallableDefinition(params = ps :: pss)) =>
+              val (argCountUB, argCountLB) = as match
+              // Tup: regular arguments
+              case tup: (Term.Tup | Term.CtxTup) => 
+                val fields = tup match
+                  case Term.Tup(fs) => fs
+                  case Term.CtxTup(fs) => fs
+                (
+                  !fields.exists(_.isInstanceOf[Spd]),
+                  (
+                    fields.count:
+                      case Fld(asc = S(_)) => false
+                      case _: Fld => true
+                      case _: Spd => false
+                  ) + (
+                    fields.collectFirst:
+                      case Fld(asc = S(_)) => 1
+                    .getOrElse(0)
+                  )
+                )
+              // Other: spread arguments
+              case _ => (false, 0)
+              
+              (ps.paramCountUB, argCountUB) match
+                case (true, true) => if ps.paramCountLB != argCountLB then
+                  raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
+                    msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
+                case (true, false) => if ps.paramCountLB < argCountLB then
+                  raise(ErrorReport(msg"Expected ${ps.paramCountLB.toString()} arguments, " +
+                    msg"got at least ${argCountLB.toString()}" -> as.toLoc :: Nil))
+                case (false, true) => if ps.paramCountLB > argCountLB then
+                  raise(ErrorReport(msg"Expected at least ${ps.paramCountLB.toString()} arguments, " +
+                    msg"got ${argCountLB.toString()}" -> as.toLoc :: Nil))
+                case (false, false) => ()
+              
+              /**
+               * Zip (pair) a list of parameter and a list of arguments.
+               *
+               * If there are some spread parameters, we are not able to
+               * pair all the parameters and arguments statically. We will
+               * try to pair as many as possible.
+               */
+              @tailrec
+              def zip(ps: Ls[Param], as: Ls[Elem], recordArgs: Ls[Fld], beforeSpread: Bool): Ls[Fld] = (ps, as) match
+                // The spread argument takes all the remaining arguments.
+                case (ps, (a: Spd) :: as) =>
+                  traverse(a.term, expect = NonModule(N))
+                  zip(ps, as, recordArgs, false)
+                case (ps, a :: as) if !beforeSpread =>
+                  a.subTerms.foreach(traverse(_, expect = NonModule(N)))
+                  zip(ps, as, recordArgs, false)
+                
+                // Pair the parameter and the argument.
+                case (p :: ps, (a @ Fld(asc = N)) :: as) =>
+                  traverse(a.term, 
+                    // note: we accept regular arguments for module parameters
+                    expect = if p.modulefulness.isModuleful
+                      then Any
+                      else NonModule(S(msg"Module argument passed to a non-module parameter."))
+                  )
+                  zip(ps, as, recordArgs, true)
+                
+                // Record Arguments. They are pushed to the last parameter.
+                case (_, (a @ Fld(asc = S(_))) :: as) =>
+                  zip(ps, as, a :: recordArgs, true)
+                
+                // If there are more parameters, there must be a spread
+                // argument, or some record arguments before.
+                case (p :: ps, Nil) =>
+                  recordArgs.reverse
+                  
+                // If there are more arguments, all of them go to `restParam`.
+                case (Nil, a :: as) =>
+                  a.subTerms.foreach(traverse(_, expect = NonModule(N)))
+                  zip(Nil, as, recordArgs, beforeSpread)
+                
+                case (Nil, Nil) => 
+                  recordArgs.reverse
+              end zip
+              
+              // Application arguments that are not tuples represent spreads, as in `f(...arg)`
+              val args = as match
+                case Term.Tup(args) => args
+                case Term.CtxTup(args) => args
+                case spd => Spd(true, spd) :: Nil
+              
+              // The lhs of the App is already traversed by the recursive
+              // `traverse` or `resolve` at the beginning.
+              val recordArgs = zip(ps.params, args, Nil, true)
+              recordArgs.foreach:
+                _.subTerms.foreach(traverse(_, expect = NonModule(N)))
+              S(defn.copy(params = pss))
             case _ =>
-              ((t: Term) => lam(bod(t)), pss)
+              traverse(as, expect = NonModule(N))
+              N
+          case _ => defn
         
-        val (expansionFn, pss) = expand(defn.params, identity, identity)
-        if defn.params.length =/= pss.length then
-          val expansion = expansionFn(t.duplicate)
-          t.expand(S(expansion))
-          expansion match // * expansion may change the semantics, thus symbol is also changed
-          case r: Resolvable => resolveSymbol(r)
-          case _ => ()
-        
-        (S(defn.copy(params = pss)), ictx)
-      case S(defn) =>
-        t.dontResolve
-        (S(defn), ictx)
-      case _ =>
-        t.dontResolve
-        (N, ictx)
+        // Resolve the implicit arguments.
+        newDefn match
+        case S(defn) if !inCtxPrefix && !inTyPrefix =>
+          /**
+           * Resolve all possible implicit arguments and perform eta-expansion.
+           * 
+           * @return (1) A lambda accepting a term, applying the implicit
+           * arguments and performing eta-expansion on the term, and
+           * return the result. (2) The residual parameter lists that are not
+           * consumed by this resolution.
+           */
+          def expand(pss: Ls[ParamList], lam: Term => Term, bod: Term => Term): (Term => Term, Ls[ParamList]) =
+            pss match
+              // The current parameter list is not a using clause, and
+              // there are more using clauses in later parameter lists,
+              // so perform eta-expansion.
+              case (ps @ ParamList(
+                flags = ParamListFlags(ctx = false)
+              )) :: pss if !inAppPrefix && pss.exists(_.flags.ctx) =>
+                val as = ps.params.map(p => Fld(p.flags, p.sym.ref().dontResolve, N))
+              //   val as = ps.params.map(p => Fld(p.flags, p.sym.ref().resolve, N))
+                val newLam = (t: Term) => 
+                  lam(Term.Lam(ps, t))
+                val newBod = (t: Term) =>
+                  Term.App(bod(t), Term.Tup(as)(DummyTup))(DummyApp, N, FlowSymbol("implicit app")).dontResolve
+                expand(pss, newLam, newBod)
+              // The current parameter list is a using clause, so resolve
+              // implicit arguments from the context.
+              case (ps @ ParamList(
+                flags = ParamListFlags(ctx = true)
+              )) :: pss =>
+                val as = ps.params.map(resolveArg(_)(t))
+                val newBod = (t: Term) =>
+                  Term.App(bod(t), Term.Tup(as)(DummyTup))(DummyApp, N, FlowSymbol("implicit app")).dontResolve
+                expand(pss, lam, newBod)
+              case _ =>
+                ((t: Term) => lam(bod(t)), pss)
+          
+          val (expansionFn, pss) = expand(defn.params, identity, identity)
+          if defn.params.length =/= pss.length then
+            val expansion = expansionFn(t.duplicate)
+            t.expand(S(expansion))
+            expansion match // * expansion may change the semantics, thus symbol is also changed
+            case r: Resolvable => 
+              resolveSymbol(r, prefer = prefer)
+              resolveType(r, prefer = prefer)
+            case _ => ()
+          
+          (S(defn.copy(params = pss)), ictx)
+        case S(defn) =>
+          t.dontResolve
+          (S(defn), ictx)
+        case _ =>
+          t.dontResolve
+          (N, ictx)
   
   /**
    * Resolve the symbol for a resolvable term, which was not resolved by
-   * the elaborator due to unready or missing definitions. Disambiguate
-   * `BlockMemberSymbol`s to concrete ones by checking the `expect` parameter.
+   * the elaborator due to unready definitions. After the symbol
+   * resolution, the term is expanded into the same term, 
    *
    * In particular, for Sel and SynthSel terms, it checks the definition
    * of the prefix (note that the prefix should be resolved before this
@@ -758,92 +775,128 @@ class Resolver(tl: TraceLogger)
    * parameters as an App, even for a generalized "App" that has no
    * parameter list (in order to handle implicit applications), and
    * resolves the symbol for the result of this App.
-   * 
+   *
    * This also expands the LHS `Foo` of a selection to `Foo.class` if
    * the selection is selecting a static member from a lifted module.
    */
-  def resolveSymbol(t: Resolvable)(using ictx: ICtx): Unit =
-    // The symbol resolution already failed in the elaborator. We will
-    // not try to resolve it again in the resolver.
-    if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) then return
+  def resolveSymbol(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit =
+  trace[Unit](
+    s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
+    _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
+  ):
+    // If the term has an expansion already, it is likely that there is
+    // an internal error because otherwise we should resolve the symbol
+    // of the expansion instead.
+    /*
+    if t.hasExpansion then lastWords:
+      s"resolveSymbol: term ${t} already has an expansion ~> ${t.expanded}, " +
+      s"thus the resolver cannot resolve its symbol"
+    */
+    // * We can't perform the check because of UCS and handler reusing terms.
     
-    def withSym(r: Resolvable, sym: FieldSymbol) = r match
-      case t: Term.Sel => t.sym = S(sym)
-      case t: Term.SynthSel => t.sym = S(sym)
-      case t: Term.App => t.sym = S(sym)
-      case t: Term.TyApp => t.sym = S(sym)
-      case t: Term.Ref => t.resSym = S(sym)
-    
-    t match
-    case t @ AnySel(lhs: Resolvable, id) =>
-      log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-      lhs.singletonDefn.foreach: mdef =>
-        val fsym = mdef.body.members.get(id.name)
-        fsym match
-        case S(fldSym) => 
-          val bsym = fldSym.asBlkMember.getOrElse:
-            lastWords(s"${mdef}: field symbol found ${fldSym} but no block member symbol")
-          log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-          withSym(t, bsym)
-          expand2DotClass(lhs, expect = Expect.Module(N))
-          log(s"Resolved symbol for ${t}: ${bsym}")
-        case N => 
-          withSym(t, ErrorSymbol(id.name, Tree.Dummy))
-          raise: 
-            ErrorReport(
-              msg"${mdef.kind.desc.capitalize} '${mdef.sym.nme}' " +
-              msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
-              extraInfo = S(mdef))
-    case _ =>
-    
-    t match
-    case t @ Apps(base: Resolvable, ass) =>
-      base.termDefn match
-        case S(lhsDefn) if lhsDefn.params.length == ass.length =>
-          val sym = lhsDefn.modulefulness.msym
-          log(s"Resolving symbol for ${t}: defn = ${lhsDefn}")
-          sym.map(withSym(t, _))
-          log(s"Resolved symbol for ${t}: ${sym}")
+    t.expandedResolvableIn: t =>
+      t match
+      
+      // The symbol resolution already failed in the elaborator. We will
+      // not try to resolve it again in the resolver.
+      case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
+      
+      case t @ AnySel(lhs: Resolvable, id) => lhs.expandedResolvableIn: lhs =>
+        log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
+        lhs.singletonDefn.foreach: mdef =>
+          val fsym = mdef.body.members.get(id.name)
+          fsym match
+          case S(fldSym) => 
+            val bsym = fldSym.asBlkMember.getOrElse:
+              lastWords(s"${mdef}: field symbol found ${fldSym} but no block member symbol")
+            log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
+            t.expand(S(t.withSym(bsym)))
+            expand2DotClass(lhs, expect = Expect.Module(N))
+            log(s"Resolved symbol for ${t}: ${bsym}")
+          case N => 
+            t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
+            raise: 
+              ErrorReport(
+                msg"${mdef.kind.desc.capitalize} '${mdef.sym.nme}' " +
+                msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
+                extraInfo = S(mdef))
+      case _ =>
+  
+  /**
+   * Resolve the type for a resolvable term representing an expression
+   * (as opposed to a term representing a type, i.e., signature). The
+   * resolvable term should should already be symbol-resolved by
+   * `resolveSymbol`. After this type resolution, the resolvable term is
+   * expanded into a copy of the term with the `typ` field set to the
+   * resolved type.
+   */
+  def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
+    trace[Unit](
+      s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
+      _ => s"-> typ = ${t.resolvedTyp})"
+    ):
+      def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
+        case _: Module => bms.asMod
+        case _: Class => bms.asCls
+        case _: NonModule => 
+          val trmSym = bms.defn match
+          case S(defn: TermDefinition) => S(defn.tsym)
+          case _ => N
+          trmSym orElse bms.asPrincipal
+        case _: Any => bms.defn match
+          case S(defn: TermDefinition) => S(defn.tsym)
+          case S(defn: ClassDef) => S(defn.sym)
+          case S(defn: ModuleOrObjectDef) => S(defn.sym)
+          case _ => N
+      
+      t match
+      case t @ Apps(base: Resolvable, ass) => 
+        val decl = base.resolvedSym match
+          case S(bms: BlockMemberSymbol) => 
+            val disambBms = disambSym(bms)
+            log(s"Disambiguate ${bms} into ${disambBms} (defn = ${disambBms.map(_.defn)})")
+            disambBms match
+            case S(disambBms) => disambBms.defn
+            case N => bms.defn
+          case S(bls: BlockLocalSymbol) => bls.decl
+          case S(fs: FieldSymbol) => fs.defn
+          case _ => N
+        log(s"Declaration: ${decl}")
+        decl match
+        case S(defn: TermDefinition) if defn.params.length === ass.length =>
+          val ty = defn.sign.map(resolveSign(_, expect = Expect.fromModulefulness(defn.modulefulness)))
+          ty.foreach(ty => t.expand(S(t.withTyp(ty))))
+        case S(defn: Param) if ass.isEmpty =>
+          val ty = defn.sign.map(resolveSign(_, expect = Expect.fromModulefulness(defn.modulefulness)))
+          ty.foreach(ty => t.expand(S(t.withTyp(ty))))
+        case S(defn: ModuleOrObjectDef) if ass.isEmpty =>
+          val ty = Type.Ref(defn.sym, Nil)
+          t.expand(S(t.withTyp(ty)))
         case _ =>
-    case _ =>
-    
-    t match
-    // If a reference was not resolved to take implicit arguments or
-    // return some module type, then its result symbol is the same as
-    // the symbol it refers to.
-    case t: Term.Ref if t.resSym.isEmpty =>
-      t.resSym = S(t.sym)
-    // If a type application was not resolved to take implicit
-    // arguments, then its result symbol is the same as the symbol of its
-    // LHS.
-    case t: Term.TyApp if t.sym.isEmpty =>
-      t.sym = t.lhs.resolvedSymbol
-    case _ =>
+      case _ =>
+  end resolveType
   
   def resolveArg(p: Param)(lhs: Term)(using ictx: ICtx): Elem =
     log(s"Resolving implicit argument, expecting a ${p.sign}")
     p.sign match
-      case S(sign) => resolveType(sign) match
-        case S(tpe: Type.Specified) =>
-          ictx.get(tpe) match
-            case R(i) =>
-              log(s"Resolved ${p.sign} with instance ${i}")
-              val ref = i.sym.ref()
-              traverse(ref,
-                // note: we accept regular arguments for module parameters
-                expect = if p.modulefulness.isModuleful
-                  then Any
-                  else NonModule(S(msg"Module argument passed to a non-module parameter.")),
-              )
-              Fld(p.flags, ref, N)
-            case L(msgs) =>
-              raise(ErrorReport(
-                msg"Cannot query instance of type ${ictx.describeType(tpe)} for call: " -> lhs.toLoc ::
-                msg"Required by contextual parameter declaration: " -> p.toLoc :: msgs))
-              Fld(FldFlags.empty, Term.Error, N)
-        case N =>
-          // There is an error during resolving the type signature.
-          // The error should have been reported.
+      case S(sign) => 
+        val ty = resolveSign(sign, expect = if p.modulefulness.modified then Module(N) else NonModule(N))
+        log(s"Resolving implicit argument, expecting a ${ty.show}")
+        ictx.query(ty) match
+        case R(i) =>
+          log(s"Resolved ${p.sign} with instance ${i}")
+          val ref = i.sym.ref()
+          traverse(ref,
+            // note: we accept regular arguments for module parameters
+            expect = if p.modulefulness.isModuleful
+              then Any
+              else NonModule(S(msg"Module argument passed to a non-module parameter.")),
+          )
+          Fld(p.flags, ref, N)
+        case L(msgs) =>
+          raise(ErrorReport(
+            msg"Cannot query instance of type ${ictx.showTy(ty)} for call: " -> lhs.toLoc ::
+            msg"Required by contextual parameter declaration: " -> p.toLoc :: msgs))
           Fld(FldFlags.empty, Term.Error, N)
       case N =>
         // By the syntax of contextual parameter, 
@@ -856,126 +909,153 @@ class Resolver(tl: TraceLogger)
       if p.sign.isEmpty then
         raise(ErrorReport(msg"Module parameter must have explicit type." -> p.sym.toLoc :: Nil))
     p.sign.foreach:
-      traverseType(_, 
+      traverseSign(_, 
         expect = if p.modulefulness.modified
           then Module(S(msg"Module parameter must have a module type."))
           else NonModule(S(msg"Non-module parameter must have a non-module type.")),
       )
   
-  def traverseType(t: Term, expect: Expect, inTyAppPrefix: Bool = false)(using ictx: ICtx): Unit =
+  /**
+   * Traverse through a term that is expected to be a type. In this
+   * process, it reports any non-type terms, checks if the term
+   * satisfies the expectation, resolves the symbol of the term, and
+   * checks the arity of type params/args.
+   *
+   * @param inAppPrefix if true, the currently traversing term is the
+   * prefix of an TyApp. 
+   * @param expect the expectation on the type. See [[Expect]] for
+   * details.
+   */
+  def traverseSign(t: Term, expect: Expect, inAppPrefix: Bool = false)(using ictx: ICtx): Unit =
   trace(s"Traversing type ${t}, expecting ${expect}"):
     
+    // * Traverse through the sub-terms.
     t match
-    
-    // If the term is a reference (probably to a class, module or type
-    // alias definition), check its symbol to ensure it is really a type.
     case Term.Ref(_) =>
-    case AnySel(_, _) =>
     case Term.Lit(_) =>
+    case Term.Tup(_) => t.subTerms.foreach(traverse(_, expect = NonModule(N)))
     case Term.UnitVal() =>
-    case Term.App(Term.Ref(_: BuiltinSymbol), args) =>
-      args.subTerms.foreach(traverseType(_, expect = NonModule(N)))
+    // Literals with operators. e.g., -42
+    case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
     
-    // If the term is a type application (T[A, ...]), traverse the
-    // type constructor and arguments respectively.
+    // Selection. The prefix should be a term, rather than a type, that
+    // can be selected from.
+    case AnySel(base, _) =>
+      base.subTerms.foreach(traverse(_, expect = Any))
+    
+    // Type Application. Traverse the type constructor and arguments,
+    // respectively.
     case Term.TyApp(con, targs) => 
-      traverseType(con, expect = expect, inTyAppPrefix = true)
-      targs.foreach(traverseType(_, expect = Expect.NonModule(S("Type arguments should be non-moduleful types."))))
+      traverseSign(con, expect = expect, inAppPrefix = true)
+      targs.foreach(traverseSign(_, expect = Expect.NonModule(S("Type arguments should be non-moduleful types."))))
     
+    // Complex type: Function type, Wildcard type, Composed type,
+    // Negation type, Forall type, 
     case t: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup) =>
-      t.subTerms.foreach(traverseType(_, expect = Expect.NonModule(N)))
+      t.subTerms.foreach(traverseSign(_, expect = Expect.NonModule(N)))
     
-    case _ => raise:
-      ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil)
+    // t is not a type.
+    case _ => 
+      raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
+      return
+    
+    val typ = resolveSign(t, expect = expect)
+    
+    // * Resolve the symbol and type of the term.
+    t match
+      case t: Resolvable =>
+        resolveSymbol(t, prefer = expect)
+        t.expandedResolvableIn(_.withTyp(typ))
+      case _ => ()
+    
+    // * Check if the term satisfies the expectation.
+    // * Check the arity of type params/args.
+    typ match 
+      case Type.Ref(sym: TypeSymbol, targs) if !inAppPrefix =>
+        sym.defn.flatMap(CallableDefinition.fromDefn(_)).foreach: 
+          case CallableDefinition(tparams = tparams) =>
+            val tparamsNum = tparams.map(_.length)
+            val targsNum = targs.length
+            if tparamsNum.getOrElse(0) =/= targsNum then
+              val tparamsMsg = tparamsNum.getOrElse("no").toString
+              val targsMsg = if targsNum === 0 then "none" else targsNum.toString
+              raise:
+                ErrorReport:
+                  msg"Expected ${tparamsMsg} type arguments, "
+                  + msg"got ${targsMsg}" -> t.toLoc :: Nil
+      case Type.Ref(sym: VarSymbol, targs) if !inAppPrefix =>
+        // TODO: check arity?
+      case _ =>
+  
+  /**
+   * Given a symbol-resolved term that represents a type, resolve the
+   * type that it represents.
+   */
+  def resolveSign(t: Term, expect: Expect): Type = 
+    def raiseError(sym: Opt[Symbol] = N) =
+      val defnMsg = sym match
+        case S(sym: FieldSymbol) => sym.defn match
+          case S(defn: TermDefinition) => s" denoting ${defn.k.desc} '${defn.sym.nme}'"
+          case S(defn: ClassLikeDef) => s" denoting ${defn.kind.desc} '${defn.sym.nme}'"
+          case _ => ""
+        case _ => ""
+      
+      expect match
+      case expect: Module => raise:
+        ErrorReport(msg"Expected a module type; found ${t.describe}${defnMsg}." -> t.toLoc
+          :: expect.message)
+      case expect: Class => raise:
+        ErrorReport(msg"Expected a statically resolvable class; found ${t.describe}${defnMsg}." -> t.toLoc
+          :: expect.message)
+      case expect: NonModule => raise:
+        ErrorReport(msg"Expected a non-module type; found ${t.describe}${defnMsg}." -> t.toLoc
+          :: expect.message)
+      case _ => raise:
+        ErrorReport(msg"Expected a type, got ${t.describe}${defnMsg}" -> t.toLoc :: Nil)
+      Type.Error
     
     t match
-      case t: Resolvable => resolveSymbol(t)
-      case _ => ()
-    
-    def checkTypeArity(sym: FieldSymbol): Unit =
-      if inTyAppPrefix then
-        return
-      val targs = t match
-        case Term.TyApp(_, targs) => S(targs)
-        case _ => N
-      val cdefn = sym.defn.flatMap(CallableDefinition.fromDefn(_))
-      cdefn.foreach: 
-        case CallableDefinition(tparams = tparams) =>
-          val tparamsNum = tparams.map(_.length)
-          val targsNum = targs.map(_.length)
-          if tparamsNum != targsNum then
-            val tparamsMsg = tparamsNum.getOrElse("no").toString
-            val targsMsg = targsNum.getOrElse("none").toString
-            raise:
-              ErrorReport:
-                msg"Expected ${tparamsMsg} type arguments, "
-                + msg"got ${targsMsg}" -> t.toLoc :: Nil
-    
-    expect match
-      case expect: Module => t.asModulefulType match
-        case S(m) => checkTypeArity(m)
-        case N => raise:
-          log(s"Error: no moduelful type defn in ${t.resolvedSymbol}, ${t.resolvedSymbol.flatMap(_.asBlkMember).map(_.trees)}")
-          ErrorReport(msg"Expected a module type; found ${t.describe}." -> t.toLoc
-            :: expect.message)
-      case expect: NonModule => t.asNonModulefulType match
-        case S(S(s: FieldSymbol)) => checkTypeArity(s)
-        case S(S(_)) => ()
-        case S(N) => ()
-        case N => raise:
-          log(s"Error: no non-moduleful type defn in ${t.resolvedSymbol}, ${t.resolvedSymbol.flatMap(_.asBlkMember).map(_.trees)}")
-          ErrorReport(msg"Expected a non-module type; found ${t.describe}." -> t.toLoc
-            :: expect.message)
-      case expect: Class => t.asStaticClassType match
-        case S(c) => checkTypeArity(c)
-        case N => raise:
-          log(s"Error: no statically resolable class defn in ${t.resolvedSymbol.flatMap(_.asBlkMember).map(_.trees)}")
-          ErrorReport(msg"Expected a statically resolvable class; found ${t.describe}." -> t.toLoc
-            :: expect.message)
-      case _ => ()
-  
-  // FIXME @Harry: refactor resolveType and dedup with traverseType
-  def resolveType(t: Term): Opt[ICtx.Type.Specified] = t match
       // If the term is a type application, e.g., T[A, ...], resolve the
       // type constructor and arguments respectively.
-      case Term.TyApp(con, args) => 
-        (resolveType(con), args.map(resolveType(_)).sequence) match
-          case (S(sym: ICtx.Type.Sym), S(typeArgs)) =>
-            S(ICtx.Type.App(sym, typeArgs))
-          case _ =>
-            // Either the type constructor or the arguments is not
-            // resolved. The error should have been reported.
-            N
+      case Term.TyApp(con, args) => resolveSign(con, expect = expect) match
+        case Type.Ref(sym, Nil) =>
+          Type.Ref(sym, args.map(resolveSign(_, expect = Any)))
+        case _ =>
+          raise(ErrorReport(msg"Expected a type constructor, got ${t.describe}" -> t.toLoc :: Nil))
+          Type.Error
       
-      // Complex types are not supported.
-      // TODO: Handle complex types.
-      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup) => N
+      case Term.Lit(_) => if expect.module 
+        then raiseError()
+        else Type.NotImplemented // TODO: Support Lit
+      case Term.UnitVal() => if expect.module
+        then raiseError()
+        else Type.NotImplemented // TODO: Support UnitVal
+      case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) => if expect.module
+        then raiseError()
+        else Type.NotImplemented // TODO: Support Lit with operator
+      case _: (Term.FunTy | Term.WildcardTy | Term.CompType | Term.Neg | Term.Forall | Term.Tup | Term.Lit) => if expect.module
+        then raiseError()
+        else Type.NotImplemented // TODO: Support complex types
       
       // Otherwise, resolve the term directly.
-      case _ => t.symbol match
+      case _ => t.resolvedSym match
         // A VarSymbol is probably a type parameter.
         case S(sym: VarSymbol) if ModuleChecker.isTypeParam(sym) =>
-          S(ICtx.Type.Sym(sym))
-        case S(sym) => sym.asTpe match
-          // A BaseTypeSymbol is some concrete type.
-          case S(tpe: BaseTypeSymbol) =>
-            S(ICtx.Type.Sym(tpe))
-          // A TypeAliasSymbol is a type alias that require further
-          // resolution.
-          case S(tpe: TypeAliasSymbol) =>
-            tpe.defn match
-              case S(tpe) => 
-                tpe.rhs.flatMap(resolveType(_))
-              case N => 
-                // No definition for the type alias. There must be an
-                // error reported on elaborating the type alias.
-                N
-          case N =>
-            raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
-            N
+          if expect.module 
+          then raiseError(S(sym))
+          else Type.Ref(sym, Nil)
+        case S(tsym) =>
+          val dtsym = expect match
+          case expect: Module => tsym.asMod.getOrElse(raiseError(S(tsym)))
+          case expect: Class => tsym.asCls.getOrElse(raiseError(S(tsym)))
+          case expect: NonModule => tsym.asNonModTpe.getOrElse(raiseError(S(tsym)))
+          case _ => tsym.asTpe.getOrElse(raiseError(S(tsym)))
+          dtsym match
+            case dtsym: TypeSymbol => Type.Ref(dtsym, Nil)
+            case _ => Type.Error
         case N =>
-          raise(ErrorReport(msg"Expected a type symbol, got ${t.describe}" -> t.toLoc :: Nil))
-          N
+          raise(ErrorReport(msg"Expected a type, got a non-type ${t.describe}" -> t.toLoc :: Nil))
+          Type.Error
 
 end Resolver
 
@@ -1028,38 +1108,9 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t => t.resolvedSymbol.exists(checkSym)
+      case t: Resolvable => t.resolvedTyp match
+        case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
+        case N => false
+      case _ => false
   
-  def evalsToStaticClass(t: Term): Bool =
-    t.resolvedSymbol match
-      case S(sym) => sym.asCls.isDefined
-      case N => false
-  
-  extension (t: Term)
-    def asModulefulType: Opt[ModuleOrObjectSymbol] = t.resolvedSymbol match
-      case S(sym: FieldSymbol) =>
-        sym.asMod
-      case _ =>
-        N
-    
-    def asNonModulefulType: Opt[Opt[Symbol]] = t.resolvedSymbol match
-      case S(sym: FieldSymbol) =>
-        (sym.asTpe orElse sym.asObj).map(S(_))
-      case S(sym: VarSymbol) if isTypeParam(sym) =>
-        S(S(sym))
-      case _ =>
-        S(N)
-    
-    def asStaticClassType: Opt[ClassSymbol] = t.resolvedSymbol match
-      case S(sym: FieldSymbol) =>
-        sym.asCls
-      case _ =>
-        N
-
-extension [T](xs: Ls[Opt[T]])
-  def sequence: Opt[Ls[T]] =
-    xs.foldRight(S(Nil): Opt[Ls[T]]): (x, acc) => 
-      for 
-        x <- x
-        acc <- acc
-      yield x :: acc
+  def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)

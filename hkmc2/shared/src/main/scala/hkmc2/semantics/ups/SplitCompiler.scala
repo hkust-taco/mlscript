@@ -329,7 +329,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         // consequence split.
         (makeConsequent, alternative) => Split.Let(
           sym = lambdaSymbol,
-          term = Term.Lam(PlainParamList(params), transform.clone),
+          term = Term.Lam(PlainParamList(params), transform.mkClone),
           // Declare the lambda function at the outermost level. Even if there
           // are multiple disjunctions in the consequent, we will not need to
           // repeat the `transform` term.

@@ -194,7 +194,7 @@ fun foo(x) =
   class Bar extends Foo
   (new Bar).self2
 foo(2)
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Foo'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
 //│ ║  l.194: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

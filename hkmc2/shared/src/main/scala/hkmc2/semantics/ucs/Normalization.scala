@@ -52,7 +52,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then
             lhs.constructor
           else
-            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol)).resolve
+            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
         case _ => lhs.constructor
       lhs.copy(constructor)(lhs.tree, lhs.output)
   

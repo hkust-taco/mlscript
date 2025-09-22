@@ -25,22 +25,60 @@ module TrmMod with
 
 fun f: ClsMod = 42
 
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:f,typ=class:ClsMod} of member:f
+//│ = 42
+
 fun f: module ClsMod = ClsMod
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:f,typ=module:ClsMod} of member:f
+//│ = class ClsMod { whoami: "module" }
 
 fun f: TypMod = 42
 
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:f,typ=type:TypMod} of member:f
+//│ = 42
+
 fun f: module TypMod = TypMod
+
+:rt
+f
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:f,typ=module:TypMod} of member:f
+//│ = class TypMod { whoami: "module" }
 
 :e
 fun f: TrmMod = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting module definition 'TrmMod'.
-//│ ║  l.35: 	fun f: TrmMod = 42
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'TrmMod'.
+//│ ║  l.67: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
 // * FIXME: Should compile to term (function) `TrmMod` rather than module `TrmMod`
+// * FIXME: Should module-check as the term module (or probably we will remove module-checks before that)
 :sjs
+:fixme
 fun f = TrmMod
+//│ ╔══[ERROR] Unexpected moduleful reference of type TrmMod.
+//│ ║  l.77: 	fun f = TrmMod
+//│ ║        	        ^^^^^^
+//│ ╙── Function must be marked as returning a 'module' in order to return a module.
 //│ JS (unsanitized):
 //│ let f5; f5 = function f() { return TrmMod1 };
 
@@ -80,8 +118,14 @@ assertNonModule(TypMod).whoami
 //│ = "module"
 
 // FIXME: should not resolve to module's `.whoami`, hence should be an error
+// FIXME: Should module-check as the term module (or probably we will remove module-checks before that)
 :breakme
+:fixme
 assertNonModule(TrmMod).whoami
+//│ ╔══[ERROR] Unexpected moduleful reference of type TrmMod.
+//│ ║  l.124: 	assertNonModule(TrmMod).whoami
+//│ ║         	                ^^^^^^
+//│ ╙── Module argument passed to a non-module parameter.
 //│ = "module"
 
 
@@ -91,11 +135,11 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.92: 	fun f(x: Foo): Foo = x
-//│ ╙──      	         ^^^
+//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ╙──       	         ^^^
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.92: 	fun f(x: Foo): Foo = x
-//│ ╙──      	               ^^^
+//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
 
@@ -104,10 +148,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.105: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

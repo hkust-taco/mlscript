@@ -38,6 +38,12 @@ print(1, 2, 3)
 2 + 2 |> print
 //│ > 4
 
+2 + 2 |> (_ * 2)
+//│ = 8
+
+2 + 2 .> (_ * 2)
+//│ = 6
+
 print <| 2 + 2
 //│ > 4
 
@@ -174,7 +180,7 @@ foldr(tuple)(0, 1, 2, 3)
 :re
 foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.175: 	foldr(+)()
+//│ ║  l.181: 	foldr(+)()
 //│ ╙──       	        ^^
 
 

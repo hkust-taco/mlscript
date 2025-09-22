@@ -177,7 +177,7 @@ if x
 //│ >  if
 //│ >    x is true and
 //│ >      y is true then 0
-//│ >      let $scrut = λ(Param(‹›,_0,None,Modulefulness(None)), ). _0#0
+//│ >      let $scrut = λ(_0). _0
 //│ >      $scrut is true then 1
 //│ >      else 42 // duplicated
 //│ >    else 42

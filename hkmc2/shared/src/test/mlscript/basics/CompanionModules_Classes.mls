@@ -11,7 +11,7 @@ C()
 //│ Blk:
 //│   stats = Nil
 //│   res = App:
-//│     lhs = Ref{member:C} of member:C
+//│     lhs = Ref{sym=member:C,typ=module:C} of member:C
 //│     rhs = Tup of Nil
 //│ = C()
 
@@ -21,8 +21,8 @@ new C
 //│ Blk:
 //│   stats = Nil
 //│   res = New:
-//│     cls = SynthSel{class:C}:
-//│       prefix = Ref{member:C} of member:C
+//│     cls = SynthSel{sym=class:C,typ=class:C}:
+//│       prefix = Ref{sym=member:C} of member:C
 //│       nme = Ident of "class"
 //│     args = Nil
 //│     rft = N
@@ -36,9 +36,9 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Sel{member:empty}:
-//│     prefix = SynthSel{module:C}:
-//│       prefix = Ref{member:C} of member:C
+//│   res = Sel{sym=member:empty}:
+//│     prefix = SynthSel{sym=module:C,typ=module:C}:
+//│       prefix = Ref{sym=member:C,typ=module:C} of member:C
 //│       nme = Ident of "class"
 //│     nme = Ident of "empty"
 //│ = 1
@@ -59,8 +59,8 @@ C.empty
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Sel{member:empty}:
-//│     prefix = Ref{member:C} of member:C
+//│   res = Sel{sym=member:empty}:
+//│     prefix = Ref{sym=member:C,typ=module:C} of member:C
 //│     nme = Ident of "empty"
 //│ = 1
 

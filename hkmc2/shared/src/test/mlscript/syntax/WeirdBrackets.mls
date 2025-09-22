@@ -53,10 +53,10 @@ fun f(x) = if x is \{ Int then 1, Bool then 2 }
 
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Cannot use this reference denoting function definition 'huh' as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
-//│ ╔══[ERROR] Cannot use this reference denoting function definition 'huh' as a pattern
+//│ ╔══[ERROR] Cannot use this reference as a pattern
 //│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
 

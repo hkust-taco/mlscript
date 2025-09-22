@@ -136,7 +136,7 @@ Cls.huh
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'huh')
 
 let c = new Cls(123)
-//│ ╔══[ERROR] Expected a statically known class; found reference denoting object definition 'Cls'.
+//│ ╔══[ERROR] Expected a statically known class; found reference of type Cls.
 //│ ║  l.138: 	let c = new Cls(123)
 //│ ║         	            ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -201,7 +201,7 @@ class C
 
 :sjs
 class D extends id(C)
-//│ ╔══[ERROR] Expected a statically known class; found selection denoting function definition 'id'.
+//│ ╔══[ERROR] Expected a statically known class; found selection.
 //│ ║  l.203: 	class D extends id(C)
 //│ ║         	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.

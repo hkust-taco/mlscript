@@ -6,11 +6,11 @@ fun id(x) = x
 if id(0) is t then t
 //│ The simple split before desugaring:
 //│ >  if
-//│ >    let $scrut = member:id#666(0)
-//│ >    $scrut is t then t#666
+//│ >    let $scrut = member:id(0)
+//│ >    $scrut is t then t
 //│ Split expanded from the simple split:
 //│ >  if
-//│ >    let $scrut = member:id#666(0)
-//│ >    let t = $scrut#0
-//│ >    else t#666
+//│ >    let $scrut = member:id(0)
+//│ >    let t = $scrut
+//│ >    else t
 //│ = 0

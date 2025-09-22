@@ -17,6 +17,8 @@ abstract class Symbol(using State) extends Located:
   
   def nme: Str
   
+  def getState: State = summon
+  
   val uid: Uid[Symbol] = State.suid.nextUid
   
   val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
@@ -85,7 +87,12 @@ abstract class Symbol(using State) extends Located:
   
   def asClsLike: Opt[ClassSymbol | ModuleOrObjectSymbol | PatternSymbol] =
     (asCls: Opt[ClassSymbol | ModuleOrObjectSymbol | PatternSymbol]) orElse asModOrObj orElse asPat
-  def asTpe: Opt[TypeSymbol] = asCls orElse asAls
+  def asTpe: Opt[TypeSymbol] = asCls
+    .orElse[TypeSymbol](asModOrObj)
+    .orElse[TypeSymbol](asAls)
+  def asNonModTpe: Opt[TypeSymbol] = asCls
+    .orElse[TypeSymbol](asObj)
+    .orElse[TypeSymbol](asAls)
   
   def asBlkMember: Opt[BlockMemberSymbol] = this match
     case mem: BlockMemberSymbol => S(mem)
@@ -93,7 +100,17 @@ abstract class Symbol(using State) extends Located:
       case S(defn: TypeLikeDef) => S(defn.bsym)
       case S(defn: TermDefinition) => S(defn.sym)
       case N => N
-  
+
+  /** Get the symbol corresponding to the "representative" of a set of overloaded definitions,
+    * or the sole definition, if it is not overloaded.
+    * We should consider the ordering terms > classes/objects/types > modules, for this purpose. */
+  def asPrincipal =
+    asCls orElse
+    asObj orElse
+    asAls orElse
+    asPat orElse
+    asMod
+
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
     case _ => false
@@ -111,11 +128,23 @@ class FlowSymbol(label: Str)(using State) extends Symbol:
   val outFlows: mutable.Buffer[FlowSymbol] = mutable.Buffer.empty
   val outFlows2: mutable.Buffer[Consumer] = mutable.Buffer.empty
   val inFlows: mutable.Buffer[ConcreteProd] = mutable.Buffer.empty
+  def showDbg: Str =
+    label + s"‹$uid›"
   override def toString: Str =
     label + State.dbgUid(uid)
 
   def subst(using s: SymbolSubst): FlowSymbol = s.mapFlowSym(this)
 
+object FlowSymbol:
+  
+  def app()(using State) =
+    // FlowSymbol("‹app-res›")
+    FlowSymbol("@")
+
+  def sel(nme: Str)(using State) =
+    FlowSymbol(s"⋅$nme")
+  
+end FlowSymbol
 
 sealed trait LocalSymbol extends Symbol:
   def subst(using s: SymbolSubst): LocalSymbol
@@ -191,7 +220,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   def trmImplTree: Opt[Tree.TermDef] = trees.collectFirst:
     case t: Tree.TermDef if t.rhs.isDefined => t
   
-  def isParameterizedMethod: Bool = trmTree.exists(_.sParameterizedMethod)
+  def isParameterizedMethod: Bool = trmTree.exists(_.isParameterizedMethod)
   
   lazy val hasLiftedClass: Bool =
     objTree.isDefined || trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
@@ -239,7 +268,7 @@ case class TupSymbol(arity: Opt[Int])(using State) extends CtorSymbol:
 
 
 /** A TypeSymbol that is not an alias. */
-type BaseTypeSymbol = ClassSymbol
+type BaseTypeSymbol = ClassSymbol | ModuleOrObjectSymbol
 
 type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
 

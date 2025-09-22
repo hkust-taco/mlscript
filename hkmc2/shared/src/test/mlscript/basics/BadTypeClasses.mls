@@ -19,31 +19,30 @@ M.f
 //│ ║        	              ^^^
 //│ ╙── Missing instance: Expected: Int; Available: ‹none available›
 
-:e
+:todo // support literal type
 using 42 = 42
-//│ ╔══[ERROR] Expected a type symbol, got integer literal
-//│ ║  l.23: 	using 42 = 42
-//│ ╙──      	      ^^
+use[42]
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot add instance with a not-yet implemented type.
 
 val someInt = 42
 
 :e
 using someInt = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting value definition 'someInt'.
-//│ ║  l.31: 	using someInt = 42
+//│ ╔══[ERROR] Expected a non-module type; found reference denoting value 'someInt'.
+//│ ║  l.30: 	using someInt = 42
 //│ ║        	      ^^^^^^^
 //│ ╙── Implicit instance must be marked as returning a 'module' in order to have a module return type.
-//│ ╔══[ERROR] Expected a type, got reference denoting value definition 'someInt'
-//│ ║  l.31: 	using someInt = 42
+//│ ╔══[ERROR] Expected a type, got reference denoting value 'someInt'
+//│ ║  l.30: 	using someInt = 42
 //│ ╙──      	      ^^^^^^^
 
 :e
 using someInt: Int = 42
 //│ ╔══[ERROR] Expected a type, got block
-//│ ║  l.41: 	using someInt: Int = 42
+//│ ║  l.40: 	using someInt: Int = 42
 //│ ╙──      	      ^^^^^^^^^^^^
-//│ ╔══[ERROR] Expected a type symbol, got block
-//│ ║  l.41: 	using someInt: Int = 42
+//│ ╔══[ERROR] Expected a type, got a non-type block
+//│ ║  l.40: 	using someInt: Int = 42
 //│ ╙──      	      ^^^^^^^^^^^^
 
 module M with
@@ -52,13 +51,13 @@ module M with
 :e
 M.bar[](1, 2)
 //│ ╔══[ERROR] Expected 2 type arguments, got 0
-//│ ║  l.53: 	M.bar[](1, 2)
+//│ ║  l.52: 	M.bar[](1, 2)
 //│ ╙──      	^^^^^^^
 
 :e
 M.bar[Int](1, 2)
 //│ ╔══[ERROR] Expected 2 type arguments, got 1
-//│ ║  l.59: 	M.bar[Int](1, 2)
+//│ ║  l.58: 	M.bar[Int](1, 2)
 //│ ╙──      	^^^^^^^^^^
 
 using Int = 42
@@ -75,18 +74,18 @@ M.foo()
 fun f[T](using t: T) = t
 f
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.76: 	f
+//│ ║  l.75: 	f
 //│ ║        	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.75: 	fun f[T](using t: T) = t
+//│ ║  l.74: 	fun f[T](using t: T) = t
 //│ ║        	               ^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 
 :e
 fun f(using t: Int = 42) = t
 //│ ╔══[ERROR] Expected a valid parameter, found term definition
-//│ ║  l.86: 	fun f(using t: Int = 42) = t
+//│ ║  l.85: 	fun f(using t: Int = 42) = t
 //│ ╙──      	      ^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: t
-//│ ║  l.86: 	fun f(using t: Int = 42) = t
+//│ ║  l.85: 	fun f(using t: Int = 42) = t
 //│ ╙──      	                           ^

@@ -17,7 +17,7 @@ module Example with
 
 :e
 let m = Example.foo()
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application of type M.
 //│ ║  l.19: 	let m = Example.foo()
 //│ ╙──      	        ^^^^^^^^^^^^^
 //│ m = class M
@@ -33,7 +33,7 @@ Example.foo()
 
 :e
 id(Example.foo())
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application of type M.
 //│ ║  l.35: 	id(Example.foo())
 //│ ║        	   ^^^^^^^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -44,21 +44,21 @@ Example.foo().mtd()
 
 :e
 Example.foo() + 1
-//│ ╔══[ERROR] Unexpected moduleful application denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful application of type M.
 //│ ║  l.46: 	Example.foo() + 1
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = "class M {   static {     M1 = this   }   constructor() {     runtime.Unit;   }   static mtd(...args) {     runtime.checkArgs(\"mtd\", 0, true, args.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"];  }1"
 
 :e
 M + 1
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.53: 	M + 1
 //│ ╙──      	^
 //│ = "class M {   static {     M1 = this   }   constructor() {     runtime.Unit;   }   static mtd(...args) {     runtime.checkArgs(\"mtd\", 0, true, args.length);     return 42   }   toString() { return runtime.render(this); }   static [definitionMetadata] = [\"class\", \"M\"];  }1"
 
 :e
 M |> id
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.60: 	M |> id
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -66,7 +66,7 @@ M |> id
 
 :e
 id <| M
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.68: 	id <| M
 //│ ║        	      ^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -76,7 +76,7 @@ fun (+) lol(a, b) = [a, b]
 
 :e
 M + 1
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.78: 	M + 1
 //│ ║        	^
 //│ ╙── Module argument passed to a non-module parameter.
@@ -84,7 +84,7 @@ M + 1
 
 :e
 let m = M
-//│ ╔══[ERROR] Unexpected moduleful reference denoting module definition 'M'.
+//│ ╔══[ERROR] Unexpected moduleful reference of type M.
 //│ ║  l.86: 	let m = M
 //│ ╙──      	        ^
 //│ m = class M
@@ -96,7 +96,7 @@ module A with
 module B with
   val a: module A = A
 print(B.a)
-//│ ╔══[ERROR] Unexpected moduleful selection denoting module definition 'A'.
+//│ ╔══[ERROR] Unexpected moduleful selection of type A.
 //│ ║  l.98: 	print(B.a)
 //│ ╙──      	      ^^^
 //│ > class A

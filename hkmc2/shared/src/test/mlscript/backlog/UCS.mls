@@ -141,7 +141,7 @@ if 1 + 1
 //│ ╔══[ERROR] Unrecognized term split (integer literal)
 //│ ║  l.123: 	    * 2 == 4 then "X"
 //│ ╙──       	      ^
-//│ ═══[ERROR] Unrecognized term split (reference without resolved definition term)
+//│ ═══[ERROR] Unrecognized term split (reference term)
 //│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———

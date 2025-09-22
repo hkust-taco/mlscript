@@ -13,7 +13,7 @@ Foo(42).x
 //│   stats = Nil
 //│   res = Sel:
 //│     prefix = App:
-//│       lhs = Ref of member:Foo
+//│       lhs = Ref{sym=member:Foo} of member:Foo
 //│       rhs = Tup of Ls of 
 //│         Fld:
 //│           flags = ()
@@ -33,7 +33,7 @@ foo.x
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref{sym=foo} of foo
 //│     nme = Ident of "x"
 //│ = 42
 
@@ -45,7 +45,7 @@ foo.y
 //│ Blk:
 //│   stats = Nil
 //│   res = Sel:
-//│     prefix = Ref of foo
+//│     prefix = Ref{sym=foo} of foo
 //│     nme = Ident of "y"
 //│ = 42
 
@@ -72,15 +72,15 @@ case
 //│       kw = keyword 'if'
 //│       split = Cons:
 //│         branch = Match:
-//│           scrutinee = Ref of caseScrut
+//│           scrutinee = Ref{sym=caseScrut} of caseScrut
 //│           pattern = Constructor:
-//│             target = Ref of member:Foo
+//│             target = Ref{sym=member:Foo} of member:Foo
 //│             patternArguments = Nil
 //│             arguments = S of Ls of 
 //│               Alias:
 //│                 pattern = Wildcard
 //│                 id = Ident of "a"
-//│           consequent = Else of Ref of a
+//│           consequent = Else of Ref{sym=a} of a
 //│         tail = End
 //│ Lowered:
 //│ Program:
