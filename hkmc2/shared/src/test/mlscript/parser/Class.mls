@@ -19,11 +19,11 @@ class Foo extends
 //│ ║  l.17: 	class Foo extends
 //│ ╙──      	                 ^
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Error()),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Error()),None)
 
 class Foo extends Bar
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),None)
 
 :pe
 class Foo extends Bar with
@@ -31,21 +31,21 @@ class Foo extends Bar with
 //│ ║  l.29: 	class Foo extends Bar with
 //│ ╙──      	                          ^
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),keyword 'with',Error()),None)
+//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),Keywrd(keyword 'with'),Error()),None)
 
 class Foo extends Bar with val x
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),keyword 'with',TermDef(ImmutVal,Ident(x),None)),None)
+//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),Keywrd(keyword 'with'),TermDef(ImmutVal,Ident(x),None)),None)
 
 class Foo extends Bar with
   val x: Int
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),keyword 'with',Block(List(TermDef(ImmutVal,InfixApp(Ident(x),keyword ':',Ident(Int)),None)))),None)
+//│ 	TypeDef(Cls,InfixApp(InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),Keywrd(keyword 'with'),Block(List(TermDef(ImmutVal,InfixApp(Ident(x),Keywrd(keyword ':'),Ident(Int)),None)))),None)
 
 class Foo with
   val x: Int
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'with',Block(List(TermDef(ImmutVal,InfixApp(Ident(x),keyword ':',Ident(Int)),None)))),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'with'),Block(List(TermDef(ImmutVal,InfixApp(Ident(x),Keywrd(keyword ':'),Ident(Int)),None)))),None)
 
 
 :pe
@@ -74,8 +74,8 @@ class
   Bar with
     x
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None)
-//│ 	TypeDef(Cls,InfixApp(Ident(Bar),keyword 'with',Block(List(Ident(x)))),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Bar),Keywrd(keyword 'with'),Block(List(Ident(x)))),None)
 
 
 :pe
@@ -108,7 +108,7 @@ class
   Foo
   extends Bar
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),None)
 
 class
   Foo
@@ -116,18 +116,18 @@ class
   Bar
   extends Baz
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None)
-//│ 	TypeDef(Cls,InfixApp(Ident(Bar),keyword 'extends',Ident(Baz)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Bar),Keywrd(keyword 'extends'),Ident(Baz)),None)
 
 class Foo
 extends Bar
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Ident(Bar)),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Ident(Bar)),None)
 
 class Foo
 extends
   Bar
 //│ Parsed:
-//│ 	TypeDef(Cls,InfixApp(Ident(Foo),keyword 'extends',Block(List(Ident(Bar)))),None)
+//│ 	TypeDef(Cls,InfixApp(Ident(Foo),Keywrd(keyword 'extends'),Block(List(Ident(Bar)))),None)
 
 

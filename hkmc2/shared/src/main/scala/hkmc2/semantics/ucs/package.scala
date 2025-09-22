@@ -2,7 +2,7 @@ package hkmc2
 package semantics
 
 import sourcecode.{FileName, Line, Name}
-import syntax.{Keyword, Tree}, Tree.{Ident, InfixApp, Sel, SynthSel}
+import syntax.{Keyword, Tree}, Tree.{Ident, InfixApp, Keywrd, Sel, SynthSel}
 import mlscript.utils.*, shorthands.*
 
 package object ucs:
@@ -24,7 +24,7 @@ package object ucs:
   
   extension (op: Keyword.Infix)
     infix def unapply(tree: Tree): Opt[(Tree, Tree)] = tree match
-      case InfixApp(lhs, `op`, rhs) => S((lhs, rhs))
+      case InfixApp(lhs, Keywrd(`op`), rhs) => S((lhs, rhs))
       case _ => N
   
   type Ctor = SynthSel | Sel | Ident

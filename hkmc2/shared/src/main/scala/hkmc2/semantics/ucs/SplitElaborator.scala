@@ -44,13 +44,17 @@ trait SplitElaborator:
       case _ => ()
   
   private def topmostDefault: SimpleSplit =
-    if kwLocSets._1.nonEmpty then SimpleSplit.Else(Term.UnitVal()) else SimpleSplit.End
+    if kwLocSets._1.nonEmpty then Else(Term.UnitVal())(N) else End
   
   private object `~>`:
-    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ Tree)] = tree match
-      case lhs `and` rhs => S((lhs, L(rhs)))
-      case lhs `then` rhs => kwLocSets._2 ++= tree.toLoc; S((lhs, R(rhs)))
-      case lhs `do` rhs => kwLocSets._1 ++= tree.toLoc; S((lhs, R(rhs)))
+    infix def unapply(tree: Tree): Opt[(Tree, Tree \/ (Keywrd[Connective], Tree))] = tree match
+      case InfixApp(lhs, Keywrd(`and`), rhs) => S((lhs, L(rhs)))
+      case InfixApp(lhs, kw @ Keywrd[`then`.type](`then`), rhs) =>
+        kwLocSets._2 ++= tree.toLoc
+        S((lhs, R((kw, rhs))))
+      case InfixApp(lhs, kw @ Keywrd[`do`.type](`do`), rhs) =>
+        kwLocSets._1 ++= tree.toLoc
+        S((lhs, R((kw, rhs))))
       case _ => N
   
   private def withScopedConnectives(kw: Keywrd[?])(evaluate: => SimpleSplit): SimpleSplit =
@@ -76,8 +80,8 @@ trait SplitElaborator:
   
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
-    val affirmative = Else(Term.Lit(BoolLit(true)))
-    val negative = Else(Term.Lit(BoolLit(false)))
+    val affirmative = Else(Term.Lit(BoolLit(true)))(N)
+    val negative = Else(Term.Lit(BoolLit(false)))(N)
     val (scrutinee, pattern) :: matches = disaggregate(tree)
     subterm(scrutinee).reference: scrutinee =>
       lazy val innerSplit: Ctxl[SimpleSplit] = expandMatches(matches)(affirmative)
@@ -108,15 +112,15 @@ trait SplitElaborator:
     // - `N` if no `else` branch has been found; or
     // - `S((default, unreachables))` if `default` is the first `else` branch
     //   in the split and all splits thereafter will be added to `unreachables`.
-    val z: (Ls[Head], Opt[(Term, Ls[SimpleSplit])]) = (Nil, N)
+    val z: (Ls[Head], Opt[(Else, Ls[SimpleSplit])]) = (Nil, N)
     val (reachables, elseRest) = splits.reverseIterator.foldLeft(z):
       // This is the case when we haven't found an `else` branch yet.
       case ((branches, N), split) =>
         @tailrec
-        def go(acc: Ls[Head], split: SimpleSplit): (Ls[Head], Opt[Term]) =
+        def go(acc: Ls[Head], split: SimpleSplit): (Ls[Head], Opt[Else]) =
           split match
             case Cons(branch, tail) => go(branch :: acc, tail)
-            case Else(default) => (acc, S(default))
+            case `else`: Else => (acc, S(`else`))
             case End => (acc, N)
         go(branches, split).mapSecond(_.map(_ -> (Nil: Ls[SimpleSplit])))
       case ((branches, S((default, unreachables))), split) =>
@@ -131,7 +135,7 @@ trait SplitElaborator:
           raise(WarningReport((msg"This else clause makes the following branches unreachable." -> default.toLoc :: messages)))
       case N => ()
     // Reconstruct the split from the reachable `heads`.
-    reachables.foldLeft(elseRest.fold(SimpleSplit.End)(_._1 |> SimpleSplit.Else)):
+    reachables.foldLeft(elseRest.fold(SimpleSplit.End)(_._1)):
       case (innerSplit, branch) => branch ~: innerSplit
   
   /** Handle the common cases of branches in splits. */
@@ -146,7 +150,8 @@ trait SplitElaborator:
       (ctx, Head.Let(TempSymbol(N, "unused"), term(rhsTree)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
-    case PrefixApp(Keywrd(`else`), elseTree) => (ctx, Else(term(elseTree)))
+    case PrefixApp(kw: Keywrd[`else`.type], elseTree) =>
+      (ctx, Else(term(elseTree))(S(kw)))
   
   private def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
     val z = (ctx, Ls[(Term, Pattern)]())
@@ -174,7 +179,7 @@ trait SplitElaborator:
       def innerSplit(using ctx: Ctx) = expandMatches(matches):
         consequent match
           case L(tree) => termSplit(Ls(tree), termNoop)
-          case R(tree) => Else(term(tree))
+          case R((kw, tree)) => Else(term(tree))(S(kw))
       val split = coda match
         case Under() if mk isnt termNoop => innerSplit
         case coda => mk(term(coda)).reference: scrutinee =>
@@ -227,11 +232,11 @@ trait SplitElaborator:
           consequentTree match
             case L(tree) =>
               termSplit(Ls(tree), termNoop)
-            case R(tree) => Else(term(tree))
+            case R((kw, tree)) => Else(term(tree))(S(kw))
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>
       error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
-      Else(Term.Error)
+      Else(Term.Error)(N)
   
   extension (term: Term)
     private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =

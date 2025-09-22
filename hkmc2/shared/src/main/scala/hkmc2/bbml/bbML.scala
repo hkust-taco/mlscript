@@ -4,6 +4,7 @@ package bbml
 
 import scala.collection.mutable.{HashSet, HashMap, ListBuffer}
 import scala.annotation.tailrec
+import sourcecode.{FileName, Line, Name}
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -100,7 +101,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL)(using Ctx):
     state.lowerBounds = ctx.getRegEnv :: Nil
     InfVar(ctx.lvl, infVarState.nextUid, state, false)(sym, "")
 
-  private def error(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
+  private def error(using Line, FileName, Name, Raise)(msg: Ls[Message -> Opt[Loc]])(using BbCtx) =
     raise(ErrorReport(msg))
     Bot // TODO: error type?
 

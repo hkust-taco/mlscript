@@ -23,7 +23,7 @@ fun f(x, y, z) = if x then y else z
 //│     split = Block of Ls of 
 //│       InfixApp:
 //│         lhs = Ident of "x"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "y"
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'else'
@@ -131,10 +131,10 @@ fun foo(x) = if x is
   else "I shouldn't tell you what's inside the box."
 //│ ╔══[WARNING] This else clause makes the following branches unreachable.
 //│ ║  l.129: 	  else "I can't tell you what's inside the box."
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
 //│ ║  l.130: 	  else "I don't want to tell you what's inside the box."
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.
 //│ ║  l.131: 	  else "I shouldn't tell you what's inside the box."
-//│ ╙──       	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

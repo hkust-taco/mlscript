@@ -27,7 +27,7 @@ fun checkZeroOneTwo(x) = if x is
 //│ ╟── This branch is unreachable.
 //│ ╟── This branch is unreachable.
 //│ ║  l.15: 	  else ()
-//│ ╙──      	       ^^
+//│ ╙──      	  ^^^^^^^
 //│ Normalized:
 //│ >  if else <error>
 

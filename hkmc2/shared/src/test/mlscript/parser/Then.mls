@@ -3,22 +3,22 @@
 
 1 then 2
 //│ Parsed:
-//│ 	InfixApp(IntLit(1),keyword 'then',IntLit(2))
+//│ 	InfixApp(IntLit(1),Keywrd(keyword 'then'),IntLit(2))
 
 1 then 2 then 3
 //│ Parsed:
-//│ 	InfixApp(InfixApp(IntLit(1),keyword 'then',IntLit(2)),keyword 'then',IntLit(3))
+//│ 	InfixApp(InfixApp(IntLit(1),Keywrd(keyword 'then'),IntLit(2)),Keywrd(keyword 'then'),IntLit(3))
 
 1 and 2 then 3
 //│ Parsed:
-//│ 	InfixApp(InfixApp(IntLit(1),keyword 'and',IntLit(2)),keyword 'then',IntLit(3))
+//│ 	InfixApp(InfixApp(IntLit(1),Keywrd(keyword 'and'),IntLit(2)),Keywrd(keyword 'then'),IntLit(3))
 
 1 and 2 and 3 then 4
 //│ Parsed:
-//│ 	InfixApp(InfixApp(InfixApp(IntLit(1),keyword 'and',IntLit(2)),keyword 'and',IntLit(3)),keyword 'then',IntLit(4))
+//│ 	InfixApp(InfixApp(InfixApp(IntLit(1),Keywrd(keyword 'and'),IntLit(2)),Keywrd(keyword 'and'),IntLit(3)),Keywrd(keyword 'then'),IntLit(4))
 
 1 then 2 and 3
 //│ Parsed:
-//│ 	InfixApp(IntLit(1),keyword 'then',InfixApp(IntLit(2),keyword 'and',IntLit(3)))
+//│ 	InfixApp(IntLit(1),Keywrd(keyword 'then'),InfixApp(IntLit(2),Keywrd(keyword 'and'),IntLit(3)))
 
 

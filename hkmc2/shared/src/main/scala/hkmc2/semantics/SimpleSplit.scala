@@ -1,14 +1,21 @@
 package hkmc2
 package semantics
 
-import mlscript.utils.*, shorthands.*, syntax.*, Tree.BoolLit
-import utils.TL, Elaborator.{Ctx, State}
+import mlscript.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
+import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
 
 enum SimpleSplit extends AutoLocated with ProductWithTail:
   import SimpleSplit.Head
   
   case Cons(branch: SimpleSplit.Head, tail: SimpleSplit)
-  case Else(default: Term)
+  /**
+    * 
+    * 
+    * @param default The default term.
+    * @param kw The keyword of `then` or `else`. It is `None` if the split is
+    *           the topmost one.
+    */
+  case Else(default: Term)(val kw: Opt[Keywrd[`else`.type | `then`.type | `do`.type]])
   case End
   
   inline def ~:(head: SimpleSplit.Head): Cons = Cons(head, this)
@@ -16,17 +23,14 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   def ~~:(front: SimpleSplit): SimpleSplit =
     front match
       case Cons(head, tail) => Cons(head, tail ~~: this)
-      case Else(default) => Else(default)
+      case `else`: Else => `else`
       case End => this
-  
-  lazy val hasElse: Bool = this match
-    case Cons(_, tail) => tail.hasElse
-    case Else(_) => true
-    case End => false
   
   protected def children: List[Located] = this match
     case Cons(branch, tail) => List(branch, tail)
-    case Else(default) => List(default)
+    case `else` @ Else(default) => `else`.kw match
+      case N => default :: Nil
+      case S(kw) => kw :: default :: Nil
     case End => Nil
   
   def subTerms: Ls[Term] = this match
@@ -51,20 +55,16 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case End => acc
     go(Nil, this).reverse
   
+  /** This field is designed to be compatible with bbML. */
   private var _expandedSplit: Opt[Split] = N
   
+  /**  */
   def getExpandedSplit(using TL, Ctx, State, Raise): Split = _expandedSplit.getOrElse:
     val split = Split.from(this)
     _expandedSplit = S(split)
     split
 
 object SimpleSplit:
-  /** Note: The order of the given `heads` must be reversed: later branches
-    * should come earlier in the list. */
-  def apply(heads: Ls[Head], default: Opt[Term]): SimpleSplit =
-    heads.foldLeft(default.fold(End)(Else(_))):
-      case (tail, head) => Cons(head, tail)
-  
   object IfThenElse:
     def unapply(split: SimpleSplit): Opt[(Term, Term, Term)] = split match
       case Cons(

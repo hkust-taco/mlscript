@@ -319,7 +319,7 @@ fun f(x) = if x
 //│             op = Ident of "=="
 //│             rhss = Ls of 
 //│               IntLit of 0
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "a"
 //│         InfixApp:
 //│           lhs = OpApp:
@@ -327,7 +327,7 @@ fun f(x) = if x
 //│             op = Ident of ">"
 //│             rhss = Ls of 
 //│               IntLit of 1
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "b"
 
 f(0)

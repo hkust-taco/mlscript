@@ -4,13 +4,13 @@
 x
   is A
 //│ Parsed:
-//│ 	InfixApp(Ident(x),keyword 'is',Ident(A))
+//│ 	InfixApp(Ident(x),Keywrd(keyword 'is'),Ident(A))
 
 
 x
   is A
   is B
 //│ Parsed:
-//│ 	OpSplit(Ident(x),List(InfixApp(SplitPoint(),keyword 'is',Ident(A)), InfixApp(SplitPoint(),keyword 'is',Ident(B))))
+//│ 	OpSplit(Ident(x),List(InfixApp(SplitPoint(),Keywrd(keyword 'is'),Ident(A)), InfixApp(SplitPoint(),Keywrd(keyword 'is'),Ident(B))))
 
 

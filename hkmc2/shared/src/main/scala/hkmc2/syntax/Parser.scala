@@ -603,7 +603,7 @@ abstract class Parser(
               case Curly => Bra(Curly, Block(ps))
               case Square => TyTup(ps)
             exprCont(
-              Quoted(InfixApp(lhs, kw, Unquoted(rhs)).withLoc(S(loc))).withLoc(S(l ++ loc)),
+              Quoted(InfixApp(lhs, new Keywrd(kw).withLoc(S(l0)), Unquoted(rhs)).withLoc(S(loc))).withLoc(S(l ++ loc)),
               prec, allowNewlines = allowNewlines)
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _
         if kw.leftPrecOrMin > prec =>
@@ -613,7 +613,7 @@ abstract class Parser(
             case Round => Tup(ps)
             case Curly => ???
             case Square => TyTup(ps)
-          val res = InfixApp(lhs, kw, rhs).withLoc(S(loc))
+          val res = InfixApp(lhs, new Keywrd(kw).withLoc(S(l0)), rhs).withLoc(S(loc))
           exprCont(res, prec, allowNewlines = allowNewlines)
         case _ =>
           val sts = ps
@@ -653,9 +653,9 @@ abstract class Parser(
               consume
               val ele = simpleExprImpl(prec, allowNewlines = false)
               term match
-                case InfixApp(lhs, Keyword.`then`, rhs) =>
+                case InfixApp(lhs, kw @ Keywrd(Keyword.`then`), rhs) =>
                   Quoted(IfLike(new Keywrd(Keyword.`if`).withLoc(S(l0)), Block(
-                    InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)) ::
+                    InfixApp(Unquoted(lhs), kw, Unquoted(rhs)) ::
                       PrefixApp(new Keywrd(Keyword.`else`).withLoc(S(l1)), Unquoted(ele)) :: Nil
                   )))
                 case tk =>
@@ -772,7 +772,7 @@ abstract class Parser(
       e match
       case N => die
       case S(e) =>
-        opSplitImpl(lhs, splittingOpLoc, prec, InfixApp(e, Keyword.`then`, rhs) :: acc)
+        opSplitImpl(lhs, splittingOpLoc, prec, InfixApp(e, new Keywrd(Keyword.`then`).withLoc(S(l0)), rhs) :: acc)
     case (IDENT(op, true), l0) :: rest =>
       assert(opPrec(op)._1 <= prec)
       if rest.collectFirst{ case (_: NEWLINE_COMMA | IDENT("then", false), _) => }.isEmpty // TODO dedup
@@ -801,7 +801,7 @@ abstract class Parser(
           consume
           consume
           val rhs = effectfulRhs(kw.rightPrecOrMin, allowNewlines = allowNewlines)
-          exprCont(Quoted(InfixApp(PlainTup(acc), kw, Unquoted(rhs))), prec, allowNewlines = allowNewlines)
+          exprCont(Quoted(InfixApp(PlainTup(acc), new Keywrd(kw).withLoc(S(l0)), Unquoted(rhs))), prec, allowNewlines = allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
@@ -849,7 +849,7 @@ abstract class Parser(
         consume
         val rhs = effectfulRhs(kw.rightPrecOrMin, allowNewlines = allowNewlines)
         val res = acc match
-          case _ => InfixApp(PlainTup(acc), kw, rhs)
+          case _ => InfixApp(PlainTup(acc), new Keywrd(kw).withLoc(S(l0)), rhs)
         exprCont(res, prec, allowNewlines = allowNewlines)
         
       case (IDENT("!", _), l0) :: (br @ BRACKETS(bk, toks), l1) :: _ =>

@@ -112,9 +112,9 @@ pattern BadNegated = ~(Int as x) => x
 //│         lhs = Tup of Ls of 
 //│           InfixApp:
 //│             lhs = Ident of "Int"
-//│             kw = keyword 'as'
+//│             kw = Keywrd of keyword 'as'
 //│             rhs = Ident of "x"
-//│         kw = keyword '=>'
+//│         kw = Keywrd of keyword '=>'
 //│         rhs = Ident of "x"
 
 :ucs ups

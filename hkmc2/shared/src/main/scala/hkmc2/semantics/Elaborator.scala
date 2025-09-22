@@ -420,7 +420,7 @@ extends Importer with ucs.SplitElaborator:
           Term.WildcardTy(S(subterm(arg1)), S(subterm(arg2)))
         case arg => subterm(arg)
       })(N).withLocOf(tree)
-    case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
+    case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
         val sym = VarSymbol(id)
@@ -429,9 +429,9 @@ extends Importer with ucs.SplitElaborator:
         sym
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id), N, N)
-        case InfixApp(id: Tree.Ident, Keyword.`extends`, ub) => (genSym(id), S(ub), N)
-        case InfixApp(id: Tree.Ident, Keyword.`restricts`, lb) => (genSym(id), N, S(lb))
-        case InfixApp(InfixApp(id: Tree.Ident, Keyword.`extends`, ub), Keyword.`restricts`, lb) => (genSym(id), S(ub), S(lb))
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id), S(ub), N)
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id), N, S(lb))
+        case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) => (genSym(id), S(ub), S(lb))
       )
       val outer = (tvs.collect:
         case Outer(S(name: Tree.Ident)) => genSym(name)
@@ -452,22 +452,22 @@ extends Importer with ucs.SplitElaborator:
           case (sym, ub, lb) =>
             QuantVar(sym, ub.map(ub => subterm(ub)), lb.map(lb => subterm(lb)))
         Term.Forall(bds, outer, subterm(body))
-    case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
+    case InfixApp(lhs, Keywrd(Keyword.`->`), Effectful(eff, rhs)) =>
       Term.FunTy(subterm(lhs), subterm(rhs), S(subterm(eff)))
-    case InfixApp(lhs, Keyword.`->`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`->`), rhs) =>
       Term.FunTy(subterm(lhs), subterm(rhs), N)
-    case InfixApp(lhs, Keyword.`=>`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
         val (syms, nestCtx) = funParams(lhs)
         Term.Lam(syms, term(rhs)(using nestCtx))
-    case InfixApp(lhs, Keyword.`as`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
-    case InfixApp(lhs, Keyword.`:`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(tree :: Nil, hasResult = false)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
       Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
-    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
+    case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
       Term.IfLike(Keyword.`if`, shorthandSplit(tree))
     case InfixApp(lhs, kw, rhs) =>
       raise:
@@ -763,9 +763,9 @@ extends Importer with ucs.SplitElaborator:
     case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
     case _ => term(tree)
   def fld(tree: Tree)(using UnderCtx): Ctxl[Elem] = tree match
-    case InfixApp(id: Ident, Keyword.`:`, rhs) =>
+    case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs)))
-    case InfixApp(lhs, Keyword.`:`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
       Spd(false, arg(trm))
@@ -955,7 +955,7 @@ extends Importer with ucs.SplitElaborator:
       case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
         go(sts, Nil, RcdSpread(term(body)) :: acc)
-      case InfixApp(lhs, Keyword.`:`, rhs) :: sts =>
+      case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
         var newCtx = ctx
         val rhs_t = rhs match
           case _: Under => subterm(rhs)
@@ -991,7 +991,7 @@ extends Importer with ucs.SplitElaborator:
         val newAcc = rhso match
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
-              InfixApp(_, Keyword.`=>`, _)
+              InfixApp(_, Keywrd(Keyword.`=>`), _)
             mkLetBinding(kw, sym, term(rrhs), annotations) reverse_::: acc
           case N =>
             if tups.nonEmpty then
@@ -1016,7 +1016,7 @@ extends Importer with ucs.SplitElaborator:
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
             go(sts, Nil, Term.Error :: acc)
         case App(base, args) =>
-          go(Def(base, InfixApp(args, Keyword.`=>`, rhs)) :: sts, Nil, acc)
+          go(Def(base, InfixApp(args, Keywrd(Keyword.`=>`), rhs)) :: sts, Nil, acc)
         case _ =>
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
@@ -1473,8 +1473,8 @@ extends Importer with ucs.SplitElaborator:
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
     def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
       val entries = ps.foldLeft(List[(Ident, Pattern)]()):
-        case (acc, InfixApp(id: Ident, Keyword.`:`, p)) => (id, go(p)) :: acc
-        case (acc, InfixApp(key: StrLit, Keyword.`:`, p)) =>
+        case (acc, InfixApp(id: Ident, Keywrd(Keyword.`:`), p)) => (id, go(p)) :: acc
+        case (acc, InfixApp(key: StrLit, Keywrd(Keyword.`:`), p)) =>
           ((Ident(key.value): Ident).withLocOf(key), go(p)) :: acc
         case (acc, Pun(false, p)) => (p, Variable(p)) :: acc
         case (acc, t) =>
@@ -1514,7 +1514,7 @@ extends Importer with ucs.SplitElaborator:
       // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.
       case Tup(lhs) `=>` rhs => lhs match
         case p @ Pun(false, _) :: Nil => record(p)
-        case p @ InfixApp(_: Ident, Keyword.`:`, _) :: Nil => record(p)
+        case p @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) :: Nil => record(p)
         case lhs :: Nil => arrow(lhs, rhs)
         case _ :: _ | Nil => ??? // TODO: When is this case reached?
       case p as q => q match
@@ -1539,7 +1539,7 @@ extends Importer with ucs.SplitElaborator:
       // A single pun pattern is a record pattern.
       case p @ Pun(false, _) => record(p :: Nil)
       // A single record field is a record pattern.
-      case p @ InfixApp(_, Keyword.`:`, _) => record(p :: Nil)
+      case p @ InfixApp(_, Keywrd(Keyword.`:`), _) => record(p :: Nil)
       // Range patterns. We can also desugar them into disjunctions of all the
       // literals in the range.
       case (lower: StrLit) to (incl, upper: StrLit) =>
