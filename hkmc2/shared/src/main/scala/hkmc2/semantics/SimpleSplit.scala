@@ -23,12 +23,12 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   def ~~:(front: SimpleSplit): SimpleSplit =
     front match
       case Cons(head, tail) => Cons(head, tail ~~: this)
-      case `else`: Else => `else`
+      case els: Else => els
       case End => this
   
   protected def children: List[Located] = this match
     case Cons(branch, tail) => List(branch, tail)
-    case `else` @ Else(default) => `else`.kw match
+    case els @ Else(default) => els.kw match
       case N => default :: Nil
       case S(kw) => kw :: default :: Nil
     case End => Nil

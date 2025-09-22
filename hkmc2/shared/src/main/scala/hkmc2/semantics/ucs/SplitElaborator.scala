@@ -120,7 +120,7 @@ trait SplitElaborator:
         def go(acc: Ls[Head], split: SimpleSplit): (Ls[Head], Opt[Else]) =
           split match
             case Cons(branch, tail) => go(branch :: acc, tail)
-            case `else`: Else => (acc, S(`else`))
+            case els: Else => (acc, S(els))
             case End => (acc, N)
         go(branches, split).mapSecond(_.map(_ -> (Nil: Ls[SimpleSplit])))
       case ((branches, S((default, unreachables))), split) =>
