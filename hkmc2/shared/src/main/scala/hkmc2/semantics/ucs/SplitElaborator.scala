@@ -16,9 +16,6 @@ object SplitElaborator:
   type Reference = () => Term.Ref
   
   type Connective = `do`.type | `then`.type
-
-  private val termNoop: Term => Term = identity
-  private val treeNoop: Tree => Tree = identity
 import SplitElaborator.*
 
 trait SplitElaborator:
@@ -70,13 +67,13 @@ trait SplitElaborator:
   protected def split(t: IfLike): Ctxl[SimpleSplit] =
     withScopedConnectives(t.kw):
       t.split match
-        case block: Block => termSplit(block.desugStmts, termNoop)
-        case other: Tree => termSplit(Ls(other), termNoop)
+        case block: Block => termSplit(block.desugStmts, identity)
+        case other: Tree => termSplit(Ls(other), identity)
   
   /** Elaborate `case` expressions */
   protected def caseSplit(scrut: VarSymbol, tree: Case): Ctxl[SimpleSplit] =
     withScopedConnectives(tree.kw):
-      patternBranch(() => scrut.ref(), tree.branches, treeNoop)
+      patternBranch(() => scrut.ref(), tree.branches, identity)
   
   /** Elaborate shorthand expressions. */
   protected def shorthandSplit(tree: Tree)(using UnderCtx): Ctxl[SimpleSplit] =
@@ -172,16 +169,16 @@ trait SplitElaborator:
   
   private def termBranch(t: Tree, mk: Term => Term): Ctxl[(Ctx, SimpleSplit)] = branch.appOrElse(t):
     case block: Block => (ctx, termSplit(block.desugStmts, mk))
-    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs, treeNoop)))
+    case lhs is rhs => (ctx, mk(term(lhs)).reference(patternBranch(_, rhs, identity)))
     // Several matches followed by `and`, `do`, or `then`.
     case matchesTree ~> consequent =>
       val (coda, patternTree) :: matches = disaggregate(matchesTree)
       def innerSplit(using ctx: Ctx) = expandMatches(matches):
         consequent match
-          case L(tree) => termSplit(Ls(tree), termNoop)
+          case L(tree) => termSplit(Ls(tree), identity)
           case R((kw, tree)) => Else(term(tree))(S(kw))
       val split = coda match
-        case Under() if mk isnt termNoop => innerSplit
+        case Under() => innerSplit
         case coda => mk(term(coda)).reference: scrutinee =>
           val pattern = self.pattern(patternTree)
           val innerCtx = ctx ++ pattern.variables.allocate
@@ -210,7 +207,7 @@ trait SplitElaborator:
   
   private def operatorBranch(scrutinee: Reference, rhs: Tree): Ctxl[(Ctx, SimpleSplit)] =
     branch.appOrElse(rhs): rhsTree => 
-      termBranch(rhsTree.splitOn(Trm(scrutinee())), termNoop)
+      termBranch(rhsTree.splitOn(Trm(scrutinee())), identity)
   
   private def patternBranch(scrutinee: Reference, t: Tree, mk: Tree => Tree): Ctxl[SimpleSplit] = t match
     case block: Block =>
@@ -233,7 +230,7 @@ trait SplitElaborator:
         val split = expandMatches(matches):
           consequentTree match
             case L(tree) =>
-              termSplit(Ls(tree), termNoop)
+              termSplit(Ls(tree), identity)
             case R((kw, tree)) => Else(term(tree))(S(kw))
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>

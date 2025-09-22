@@ -243,17 +243,19 @@ _ - _ of 1, 2
 //│ = -1
 
 
+// `_` here is interpreted as a UCS default case...
 :sjs
+:w
 let f = if _ then 1 else 0
+//│ ╔══[WARNING] This else clause makes the following branches unreachable.
+//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ║         	             ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ╙──       	                    ^^^^^^
 //│ JS (unsanitized):
-//│ let f15, scrut, tmp16, lambda41;
-//│ lambda41 = (undefined, function (_0) {
-//│   return _0
-//│ });
-//│ scrut = lambda41;
-//│ if (scrut === true) { tmp16 = 1; } else { tmp16 = 0; }
-//│ f15 = tmp16;
-//│ f = 0
+//│ let f15, tmp16; tmp16 = 1; f15 = tmp16;
+//│ f = 1
 
 :sjs
 fun f(x) =
@@ -263,8 +265,8 @@ fun f(x) =
 //│ JS (unsanitized):
 //│ let f16;
 //│ f16 = function f(x3) {
-//│   let scrut1;
-//│   scrut1 = x3 == 0;
-//│   if (scrut1 === true) { return 1 } else { return 2 }
+//│   let scrut;
+//│   scrut = x3 == 0;
+//│   if (scrut === true) { return 1 } else { return 2 }
 //│ };
 
