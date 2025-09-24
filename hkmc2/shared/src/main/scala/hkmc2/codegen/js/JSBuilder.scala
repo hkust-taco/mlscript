@@ -342,11 +342,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${
-                  val ext = result(p)
-                  ext
-                  // p match
-                  // case _: LamRes => doc"($ext)"
-                  // case _ => ext
+                  result(p)
                 }").getOrElse("")
               } " :: braced:
                 

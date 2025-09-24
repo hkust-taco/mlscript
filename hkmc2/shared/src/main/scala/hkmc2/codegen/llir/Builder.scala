@@ -295,7 +295,6 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             k(ctx.findName(l) |> sr)
       case Value.This(sym) => bErrStop(msg"Unsupported value: This")
       case Value.Lit(lit) => k(Expr.Literal(lit))
-      
         
   
   private def getClassOfField(p: FieldSymbol)(using ctx: Ctx)(using Raise, Scope): Local =
