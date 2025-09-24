@@ -322,12 +322,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val body = blockBuilder
       .assign(startSym, h.debugInfo.prevLocalsFn match
-          case None => ArrRes(mut = true, Nil)
+          case None => Tuple(mut = true, Nil)
           case Some(value) => PureCall(value, Nil)
         )
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
-      .assign(arrSym, ArrRes(mut = false, localsInfo.map(v => v._1.asPath.asArg)))
+      .assign(arrSym, Tuple(mut = false, localsInfo.map(v => v._1.asPath.asArg)))
       .assign(thisInfo, Instantiate(mut = true, fnLocalsPath,
           Value.Lit(Tree.StrLit(h.debugInfo.debugNme)).asArg
             :: Value.Ref(arrSym).asArg
@@ -401,11 +401,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyPath(p: Path): Path = p match
         case Value.Ref(`getLocalsSym`) => handlerCtx.debugInfo.prevLocalsFn.get
         case _ => super.applyPath(p)
-      override def applyLam(lam: LamRes): LamRes =
+      override def applyLam(lam: Lambda): Lambda =
         // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
-        LamRes(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
+        Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
         case c: ClsLikeDefn => translateCls(c)
@@ -623,7 +623,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       
       val localsRes = h.debugInfo.prevLocalsFn match
         case Some(value) => PureCall(value, Nil)
-        case None => ArrRes(mut = true, Nil)
+        case None => Tuple(mut = true, Nil)
       
       val getLocalsFnDef = FunDefn(
         S(clsSym),

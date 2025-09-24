@@ -493,9 +493,9 @@ sealed abstract class Result extends AutoLocated:
     case Instantiate(mut, cls, args) => cls :: args.map(_.value)
     case Select(qual, name) => qual :: name :: Nil
     case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
-    case LamRes(params, body) => params :: Nil
-    case ArrRes(mut, elems) => elems.map(_.value)
-    case RcdRes(mut, elems) => elems.map(_.value)
+    case Lambda(params, body) => params :: Nil
+    case Tuple(mut, elems) => elems.map(_.value)
+    case Record(mut, elems) => elems.map(_.value)
     case Value.Ref(l) => Nil
     case Value.This(sym) => Nil
     case Value.Lit(lit) => lit :: Nil
@@ -505,17 +505,17 @@ sealed abstract class Result extends AutoLocated:
     case Call(fun, args) => fun.subBlocks ::: args.flatMap(_.value.subBlocks)
     case Instantiate(mut, cls, args) => args.flatMap(_.value.subBlocks)
     case Select(qual, name) => qual.subBlocks
-    case LamRes(params, body) => body :: Nil
-    case ArrRes(mut, elems) => elems.flatMap(_.value.subBlocks)
+    case Lambda(params, body) => body :: Nil
+    case Tuple(mut, elems) => elems.flatMap(_.value.subBlocks)
     case _ => Nil
   
   lazy val freeVars: Set[Local] = this match
     case Call(fun, args) => fun.freeVars ++ args.flatMap(_.value.freeVars).toSet
     case Instantiate(mut, cls, args) => cls.freeVars ++ args.flatMap(_.value.freeVars).toSet
     case Select(qual, name) => qual.freeVars 
-    case LamRes(params, body) => body.freeVars -- params.paramSyms
-    case ArrRes(mut, elems) => elems.flatMap(_.value.freeVars).toSet
-    case RcdRes(mut, args) =>
+    case Lambda(params, body) => body.freeVars -- params.paramSyms
+    case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
+    case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
     case Value.Ref(l) => Set(l)
     case Value.This(sym) => Set.empty
@@ -526,9 +526,9 @@ sealed abstract class Result extends AutoLocated:
     case Call(fun, args) => fun.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
     case Instantiate(mut, cls, args) => cls.freeVarsLLIR ++ args.flatMap(_.value.freeVarsLLIR).toSet
     case Select(qual, name) => qual.freeVarsLLIR 
-    case LamRes(params, body) => body.freeVarsLLIR -- params.paramSyms
-    case ArrRes(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
-    case RcdRes(mut, args) =>
+    case Lambda(params, body) => body.freeVarsLLIR -- params.paramSyms
+    case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
+    case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
     case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
     case Value.Ref(l: MemberSymbol[?]) => l.defn match
@@ -550,11 +550,11 @@ case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffect
 
 case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 
-case class LamRes(params: ParamList, body: Block) extends Result
+case class Lambda(params: ParamList, body: Block) extends Result
 
-case class ArrRes(mut: Bool, elems: Ls[Arg]) extends Result
+case class Tuple(mut: Bool, elems: Ls[Arg]) extends Result
 
-case class RcdRes(mut: Bool, elems: Ls[RcdArg]) extends Result
+case class Record(mut: Bool, elems: Ls[RcdArg]) extends Result
 
 
 sealed abstract class Path extends TrivialResult:

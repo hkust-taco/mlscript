@@ -106,13 +106,13 @@ object Printer:
     case Call(fun, args) => doc"${mkDocument(fun)}(${args.map(mkDocument).mkString(", ")})"
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkString(", ")})"
-    case LamRes(params, body) =>
+    case Lambda(params, body) =>
       val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkString(", ")
       doc"(${docParams}) => ${mkDocument(body)}"
-    case ArrRes(mut, elems) =>
+    case Tuple(mut, elems) =>
       val docElems = elems.map(x => mkDocument(x)).mkString(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"
-    case RcdRes(mut, args) =>
+    case Record(mut, args) =>
       doc"${if mut then "mut " else ""}{ ${
         args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
       } }"

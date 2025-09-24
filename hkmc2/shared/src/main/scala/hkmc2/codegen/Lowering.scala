@@ -131,7 +131,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       res match
       case R(res) => term(res)(k)
       case L((mut, flds)) =>
-        k(RcdRes(mut, flds.reverse))
+        k(Record(mut, flds.reverse))
     case RcdSpread(bod) :: stats =>
       res match
       case R(_) => wat("RcdField in non-Rcd context", res)
@@ -311,12 +311,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case st.Asc(lhs, rhs) =>
       term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>
-      args(fs)(args => k(ArrRes(mut = false, args)))
+      args(fs)(args => k(Tuple(mut = false, args)))
     case Mut(st.Tup(fs)) =>
-      args(fs)(args => k(ArrRes(mut = true, args)))
+      args(fs)(args => k(Tuple(mut = true, args)))
     case st.CtxTup(fs) =>
       // * This case is currently triggered for code such as `f(using 42)`
-      args(fs)(args => k(ArrRes(mut = false, args)))
+      args(fs)(args => k(Tuple(mut = false, args)))
     case ref @ st.Ref(sym) =>
       sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
@@ -350,7 +350,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(LamRes(paramLists.head, bodyBlock).withLocOf(ref))
+          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
         if sym.unary then
           val t1 = new Tree.Ident("arg")
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
@@ -365,7 +365,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(LamRes(paramLists.head, bodyBlock).withLocOf(ref))
+          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.hasDeclareModifier.isDefined =>
@@ -511,7 +511,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(LamRes(paramLists.head, bodyBlock))
+      then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
         val lamDef = FunDefn(N, lamSym, paramLists, bodyBlock)
@@ -844,7 +844,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val arr = new TempSymbol(N, "arr")
           Assign(
             arr,
-            ArrRes(mut = false, ds.reverse.map(_.asArg)),
+            Tuple(mut = false, ds.reverse.map(_.asArg)),
             Assign(l, r, setupTerm("Lam", Value.Ref(arr) :: Value.Ref(l) :: Nil)(k)))
         case sym :: rest =>
           setupSymbol(sym): r =>
@@ -858,7 +858,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val arrSym = new TempSymbol(N, "arr")
           Assign(
             arrSym,
-            ArrRes(mut = false, xs.reverse.map(_.asArg)),
+            Tuple(mut = false, xs.reverse.map(_.asArg)),
             setupTerm("Tup", Value.Ref(arrSym) :: Nil): r2 =>
               val l1 = new TempSymbol(N)
               val l2 = new TempSymbol(N)
@@ -886,7 +886,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           .chain(b => quote(res)(r3 => Assign(l3, r3, b)))
           .chain(b => setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 => Assign(l4, r4, b)))
           .chain(b => setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 => Assign(l5, r5, b)))
-          .assign(arrSym, ArrRes(mut = false, (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)))
+          .assign(arrSym, Tuple(mut = false, (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)))
           .rest(setupTerm("Blk", Value.Ref(arrSym) :: Value.Ref(l3) :: Nil)(k))
       }
     case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
@@ -973,7 +973,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         b,
         Assign(
           rcdSym,
-          RcdRes(mut = false, fsr.reverse),
+          Record(mut = false, fsr.reverse),
           k((Arg(N, Value.Ref(rcdSym)) :: asr).reverse)))
       
   
@@ -996,7 +996,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
-      case LamRes(params, body) =>
+      case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         val lamDef = FunDefn(N, lamSym, params :: Nil, body)
         Define(lamDef, k(lamSym |> Value.Ref.apply))

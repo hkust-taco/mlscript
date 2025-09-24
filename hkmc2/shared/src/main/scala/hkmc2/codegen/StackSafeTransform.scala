@@ -104,8 +104,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         else
           super.applyResult2(r)(k)
       
-      override def applyLam(lam: LamRes): LamRes =
-        LamRes(lam.params, rewriteBlk(lam.body))
+      override def applyLam(lam: Lambda): Lambda =
+        Lambda(lam.params, rewriteBlk(lam.body))
   
     transform.applyBlock(b)
   

@@ -55,9 +55,9 @@ class BlockTraverser:
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
     case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
-    case l @ LamRes(params, body) => applyLam(l)
-    case ArrRes(mut, elems) => elems.foreach(applyArg)
-    case RcdRes(mut, fields) => fields.foreach:
+    case l @ Lambda(params, body) => applyLam(l)
+    case Tuple(mut, elems) => elems.foreach(applyArg)
+    case Record(mut, fields) => fields.foreach:
       case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
     case p: Path => applyPath(p)
   
@@ -133,12 +133,12 @@ class BlockTraverser:
     hdr.params.foreach(applyParamList)
     applySubBlock(hdr.body)
   
-  def applyLam(lam: LamRes): Unit =
+  def applyLam(lam: Lambda): Unit =
     applyParamList(lam.params)
     applySubBlock(lam.body)
   
 class BlockTraverserShallow extends BlockTraverser:
-  override def applyLam(lam: LamRes) = ()
+  override def applyLam(lam: Lambda) = ()
   override def applyFunDefn(fun: FunDefn): Unit = ()
   override def applyDefn(defn: Defn): Unit = defn match
     case _: FunDefn | _: ClsLikeDefn => ()

@@ -12,7 +12,7 @@ object LambdaRewriter:
   def desugar(b: Block)(using State) =
     
     def rewriteOneBlk(b: Block) = b match
-      case Assign(lhs, LamRes(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
+      case Assign(lhs, Lambda(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
         val newSym = BlockMemberSymbol(lhs.nme, Nil,
           nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
         )
@@ -22,10 +22,10 @@ object LambdaRewriter:
           .rest(rest)
         (blk, Nil)
       case _ =>
-        var lambdasList: List[(BlockMemberSymbol, LamRes)] = Nil
+        var lambdasList: List[(BlockMemberSymbol, Lambda)] = Nil
         val lambdaRewriter = new BlockDataTransformer(SymbolSubst()):
           override def applyResult(r: Result): Result = r match
-            case lam: LamRes => 
+            case lam: Lambda => 
               val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
               lambdasList ::= (sym -> super.applyLam(lam))
               Value.Ref(sym)
@@ -37,7 +37,7 @@ object LambdaRewriter:
       override def applyBlock(b: Block): Block =
         val (newBlk, lambdasList) = rewriteOneBlk(b)
         val lambdaDefns = lambdasList.map:
-          case (sym, LamRes(params, body)) =>
+          case (sym, Lambda(params, body)) =>
             FunDefn(N, sym, params :: Nil, body)
         val ret = lambdaDefns.foldLeft(newBlk):
           case (acc, defn) => Define(defn, acc)
