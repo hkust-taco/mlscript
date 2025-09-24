@@ -968,13 +968,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     if fsr.isEmpty then
       Begin(b, k(asr.reverse))
     else
-      val arrSym = new TempSymbol(N, "rcd")
+      val rcdSym = new TempSymbol(N, "rcd")
       Begin(
         b,
         Assign(
-          arrSym,
+          rcdSym,
           RcdRes(mut = false, fsr.reverse),
-          k((Arg(N, Value.Ref(arrSym)) :: asr).reverse)))
+          k((Arg(N, Value.Ref(rcdSym)) :: asr).reverse)))
       
   
   inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using Subst): Block =
