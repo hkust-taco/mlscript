@@ -12,16 +12,6 @@ import semantics.Pattern as SP // "SP" is short for "semantic patterns"
 import Term.Ref
 
 object SplitCompiler:
-  /** String range bounds must be single characters. */
-  def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
-    val ds = Buffer.empty[(Message, Option[Loc])]
-    if lo.value.length != 1 then
-      ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
-    if hi.value.length != 1 then
-      ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
-    if ds.nonEmpty then error(ds.toSeq*)
-    ds.nonEmpty
-  
   /** A class that can generate `Ref` to the scrutinee. It also comes with a few
    *  mutable maps to reuse sub-scrutinees. Memoization of sub-scrutinees help
    *  the normalization to merge let bindings from different branches.

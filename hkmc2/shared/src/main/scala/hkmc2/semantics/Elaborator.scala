@@ -1418,9 +1418,17 @@ extends Importer with ucs.SplitElaborator:
       case N => N
   
   def pattern(t: Tree): Ctxl[Pattern] =
-    import ucs.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ups.SplitCompiler.isInvalidStringBounds, ucs.extractors.to
+    import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
     given TraceLogger = tl
+    /** String range bounds must be single characters. */
+    def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
+      val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]
+      if lo.value.length != 1 then
+        ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
+      if hi.value.length != 1 then
+        ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
+      if ds.nonEmpty then error(ds.toSeq*)
+      ds.nonEmpty
     /** Resolve an identifier. We need to perform a very preliminary check to
      *  determine whether this identifier refers to a pattern, a class, an
      *  object, or creates a new binding.
