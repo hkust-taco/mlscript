@@ -174,7 +174,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             subTerm_nonTail(bod)(r =>
               // Assign(td.sym, r,
               //   term(st.Blk(stats, res))(k)))
-              Define(ValDefn.mk(td.owner, knd, td.sym, r),
+              Define(ValDefn(td.tsym, td.sym, r),
                 blockImpl(stats, res)(k)))
           case syntax.Fun =>
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
@@ -184,7 +184,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             // Implicit instances are not parameterized for now.
             assert(td.params.isEmpty)
             subTerm(bod)(r =>
-              Define(ValDefn.mk(td.owner, syntax.ImmutVal, td.sym, r),
+              Define(ValDefn(td.tsym, td.sym, r),
                 blockImpl(stats, res)(k)))
           case syntax.LetBind | syntax.ParamBind | syntax.HandlerBind => fail:
             ErrorReport(
