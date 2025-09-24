@@ -821,7 +821,7 @@ class Resolver(tl: TraceLogger)
   def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
     trace[Unit](
       s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
-      _ => s"-> typ = ${t.resolvedTyp})"
+      _ => s"-> (typ = ${t.resolvedTyp})"
     ):
       def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
         case _: Module => bms.asMod
@@ -868,6 +868,7 @@ class Resolver(tl: TraceLogger)
     log(s"Resolving implicit argument, expecting a ${p.sign}")
     p.sign match
       case S(sign) => 
+        // FIXME[Harry]: Don't re-resolve signatures for every argument!
         val ty = resolveSign(sign, expect = if p.modulefulness.modified then Module(N) else NonModule(N))
         log(s"Resolving implicit argument, expecting a ${ty.show}")
         ictx.query(ty) match

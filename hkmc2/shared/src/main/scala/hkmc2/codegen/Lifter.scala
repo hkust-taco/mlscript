@@ -784,7 +784,9 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case _ => Lifted(d, Nil)
     case S(LiftedInfo(includedCaptures, includedLocals, clsCaptures, reqdBms, fakeCtorBms, singleCallBms)) =>
       
-      def createSymbolsUpdateCtx[T <: LocalPath](createSym: String => (VarSymbol, T)) =
+      def createSymbolsUpdateCtx[T <: LocalPath](createSym: String => (VarSymbol, T))
+      : (List[Param], LifterCtx, List[(Local, (VarSymbol, T))])
+      =
         val capturesSymbols = includedCaptures.map: sym =>
           (sym, createSym(sym.nme + "$capture"))
 

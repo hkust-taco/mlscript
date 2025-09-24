@@ -1,0 +1,14 @@
+# [2025-09-23] LP: I recommend running the official JDK 21 from Oracle's website,
+#   as it appears to be at least 2x faster than the community editions, at least on an Apple M2 Ultra
+#   (using GraalVM also appears to be similarly slow, surprisingly)
+
+-J-server
+
+-J-Xss4M
+
+# The options below were inspired by a message I got on some runs with more than usual memory retention:
+#   [warn] In the last 10 seconds, 5.067 (50.7%) were spent in GC. [Heap: 0.01GB free of 1.00GB, max 1.00GB] Consider increasing the JVM heap using `-Xmx` or try a different collector, e.g. `-XX:+UseG1GC`, for better performance.
+-J-Xms2G # reduces warm-up time the first time the tests are run
+-J-Xmx4G # reduces time spent doing GC
+#-J-XX:+UseG1GC # does not seem to make much of a difference
+
