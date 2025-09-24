@@ -83,6 +83,9 @@ trait SplitElaborator:
     subterm(scrutinee).reference: scrutinee =>
       lazy val innerSplit: Ctxl[SimpleSplit] = expandMatches(matches)(affirmative)
       pattern match
+        case Block(Nil) =>
+          val recordPattern = Pattern.Record(Nil).withLocOf(pattern)
+          Head.Match(scrutinee(), recordPattern, innerSplit) ~: negative
         case Block(trees) => trees.foldRight(negative):
           case (pattern, alternative) =>
             Head.Match(scrutinee(), self.pattern(pattern), innerSplit) ~: alternative

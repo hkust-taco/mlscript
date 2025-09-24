@@ -180,13 +180,16 @@ is_object([1, 2])
 is_object(is_object)
 //│ = true
 
-:sjs
 fun is_record_alt(x) = x is {}
-//│ JS (unsanitized):
-//│ let is_record_alt; is_record_alt = function is_record_alt(x7) { return false };
 
 is_record_alt of []
-//│ = false
+//│ = true
 
 is_record_alt of 0
 //│ = false
+
+is_object("")
+//│ = false
+
+is_object(Nil)
+//│ = true
