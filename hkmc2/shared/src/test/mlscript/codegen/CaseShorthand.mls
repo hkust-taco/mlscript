@@ -57,7 +57,7 @@ case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.54: 	case [x] then x, [] then 0
-//│ ╙──      	      ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 :sjs
 case
