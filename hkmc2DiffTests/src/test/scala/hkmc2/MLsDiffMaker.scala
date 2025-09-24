@@ -63,8 +63,6 @@ abstract class MLsDiffMaker extends DiffMaker:
   val stackSafe = Command("stackSafe")(_.trim)
   val liftDefns = NullaryCommand("lift")
   val importQQ = NullaryCommand("qq")
-  // TODO: Remove after most UCS tests work with the new desugarer.
-  val useNewDesugaring = NullaryCommand("useNewDesugaring")
   
   def mkConfig: Config =
     import Config.*
@@ -89,8 +87,7 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
-      useNewDesugaring = useNewDesugaring.isSet,
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
     )
   
   
@@ -201,9 +198,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   def processOrigin(origin: Origin)(using Raise): Unit =
     val oldCtx = curCtx
     
-    given Config = mkConfig.copy(
-      useNewDesugaring = origin.fileName.segments.exists(s => s === "ucs" || s === "ups")
-    )
+    given Config = mkConfig
     
     val lexer = new syntax.Lexer(origin, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
