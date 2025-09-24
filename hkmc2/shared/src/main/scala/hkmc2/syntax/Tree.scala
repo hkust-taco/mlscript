@@ -44,10 +44,6 @@ sealed trait Literal extends AutoLocated:
 
 enum SpreadKind:
   case Eager, Lazy
-  override def toString(): String = this match
-    case Eager => "..."
-    case Lazy => ".."
-
   def str: Str = this match
     case Eager => "..."
     case Lazy => ".."

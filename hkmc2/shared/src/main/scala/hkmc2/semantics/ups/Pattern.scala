@@ -224,7 +224,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       leading.iterator.map(_.showDbg).mkString("[", ", ", "]")
     case Tuple(leading, S(spreadKind, spread, trailing)) =>
       val leadingItems = leading.iterator.map(_.showDbg)
-      val spreadItem = Iterator.single(spreadKind.toString + spread.showDbg)
+      val spreadItem = Iterator.single(spreadKind.str + spread.showDbg)
       val trailingItems = trailing.iterator.map(_.showDbg)
       (leadingItems ++ spreadItem ++ trailingItems).mkString("[", ", ", "]")
     case And(Nil) => "⊤"

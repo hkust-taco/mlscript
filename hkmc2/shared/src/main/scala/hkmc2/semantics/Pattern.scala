@@ -370,7 +370,7 @@ enum Pattern extends AutoLocated:
     case Tuple(leading, spread) =>
       (leading.iterator.map(_.showDbg) ++ spread.fold(Iterator.empty):
         case (spreadKind, middle, trailing) =>
-          Iterator.single(spreadKind.toString + middle.showDbg) ++
+          Iterator.single(spreadKind.str + middle.showDbg) ++
             trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
     case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
