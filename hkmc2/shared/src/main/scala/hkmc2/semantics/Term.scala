@@ -384,6 +384,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case CtxTup(fields) => "contextual tuple literal"
       case IfLike(Keyword.`if`, _) => "`if` expression"
       case IfLike(Keyword.`while`, _) => "`while` expression"
+      case SynthIf(split) => "`if` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -489,6 +490,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
     case t: App => treeOrSubterms(t.tree)
     case IfLike(_, split) => split :: Nil
+    case SynthIf(split) => split :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil

@@ -302,18 +302,6 @@ class Resolver(tl: TraceLogger)
         traverseStmts(stats)
       
       case t: Term.IfLike =>
-        def split(s: Split): Unit = s match
-          case Split.Cons(head, tail) =>
-            traverse(head.scrutinee, expect = NonModule(N))
-            head.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
-            split(head.continuation)
-            split(tail)
-          case Split.Let(sym, term, tail) =>
-            traverse(term, expect = NonModule(N))
-            split(tail)
-          case Split.Else(default) =>
-            traverse(default, expect = Any)
-          case Split.End =>
         def simpleSplit(s: SimpleSplit): Unit = s match
           case SimpleSplit.Cons(head: SimpleSplit.Head.Match, tail) =>
             traverse(head.scrutinee, expect = NonModule(N))

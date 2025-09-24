@@ -26,7 +26,6 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
-  var duplicated: Bool = false
   def mkClone(using State): Split =
     this match
       case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
@@ -34,15 +33,22 @@ enum Split extends AutoLocated with ProductWithTail:
       case Else(default) => Else(default.mkClone)
       case End => End
   
+  /** Used to indicate whether the `Split` was duplicated during desugaring or
+    * normalization. */
+  def duplicated: Bool = false
+  
+  private var _duplicated: Bool = false
+  
+  def setDuplicated: this.type =
+    if this != End then _duplicated = true
+    this
   
   def duplicate: Split =
-    val copy = this match
+    (this match
       case Cons(head, tail) => Cons(head, tail.duplicate)
       case Let(name, term, tail) => Let(name, term, tail.duplicate)
       case Else(default) => Else(default)
-      case End => End
-    if copy != End then copy.duplicated = true
-    copy
+      case End => End).setDuplicated
   
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull

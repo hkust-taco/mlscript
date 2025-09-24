@@ -2,19 +2,14 @@ package hkmc2
 package semantics
 package ups
 
-import mlscript.utils.*, shorthands.*
-import Message.MessageContext
-import ucs.{TermSynthesizer, FlatPattern, error, warn, safeRef}, ucs.extractors.*
-import syntax.{Fun, Keyword, Tree}, Tree.{Ident, StrLit}, Keyword.{`as`, `=>`}
-import collection.mutable.{Buffer, HashMap}, collection.immutable.SeqMap
-import Elaborator.{Ctx, State, ctx}, utils.TL
+import mlscript.utils.*, shorthands.*, Message.MessageContext, utils.TL
+import syntax.Tree, Tree.Ident, ucs.safeRef, Elaborator.{Ctx, State}
 import semantics.Pattern as SP // "SP" is short for "semantic patterns"
-import Term.Ref
 
 /** This class compiles a tree describing a pattern into functions that can
  *  perform pattern matching on terms described by the pattern. */
 class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends SplitCompiler:
-  import tl.*, FlatPattern.MatchMode, SP.*, SplitCompiler.*
+  import tl.*, SP.*, SplitCompiler.*
   
   /** Make a term like `MatchFailure(null)`. We will synthesize detailed
    *  error messages and pass them to the function. */
@@ -92,7 +87,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends SplitCompiler
     val paramList = PlainParamList(param :: Nil)
     val lambda = Term.Lam(paramList, Term.SynthIf(topmost))
     val defineVar = DefineVar(fieldSymbol, lambda)
-    val field = RcdField(Term.Lit(StrLit(name)), fieldSymbol.safeRef)
+    val field = RcdField(str(name), fieldSymbol.safeRef)
     decl :: defineVar :: field :: Nil
   
   /** Translate an anonymous pattern. They are usually pattern arguments. */
