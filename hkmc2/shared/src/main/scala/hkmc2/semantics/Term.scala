@@ -317,6 +317,7 @@ enum Term extends Statement:
       case s: Spd => s.copy(term = s.term.mkClone)
     })(term.tree)
     case IfLike(kw, split) => IfLike(kw, split)
+    case SynthIf(split) => SynthIf(split.mkClone)
     case Lam(params, body) => Lam(params, body.mkClone)
     case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
     case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)

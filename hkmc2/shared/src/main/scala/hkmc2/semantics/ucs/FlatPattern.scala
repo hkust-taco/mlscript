@@ -36,6 +36,19 @@ enum FlatPattern extends AutoLocated:
   
   case Record(entries: List[(Ident -> BlockLocalSymbol)])(val output: Ls[BlockLocalSymbol])
   
+  def mkClone(using State): FlatPattern = this match
+    case Lit(literal) => Lit(literal)(output)
+    case pattern @ ClassLike(constructor, arguments, mode, refined) =>
+      ClassLike(constructor.mkClone, arguments, mode, refined)(Tree.Dummy, output)
+    case Pattern(constructor, patternArguments, extractionArguments) =>
+      val clonedPatternArguments = patternArguments.map: argument =>
+        new Argument.Pattern(argument.scrutinee, argument.pattern.mkClone)
+      val clonedExtractionArguments = extractionArguments.map: argument =>
+        new Argument.Term(argument.scrutinee, Tree.Dummy)
+      Pattern(constructor.mkClone, clonedPatternArguments, clonedExtractionArguments)(output)
+    case Tuple(size, inf) => Tuple(size, inf)(output)
+    case Record(entries) => Record(entries)(output)
+  
   def subTerms: Ls[Term] = this match
     case p: ClassLike => p.constructor :: (p.mode match
       case MatchMode.Default => p.arguments.fold(Nil):

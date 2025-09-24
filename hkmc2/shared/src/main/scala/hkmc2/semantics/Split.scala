@@ -2,10 +2,16 @@ package hkmc2
 package semantics
 
 import mlscript.utils.*, shorthands.*
-import syntax.*, ucs.FlatPattern
+import syntax.*, Elaborator.State, ucs.FlatPattern
 
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+  def mkClone(using State): Branch =
+    val scrutineeClone = new Term.Ref(scrutinee.sym)
+        (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
+    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
+  
   override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+  
   def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
@@ -21,6 +27,13 @@ enum Split extends AutoLocated with ProductWithTail:
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
   var duplicated: Bool = false
+  def mkClone(using State): Split =
+    this match
+      case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
+      case Let(sym, term, tail) => Let(sym, term.mkClone, tail. mkClone)
+      case Else(default) => Else(default.mkClone)
+      case End => End
+  
   
   def duplicate: Split =
     val copy = this match
