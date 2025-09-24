@@ -214,11 +214,11 @@ x + y
 //│ ret = f5();
 //│ f11 = ret.a;
 //│ f21 = ret.b;
+//│ tmp = runtime.safeCall(f21());
+//│ x = runtime.safeCall(tmp.toString());
+//│ tmp1 = runtime.safeCall(f11());
 //│ tmp2 = runtime.safeCall(f21());
-//│ x = runtime.safeCall(tmp2.toString());
-//│ tmp = runtime.safeCall(f11());
-//│ tmp1 = runtime.safeCall(f21());
-//│ y = runtime.safeCall(tmp1.toString());
+//│ y = runtime.safeCall(tmp2.toString());
 //│ x + y
 //│ = "01"
 //│ f1 = fun

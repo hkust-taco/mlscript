@@ -50,11 +50,11 @@ console.log("c")
 y * 2
 //│ JS (unsanitized):
 //│ let x, y, tmp2, tmp3, tmp4;
-//│ tmp4 = runtime.safeCall(globalThis.console.log("a"));
+//│ tmp2 = runtime.safeCall(globalThis.console.log("a"));
 //│ x = 123;
-//│ tmp2 = runtime.safeCall(globalThis.console.log("b"));
+//│ tmp3 = runtime.safeCall(globalThis.console.log("b"));
 //│ y = x + 1;
-//│ tmp3 = runtime.safeCall(globalThis.console.log("c"));
+//│ tmp4 = runtime.safeCall(globalThis.console.log("c"));
 //│ y * 2
 //│ > a
 //│ > b

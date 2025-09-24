@@ -31,9 +31,6 @@ object ImplctRet extends TailOp:
 object Thrw extends TailOp:
   def apply(r: Result): Block = Throw(r)
 
-class AssignOp(sym: Symbol, rest: Block) extends (Result => Block):
-  def apply(r: Result): Block = Assign(sym, r, rest)
-
 // * No longer in meaningful use and could be removed if we don't find a use for it:
 class Subst(initMap: Map[Local, Value]):
   val map = initMap
@@ -154,7 +151,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       reportAnnotations(decl, annotations)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
-      subTerm(rhs)(AssignOp(sym, blockImpl(stats, res)(k)))
+      term(rhs): r =>
+        Assign(sym, r, blockImpl(stats, res)(k))
     case (imp @ Import(sym, path)) :: stats =>
       raise(ErrorReport(
         msg"Imports must be at the top level" ->
@@ -998,11 +996,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case v: Value => k(v)
       case p: Path => k(p)
       case r =>
-        k match
-          case assignOp: AssignOp => assignOp(r)
-          case _ =>
-            val l = new TempSymbol(N)
-            Assign(l, r, k(l |> Value.Ref.apply))
+        val l = new TempSymbol(N)
+        Assign(l, r, k(l |> Value.Ref.apply))
   
   
   def program(main: st.Blk): Program =

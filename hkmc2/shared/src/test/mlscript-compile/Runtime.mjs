@@ -399,32 +399,32 @@ globalThis.Object.freeze(class Runtime {
     if (scrut === true) {
       scrut1 = functionName.length > 0;
       if (scrut1 === true) {
-        tmp11 = " '" + functionName;
-        tmp12 = tmp11 + "'";
+        tmp1 = " '" + functionName;
+        tmp2 = tmp1 + "'";
       } else {
-        tmp12 = "";
+        tmp2 = "";
       }
-      name = tmp12;
-      tmp1 = "Function" + name;
-      tmp2 = tmp1 + " expected ";
+      name = tmp2;
+      tmp3 = "Function" + name;
+      tmp4 = tmp3 + " expected ";
       if (isUB === true) {
-        tmp3 = "";
+        tmp5 = "";
       } else {
-        tmp3 = "at least ";
+        tmp5 = "at least ";
       }
-      tmp4 = tmp2 + tmp3;
-      tmp5 = tmp4 + expected;
-      tmp6 = tmp5 + " argument";
+      tmp6 = tmp4 + tmp5;
+      tmp7 = tmp6 + expected;
+      tmp8 = tmp7 + " argument";
       scrut2 = expected === 1;
       if (scrut2 === true) {
-        tmp7 = "";
+        tmp9 = "";
       } else {
-        tmp7 = "s";
+        tmp9 = "s";
       }
-      tmp8 = tmp6 + tmp7;
-      tmp9 = tmp8 + " but got ";
-      tmp10 = tmp9 + got;
-      throw globalThis.Error(tmp10)
+      tmp10 = tmp8 + tmp9;
+      tmp11 = tmp10 + " but got ";
+      tmp12 = tmp11 + got;
+      throw globalThis.Error(tmp12)
     } else {
       return runtime.Unit
     }
@@ -510,15 +510,15 @@ globalThis.Object.freeze(class Runtime {
             scrut1 = cur !== null;
             if (scrut1 === true) {
               locals = cur.getLocals;
-              tmp12 = locals.length - 1;
-              curLocals = runtime.safeCall(locals.at(tmp12));
+              tmp = locals.length - 1;
+              curLocals = runtime.safeCall(locals.at(tmp));
               loc = cur.getLoc;
               if (loc === null) {
-                tmp11 = "pc=" + cur.pc;
+                tmp1 = "pc=" + cur.pc;
               } else {
-                tmp11 = loc;
+                tmp1 = loc;
               }
-              loc1 = tmp11;
+              loc1 = tmp1;
               if (showLocals === true) {
                 scrut2 = curLocals.locals.length > 0;
                 if (scrut2 === true) {
@@ -528,31 +528,31 @@ globalThis.Object.freeze(class Runtime {
                     tmp23 = Rendering.render(l.value);
                     return tmp22 + tmp23
                   });
-                  tmp7 = lambda;
-                  tmp8 = runtime.safeCall(curLocals.locals.map(tmp7));
-                  tmp9 = runtime.safeCall(tmp8.join(", "));
-                  tmp10 = " with locals: " + tmp9;
+                  tmp2 = lambda;
+                  tmp3 = runtime.safeCall(curLocals.locals.map(tmp2));
+                  tmp4 = runtime.safeCall(tmp3.join(", "));
+                  tmp5 = " with locals: " + tmp4;
                 } else {
-                  tmp10 = "";
+                  tmp5 = "";
                 }
               } else {
-                tmp10 = "";
+                tmp5 = "";
               }
-              localsMsg = tmp10;
-              tmp = "\n\tat " + curLocals.fnName;
-              tmp1 = tmp + " (";
-              tmp2 = tmp1 + loc1;
-              tmp3 = tmp2 + ")";
-              tmp4 = msg + tmp3;
-              msg = tmp4;
-              tmp5 = msg + localsMsg;
-              msg = tmp5;
+              localsMsg = tmp5;
+              tmp6 = "\n\tat " + curLocals.fnName;
+              tmp7 = tmp6 + " (";
+              tmp8 = tmp7 + loc1;
+              tmp9 = tmp8 + ")";
+              tmp10 = msg + tmp9;
+              msg = tmp10;
+              tmp11 = msg + localsMsg;
+              msg = tmp11;
               cur = cur.next;
               atTail = false;
-              tmp6 = runtime.Unit;
+              tmp12 = runtime.Unit;
               continue tmp21
             } else {
-              tmp6 = runtime.Unit;
+              tmp12 = runtime.Unit;
             }
             break;
           }
@@ -588,10 +588,10 @@ globalThis.Object.freeze(class Runtime {
     return msg
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
-    let scrut, result, scrut1, scrut2, lambda, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    let scrut, result, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     if (cont instanceof Runtime.FunctionContFrame.class) {
-      tmp7 = cont.constructor.name + "(pc=";
-      result = tmp7 + cont.pc;
+      tmp = cont.constructor.name + "(pc=";
+      result = tmp + cont.pc;
       lambda = (undefined, function (m, marker) {
         let scrut3, tmp8, tmp9;
         scrut3 = runtime.safeCall(m.has(cont));
@@ -604,26 +604,26 @@ globalThis.Object.freeze(class Runtime {
           return runtime.Unit
         }
       });
-      tmp = runtime.safeCall(hl.forEach(lambda));
+      tmp1 = runtime.safeCall(hl.forEach(lambda));
       scrut1 = runtime.safeCall(vis.has(cont));
       if (scrut1 === true) {
-        tmp1 = reps + 1;
-        reps = tmp1;
+        tmp2 = reps + 1;
+        reps = tmp2;
         scrut2 = reps > 10;
         if (scrut2 === true) {
           throw globalThis.Error("10 repeated continuation frame (loop?)")
         } else {
-          tmp2 = runtime.Unit;
+          tmp3 = runtime.Unit;
         }
-        tmp3 = result + ", REPEAT";
-        result = tmp3;
-        tmp4 = runtime.Unit;
+        tmp4 = result + ", REPEAT";
+        result = tmp4;
+        tmp5 = runtime.Unit;
       } else {
-        tmp4 = runtime.safeCall(vis.add(cont));
+        tmp5 = runtime.safeCall(vis.add(cont));
       }
-      tmp5 = result + ") -> ";
-      tmp6 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
-      return tmp5 + tmp6
+      tmp6 = result + ") -> ";
+      tmp7 = Runtime.showFunctionContChain(cont.next, hl, vis, reps);
+      return tmp6 + tmp7
     } else {
       scrut = cont === null;
       if (scrut === true) {

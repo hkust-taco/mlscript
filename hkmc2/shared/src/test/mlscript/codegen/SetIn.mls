@@ -120,18 +120,18 @@ example()
 //│   get_x = get_x1;
 //│   old1 = x2;
 //│   try {
-//│     tmp8 = x2 + 1;
-//│     x2 = tmp8;
-//│     tmp9 = Predef.print(x2);
-//│     tmp10 = (tmp9 , x2);
-//│     tmp7 = tmp10;
+//│     tmp5 = x2 + 1;
+//│     x2 = tmp5;
+//│     tmp6 = Predef.print(x2);
+//│     tmp7 = (tmp6 , x2);
+//│     tmp4 = tmp7;
 //│   } finally {
 //│     x2 = old1;
 //│   }
-//│   y = tmp7;
-//│   tmp4 = Predef.print(x2);
-//│   tmp5 = runtime.safeCall(get_x());
-//│   tmp6 = Predef.print(tmp5);
+//│   y = tmp4;
+//│   tmp8 = Predef.print(x2);
+//│   tmp9 = runtime.safeCall(get_x());
+//│   tmp10 = Predef.print(tmp9);
 //│   return y
 //│ };
 //│ example3()
