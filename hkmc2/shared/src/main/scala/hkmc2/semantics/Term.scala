@@ -202,9 +202,6 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
-  // I know the name `ssss` is ugly! For now, the old and new desugarers exist
-  // together. Once I remove the old desugarer, `ssss` will replace `desugared`
-  // and become the normal `Split`.
   case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: SimpleSplit)
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
@@ -688,7 +685,8 @@ case class Import(sym: Symbol, file: Str) extends Statement
 sealed abstract class Declaration:
   val sym: Symbol
   
-  /** Whether this can be used at the constructor position in pattern. */
+  /** Whether this declares a class, a pattern, an object, or a pattern
+    * parameter. Only they can be at the constructor position in patterns. */
   def isPatternConstructor: Bool = this match
     case _: (TermDefinition | TypeDef | TyParam) => false
     case d: ModuleOrObjectDef => d.kind isnt Mod

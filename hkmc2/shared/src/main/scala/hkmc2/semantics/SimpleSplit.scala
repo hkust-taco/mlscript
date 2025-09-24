@@ -9,7 +9,7 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   
   case Cons(branch: SimpleSplit.Head, tail: SimpleSplit)
   /**
-    * 
+    * The end of splits with a default term.
     * 
     * @param default The default term.
     * @param kw The keyword of `then` or `else`. It is `None` if the split is

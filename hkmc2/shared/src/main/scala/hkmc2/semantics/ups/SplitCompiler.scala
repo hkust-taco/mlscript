@@ -569,6 +569,9 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
               case (innerSplit, (symbol, mkTerm)) => Split.Let(symbol, mkTerm(), innerSplit),
           alternative)
   
+  /** This method handles the efficient and non-backtracking pattern compilation. 
+    * Note that we still have not supported accessing pattern parameters in the
+    * naive pattern declaration in the efficient pattern compilation. */
   def compilePattern(scrutinee: Scrut, pattern: SP): MakeSplit =
   (makeConsequent, alternative) => scoped("ucs:ups:compilation"):
     // Instantiate the pattern and all patterns used in it.
