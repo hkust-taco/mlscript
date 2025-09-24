@@ -15,7 +15,7 @@ foo()
 
 let x = 1
 let f = () => x
-//│ f = fun
+//│ f = fun f
 //│ x = 1
 
 f()

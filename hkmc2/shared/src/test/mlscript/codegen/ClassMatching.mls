@@ -186,18 +186,18 @@ fun f(x) = print of if x is
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let param04, tmp9;
+//│   let param04, tmp8;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     if (param04 === 0) {
-//│       tmp9 = "0";
+//│       tmp8 = "0";
 //│     } else {
-//│       tmp9 = "oops";
+//│       tmp8 = "oops";
 //│     }
 //│   } else if (x3 instanceof None1.class) {
-//│     tmp9 = "ok";
-//│   } else { tmp9 = "oops"; }
-//│   return Predef.print(tmp9)
+//│     tmp8 = "ok";
+//│   } else { tmp8 = "oops"; }
+//│   return Predef.print(tmp8)
 //│ };
 
 f(Some(0))

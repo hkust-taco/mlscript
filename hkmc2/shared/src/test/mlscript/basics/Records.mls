@@ -138,33 +138,33 @@ fun showProps(x, y, props) = Object.entries(props)
 //│ JS (unsanitized):
 //│ let showProps;
 //│ showProps = function showProps(x6, y3, props) {
-//│   let tmp14, lambda, tmp15;
-//│   tmp14 = runtime.safeCall(globalThis.Object.entries(props));
+//│   let tmp8, lambda, tmp9;
+//│   tmp8 = runtime.safeCall(globalThis.Object.entries(props));
 //│   lambda = (undefined, function (caseScrut) {
-//│     let first1, first0, k, v, y$_, x$_, tmp16, tmp17, tmp18;
+//│     let first1, first0, k, v, y$_, x$_, tmp10, tmp11, tmp12;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 2) {
 //│       first0 = runtime.Tuple.get(caseScrut, 0);
 //│       first1 = runtime.Tuple.get(caseScrut, 1);
 //│       if (first0 === "x") {
 //│         x$_ = first1;
-//│         tmp16 = x6 + x$_;
-//│         return "x: " + tmp16
+//│         tmp10 = x6 + x$_;
+//│         return "x: " + tmp10
 //│       } else if (first0 === "y") {
 //│         y$_ = first1;
-//│         tmp17 = y3 + y$_;
-//│         return "y: " + tmp17
+//│         tmp11 = y3 + y$_;
+//│         return "y: " + tmp11
 //│       } else {
 //│         k = first0;
 //│         v = first1;
-//│         tmp18 = k + ": ";
-//│         return tmp18 + v
+//│         tmp12 = k + ": ";
+//│         return tmp12 + v
 //│       }
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   });
-//│   tmp15 = Iter.mapping(tmp14, lambda);
-//│   return Iter.joined(tmp15, ", ")
+//│   tmp9 = Iter.mapping(tmp8, lambda);
+//│   return Iter.joined(tmp9, ", ")
 //│ };
 
 fun output(i, s) = print of "  ".repeat(i) + s

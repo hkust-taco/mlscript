@@ -205,7 +205,7 @@ let foo =
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.201: 	    Tuple(...elements) then elements
 //│ ╙──       	          ^^^^^^^^^^^
-//│ foo = fun
+//│ foo = fun foo
 
 foo(Tuple(1, 2, 3))
 //│ ═══[RUNTIME ERROR] Error: match error

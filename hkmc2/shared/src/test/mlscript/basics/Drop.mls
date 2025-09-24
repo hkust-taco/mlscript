@@ -22,11 +22,8 @@ drop { a: 0, b: 1 }
 :sjs
 let discard = drop _
 //│ JS (unsanitized):
-//│ let discard, tmp4, lambda;
-//│ lambda = (undefined, function (_0) { return runtime.Unit });
-//│ tmp4 = lambda;
-//│ discard = tmp4;
-//│ discard = fun
+//│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
+//│ discard = fun discard
 
 discard of { a: 0, b: 1 }
 

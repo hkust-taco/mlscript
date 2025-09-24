@@ -13,23 +13,23 @@ arr.map(_ === false)
 :sjs
 arr.map((e, ...) => e === false)
 //│ JS (unsanitized):
-//│ let tmp2, lambda1;
+//│ let tmp1, lambda1;
 //│ lambda1 = (undefined, function (e, ..._) {
 //│   return e === false
 //│ });
-//│ tmp2 = lambda1;
-//│ runtime.safeCall(arr.map(tmp2))
+//│ tmp1 = lambda1;
+//│ runtime.safeCall(arr.map(tmp1))
 //│ = [false, true]
 
 :sjs
 arr.map((_, ...) => 1)
 //│ JS (unsanitized):
-//│ let tmp3, lambda2;
+//│ let tmp2, lambda2;
 //│ lambda2 = (undefined, function (_, ..._1) {
 //│   return 1
 //│ });
-//│ tmp3 = lambda2;
-//│ runtime.safeCall(arr.map(tmp3))
+//│ tmp2 = lambda2;
+//│ runtime.safeCall(arr.map(tmp2))
 //│ = [1, 1]
 
 :e

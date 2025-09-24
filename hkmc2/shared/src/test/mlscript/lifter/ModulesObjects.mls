@@ -151,11 +151,11 @@ fun foo(x, y) =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo4 = function foo(x, y) {
-//│   let tmp2, M$1, capture;
+//│   let tmp, M$1, capture;
 //│   capture = new foo$capture3(y);
 //│   M$1 = globalThis.Object.freeze(new M5(x, capture));
-//│   tmp2 = foo3$(M$1, x, capture);
-//│   return tmp2
+//│   tmp = foo3$(M$1, x, capture);
+//│   return tmp
 //│ };
 
 :expect 12
@@ -253,7 +253,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp5;
+//│ let M17, tmp3;
 //│ globalThis.Object.freeze(class M16 {
 //│   static {
 //│     M17 = this
@@ -262,7 +262,7 @@ M.A().get
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let scrut, tmp6;
+//│     let scrut, tmp4;
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
@@ -279,17 +279,17 @@ M.A().get
 //│     });
 //│     scrut = M16.A();
 //│     if (scrut instanceof M16.A.class) {
-//│       tmp6 = 2;
+//│       tmp4 = 2;
 //│     } else {
-//│       tmp6 = 3;
+//│       tmp4 = 3;
 //│     }
-//│     this.x = tmp6;
+//│     this.x = tmp4;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp5 = M17.A();
-//│ tmp5.get
+//│ tmp3 = M17.A();
+//│ tmp3.get
 //│ = 4
 
 module M with
@@ -317,16 +317,16 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ JS (unsanitized):
-//│ let B2, M21, tmp7, tmp8, B$;
+//│ let B2, M21, tmp5, tmp6, B$;
 //│ B$ = function B$(isMut, A$instance$0) {
-//│   let tmp9, tmp10;
+//│   let tmp7, tmp8;
 //│   if (isMut === true) {
-//│     tmp9 = new B2.class();
+//│     tmp7 = new B2.class();
 //│   } else {
-//│     tmp9 = globalThis.Object.freeze(new B2.class());
+//│     tmp7 = globalThis.Object.freeze(new B2.class());
 //│   }
-//│   tmp10 = tmp9(A$instance$0);
-//│   return tmp10
+//│   tmp8 = tmp7(A$instance$0);
+//│   return tmp8
 //│ };
 //│ B2 = function B() {
 //│   return (A$instance$0) => {
@@ -393,9 +393,9 @@ M.A(2).newB.newA_B(3).newB.get
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp7 = M21.A(2);
-//│ tmp8 = runtime.safeCall(tmp7.newB.newA_B(3));
-//│ tmp8.newB.get
+//│ tmp5 = M21.A(2);
+//│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
+//│ tmp6.newB.get
 //│ = 3
 
 module M with
@@ -479,17 +479,17 @@ A.x
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let f, g2, tmp9, tmp10, tmp11;
+//│     let f, g2, tmp7, tmp8, tmp9;
 //│     f = function f() {
 //│       return 1
 //│     };
 //│     g2 = function g() {
 //│       return h$(f)
 //│     };
-//│     tmp9 = f();
-//│     tmp10 = g2();
-//│     tmp11 = tmp9 + tmp10;
-//│     this.x = tmp11;
+//│     tmp7 = f();
+//│     tmp8 = g2();
+//│     tmp9 = tmp7 + tmp8;
+//│     this.x = tmp9;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 

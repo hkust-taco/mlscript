@@ -118,7 +118,7 @@ fun keepIfGreaterThan(x, y) =
 
 
 let isDefined2 = _ is Some
-//│ isDefined2 = fun
+//│ isDefined2 = fun isDefined2
 
 Some(1) isDefined2()
 //│ = true

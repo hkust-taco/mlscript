@@ -187,10 +187,10 @@ renderAsStr of test
 //│ = "fun test { test: ref'1 } as ref'1"
 
 let greetings = () => "hello"
-//│ greetings = fun
+//│ greetings = fun greetings
 
 renderAsStr of greetings
-//│ = "fun"
+//│ = "fun greetings"
 
 renderAsStr of x => x * 2
 //│ = "fun"

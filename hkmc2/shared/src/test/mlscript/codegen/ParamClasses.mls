@@ -99,12 +99,12 @@ let foo = Foo
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
-//│ let f, tmp1; tmp1 = runtime.safeCall(foo1(1, 2)); f = tmp1;
+//│ let f; f = runtime.safeCall(foo1(1, 2));
 //│ f = Foo(1, 2)
 
 let f = new! foo(1, 2)
 //│ JS (unsanitized):
-//│ let f1, tmp2; tmp2 = globalThis.Object.freeze(new foo1(1, 2)); f1 = tmp2;
+//│ let f1; f1 = globalThis.Object.freeze(new foo1(1, 2));
 //│ f = Foo(1, 2)
 
 f.a
@@ -119,7 +119,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS (unsanitized):
-//│ let f2, tmp3; tmp3 = Foo5(1, 2); f2 = tmp3;
+//│ let f2; f2 = Foo5(1, 2);
 //│ f = Foo(1, 2)
 
 f.a
@@ -134,7 +134,7 @@ f.b
 
 Foo(print(1), print(2))
 //│ JS (unsanitized):
-//│ let tmp4, tmp5; tmp4 = Predef.print(1); tmp5 = Predef.print(2); Foo5(tmp4, tmp5)
+//│ let tmp1, tmp2; tmp1 = Predef.print(1); tmp2 = Predef.print(2); Foo5(tmp1, tmp2)
 //│ > 1
 //│ > 2
 //│ = Foo((), ())
@@ -165,7 +165,7 @@ data class Inner(c) with
 
 let i = new Inner(100)
 //│ JS (unsanitized):
-//│ let i, tmp6; tmp6 = globalThis.Object.freeze(new Inner1.class(100)); i = tmp6;
+//│ let i; i = globalThis.Object.freeze(new Inner1.class(100));
 //│ > 100
 //│ i = Inner(100)
 
@@ -194,25 +194,24 @@ class Foo(x, val y, z, val z, z) with
 //│     Foo7.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
-//│     let tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16;
+//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│     this.#x = x;
 //│     this.y = y;
 //│     this.#z = z;
 //│     this.z = z1;
 //│     this.#z1 = z2;
 //│     this.#x1 = 1;
-//│     tmp7 = this.y + 1;
-//│     this.#y = tmp7;
-//│     tmp8 = "x = " + this.#x1;
-//│     tmp9 = Predef.print(tmp8);
-//│     tmp10 = "y = " + this.#y;
-//│     tmp11 = Predef.print(tmp10);
-//│     tmp12 = "this.y = " + this.y;
-//│     tmp13 = Predef.print(tmp12);
-//│     tmp14 = "z = " + this.#z1;
-//│     tmp15 = Predef.print(tmp14);
-//│     tmp16 = "this.z = " + this.z;
-//│     Predef.print(tmp16);
+//│     this.#y = this.y + 1;
+//│     tmp3 = "x = " + this.#x1;
+//│     tmp4 = Predef.print(tmp3);
+//│     tmp5 = "y = " + this.#y;
+//│     tmp6 = Predef.print(tmp5);
+//│     tmp7 = "this.y = " + this.y;
+//│     tmp8 = Predef.print(tmp7);
+//│     tmp9 = "z = " + this.#z1;
+//│     tmp10 = Predef.print(tmp9);
+//│     tmp11 = "this.z = " + this.z;
+//│     Predef.print(tmp11);
 //│   }
 //│   #x;
 //│   #z;

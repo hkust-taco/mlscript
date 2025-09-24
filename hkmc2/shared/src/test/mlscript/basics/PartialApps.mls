@@ -109,33 +109,26 @@ passTo(1, add(., 1) @ _ + _)(2)
 :sjs
 let f = add(_, 1)
 //│ JS (unsanitized):
-//│ let f, tmp23, lambda10;
-//│ lambda10 = (undefined, function (_0) {
-//│   let tmp24;
-//│   tmp24 = add();
-//│   return tmp24(_0, 1)
-//│ });
-//│ tmp23 = lambda10;
-//│ f = tmp23;
-//│ f = fun
+//│ let f, f1; f1 = function f(_0) { let tmp23; tmp23 = add(); return tmp23(_0, 1) }; f = f1;
+//│ f = fun f
 
 :fixme
 let f = add(., 1)
 //│ ╔══[PARSE ERROR] Expected an expression; found period instead
-//│ ║  l.123: 	let f = add(., 1)
+//│ ║  l.116: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected period here
-//│ ║  l.123: 	let f = add(., 1)
+//│ ║  l.116: 	let f = add(., 1)
 //│ ╙──       	            ^
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 0
 //│ f = undefined
 
 :fixme
 f(1)
-//│ ═══[RUNTIME ERROR] TypeError: f1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: f2 is not a function
 
 let f = add of _, 1
-//│ f = fun
+//│ f = fun f
 
 f(1)
 //│ = 2

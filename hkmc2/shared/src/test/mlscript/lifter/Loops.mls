@@ -53,18 +53,18 @@ fun foo() =
 //│   }
 //│ });
 //│ foo2 = function foo() {
-//│   let x, scrut, tmp4, tmp5;
+//│   let x, scrut, tmp2, tmp3;
 //│   x = 1;
-//│   tmp6: while (true) {
+//│   tmp4: while (true) {
 //│     scrut = true;
 //│     if (scrut === true) {
-//│       tmp4 = x + 1;
-//│       x = tmp4;
+//│       tmp2 = x + 1;
+//│       x = tmp2;
 //│       return runtime.safeCall(lambda2(x))
-//│     } else { tmp5 = runtime.Unit; }
+//│     } else { tmp3 = runtime.Unit; }
 //│     break;
 //│   }
-//│   return tmp5
+//│   return tmp3
 //│ };
 
 :expect 2

@@ -241,7 +241,7 @@ fun bar() = baz
 //│ JS (unsanitized):
 //│ let bar, baz;
 //│ baz = function baz() { return 1 };
-//│ bar = function bar() { let tmp4; tmp4 = baz(); return tmp4 };
+//│ bar = function bar() { let tmp3; tmp3 = baz(); return tmp3 };
 
 // ——— ——— ———
 
