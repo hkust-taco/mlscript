@@ -227,7 +227,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               Match(scrut, newArms, dfltParts.map(_.head), StateTransition(restId)),
               BlockState(restId, restParts.head, N) :: states
             )
-      case l @ Label(label, _, body, rest) =>
+      case l @ Label(label, loop, body, rest) =>
         val startId = freshId() // start of body
 
         val PartRet(restNew, restParts) = go(rest)
