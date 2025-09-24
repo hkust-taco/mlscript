@@ -32,7 +32,7 @@ fun test(x) =
 :sjs
 fold(||)(0, false, 42, 123)
 //│ JS (unsanitized):
-//│ let tmp, tmp1, lambda5;
+//│ let lambda5, tmp;
 //│ lambda5 = (undefined, function (arg1, arg2) {
 //│   let lambda6;
 //│   lambda6 = (undefined, function () {
@@ -40,9 +40,8 @@ fold(||)(0, false, 42, 123)
 //│   });
 //│   return runtime.short_or(arg1, lambda6)
 //│ });
-//│ tmp = lambda5;
-//│ tmp1 = runtime.safeCall(Predef.fold(tmp));
-//│ runtime.safeCall(tmp1(0, false, 42, 123))
+//│ tmp = runtime.safeCall(Predef.fold(lambda5));
+//│ runtime.safeCall(tmp(0, false, 42, 123))
 //│ = 42
 
 

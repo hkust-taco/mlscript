@@ -89,7 +89,7 @@ fun test2() =
 //│ test22 = function test2() {
 //│   let funny, tmp1;
 //│   funny = function funny() {
-//│     let tmp2, lambda, lambda1;
+//│     let lambda, lambda1;
 //│     lambda = (undefined, function (caseScrut) {
 //│       if (caseScrut === 0) {
 //│         return 0
@@ -97,14 +97,13 @@ fun test2() =
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     });
-//│     tmp2 = lambda;
 //│     lambda1 = (undefined, function (caseScrut) {
-//│       let n, tmp3, tmp4, tmp5;
+//│       let n, tmp2, tmp3, tmp4;
 //│       n = caseScrut;
-//│       tmp3 = funny();
-//│       tmp4 = n - 1;
-//│       tmp5 = tmp3(tmp4);
-//│       return tmp5 + 1
+//│       tmp2 = funny();
+//│       tmp3 = n - 1;
+//│       tmp4 = tmp2(tmp3);
+//│       return tmp4 + 1
 //│     });
 //│     return lambda1
 //│   };
@@ -129,7 +128,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.130: 	  print("Hi")
+//│ ║  l.129: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

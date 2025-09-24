@@ -996,6 +996,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
+      case LamRes(params, body) =>
+        val lamSym = BlockMemberSymbol("lambda", Nil, false)
+        val lamDef = FunDefn(N, lamSym, params :: Nil, body)
+        Define(lamDef, k(lamSym |> Value.Ref.apply))
       case r =>
         val l = new TempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))

@@ -128,12 +128,11 @@ Foo::n(foo, 2)
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
-//│ let tmp12, lambda9;
+//│ let lambda9;
 //│ lambda9 = (undefined, function (self, ...args) {
 //│   return runtime.safeCall(self.n(...args))
 //│ });
-//│ tmp12 = lambda9;
-//│ tmp12(foo, 2)
+//│ lambda9(foo, 2)
 //│ = 125
 
 

@@ -3,17 +3,16 @@
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
-//│ let tmp, lambda;
+//│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   let tmp1, tmp2, tmp3, tmp4;
-//│   tmp1 = x + 1;
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
 //│   tmp3 = tmp2 + 1;
-//│   tmp4 = tmp3 + 1;
-//│   return tmp4 + 1
+//│   return tmp3 + 1
 //│ });
-//│ tmp = lambda;
-//│ tmp(1)
+//│ lambda(1)
 //│ = 6
 
 :sjs
@@ -21,13 +20,13 @@
 //│ JS (unsanitized):
 //│ let lambda1;
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp1, tmp2, tmp3, tmp4, tmp5;
-//│   tmp1 = x + 1;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
 //│   tmp3 = tmp2 + 1;
 //│   tmp4 = tmp3 + 1;
-//│   tmp5 = tmp4 + 1;
-//│   return tmp5 + 1
+//│   return tmp4 + 1
 //│ });
 //│ lambda1(1)
 //│ = 7
@@ -35,13 +34,13 @@
 :sjs
 (x => x) + 1
 //│ JS (unsanitized):
-//│ let tmp1, lambda2; lambda2 = (undefined, function (x) { return x }); tmp1 = lambda2; tmp1 + 1
+//│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2 + 1
 //│ = "function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }1"
 
 :sjs
 1 + (x => x)
 //│ JS (unsanitized):
-//│ let tmp2, lambda3; lambda3 = (undefined, function (x) { return x }); tmp2 = lambda3; 1 + tmp2
+//│ let lambda3; lambda3 = (undefined, function (x) { return x }); 1 + lambda3
 //│ = "1function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }"
 
 

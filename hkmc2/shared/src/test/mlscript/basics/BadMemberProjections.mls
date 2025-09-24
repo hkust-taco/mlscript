@@ -31,8 +31,7 @@
 //│   let args = runtime.Tuple.slice(args1, 1, 0);
 //│   return runtime.safeCall(self.x(...args))
 //│ });
-//│ tmp = lambda1;
-//│ block$res2 = runtime.checkCall(tmp());
+//│ block$res2 = runtime.checkCall(lambda1());
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function expected at least 1 argument but got 0
 
@@ -51,7 +50,7 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.52: 	"A"::x
+//│ ║  l.51: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -60,7 +59,7 @@ let x = 1
 :e
 "A" ::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.61: 	"A" ::x
+//│ ║  l.60: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
