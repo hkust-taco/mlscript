@@ -1562,7 +1562,7 @@ extends Importer with ucs.SplitElaborator:
       case p where t =>
         val q = go(p)
         Guarded(q, term(t)(using ctx ++ q.variables.allocate))
-      case Under() => Pattern.Wildcard()
+      case Under() => Pattern.Wildcard().withLocOf(t)
       // Singleton blocks like `{1}`.
       case Block(p :: Nil) => go(p)
       // Record patterns like `(a: p1, b: p2, ...pn)`.
