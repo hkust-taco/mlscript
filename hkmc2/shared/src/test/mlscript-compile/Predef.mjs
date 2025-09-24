@@ -154,21 +154,20 @@ globalThis.Object.freeze(class Predef {
     }
   } 
   static mkStr(...xs) {
-    let tmp, tmp1, lambda;
+    let lambda, tmp;
     lambda = (undefined, function (acc, x) {
-      let tmp2, tmp3, tmp4;
+      let tmp1, tmp2, tmp3;
       if (typeof x === 'string') {
-        tmp2 = true;
+        tmp1 = true;
       } else {
-        tmp2 = false;
+        tmp1 = false;
       }
-      tmp3 = runtime.safeCall(Predef.assert(tmp2));
-      tmp4 = acc + x;
-      return (tmp3 , tmp4)
+      tmp2 = runtime.safeCall(Predef.assert(tmp1));
+      tmp3 = acc + x;
+      return (tmp2 , tmp3)
     });
-    tmp = lambda;
-    tmp1 = runtime.safeCall(Predef.fold(tmp));
-    return runtime.safeCall(tmp1(...xs))
+    tmp = runtime.safeCall(Predef.fold(lambda));
+    return runtime.safeCall(tmp(...xs))
   } 
   static use(instance) {
     return instance

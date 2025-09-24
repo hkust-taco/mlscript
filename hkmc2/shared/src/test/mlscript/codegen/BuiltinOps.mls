@@ -74,12 +74,13 @@ id(+)(1, 2)
 :re
 id(+)(1)
 //│ JS (unsanitized):
-//│ let tmp1, lambda4;
+//│ let tmp3, tmp4, lambda4;
 //│ lambda4 = (undefined, function (arg1, arg2) {
 //│   return arg1 + arg2
 //│ });
-//│ tmp1 = Predef.id(lambda4);
-//│ runtime.safeCall(tmp1(1))
+//│ tmp3 = lambda4;
+//│ tmp4 = Predef.id(tmp3);
+//│ runtime.safeCall(tmp4(1))
 //│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 
@@ -95,12 +96,13 @@ fun (+) lol(a, b) = [a, b]
 :sjs
 id(~)(2)
 //│ JS (unsanitized):
-//│ let tmp2, lambda5;
+//│ let tmp5, tmp6, lambda5;
 //│ lambda5 = (undefined, function (arg) {
 //│   return ~ arg
 //│ });
-//│ tmp2 = Predef.id(lambda5);
-//│ runtime.safeCall(tmp2(2))
+//│ tmp5 = lambda5;
+//│ tmp6 = Predef.id(tmp5);
+//│ runtime.safeCall(tmp6(2))
 //│ = -3
 
 2 |> ~

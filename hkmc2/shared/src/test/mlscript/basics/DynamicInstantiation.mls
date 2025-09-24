@@ -16,7 +16,7 @@ new! c
 //│ = C
 
 let f = new! _
-//│ f = fun f
+//│ f = fun
 
 f(c)
 //│ = C

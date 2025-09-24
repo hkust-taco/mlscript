@@ -135,14 +135,18 @@ fun popByIndex(start, end, acc, lft) =
 //│ JS (unsanitized):
 //│ let popByIndex;
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
-//│   let scrut, tmp39, tmp40;
+//│   let scrut, tmp41, tmp42, tmp43;
 //│   scrut = start >= end;
 //│   if (scrut === true) {
 //│     return acc
 //│   } else {
-//│     tmp39 = start + 1;
-//│     tmp40 = runtime.safeCall(lft.at(start));
-//│     return popByIndex(tmp39, end, globalThis.Object.freeze([ ...acc, tmp40 ]), lft)
+//│     tmp41 = start + 1;
+//│     tmp42 = runtime.safeCall(lft.at(start));
+//│     tmp43 = globalThis.Object.freeze([
+//│       ...acc,
+//│       tmp42
+//│     ]);
+//│     return popByIndex(tmp41, end, tmp43, lft)
 //│   }
 //│ };
 

@@ -256,7 +256,7 @@ let x
 //│ > 3
 
 let incr = _ + 1
-//│ incr = fun incr
+//│ incr = fun
 
 // :dp
 2

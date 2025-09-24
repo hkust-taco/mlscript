@@ -20,7 +20,7 @@ let name = "_"
 //│ name = "_"
 
 let display(balance) = balance
-//│ display = fun display
+//│ display = fun
 
 "b" ~ display("-")
 //│ = "b-"

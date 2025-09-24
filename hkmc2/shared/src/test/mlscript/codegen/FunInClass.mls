@@ -90,11 +90,13 @@ fun test(a) =
 //│       C11.class = this
 //│     }
 //│     constructor(b) {
+//│       let tmp3;
 //│       this.b = b;
-//│       Predef.print(globalThis.Object.freeze([
+//│       tmp3 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
-//│       ]));
+//│       ]);
+//│       Predef.print(tmp3);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
@@ -107,11 +109,13 @@ fun test(a) =
 //│       C21.class = this
 //│     }
 //│     constructor(b) {
+//│       let tmp3;
 //│       this.b = b;
-//│       Predef.print(globalThis.Object.freeze([
+//│       tmp3 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
-//│       ]));
+//│       ]);
+//│       Predef.print(tmp3);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C2", ["b"]]; 

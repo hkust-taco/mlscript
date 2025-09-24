@@ -76,12 +76,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp6, tmp7, tmp8;
+//│ let x1, tmp6, tmp7, tmp8, arr2;
 //│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
 //│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
 //│ tmp7 = Predef.print(x1);
+//│ arr2 = globalThis.Object.freeze([
+//│   tmp6
+//│ ]);
 //│ tmp8 = x1;
-//│ globalThis.Object.freeze(new Term.Lam(globalThis.Object.freeze([ tmp6 ]), tmp8))
+//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp8))
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 

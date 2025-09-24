@@ -128,12 +128,44 @@ let graphics = new Set of tuple of
   "circle", "ellipse", "image", "line", "path"
   "polygon", "polyline", "rect", "text", "use"
 
+:sjs
 fun showProps(x, y, props) = Object.entries(props)
   Iter.mapping of case
     ["x", x'] then "x: " + (x + x')
     ["y", y'] then "y: " + (y + y')
     [k, v] then k + ": " + v
   Iter.joined(", ")
+//│ JS (unsanitized):
+//│ let showProps;
+//│ showProps = function showProps(x6, y3, props) {
+//│   let tmp14, lambda, tmp15;
+//│   tmp14 = runtime.safeCall(globalThis.Object.entries(props));
+//│   lambda = (undefined, function (caseScrut) {
+//│     let first1, first0, k, v, y$_, x$_, tmp16, tmp17, tmp18;
+//│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 2) {
+//│       first0 = runtime.Tuple.get(caseScrut, 0);
+//│       first1 = runtime.Tuple.get(caseScrut, 1);
+//│       if (first0 === "x") {
+//│         x$_ = first1;
+//│         tmp16 = x6 + x$_;
+//│         return "x: " + tmp16
+//│       } else if (first0 === "y") {
+//│         y$_ = first1;
+//│         tmp17 = y3 + y$_;
+//│         return "y: " + tmp17
+//│       } else {
+//│         k = first0;
+//│         v = first1;
+//│         tmp18 = k + ": ";
+//│         return tmp18 + v
+//│       }
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│   });
+//│   tmp15 = Iter.mapping(tmp14, lambda);
+//│   return Iter.joined(tmp15, ", ")
+//│ };
 
 fun output(i, s) = print of "  ".repeat(i) + s
 
@@ -171,14 +203,14 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.172: 	t("group")
+//│ ║  l.204: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.179: 	t("group")
+//│ ║  l.211: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

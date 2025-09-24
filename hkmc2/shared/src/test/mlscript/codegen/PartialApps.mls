@@ -4,7 +4,7 @@
 fun foo(x, y, z) = [x, y, z]
 
 let f = foo(1, _, 3)
-//│ f = fun f
+//│ f = fun
 
 f(2)
 //│ = [1, 2, 3]
@@ -12,14 +12,17 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f2, f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
-//│ f = fun f
+//│ let f1, tmp1, lambda1;
+//│ lambda1 = (undefined, function (_0, _1) { return foo(1, _0, _1) });
+//│ tmp1 = lambda1;
+//│ f1 = tmp1;
+//│ f = fun
 
 f(2, 3)
 //│ = [1, 2, 3]
 
 let g = f(_, 3)
-//│ g = fun g
+//│ g = fun
 
 g(2)
 //│ = [1, 2, 3]
@@ -44,7 +47,7 @@ fun foo2(x, y, z)(a, b) = [x, y, z, a, b]
 let f = [_]
 f(27)
 //│ = [27]
-//│ f = fun f
+//│ f = fun
 
 // :sjs
 let f = [_ + 1]
@@ -55,22 +58,22 @@ f.0(27)
 let f = foo(..._)
 f([1, 2, 3])
 //│ = [1, 2, 3]
-//│ f = fun f
+//│ f = fun
 
 let f = [..._]
 f([1, 2, 3])
 //│ = [1, 2, 3]
-//│ f = fun f
+//│ f = fun
 
 // :sjs
 let f = [..._]
 f([])
 //│ = []
-//│ f = fun f
+//│ f = fun
 
 
 let h = _ - 2
-//│ h = fun h
+//│ h = fun
 
 h(1)
 //│ = -1
@@ -79,15 +82,20 @@ h(1)
 :sjs
 let i = _(0, 1, _)
 //│ JS (unsanitized):
-//│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
-//│ i = fun i
+//│ let i, tmp16, lambda13;
+//│ lambda13 = (undefined, function (_0, _1) {
+//│   return runtime.safeCall(_0(0, 1, _1))
+//│ });
+//│ tmp16 = lambda13;
+//│ i = tmp16;
+//│ i = fun
 
 i(print, 2)
 //│ > 0 1 2
 
 :re
 i(print)(2)
-//│ ═══[RUNTIME ERROR] Error: Function 'i' expected 2 arguments but got 1
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 1
 
 // :re
 i((x, y, z) => x + y + z, 2)
@@ -199,7 +207,7 @@ _ - _ of 1, 2
 :pe
 |> 1
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.200: 	|> 1
+//│ ║  l.208: 	|> 1
 //│ ╙──       	   ^
 //│ = fun pipeInto
 
@@ -207,7 +215,7 @@ _ - _ of 1, 2
 :re
 |> (1)
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.208: 	|> (1)
+//│ ║  l.216: 	|> (1)
 //│ ╙──       	   ^^^
 //│ ═══[RUNTIME ERROR] TypeError: f is not a function
 
@@ -225,18 +233,22 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda38; lambda38 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda38)
+//│ let tmp67, lambda52;
+//│ lambda52 = (undefined, function (_0) { return _0 - 2 });
+//│ tmp67 = lambda52;
+//│ Predef.passTo(1, tmp67)
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp14, lambda39;
-//│ lambda39 = (undefined, function (_0) {
+//│ let tmp68, tmp69, lambda53;
+//│ lambda53 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp14 = Predef.passTo(1, lambda39);
-//│ runtime.safeCall(tmp14())
+//│ tmp68 = lambda53;
+//│ tmp69 = Predef.passTo(1, tmp68);
+//│ runtime.safeCall(tmp69())
 //│ = -1
 
 1 \ (_ - _)(2)
@@ -247,7 +259,7 @@ _ - _ of 1, 2
 :sjs
 let f = if _ then 1 else 0
 //│ JS (unsanitized):
-//│ let f15, tmp16; tmp16 = 1; f15 = tmp16;
+//│ let f8, tmp72; tmp72 = 1; f8 = tmp72;
 //│ f = 1
 
 
