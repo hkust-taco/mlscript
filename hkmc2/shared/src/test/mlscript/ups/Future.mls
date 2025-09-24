@@ -97,8 +97,16 @@ pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ║  l.92: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                 ^^^^^^
 
-:todo // Extraction parameters.
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
+
+"foobar" is Test
+//│ = true
+
+:fixme
+:expect MatchResult(["foo", "bar"], {})
+Test.unapply("foobar")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchResult(["foo", "bar"], {})', got: 'MatchResult("foobar", {})'
+//│ = MatchResult("foobar", {})
 
 :todo
 // This is tokenized into:

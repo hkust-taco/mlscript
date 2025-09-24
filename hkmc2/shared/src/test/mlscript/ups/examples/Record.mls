@@ -91,7 +91,6 @@ pattern NumberSystem =
   (((:digits, radix: "o")) => parseInt(digits, 8)) |
   (((:digits, radix: "b")) => parseInt(digits, 2))
 
-:todo // This looks decent! Make this happen!
 fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
     (:radix, :digits) is NumberSystem as value then Some(value)

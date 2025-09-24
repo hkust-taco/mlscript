@@ -39,9 +39,6 @@ pattern DomainSuffix = Rep1(pattern ("." ~ Char.Letter ~ Rep1(pattern Char.Lette
 
 pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(pattern Char.Letter)
 
-id of _ is 0
-//│ = fun
-
 [".com", ".hk", ".fr", ".cn"]
   Iter.mapping of _ is DomainSuffixFragment
   Iter.folded of true, _ && _

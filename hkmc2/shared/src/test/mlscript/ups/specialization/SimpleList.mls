@@ -138,15 +138,13 @@ fun (::) cons(head, tail) = Pair(head, tail)
 0 :: 1 :: 0 :: null is @compile BinSeq
 //│ = true
 
-:todo
-// Note the location of `null` is missing because of the parse rule doesn't
-// attach location information to `UnitLit(true)`.
+:e
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.144: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.144: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.142: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                  ^^^^
 
 null is @compile List

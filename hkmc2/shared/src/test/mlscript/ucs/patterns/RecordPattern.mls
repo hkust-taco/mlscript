@@ -56,7 +56,6 @@ let rcd =
 // * As that will make sense when we have dependent types,
 // * as in: `{ n: Int, v: Vec[Int, n] }`
 
-:js
 let r = {x: 2, y : 4}
 //│ r = {x: 2, y: 4}
 
@@ -64,10 +63,10 @@ let r = {x: 2, y : 4}
 if r is
   {x:a, y:a} then a
 //│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.65: 	  {x:a, y:a} then a
+//│ ║  l.64: 	  {x:a, y:a} then a
 //│ ║        	          ^
 //│ ╟── The previous definition is as follows.
-//│ ║  l.65: 	  {x:a, y:a} then a
+//│ ║  l.64: 	  {x:a, y:a} then a
 //│ ╙──      	     ^
 //│ = 4
 
@@ -181,5 +180,13 @@ is_object([1, 2])
 is_object(is_object)
 //│ = true
 
-:todo
+:sjs
 fun is_record_alt(x) = x is {}
+//│ JS (unsanitized):
+//│ let is_record_alt; is_record_alt = function is_record_alt(x7) { return false };
+
+is_record_alt of []
+//│ = false
+
+is_record_alt of 0
+//│ = false
