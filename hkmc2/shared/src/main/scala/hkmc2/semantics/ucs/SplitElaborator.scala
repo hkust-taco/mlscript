@@ -238,7 +238,7 @@ trait SplitElaborator:
         Head.Match(scrutinee(), firstPattern, split) ~: End
     case _ =>
       error(msg"Unrecognized pattern split (${t.describe})." -> t.toLoc)
-      Else(Term.Error)(N)
+      Else(Term.Error)(N).withLocOf(t) // To inspect the source of errors.
   
   extension (term: Term)
     private inline def reference(continuation: Reference => SimpleSplit): SimpleSplit =
