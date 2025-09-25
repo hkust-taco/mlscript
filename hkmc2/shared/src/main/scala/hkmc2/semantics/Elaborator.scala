@@ -1519,7 +1519,7 @@ extends Importer with ucs.SplitElaborator:
     def go(t: Tree): Ctxl[Pattern] = t match
       // Annotated patterns like `@compile P`.
       case Tree.Annotated(annotation, target) =>
-        go(target).annotate(term(annotation))
+        go(target).annotate(term(annotation), t.toLoc)
       // Brackets.
       case Bra(BracketKind.Round | BracketKind.Curly, t) => go(t)
       // Tuple patterns like `[p1, p2, ...ps, pn]`.

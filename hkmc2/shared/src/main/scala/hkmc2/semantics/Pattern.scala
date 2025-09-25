@@ -246,7 +246,8 @@ enum Pattern extends AutoLocated:
    */
   case Transform(pattern: Pattern, parameters: Ls[(VarSymbol, VarSymbol)], transform: Term)
   
-  case Annotated(pattern: Pattern, annotations: Vector[Term])
+  /** If the term is `Error`, we add `Opt[Loc]` to the list instead. */
+  case Annotated(pattern: Pattern, annotations: Vector[Opt[Loc] \/ Term])
   
   /** A pattern that comes with an extra condition. It works in a way similar to
    *  `and` in split. */
@@ -254,10 +255,14 @@ enum Pattern extends AutoLocated:
   
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
   
-  inline def annotate(annotation: Term): Pattern.Annotated = this match
-    case Annotated(pattern, annotations) =>
-      Annotated(pattern, annotations :+ annotation)
-    case _ => Annotated(this, Vector(annotation))
+  /** Annotate the pattern using the given term. If the term is `Error`, then
+    * use the location of the original tree for error reporting. */
+  inline def annotate(annotation: Term, treeLoc: Opt[Loc]): Pattern.Annotated =
+    val elem = if annotation is Term.Error then L(treeLoc) else R(annotation)
+    this match
+      case Annotated(pattern, annotations) =>
+        Annotated(pattern, annotations :+ elem)
+      case _ => Annotated(this, Vector(elem))
   
   inline def withGuard(guard: Term) = Pattern.Guarded(this, guard)
   
@@ -300,7 +305,8 @@ enum Pattern extends AutoLocated:
     case Chain(first, second) => first :: second :: Nil
     case Alias(pattern, alias) => pattern :: alias :: Nil
     case Transform(pattern, _, transform) => pattern :: transform :: Nil
-    case Annotated(pattern, annotations) => pattern :: annotations.toList
+    case Annotated(pattern, annotations) => pattern ::
+      annotations.iterator.collect { case R(term) => term }.toList
     case Guarded(pattern, guard) => pattern.children :+ guard
   
   def subTerms: Ls[Term] = this match
@@ -316,7 +322,8 @@ enum Pattern extends AutoLocated:
     case Chain(first, second) => first.subTerms ::: second.subTerms
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, _, transform) => pattern.subTerms :+ transform
-    case Annotated(pattern, annotations) => pattern.subTerms ::: annotations.toList
+    case Annotated(pattern, annotations) => pattern.subTerms :::
+      annotations.iterator.collect { case R(term) => term }.toList
     case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
   def describe: Str = this match
@@ -377,6 +384,8 @@ enum Pattern extends AutoLocated:
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
     case Transform(pattern, _, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
-    case Annotated(pattern, annotations) =>
-      annotations.iterator.map(_.showDbg).mkString("@", " @", " ") + pattern.showDbgWithPar
+    case Annotated(pattern, annotations) => annotations.iterator.map:
+        case L(errorLoc) => "error"
+        case R(term) => term.showDbg
+      .mkString("@", " @", " ") + pattern.showDbgWithPar
     case Guarded(pattern, guard) => pattern.showDbg + " where " + guard.showDbg

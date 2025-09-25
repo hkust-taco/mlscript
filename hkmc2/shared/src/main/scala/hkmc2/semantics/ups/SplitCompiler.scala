@@ -336,14 +336,22 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         // Currently, we only support `@compile` annotation, so here we only
         // check whether this annotation exists, and report an error for all
         // other annotations.
-        val shouldCompile = annotations.foldLeft(true): (acc, term) =>
-          term.symbol match
-            case S(symbol) if symbol === ctx.builtins.annotations.compile => true
-            case S(_) | N =>
-              warn(msg"This annotation is not supported here." -> term.toLoc,
+        val shouldCompile = annotations.foldLeft(true): (acc, termOrLoc) =>
+          val res = termOrLoc match
+            case R(term) => term.symbol match
+              case S(symbol) if symbol is ctx.builtins.annotations.compile => N
+              case S(_) | N => S(term.toLoc)
+            case L(loc) => S(loc)
+          res match
+            case S(loc) =>
+              warn(msg"This annotation is not supported here." -> loc,
                 msg"Note: Patterns only support the `@compile` annotation." -> pattern.toLoc)
               acc
-        if shouldCompile then compilePattern(scrutinee, pattern) else makeMatchSplit(scrutinee, pattern)
+            case N => true
+        if shouldCompile then
+          compilePattern(scrutinee, pattern)
+        else
+          makeMatchSplit(scrutinee, pattern)
       case Guarded(pattern, guard) => (makeConsequent, alternative) =>
         makeMatchSplit(scrutinee, pattern)(
           (output, bindings) =>
