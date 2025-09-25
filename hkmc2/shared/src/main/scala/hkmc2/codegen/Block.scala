@@ -348,7 +348,6 @@ final case class ValDefn(
     rhs: Path,
 ) extends Defn:
   val innerSym = S(tsym)
-  val k = tsym.k
   val owner: Opt[InnerSymbol] = tsym.owner
 
 
