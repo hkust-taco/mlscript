@@ -175,8 +175,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
     else
       val fstParams = params.head
-      val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Value.Lam(params, acc), false))
-      bLam(Value.Lam(fstParams, wrappedLambda), S(sym.nme), S(sym))(k)(using ctx)
+      val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
+      bLam(Lambda(fstParams, wrappedLambda), S(sym.nme), S(sym))(k)(using ctx)
 
   private def bFunDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
@@ -188,7 +188,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val paramsList = params.head.params
         val ctx2 = paramsList.foldLeft(ctx)((acc, x) => acc.addName(x.sym, x.sym)).nonTopLevel
         val pl = paramsList.map(_.sym)
-        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Value.Lam(params, acc), false))
+        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
         Func(
           uid.make, sym, params = pl, resultNum = 1,
           body = bBlockWithEndCont(wrappedLambda)(x => Node.Result(Ls(x)))(using ctx2)
@@ -205,7 +205,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val paramsList = params.head.params
         val ctx2 = paramsList.foldLeft(ctx)((acc, x) => acc.addName(x.sym, x.sym)).nonTopLevel
         val pl = paramsList.map(_.sym)
-        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Value.Lam(params, acc), false))
+        val wrappedLambda = params.tail.foldRight(body)((params, acc) => Return(Lambda(params, acc), false))
         Func(
           uid.make, sym, params = pl, resultNum = 1,
           body = bBlockWithEndCont(wrappedLambda)(x => Node.Result(Ls(x)))(using ctx2)
@@ -233,9 +233,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           funcs.map(f => f.name -> f).toMap,
         )
   
-  private def bLam(lam: Value.Lam, nameHint: Opt[Str], recName: Opt[Local])(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
+  private def bLam(lam: Lambda, nameHint: Opt[Str], recName: Opt[Local])(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope) : Node =
     trace[Node](s"bLam begin", x => s"bLam end: ${x.show}"):
-      val Value.Lam(params, body) = lam
+      val Lambda(params, body) = lam
       // Generate an auxiliary class inheriting from Callable
       val freeVars = lam.freeVarsLLIR -- body.definedVars -- recName.iterator -- ctx.fn_ctx.keySet
       log(s"Defined vars: ${body.definedVars}")
@@ -290,18 +290,11 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               (0 until f.paramsSize).zip(tempSymbols).map((_n, sym) =>
                 Param(FldFlags.empty, sym, N, Modulefulness.none)).toList)
             val app = Call(v, tempSymbols.map(x => Arg(N, Value.Ref(x))).toList)(true, false)
-            bLam(Value.Lam(paramsList, Return(app, false)), S(l.nme), N)(k)
+            bLam(Lambda(paramsList, Return(app, false)), S(l.nme), N)(k)
           case None =>
             k(ctx.findName(l) |> sr)
       case Value.This(sym) => bErrStop(msg"Unsupported value: This")
       case Value.Lit(lit) => k(Expr.Literal(lit))
-      case lam @ Value.Lam(params, body) => bLam(lam, N, N)(k)
-      case Value.Arr(false, elems) =>
-        bArgs(elems):
-          case args: Ls[TrivialExpr] =>
-            val v: Local = newTemp
-            Node.LetExpr(v, Expr.CtorApp(builtinTuple(elems.length), args), k(v |> sr))
-      case Value.Rcd(mut, fields) => bErrStop(msg"Unsupported value: Rcd")
         
   
   private def getClassOfField(p: FieldSymbol)(using ctx: Ctx)(using Raise, Scope): Local =
@@ -433,6 +426,13 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
       case Instantiate(_, cls, args) =>
         bErrStop(msg"Unsupported kind of Instantiate")
+      case lam @ Lambda(params, body) => bLam(lam, N, N)(k)
+      case Tuple(false, elems) =>
+        bArgs(elems):
+          case args: Ls[TrivialExpr] =>
+            val v: Local = newTemp
+            Node.LetExpr(v, Expr.CtorApp(builtinTuple(elems.length), args), k(v |> sr))
+      case Record(mut, fields) => bErrStop(msg"Unsupported value: Rcd")
       case x: Path => bPath(x)(k)
 
   private def bBlockWithEndCont(blk: Block)(k: TrivialExpr => Ctx ?=> Node)(using Ctx)(using Raise, Scope) : Node =

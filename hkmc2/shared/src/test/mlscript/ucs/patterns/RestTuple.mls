@@ -62,7 +62,7 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ JS (unsanitized):
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let last0, rest, first0, x, first1, first01, y, z, w, tmp, tmp1;
+//│   let last0, rest, first0, x, first1, first01, y, z, w, tmp6, tmp7;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     first0 = runtime.Tuple.get(xs, 0);
 //│     rest = runtime.safeCall(runtime.Tuple.lazySlice(xs, 1, 1));
@@ -74,9 +74,9 @@ fun nested_tuple_patterns(xs) = if xs is
 //│       y = first01;
 //│       z = first1;
 //│       w = last0;
-//│       tmp = x + y;
-//│       tmp1 = tmp + z;
-//│       return tmp1 + w
+//│       tmp6 = x + y;
+//│       tmp7 = tmp6 + z;
+//│       return tmp7 + w
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }

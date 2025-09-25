@@ -76,12 +76,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp6, tmp7, tmp8;
+//│ let x1, tmp6, tmp7, tmp8, arr2;
 //│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
 //│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
 //│ tmp7 = Predef.print(x1);
+//│ arr2 = globalThis.Object.freeze([
+//│   tmp6
+//│ ]);
 //│ tmp8 = x1;
-//│ globalThis.Object.freeze(new Term.Lam(globalThis.Object.freeze([ tmp6 ]), tmp8))
+//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp8))
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
@@ -115,20 +118,20 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let scrut, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40;
-//│ tmp30 = globalThis.Object.freeze(new Term.Symbol("scrut"));
-//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp30));
-//│ tmp31 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp34 = scrut;
-//│ tmp35 = globalThis.Object.freeze(new Term.LitPattern(true));
-//│ tmp40 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp36 = globalThis.Object.freeze(new Term.Else(tmp40));
-//│ tmp37 = globalThis.Object.freeze(new Term.Branch(tmp34, tmp35, tmp36));
-//│ tmp39 = globalThis.Object.freeze(new Term.Lit(false));
-//│ tmp38 = globalThis.Object.freeze(new Term.Else(tmp39));
-//│ tmp32 = globalThis.Object.freeze(new Term.Cons(tmp37, tmp38));
-//│ tmp33 = globalThis.Object.freeze(new Term.Let(tmp30, tmp31, tmp32));
-//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp33))
+//│ let scrut, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39;
+//│ tmp29 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp29));
+//│ tmp30 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp33 = scrut;
+//│ tmp34 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp39 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp35 = globalThis.Object.freeze(new Term.Else(tmp39));
+//│ tmp36 = globalThis.Object.freeze(new Term.Branch(tmp33, tmp34, tmp35));
+//│ tmp38 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp37 = globalThis.Object.freeze(new Term.Else(tmp38));
+//│ tmp31 = globalThis.Object.freeze(new Term.Cons(tmp36, tmp37));
+//│ tmp32 = globalThis.Object.freeze(new Term.Let(tmp29, tmp30, tmp31));
+//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp32))
 //│ = IfLike(
 //│   If,
 //│   Let(

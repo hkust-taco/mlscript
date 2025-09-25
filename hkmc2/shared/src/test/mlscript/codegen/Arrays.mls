@@ -21,7 +21,7 @@ single.0
 :sjs
 val single = [1]
 //│ JS (unsanitized):
-//│ let single1; single1 = globalThis.Object.freeze([ 1 ]);
+//│ let single1, tmp; tmp = globalThis.Object.freeze([ 1 ]); single1 = tmp;
 //│ single = [1]
 
 single.0

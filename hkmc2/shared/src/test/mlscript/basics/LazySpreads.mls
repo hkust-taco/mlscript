@@ -21,15 +21,15 @@ fun buildPalindrome = case
 //│ buildPalindrome = function buildPalindrome() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let n, tmp, tmp1, tmp2;
+//│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return globalThis.Object.freeze([])
 //│     } else {
 //│       n = caseScrut;
-//│       tmp = buildPalindrome();
-//│       tmp1 = n - 1;
-//│       tmp2 = tmp(tmp1);
-//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp2, n))
+//│       tmp3 = buildPalindrome();
+//│       tmp4 = n - 1;
+//│       tmp5 = tmp3(tmp4);
+//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n))
 //│     }
 //│   });
 //│   return lambda
@@ -52,7 +52,7 @@ fun sum2 = case
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let last03, rest3, first0, x, xs, y, tmp2, tmp3, tmp4;
+//│     let last03, rest3, first0, x, xs, y, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
@@ -62,10 +62,10 @@ fun sum2 = case
 //│       x = first0;
 //│       xs = rest3;
 //│       y = last03;
-//│       tmp2 = x + y;
-//│       tmp3 = sum2();
-//│       tmp4 = tmp3(xs);
-//│       return tmp2 + tmp4
+//│       tmp5 = x + y;
+//│       tmp6 = sum2();
+//│       tmp7 = tmp6(xs);
+//│       return tmp5 + tmp7
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }

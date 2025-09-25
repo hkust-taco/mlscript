@@ -10,7 +10,14 @@ drop id(2 + 2)
 :sjs
 drop { a: 0, b: 1 }
 //│ JS (unsanitized):
-//│ let a, b; a = 0; b = 1; runtime.Unit
+//│ let a, b, tmp2, tmp3;
+//│ a = 0;
+//│ tmp2 = globalThis.Object.freeze({
+//│   a: a
+//│ });
+//│ b = 1;
+//│ tmp3 = globalThis.Object.freeze({ b: b });
+//│ runtime.Unit
 
 :sjs
 let discard = drop _

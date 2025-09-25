@@ -19,7 +19,7 @@ foo(0, ...a)
 :sjs
 foo(1, ...[2, 3], 4)
 //│ JS (unsanitized):
-//│ foo(1, ...globalThis.Object.freeze([ 2, 3 ]), 4)
+//│ let tmp; tmp = globalThis.Object.freeze([ 2, 3 ]); foo(1, ...tmp, 4)
 //│ = [1, 2, 3, 4]
 
 :re

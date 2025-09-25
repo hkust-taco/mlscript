@@ -19,25 +19,27 @@ fun f() =
 //│ JS (unsanitized):
 //│ let f, getLocals2;
 //│ getLocals2 = function getLocals() {
-//│   let prev, thisInfo, tmp;
+//│   let prev, thisInfo, arr, tmp;
 //│   prev = [];
-//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", globalThis.Object.freeze([]));
+//│   arr = globalThis.Object.freeze([]);
+//│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", arr);
 //│   tmp = runtime.safeCall(prev.push(thisInfo));
 //│   return prev
 //│ };
 //│ f = function f() {
 //│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1;
 //│   getLocals3 = function getLocals() {
-//│     let i1, j1, k1, prev, thisInfo, tmp2;
+//│     let i1, j1, k1, prev, thisInfo, arr, tmp2;
 //│     prev = getLocals2();
 //│     i1 = new runtime.LocalVarInfo.class("i", i);
 //│     j1 = new runtime.LocalVarInfo.class("j", j);
 //│     k1 = new runtime.LocalVarInfo.class("k", k);
-//│     thisInfo = new runtime.FnLocalsInfo.class("f", globalThis.Object.freeze([
+//│     arr = globalThis.Object.freeze([
 //│       i1,
 //│       j1,
 //│       k1
-//│     ]));
+//│     ]);
+//│     thisInfo = new runtime.FnLocalsInfo.class("f", arr);
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
@@ -136,8 +138,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:136:3)
-//│ 	at lambda_test (Debugging.mls:133:3)
+//│ 	at lambda (Debugging.mls:138:3)
+//│ 	at lambda_test (Debugging.mls:135:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -216,9 +218,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:209:3) with locals: j=200
+//│ > 	at f (Debugging.mls:211:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:211:3)
+//│ > 	at f (Debugging.mls:213:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:212:3) with locals: j=300
+//│ > 	at f (Debugging.mls:214:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

@@ -10,7 +10,7 @@ class Foo with
 :sjs
 let f = new Foo
 //│ JS (unsanitized):
-//│ let f, tmp; tmp = globalThis.Object.freeze(new Foo1()); f = tmp;
+//│ let f; f = globalThis.Object.freeze(new Foo1());
 //│ f = Foo { x: 0 }
 
 set
@@ -38,7 +38,7 @@ f.y
 // :elt
 let f = new mut Foo
 //│ JS (unsanitized):
-//│ let f1, tmp1; tmp1 = new Foo1(); f1 = tmp1;
+//│ let f1; f1 = new Foo1();
 //│ f = Foo { x: 0 }
 
 set

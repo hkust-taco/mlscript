@@ -231,12 +231,12 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)()
 //│ JS (unsanitized):
-//│ let tmp14, lambda39;
+//│ let lambda39, tmp19;
 //│ lambda39 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp14 = Predef.passTo(1, lambda39);
-//│ runtime.safeCall(tmp14())
+//│ tmp19 = Predef.passTo(1, lambda39);
+//│ runtime.safeCall(tmp19())
 //│ = -1
 
 1 \ (_ - _)(2)
@@ -247,7 +247,7 @@ _ - _ of 1, 2
 :sjs
 let f = if _ then 1 else 0
 //│ JS (unsanitized):
-//│ let f15, tmp16; tmp16 = 1; f15 = tmp16;
+//│ let f15, tmp21; tmp21 = 1; f15 = tmp21;
 //│ f = 1
 
 

@@ -15,64 +15,85 @@ let discard = drop _
 
 discard of { a: 0, b: 11111 }
 //│ JS (unsanitized):
-//│ let a, b; a = 0; b = 11111; runtime.safeCall(discard(globalThis.Object.freeze({ a: a, b: b })))
+//│ let a, b, tmp;
+//│ a = 0;
+//│ b = 11111;
+//│ tmp = globalThis.Object.freeze({ a: a, b: b });
+//│ runtime.safeCall(discard(tmp))
 
 discard of { a: 0, b: 11111 }
 //│ JS (unsanitized):
-//│ let a1, b1;
+//│ let a1, b1, tmp1;
 //│ a1 = 0;
 //│ b1 = 11111;
-//│ runtime.safeCall(discard(globalThis.Object.freeze({ a: a1, b: b1 })))
+//│ tmp1 = globalThis.Object.freeze({ a: a1, b: b1 });
+//│ runtime.safeCall(discard(tmp1))
 
 
 discard of { aaaa: 1 }
 //│ JS (unsanitized):
-//│ let aaaa; aaaa = 1; runtime.safeCall(discard(globalThis.Object.freeze({ aaaa: aaaa })))
+//│ let aaaa, tmp2;
+//│ aaaa = 1;
+//│ tmp2 = globalThis.Object.freeze({ aaaa: aaaa });
+//│ runtime.safeCall(discard(tmp2))
 
 discard of { aaaaaaaaa: 1, bbbb: 2 }
 //│ JS (unsanitized):
-//│ let aaaaaaaaa, bbbb;
+//│ let aaaaaaaaa, bbbb, tmp3;
 //│ aaaaaaaaa = 1;
 //│ bbbb = 2;
-//│ runtime.safeCall(discard(globalThis.Object.freeze({ aaaaaaaaa: aaaaaaaaa, bbbb: bbbb })))
+//│ tmp3 = globalThis.Object.freeze({
+//│   aaaaaaaaa: aaaaaaaaa,
+//│   bbbb: bbbb
+//│ });
+//│ runtime.safeCall(discard(tmp3))
 
 discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
 //│ JS (unsanitized):
-//│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd;
+//│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd, tmp4;
 //│ aaaaaaaaa1 = 1;
 //│ bbbbbbbb = 2;
 //│ ccccccccc = 3;
 //│ dddddddddd = 4;
-//│ runtime.safeCall(discard(globalThis.Object.freeze({
+//│ tmp4 = globalThis.Object.freeze({
 //│   aaaaaaaaa: aaaaaaaaa1,
 //│   bbbbbbbb: bbbbbbbb,
 //│   ccccccccc: ccccccccc,
 //│   dddddddddd: dddddddddd
-//│ })))
+//│ });
+//│ runtime.safeCall(discard(tmp4))
 
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ]
 //│ JS (unsanitized):
-//│ runtime.safeCall(discard(globalThis.Object.freeze([ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ])))
+//│ let tmp5;
+//│ tmp5 = globalThis.Object.freeze([
+//│   "aaaaaaaaaaaaaaa",
+//│   "bbbbbbbbbbbbbbbb"
+//│ ]);
+//│ runtime.safeCall(discard(tmp5))
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]
 //│ JS (unsanitized):
-//│ runtime.safeCall(discard(globalThis.Object.freeze([
+//│ let tmp6;
+//│ tmp6 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
 //│   "bbbbbbbbbbbbbbbb",
 //│   "ccccccccccccccccc",
 //│   "dddddddddddddddddd"
-//│ ])))
+//│ ]);
+//│ runtime.safeCall(discard(tmp6))
 
 discard of [[ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]]
 //│ JS (unsanitized):
-//│ runtime.safeCall(discard(globalThis.Object.freeze([
-//│   globalThis.Object.freeze([
-//│     "aaaaaaaaaaaaaaa",
-//│     "bbbbbbbbbbbbbbbb",
-//│     "ccccccccccccccccc",
-//│     "dddddddddddddddddd"
-//│   ])
-//│ ])))
+//│ let tmp7, tmp8;
+//│ tmp7 = globalThis.Object.freeze([
+//│   "aaaaaaaaaaaaaaa",
+//│   "bbbbbbbbbbbbbbbb",
+//│   "ccccccccccccccccc",
+//│   "dddddddddddddddddd"
+//│ ]);
+//│ tmp8 = globalThis.Object.freeze([ tmp7 ]);
+//│ runtime.safeCall(discard(tmp8))
 
 

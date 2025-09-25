@@ -131,7 +131,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       res match
       case R(res) => term(res)(k)
       case L((mut, flds)) =>
-        k(Value.Rcd(mut, flds.reverse))
+        k(Record(mut, flds.reverse))
     case RcdSpread(bod) :: stats =>
       res match
       case R(_) => wat("RcdField in non-Rcd context", res)
@@ -152,7 +152,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       reportAnnotations(decl, annotations)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
-      subTerm(rhs): r =>
+      term(rhs): r =>
         Assign(sym, r, blockImpl(stats, res)(k))
     case (imp @ Import(sym, path)) :: stats =>
       raise(ErrorReport(
@@ -311,12 +311,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case st.Asc(lhs, rhs) =>
       term(lhs, inStmtPos = inStmtPos)(k)
     case st.Tup(fs) =>
-      args(fs)(args => k(Value.Arr(mut = false, args)))
+      args(fs)(args => k(Tuple(mut = false, args)))
     case Mut(st.Tup(fs)) =>
-      args(fs)(args => k(Value.Arr(mut = true, args)))
+      args(fs)(args => k(Tuple(mut = true, args)))
     case st.CtxTup(fs) =>
       // * This case is currently triggered for code such as `f(using 42)`
-      args(fs)(args => k(Value.Arr(mut = false, args)))
+      args(fs)(args => k(Tuple(mut = false, args)))
     case ref @ st.Ref(sym) =>
       sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
@@ -350,7 +350,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(Value.Lam(paramLists.head, bodyBlock).withLocOf(ref))
+          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
         if sym.unary then
           val t1 = new Tree.Ident("arg")
           val p1 = Param(FldFlags.empty, VarSymbol(t1), N, Modulefulness.none)
@@ -365,7 +365,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (paramLists, bodyBlock) = setupFunctionDef(ps :: Nil, bod, S(sym.nme))
           tl.log(s"Ref builtin $sym")
           assert(paramLists.length === 1)
-          return k(Value.Lam(paramLists.head, bodyBlock).withLocOf(ref))
+          return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(d) if d.hasDeclareModifier.isDefined =>
@@ -406,11 +406,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isAnd = sym is State.andSymbol
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
-            val ar2 = Value.Lam(PlainParamList(Nil), returnedTerm(arg2))
-            k(Call(
-              Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
-              Arg(N, ar1) :: Arg(N, ar2) :: Nil
-            )(true, false))
+            val lamSym = BlockMemberSymbol("lambda", Nil, false)
+            val lamDef = FunDefn(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))
+            Define(
+              lamDef,
+              k(Call(
+                Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
+                Arg(N, ar1) :: Arg(N, Value.Ref(lamSym)) :: Nil
+              )(true, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
               k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false))
@@ -508,10 +511,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       warnStmt
       val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, body, N)
       if k.isInstanceOf[TailOp] || bodyBlock.size <= 5
-      then k(Value.Lam(paramLists.head, bodyBlock))
+      then k(Lambda(paramLists.head, bodyBlock))
       else
-        val l = new TempSymbol(N)
-        Assign(l, Value.Lam(paramLists.head, bodyBlock), k(l |> Value.Ref.apply))
+        val lamSym = new BlockMemberSymbol("lambda", Nil, false)
+        val lamDef = FunDefn(N, lamSym, paramLists, bodyBlock)
+        Define(
+          lamDef,
+          k(lamSym |> Value.Ref.apply))
     
     /* 
     case t @ st.If(Split.Let(sym, trm, tail)) =>
@@ -835,7 +841,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def rec(ps: Ls[LocalSymbol & NamedSymbol], ds: Ls[Path])(k: Result => Block)(using Subst): Block = ps match
         case Nil => quote(body): r =>
           val l = new TempSymbol(N)
-          Assign(l, r, setupTerm("Lam", Value.Arr(mut = false, ds.reverse.map(_.asArg)) :: Value.Ref(l) :: Nil)(k))
+          val arr = new TempSymbol(N, "arr")
+          Assign(
+            arr,
+            Tuple(mut = false, ds.reverse.map(_.asArg)),
+            Assign(l, r, setupTerm("Lam", Value.Ref(arr) :: Value.Ref(l) :: Nil)(k)))
         case sym :: rest =>
           setupSymbol(sym): r =>
             val l = new TempSymbol(N)
@@ -844,9 +854,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(params.params.map(_.sym), Nil)(k) // TODO: restParam?
     case App(lhs, Tup(rhs)) => quote(lhs): r1 =>
       def rec(es: Ls[Elem], xs: Ls[Path])(k: Result => Block): Block = es match
-        case Nil => setupTerm("Tup", Value.Arr(mut = false, xs.reverse.map(_.asArg)) :: Nil): r2 =>
-          val l1, l2 = new TempSymbol(N)
-          Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
+        case Nil =>
+          val arrSym = new TempSymbol(N, "arr")
+          Assign(
+            arrSym,
+            Tuple(mut = false, xs.reverse.map(_.asArg)),
+            setupTerm("Tup", Value.Ref(arrSym) :: Nil): r2 =>
+              val l1 = new TempSymbol(N)
+              val l2 = new TempSymbol(N)
+              Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
+          )
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = new TempSymbol(N)
           Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
@@ -862,14 +879,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       require(sym2 is sym)
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
+        val arrSym = new TempSymbol(N, "arr")
         blockBuilder.assign(l1, r1)
           .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
           .chain(b => quote(rhs)(r2 => Assign(l2, r2, b)))
           .chain(b => quote(res)(r3 => Assign(l3, r3, b)))
           .chain(b => setupTerm("LetDecl", Value.Ref(l1) :: Nil)(r4 => Assign(l4, r4, b)))
           .chain(b => setupTerm("DefineVar", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(r5 => Assign(l5, r5, b)))
-          .rest(setupTerm("Blk", Value.Arr(mut = false,
-            (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)) :: Value.Ref(l3) :: Nil)(k))
+          .assign(arrSym, Tuple(mut = false, (l4 :: l5 :: Nil).map(s => Value.Ref(s).asArg)))
+          .rest(setupTerm("Blk", Value.Ref(arrSym) :: Value.Ref(l3) :: Nil)(k))
       }
     case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split): r =>
       val l = new TempSymbol(N)
@@ -947,11 +965,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             fsr ::= RcdArg(S(ir), tr)
             rec(as)
     val b = rec(as)
-    val args = if fsr.isEmpty then asr else Arg(N, Value.Rcd(mut = false, fsr.reverse)) :: asr
-    Begin(
-      b,
-      k(args.reverse)
-    )
+    if fsr.isEmpty then
+      Begin(b, k(asr.reverse))
+    else
+      val rcdSym = new TempSymbol(N, "rcd")
+      Begin(
+        b,
+        Assign(
+          rcdSym,
+          Record(mut = false, fsr.reverse),
+          k((Arg(N, Value.Ref(rcdSym)) :: asr).reverse)))
+      
   
   inline def plainArgs(ts: Ls[st])(k: Ls[Arg] => Block)(using Subst): Block =
     subTerms(ts)(asr => k(asr.map(Arg(N, _))))
@@ -972,6 +996,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     term(t, inStmtPos = inStmtPos):
       case v: Value => k(v)
       case p: Path => k(p)
+      case Lambda(params, body) =>
+        val lamSym = BlockMemberSymbol("lambda", Nil, false)
+        val lamDef = FunDefn(N, lamSym, params :: Nil, body)
+        Define(lamDef, k(lamSym |> Value.Ref.apply))
       case r =>
         val l = new TempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))

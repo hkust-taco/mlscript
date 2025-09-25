@@ -48,6 +48,5 @@ object Bar extends! Foo!class
 //│ ║  l.46: 	object Bar extends! Foo!class
 //│ ║        	                  ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value (...args) => {   runtime.checkArgs("", 1, true, args.length);   let arg = args[0];   return ! arg } is not a constructor or null
 
 

@@ -60,9 +60,9 @@ data class Baz(z) extends Bar(z * 1) with
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
-//│     let tmp2;
-//│     tmp2 = z * 1;
-//│     super(tmp2);
+//│     let tmp;
+//│     tmp = z * 1;
+//│     super(tmp);
 //│     this.z = z;
 //│   }
 //│   get baz() {

@@ -318,17 +318,19 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       )
     val startSym = FlowSymbol("prev")
     val thisInfo = FlowSymbol("thisInfo")
+    val arrSym = TempSymbol(N, "arr")
     
     val body = blockBuilder
       .assign(startSym, h.debugInfo.prevLocalsFn match
-          case None => Value.Arr(mut = true, Nil)
+          case None => Tuple(mut = true, Nil)
           case Some(value) => PureCall(value, Nil)
         )
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
+      .assign(arrSym, Tuple(mut = false, localsInfo.map(v => v._1.asPath.asArg)))
       .assign(thisInfo, Instantiate(mut = true, fnLocalsPath,
           Value.Lit(Tree.StrLit(h.debugInfo.debugNme)).asArg
-            :: Value.Arr(mut = false, localsInfo.map(v => v._1.asPath.asArg)).asArg
+            :: Value.Ref(arrSym).asArg
             :: Nil
         ))
       .assign(TempSymbol(N, ""), Call(startSym.asPath.selSN("push"), thisInfo.asPath.asArg :: Nil)(false, false))
@@ -399,11 +401,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyPath(p: Path): Path = p match
         case Value.Ref(`getLocalsSym`) => handlerCtx.debugInfo.prevLocalsFn.get
         case _ => super.applyPath(p)
-      override def applyLam(lam: Value.Lam): Value.Lam =
+      override def applyLam(lam: Lambda): Lambda =
         // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
-        Value.Lam(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
+        Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn): Defn = defn match
         case f: FunDefn => translateFun(f)
         case c: ClsLikeDefn => translateCls(c)
@@ -476,14 +478,20 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))))
     
     val handlerMtds = h.handlers.map: handler =>
-      val lam = Value.Lam(
-        PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil),
+      val lamSym = BlockMemberSymbol("lambda", Nil, false)
+      val lamDefn = FunDefn(
+        N,
+        lamSym,
+        PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         translateBlock(handler.body,
           handler.params.flatMap(_.paramSyms).toSet,
           handlerMtdCtx(s"Cont$$handler$$${symToStr(h.lhs)}$$${symToStr(handler.sym)}$$", handler.sym.nme)))
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: lam :: Nil), false))
+        handler.sym, handler.params,
+        Define(
+          lamDefn,
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(lamSym) :: Nil), false)))
     
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -615,7 +623,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       
       val localsRes = h.debugInfo.prevLocalsFn match
         case Some(value) => PureCall(value, Nil)
-        case None => Value.Arr(mut = true, Nil)
+        case None => Tuple(mut = true, Nil)
       
       val getLocalsFnDef = FunDefn(
         S(clsSym),

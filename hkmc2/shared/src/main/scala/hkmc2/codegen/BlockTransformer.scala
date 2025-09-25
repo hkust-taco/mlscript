@@ -104,6 +104,17 @@ class BlockTransformer(subst: SymbolSubst):
       val cls2 = applyPath(cls)
       val args2 = args.mapConserve(applyArg)
       if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
+    case l: Lambda => applyLam(l)
+    case Tuple(mut, elems) =>
+      val elems2 = elems.mapConserve(applyArg)
+      if (elems2 is elems) then r else Tuple(mut, elems2)
+    case Record(mut, fields) =>
+      val fields2 = fields.mapConserve:
+        case arg @ RcdArg(idx, v) =>
+          val idx2 = idx.mapConserve(applyPath)
+          val v2 = applyPath(v)
+          if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
+      if fields2 is fields then r else Record(mut, fields2)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Path = p match
@@ -125,17 +136,6 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = sym.subst
       if (sym2 is sym) then v else Value.This(sym2)
     case Value.Lit(lit) => v
-    case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(mut, elems) =>
-      val elems2 = elems.mapConserve(applyArg)
-      if (elems2 is elems) then v else Value.Arr(mut, elems2)
-    case Value.Rcd(mut, fields) =>
-      val fields2 = fields.mapConserve:
-        case arg @ RcdArg(idx, v) =>
-          val idx2 = idx.mapConserve(applyPath)
-          val v2 = applyPath(v)
-          if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
-      if fields2 is fields then v else Value.Rcd(mut, fields2)
   
   def applyLocal(sym: Local): Local = sym.subst
   
@@ -228,13 +228,13 @@ class BlockTransformer(subst: SymbolSubst):
         (params2 is hdr.params) && (body2 is hdr.body)
       then hdr else Handler(sym2, resumeSym2, params2, body2)
   
-  def applyLam(lam: Value.Lam): Value.Lam =
+  def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
     val body2 = applySubBlock(lam.body)
-    if (params2 is lam.params) && (body2 is lam.body) then lam else Value.Lam(params2, body2)
+    if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
   
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
-  override def applyLam(lam: Value.Lam) = lam
+  override def applyLam(lam: Lambda) = lam
   override def applyFunDefn(fun: FunDefn): FunDefn = fun
   override def applyDefn(defn: Defn): Defn = defn match
     case _: FunDefn | _: ClsLikeDefn => defn

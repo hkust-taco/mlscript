@@ -94,16 +94,6 @@ object Printer:
     case Value.Ref(l) => getVar(l)
     case Value.This(sym) => doc"this"
     case Value.Lit(lit) => doc"${lit.idStr}"
-    case Value.Lam(params, body) =>
-      val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkString(", ")
-      doc"(${docParams}) => ${mkDocument(body)}"
-    case Value.Arr(mut, elems) =>
-      val docElems = elems.map(x => mkDocument(x)).mkString(", ")
-      doc"${if mut then "mut " else ""}[${docElems}]"
-    case Value.Rcd(mut, args) =>
-      doc"${if mut then "mut " else ""}{ ${
-        args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
-      } }"
   
   def mkDocument(path: Path)(using Raise, Scope): Document = path match
     case Select(qual, name) =>
@@ -116,6 +106,16 @@ object Printer:
     case Call(fun, args) => doc"${mkDocument(fun)}(${args.map(mkDocument).mkString(", ")})"
     case Instantiate(mut, cls, args) =>
       doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkString(", ")})"
+    case Lambda(params, body) =>
+      val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkString(", ")
+      doc"(${docParams}) => ${mkDocument(body)}"
+    case Tuple(mut, elems) =>
+      val docElems = elems.map(x => mkDocument(x)).mkString(", ")
+      doc"${if mut then "mut " else ""}[${docElems}]"
+    case Record(mut, args) =>
+      doc"${if mut then "mut " else ""}{ ${
+        args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
+      } }"
     case x: Path => mkDocument(x)
   
   def mkDocument(prog: Program)(using Raise, Scope): Document = summon[Scope].nest.givenIn:
