@@ -182,12 +182,14 @@ object Split:
         else
           lines
       def term(t: Statement): Lines = t match
-        // case Term.Blk(stmts, term) =>
-        //   stmts.iterator.concat(Iterator.single(term)).flatMap:
-        //     case DefineVar(sym, Term.IfLike(Keyword.`if`, split)) =>
-        //       s"$sym = if" #: split(splt, true, true)
-        //     case stmt => (0, stmt.showDbg) :: Nil
-        //   .toList
+        case Term.Blk(stmts, term) =>
+          stmts.iterator.concat(Iterator.single(term)).flatMap:
+            case DefineVar(sym, Term.IfLike(kw, splt)) =>
+              s"$sym = ${kw.name}" #: SimpleSplit.prettyPrint.split(splt, true, true)
+            case DefineVar(sym, Term.SynthIf(splt)) =>
+              s"$sym = if" #: split(splt, true, true)
+            case stmt => (0, stmt.showDbg) :: Nil
+          .toList
         case t: Statement => (0, t.showDbg) :: Nil
       def branch(b: Branch, isTopLevel: Bool): Lines =
         val Branch(scrutinee, pattern, consequent) = b

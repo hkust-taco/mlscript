@@ -100,7 +100,7 @@ object SimpleSplit:
         List(scrutinee, pattern, consequent)
       case Let(binding, term) => List(binding, term)
   
-  private object prettyPrint:
+  private[semantics] object prettyPrint:
     /** Represents lines with indentations. */
     type Lines = Ls[(Int, Str)]
     
@@ -129,29 +129,32 @@ object SimpleSplit:
     
     inline def apply(s: SimpleSplit): Str = showSplit("if", s)
     
+    /** Show a split as a list of lines.
+     *  @param isFirst whether this is the first and frontmost branch
+     *  @param isTopLevel whether this is the top-level split
+     */
+    private[semantics] def split(s: SimpleSplit, isFirst: Bool, isTopLevel: Bool): Lines = s match
+      case SimpleSplit.Cons(head: Head.Match, tail) => (branch(head, isTopLevel) match
+        case (n, line) :: tail => (n, line) :: tail
+        case Nil => Nil
+      ) ::: split(tail, false, isTopLevel)
+      case SimpleSplit.Cons(Head.Let(nme, rhs), tail) =>
+        (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
+      case SimpleSplit.Else(t) =>
+        (if isFirst && !isTopLevel then "" else "else") #: term(t)
+      case SimpleSplit.End => Nil
+    
+    private def term(t: Statement): Lines = (0, t.showDbg) :: Nil
+    
+    private def branch(b: Head.Match, isTopLevel: Bool): Lines =
+      val Head.Match(scrutinee, pattern, consequent) = b
+      val lines = split(consequent, true, false)
+      val prefix = s"${scrutinee.sym} is ${pattern.showDbg}"
+      consequent match
+        case SimpleSplit.Else(_) => (prefix + " then") #: lines
+        case _ => (prefix + " and") #: lines
+    
     private def showSplit(prefix: Str, s: SimpleSplit): Str =
-      /** Show a split as a list of lines.
-       *  @param isFirst whether this is the first and frontmost branch
-       *  @param isTopLevel whether this is the top-level split
-       */
-      def split(s: SimpleSplit, isFirst: Bool, isTopLevel: Bool): Lines = s match
-        case SimpleSplit.Cons(head: Head.Match, tail) => (branch(head, isTopLevel) match
-          case (n, line) :: tail => (n, line) :: tail
-          case Nil => Nil
-        ) ::: split(tail, false, isTopLevel)
-        case SimpleSplit.Cons(Head.Let(nme, rhs), tail) =>
-          (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
-        case SimpleSplit.Else(t) =>
-          (if isFirst && !isTopLevel then "" else "else") #: term(t)
-        case SimpleSplit.End => Nil
-      def term(t: Statement): Lines = (0, t.showDbg) :: Nil
-      def branch(b: Head.Match, isTopLevel: Bool): Lines =
-        val Head.Match(scrutinee, pattern, consequent) = b
-        val lines = split(consequent, true, false)
-        val prefix = s"${scrutinee.sym} is ${pattern.showDbg}"
-        consequent match
-          case SimpleSplit.Else(_) => (prefix + " then") #: lines
-          case _ => (prefix + " and") #: lines
       val lines = split(s, true, true)
       (if prefix.isEmpty then lines else prefix #: lines).toIndentedString
   
