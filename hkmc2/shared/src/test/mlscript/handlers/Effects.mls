@@ -168,9 +168,11 @@ if true do
 //│       tmp12 = super();
 //│     }
 //│     perform(arg) {
-//│       return runtime.mkEffect(this, (k) => {
+//│       let lambda;
+//│       lambda = (undefined, function (k) {
 //│         return arg
-//│       })
+//│       });
+//│       return runtime.mkEffect(this, lambda)
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Handler$h$"]; 

@@ -124,12 +124,9 @@ data class Cls(x) with
 //│     Cls1.class = this
 //│   }
 //│   constructor(x2) {
-//│     let tmp, tmp1;
 //│     this.x = x2;
-//│     tmp = this.x + 1;
-//│     this.#x = tmp;
-//│     tmp1 = this.#x * 2;
-//│     this.#x1 = tmp1;
+//│     this.#x = this.x + 1;
+//│     this.#x1 = this.#x * 2;
 //│     Predef.print(this.x, this.#x1);
 //│   }
 //│   #x;
@@ -229,7 +226,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.230: 	Runtime
+//│ ║  l.227: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

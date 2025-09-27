@@ -9,14 +9,11 @@ if true then 1 else 0
 :sjs
 let f = x => if x then print("ok") else print("ko")
 //│ JS (unsanitized):
-//│ let f, tmp, lambda;
+//│ let f, lambda;
 //│ lambda = (undefined, function (x) {
-//│   if (x === true) {
-//│     return Predef.print("ok")
-//│   } else { return Predef.print("ko") }
+//│   if (x === true) { return Predef.print("ok") } else { return Predef.print("ko") }
 //│ });
-//│ tmp = lambda;
-//│ f = tmp;
+//│ f = lambda;
 //│ f = fun
 
 f(true)
@@ -29,37 +26,31 @@ f(false)
 :sjs
 let f = x => print((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let f1, tmp1, lambda1;
+//│ let f1, lambda1;
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp2, tmp3;
+//│   let tmp, tmp1;
 //│   if (x === true) {
-//│     tmp2 = "ok";
-//│   } else {
-//│     tmp2 = "ko";
-//│   }
-//│   tmp3 = tmp2 + "!";
-//│   return Predef.print(tmp3)
+//│     tmp = "ok";
+//│   } else { tmp = "ko"; }
+//│   tmp1 = tmp + "!";
+//│   return Predef.print(tmp1)
 //│ });
-//│ tmp1 = lambda1;
-//│ f1 = tmp1;
+//│ f1 = lambda1;
 //│ f = fun
 
 :sjs
 let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let f2, tmp2, lambda2;
+//│ let f2, lambda2;
 //│ lambda2 = (undefined, function (x) {
-//│   let tmp3, tmp4;
+//│   let tmp, tmp1;
 //│   if (x === true) {
-//│     tmp3 = "ok";
-//│   } else {
-//│     tmp3 = "ko";
-//│   }
-//│   tmp4 = tmp3 + "!";
-//│   return Predef.print(tmp4)
+//│     tmp = "ok";
+//│   } else { tmp = "ko"; }
+//│   tmp1 = tmp + "!";
+//│   return Predef.print(tmp1)
 //│ });
-//│ tmp2 = lambda2;
-//│ f2 = tmp2;
+//│ f2 = lambda2;
 //│ f = fun
 // --- TODO: What we want ---
 // this.f = (x) => {

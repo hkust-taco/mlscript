@@ -109,7 +109,7 @@ passTo(1, add(., 1) @ _ + _)(2)
 :sjs
 let f = add(_, 1)
 //│ JS (unsanitized):
-//│ let f, f1; f1 = function f(_0) { let tmp17; tmp17 = add(); return tmp17(_0, 1) }; f = f1;
+//│ let f, f1; f1 = function f(_0) { let tmp15; tmp15 = add(); return tmp15(_0, 1) }; f = f1;
 //│ f = fun f
 
 :fixme

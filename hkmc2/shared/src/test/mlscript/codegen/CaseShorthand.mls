@@ -57,7 +57,7 @@ case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.54: 	case [x] then x, [] then 0
-//│ ╙──      	      ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 :sjs
 case
@@ -79,7 +79,7 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, tmp6, lambda12;
+//│ let isDefined, lambda12;
 //│ lambda12 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
@@ -89,7 +89,6 @@ val isDefined = case
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ tmp6 = lambda12;
-//│ isDefined = tmp6;
+//│ isDefined = lambda12;
 //│ isDefined = fun
 

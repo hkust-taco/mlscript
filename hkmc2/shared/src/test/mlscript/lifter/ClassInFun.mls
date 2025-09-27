@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, Handler$h$1, lambda, f$, Cont$func$f$$, Cont$handleBlock$h$$, lambda$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, lambda, Handler$h$1, f$, Cont$func$f$$, Cont$handleBlock$h$$, lambda$;
 //│ globalThis.Object.freeze(class Effect {
 //│   static {
 //│     Effect1 = this
@@ -692,7 +692,7 @@ fun f(x) =
 f(2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
-//│ let h3, f9, tmp11, h$3;
+//│ let h3, f9, tmp9, h$3;
 //│ h$3 = function h$(Test$instance, x) {
 //│   return x
 //│ };
@@ -720,8 +720,8 @@ f(2).get()
 //│   foo1 = Test10;
 //│   return runtime.safeCall(foo1())
 //│ };
-//│ tmp11 = f9(2);
-//│ runtime.safeCall(tmp11.get())
+//│ tmp9 = f9(2);
+//│ runtime.safeCall(tmp9.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 

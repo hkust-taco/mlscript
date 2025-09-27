@@ -41,7 +41,7 @@ inc(2)
 :sjs
 _ + _
 //│ JS (unsanitized):
-//│ let lambda4; lambda4 = (undefined, function (_0, _1) { return _0 + _1 }); lambda4
+//│ let lambda5; lambda5 = (undefined, function (_0, _1) { return _0 + _1 }); lambda5
 //│ = fun
 
 let f = _ + _
@@ -99,11 +99,11 @@ print(inc(_))
 :sjs
 _ is Int
 //│ JS (unsanitized):
-//│ let lambda8;
-//│ lambda8 = (undefined, function (_0) {
+//│ let lambda9;
+//│ lambda9 = (undefined, function (_0) {
 //│   if (globalThis.Number.isInteger(_0)) { return true } else { return false }
 //│ });
-//│ lambda8
+//│ lambda9
 //│ = fun
 
 let f = _ is Int

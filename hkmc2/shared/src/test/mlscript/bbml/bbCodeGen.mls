@@ -89,7 +89,7 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ JS (unsanitized):
-//│ let foo, tmp; tmp = globalThis.Object.freeze(new Foo1.class(42)); foo = tmp; foo.x
+//│ let foo; foo = globalThis.Object.freeze(new Foo1.class(42)); foo.x
 //│ = 42
 //│ Type: Int
 
@@ -134,9 +134,8 @@ data class Foo()
 let foo = new Foo()
 if foo is Foo then 1 else 0
 //│ JS (unsanitized):
-//│ let foo1, tmp1;
-//│ tmp1 = globalThis.Object.freeze(new Foo3.class());
-//│ foo1 = tmp1;
+//│ let foo1;
+//│ foo1 = globalThis.Object.freeze(new Foo3.class());
 //│ if (foo1 instanceof Foo3.class) { 1 } else { 0 }
 //│ = 1
 //│ foo = Foo()
@@ -152,15 +151,15 @@ fun pow(x) = case
 //│ pow = function pow(x1) {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp2, tmp3, tmp4;
+//│     let n, tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     } else {
 //│       n = caseScrut;
-//│       tmp2 = pow(x1);
-//│       tmp3 = n - 1;
-//│       tmp4 = runtime.safeCall(tmp2(tmp3));
-//│       return x1 * tmp4
+//│       tmp = pow(x1);
+//│       tmp1 = n - 1;
+//│       tmp2 = runtime.safeCall(tmp(tmp1));
+//│       return x1 * tmp2
 //│     }
 //│   });
 //│   return lambda1
@@ -194,7 +193,7 @@ fun nott = case
 :sjs
 nott of false
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = nott(); tmp2(false)
+//│ let tmp; tmp = nott(); tmp(false)
 //│ = true
 //│ Type: Bool
 
@@ -208,15 +207,15 @@ fun fact = case
 //│ fact = function fact() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp3, tmp4, tmp5;
+//│     let n, tmp1, tmp2, tmp3;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     } else {
 //│       n = caseScrut;
-//│       tmp3 = fact();
-//│       tmp4 = n - 1;
-//│       tmp5 = tmp3(tmp4);
-//│       return n * tmp5
+//│       tmp1 = fact();
+//│       tmp2 = n - 1;
+//│       tmp3 = tmp1(tmp2);
+//│       return n * tmp3
 //│     }
 //│   });
 //│   return lambda1
@@ -259,10 +258,9 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ JS (unsanitized):
-//│ let x4, y, tmp4;
+//│ let x4, y;
 //│ x4 = globalThis.Object.freeze(new globalThis.Region());
-//│ tmp4 = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
-//│ y = tmp4;
+//│ y = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
 //│ y.value
 //│ = 42
 //│ Type: Int
@@ -271,10 +269,9 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ JS (unsanitized):
-//│ let x5, y1, tmp5;
+//│ let x5, y1;
 //│ x5 = globalThis.Object.freeze(new globalThis.Region());
-//│ tmp5 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
-//│ y1 = tmp5;
+//│ y1 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
 //│ y1.value = 0;
 //│ 0
 //│ = 0

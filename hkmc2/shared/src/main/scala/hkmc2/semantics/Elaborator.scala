@@ -634,11 +634,11 @@ extends Importer with ucs.SplitElaborator:
     case tree: IfLike => Term.IfLike(tree.kw.kw, split(tree))
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
-    case tree: Case =>
+    case tree @ Case(kw, _) =>
       val scrut = VarSymbol(Ident("caseScrut"))
       val body = Term.IfLike(Keyword.`if`, caseSplit(scrut, tree))
       val params = Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-      Term.Lam(PlainParamList(params), body)
+      Term.Lam(PlainParamList(params), body).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>

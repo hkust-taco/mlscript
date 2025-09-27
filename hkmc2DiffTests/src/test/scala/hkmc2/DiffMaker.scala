@@ -338,7 +338,16 @@ abstract class DiffMaker:
   
   
   def run(): Unit =
-    try rec(allLines) finally out.close()
+    val starttime = System.currentTimeMillis()
+    try rec(allLines) finally
+      val endtime = System.currentTimeMillis()
+      val duration = (endtime - starttime).toString
+      println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${
+          " " * (5 - duration.length) + duration
+        } ms${Console.RESET}  ${
+          Console.YELLOW + relativeName + file.ext + Console.RESET
+        }")
+      out.close()
     val result = strw.toString
     if result =/= fileContents then
       println(s"Updating $file...")

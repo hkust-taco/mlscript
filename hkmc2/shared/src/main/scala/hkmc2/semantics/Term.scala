@@ -258,10 +258,7 @@ enum Term extends Statement:
    * The symbol representing the evaluation result of the term. This
    * symbol is resolved during the resolution stage.
    */
-  def resolvedSym: Opt[Symbol] = this match
-    case r: Resolvable => r.expanded
-    case t => t
-  match
+  def resolvedSym: Opt[Symbol] = expanded match
     case ref: Ref => ref.symbol
     case sel: Sel => sel.sym
     case sel: SynthSel => sel.sym
@@ -269,10 +266,7 @@ enum Term extends Statement:
     case app: TyApp => app.lhs.resolvedSym
     case _ => N
   
-  def resolvedTyp: Opt[Type] = this match
-    case r: Resolvable => r.expanded
-    case t => t
-  match
+  def resolvedTyp: Opt[Type] = expanded match
     case ref: Ref => ref.typ
     case app: App => app.typ
     case app: TyApp => app.typ

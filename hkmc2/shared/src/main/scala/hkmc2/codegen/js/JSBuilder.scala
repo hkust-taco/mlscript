@@ -11,7 +11,7 @@ import hkmc2.Message.MessageContext
 import hkmc2.syntax.{Tree, MutVal, ImmutVal}
 import hkmc2.semantics.*
 import Elaborator.{State, Ctx}
-import hkmc2.codegen.Value.Lam
+import hkmc2.codegen.Lambda
 
 import Scope.scope
 import hkmc2.syntax.Tree.UnitLit
@@ -94,7 +94,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     if a.spread.nonEmpty then die else subexpression(a.value)
   
   def subexpression(r: Result)(using Raise, Scope): Document = r match
-    case _: Value.Lam => doc"(${result(r)})"
+    case _: Lambda => doc"(${result(r)})"
     case _ => result(r)
   
   def fieldSelect(s: Str): Document = escapeField(s, ".")
@@ -143,7 +143,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then doc"$runtimeVar.checkCall(${base}(${argsDoc}))"
         else doc"${base}(${argsDoc})"
       else doc"$runtimeVar.safeCall(${base}(${argsDoc}))"
-    case Value.Lam(ps, bod) => scope.nest givenIn:
+    case Lambda(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => ${ braced(bodyDoc) }"
     case Select(qual, id) =>
@@ -162,8 +162,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Instantiate(mut, cls, as) =>
       val inner = doc"new ${result(cls)}(${as.map(argument).mkDocument(", ")})"
       if mut then inner else doc"$freeze(${inner})"
-    case Value.Arr(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
-    case Value.Arr(mut, es) =>
+    case Tuple(mut, es) if es.isEmpty => if mut then "[]" else doc"$freeze([])"
+    case Tuple(mut, es) =>
       val inner =
         val lazyConcat = es.exists(!_.spread.getOrElse(true))
         if lazyConcat
@@ -171,9 +171,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         else bracketed("[", "]", insertBreak = true):
           es.map(argument).mkDocument(doc", # ")
       if mut then inner else doc"$freeze(${inner})"
-    case Value.Rcd(mut, Nil) =>
+    case Record(mut, Nil) =>
       if mut then "{}" else doc"$freeze({})"
-    case Value.Rcd(mut, flds) =>
+    case Record(mut, flds) =>
       val inner = bracketed(pre = "{", post = "}", insertBreak = true):
         flds.map:
           case RcdArg(S(Value.Lit(IntLit(idx))), v) =>
@@ -225,7 +225,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case FunDefn(own, sym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
               case (ps, block) => 
-                Return(Lam(ps, block), false)
+                Return(Lambda(ps, block), false)
             val name = if sym.nameIsMeaningful then S(sym.nme) else N
             val (params, bodyDoc) = setupFunction(name, ps, result)
             if sym.nameIsMeaningful then
@@ -248,7 +248,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 case td @ FunDefn(_, _, ps :: pss, bod) =>
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
-                      Return(Lam(ps, block), false)
+                      Return(Lambda(ps, block), false)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result)
                   doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
@@ -342,10 +342,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${
-                  val ext = result(p)
-                  p match
-                  case _: Value.Lam => doc"($ext)"
-                  case _ => ext
+                  result(p)
                 }").getOrElse("")
               } " :: braced:
                 

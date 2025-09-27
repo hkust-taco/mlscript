@@ -38,8 +38,10 @@ fun test2() =
     n then funny(n - 1) + 1
   funny
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
+//│ ║  l.36: 	  fun funny = case
+//│ ║        	              ^^^^
 //│ ║  l.37: 	    0 then 0
-//│ ║        	    ^^^^^^^^
+//│ ║        	^^^^^^^^^^^^
 //│ ║  l.38: 	    n then funny(n - 1) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.39: 	  funny
@@ -82,15 +84,22 @@ fun test2() =
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.81: 	    case 0 then 0
-//│ ╙──      	         ^^^^^^^^
+//│ ║  l.83: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let test22;
 //│ test22 = function test2() {
 //│   let funny, tmp1;
 //│   funny = function funny() {
-//│     let lambda;
+//│     let lambda, lambda1;
 //│     lambda = (undefined, function (caseScrut) {
+//│       if (caseScrut === 0) {
+//│         return 0
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       }
+//│     });
+//│     lambda1 = (undefined, function (caseScrut) {
 //│       let n, tmp2, tmp3, tmp4;
 //│       n = caseScrut;
 //│       tmp2 = funny();
@@ -98,21 +107,21 @@ fun test2() =
 //│       tmp4 = tmp2(tmp3);
 //│       return tmp4 + 1
 //│     });
-//│     return lambda
+//│     return lambda1
 //│   };
 //│   tmp1 = funny();
 //│   return tmp1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.81: 	    case 0 then 0
-//│ ╙──      	         ^^^^^^^^
+//│ ║  l.83: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.81: 	    case 0 then 0
+//│ ║  l.83: 	    case 0 then 0
 //│ ║        	         ^^^^^^^^
-//│ ║  l.82: 	    case n then funny(n - 1) + 1
+//│ ║  l.84: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.83: 	  funny
+//│ ║  l.85: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
@@ -121,7 +130,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.122: 	  print("Hi")
+//│ ║  l.131: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

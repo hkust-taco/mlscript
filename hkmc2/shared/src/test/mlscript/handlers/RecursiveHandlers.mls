@@ -170,7 +170,8 @@ str
 //│         tmp12 = super();
 //│       }
 //│       perform(arg) {
-//│         return runtime.mkEffect(this, (k) => {
+//│         let lambda;
+//│         lambda = (undefined, function (k) {
 //│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2;
 //│           globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             static {
@@ -218,7 +219,8 @@ str
 //│           tmp14 = str + "A";
 //│           str = tmp14;
 //│           return runtime.Unit
-//│         })
+//│         });
+//│         return runtime.mkEffect(this, lambda)
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Handler$h1$"]; 
@@ -258,7 +260,8 @@ str
 //│           tmp13 = super();
 //│         }
 //│         perform(arg) {
-//│           return runtime.mkEffect(this, (k) => {
+//│           let lambda;
+//│           lambda = (undefined, function (k) {
 //│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2;
 //│             globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               static {
@@ -309,7 +312,8 @@ str
 //│             tmp17 = str + tmp16;
 //│             str = tmp17;
 //│             return runtime.Unit
-//│           })
+//│           });
+//│           return runtime.mkEffect(this, lambda)
 //│         }
 //│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "Handler$h2$"]; 

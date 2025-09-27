@@ -74,7 +74,7 @@ id(+)(1, 2)
 :re
 id(+)(1)
 //│ JS (unsanitized):
-//│ let tmp1, lambda4;
+//│ let lambda4, tmp1;
 //│ lambda4 = (undefined, function (arg1, arg2) {
 //│   return arg1 + arg2
 //│ });
@@ -95,7 +95,7 @@ fun (+) lol(a, b) = [a, b]
 :sjs
 id(~)(2)
 //│ JS (unsanitized):
-//│ let tmp2, lambda5;
+//│ let lambda5, tmp2;
 //│ lambda5 = (undefined, function (arg) {
 //│   return ~ arg
 //│ });

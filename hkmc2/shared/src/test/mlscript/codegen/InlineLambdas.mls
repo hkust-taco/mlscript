@@ -18,18 +18,17 @@
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
-//│ let tmp, lambda1;
+//│ let lambda1;
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp1, tmp2, tmp3, tmp4, tmp5;
-//│   tmp1 = x + 1;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
 //│   tmp3 = tmp2 + 1;
 //│   tmp4 = tmp3 + 1;
-//│   tmp5 = tmp4 + 1;
-//│   return tmp5 + 1
+//│   return tmp4 + 1
 //│ });
-//│ tmp = lambda1;
-//│ tmp(1)
+//│ lambda1(1)
 //│ = 7
 
 :sjs
