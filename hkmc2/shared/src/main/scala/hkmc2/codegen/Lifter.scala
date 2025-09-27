@@ -83,20 +83,22 @@ object Lifter:
   object AccessInfo:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
+  type LocalVarSymbol = VarSymbol | TempSymbol
+  
   def getVars(d: Defn)(using state: State): Set[Local] = d match
     case f: FunDefn =>
       (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
-        case s: FlowSymbol if !(s is state.runtimeSymbol) => s
+        case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
     case c: ClsLikeDefn =>      
       val companionVars = c.companion.fold(Set.empty)(_.ctor.definedVars)
       (companionVars ++ c.preCtor.definedVars ++ c.ctor.definedVars).collect:
-        case s: FlowSymbol if !(s is state.runtimeSymbol) => s
+        case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
       
     case _ => Set.empty
 
   def getVarsBlk(b: Block)(using state: State): Set[Local] =
     b.definedVars.collect:
-      case s: FlowSymbol if !(s is state.runtimeSymbol) => s
+      case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
 
   object RefOfBms:
     def unapply(p: Path) = p match
@@ -579,61 +581,88 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     defns.flatMap(f => createLiftInfoCont(f, S(c), newCtx)).toMap
       ++ c.methods.flatMap(f => createLiftInfoFn(f, newCtx))
       ++ staticMtdInfo
-
-  // Replaces references to BlockMemberSymbols as needed with fresh variables, and
-  // returns the mapping from the symbol to the required variable. When possible,
-  // it also directly rewrites Results (Calls and Instantiates).
-  // Since first-class classes can't be lifted, this is where class
-  // instantiations are rewritten.
-  def rewriteBms(b: Block, ctx: LifterCtx) =
-    val syms: LinkedHashMap[BlockMemberSymbol, Local] = LinkedHashMap.empty
-
-    val walker = new BlockDataTransformer(SymbolSubst()):
-      // only scan within the block. don't traverse
-      
-      override def applyResult(r: Result): Result = r match
-        // if possible, directly rewrite the call using the efficient version
-        case c @ Call(RefOfBms(l), args) => ctx.bmsReqdInfo.get(l) match
-          case Some(info) if !ctx.isModOrObj(l) =>
-            val extraArgs = ctx.defns.get(l) match
-              // If it's a class, we need to add the isMut parameter.
-              // Instantiation without `new mut` is always immutable 
-              case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
-              case _ => getCallArgs(l, ctx)
-            val newArgs = args.map(applyArg(_))
-            Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
-          case _ => super.applyResult(r)
-        case c @ Instantiate(mut, InstSel(l), args) =>
-          ctx.bmsReqdInfo.get(l) match
-          case Some(info) if !ctx.isModOrObj(l) =>
-            val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
-            val newArgs = args.map(applyArg)
-            Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
-          case _ => super.applyResult(r)
-        // if possible, directly create the bms and replace the result with it
-        case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
-          createCall(l, ctx)
-        case _ => super.applyResult(r)
-      
-      // otherwise, there's no choice but to create the call earlier
-      override def applyPath(p: Path): Path = p match
-        case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
-          val newSym = syms.get(l) match
-            case None =>
-              val newSym = FlowSymbol(l.nme + "$this")
-              syms.addOne(l -> newSym)
-              newSym
-            case Some(value) => value
-          Value.Ref(newSym)
-        case _ => super.applyPath(p)
-    (walker.applyBlock(b), syms.toList)
-  end rewriteBms
   
   // This rewrites code so that it's valid when lifted to the top level.
   // This way, no piece of code must be traversed by a BlockRewriter more than once.
   // Remark: This is why so much prior analysis is needed and is the main source of complexity in the lifter.
   class BlockRewriter(inScopeIsyms: Set[InnerSymbol], ctx: LifterCtx) extends BlockTransformerShallow(SymbolSubst()):
     def iSymInScope(l: InnerSymbol) = inScopeIsyms.contains(l)
+    
+    // Closure symbols that point to an initialized closure in this scope
+    var activeClosures: Set[Local] = Set.empty
+    // Map from block member symbols to initialized closures
+    val closureMap: MutMap[BlockMemberSymbol, Local] = MutMap.empty
+    
+    
+    // Replaces references to BlockMemberSymbols as needed with fresh variables, and
+    // returns the mapping from the symbol to the required variable. When possible,
+    // it also directly rewrites Results (Calls and Instantiates).
+    // Since first-class classes can't be lifted, this is where class
+    // instantiations are rewritten.
+    //
+    // Does *not* rewrite references to non-lifted BMS symbols.
+    def rewriteBms(b: Block, ctx: LifterCtx) =
+      // BMS's that need to be created
+      val syms: LinkedHashMap[BlockMemberSymbol, Local] = LinkedHashMap.empty
+
+      val walker = new BlockDataTransformer(SymbolSubst()):
+        // only scan within the block. don't traverse
+        
+        override def applyResult(r: Result): Result = r match
+          // if possible, directly rewrite the call using the efficient version
+          case c @ Call(RefOfBms(l), args) => ctx.bmsReqdInfo.get(l) match
+            case Some(info) if !ctx.isModOrObj(l) =>
+              val extraArgs = ctx.defns.get(l) match
+                // If it's a class, we need to add the isMut parameter.
+                // Instantiation without `new mut` is always immutable 
+                case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
+                case _ => getCallArgs(l, ctx)
+              val newArgs = args.map(applyArg(_))
+              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
+            case _ => super.applyResult(r)
+          case c @ Instantiate(mut, InstSel(l), args) =>
+            ctx.bmsReqdInfo.get(l) match
+            case Some(info) if !ctx.isModOrObj(l) =>
+              val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
+              val newArgs = args.map(applyArg)
+              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
+            case _ => super.applyResult(r)
+          // LEGACY CODE: We previously directly created the closure and assigned it to the
+          // variable here. But, since this closure may be re-used later, this doesn't work
+          // in general, so we will always create a TempSymbol for it.
+          // case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
+          //   createCall(l, ctx)
+          case _ => super.applyResult(r)
+        
+        // extract the call
+        override def applyPath(p: Path): Path = 
+          p match
+          case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
+            val newSym = closureMap.get(l) match
+              case None =>
+                // $this was previously used, but it may be confused with the `this` keyword
+                // let's use $here instead
+                val newSym = TempSymbol(N, l.nme + "$here")
+                syms.addOne(l -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
+                closureMap.addOne(l -> newSym) // add to `closureMap`: `newSym` refers to the closure and can be used later
+                newSym
+
+              // symbol exists, and is initialized
+              case Some(value) if activeClosures.contains(value) => value
+              // symbol exists, needs initialization
+              case Some(value) =>
+                syms.addOne(l -> value)
+                value
+            Value.Ref(newSym)
+          case _ => super.applyPath(p)
+      (walker.applyBlock(b), syms.toList)
+    end rewriteBms
+    
+    def applySubBlockAndReset(b: Block): Block =
+      val curActive = activeClosures
+      val ret = applySubBlock(b)
+      activeClosures = curActive
+      ret
     
     override def applyBlock(b: Block): Block = 
       // extract references to BlockMemberSymbols in the block which now may
@@ -648,6 +677,38 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       
       // Rewrite the rest
       val remaining = rewritten match
+        
+        // We create closures once the first time we see them, then re-use them later.
+        // We store already-created closures in a set in the BlockRewriter class.
+        // This set needs to be reset after processing an if-else branch or while loop,
+        // since closures nested inside each branch may not be re-used elsewhere.
+        case Match(scrut, arms, dflt, rst) =>
+          val scrut2 = applyPath(scrut)
+          val arms2 = arms.mapConserve: arm =>
+            val cse2 = applyCase(arm._1)
+            val blk2 = applySubBlockAndReset(arm._2)
+            if (cse2 is arm._1) && (blk2 is arm._2) then arm else (cse2, blk2)
+          val dflt2 = dflt.mapConserve(applySubBlockAndReset)
+          val rst2 = applySubBlock(rst)
+          if (scrut2 is scrut) &&
+              (arms2 is arms) &&
+              (dflt2 is dflt) && (rst2 is rst)
+            then b else Match(scrut2, arms2, dflt2, rst2)
+            
+        case Label(lbl, bod, rst) =>
+          val lbl2 = applyLocal(lbl)
+          val bod2 = applySubBlockAndReset(bod)
+          val rst2 = applySubBlock(rst)
+          if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, bod2, rst2)
+        case Begin(sub, rst) =>
+          val sub2 = applySubBlockAndReset(sub)
+          val rst2 = applySubBlock(rst)
+          if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
+        case TryBlock(sub, fin, rst) =>
+          val sub2 = applySubBlockAndReset(sub)
+          val fin2 = applySubBlockAndReset(fin)
+          val rst2 = applySubBlock(rst)
+          if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
         
         // Detect private field usages
         case Assign(t: TermSymbol, rhs, rest) if t.owner.isDefined =>
@@ -1139,7 +1200,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
     val thisVars = ctx.usedLocals(f.sym)
     // add the mapping from this function's locals to the capture's symbols and the capture path
-    val captureSym = FlowSymbol("capture")
+    val captureSym = TempSymbol(N, "capture")
     val captureCtx = ctx
       .addLocalCaptureSyms(varsMap) // how to access locals via the capture class from now on
       .addCapturePath(f.sym, LocalPath.Sym(captureSym)) // the path to this function's capture

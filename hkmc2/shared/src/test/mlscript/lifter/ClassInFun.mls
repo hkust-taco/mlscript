@@ -39,9 +39,9 @@ f() + f() + f()
 //│     tmp1 = super();
 //│   }
 //│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda(this));
-//│     return runtime.mkEffect(this, lambda$this)
+//│     let lambda$here;
+//│     lambda$here = runtime.safeCall(lambda(this));
+//│     return runtime.mkEffect(this, lambda$here)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Handler$h$"]; 
