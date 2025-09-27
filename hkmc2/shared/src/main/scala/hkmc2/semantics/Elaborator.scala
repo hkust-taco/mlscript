@@ -1241,11 +1241,7 @@ extends Importer with ucs.SplitElaborator:
             // Pattern definition should not have a body like class definition.
             assert(body.isEmpty)
             val ps = pss.headOption
-            // The following iteration filters out:
-            // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
-            // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
-            // 3. the rest are reported as invalid parameters.
-            val (patternParams, extractionParams) = ps.fold((Nil, Nil)):
+            val allParams = ps.fold(Nil):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
                 case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
@@ -1254,7 +1250,11 @@ extends Importer with ucs.SplitElaborator:
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${flags.show}" -> sym.toLoc :: Nil))
                   N
-              .partition(_.flags.pat)
+            // The following iteration filters out:
+            // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
+            // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
+            // 3. the rest are reported as invalid parameters.
+            val (patternParams, extractionParams) = allParams.partition(_.flags.pat)
             log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
             log(s"`${patSym.nme}`'s extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
             // Empty pattern body is considered as wildcard patterns.
@@ -1277,7 +1277,7 @@ extends Importer with ucs.SplitElaborator:
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
-            val pd = PatternDef(owner, patSym, sym, tps,
+            val pd = PatternDef(owner, patSym, sym, tps, allParams,
               patternParams, extractionParams, pat, annotations)
             patSym.defn = S(pd)
             pd
@@ -1538,8 +1538,7 @@ extends Importer with ucs.SplitElaborator:
         Composition(op === "|", go(lhs), go(rhs))
       // Constructor patterns with pattern arguments and arguments.
       case App(ctor: Ctor, Tup(argTrees)) =>
-        val (patArgs, args) = argTrees.partitionMap(arg(_))
-        Constructor(term(ctor), patArgs, S(args))
+        Constructor(term(ctor), S(argTrees.map(go(_))))
       // `[p1, p2, ...ps, pn] => term`: All patterns are in the `TyTup`.
       case (lhs: TyTup) `=>` rhs => arrow(lhs, rhs)
       // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.

@@ -32,7 +32,7 @@ bmi of weight: 70
 // returns `Some` if the pattern matches, and `None` otherwise.
 pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
 
-fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then value
+fun bmi(record) = if record is MatchOrNone(RoundedBMI) as value then value
 
 :e
 // alternatively?

@@ -749,6 +749,8 @@ case class PatternDef(
     sym: PatternSymbol,
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
+    /** All parameters. */
+    parameters: Ls[Param],
     /** The pattern parameters, for example, `T` in
      *  `pattern Nullable(pattern T) = null | T`. */
     patternParams: Ls[Param],

@@ -75,7 +75,6 @@ case
 //│           scrutinee = Ref{sym=caseScrut} of caseScrut
 //│           pattern = Constructor:
 //│             target = Ref{sym=member:Foo} of member:Foo
-//│             patternArguments = Nil
 //│             arguments = S of Ls of 
 //│               Alias:
 //│                 pattern = Wildcard

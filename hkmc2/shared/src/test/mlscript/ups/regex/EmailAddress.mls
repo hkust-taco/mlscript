@@ -9,9 +9,9 @@ import "../../../mlscript-compile/Stack.mls"
 
 pattern UserNameLetter = Char.Letter | Char.Digit | "." | "_" | "%" | "+" | "-"
 
-pattern Rep1(pattern S) = S ~ (Rep1(pattern S) | "")
+pattern Rep1(pattern S) = S ~ (Rep1(S) | "")
 
-pattern UserName = Rep1(pattern UserNameLetter)
+pattern UserName = Rep1(UserNameLetter)
 
 :expect true
 "john.doe" is UserName
@@ -33,11 +33,10 @@ pattern UserName = Rep1(pattern UserNameLetter)
 "" is UserName
 //│ = false
 
-:todo
 // Nested pattern arguments seem problematic.
-pattern DomainSuffix = Rep1(pattern ("." ~ Char.Letter ~ Rep1(pattern Char.Letter)))
+pattern DomainSuffix = Rep1("." ~ Char.Letter ~ Rep1(Char.Letter))
 
-pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(pattern Char.Letter)
+pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(Char.Letter)
 
 [".com", ".hk", ".fr", ".cn"]
   Iter.mapping of _ is DomainSuffixFragment
@@ -49,11 +48,11 @@ pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(pattern Char.Letter)
   Iter.folded of false, _ || _
 //│ = false
 
-pattern DomainSuffix = Rep1(pattern DomainSuffixFragment)
+pattern DomainSuffix = Rep1(DomainSuffixFragment)
 
 pattern DomainNameLetter = Char.Letter | Char.Digit | "-"
 
-pattern DomainName = Rep1(pattern DomainNameLetter)
+pattern DomainName = Rep1(DomainNameLetter)
 
 "google" is DomainName
 //│ = true
@@ -85,10 +84,10 @@ open Stack
 
 pattern CommaSep(pattern S) =
   ("" => Nil) |
-  ((S as head) ~ "," ~ (CommaSep(pattern S) as tail)) => head :: tail
+  ((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail
 
 fun parseEmails(input) =
-  if input is CommaSep(pattern Email) as emails then emails else Nil
+  if input is CommaSep(Email) as emails then emails else Nil
 
 :todo
 parseEmails of emails.join(",")

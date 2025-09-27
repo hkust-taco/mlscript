@@ -10,6 +10,7 @@ import collection.mutable.Buffer
 import FlatPattern.*
 import hkmc2.codegen.Block
 
+// TODO TODO: Renamed to `ResolvedPattern`.
 /** Flat patterns for pattern matching */
 enum FlatPattern extends AutoLocated:
   /** The symbol that binds the output of this pattern. */
@@ -17,19 +18,35 @@ enum FlatPattern extends AutoLocated:
   
   case Lit(literal: Literal)(val output: Ls[BlockLocalSymbol])
   
+  // TODO TODO: Separate into class and object patterns so that the 
+  // number of arguments are always correct.
   /** An individual argument is None when it is not matched, i.e. when an underscore is used there.
     * The whole argument list is None when no argument list is being matched at all, as in `x is Some then ...`. */
   case ClassLike(
       val constructor: Term,
-      val arguments: Opt[Ls[Argument]],
+      val symbol: ClassSymbol | ModuleOrObjectSymbol | VarSymbol,
+      val arguments: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]],
       val mode: MatchMode,
       var refined: Bool
   )(val tree: Tree, val output: Ls[BlockLocalSymbol])
   
+  /**
+    * The number of pattern arguments and the number of extraction arguments are
+    * assumed to match with the pattern definition.
+    *
+    * @param constructor
+    * @param symbol
+    * @param patternArguments
+    * @param extractionArguments
+    * @param mode to either match the entire scrutinee or match the prefix
+    * @param output
+    */
   case Pattern(
       val constructor: Term,
-      val patternArguments: Ls[Argument.Pattern],
-      val extractionArguments: Ls[Argument.Term],
+      val symbol: PatternSymbol,
+      val patternArguments: Ls[semantics.Pattern],
+      val extractionArguments: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]],
+      val mode: MatchMode,
   )(val output: Ls[BlockLocalSymbol])
   
   case Tuple(size: Int, inf: Bool)(val output: Ls[BlockLocalSymbol])
@@ -38,38 +55,33 @@ enum FlatPattern extends AutoLocated:
   
   def mkClone(using State): FlatPattern = this match
     case Lit(literal) => Lit(literal)(output)
-    case pattern @ ClassLike(constructor, arguments, mode, refined) =>
-      ClassLike(constructor.mkClone, arguments, mode, refined)(Tree.Dummy, output)
-    case Pattern(constructor, patternArguments, extractionArguments) =>
-      val clonedPatternArguments = patternArguments.map: argument =>
-        new Argument.Pattern(argument.scrutinee, argument.pattern.mkClone)
-      val clonedExtractionArguments = extractionArguments.map: argument =>
-        new Argument.Term(argument.scrutinee, Tree.Dummy)
-      Pattern(constructor.mkClone, clonedPatternArguments, clonedExtractionArguments)(output)
+    case pattern @ ClassLike(constructor, symbol, arguments, mode, refined) =>
+      ClassLike(constructor.mkClone, symbol, arguments, mode, refined)(Tree.Dummy, output)
+    case Pattern(constructor, patternSymbol, patternArguments, extractionArguments, mode) =>
+      val clonedPatternArguments = patternArguments.map(_.mkClone)
+      val clonedExtractionArguments = 
+        extractionArguments.map(_.map(_._1 -> N))
+      Pattern(constructor.mkClone, patternSymbol, clonedPatternArguments, clonedExtractionArguments, mode)(output)
     case Tuple(size, inf) => Tuple(size, inf)(output)
     case Record(entries) => Record(entries)(output)
   
   def subTerms: Ls[Term] = this match
-    case p: ClassLike => p.constructor :: (p.mode match
-      case MatchMode.Default => p.arguments.fold(Nil):
-        _.iterator.flatMap:
-          case Argument.Term(_, _) => Nil
-          case Argument.Pattern(_, pattern) => pattern.subTerms
-        .toList
-      case _: MatchMode.StringPrefix => Nil
-      case MatchMode.Annotated(annotation) => annotation :: Nil)
+    case p: ClassLike => p.constructor :: Nil
     case _: (Lit | Tuple | Record) => Nil
   
   def children: Ls[Located] = this match
     case Lit(literal) => literal :: Nil
-    case ClassLike(ctor, scruts, _, _) => ctor :: scruts.fold(Nil)(_.map(_.scrutinee))
+    case ClassLike(ctor, symbol, scruts, _, _) => ctor :: scruts.fold(Nil)(_.map(_._1))
     case Tuple(fields, _) => Nil
     case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
+    case Pattern(patternTerm, patternSymbol, patternArguments, extractionArguments, _) =>
+      // TODO TODO: Return `extractionArguments`.
+      patternTerm :: patternArguments
   
   def showDbg: Str =
     (this match
     case Lit(literal) => literal.idStr
-    case ClassLike(ctor, args, _, rfd) =>
+    case ClassLike(ctor, symbol, args, _, rfd) =>
       def showCtor(ctor: Term): Str = ctor match
         // This prints the symbol name without `refNum` and "member:" prefix.
         case Term.Ref(sym: BlockMemberSymbol) => sym.nme
@@ -79,7 +91,7 @@ enum FlatPattern extends AutoLocated:
         case Term.SynthSel(p, i) => s"${showCtor(p)}.${i.name}"
         case _ => ctor.showDbg
       (if rfd then "refined " else "") + showCtor(ctor) +
-        args.fold("")(_.iterator.map(_.scrutinee.nme).mkString("(", ", ", ")"))
+        args.fold("")(_.iterator.map(_._1.nme).mkString("(", ", ", ")"))
     case Tuple(size, inf) => "[]" + (if inf then ">=" else "=") + size
     case Record(Nil) => "{}"
     case Record(entries) =>
@@ -87,28 +99,6 @@ enum FlatPattern extends AutoLocated:
       output.iterator.map(s => s.nme).mkStringOr("as ", " as ", "", "")
 
 object FlatPattern:
-  /** Represent arguments in constructor patterns.
-   * 
-   *  @param scrutinee the symbol representing the scrutinee
-   *  @param tree the original `Tree` for making error messages
-   *  @param pattern is for the new pattern compilation and translation.
-   */
-  enum Argument extends Located:
-    val scrutinee: BlockLocalSymbol
-    
-    case Term(val scrutinee: BlockLocalSymbol, tree: Tree)
-    case Pattern(val scrutinee: BlockLocalSymbol, pattern: semantics.Pattern)
-    
-    override def toLoc: Opt[Loc] = this match
-      case Term(_, tree) => tree.toLoc
-      case Argument.Pattern(_, pattern) => pattern.toLoc
-  
-  object Argument:
-    def apply(scrutinee: BlockLocalSymbol, tree: Tree): Argument.Term =
-      Argument.Term(scrutinee, tree)
-    def apply(scrutinee: BlockLocalSymbol, pattern: semantics.Pattern): Argument.Pattern =
-      Argument.Pattern(scrutinee, pattern)
-  
   /** A class-like pattern whose symbol is resolved to a class. */
   object Class:
     def unapply(p: FlatPattern): Opt[ClassSymbol] = p match
@@ -129,14 +119,10 @@ object FlatPattern:
      */
     case Default
     /** Call `unapplyStringPrefix` instead of `unapply`. */
-    case StringPrefix(prefix: TempSymbol, postfix: TempSymbol)
-    /** The pattern is annotated. The normalization will intepret the pattern
-     *  matching behavior based on the resolved symbol
-     */
-    case Annotated(annotation: Term)
+    case StringPrefix(prefix: BlockLocalSymbol, postfix: BlockLocalSymbol)
     
   object ClassLike:
-    def apply(constructor: Term, arguments: Opt[Ls[Argument]], output: Ls[BlockLocalSymbol]): ClassLike =
-      ClassLike(constructor, arguments, MatchMode.Default, false)(Tree.Dummy, output)
-    def apply(constructor: Term, symbols: Opt[Ls[BlockLocalSymbol]]): ClassLike =
-      ClassLike(constructor, symbols.map(_.map(Argument(_, Tree.Dummy))), MatchMode.Default, false)(Tree.Dummy, Nil)
+    def apply(constructor: Term, symbol: ClassSymbol | ModuleOrObjectSymbol, arguments: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], output: Ls[BlockLocalSymbol]): ClassLike =
+      ClassLike(constructor, symbol, arguments, MatchMode.Default, false)(Tree.Dummy, output)
+    def apply(constructor: Term, symbol: ClassSymbol | ModuleOrObjectSymbol, symbols: Opt[Ls[BlockLocalSymbol]]): ClassLike =
+      ClassLike(constructor, symbol, symbols.map(_.map(_ -> N)), MatchMode.Default, false)(Tree.Dummy, Nil)

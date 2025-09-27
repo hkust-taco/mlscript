@@ -141,10 +141,6 @@ object Pattern:
   /** A shorthand for creating a variable pattern. */
   def Variable = Pattern.Wildcard() binds (_: Ident)
   
-  object Constructor:
-    def apply(target: Term, arguments: Opt[Ls[Pattern]]): Constructor =
-      Constructor(target, Nil, arguments)
-  
   trait ConstructorImpl:
     self: Pattern.Constructor =>
     
@@ -173,15 +169,11 @@ import Pattern.*, InvalidReason.*
 enum Pattern extends AutoLocated:
   /** A pattern that matches a constructor and its arguments.
    *  @param target The term representing the constructor.
-   *  @param patternArguments Arguments of higher-order patterns. They are only
-   *      meaningful when the `target` refers to a pattern symbol. They can't
-   *      have any free variables.
    *  @param arguments `None` if the pattern does not have a parameter list. The
    *      patterns that are used to destruct the constructor's arguments.
    */
   case Constructor(
       target: Term,
-      patternArguments: Ls[Pattern],
       arguments: Opt[Ls[Pattern]]
   ) extends Pattern with ConstructorImpl
   
@@ -270,7 +262,7 @@ enum Pattern extends AutoLocated:
    *  which will be reported when constructing symbols for variables. We use a
    *  map because we want to replace variables. */
   lazy val variables: Variables = this match
-    case Constructor(_, _, arguments) => arguments.fold(Variables.empty)(_.variables)
+    case Constructor(_, arguments) => arguments.fold(Variables.empty)(_.variables)
     case Composition(false, left, right) => left.variables ++ right.variables
     case union @ Composition(true, left, right) => left.variables.intersect(right.variables, union)
     // If we only allow negation patterns to be used as the top-level pattern
@@ -290,8 +282,7 @@ enum Pattern extends AutoLocated:
     case Guarded(pattern, _) => pattern.variables
   
   def children: Ls[Located] = this match
-    case Constructor(target, patternArguments, arguments) =>
-      target :: patternArguments ::: arguments.getOrElse(Nil)
+    case Constructor(target, arguments) => target :: arguments.getOrElse(Nil)
     case Composition(polarity, left, right) => left :: right :: Nil
     case Negation(pattern) => pattern :: Nil
     case Wildcard() => Nil
@@ -310,8 +301,8 @@ enum Pattern extends AutoLocated:
     case Guarded(pattern, guard) => pattern.children :+ guard
   
   def subTerms: Ls[Term] = this match
-    case Constructor(target, patternArguments, arguments) =>
-      target :: patternArguments.flatMap(_.subTerms) ::: arguments.fold(Nil)(_.flatMap(_.subTerms))
+    case Constructor(target, arguments) =>
+      target :: arguments.fold(Nil)(_.flatMap(_.subTerms))
     case Composition(_, left, right) => left.subTerms ::: right.subTerms
     case Negation(pattern) => pattern.subTerms
     case _: (Wildcard | Literal | Range) => Nil
@@ -327,7 +318,7 @@ enum Pattern extends AutoLocated:
     case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
   def describe: Str = this match
-    case Constructor(_, _, _) => "constructor"
+    case Constructor(_, _) => "constructor"
     case Composition(true, _, _) => "disjunction"
     case Composition(false, _, _) => "conjunction"
     case Negation(_) => "negation"
@@ -358,14 +349,9 @@ enum Pattern extends AutoLocated:
     if addPar then s"(${showDbg})" else showDbg
   
   def showDbg: Str = this match
-    case Constructor(target, patternArguments, arguments) =>
-      val targetText = target.symbol.fold(target.showDbg)(_.toString())
-      val patternArgumentsText = if patternArguments.isEmpty then "" else
-        patternArguments.iterator.map(_.showDbg)
-          .map("pattern " + _).mkString("(", ", ", ")")
-      val argumentsText = arguments.fold(""): args =>
-        s"(${args.map(_.showDbg).mkString(", ")})"
-      s"$targetText$patternArgumentsText$argumentsText"
+    case Constructor(target, arguments) =>
+      target.symbol.fold(target.showDbg)(_.nme) + arguments.fold(""):
+        args => s"(${args.map(_.showDbg).mkString(", ")})"
     case Composition(true, left, right) => s"${left.showDbg} ∨ ${right.showDbg}"
     case Composition(false, left, right) => s"${left.showDbg} ∧ ${right.showDbg}"
     case Negation(pattern) => s"¬${pattern.showDbgWithPar}"

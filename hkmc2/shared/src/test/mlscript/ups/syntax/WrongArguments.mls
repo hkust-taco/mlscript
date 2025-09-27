@@ -2,11 +2,10 @@
 
 class Foo(val bar: Int)
 
-:e
-pattern Bar = Foo(pattern 0)
-//│ ╔══[ERROR] This literal pattern cannot be used as an argument here.
-//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
-//│ ╙──     	                          ^
-//│ ╔══[ERROR] Expected one argument, but found only zero arguments.
-//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
-//│ ╙──     	              ^^^
+pattern Bar = Foo(0)
+
+Foo(0) is Bar
+//│ = true
+
+Foo(1) is Bar
+//│ = false

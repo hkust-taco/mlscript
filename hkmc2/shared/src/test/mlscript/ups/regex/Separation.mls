@@ -1,15 +1,25 @@
 :js
 
-
 pattern TailLines(pattern L) =
   ("" => []) |
-  ("\n" ~ (Lines(pattern L) as t)) => t
+  ("\n" ~ (Lines(L) as t)) => t
 pattern Lines(pattern L) = 
   ("" => []) |
-  (((L as h) ~ (TailLines(pattern L) as t)) => [h, ...t])
+  (((L as h) ~ (TailLines(L) as t)) => [h, ...t])
 
-fun foo(input) = input is Lines("hello")
+"hello" is Lines("hello")
+//│ = true
 
-:fixme
-foo of "hello"
-//│ ═══[RUNTIME ERROR] Error: Function 'unapply' expected 2 arguments but got 1
+"hello\nworld" is Lines("hello" | "world")
+//│ = true
+
+"hello\nworld" is Lines("hello")
+//│ = false
+
+pattern Digit = "0" ..= "9"
+
+pattern Integer = Digit ~ ("" | Integer)
+
+"12345" is Integer
+//│ = true
+

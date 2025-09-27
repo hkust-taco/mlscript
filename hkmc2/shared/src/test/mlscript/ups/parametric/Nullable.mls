@@ -11,7 +11,7 @@ pattern Nullable(pattern T) = null | T
 
 // This creates an inline object with `unapply` method and pass it to
 // `Nullable.unapply`.
-fun isPositiveOrNull(x) = x is Nullable(pattern ((Int as x) => x > 0) as true)
+fun isPositiveOrNull(x) = x is Nullable(((Int as x) => x > 0) as true)
 
 isPositiveOrNull of 0
 //│ = false
@@ -28,7 +28,7 @@ isPositiveOrNull of -2
 // No transformation, so the output is the same as the input.
 
 fun mightBeInt(x) =
-  if x is (@compile Nullable(pattern Int)) as output then output
+  if x is (@compile Nullable(Int)) as output then output
 
 mightBeInt of 42
 //│ = 42
@@ -46,13 +46,13 @@ open Option { Some, None }
 
 pattern Optional(pattern T) = (null => None) | ((T as x) => Some(x))
 
-null is Optional(pattern Int, None)
+null is Optional(Int) as None
 //│ = true
 
-42 is Optional(pattern Int, Some(42))
+42 is Optional(Int) as Some(42)
 //│ = true
 
-null is Optional(pattern Int, Some(42))
+null is Optional(Int) as Some(42)
 //│ = false
 
 :e
@@ -65,7 +65,7 @@ fun toIntOption(x) = if x is (@compile Optional) as o then o
 //│ ║  l.60: 	fun toIntOption(x) = if x is (@compile Optional) as o then o
 //│ ╙──      	                                       ^^^^^^^^
 
-fun toIntOption(x) = if x is (@compile Optional(pattern Int)) as o then o
+fun toIntOption(x) = if x is (@compile Optional(Int)) as o then o
 
 toIntOption of 42
 //│ = Some(42)

@@ -86,7 +86,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** Instantiate the given pattern with a substitution map. */
   def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
-    case SP.Constructor(target, patternArguments, arguments) => target.symbol match
+    case SP.Constructor(target, arguments) => target.symbol match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
@@ -122,8 +122,9 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
               msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
           ClassLike(symbol, N)
         case S(symbol: PatternSymbol) =>
-          val arguments = patternArguments.map(instantiate(_))
-          val instantiation = Instantiation(symbol, arguments)(pattern.toLoc)
+          // TODO TODO: partition pattern arguments and extraction arguments
+          val patternArguments = arguments.getOrElse(Nil).map(instantiate(_))
+          val instantiation = Instantiation(symbol, patternArguments)(pattern.toLoc)
           Synonym(schedule(instantiation))
     case SP.Composition(true, left, right) => instantiate(left) or instantiate(right)
     case SP.Composition(false, left, right) => instantiate(left) and instantiate(right)
