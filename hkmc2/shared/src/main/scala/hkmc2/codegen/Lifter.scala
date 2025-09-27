@@ -601,7 +601,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     // instantiations are rewritten.
     //
     // Does *not* rewrite references to non-lifted BMS symbols.
-    def rewriteBms(b: Block, ctx: LifterCtx) =
+    def rewriteBms(b: Block) =
       // BMS's that need to be created
       val syms: LinkedHashMap[BlockMemberSymbol, Local] = LinkedHashMap.empty
 
@@ -667,7 +667,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     override def applyBlock(b: Block): Block = 
       // extract references to BlockMemberSymbols in the block which now may
       // need to be enriched with aux parameters
-      val (rewritten, syms) = rewriteBms(b, ctx)
+      val (rewritten, syms) = rewriteBms(b)
       val pre = syms.foldLeft(blockBuilder):
         case (blk, (bms, local)) =>
           val initial = blk.assign(local, createCall(bms, ctx))
