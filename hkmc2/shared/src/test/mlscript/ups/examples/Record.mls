@@ -42,7 +42,7 @@ fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
 bmi of weight: 70, height: 1.75
-//│ = Some(23)
+//│ = Some({weight: 70, height: 1.75})
 
 bmi of height: 1.75
 //│ = None

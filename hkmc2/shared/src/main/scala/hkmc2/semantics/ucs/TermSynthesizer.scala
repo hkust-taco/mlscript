@@ -124,7 +124,7 @@ trait TermSynthesizer(using State):
     consequent: => Split,
     alternative: Split
   ): Split =
-    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false)(Nil),
+    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false),
       subScrutinees.iterator.zipWithIndex.foldRight(consequent):
         case ((arg, index), innerSplit) =>
           val label = s"the $index-th element of the match result"
@@ -150,4 +150,4 @@ trait TermSynthesizer(using State):
       case ((arg, index), innerSplit) =>
         val label = s"the first ${index + 1}-th element of the tuple"
         Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
-    Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true)(Nil), split2) ~: alternative
+    Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true), split2) ~: alternative

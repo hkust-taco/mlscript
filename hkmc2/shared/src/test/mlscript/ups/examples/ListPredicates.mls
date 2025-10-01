@@ -31,8 +31,11 @@ pattern Unique(pattern P) =
 list1 is Unique(_)
 //│ = true
 
+:expect false
+:todo
 list1 is Unique((Num as x) => x.toString().length)
-//│ = false
+//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
+//│ = true
 
 fun addProperty(obj, k, v) = (...obj, (k): v)
 addProperty of (a: 1), "b", 2

@@ -11,9 +11,9 @@ pattern Zero = 0
 //│ Normalized:
 //│ >  if
 //│ >    let $scrut = 0
-//│ >    let $pattern_0 = member:Zero
-//│ >    let $matchResult = (member:Nullable.)unapply($pattern_0, $scrut)
-//│ >    $matchResult is $runtime.MatchResult.class then true
+//│ >    let $patternArgument0$ = member:Zero
+//│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, $scrut)
+//│ >    $unapplyResult is $runtime.MatchResult.class(output, bindings) then true
 //│ >    else false
 //│ = true
 
@@ -23,9 +23,9 @@ import "../../../mlscript-compile/Char.mls"
 fun foo(x) = x is Nullable(Char.Letter)
 //│ Normalized:
 //│ >  if
-//│ >    let $pattern_0 = (member:Char.)Letter‹member:Letter›
-//│ >    let $matchResult = (member:Nullable.)unapply($pattern_0, x)
-//│ >    $matchResult is $runtime.MatchResult.class then true
+//│ >    let $patternArgument0$ = (member:Char.)Letter‹member:Letter›
+//│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, x)
+//│ >    $unapplyResult is $runtime.MatchResult.class(output, bindings) then true
 //│ >    else false
 
 foo of null

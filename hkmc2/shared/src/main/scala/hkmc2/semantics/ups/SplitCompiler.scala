@@ -224,7 +224,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         .mapFirst(S(_))
       val outputSymbol = new LazyScrut()
       val consequent = makeConsequentForArguments(outputSymbol, SeqMap.empty)
-      val pattern = FlatPattern.ClassLike(classTerm, classSymbol, theArguments, outputSymbol.toList)
+      val pattern = FlatPattern.ClassLike(classTerm, classSymbol, theArguments, MatchMode.Default, false)(Tree.Dummy)
       Branch(scrutinee(), pattern, outputSymbol.toLet(scrutinee(), consequent)) ~: alternative
     else RejectSplit
   
@@ -261,36 +261,51 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     if shouldReject then RejectSplit else (makeConsequent, alternative) =>
       val outputSymbol = new LazyScrut()
       val consequent = makeConsequent(outputSymbol, SeqMap.empty)
-      val pattern = FlatPattern.ClassLike(objectTerm, objectSymbol, N, outputSymbol.toList)
+      val pattern = FlatPattern.ClassLike(objectTerm, objectSymbol, N)
       Branch(scrutinee(), pattern, outputSymbol.toLet(scrutinee(), consequent)) ~: alternative
   
-  private def matchParametersWithArguments(scrutinee: Scrut, defn: PatternDef, arguments: Opt[Ls[SP]]) =
+  /**
+    * When a scrutinee is matched with a defined pattern `P`, this method checks
+    * whether the arguments provided by the user (both pattern arguments and
+    * extraction parameters) match the parameters in the definition of `P`. This
+    * part of the logic is used by both efficiently compiled patterns and
+    * naively compiled patterns to ensure the consistency of diagnostics.
+    *
+    * @param scrutinee the scrutinee of the match
+    * @param defn the pattern's definition
+    * @param arguments all arguments provided by the user
+    * @return Return a triple. The first element is the pattern arguments
+    *         received when `P` is parameterized. The second element is the
+    *         sub-patterns used to match the value returned after `P` is applied.
+    *         The third element indicates whether expanding this branch should
+    *         be abandoned due to invalid arguments.
+    */
+  private def matchParametersWithArguments(
+      scrutinee: Scrut,
+      defn: PatternDef,
+      arguments: Opt[Ls[SP]]
+  ): (Ls[SP], Opt[Ls[(SymbolScrut, SP)]], Bool) =
     val argumentCount = arguments.fold(0)(_.length)
     val patternParameterCount = defn.patternParams.length
-    val parameterCount = defn.parameters.length
     val loc = Loc(arguments.getOrElse(Nil))
-    lazy val failedResult =
-      (Ls[SP](), N: Opt[Ls[(SymbolScrut, SP)]], N: Opt[SP], true)
     if argumentCount < patternParameterCount then
-      // This case excludes the case when the number of pattern arguments is
-      // less than the number of pattern parameters.
+      // Since pattern parameters are required, if the total number of arguments
+      // is less than this number, the pattern matching is definitely incorrect.
       error:
         msg"Expected ${"pattern argument" countBy patternParameterCount
         }, but found only ${"pattern argument" countBy argumentCount}." -> loc
-      failedResult
+      (Nil, N, true)
     else arguments match
-      // In other cases, the number of pattern arguments is equal to the
-      // number of pattern parameters.
-      // TODO TODO: Optimize the argument pairing logic here.
-      case N => (Nil, N, N, false)
+      // Now that the number of pattern parameters can definitely be satisfied,
+      // what we need is to properly pair the parameters with the arguments.
+      case N => (Nil, N, false) // This implies `patternParameterCount` is 0.
+      case S(arguments) if argumentCount === patternParameterCount =>
+        // All the arguments satisfy the pattern arguments, with none left over.
+        (arguments, N, false)
       case S(arguments) =>
-        lazy val patternArguments = arguments
         val extractionParameterCount = defn.extractionParams.size
         val extractionArgumentCount = argumentCount - patternParameterCount
-        if argumentCount === patternParameterCount then
-          // No extraction arguments and no extraction parameters.
-          (patternArguments, N, N, false)
-        else if extractionArgumentCount === extractionParameterCount then
+        if extractionArgumentCount === extractionParameterCount then
           // Match arguments and parameters pairwisely.
           val (patternArguments, extractionSubPatterns) =
             arguments.iterator.zip(defn.parameters).toList.partitionMap:
@@ -300,19 +315,46 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
           val extractionArguments: Ls[(SymbolScrut, SP)] = extractionSubPatterns.iterator.zipWithIndex.map:
             case (pattern, index) => scrutinee.getSubScrutinee(index) -> pattern
           .toList
-          (patternArguments, S(extractionArguments), N, false)
+          (patternArguments, S(extractionArguments), false)
         else arguments match
           // When the pattern does not have any parameters, the user can provide
           // an argument as a shorthand of matching the output. For example,
-          // `x is P(Q) ===== x is P as Q` when `P`` is not parameterized.
+          // `x is P(Q) === x is P as Q` when `P`` is not parameterized.
           case outputPattern :: Nil if defn.parameters.isEmpty =>
-            (Nil, N, S(outputPattern), false)
+            (Nil, S(scrutinee.getSubScrutinee(0) -> outputPattern :: Nil), false)
           case _ :: _ | Nil =>
             error:
               msg"Expected ${"extraction argument" countBy extractionParameterCount
               }, but found ${if extractionArgumentCount < extractionParameterCount then "only " else ""
               }${"argument" countBy extractionArgumentCount}." -> loc
-            failedResult
+            (Nil, N, true)
+  
+  // /**
+  //   * Create a split that naively compiles and then binds the pattern arguments.
+  //   *
+  //   * @param patternArguments the pattern arguments with their symbols
+  //   * @param split the inner split to be enclosed
+  //   */
+  // def buildPatternArguments(patterns: List[SP], split: Split): (Split => Split, Ls[TempSymbol]) =
+  //   // Maybe I should merge `SplitCompiler` and `NaiveCompiler` again.
+  //   val compiler = new NaiveCompiler
+  //   patterns.iterator.zipWithIndex.map: (pattern, index) =>
+  //     new TempSymbol(N, s"patternArgument${index}$$") -> pattern
+  //   .foldRight((split, Nil)):
+  //     case ((symbol, pattern), (innerSplit, symbols)) =>
+  //       val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
+  //       Split.Let(symbol, record, innerSplit) -> (symbol :: symbols)
+  
+  /** Create a split that binds the pattern arguments. */
+  def buildPatternArguments(
+      patternArguments: List[(BlockLocalSymbol, SP)],
+      split: Split
+  ): Split =
+    val compiler = new NaiveCompiler
+    patternArguments.foldRight(split):
+      case ((symbol, pattern), innerSplit) =>
+        val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
+        Split.Let(symbol, record, innerSplit)
   
   /**
     * Make a split that matches the given pattern in the naive way. Note that
@@ -332,23 +374,13 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   ): MakeSplit =
     val defn = patternSymbol.defn.getOrElse:
       lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
-    val (patternArguments, extractionMatches, outputPattern, shouldReject) =
+    val (patternArguments, extractionMatches, shouldReject) =
       matchParametersWithArguments(scrutinee, defn, arguments)
     if shouldReject then RejectSplit else (makeConsequent, alternative) =>
-      val outputSymbol = new LazyScrut()
-      val (extractionArguments, makeConsequentForArguments) =
-        val makeInnermostConsequent = outputPattern match
-          case N => makeConsequent
-          case S(pattern) =>
-            val mk: MakeConsequent = (_outerOutput, outerBindings) =>
-              makeMatchSplit(outputSymbol, pattern)(
-                (patternOutput, patternBindings) =>
-                  makeConsequent(patternOutput, outerBindings ++ patternBindings),
-                Split.End)
-            mk
-        val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeInnermostConsequent)
+      val (extractionArguments, makeConsequentForSubPatterns) =
+        val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeConsequent)
         extractionMatches.fold(z):
-          _.foldRight((Ls[(BlockLocalSymbol, Opt[Loc])](), makeInnermostConsequent)):
+          _.foldRight((Ls[(BlockLocalSymbol, Opt[Loc])](), makeConsequent)):
             case ((subScrutinee, subPattern), (accArguments, makeInnerConsequent)) =>
               val makeThisSplit: MakeConsequent = (outerOutput, outerBindings) =>
                 makeMatchSplit(subScrutinee, subPattern)(
@@ -356,15 +388,38 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
                     // Note that we discard the argument pattern's output becuase
                     // we can't synthesize a valid term if the argument pattern
                     // produce some output.
-                    outerOutput, // TODO: Combine `outerOutput` with `argumentOutput`.
+                    outerOutput,
                     outerBindings ++ argumentBindings),
                   Split.End)
               ((subScrutinee.symbol, subPattern.toLoc) :: accArguments, makeThisSplit)
           .mapFirst(S(_))
-      val consequent = makeConsequentForArguments(outputSymbol, SeqMap.empty)
-      val pattern = FlatPattern.Pattern(patternTerm, patternSymbol,
-          patternArguments, extractionArguments, MatchMode.Default)(outputSymbol.toList)
-      Branch(scrutinee(), pattern, outputSymbol.toLet(scrutinee(), consequent)) ~: alternative
+      // First, we need to prepare the objects that performs the naive matching
+      // of pattern arguments which will be passed to the pattern.
+      val patternBindings = patternArguments.iterator.zipWithIndex.map:
+        case (pattern, index) => new TempSymbol(N, s"patternArgument${index}$$") -> pattern
+      .toList
+      val wrapPatternArgumentDefinitions = buildPatternArguments(patternBindings, _)
+      // Then, we can call the `unapply` method.
+      val unapplyArguments = patternBindings.map(_._1.safeRef |> fld) :+ fld(scrutinee())
+      val unapplyCall = app(sel(patternTerm, "unapply").resolve, tup(unapplyArguments*), s"result of unapply")
+      val unapplyResult = TempSymbol(N, "unapplyResult")
+      val wrapUnapply = Split.Let(unapplyResult, unapplyCall, _)
+      // Then, we need to destruct the produced `MatchResult`.
+      val outputSymbol = TempSymbol(N, "output").toScrut // TODO: We can use `LazyScrut` for this, but the match result pattern's parameters requires a symbol.
+      val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This can be automatically removed when no transformation is used.
+      val wrapDestruction = (consequent: Split) =>
+        val pattern = matchResultPattern(S(outputSymbol.symbol :: bindingsSymbol :: Nil))
+        Branch(unapplyResult.safeRef, pattern, consequent) ~: alternative
+      // Check the number of extraction arguments.
+      val wrapExtractionArguments = extractionArguments match
+        case N | S(Nil) => identity[Split]
+        case S((single, _) :: Nil) => Split.Let(single, outputSymbol(), _)
+        case S(extractionArguments) => (split: Split) =>
+          makeTupleBranch(scrutinee(), extractionArguments.map(_._1), split, Split.End)
+      // Finally, the inner split that does the work.
+      val consequent = makeConsequentForSubPatterns(outputSymbol, SeqMap.empty)
+      // Here we go!
+      wrapPatternArgumentDefinitions(wrapUnapply(wrapDestruction(wrapExtractionArguments(consequent))))
   
   private def makeMatchPatternParameterSplit(
       scrutinee: Scrut,
@@ -378,7 +433,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       (makeConsequent, alternative) =>
         val outputSymbol = new LazyScrut()
         val consequent = makeConsequent(outputSymbol, SeqMap.empty)
-        val pattern = FlatPattern.ClassLike(parameterTerm, parameterSymbol, N, MatchMode.Default, false)(Tree.Dummy, outputSymbol.toList)
+        val pattern = FlatPattern.ClassLike(parameterTerm, parameterSymbol, N, MatchMode.Default, false)(Tree.Dummy)
         Branch(scrutinee(), pattern, outputSymbol.toLet(scrutinee(), consequent)) ~: alternative
     case S(_) | N =>
       error(msg"Cannot use this ${parameterTerm.describe} as a pattern" -> parameterTerm.toLoc)
@@ -431,7 +486,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // Note that we might duplicate the alternative split here.
       case Wildcard() => (makeConsequent, alternative) => makeConsequent(scrutinee, SeqMap.empty) ~~: alternative
       case Literal(literal) => (makeConsequent, alternative) =>
-        Branch(scrutinee(), FlatPattern.Lit(literal)(Nil), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
+        Branch(scrutinee(), FlatPattern.Lit(literal), makeConsequent(scrutinee, SeqMap.empty)) ~: alternative
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
       case Concatenation(left, right) => (makeConsequent, alternative) =>
@@ -502,7 +557,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
             ((key, subScrutinee.symbol) :: fields, makeThisSplit)
         // END TODO
         val consequent = makeChainedConsequent(scrutinee, SeqMap.empty)
-        Branch(scrutinee(), FlatPattern.Record(entries)(Nil), consequent) ~: alternative
+        Branch(scrutinee(), FlatPattern.Record(entries), consequent) ~: alternative
       case Chain(first, second) => (makeConsequent, alternative) =>
         makeMatchSplit(scrutinee, first)(
           (firstOutput, firstBindings) => makeMatchSplit(firstOutput, second)(
@@ -590,24 +645,15 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       arguments: Opt[Ls[SP]]
   ): MakePrefixSplit =
     val defn = patternSymbol.defn.getOrElse(die)
-    val (patternArguments, extractionMatches, outputPattern, shouldReject) =
+    val (patternArguments, extractionMatches, shouldReject) =
       matchParametersWithArguments(scrutinee, defn, arguments)
     if shouldReject then RejectPrefixSplit else (makeConsequent, alternative) =>
       val outputSymbol = TempSymbol(N, "output").toScrut
       val remainingSymbol = TempSymbol(N, "remaining").toScrut
       val (extractionArguments, makeConsequentForArguments) =
-        val makeInnermostConsequent = outputPattern match
-          case N => makeConsequent
-          case S(pattern) =>
-            val mk: MakePrefixConsequent = (_outerOutput, _outerRemaining, outerBindings) =>
-              makeStringPrefixMatchSplit(outputSymbol, pattern)(
-                (patternOutput, patternRemaining, patternBindings) =>
-                  makeConsequent(patternOutput, patternRemaining, outerBindings ++ patternBindings),
-                Split.End)
-            mk
-        val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeInnermostConsequent)
+        val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeConsequent)
         extractionMatches.fold(z):
-          _.foldRight((Ls[(BlockLocalSymbol, Opt[Loc])](), makeInnermostConsequent)):
+          _.foldRight((Ls[(BlockLocalSymbol, Opt[Loc])](), makeConsequent)):
             case ((subScrutinee, subPattern), (accArguments, makeInnerConsequent)) =>
               val makeThisSplit: MakePrefixConsequent = (outerOutput, outerRemaining, outerBindings) =>
                 makeStringPrefixMatchSplit(subScrutinee, subPattern)(
@@ -624,7 +670,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val consequent = makeConsequentForArguments(outputSymbol, remainingSymbol, SeqMap.empty)
       val mode = MatchMode.StringPrefix(outputSymbol.symbol, remainingSymbol.symbol)
       val pattern = FlatPattern.Pattern(patternTerm, patternSymbol,
-          patternArguments, extractionArguments, mode)(Nil)
+          patternArguments, extractionArguments, mode)
       Branch(scrutinee(), pattern, consequent) ~: alternative
   
   private def makeMatchPrefixPatternParameterSplit(
@@ -640,7 +686,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         val outputSymbol = TempSymbol(N, "output") // Denotes the pattern's output.
         val remainingSymbol = TempSymbol(N, "remaining") // Denotes the remaining value.
         val mode = MatchMode.StringPrefix(outputSymbol, remainingSymbol)
-        val thePattern = FlatPattern.ClassLike(parameterTerm, parameterSymbol, N, mode, false)(Tree.Dummy, Nil)
+        val thePattern = FlatPattern.ClassLike(parameterTerm, parameterSymbol, N, mode, false)(Tree.Dummy)
         val consequent = makeConsequent(outputSymbol.toScrut, remainingSymbol.toScrut, SeqMap.empty)
         Branch(scrutinee(), thePattern, consequent) ~: alternative
     case S(_) | N => RejectPrefixSplit
@@ -697,7 +743,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // string and returns an empty string as the remaining value.
       val emptyStringSymbol = TempSymbol(N, "emptyString")
       makeConsequent(scrutinee, emptyStringSymbol.toScrut, SeqMap.empty)
-      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, ctx.builtins.Str, N, Nil),
+      Branch(scrutinee(), FlatPattern.ClassLike(ctx.builtins.Str.safeRef, ctx.builtins.Str, N),
         Split.Let(emptyStringSymbol, str(""),
           makeConsequent(scrutinee, emptyStringSymbol.toScrut, SeqMap.empty))
       ) ~: alternative

@@ -42,9 +42,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
   extension (head: Head)
     /** Create a flat pattern that can be used in the UCS expressions. */
     def toFlatPattern: FlatPattern = head match
-      case lit: syntax.Literal => FlatPattern.Lit(lit)(Nil)
+      case lit: syntax.Literal => FlatPattern.Lit(lit)
       case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        FlatPattern.ClassLike(reference(sym, head.toLoc).getOrElse(Term.Error), sym, N, Nil)
+        FlatPattern.ClassLike(reference(sym, head.toLoc).getOrElse(Term.Error), sym, N)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
       case sym: ClassLikeSymbol => sym.nme
@@ -153,7 +153,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         // Check the presence of the field, and call the matcher if it exists.
         val fieldIdent: Ident = field.asIdent
         val fieldSymbol = TempSymbol(N, fieldIdent.name)
-        val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)(Nil)
+        val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)
         val consequent = Split.Else:
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
         val branch = Branch(scrutinee.safeRef, fieldTest, consequent)

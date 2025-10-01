@@ -1433,7 +1433,7 @@ extends Importer with ucs.SplitElaborator:
      *  determine whether this identifier refers to a pattern, a class, an
      *  object, or creates a new binding.
      * 
-     *  TODO TODO: This routine is insufficient to look up definitions defined
+     *  FIXME: This routine is insufficient to look up definitions defined
      *  later in the program. */
     def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = scoped("ucs:pattern:resolution"):
       log(s"resolve ${id}")

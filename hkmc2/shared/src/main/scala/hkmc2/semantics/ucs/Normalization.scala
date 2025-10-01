@@ -53,7 +53,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           else
             Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
         case _ => lhs.constructor
-      lhs.copy(constructor)(lhs.tree, lhs.output)
+      lhs.copy(constructor)(lhs.tree)
   
   extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
@@ -97,13 +97,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       case FlatPattern.Record(rhsEntries) =>
         val filteredEntries = lhs.entries.filter:
           (fieldName1, _) => rhsEntries.forall { (fieldName2, _) => !(fieldName1 === fieldName2)}
-        FlatPattern.Record(filteredEntries)(lhs.output)
+        FlatPattern.Record(filteredEntries)
       case rhs: FlatPattern.ClassLike => rhs.constructor.symbol.flatMap(_.asCls) match
         case S(cls: ClassSymbol) => cls.defn match
           case S(ClassDef.Parameterized(params = paramList)) =>
             val filteredEntries = lhs.entries.filter:
               (fieldName1, _) => paramList.params.forall { (param:Param) => !(fieldName1 === param.sym.id)}
-            FlatPattern.Record(filteredEntries)(lhs.output)
+            FlatPattern.Record(filteredEntries)
           case S(_) | N => lhs
         case S(_) | N => lhs
       case _ => lhs
@@ -122,20 +122,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   ):
     normalizeImpl(split)
   
-  /** Bind the current scrutinee to a flat pattern's output symbols. */
-  def aliasOutputSymbols(scrutinee: => Term.Ref, outputSymbols: Ls[BlockLocalSymbol], split: Split): Split =
-    outputSymbols.foldRight(split):
-      // Can we use `Subst` to transform the inner split?
-      case (symbol, innerSplit) => Split.Let(symbol, scrutinee, innerSplit)
-    // split // TODO TODO: rm this function
-  
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
     case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
       case pattern: (FlatPattern.Lit | FlatPattern.Tuple | FlatPattern.Record) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         // TODO(ucs): deduplicate [1]
-        val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
-          normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern)))
+        val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
         Branch(scrutinee, pattern, whenTrue) ~: whenFalse
       case pattern @ FlatPattern.ClassLike(ctor, symbol, argsOpt, mode, _) =>
@@ -143,15 +135,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         symbol match
           case symbol: VarSymbol => mode match
             case MatchMode.Default =>
-              normalizeExtractorPatternParameter(scrutinee, ctor, symbol, pattern.output, consequent, alternative)
+              normalizeExtractorPatternParameter(scrutinee, ctor, symbol, consequent, alternative)
             case sp: MatchMode.StringPrefix =>
-              normalizeStringPrefixPattern(scrutinee, ctor, Nil, N, sp, pattern.output, consequent, alternative)
+              normalizeStringPrefixPattern(scrutinee, ctor, Nil, N, sp, consequent, alternative)
           case symbol: (ClassSymbol | ModuleOrObjectSymbol) if mode.isInstanceOf[MatchMode.StringPrefix] =>
             // Match classes and modules are disallowed in the string mode.
             normalizeImpl(alternative)
           case symbol: (ClassSymbol | ModuleOrObjectSymbol) =>
-            val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
-              normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern)))
+            val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
             val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
             Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
         end match
@@ -159,10 +150,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
         val extractionArguments = extractionArgs.map(_.map(_._1))
         mode match
-          case MatchMode.Default =>
-            normalizeExtractorPattern(scrutinee, patternSymbol, ctor, patternArguments, extractionArguments, pattern.output, consequent, normalizeImpl(alternative))
+          case MatchMode.Default => ???
           case sp: MatchMode.StringPrefix =>
-            normalizeStringPrefixPattern(scrutinee, ctor, patternArguments, extractionArguments, sp, pattern.output, consequent, normalizeImpl(alternative))
+            normalizeStringPrefixPattern(scrutinee, ctor, patternArguments, extractionArguments, sp, consequent, normalizeImpl(alternative))
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -182,21 +172,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       scrutinee: Term.Ref,
       parameterTerm: Term,
       parameterSymbol: VarSymbol,
-      outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split =
     val call = app(sel(parameterTerm, "unapply").resolve, tup(fld(scrutinee)), s"result of unapply")
     val split = tempLet(s"matchResult_${parameterSymbol.name}", call): resultSymbol =>
-      if outputSymbols.isEmpty then
-        // No need to destruct the result.
-        Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
-      else
-        val outputSymbol = TempSymbol(N, "output")
-        val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
-        Branch(resultSymbol.safeRef, matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
-          aliasOutputSymbols(outputSymbol.safeRef, outputSymbols, consequent)
-        ) ~: alternative
+      Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
     normalize(split)
   
   /** Create a split that binds the pattern arguments. */
@@ -212,92 +193,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
         Split.Let(symbol, record, innerSplit)
   
-  /** Normalize splits whose leading branch matches a pattern and does not have
-   *  a `@compile` annotation. */
-  private def normalizeExtractorPattern(
-      scrutinee: Term.Ref,
-      patternSymbol: PatternSymbol,
-      ctorTerm: Term,
-      patternArguments: Ls[Pattern],
-      extractionArguments: Opt[Ls[BlockLocalSymbol]],
-      outputSymbols: Ls[BlockLocalSymbol],
-      consequent: Split,
-      alternative: Split,
-  )(using VarSet): Split =
-    // TODO TODO: Remove all argument count checks in this method.
-    val defn = patternSymbol.defn.getOrElse:
-      lastWords(s"Pattern `${patternSymbol.nme}` has not been elaborated.")
-    // Place pattern arguments first, then the scrutinee.
-    val patternBindings = patternArguments.iterator.zipWithIndex.map:
-      case (pattern, index) => new TempSymbol(N, s"pattern_${index}") -> pattern
-    .toList
-    val unapplyArgs = patternBindings.map(_._1.safeRef |> fld) :+ fld(scrutinee)
-    val unapplyCall = app(sel(ctorTerm, "unapply").resolve, tup(unapplyArgs*), s"result of unapply")
-    val split = buildPatternArguments(patternBindings, tempLet("matchResult", unapplyCall): resultSymbol =>
-      extractionArguments match
-        case N =>
-          if outputSymbols.isEmpty then
-            // No need to destruct the result.
-            Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
-          else
-            val extractionSymbol = TempSymbol(N, "output")
-            val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
-            Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
-              aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols, consequent)
-            ) ~: alternative
-        case S(extractionArgs) =>
-          val extractionParams = defn.extractionParams
-          // TODO: Check if the number of arguments is correct.
-          // Note that if the pattern definition doesn't have any extraction
-          // parameters, we still allow there to be a single argument, which
-          // represents the entire output.
-          val extractionSymbol = TempSymbol(N, "tuple")
-          val bindingsSymbol = TempSymbol(N, "bindings") // TODO: This is useless.
-          if extractionArgs.size === extractionParams.size then
-            log(s"number of arguments is correct")
-            // If the number of arguments is the same as the number of extraction
-            // parameters, we destruct the `MatchResult`'s argument as a tuple
-            // with length equal to the number of extraction parameters.
-            // 
-            // For example, with pattern `pattern Foo(x, y, z) = ...`, we are
-            // allowed to do `if input is Foo(x, y, z) then ...`.
-            Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
-              aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols,
-                if extractionArgs.size === 0 then consequent else
-                  makeTupleBranch(extractionSymbol.safeRef, extractionArgs, consequent, Split.End))
-            ) ~: alternative
-          else extractionArgs match
-            case arg :: Nil if extractionParams.isEmpty =>
-              log(s"only one argument and no extraction params")
-              // If the pattern definition doesn't have any extraction parameters,
-              // we allow there to be a single argument, which represents the
-              // entire output of the pattern.
-              // 
-              // For example, with pattern `pattern Foo = ...`, we are allowed to
-              // do `if input is Foo(output) then ...`, which is equivalent to
-              // `if input is Foo as output then ...`.
-              Branch(resultSymbol.safeRef, matchResultPattern(S(extractionSymbol :: bindingsSymbol :: Nil)),
-                aliasOutputSymbols(extractionSymbol.safeRef, outputSymbols,
-                  Split.Let(arg, extractionSymbol.safeRef, consequent))
-              ) ~: alternative
-            case _ =>
-              log(s"number of arguments is incorrect")
-              // Otherwise, the number of arguments is incorrect.
-              error(msg"Expected ${"argument" countBy extractionParams.size
-              }, but found ${if extractionArgs.size < extractionParams.size then "only " else ""
-              }${"argument" countBy extractionArgs.size}." -> Loc(extractionArgs))
-              // TODO: Improve the error message by checking the pattern definition
-              // and demonstrating how to correctly write the pattern.
-              normalizeImpl(alternative))
-    normalize(split)
-  
   private def normalizeStringPrefixPattern(
       scrutinee: Term.Ref,
       ctorTerm: Term,
       patternArguments: Ls[Pattern],
       extractionArguments: Opt[Ls[BlockLocalSymbol]],
       stringPrefix: MatchMode.StringPrefix,
-      outputSymbols: Ls[BlockLocalSymbol],
       consequent: Split,
       alternative: Split,
   )(using VarSet): Split = trace(
@@ -318,11 +219,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       Branch(
         resultSymbol.safeRef,
         matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
-        aliasOutputSymbols(resultSymbol.safeRef, outputSymbols,
-          // Bind the `remaining` variable to the second element of the output
-          // of `matchResult`.
-          Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
-            Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent)))
+        // Bind the `remaining` variable to the second element of the output
+        // of `matchResult`.
+        Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
+          Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent))
       ) ~: alternative
     normalize(buildPatternArguments(patternBindings, split))
 
