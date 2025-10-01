@@ -13,7 +13,7 @@ import collection.mutable.{Map as MutMap}
 
 
 class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) extends TermSynthesizer:
-  import Normalization.*, Mode.*, FlatPattern.MatchMode
+  import Normalization.*, Mode.*
   import tl.*
 
   def reportUnreachableCase[T <: Located](unreachable: Located, subsumedBy: T, when: Bool = true): T =
@@ -67,8 +67,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           case ((fieldName1, p1), (fieldName2, p2)) =>
             fieldName1 === fieldName2 && p1 === p2
       case (_: FlatPattern.ClassLike, _) | (_: FlatPattern.Lit, _) |
-        (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) |
-        (_: FlatPattern.Pattern, _) => false
+        (_: FlatPattern.Tuple, _) | (_: FlatPattern.Record, _) => false
     /** Checks if `lhs` can be subsumed under `rhs`. */
     def <:<(rhs: FlatPattern): Bool = compareCasePattern(lhs, rhs)
     /**
@@ -77,7 +76,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       */
     infix def reportInconsistentRefinedWith(rhs: FlatPattern): Unit = (lhs, rhs) match
       // case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
-      case (FlatPattern.ClassLike(c1, _, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, _, rfd2)) if rfd1 =/= rfd2 =>
+      case (FlatPattern.ClassLike(c1, _, _, rfd1), FlatPattern.ClassLike(c2, _, _, rfd2)) if rfd1 =/= rfd2 =>
         def be(value: Bool): Str = if value then "is" else "is not"
         warn(
           msg"Found two inconsistently refined patterns:" -> rhs.toLoc,
@@ -130,29 +129,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
         val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
         Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-      case pattern @ FlatPattern.ClassLike(ctor, symbol, argsOpt, mode, _) =>
+      case pattern @ FlatPattern.ClassLike(ctor, symbol, argsOpt, _) =>
         log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-        symbol match
-          case symbol: VarSymbol => mode match
-            case MatchMode.Default =>
-              normalizeExtractorPatternParameter(scrutinee, ctor, symbol, consequent, alternative)
-            case sp: MatchMode.StringPrefix =>
-              normalizeStringPrefixPattern(scrutinee, ctor, Nil, N, sp, consequent, alternative)
-          case symbol: (ClassSymbol | ModuleOrObjectSymbol) if mode.isInstanceOf[MatchMode.StringPrefix] =>
-            // Match classes and modules are disallowed in the string mode.
-            normalizeImpl(alternative)
-          case symbol: (ClassSymbol | ModuleOrObjectSymbol) =>
-            val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
-            val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-            Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
-        end match
-      case pattern @ FlatPattern.Pattern(ctor, patternSymbol, patternArguments, extractionArgs, mode) =>
-        log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-        val extractionArguments = extractionArgs.map(_.map(_._1))
-        mode match
-          case MatchMode.Default => ???
-          case sp: MatchMode.StringPrefix =>
-            normalizeStringPrefixPattern(scrutinee, ctor, patternArguments, extractionArguments, sp, consequent, normalizeImpl(alternative))
+        val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
+        val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
+        Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -163,22 +144,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       log(s"DFLT: ${default.showDbg}")
       split
     case Split.End => Split.End
-  
-  /** This function normalizes a pattern that resolves to a pattern parameter.
-   *  We might be able to merge this function with `normalizeExtractorPattern`.
-   *  The difference is that we don't have a way to check the arity of the 
-   *  referenced pattern argument. */
-  private def normalizeExtractorPatternParameter(
-      scrutinee: Term.Ref,
-      parameterTerm: Term,
-      parameterSymbol: VarSymbol,
-      consequent: Split,
-      alternative: Split,
-  )(using VarSet): Split =
-    val call = app(sel(parameterTerm, "unapply").resolve, tup(fld(scrutinee)), s"result of unapply")
-    val split = tempLet(s"matchResult_${parameterSymbol.name}", call): resultSymbol =>
-      Branch(resultSymbol.safeRef, matchResultPattern(N), consequent) ~: alternative
-    normalize(split)
   
   /** Create a split that binds the pattern arguments. */
   def buildPatternArguments(
@@ -193,39 +158,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
         Split.Let(symbol, record, innerSplit)
   
-  private def normalizeStringPrefixPattern(
-      scrutinee: Term.Ref,
-      ctorTerm: Term,
-      patternArguments: Ls[Pattern],
-      extractionArguments: Opt[Ls[BlockLocalSymbol]],
-      stringPrefix: MatchMode.StringPrefix,
-      consequent: Split,
-      alternative: Split,
-  )(using VarSet): Split = trace(
-    pre = s"normalizeStringPrefixPattern <<< ${ctorTerm.showDbg}",
-    post = (r: Split) => s"normalizeStringPrefixPattern >>> ${r.prettyPrint}"
-  ):
-    val patternBindings = patternArguments.iterator.zipWithIndex.map:
-      case (pattern, index) =>  new TempSymbol(N, s"patternArgument${index}$$") -> pattern
-    .toList
-    val call =
-      val method = "unapplyStringPrefix"
-      val args = tup(patternBindings.map(_._1.safeRef) :+ scrutinee)
-      app(sel(ctorTerm, method), args, s"result of $method")
-    val split = tempLet("matchResult", call): resultSymbol =>
-      // let `matchResult` be the return value
-      val outputSymbol = TempSymbol(N, "arg")
-      val bindingsSymbol = TempSymbol(N, "bindings")
-      Branch(
-        resultSymbol.safeRef,
-        matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
-        // Bind the `remaining` variable to the second element of the output
-        // of `matchResult`.
-        Split.Let(stringPrefix.prefix, callTupleGet(outputSymbol.safeRef, 0, "prefix"),
-          Split.Let(stringPrefix.postfix, callTupleGet(outputSymbol.safeRef, 1, "postfix"), consequent))
-      ) ~: alternative
-    normalize(buildPatternArguments(patternBindings, split))
-
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
     * If `mode` is `+`, the function _keeps_ branches that agree on
@@ -308,7 +240,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     rec(split)(using mode, summon)
   
   private def aliasBindings(p: FlatPattern, q: FlatPattern): Split => Split = (p, q) match
-    case (FlatPattern.ClassLike(_, _, S(ss1), _, _), FlatPattern.ClassLike(_, _, S(ss2), _, _)) =>
+    case (FlatPattern.ClassLike(_, _, S(ss1), _), FlatPattern.ClassLike(_, _, S(ss2), _)) =>
       ss1.iterator.zip(ss2.iterator).foldLeft(identity[Split]):
         case (acc, (l, r)) if l._1 === r._1 => acc
         case (acc, (l, r)) => innermost => Split.Let(r._1, l._1.safeRef, acc(innermost))
@@ -353,7 +285,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           )
         pat match
           case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
-          case FlatPattern.ClassLike(ctor, symbol, argsOpt, _mode, _refined) =>
+          case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
               val args = argsOpt.map(_.map(_._1)).getOrElse(Nil)
@@ -380,11 +312,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctor)(k(mod, Nil))
-              case _ =>
-                // Normalization have already checked the constructor
-                // resolves to a class or module. Branches with unresolved
-                // constructors should have been removed.
-                lastWords("Pattern.ClassLike: constructor is neither a class nor a module")
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
@@ -525,18 +452,18 @@ object Normalization:
     import FlatPattern.*, ctx.builtins as blt
     (lhs, rhs) match
     // `Object` is the supertype of all (non-virtual) classes and modules.
-    case (Class(cs: ClassSymbol), Class(blt.`Object`))
+    case (ClassLike(_, cs: ClassSymbol, _, _), ClassLike(symbol = blt.`Object`))
         if !ctx.builtins.virtualClasses.contains(cs) => true
     // Class and module are subtypes of `Object`.
-    case (Module(_), Class(blt.`Object`)) => true
+    case (ClassLike(_, cs: ModuleOrObjectSymbol, _, _), ClassLike(symbol = blt.`Object`)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
-    case (Class(blt.`Int`), Class(blt.`Num`)) => true
+    case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
-    case (Lit(Tree.IntLit(_)), Class(blt.`Int` | blt.`Num`)) => true
-    case (Lit(Tree.StrLit(_)), Class(blt.`Str`)) => true
-    case (Lit(Tree.DecLit(_)), Class(blt.`Num`)) => true
-    case (Lit(Tree.BoolLit(_)), Class(blt.`Bool`)) => true
+    case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Num`)) => true
+    case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
+    case (Lit(Tree.DecLit(_)), ClassLike(symbol = blt.`Num`)) => true
+    case (Lit(Tree.BoolLit(_)), ClassLike(symbol = blt.`Bool`)) => true
     case (Record(entries1), Record(entries2)) =>
       entries1.forall { (fieldName1, _) => entries2.exists { (fieldName2, _) => fieldName1 === fieldName2 } }
     case (Record(entries), rhs: ClassLike) =>

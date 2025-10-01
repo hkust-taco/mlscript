@@ -32,10 +32,8 @@ list1 is Unique(_)
 //│ = true
 
 :expect false
-:todo
 list1 is Unique((Num as x) => x.toString().length)
-//│ ═══[RUNTIME ERROR] Expected: 'false', got: 'true'
-//│ = true
+//│ = false
 
 fun addProperty(obj, k, v) = (...obj, (k): v)
 addProperty of (a: 1), "b", 2

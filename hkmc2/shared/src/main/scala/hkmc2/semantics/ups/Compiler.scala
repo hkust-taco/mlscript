@@ -44,7 +44,8 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     def toFlatPattern: FlatPattern = head match
       case lit: syntax.Literal => FlatPattern.Lit(lit)
       case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
-        FlatPattern.ClassLike(reference(sym, head.toLoc).getOrElse(Term.Error), sym, N)
+        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error)
+        FlatPattern.ClassLike(constructor, sym, N, false)(Tree.Dummy)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
       case sym: ClassLikeSymbol => sym.nme

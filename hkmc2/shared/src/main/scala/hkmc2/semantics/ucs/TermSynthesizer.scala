@@ -3,7 +3,7 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.Tree.*, Elaborator.{Ctx, State, ctx}
+import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** This trait includes some helpers for synthesizing `Term`s which look like 
   * they have already been processed by the `Resolver`. Its methods should only
@@ -41,16 +41,20 @@ trait TermSynthesizer(using State):
     sel(runtimeRef, "MatchResult", State.matchResultClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
-  protected def matchResultPattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), State.matchResultClsSymbol, parameters)
+  protected def matchResultPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+    val constructor = sel(matchResultClass, "class", State.matchResultClsSymbol)
+    val parameters = parametersOpt.map(_.map(_ -> N))
+    FlatPattern.ClassLike(constructor, State.matchResultClsSymbol, parameters, false)(Tree.Dummy)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
     sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
-  protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), State.matchFailureClsSymbol, parameters)
+  protected def matchFailurePattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+    val constructor = sel(matchFailureClass, "class", State.matchFailureClsSymbol)
+    val parameters = parametersOpt.map(_.map(_ -> N))
+    FlatPattern.ClassLike(constructor, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
   protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")
