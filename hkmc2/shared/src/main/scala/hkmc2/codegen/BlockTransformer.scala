@@ -30,17 +30,23 @@ class BlockTransformer(subst: SymbolSubst):
       applyResult2(exc): exc2 =>
         if exc2 is exc then b else Throw(exc2)
     case Match(scrut, arms, dflt, rst) =>
-      val scrut2 = applyPath(scrut)
-      val arms2 = arms.mapConserve: arm =>
-        val cse2 = applyCase(arm._1)
-        val blk2 = applySubBlock(arm._2)
-        if (cse2 is arm._1) && (blk2 is arm._2) then arm else (cse2, blk2)
-      val dflt2 = dflt.mapConserve(applySubBlock)
-      val rst2 = applySubBlock(rst)
-      if (scrut2 is scrut) &&
-          (arms2 is arms) &&
-          (dflt2 is dflt) && (rst2 is rst)
-        then b else Match(scrut2, arms2, dflt2, rst2)
+      applyPath2(scrut): scrut2 =>
+        def rec(arms: List[(Case, Block)])(k: List[(Case, Block)] => Block): Block =
+          arms match
+            case Nil => k(Nil)
+            case (cse, blk) :: t =>
+              applyCase(cse): cse2 =>
+                val blk2 = applySubBlock(blk)
+                rec(t): t2 =>
+                  if (cse2 is cse) && (blk2 is blk) && (t2 is t) then k(arms)
+                  else k((cse2, blk2) :: t2)
+        rec(arms): arms2 =>
+          val dflt2 = dflt.mapConserve(applySubBlock)
+          val rst2 = applySubBlock(rst)
+          if (scrut2 is scrut) &&
+              (arms2 is arms) &&
+              (dflt2 is dflt) && (rst2 is rst)
+            then b else Match(scrut2, arms2, dflt2, rst2)
     case Label(lbl, bod, rst) =>
       val lbl2 = applyLocal(lbl)
       val bod2 = applySubBlock(bod)
@@ -62,71 +68,146 @@ class BlockTransformer(subst: SymbolSubst):
         if (l2 is l) && (r2 is r) && (rst2 is rst) then b else Assign(l2, r2, rst2)
     case b @ AssignField(l, n, r, rst) =>
       applyResult2(r): r2 =>
-        val l2 = applyPath(l)
-        val rst2 = applySubBlock(rst)
-        val sym = b.symbol.mapConserve(_.subst)
-        if (l2 is l) && (r2 is r) && (rst2 is rst) && (sym is b.symbol)
-          then b else AssignField(l2, n, r2, rst2)(sym)
+        applyPath2(l): l2 =>
+          val rst2 = applySubBlock(rst)
+          val sym = b.symbol.mapConserve(_.subst)
+          if (l2 is l) && (r2 is r) && (rst2 is rst) && (sym is b.symbol)
+            then b else AssignField(l2, n, r2, rst2)(sym)
     case Define(defn, rst) =>
-      val defn2 = applyDefn(defn)
-      val rst2 = applySubBlock(rst)
-      if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
+      applyDefn(defn): defn2 =>
+        val rst2 = applySubBlock(rst)
+        if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
     case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
-      val par2 = applyPath(par)
-      val args2 = args.mapConserve(applyPath)
-      val cls2 = cls.subst
-      val hdr2 = hdr.mapConserve(applyHandler)
-      val bod2 = applySubBlock(bod)
-      val rst2 = applySubBlock(rst)
-      if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-          (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
-        then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
+      def rec(ps: List[Path])(k: List[Path] => Block): Block =
+        ps match
+          case Nil => k(Nil)
+          case p :: t =>
+            applyPath2(p): p2 =>
+              rec(t): t2 =>
+                if (p2 is p) && (t2 is t) then k(ps)
+                else k(p2 :: t2)
+      applyPath2(par): par2 =>
+        rec(args): args2 =>
+          val cls2 = cls.subst
+          val hdr2 = hdr.mapConserve(applyHandler)
+          val bod2 = applySubBlock(bod)
+          val rst2 = applySubBlock(rst)
+          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
+              (cls2 is cls) && (hdr2 is hdr) && (bod2 is bod) && (rst2 is rst)
+            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
       applyResult2(rhs): rhs2 =>
-        val lhs2 = applyPath(lhs)
-        val fld2 = applyPath(fld)
-        val rest2 = applySubBlock(rest)
-        if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
-        then b
-        else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
-      
+        applyPath2(lhs): lhs2 =>
+          applyPath2(fld): fld2 =>
+            val rest2 = applySubBlock(rest)
+            if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
+            then b
+            else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
   
-  def applyResult2(r: Result)(k: Result => Block): Block = k(applyResult(r))
-
-  def applyResult(r: Result): Result = r match
-    case r @ Call(fun, args) =>
-      val fun2 = applyPath(fun)
-      val args2 = args.mapConserve(applyArg)
-      if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
-    case Instantiate(mut, cls, args) =>
-      val cls2 = applyPath(cls)
-      val args2 = args.mapConserve(applyArg)
-      if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
-    case l: Lambda => applyLam(l)
-    case Tuple(mut, elems) =>
-      val elems2 = elems.mapConserve(applyArg)
-      if (elems2 is elems) then r else Tuple(mut, elems2)
-    case Record(mut, fields) =>
-      val fields2 = fields.mapConserve:
-        case arg @ RcdArg(idx, v) =>
-          val idx2 = idx.mapConserve(applyPath)
-          val v2 = applyPath(v)
-          if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
-      if fields2 is fields then r else Record(mut, fields2)
-    case p: Path => applyPath(p)
+  def applyValue2(v: Value)(k: Value => Block) = k(applyValue(v))
   
-  def applyPath(p: Path): Path = p match
+  def applyPath2(p: Path)(k: Path => Block): Block = p match
     case DynSelect(qual, fld, arrayIdx) =>
-      val qual2 = applyPath(qual)
-      val fld2 = applyPath(fld)
-      if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx) 
+      applyPath2(qual): qual2 =>
+        applyPath2(fld): fld2 =>
+          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx))
     case p @ Select(qual, name) =>
-      val qual2 = applyPath(qual)
-      val sym2 = p.symbol.mapConserve(_.subst)
-      if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)
-    case v: Value => applyValue(v)
+      applyPath2(qual): qual2 =>
+        val sym2 = p.symbol.mapConserve(_.subst)
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2))
+    case v: Value => applyValue2(v)(k)
+  
+  def applyArg2(arg: Arg)(k: Arg => Block): Block =
+    applyPath2(arg.value): val2 =>
+      k(if val2 is arg.value then arg else Arg(arg.spread, val2))
+  
+  def applyRcdArg2(rcdArg: RcdArg)(k: RcdArg => Block): Block =
+    val RcdArg(idx, p) = rcdArg
+    val toBeIdxed = (idx2: Opt[Path]) =>
+      applyPath2(p): p2 =>
+        k(if (p2 is p) && (idx2 is idx) then rcdArg else RcdArg(idx2, p2))
+    idx match
+      case Some(i) =>
+        applyPath2(i): i2 =>
+          toBeIdxed(if i is i2 then idx else Some(i2))
+      case None => toBeIdxed(idx)
+  
+  def applyRcdArgs(rcdArgs: List[RcdArg])(k: List[RcdArg] => Block): Block =
+    rcdArgs match
+      case Nil => k(Nil)
+      case rcdArg :: t =>
+        applyRcdArg2(rcdArg): rcdArg2 =>
+          applyRcdArgs(t): ts =>
+            val newArgs = if (ts is t) && (rcdArg2 is rcdArg) then rcdArgs else rcdArg2 :: ts
+            k(newArgs)
+  
+  def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
+    args match
+      case Nil => k(Nil)
+      case arg :: t =>
+        applyArg2(arg): arg2 =>
+          applyArgs(t): ts =>
+            val newArgs = if (ts is t) && (arg2 is arg) then args else arg2 :: ts
+            k(newArgs)
+  
+  def applyResult2(r: Result)(k: Result => Block): Block = // k(applyResult(r))
+    r match
+    case r @ Call(fun, args) =>
+      // for
+      //   fun2 <- applyPath2(fun)
+      //   args2 <- applyArgs(args)
+      // yield
+      //   k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects))
+      applyPath2(fun): fun2 =>
+        applyArgs(args): args2 =>
+          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects))
+    case Instantiate(mut, cls, args) =>
+      applyPath2(cls): cls2 =>
+        applyArgs(args): args2 =>
+          k(if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2))
+    case l: Lambda => k(applyLam(l))
+    case Tuple(mut, elems) =>
+      applyArgs(elems): elems2 =>
+        k(if (elems2 is elems) then r else Tuple(mut, elems2))
+    case Record(mut, fields) =>
+      applyRcdArgs(fields): fields2 =>
+        k(if fields2 is fields then r else Record(mut, fields2))
+    case p: Path => applyPath2(p)(k)
+
+  // def applyResult(r: Result): Result = r match
+  //   case r @ Call(fun, args) =>
+  //     val fun2 = applyPath(fun)
+  //     val args2 = args.mapConserve(applyArg)
+  //     if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects)
+  //   case Instantiate(mut, cls, args) =>
+  //     val cls2 = applyPath(cls)
+  //     val args2 = args.mapConserve(applyArg)
+  //     if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2)
+  //   case l: Lambda => applyLam(l)
+  //   case Tuple(mut, elems) =>
+  //     val elems2 = elems.mapConserve(applyArg)
+  //     if (elems2 is elems) then r else Tuple(mut, elems2)
+  //   case Record(mut, fields) =>
+  //     val fields2 = fields.mapConserve:
+  //       case arg @ RcdArg(idx, v) =>
+  //         val idx2 = idx.mapConserve(applyPath)
+  //         val v2 = applyPath(v)
+  //         if (idx2 is idx) && (v2 is v) then arg else RcdArg(idx2, v2)
+  //     if fields2 is fields then r else Record(mut, fields2)
+  //   case p: Path => applyPath(p)
+  
+  // def applyPath(p: Path): Path = p match
+  //   case DynSelect(qual, fld, arrayIdx) =>
+  //     val qual2 = applyPath(qual)
+  //     val fld2 = applyPath(fld)
+  //     if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx) 
+  //   case p @ Select(qual, name) =>
+  //     val qual2 = applyPath(qual)
+  //     val sym2 = p.symbol.mapConserve(_.subst)
+  //     if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2)
+  //   case v: Value => applyValue(v)
   
   def applyValue(v: Value): Value = v match
     case Value.Ref(l) =>
@@ -147,13 +228,13 @@ class BlockTransformer(subst: SymbolSubst):
     if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
       then fun else FunDefn(own2, sym2, params2, body2)
   
-  def applyValDefn(defn: ValDefn): ValDefn =
+  def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn
     val tsym2 = tsym.subst
     val sym2 = sym.subst
-    val rhs2 = applyPath(rhs)
-    if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
-      then defn else ValDefn(tsym2, sym2, rhs2)
+    applyPath2(rhs): rhs2 =>
+      if (tsym2 is tsym) && (sym2 is sym) && (rhs2 is rhs)
+        then k(defn) else k(ValDefn(tsym2, sym2, rhs2))
   
   def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
     val isym2 = defn.isym.subst
@@ -167,10 +248,10 @@ class BlockTransformer(subst: SymbolSubst):
         (ctor2 is defn.ctor)
       then defn else ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)
     
-  def applyDefn(defn: Defn): Defn = defn match
-    case defn: FunDefn => applyFunDefn(defn)
-    case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+  def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+    case defn: FunDefn => k(applyFunDefn(defn))
+    case defn: ValDefn => applyValDefn(defn)(k)
+    case ClsLikeDefn(own, isym, sym, kind, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod)
     =>
       val own2 = own.mapConserve(_.subst)
@@ -178,28 +259,35 @@ class BlockTransformer(subst: SymbolSubst):
       val sym2 = sym.subst
       val paramsOpt2 = paramsOpt.mapConserve(applyParamList)
       val auxParams2 = auxParams.mapConserve(applyParamList)
-      val parentPath2 = parentPath.mapConserve(applyPath)
-      val methods2 = methods.mapConserve(applyFunDefn)
-      val privateFields2 = privateFields.mapConserve(_.subst)
-      val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
-      val preCtor2 = applySubBlock(preCtor)
-      val ctor2 = applySubBlock(ctor)
-      val mod2 = mod.mapConserve(applyObjBody)
-      if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
-          (paramsOpt2 is paramsOpt) &&
-          (auxParams2 is auxParams) &&
-          (parentPath2 is parentPath) &&
-          (methods2 is methods) &&
-          (privateFields2 is privateFields) &&
-          (publicFields2 is publicFields) &&
-          (preCtor2 is preCtor) && (ctor2 is ctor) &&
-          (mod2 is mod)
-        then defn else ClsLikeDefn(own2, isym2, sym2, k, paramsOpt2, 
-          auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2)
+      val withoutParentPath = (parentPath2: Opt[Path]) =>
+        val methods2 = methods.mapConserve(applyFunDefn)
+        val privateFields2 = privateFields.mapConserve(_.subst)
+        val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
+        val preCtor2 = applySubBlock(preCtor)
+        val ctor2 = applySubBlock(ctor)
+        val mod2 = mod.mapConserve(applyObjBody)
+        k:
+          if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
+              (paramsOpt2 is paramsOpt) &&
+              (auxParams2 is auxParams) &&
+              (parentPath2 is parentPath) &&
+              (methods2 is methods) &&
+              (privateFields2 is privateFields) &&
+              (publicFields2 is publicFields) &&
+              (preCtor2 is preCtor) && (ctor2 is ctor) &&
+              (mod2 is mod)
+            then defn else ClsLikeDefn(own2, isym2, sym2, kind, paramsOpt2, 
+              auxParams2, parentPath2, methods2, privateFields2, publicFields2, preCtor2, ctor2, mod2)
+      parentPath match
+        case Some(pp) => applyPath2(pp): pp2 =>
+          withoutParentPath:
+            if pp2 is pp then parentPath else Some(pp2)
+        case None => withoutParentPath(parentPath)
+      
   
-  def applyArg(arg: Arg): Arg =
-    val val2 = applyPath(arg.value)
-    if val2 is arg.value then arg else Arg(arg.spread, val2)
+  // def applyArg(arg: Arg): Arg =
+  //   val val2 = applyPath(arg.value)
+  //   if val2 is arg.value then arg else Arg(arg.spread, val2)
   
   def applyParamList(pl: ParamList): ParamList =
     def applyParam(p: Param): Param =
@@ -210,14 +298,14 @@ class BlockTransformer(subst: SymbolSubst):
     if (params2 is pl.params) && (rest2 is pl.restParam)
       then pl else ParamList(pl.flags, params2, rest2)
   
-  def applyCase(cse: Case): Case = cse match
-    case Case.Lit(lit) => cse
+  def applyCase(cse: Case)(k: Case => Block): Block = cse match
+    case Case.Lit(lit) => k(cse)
     case Case.Cls(cls, path) =>
       val cls2 = cls.subst
-      val path2 = applyPath(path)
-      if (cls2 is cls) && (path2 is path) then cse else Case.Cls(cls2, path2)
-    case Case.Tup(len, inf) => cse
-    case Case.Field(name, safe) => cse
+      applyPath2(path): path2 =>
+        k(if (cls2 is cls) && (path2 is path) then cse else Case.Cls(cls2, path2))
+    case Case.Tup(len, inf) => k(cse)
+    case Case.Field(name, safe) => k(cse)
   
   def applyHandler(hdr: Handler): Handler =
     val sym2 = hdr.sym.subst
@@ -236,9 +324,9 @@ class BlockTransformer(subst: SymbolSubst):
 class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst):
   override def applyLam(lam: Lambda) = lam
   override def applyFunDefn(fun: FunDefn): FunDefn = fun
-  override def applyDefn(defn: Defn): Defn = defn match
-    case _: FunDefn | _: ClsLikeDefn => defn
-    case _: ValDefn => super.applyDefn(defn)
+  override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+    case _: FunDefn | _: ClsLikeDefn => k(defn)
+    case _: ValDefn => super.applyDefn(defn)(k)
   
   override def applyHandler(hdr: Handler): Handler = hdr
   
@@ -246,14 +334,23 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
     case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
-      val par2 = applyPath(par)
-      val args2 = args.mapConserve(applyPath)
-      val cls2 = cls.subst
-      val hdr2 = hdr.mapConserve(applyHandler)
-      val rst2 = applySubBlock(rst)
-      if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
-          (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
-        then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
+      def rec(ps: List[Path])(k: List[Path] => Block): Block =
+        ps match
+          case Nil => k(Nil)
+          case p :: t =>
+            applyPath2(p): p2 =>
+              rec(t): t2 =>
+                if (p is p2) && (t2 is t) then k(ps)
+                else k(p2 :: t2)
+        
+      applyPath2(par): par2 =>
+        rec(args): args2 =>
+          val cls2 = cls.subst
+          val hdr2 = hdr.mapConserve(applyHandler)
+          val rst2 = applySubBlock(rst)
+          if (l2 is l) && (res2 is res) && (par2 is par) && (args2 is args) &&
+              (cls2 is cls) && (hdr2 is hdr) && (rst2 is rst)
+            then b else HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod, rst2)
     case _ => super.applyBlock(b)
 
 // Does not traverse into sub-blocks or definitions. The purpose of this is is to only rewrite a block's data, i.e. 
@@ -261,3 +358,14 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
 // to traverse sub-blocks while using this class to perform more complicated transformations on the blocks themselves.
 class BlockDataTransformer(subst: SymbolSubst) extends BlockTransformerShallow(subst):
   override def applySubBlock(b: Block): Block = b
+
+
+
+// extension [A, B](f:  A => B)
+//   def map(a: A) = f(a)
+//   def flatMap(a: A) = f(a)
+
+// extension [A, B](ma: (A => B) => B)
+//   def flatMap[C](f: A => (C => B) => B): (C => B) => B = kc => ma(a => f(a)(kc))
+//   def map[C](f: A => C): (C => B) => B = kc => ma(a => kc(f(a)))
+//   def retrn(a: A): (A => B) => B = ka => ka(a)

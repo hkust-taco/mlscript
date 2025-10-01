@@ -60,34 +60,45 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
 
       override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
       
-      override def applyDefn(defn: Defn): Defn = defn match
-        case defn: ClsLikeDefn => rewriteCls(defn, isTopLevel)
-        case _: FunDefn | _: ValDefn => super.applyDefn(defn)
+      override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+        case defn: ClsLikeDefn => k(rewriteCls(defn, isTopLevel))
+        case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) =>
-          extract(applyResult(res), true, Return(_, implct), N, curDepth)
+          super.applyResult2(res): res =>
+            extract(res, true, Return(_, implct), N, curDepth)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, r, rest) =>
           if usesStack(r) then
-            extract(applyResult(r), false, _ => applyBlock(rest), S(lhs), curDepth)
+            super.applyResult2(r): r =>
+              extract(r, false, _ => applyBlock(rest), S(lhs), curDepth)
           else
             super.applyBlock(b)
         case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
           val l2 = applyLocal(l)
           val res2 = applyLocal(res)
-          val par2 = applyPath(par)
-          val args2 = args.mapConserve(applyPath)
-          val cls2 = cls.subst
-          val hdr2 = hdr.mapConserve(applyHandler)
-          val bod2 = rewriteBlk(bod)
-          val rst2 = applyBlock(rst)
-          if isTopLevel then
-            val newRes = TempSymbol(N, "res")
-            val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, Ret(newRes.asPath))
-            wrapStackSafe(newHandler, res2, rst2)
-          else
-            HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
+            
+          applyPath2(par): par2 =>
+            def rec(ps: List[Path])(k: List[Path] => Block): Block =
+              ps match
+                case Nil => k(Nil)
+                case p :: t =>
+                  applyPath2(p): p2 =>
+                    rec(t): t2 =>
+                      if (p is p2) && (t is t2) then k(ps) else k(p2 :: t2)
+              
+            rec(args): args2 =>
+              val cls2 = cls.subst
+              val hdr2 = hdr.mapConserve(applyHandler)
+              val bod2 = rewriteBlk(bod)
+              val rst2 = applyBlock(rst)
+              if isTopLevel then
+                val newRes = TempSymbol(N, "res")
+                val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, Ret(newRes.asPath))
+                wrapStackSafe(newHandler, res2, rst2)
+              else
+                HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
         
         case _ => super.applyBlock(b)
         
