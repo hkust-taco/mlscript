@@ -162,3 +162,20 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     // Pattern arguments are accessible throughout the pattern.
     case SP.Transform(pattern, parameters, transform) =>
       Extract(instantiate(pattern), parameters.toMap, transform)
+    case SP.Annotated(pattern, annotations) =>
+      // Currently, we only support `@compile` annotation, so here we only
+      // check whether this annotation exists, and report an error for all
+      // other annotations.
+      val shouldCompile = annotations.foldLeft(true): (acc, termOrLoc) =>
+        val res = termOrLoc match
+          case R(term) => term.resolvedSym match
+            case S(symbol) if symbol is ctx.builtins.annotations.compile => N
+            case S(_) | N => S(term.toLoc)
+          case L(loc) => S(loc)
+        res match
+          case S(loc) =>
+            warn(msg"This annotation is not supported here." -> loc,
+              msg"Note: Patterns only support the `@compile` annotation." -> pattern.toLoc)
+            acc
+          case N => true
+      instantiate(pattern)
