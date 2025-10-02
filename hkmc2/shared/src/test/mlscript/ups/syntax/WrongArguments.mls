@@ -9,3 +9,28 @@ Foo(0) is Bar
 
 Foo(1) is Bar
 //│ = false
+
+pattern Baz(pattern A) = A
+
+:e
+pattern Baz(pattern A) = A()
+//│ ╔══[ERROR] `A` is a pattern parameter.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ║        	                    ^
+//│ ╟── It cannot be applied.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ║        	                         ^
+//│ ╙── Note: only instantiated patterns can be used as pattern arguments.
+
+:e
+pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╔══[ERROR] `A` is a pattern parameter.
+//│ ║  l.26: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║        	                    ^
+//│ ╟── It cannot be applied to any arguments.
+//│ ║  l.26: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║        	                         ^^^^^^^^^
+//│ ╙── Note: only instantiated patterns can be used as pattern arguments.
+//│ ╔══[ERROR] Pattern parameters cannot be applied.
+//│ ║  l.26: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╙──      	                         ^
