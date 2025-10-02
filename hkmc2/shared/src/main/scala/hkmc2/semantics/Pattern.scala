@@ -334,13 +334,6 @@ enum Pattern extends AutoLocated:
     case Annotated(_, _) => "annotated pattern"
     case Guarded(_, _) => "guarded pattern"
   
-  // Do we really need this method? At first, I wanted to implement `mkClone`
-  // for `SynthIf`, and that eventually led me here. But I feel it may not be
-  // necessary. `SynthIf` might not be copied very often. In addition, the
-  // fields in `FlatPattern` may still need to be adapted according to the new
-  // UCS desugaring logic.
-  def mkClone(using State): Pattern = ???
-  
   private def showDbgWithPar =
     val addPar = this match
       case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation | Annotated) => false

@@ -26,12 +26,11 @@ enum Split extends AutoLocated with ProductWithTail:
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
-  def mkClone(using State): Split =
-    this match
-      case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
-      case Let(sym, term, tail) => Let(sym, term.mkClone, tail. mkClone)
-      case Else(default) => Else(default.mkClone)
-      case End => End
+  def mkClone(using State): Split = this match
+    case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
+    case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
+    case Else(default) => Else(default.mkClone)
+    case End => End
   
   /** Used to indicate whether the `Split` was duplicated during desugaring or
     * normalization. */
