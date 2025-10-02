@@ -1,0 +1,25 @@
+:js
+
+import "../../mlscript-compile/ObjectBuffer.mls"
+open ObjectBuffer
+
+let buf = new DefaultObjectBuffer(10)
+//│ buf = DefaultObjectBuffer(_)
+
+buf.alloc(10)
+//│ = 0
+
+buf.alloc(1000)
+//│ = 16
+
+buf.alloc(1)
+//│ = 1016
+
+buf.free(16, 1000)
+
+buf.alloc(1)
+//│ = 16
+
+buf.alloc(1)
+//│ = 18
+
