@@ -142,16 +142,14 @@ class BlockTransformer(subst: SymbolSubst):
         k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2))
     case v: Value => applyValue(v)(k)
   
-  def applyValue(v: Value)(k: Value => Block) = k(applyValue2(v))
-  
-  def applyValue2(v: Value): Value = v match
+  def applyValue(v: Value)(k: Value => Block) = v match
     case Value.Ref(l) =>
       val l2 = l.subst
-      if (l2 is l) then v else Value.Ref(l2)
+      k(if (l2 is l) then v else Value.Ref(l2))
     case Value.This(sym) =>
       val sym2 = sym.subst
-      if (sym2 is sym) then v else Value.This(sym2)
-    case Value.Lit(lit) => v
+      k(if (sym2 is sym) then v else Value.This(sym2))
+    case Value.Lit(lit) => k(v)
   
   def applyLocal(sym: Local): Local = sym.subst
   
