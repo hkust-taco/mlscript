@@ -120,6 +120,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
   
   private lazy val lteq = State.builtinOpsMap("<=")
   private lazy val lt = State.builtinOpsMap("<")
+  private lazy val add = State.builtinOpsMap("+")
   
   private def makeRangeTest(scrut: Scrut, lo: syntax.Literal, hi: syntax.Literal, rightInclusive: Bool, innerSplit: Split) =
     def scrutFld = fld(scrut())
@@ -483,9 +484,8 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       case Range(lower, upper, rightInclusive) => (makeConsequent, alternative) =>
         makeRangeTest(scrutinee, lower, upper, rightInclusive, makeConsequent(scrutinee, SeqMap.empty)) ~~: alternative
       case Concatenation(left, right) => (makeConsequent, alternative) =>
-        log(s"Concatenation")
         makeStringPrefixMatchSplit(scrutinee, left)(
-          (consumedOutput, remainingOutput, bindingsFromConsumed) =>
+          (_consumedOutput, remainingOutput, bindingsFromConsumed) =>
             makeMatchSplit(remainingOutput, right)(
               // Here we discard the postfix output because I still haven't
               // figured out the semantics of string concatenation.
@@ -802,7 +802,10 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         (leftConsumedOutput, leftRemainingOutput, leftBindings) =>
           makeStringPrefixMatchSplit(leftRemainingOutput, right)(
             (rightConsumedOutput, rightRemainingOutput, rightBindings) =>
-              makeConsequent(leftConsumedOutput, rightRemainingOutput, leftBindings ++ rightBindings),
+              val combinedOutputSymbol = LazyScrut(S("combinedOutput"))
+              combinedOutputSymbol.toLet(
+                app(add.ref(), tup(fld(leftConsumedOutput()), fld(rightConsumedOutput())), "combined output"),
+                makeConsequent(combinedOutputSymbol, rightRemainingOutput, leftBindings ++ rightBindings)),
             alternative),
         alternative)
     // Tuples and records cannot be string prefixes.

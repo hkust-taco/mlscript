@@ -4,6 +4,8 @@ import "../../../mlscript-compile/Char.mls"
 import "../../../mlscript-compile/Iter.mls"
 import "../../../mlscript-compile/Stack.mls"
 
+open Iter { joined }
+
 // To match simple email addresses matched by the following regular expressions:
 // ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$
 
@@ -83,12 +85,20 @@ emails
 open Stack
 
 pattern CommaSep(pattern S) =
-  ("" => Nil) |
-  ((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail
+  (((S as head) ~ "," ~ (CommaSep(S) as tail)) => head :: tail) |
+  (S as head => head :: Nil) |
+  ("" => Nil)
 
 fun parseEmails(input) =
   if input is CommaSep(Email) as emails then emails else Nil
 
-:todo
-parseEmails of emails.join(",")
-//│ = Nil
+parseEmails(emails.join(",")) Iter.fromStack() Iter.toArray()
+//│ = [
+//│   "example@example.com",
+//│   "john.doe@guardian.co.uk",
+//│   "alice_bob123@sub-domain.example.org",
+//│   "user+mailbox@my-domain.net",
+//│   "test.user%filter@service-provider.co.in",
+//│   "foo-bar@company-name.io",
+//│   "simple123@abc.xyz"
+//│ ]
