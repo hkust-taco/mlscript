@@ -633,7 +633,7 @@ fun f(es, vs) =
 
 :sjs
 fun f(x) =
-  fun g = x
+  fun g() = x
   [g, g]
 //│ JS (unsanitized):
 //│ let g18, f24, g$13;
@@ -646,10 +646,9 @@ fun f(x) =
 //│   }
 //│ };
 //│ f24 = function f(x1) {
-//│   let tmp10, tmp11;
-//│   tmp10 = g$13(x1);
-//│   tmp11 = g$13(x1);
-//│   return globalThis.Object.freeze([ tmp10, tmp11 ])
+//│   let g$here;
+//│   g$here = runtime.safeCall(g18(x1));
+//│   return globalThis.Object.freeze([ g$here, g$here ])
 //│ };
 
 :sjs
@@ -692,7 +691,7 @@ fun f(x) =
 
 :sjs
 fun f(x) =
-  fun g = x
+  fun g() = x
   let a = g
   set x += 1
   [a, g]
@@ -717,14 +716,14 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f26 = function f(x1) {
-//│   let a1, tmp10, tmp11, tmp12, capture;
+//│   let a1, tmp10, capture, g$here;
 //│   capture = new f$capture17(x1);
-//│   tmp10 = g$15(capture);
-//│   a1 = tmp10;
-//│   tmp11 = capture.x0$ + 1;
-//│   capture.x0$ = tmp11;
-//│   tmp12 = g$15(capture);
-//│   return globalThis.Object.freeze([ a1, tmp12 ])
+//│   g$here = runtime.safeCall(g20(capture));
+//│   a1 = g$here;
+//│   tmp10 = capture.x0$ + 1;
+//│   capture.x0$ = tmp10;
+//│   g$here = runtime.safeCall(g20(capture));
+//│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };
 
 :sjs
@@ -765,6 +764,8 @@ fun f(x) =
 //│ };
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated
+// Note that automatically rewriting `fun h() = g` to `fun h() = a` would resolve this,
+// but it requires some more analysis
 :sjs
 fun f(x) =
   fun g() = x

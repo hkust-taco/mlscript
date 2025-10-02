@@ -85,20 +85,20 @@ object Lifter:
 
   type LocalVarSymbol = VarSymbol | TempSymbol
   
-  def getVars(d: Defn)(using state: State): Set[Local] = d match
+  def getVars(d: Defn): Set[Local] = d match
     case f: FunDefn =>
       (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
-        case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
+        case s: LocalVarSymbol => s
     case c: ClsLikeDefn =>      
       val companionVars = c.companion.fold(Set.empty)(_.ctor.definedVars)
       (companionVars ++ c.preCtor.definedVars ++ c.ctor.definedVars).collect:
-        case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
+        case s: LocalVarSymbol => s
       
     case _ => Set.empty
 
-  def getVarsBlk(b: Block)(using state: State): Set[Local] =
+  def getVarsBlk(b: Block): Set[Local] =
     b.definedVars.collect:
-      case s: LocalVarSymbol if !(s is state.runtimeSymbol) => s
+      case s: LocalVarSymbol => s
 
   object RefOfBms:
     def unapply(p: Path) = p match
