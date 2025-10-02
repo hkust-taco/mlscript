@@ -3,12 +3,10 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.{Literal, Tree}, utils.TraceLogger
+import syntax.{Literal, Tree}, utils.*
 import Message.MessageContext
 import Elaborator.{Ctx, State, ctx}
-import utils.*
 import codegen.Lowering
-import ups.{Instantiator, NaiveCompiler}
 import collection.mutable.{Map as MutMap}
 
 
@@ -39,21 +37,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
-
-  extension (lhs: FlatPattern.ClassLike)
-    /** Generate a term that really resolves to the class at runtime. */
-    def selectClass: FlatPattern.ClassLike =
-      val constructor = lhs.constructor.symbol match
-        case S(cls: ClassSymbol) => lhs.constructor
-        case S(mem: BlockMemberSymbol) =>
-          // If the class is declaration-only, we do not need to select the
-          // class.
-          if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then
-            lhs.constructor
-          else
-            Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
-        case _ => lhs.constructor
-      lhs.copy(constructor)(lhs.tree)
   
   extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
@@ -122,18 +105,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     normalizeImpl(split)
   
   def normalizeImpl(split: Split)(using vs: VarSet): Split = split match
-    case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) => pattern match
-      case pattern: (FlatPattern.Lit | FlatPattern.Tuple | FlatPattern.Record) =>
-        log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-        // TODO(ucs): deduplicate [1]
-        val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
-        val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-        Branch(scrutinee, pattern, whenTrue) ~: whenFalse
-      case pattern @ FlatPattern.ClassLike(ctor, symbol, argsOpt, _) =>
-        log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
-        val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
-        val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-        Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
+    case Split.Cons(Branch(scrutinee, pattern, consequent), alternative) =>
+      log(s"MATCH: ${scrutinee.showDbg} is ${pattern.showDbg}")
+      val whenTrue = normalize(specialize(consequent ++ alternative.duplicate, +, scrutinee, pattern))
+      val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
+      Branch(scrutinee, pattern, whenTrue) ~: whenFalse
     case Split.Let(v, _, tail) if vs has v =>
       log(s"LET: SKIP already declared scrutinee $v")
       normalizeImpl(tail)
@@ -144,19 +120,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       log(s"DFLT: ${default.showDbg}")
       split
     case Split.End => Split.End
-  
-  /** Create a split that binds the pattern arguments. */
-  def buildPatternArguments(
-      patternArguments: List[(BlockLocalSymbol, Pattern)],
-      split: Split
-  ): Split =
-    val compiler = new NaiveCompiler
-    patternArguments.foldRight(split):
-      case ((symbol, pattern), innerSplit) =>
-        scoped("ucs:translation"):
-          log(s"build anonymous pattern: ${pattern.showDbg} for symbol ${symbol.nme}")
-        val record = compiler.compileAnonymousPattern(Nil, Nil, pattern)
-        Split.Let(symbol, record, innerSplit)
   
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
@@ -299,6 +262,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                   val (cse, blk) = mkArgs(args)
                   (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
+            // Select the constructor's `.class` field.
+            lazy val ctorTerm = ctor.symbol match
+              case S(mem: BlockMemberSymbol) =>
+                // If the class is declaration-only, we do not need to
+                // select the class.
+                if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then ctor
+                else Term.SynthSel(ctor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
+              case _ => ctor
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -309,9 +280,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 // and use it `Predef.unreachable` here.
                 k(cls, Nil)(unreachableFn)
               case cls: ClassSymbol =>
-                subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
+                subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
-                subTerm_nonTail(ctor)(k(mod, Nil))
+                subTerm_nonTail(ctorTerm)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
