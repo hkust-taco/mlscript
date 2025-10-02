@@ -345,7 +345,7 @@ abstract class DiffMaker:
       println(s"${fansi.Color.Cyan.escape}Processed in ${Console.BOLD}${
           " " * (5 - duration.length) + duration
         } ms${Console.RESET}  ${
-          Console.YELLOW + relativeName + file.ext + Console.RESET
+          Console.YELLOW + relativeName + "." + file.ext + Console.RESET
         }")
       out.close()
     val result = strw.toString

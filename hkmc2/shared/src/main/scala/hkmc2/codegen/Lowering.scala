@@ -217,6 +217,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )
           case _ => _defn
         reportAnnotations(defn, defn.extraAnnotations)
+        val buffered = defn.annotations.exists:
+          case Annot.Trm(trm: SynthSel) if trm.sym.contains(ctx.builtins.annotations.buffered) => true
+          case _ => false
+        val bufferable = defn.annotations.exists:
+          case Annot.Trm(trm: SynthSel) if trm.sym.contains(ctx.builtins.annotations.bufferable) =>
+            raise(WarningReport(
+              msg"This annotation is not supported yet." -> trm.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            ))
+            true
+          case _ => false
         val (mtds, publicFlds, privateFlds, ctor) = defn match
           case pd: PatternDef => compilePatternMethods(pd)
           case _ => gatherMembers(defn.body)

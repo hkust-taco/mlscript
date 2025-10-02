@@ -1,0 +1,342 @@
+:js
+
+open annotations
+
+:w
+@bufferable
+class A(x)
+//│ ╔══[WARNING] This annotation is not supported yet.
+//│ ║  l.6: 	@bufferable
+//│ ╙──     	 ^^^^^^^^^^
+
+:lot
+@buffered
+class A(x)
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Define:
+//│     defn = ClsLikeDefn:
+//│       owner = N
+//│       isym = class:A
+//│       sym = member:A
+//│       k = Cls
+//│       paramsOpt = S of ParamList:
+//│         flags = ()
+//│         params = Ls of 
+//│           Param:
+//│             flags = ()
+//│             sym = x
+//│             sign = N
+//│             modulefulness = Modulefulness of N
+//│         restParam = N
+//│       auxParams = Nil
+//│       parentPath = N
+//│       methods = Nil
+//│       privateFields = Ls of 
+//│         class:A.x
+//│       publicFields = Nil
+//│       preCtor = End of ""
+//│       ctor = Assign:
+//│         lhs = class:A.x
+//│         rhs = Ref of x
+//│         rest = End of ""
+//│       companion = N
+//│     rest = Assign: \
+//│     lhs = $block$res
+//│     rhs = Lit of UnitLit of false
+//│     rest = End of ""
+
+data class ObjectBuffer()
+
+let buf = new ObjectBuffer()
+//│ buf = ObjectBuffer()
+
+new
+//│ FAILURE: Unexpected parse error
+//│ FAILURE LOCATION: parseRuleImpl (Parser.scala:513)
+//│ ╔══[PARSE ERROR] Expected 'with' keyword, expression, or block after `new` keyword; found end of input instead
+//│ ║  l.55: 	new
+//│ ╙──      	   ^
+
+:dp
+new {}
+//│ ┊new┊ ┊{⟨┊┊⟩}┊
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:212]
+//│ │ ? blockOfImpl		inspects ┊new┊ ┊{⟨┊┊⟩}┊    [at syntax/Parser.scala:307]
+//│ │ ! blockOfImpl		consumes ┊new┊    [at syntax/Parser.scala:318]
+//│ │ ? blockOfImpl		inspects ┊ ┊{⟨┊┊⟩}┊    [at syntax/Parser.scala:321]
+//│ │ ! blockOfImpl		consumes ┊ ┊    [at syntax/Parser.scala:321]
+//│ │ @ parseRule(34,`new` keyword ::= Kw(keyword 'with') | Expr(`new` expression ::= Kw(keyword 'with') | End()) | Blk(`new` expression ::= Kw(keyword 'with') | End()),allowNewlines = true)    [at syntax/Parser.scala:331]
+//│ │ │ ? parseRuleImpl		inspects ┊{⟨┊┊⟩}┊    [at syntax/Parser.scala:401]
+//│ │ │ ! parseRuleImpl		consumes ┊{⟨┊┊⟩}┊    [at syntax/Parser.scala:468]
+//│ │ │ > @ concludeWith(())    [at syntax/Parser.scala:470]
+//│ │ │ > │ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:470]
+//│ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:307]
+//│ │ │ > │ = List()
+//│ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:258]
+//│ │ │ > │ Concluded with List()
+//│ │ │ > = List()
+//│ │ │ @ parseRule(34,`new` expression ::= Kw(keyword 'with') | End(),allowNewlines = true)    [at syntax/Parser.scala:472]
+//│ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ │ = Some(None)
+//│ │ = Some(LexicalNew(Some(Block(List())),None))
+//│ │ @ exprCont(1,`LexicalNew(Some(Block(List())),None)`,true)    [at syntax/Parser.scala:332]
+//│ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ @ exprJux(1,`LexicalNew(Some(Block(List())),None)`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ stops at the end of input
+//│ │ │ = LexicalNew(Some(Block(List())),None)
+//│ │ = LexicalNew(Some(Block(List())),None)
+//│ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ = List(LexicalNew(Some(Block(List())),None))
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:245]
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverse (Resolver.scala:364)
+//│ ╔══[ERROR] Expected a statically known class; found unit value.
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+//│     at REPL29:1:45
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
+
+:dp
+new[buf] A(3)
+//│ ┊new┊[⟨┊buf┊⟩]┊ ┊A┊(⟨┊3┊⟩)┊
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:212]
+//│ │ ? blockOfImpl		inspects ┊new┊[⟨┊buf┊⟩]┊ ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:307]
+//│ │ ! blockOfImpl		consumes ┊new┊    [at syntax/Parser.scala:318]
+//│ │ ? blockOfImpl		inspects ┊[⟨┊buf┊⟩]┊ ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:321]
+//│ │ @ parseRule(34,`new` keyword ::= Kw(keyword 'with') | Expr(`new` expression ::= Kw(keyword 'with') | End()) | Blk(`new` expression ::= Kw(keyword 'with') | End()),allowNewlines = true)    [at syntax/Parser.scala:331]
+//│ │ │ ? parseRuleImpl		inspects ┊[⟨┊buf┊⟩]┊ ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:401]
+//│ │ │ @ simpleExpr(34)    [at syntax/Parser.scala:379]
+//│ │ │ │ ? simpleExprImpl		inspects ┊[⟨┊buf┊⟩]┊ ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:556]
+//│ │ │ │ ! simpleExprImpl		consumes ┊[⟨┊buf┊⟩]┊    [at syntax/Parser.scala:594]
+//│ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:595]
+//│ │ │ │ > │ ? maybeIndented		inspects ┊buf┊    [at syntax/Parser.scala:274]
+//│ │ │ │ > │ @ blockOf(start of expression,allowNewlines = false)    [at syntax/Parser.scala:294]
+//│ │ │ │ > │ │ ? blockOfImpl		inspects ┊buf┊    [at syntax/Parser.scala:307]
+//│ │ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
+//│ │ │ │ > │ │ │ ? simpleExprImpl		inspects ┊buf┊    [at syntax/Parser.scala:556]
+//│ │ │ │ > │ │ │ ! simpleExprImpl		consumes ┊buf┊    [at syntax/Parser.scala:580]
+//│ │ │ │ > │ │ │ @ exprCont(1,`Ident(buf)`,false)    [at syntax/Parser.scala:589]
+//│ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ > │ │ │ │ @ exprJux(1,`Ident(buf)`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ │ > │ │ │ │ = Ident(buf)
+//│ │ │ │ > │ │ │ = Ident(buf)
+//│ │ │ │ > │ │ = Ident(buf)
+//│ │ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:381]
+//│ │ │ │ > │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ │ │ > │ │ = Some(())
+//│ │ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:363]
+//│ │ │ │ > │ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ │ │ │ > │ = List(Ident(buf))
+//│ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:258]
+//│ │ │ │ > │ Concluded with List(Ident(buf))
+//│ │ │ │ > = List(Ident(buf))
+//│ │ │ │ ? simpleExprImpl		inspects ┊ ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:596]
+//│ │ │ │ ! simpleExprImpl		consumes ┊ ┊    [at syntax/Parser.scala:596]
+//│ │ │ │ @ exprCont(34,`Tup(List(Ident(buf)))`,true)    [at syntax/Parser.scala:627]
+//│ │ │ │ │ ? exprContImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ @ exprJux(34,`Tup(List(Ident(buf)))`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ stops at IDENT(A,false)
+//│ │ │ │ │ = Tup(List(Ident(buf)))
+//│ │ │ │ = Tup(List(Ident(buf)))
+//│ │ │ = Tup(List(Ident(buf)))
+//│ │ │ @ parseRule(34,`new` expression ::= Kw(keyword 'with') | End(),allowNewlines = true)    [at syntax/Parser.scala:381]
+//│ │ │ │ ? parseRuleImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:401]
+//│ │ │ = Some(None)
+//│ │ = Some(LexicalNew(Some(Tup(List(Ident(buf)))),None))
+//│ │ @ exprCont(1,`LexicalNew(Some(Tup(List(Ident(buf)))),None)`,true)    [at syntax/Parser.scala:332]
+//│ │ │ ? exprContImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:798]
+//│ │ │ @ exprJux(1,`LexicalNew(Some(Tup(List(Ident(buf)))),None)`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ ? exprJuxImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ @ parseRule(33,start of expression ::= Kw(keyword 'let') | Kw(keyword 'set') | Kw(keyword 'handle') | Kw(keyword 'new') | Kw(keyword 'in') | Kw(keyword 'if') | Kw(keyword 'while') | Kw(keyword 'else') | Kw(keyword 'case') | Kw(keyword 'region') | Kw(keyword 'outer') | Kw(keyword 'constructor') | Kw(keyword 'fun') | Kw(keyword 'val') | Kw(keyword 'using') | Kw(keyword 'type') | Kw(keyword 'pattern') | Kw(keyword 'class') | Kw(keyword 'trait') | Kw(keyword 'module') | Kw(keyword 'object') | Kw(keyword 'open') | Kw(keyword 'abstract') | Kw(keyword 'mut') | Kw(keyword 'do') | Kw(keyword 'return') | Kw(keyword 'drop') | Kw(keyword 'not') | Kw(keyword 'new!') | Kw(keyword 'throw') | Kw(keyword 'import') | Kw(keyword 'virtual') | Kw(keyword 'override') | Kw(keyword 'declare') | Kw(keyword 'data') | Kw(keyword 'public') | Kw(keyword 'private') | Kw(keyword 'out') | Kw(keyword 'true') | Kw(keyword 'false') | Kw(keyword 'undefined') | Kw(keyword 'null') | Kw(keyword 'this') | Kw(keyword '_') | Expr(expression ::= End()) | Blk(block ::= End()),allowNewlines = false)    [at syntax/Parser.scala:1170]
+//│ │ │ │ │ ? parseRuleImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:401]
+//│ │ │ │ │ @ simpleExpr(33)    [at syntax/Parser.scala:379]
+//│ │ │ │ │ │ ? simpleExprImpl		inspects ┊A┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:556]
+//│ │ │ │ │ │ ! simpleExprImpl		consumes ┊A┊    [at syntax/Parser.scala:580]
+//│ │ │ │ │ │ @ exprCont(33,`Ident(A)`,false)    [at syntax/Parser.scala:589]
+//│ │ │ │ │ │ │ ? exprContImpl		inspects ┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ │ │ ! exprContImpl		consumes ┊(⟨┊3┊⟩)┊    [at syntax/Parser.scala:1082]
+//│ │ │ │ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:1083]
+//│ │ │ │ │ │ │ > │ ? maybeIndented		inspects ┊3┊    [at syntax/Parser.scala:274]
+//│ │ │ │ │ │ │ > │ @ blockOf(start of expression,allowNewlines = false)    [at syntax/Parser.scala:294]
+//│ │ │ │ │ │ │ > │ │ ? blockOfImpl		inspects ┊3┊    [at syntax/Parser.scala:307]
+//│ │ │ │ │ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
+//│ │ │ │ │ │ │ > │ │ │ ? simpleExprImpl		inspects ┊3┊    [at syntax/Parser.scala:556]
+//│ │ │ │ │ │ │ > │ │ │ ! simpleExprImpl		consumes ┊3┊    [at syntax/Parser.scala:591]
+//│ │ │ │ │ │ │ > │ │ │ @ exprCont(1,`IntLit(3)`,false)    [at syntax/Parser.scala:592]
+//│ │ │ │ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ │ │ > │ │ │ │ @ exprJux(1,`IntLit(3)`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ │ │ > │ │ │ │ = IntLit(3)
+//│ │ │ │ │ │ │ > │ │ │ = IntLit(3)
+//│ │ │ │ │ │ │ > │ │ = IntLit(3)
+//│ │ │ │ │ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:381]
+//│ │ │ │ │ │ │ > │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ │ │ │ │ │ > │ │ = Some(())
+//│ │ │ │ │ │ │ > │ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ │ │ │ │ │ │ > │ = List(IntLit(3))
+//│ │ │ │ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:258]
+//│ │ │ │ │ │ │ > │ Concluded with List(IntLit(3))
+//│ │ │ │ │ │ │ > = List(IntLit(3))
+//│ │ │ │ │ │ │ @ exprCont(33,`App(Ident(A),Tup(List(IntLit(3))))`,false)    [at syntax/Parser.scala:1085]
+//│ │ │ │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ │ │ │ @ exprJux(33,`App(Ident(A),Tup(List(IntLit(3))))`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ │ @ parseRule(33,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:381]
+//│ │ │ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ │ │ │ = Some(())
+//│ │ │ │ = Some(App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ │ │ @ exprCont(33,`App(Ident(A),Tup(List(IntLit(3))))`,false)    [at syntax/Parser.scala:1170]
+//│ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ @ exprJux(33,`App(Ident(A),Tup(List(IntLit(3))))`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ = App(Ident(A),Tup(List(IntLit(3))))
+//│ │ │ │ @ exprCont(1,`Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))`,false)    [at syntax/Parser.scala:1170]
+//│ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ @ exprJux(1,`Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ = Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ │ │ = Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ │ │ @ exprJux(1,`Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))`,false)    [at syntax/Parser.scala:1171]
+//│ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ stops at the end of input
+//│ │ │ │ = Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ │ = Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ = Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3)))))
+//│ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ = List(Jux(LexicalNew(Some(Tup(List(Ident(buf)))),None),App(Ident(A),Tup(List(IntLit(3))))))
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:245]
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: newDefn (Resolver.scala:624)
+//│ ╔══[ERROR] Expected 1 arguments, got 2
+//│ ║  l.113: 	new[buf] A(3)
+//│ ╙──       	          ^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverse (Resolver.scala:364)
+//│ ╔══[ERROR] Expected a statically known class; found tuple literal.
+//│ ║  l.113: 	new[buf] A(3)
+//│ ║         	   ^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.Object.freeze is not a constructor
+//│     at REPL32:1:48
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
+
+new ObjectBuffer() with
+  fun f() = 3
+//│ = $anon
+
+:dp
+A[t]
+//│ ┊A┊[⟨┊t┊⟩]┊
+//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:212]
+//│ │ ? blockOfImpl		inspects ┊A┊[⟨┊t┊⟩]┊    [at syntax/Parser.scala:307]
+//│ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
+//│ │ │ ? simpleExprImpl		inspects ┊A┊[⟨┊t┊⟩]┊    [at syntax/Parser.scala:556]
+//│ │ │ ! simpleExprImpl		consumes ┊A┊    [at syntax/Parser.scala:580]
+//│ │ │ @ exprCont(1,`Ident(A)`,true)    [at syntax/Parser.scala:589]
+//│ │ │ │ ? exprContImpl		inspects ┊[⟨┊t┊⟩]┊    [at syntax/Parser.scala:798]
+//│ │ │ │ ! exprContImpl		consumes ┊[⟨┊t┊⟩]┊    [at syntax/Parser.scala:1069]
+//│ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:1070]
+//│ │ │ │ > │ ? maybeIndented		inspects ┊t┊    [at syntax/Parser.scala:274]
+//│ │ │ │ > │ @ blockOf(start of expression,allowNewlines = false)    [at syntax/Parser.scala:294]
+//│ │ │ │ > │ │ ? blockOfImpl		inspects ┊t┊    [at syntax/Parser.scala:307]
+//│ │ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
+//│ │ │ │ > │ │ │ ? simpleExprImpl		inspects ┊t┊    [at syntax/Parser.scala:556]
+//│ │ │ │ > │ │ │ ! simpleExprImpl		consumes ┊t┊    [at syntax/Parser.scala:580]
+//│ │ │ │ > │ │ │ @ exprCont(1,`Ident(t)`,false)    [at syntax/Parser.scala:589]
+//│ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ > │ │ │ │ @ exprJux(1,`Ident(t)`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ > │ │ │ │ │ stops at the end of input
+//│ │ │ │ > │ │ │ │ = Ident(t)
+//│ │ │ │ > │ │ │ = Ident(t)
+//│ │ │ │ > │ │ = Ident(t)
+//│ │ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = false)    [at syntax/Parser.scala:381]
+//│ │ │ │ > │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ │ │ > │ │ = Some(())
+//│ │ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:363]
+//│ │ │ │ > │ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ │ │ │ > │ = List(Ident(t))
+//│ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:258]
+//│ │ │ │ > │ Concluded with List(Ident(t))
+//│ │ │ │ > = List(Ident(t))
+//│ │ │ │ @ exprCont(1,`App(Ident(A),TyTup(List(Ident(t))))`,true)    [at syntax/Parser.scala:1073]
+//│ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:798]
+//│ │ │ │ │ @ exprJux(1,`App(Ident(A),TyTup(List(Ident(t))))`,false)    [at syntax/Parser.scala:1157]
+//│ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1164]
+//│ │ │ │ │ │ stops at the end of input
+//│ │ │ │ │ = App(Ident(A),TyTup(List(Ident(t))))
+//│ │ │ │ = App(Ident(A),TyTup(List(Ident(t))))
+//│ │ │ = App(Ident(A),TyTup(List(Ident(t))))
+//│ │ = App(Ident(A),TyTup(List(Ident(t))))
+//│ │ @ parseRule(1,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:381]
+//│ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
+//│ │ = Some(())
+//│ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:363]
+//│ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
+//│ = List(App(Ident(A),TyTup(List(Ident(t)))))
+//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:245]
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:429)
+//│ ╔══[ERROR] Name not found: t
+//│ ║  l.263: 	A[t]
+//│ ╙──       	  ^
+//│ = fun A { class: class A }
+
+
+:pt
+class A(x: ObjectBuffer[ObjectBuffer])
+//│ Parsed tree:
+//│ TypeDef:
+//│   k = Cls
+//│   head = App:
+//│     lhs = Ident of "A"
+//│     rhs = Tup of Ls of 
+//│       InfixApp:
+//│         lhs = Ident of "x"
+//│         kw = keyword ':'
+//│         rhs = App:
+//│           lhs = Ident of "ObjectBuffer"
+//│           rhs = TyTup of Ls of 
+//│             Ident of "ObjectBuffer"
+//│   rhs = N
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: traverseSign (Resolver.scala:972)
+//│ ╔══[ERROR] Expected no type arguments, got 1
+//│ ║  l.322: 	class A(x: ObjectBuffer[ObjectBuffer])
+//│ ╙──       	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
