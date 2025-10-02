@@ -411,13 +411,14 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       // Here we go!
       wrapPatternArgumentDefinitions(wrapUnapply(wrapDestruction(wrapExtractionArguments(consequent))))
   
-  private inline def validatePatternParameter[A](
+  /** Report errors when pattern parameters are used incorrectly. */
+  private def validatePatternParameter[A](
       parameterTerm: Term,
       parameterSymbol: VarSymbol,
       arguments: Opt[Ls[SP]],
       patternLoc: Opt[Loc],
       default: A
-  )(body: => A): A = parameterSymbol.decl match
+  )(body: => A)(using Raise): A = parameterSymbol.decl match
     case S(param @ Param(flags = FldFlags(pat = true))) => arguments match
       case S(list) =>
         // The object pattern comes with an unnecessary parameter list, but it
@@ -652,7 +653,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       patternTerm: Term,
       patternSymbol: PatternSymbol,
       arguments: Opt[Ls[SP]]
-  ): MakePrefixSplit =
+  )(using Raise): MakePrefixSplit =
     val defn = patternSymbol.defn.getOrElse(die)
     val (patternArguments, extractionMatches, shouldReject) =
       matchParametersWithArguments(scrutinee, defn, arguments)
@@ -703,7 +704,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       parameterSymbol: VarSymbol,
       arguments: Opt[Ls[SP]],
       patternLoc: Opt[Loc]
-  ): MakePrefixSplit =
+  )(using Raise): MakePrefixSplit =
     validatePatternParameter[MakePrefixSplit](
       parameterTerm, parameterSymbol, arguments, patternLoc, RejectPrefixSplit
     ): (makeConsequent, alternative) =>
