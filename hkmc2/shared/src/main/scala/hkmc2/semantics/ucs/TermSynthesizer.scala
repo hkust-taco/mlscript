@@ -8,7 +8,7 @@ import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 /** This trait includes some helpers for synthesizing `Term`s which look like 
   * they have already been processed by the `Resolver`. Its methods should only
   * be called in stages after the `Resolver`. Currently, its derived classes are
-  * `Normalization`, `Compiler`, and `NaiveCompiler`. */
+  * `Normalization`, `Compiler`, and `SplitCompiler`. */
 trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
     (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve

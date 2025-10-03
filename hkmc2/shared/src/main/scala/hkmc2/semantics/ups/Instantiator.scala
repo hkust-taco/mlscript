@@ -30,7 +30,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   /** Instantiate an anonymous pattern. */
   def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
     // TODO: We should not pass an empty map to the `instantiate` method if the
-    // caller is from the `NaiveCompiler`.
+    // caller is from the `SplitCompiler`.
     val entryPoint = instantiate(pattern)(using Map.empty)
     (entryPoint, runInstantiationLoop)
   
@@ -122,7 +122,9 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
               msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
           ClassLike(symbol, N)
         case S(symbol: PatternSymbol) =>
-          // TODO TODO: partition pattern arguments and extraction arguments
+          // TODO(after we defined the semantics of pattern parameters): We need
+          // to partition the arguments into pattern arguments and extraction
+          // arguments here.
           val patternArguments = arguments.getOrElse(Nil).map(instantiate(_))
           val instantiation = Instantiation(symbol, patternArguments)(pattern.toLoc)
           Synonym(schedule(instantiation))
