@@ -61,7 +61,6 @@ declare module js with
 
 declare module wasm with
   fun
-    test
     plus_impl
   // declare class Int31
 

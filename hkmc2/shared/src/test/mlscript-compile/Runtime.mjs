@@ -1012,9 +1012,6 @@ globalThis.Object.freeze(class Runtime {
     } else {
       return Runtime.unreachable()
     }
-  } 
-  static test() {
-    return 42
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"]; 

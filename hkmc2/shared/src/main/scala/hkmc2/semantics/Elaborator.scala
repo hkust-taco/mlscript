@@ -180,7 +180,6 @@ object Elaborator:
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
         // val Int31 = assumeObject("Int31")
         val plus_impl = assumeObject("plus_impl")
-        val test = assumeObject("test")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
         val getLocals = assumeObject("getLocals")

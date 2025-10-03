@@ -450,8 +450,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
       case t if t.resolvedSym.exists(_ is ctx.builtins.wasm.plus_impl) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
-      case t if t.resolvedSym.exists(_ is ctx.builtins.wasm.test) =>
-        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("test")))
       // case t if t.resolvedSym.exists(sym => (sym is ctx.builtins.Int31) || (sym is ctx.builtins.wasm.Int31)) =>
       case t if t.resolvedSym.exists(_ is ctx.builtins.Int31) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
