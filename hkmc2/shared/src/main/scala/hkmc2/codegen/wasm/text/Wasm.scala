@@ -34,7 +34,6 @@ abstract sealed class Type extends ToWat:
   /** Same as [[[asValType]]], except throws an exception if this type is not a `ValType`. */
   def asValType_! : ValType = asValType.getOrElse:
     lastWords(s"asValType_! called on non-ValType: `$toWat` (${getClass.getName})")
-end Type
 
 private case object I32Type extends Type:
   def toWat: Document = doc"i32"
@@ -112,7 +111,6 @@ object FunctionType:
 case class FunctionType(sigType: SignatureType) extends ToWat:
   def toWat: Document =
     doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
-end FunctionType
 
 /** A type representing a struct field. */
 case class Field(
@@ -132,7 +130,6 @@ case class StructType(fields: Map[FieldSymbol, NumIdx -> Field]) extends ToWat:
 
   def toWat: Document =
     doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
-end StructType
 
 /** A composite type. */
 type CompType = StructType | FunctionType
@@ -194,7 +191,6 @@ abstract sealed class Instruction extends ToWat:
    * `Seq(doc"42")`.
    */
   val instrargs: Seq[ToWat | Document]
-end Instruction
 
 object FoldedInstr:
   def apply(

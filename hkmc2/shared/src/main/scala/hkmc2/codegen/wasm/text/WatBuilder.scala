@@ -134,6 +134,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.toString}`"
         )
     )
+  end fieldSelect
 
   def result(r: codegen.Result)(using Ctx, Raise, Scope): Expr = r match
     case Value.This(sym) =>
@@ -657,5 +658,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.popLocal()
 
     result
+  end setupFunction
 
 end WatBuilder
