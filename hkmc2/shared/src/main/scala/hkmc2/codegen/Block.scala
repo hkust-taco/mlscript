@@ -19,7 +19,6 @@ import sem.Elaborator.State
 enum CompilationTarget:
   case JS
   case Wasm
-end CompilationTarget
 
 
 case class Program(

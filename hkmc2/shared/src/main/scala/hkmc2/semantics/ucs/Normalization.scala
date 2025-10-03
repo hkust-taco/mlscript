@@ -611,8 +611,8 @@ object Normalization:
     case (Module(_), Class(blt.`Object`)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
-    // Note: We don't make Int31 compatible with Num, since Int31 needs to know
-    // how it should be sign-extended in order to convert into a Num.
+    // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
+    // sign-extended in order to convert into a Num.
     case (Class(blt.`Int`), Class(blt.`Num`)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
