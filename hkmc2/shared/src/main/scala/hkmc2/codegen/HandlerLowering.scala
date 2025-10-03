@@ -368,48 +368,48 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         // For top level, this correspond to the last statement which should also be checked for effect.
         // For constructor, we will append `return this;` after the implicit return so it is not a tail call.
         case Return(c @ Call(fun, args), false) if !handlerCtx.isHandlerBody =>
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          if c2 is c then b else Return(c2, false)
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, c @ Call(fun, args), rest) if c.mayRaiseEffects =>
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
-          val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
-          ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
+          applyPath(cls): cls2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
+              ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case _ => super.applyBlock(b)
-      override def applyResult2(r: Result)(k: Result => Block): Block = r match
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
         case c @ Call(fun, args) if c.mayRaiseEffects =>
           val res = freshTmp("res")
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case c @ Instantiate(mut, cls, args) =>
           val res = freshTmp("res")
-          val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
-          ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-        case r => super.applyResult2(r)(k)
-      override def applyPath(p: Path): Path = p match
-        case Value.Ref(`getLocalsSym`) => handlerCtx.debugInfo.prevLocalsFn.get
-        case _ => super.applyPath(p)
+          applyPath(cls): cls2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
+              ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
+        case r => super.applyResult(r)(k)
+      override def applyPath(p: Path)(k: Path => Block): Block = p match
+        case Value.Ref(`getLocalsSym`) => k(handlerCtx.debugInfo.prevLocalsFn.get)
+        case _ => super.applyPath(p)(k)
       override def applyLam(lam: Lambda): Lambda =
         // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
         Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
-      override def applyDefn(defn: Defn): Defn = defn match
-        case f: FunDefn => translateFun(f)
-        case c: ClsLikeDefn => translateCls(c)
-        case _: ValDefn => super.applyDefn(defn)
+      override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+        case f: FunDefn => k(translateFun(f))
+        case c: ClsLikeDefn => k(translateCls(c))
+        case _: ValDefn => super.applyDefn(defn)(k)
     transformer.applyBlock(b)
   
   private def secondPass(b: Block, getLocalsFn: FunDefn)(using HandlerCtx): Block =
