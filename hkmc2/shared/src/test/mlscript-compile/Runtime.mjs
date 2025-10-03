@@ -1003,12 +1003,6 @@ globalThis.Object.freeze(class Runtime {
       } else {
         return Runtime.unreachable()
       }
-    } else if (typeof lhs === 'number') {
-      if (typeof rhs === 'number') {
-        return lhs + rhs
-      } else {
-        return Runtime.unreachable()
-      }
     } else {
       return Runtime.unreachable()
     }

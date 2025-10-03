@@ -411,5 +411,4 @@ class Int31(v) with
 
 fun plus_impl(lhs, rhs) = if lhs is
   Int31 and rhs is Int31 then lhs + rhs
-  Num and rhs is Num then lhs + rhs
   else unreachable()
