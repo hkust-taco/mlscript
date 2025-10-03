@@ -24,8 +24,8 @@ pattern Baz(pattern A) = A()
 :e
 pattern Baz(pattern A) = A(1, 2, 3)
 //│ ╔══[ERROR] `A` is a pattern parameter.
-//│ ║  l.31: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
 //│ ║        	                    ^
 //│ ╟── It cannot be applied to any arguments.
-//│ ║  l.31: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
 //│ ╙──      	                         ^^^^^^^^^
