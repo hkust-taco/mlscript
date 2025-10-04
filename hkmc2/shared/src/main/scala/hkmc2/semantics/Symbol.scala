@@ -117,6 +117,8 @@ abstract class Symbol(using State) extends Located:
   override def hashCode: Int = uid.hashCode
 
   def subst(using SymbolSubst): Symbol
+  
+  var annotations: List[Annot] = Nil
 
 end Symbol
 

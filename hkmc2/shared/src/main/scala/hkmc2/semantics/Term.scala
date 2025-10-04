@@ -569,7 +569,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
 
-final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement:
+  sym.annotations :::= annotations
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement
@@ -642,6 +643,8 @@ final case class TermDefinition(
   def extraAnnotations: Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract`) => false
     case _ => true
+  sym.annotations :::= annotations
+  tsym.annotations :::= annotations
 
 final case class HandlerTermDefinition(
   resumeSym: VarSymbol,
@@ -725,7 +728,9 @@ case class ModuleOrObjectDef(
   body: ObjBody,
   companion: Opt[ModuleCompanionSymbol],
   annotations: Ls[Annot],
-) extends ClassLikeDef, CompanionValue
+) extends ClassLikeDef, CompanionValue:
+  sym.annotations :::= annotations
+  bsym.annotations :::= annotations
 
 case class PatternDef(
     owner: Opt[InnerSymbol],
@@ -755,7 +760,8 @@ case class PatternDef(
   val paramsOpt: Opt[ParamList] = N
   val auxParams: Ls[ParamList] = Nil
   val companion: Opt[CompanionSymbol] = N // TODO support
-
+  sym.annotations :::= annotations
+  bsym.annotations :::= annotations
 
 sealed abstract class ClassDef extends ClassLikeDef:
   val kind: ClsLikeKind
@@ -810,6 +816,8 @@ object ClassDef:
       annotations: Ls[Annot],
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = S(params)
+    sym.annotations :::= annotations
+    bsym.annotations :::= annotations
   
   case class Plain(
       owner: Opt[InnerSymbol],
@@ -824,6 +832,8 @@ object ClassDef:
   ) extends ClassDef:
     val paramsOpt: Opt[ParamList] = N
     val auxParams: List[ParamList] = Nil
+    sym.annotations :::= annotations
+    bsym.annotations :::= annotations
   
 end ClassDef
 
@@ -835,7 +845,9 @@ case class TypeDef(
   rhs: Opt[Term],
   companion: Opt[CompanionValue],
   annotations: Ls[Annot],
-) extends TypeLikeDef
+) extends TypeLikeDef:
+  sym.annotations :::= annotations
+  bsym.annotations :::= annotations
 
 
 // TODO Store optional source locations for the flags instead of booleans
