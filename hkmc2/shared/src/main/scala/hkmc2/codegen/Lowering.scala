@@ -146,8 +146,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           subTerm_nonTail(rhs): r =>
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
     case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
+      reportAnnotations(decl, annotations)
       blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
+      reportAnnotations(decl, annotations)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
@@ -161,6 +163,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case (d: Declaration) :: stats =>
       d match
       case td: TermDefinition =>
+        reportAnnotations(td, td.extraAnnotations)
         td.body match
         case N => // abstract declarations have no lowering
           blockImpl(stats, res)(k)
@@ -195,6 +198,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         // * as they may contain static initialization code;
         // * therefore, we lower classes at the point where the companion is defined,
         // * if it is defined, rather than at the point where the class is defined.
+        reportAnnotations(cls, cls.extraAnnotations)
         blockImpl(stats, res)(k)
       case _defn: ClassLikeDef =>
         val defn = _defn match
@@ -212,6 +216,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 Nil,
               )
           case _ => _defn
+        reportAnnotations(defn, defn.extraAnnotations)
         val (mtds, publicFlds, privateFlds, ctor) = defn match
           case pd: PatternDef => compilePatternMethods(pd)
           case _ => gatherMembers(defn.body)
@@ -905,6 +910,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
+        reportAnnotations(decl, annotations)
         sym
     val ctor =
       term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
