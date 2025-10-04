@@ -1005,7 +1005,6 @@ extends Importer:
           go(sts, Nil, newAcc)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
-        reportUnusedAnnotations
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")
