@@ -3,8 +3,11 @@ fun max(a, b) = if a < b then b else a
 
 module ObjectBuffer with
   abstract class ObjectBuffer with
+    val buf
     fun mkNew(cls)
     fun del(cls, inst)
+    fun read(idx)
+    fun write(idx, v)
 
   class DefaultObjectBuffer(initLength) extends ObjectBuffer with
     val buf = new mut Array(max(16, initLength))
@@ -14,13 +17,16 @@ module ObjectBuffer with
       buf.[0] = buf.length
       buf.[1] = -1
 
-    fun mkNew(cls)(...args) =
+    fun mkNew(cls) =
       val idx = _alloc(getBlockSize(cls.size))
-      cls.ctor(this, idx, ...args)
-      idx
+      cls.ctor(this, idx)
 
     fun del(cls, inst) =
       _free(inst, getBlockSize(cls.size))
+
+    fun read(idx) = buf.[idx]
+
+    fun write(idx, v) = set buf.[idx] = v
 
     fun getBlockSize(sz) = Math.ceil(sz / 2) * 2
 
