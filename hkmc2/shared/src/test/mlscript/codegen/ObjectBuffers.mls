@@ -1,17 +1,45 @@
 :js
 
+import "../../mlscript-compile/ObjectBuffer.mls"
+open ObjectBuffer
 open annotations
 
 :w
 @bufferable
 class A(x)
 //│ ╔══[WARNING] This annotation is not supported yet.
-//│ ║  l.6: 	@bufferable
+//│ ║  l.8: 	@bufferable
 //│ ╙──     	 ^^^^^^^^^^
 
 :lot
+:sjs
 @buffered
-class A(x)
+class A(x) with
+  val z = x
+  fun f(y) = x + y
+//│ JS (unsanitized):
+//│ let A3;
+//│ A3 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
+//│ };
+//│ globalThis.Object.freeze(class A2 {
+//│   static {
+//│     A3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.#x = x;
+//│     this.z = this.#x;
+//│   }
+//│   static {
+//│     this.size = 2;
+//│   }
+//│   #x;
+//│   f(y) {
+//│     return this.#x + y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null]]; 
+//│ });
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -32,24 +60,206 @@ class A(x)
 //│         restParam = N
 //│       auxParams = Nil
 //│       parentPath = N
-//│       methods = Nil
+//│       methods = Ls of 
+//│         FunDefn:
+//│           owner = S of class:A
+//│           sym = member:f
+//│           params = Ls of 
+//│             ParamList:
+//│               flags = ()
+//│               params = Ls of 
+//│                 Param:
+//│                   flags = ()
+//│                   sym = y
+//│                   sign = N
+//│                   modulefulness = Modulefulness of N
+//│               restParam = N
+//│           body = Return:
+//│             res = Call:
+//│               fun = Ref of builtin:+
+//│               args = Ls of 
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref of class:A.x
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref of y
+//│             implct = false
 //│       privateFields = Ls of 
 //│         class:A.x
-//│       publicFields = Nil
+//│       publicFields = Ls of 
+//│         Tuple2:
+//│           _1 = member:z
+//│           _2 = class:A.z
 //│       preCtor = End of ""
 //│       ctor = Assign:
 //│         lhs = class:A.x
 //│         rhs = Ref of x
+//│         rest = Define: \
+//│         defn = ValDefn:
+//│           tsym = class:A.z
+//│           sym = member:z
+//│           rhs = Ref of class:A.x
 //│         rest = End of ""
-//│       companion = N
+//│       companion = S of ClsLikeBody:
+//│         isym = module:A
+//│         methods = Nil
+//│         privateFields = Nil
+//│         publicFields = Ls of 
+//│           Tuple2:
+//│             _1 = member:size
+//│             _2 = module:A.size
+//│         ctor = Define:
+//│           defn = ValDefn:
+//│             tsym = module:A.size
+//│             sym = member:size
+//│             rhs = Lit of IntLit of 2
+//│           rest = End of ""
+//│       bufferable = S of false
 //│     rest = Assign: \
 //│     lhs = $block$res
 //│     rhs = Lit of UnitLit of false
 //│     rest = End of ""
 
-data class ObjectBuffer()
+:sjs
+A.class
+//│ JS (unsanitized):
+//│ A3.class
+//│ = class A { size: 2 }
 
-let buf = new ObjectBuffer()
-//│ buf = ObjectBuffer()
+:ge
+@buffered
+@buffered
+class B1(x)
+//│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
+//│ ║  l.131: 	@buffered
+//│ ║         	 ^^^^^^^^
+//│ ║  l.132: 	@buffered
+//│ ╙──       	^^^^^^^^^
+
+:w
+:ge
+@buffered
+@bufferable
+class B2(x)
+//│ ╔══[WARNING] This annotation is not supported yet.
+//│ ║  l.143: 	@bufferable
+//│ ╙──       	 ^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
+//│ ║  l.142: 	@buffered
+//│ ║         	 ^^^^^^^^
+//│ ║  l.143: 	@bufferable
+//│ ╙──       	^^^^^^^^^^^
+
+:breakme
+:ge
+@bufferable
+module B3
 
 
+:d
+:lot
+module Test with
+  val a = 3
+//│ Elab: { Mod Test { val member:a‹685› = 3; }; }
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Define:
+//│     defn = ClsLikeDefn:
+//│       owner = N
+//│       isym = class:Test‹694›
+//│       sym = member:Test‹686›
+//│       k = Cls
+//│       paramsOpt = N
+//│       auxParams = Nil
+//│       parentPath = N
+//│       methods = Nil
+//│       privateFields = Nil
+//│       publicFields = Nil
+//│       preCtor = End of ""
+//│       ctor = Return:
+//│         res = Select{object:Unit‹2›}:
+//│           qual = Ref of $runtime‹5›
+//│           name = Ident of "Unit"
+//│         implct = true
+//│       companion = S of ClsLikeBody:
+//│         isym = module:Test‹687›
+//│         methods = Nil
+//│         privateFields = Nil
+//│         publicFields = Ls of 
+//│           Tuple2:
+//│             _1 = member:a‹685›
+//│             _2 = module:Test‹687›.a
+//│         ctor = Define:
+//│           defn = ValDefn:
+//│             tsym = module:Test‹687›.a
+//│             sym = member:a‹685›
+//│             rhs = Lit of IntLit of 3
+//│           rest = End of ""
+//│       bufferable = N
+//│     rest = Assign: \
+//│     lhs = $block$res‹693›
+//│     rhs = Lit of UnitLit of false
+//│     rest = End of ""
+
+:breakme
+:ge
+@buffered
+object B3
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ 	at: scala.Predef$.require(Predef.scala:324)
+//│ 	at: hkmc2.codegen.BufferableTransform$$anon$1.applyDefn$$anonfun$2(BufferableTransform.scala:23)
+//│ 	at: hkmc2.codegen.BufferableTransform$$anon$1.applyDefn$$anonfun$adapted$1(BufferableTransform.scala:22)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: hkmc2.codegen.BufferableTransform$$anon$1.applyDefn(BufferableTransform.scala:22)
+//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:74)
+//│ 	at: hkmc2.codegen.BufferableTransform.transform(BufferableTransform.scala:56)
+//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1049)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:105)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+
+
+let buf = new DefaultObjectBuffer(10)
+//│ buf = DefaultObjectBuffer(_)
+
+buf.mkNew(A.class)(3)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] TypeError: cls.ctor is not a function
+//│     at file:///home/attempt0/mlscript/object-buffer/hkmc2/shared/src/test/mlscript-compile/ObjectBuffer.mjs:58:39
+//│     at REPL38:1:313
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+
+
+:sjs
+class C(x)
+module C with
+  fun f() = 3
+//│ JS (unsanitized):
+//│ let C1;
+//│ C1 = function C(x) {
+//│   return globalThis.Object.freeze(new C.class(x));
+//│ };
+//│ globalThis.Object.freeze(class C {
+//│   static {
+//│     C1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.#x = x;
+//│   }
+//│   static f() {
+//│     return 3
+//│   }
+//│   #x;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C", [null]]; 
+//│ });

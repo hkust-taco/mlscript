@@ -237,7 +237,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               doc"${getVar(sym, sym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds,
-              privFlds, pubFlds, preCtor, ctor, modo)
+              privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))

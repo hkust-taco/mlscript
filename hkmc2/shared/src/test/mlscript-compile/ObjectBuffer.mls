@@ -3,7 +3,6 @@ fun max(a, b) = if a < b then b else a
 
 module ObjectBuffer with
   abstract class ObjectBuffer with
-    // TODO: add type annotations?
     fun mkNew(cls)
     fun del(cls, inst)
 
@@ -15,8 +14,10 @@ module ObjectBuffer with
       buf.[0] = buf.length
       buf.[1] = -1
 
-    fun mkNew(cls) =
-      _alloc(getBlockSize(cls.size))
+    fun mkNew(cls)(...args) =
+      val idx = _alloc(getBlockSize(cls.size))
+      cls.ctor(this, idx, ...args)
+      idx
 
     fun del(cls, inst) =
       _free(inst, getBlockSize(cls.size))
