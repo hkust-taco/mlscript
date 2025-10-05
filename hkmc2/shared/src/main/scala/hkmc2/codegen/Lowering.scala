@@ -212,8 +212,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 Nil,
                 N,
                 ObjBody(Blk(Nil, UnitVal())),
-                S(mod.sym),
-                Nil,
+                S(mod.sym)
               )
           case _ => _defn
         reportAnnotations(defn, defn.extraAnnotations)

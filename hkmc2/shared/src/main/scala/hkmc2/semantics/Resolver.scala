@@ -369,9 +369,9 @@ class Resolver(tl: TraceLogger)
   def traverseDefn(defn: Definition)(using ICtx): ICtx =
   trace(s"Resolving definition: $defn"):
     def traverseTermDef(tdf: TermDefinition) =
-      val TermDefinition(_k, _sym, _tsym, 
+      val TermDefinition(_k, _sym, tsym, 
         pss, tps, sign, body, 
-        _resSym, TermDefFlags(isMethod), modulefulness, annotations, comp
+        _resSym, TermDefFlags(isMethod), modulefulness, comp
       ) = tdf
       /** 
        * Add the contextual parameters in pss to the ICtx so that they
@@ -405,7 +405,7 @@ class Resolver(tl: TraceLogger)
           then Module(S(msg"${tdf.k.desc.capitalize} marked as returning a 'module' but not returning a module."))
           else NonModule(S(msg"${tdf.k.desc.capitalize} must be marked as returning a 'module' in order to return a module."))
       )(using withCtxParams))
-      annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      tsym.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
     
     def traverseClassLikeDef(cld: ClassLikeDef) =
       /**
@@ -426,7 +426,7 @@ class Resolver(tl: TraceLogger)
                 lastWords(s"No type signature for contextual parameter ${defn.showDbg} at ${defn.toLoc}")
       
       cld.paramsOpt.foreach(_.allParams.foreach(traverseParam(_)))
-      cld.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
+      cld.sym.annotations.flatMap(_.subTerms).foreach(traverse(_, expect = NonModule(N)))
       cld.ext.foreach(traverse(_, expect = NonModule(N)))
 
       traverseBlock(cld.body.blk)(using withCtxParams)

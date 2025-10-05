@@ -108,7 +108,6 @@ fun f(x: Foo) = x
 //│       resSym = ‹result of member:f›
 //│       flags = ()
 //│       modulefulness = Modulefulness of N
-//│       annotations = Nil
 //│       companion = N
 //│   res = Lit of UnitLit of false
 
@@ -171,7 +170,6 @@ fun f(module m: M): module M = m
 //│       resSym = ‹result of member:f›
 //│       flags = ()
 //│       modulefulness = Modulefulness of S of module:M
-//│       annotations = Nil
 //│       companion = N
 //│   res = Lit of UnitLit of false
 
@@ -200,6 +198,5 @@ fun f(o: O) = o
 //│       resSym = ‹result of member:f›
 //│       flags = ()
 //│       modulefulness = Modulefulness of N
-//│       annotations = Nil
 //│       companion = N
 //│   res = Lit of UnitLit of false

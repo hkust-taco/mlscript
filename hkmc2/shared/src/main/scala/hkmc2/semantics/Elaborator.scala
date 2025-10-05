@@ -228,7 +228,7 @@ object Elaborator:
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)
       val bsym = BlockMemberSymbol("ret", Nil, true)
-      val defn = ClassDef(N, syntax.Cls, sym, bsym, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N)
+      val defn = ClassDef(N, syntax.Cls, sym, bsym, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N)
       sym.defn = S(defn)
       Term.Sel(runtimeSymbol.ref(), id)(S(sym), N)
     val nonLocalRet =
@@ -244,7 +244,7 @@ object Elaborator:
         Param(flag, VarSymbol(Ident("bindings")), N, Modulefulness(N)(false)) ::
         Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
-        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N))
       cs
     val matchFailureClsSymbol =
       val id = new Ident("MatchFailure")
@@ -253,7 +253,7 @@ object Elaborator:
       val flag = FldFlags.empty.copy(isVal = true)
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil),
-        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
+        Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N))
       cs
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
@@ -381,7 +381,7 @@ extends Importer:
       derivedClsSym.defn = S(ClassDef(
         N, syntax.Cls, derivedClsSym,
         BlockMemberSymbol(derivedClsSym.name, Nil),
-        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), Nil, N))
+        Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(Tree.UnitLit(false)))), N))
       
       val elabed = ctx.nestInner(derivedClsSym).givenIn:
         block(sts_, hasResult = false)._1
@@ -391,10 +391,10 @@ extends Importer:
       case trm => raise(WarningReport(msg"Terms in handler block do nothing" -> trm.toLoc :: Nil))
       
       val tds = elabed.stats.map {
-          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, annotations, comp) =>
+          case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, comp) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
-                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations, comp)
+                val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, comp)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ => 
                 raise(ErrorReport(msg"Handler function is missing resumption parameter" -> td.toLoc :: Nil))
@@ -1093,7 +1093,7 @@ extends Importer:
                       val tsym = TermSymbol(Fun, N, Ident("ret"))
                       val td = TermDefinition(
                         Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
-                        N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, Nil, N)
+                        N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, N)
                       tsym.defn = S(td)
                       val htd = HandlerTermDefinition(resumeSym, td)
                       Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, b)
@@ -1110,7 +1110,7 @@ extends Importer:
               
               val tsym = TermSymbol(k, owner, id) // TODO?
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, r, 
-                TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N)
+                TermDefFlags.empty.copy(isMethod = isMethod), mfn, N)
               tsym.defn = S(tdf)
               sym.defn = S(tdf)
               tsym.annotations = annotations
@@ -1194,7 +1194,6 @@ extends Importer:
                   FlowSymbol("‹class-param-res›"),
                   TermDefFlags.empty.copy(isMethod = (k is Cls)),
                   p.modulefulness,
-                  Nil,
                   N,
                 )
                 assert(p.fldSym.isEmpty)
@@ -1240,8 +1239,9 @@ extends Importer:
             assert(body.isEmpty)
             val d =
               given Ctx = newCtx
-              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N, annotations)
+              semantics.TypeDef(alsSym, sym, tps, rhs.map(term(_)), N)
             alsSym.defn = S(d)
+            alsSym.annotations = annotations
             d
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
@@ -1291,7 +1291,7 @@ extends Importer:
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
             val pd = PatternDef(owner, patSym, sym, tps,
-              patternParams, extractionParams, pat, annotations)
+              patternParams, extractionParams, pat)
             patSym.defn = S(pd)
             patSym.annotations = annotations
             pd
@@ -1309,7 +1309,7 @@ extends Importer:
               val md =
                 val (bod, c) = mkBody
                 ModuleOrObjectDef(owner, modSym, sym,
-                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)
+                  tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp)
               modSym.defn = S(md)
               modSym.annotations = annotations
               md
@@ -1322,7 +1322,7 @@ extends Importer:
               log(s"Companion: ${comp}")
               val cd =
                 val (bod, c) = mkBody
-                ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), annotations, comp)
+                ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), comp)
               clsSym.defn = S(cd)
               clsSym.annotations = annotations
               cd
@@ -1580,7 +1580,7 @@ extends Importer:
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _, _) =>
+      case TermDefinition(k, sym, tsym, pss, _, sign, body, r, _, _, _) =>
         pss.foreach(ps => ps.params.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match
