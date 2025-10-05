@@ -22,7 +22,7 @@ hi(0)
 //│ JS (unsanitized):
 //│ let hi, res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, curDepth, stackDelayRes, Cont$func$hi$1;
+//│   let scrut, tmp, Cont$func$hi$1, doUnwind, stackDelayRes;
 //│   globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$hi$1 = this
@@ -33,39 +33,21 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 0) {
-//│         stackDelayRes = value$;
-//│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 2;
-//│             continue contLoop
-//│           }
-//│           this.pc = 1;
-//│           continue contLoop
-//│         } else if (this.pc === 1) {
-//│           break contLoop
-//│         } else if (this.pc === 2) {
-//│           runtime.stackDepth = runtime.stackDepth + 1;
-//│           return hi(tmp)
-//│         }
-//│         break;
-//│       }
+//│       runtime.skipOnce = true;
+//│       return hi(n)
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
 //│   });
-//│   curDepth = runtime.stackDepth;
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$func$hi$1(pc);
+//│     res1.contTrace.last = res1.contTrace.last.next;
+//│     return res1
+//│   };
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$hi$1(0);
-//│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
-//│     return stackDelayRes
+//│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -96,7 +78,7 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum1, res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes, Cont$func$sum$1;
+//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
 //│   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$sum$1 = this
@@ -121,16 +103,8 @@ sum(10000)
 //│       contLoop: while (true) {
 //│         runtime.stackDepth = curDepth1;
 //│         if (this.pc === 0) {
-//│           scrut = n == 0;
-//│           if (scrut === true) {
-//│             return 0
-//│           } else {
-//│             tmp = n - 1;
-//│             this.pc = 3;
-//│             continue contLoop
-//│           }
-//│           this.pc = 2;
-//│           continue contLoop
+//│           runtime.skipOnce = true;
+//│           return sum1(n)
 //│         } else if (this.pc === 2) {
 //│           break contLoop
 //│         } else if (this.pc === 3) {
@@ -149,13 +123,16 @@ sum(10000)
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
 //│   });
+//│   doUnwind = function doUnwind(res2, pc) {
+//│     res2.contTrace.last.next = new Cont$func$sum$1(pc);
+//│     res2.contTrace.last = res2.contTrace.last.next;
+//│     return res2
+//│   };
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     stackDelayRes.contTrace.last.next = new Cont$func$sum$1(0);
-//│     stackDelayRes.contTrace.last = stackDelayRes.contTrace.last.next;
-//│     return stackDelayRes
+//│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n == 0;
 //│   if (scrut === true) {
@@ -165,9 +142,7 @@ sum(10000)
 //│     tmp1 = sum1(tmp);
 //│     runtime.stackDepth = curDepth;
 //│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       tmp1.contTrace.last.next = new Cont$func$sum$1(1);
-//│       tmp1.contTrace.last = tmp1.contTrace.last.next;
-//│       return tmp1
+//│       return doUnwind(tmp1, 1)
 //│     }
 //│     return n + tmp1
 //│   }

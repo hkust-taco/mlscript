@@ -89,7 +89,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
         else
           super.applyResult(r)(k)
       
-      override def applyLam(lam: Value.Lam): Value.Lam = lastWords("Lambda in stack safe transformation")
+      override def applyLam(lam: Lambda): Lambda = lastWords("Lambda in stack safe transformation")
   
     transform.applyBlock(b)
   
@@ -103,20 +103,20 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
         case _ => ()
     trivial
   
-  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =defn.parentPath match
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = defn.parentPath match
     case Some(value) if value eq paths.contClsPath => defn
     case _ =>
       val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
         parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
-      // TODO: handle preCtor (seems this is not handled in HandlerLowering either)
       ClsLikeDefn(
         owner, isym, sym, k, paramsOpt, auxParams, parentPath,
-      methods.map(rewriteFn),
-      privateFields,
-        publicFields, rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1),
-        rewriteBlk(ctor),
-      mod.map(rewriteObjBody(_, isTopLevel)),
-    )
+        methods.map(rewriteFn),
+        privateFields,
+        publicFields, 
+        rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1), // TODO: preCtor is not translated in handler lowering
+        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1),
+        mod.map(rewriteObjBody(_, isTopLevel)),
+      )
   
   def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
     ClsLikeBody(
@@ -124,9 +124,10 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       defn.methods.map(rewriteFn),
       defn.privateFields,
       defn.publicFields,
-      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(isym), 1),
+      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(defn.isym), 1),
       )
 
+  // fnOrCls points us to the doUnwind function
   def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
     var usedDepth = false
     lazy val curDepth =

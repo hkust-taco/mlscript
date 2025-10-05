@@ -497,9 +497,9 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           ))
           ignored += l
           unliftable += l
-        case RefOfBms(l) if ctx.defns.contains(l) && isFun(ctx.defns(l)) =>
-          // naked reference to a function definition
-          firstClsFns += l
+        // case RefOfBms(l) if ctx.defns.contains(l) && isFun(ctx.defns(l)) =>
+        //   // naked reference to a function definition
+        //   firstClsFns += l
         case _ => super.applyValue(v)
     
     // analyze the extends graph
@@ -522,7 +522,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     for s <- ignored do
       dfs(s)
   
-    (ignored ++ newUnliftable, modules.toList, objects.toList)
+    LifterMetadata(ignored ++ newUnliftable, modules.toList, objects.toList, firstClsFns)
   
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =

@@ -10,19 +10,20 @@ h.oops
 //│ handleBlock$ = function handleBlock$() {
 //│   return h.oops
 //│ };
-//│ Handler$h$1 = class Handler$h$ extends globalThis.Object {
+//│ globalThis.Object.freeze(class Handler$h$ extends globalThis.Object {
+//│   static {
+//│     Handler$h$1 = this
+//│   }
 //│   constructor() {
 //│     let tmp1;
 //│     tmp1 = super();
-//│     return this;
 //│   }
-//│   toString() { return "Handler$h$"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
 //│ h = new Handler$h$1();
 //│ tmp = handleBlock$();
-//│ if (tmp instanceof runtime.EffectSig.class) {
-//│   tmp = runtime.topLevelEffect(tmp, false);
-//│ }
+//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
 //│ tmp
 
 handle h = Object with {}
@@ -36,7 +37,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.37: 	x
+//│ ║  l.38: 	x
 //│ ╙──      	^
 
 
@@ -63,7 +64,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.64: 	Foo.x
+//│ ║  l.65: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

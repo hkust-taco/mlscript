@@ -449,6 +449,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
    * 3. float out definitions
    */
   
+  // callSelf allows the continuation class of the current block (belonging to some function f or class C) 
+  // to call itself f or C in state 0 in case a stack delay effect was raised, which saves us from duplicating
+  // all the code in the first state
   private def translateBlock(b: Block, extraLocals: Set[Local], callSelf: Opt[Result], fnOrCls: FnOrCls, h: HandlerCtx): Block =
     val getLocalsFn = createGetLocalsFn(b, extraLocals)(using h)
     given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.sym.asPath)
@@ -506,7 +509,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         // This should normally be unreachable due to prior desugaring of lambda
         raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
           source = Diagnostic.Source.Compilation))
-        Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
+        Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, N, L(BlockMemberSymbol("", Nil, false)), functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case f: FunDefn => k(translateFun(f))
         case c: ClsLikeDefn => k(translateCls(c))
@@ -593,7 +596,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       cls.methods.map(translateFun),
       cls.privateFields,
       cls.publicFields,
-      translateBlock(cls.ctor, Set.empty, curCtorCtx),
+      translateBlock(cls.ctor, Set.empty, N, R(cls.isym), curCtorCtx),
     )
   
   private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
@@ -639,8 +642,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       syntax.Cls,
       N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
-      ctor, End() // TODO: handle effect in super call
-    )
+      Assign(freshTmp(), Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true), End()),
+      End(),
+      N,
+    ) // TODO: handle effect in super call
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
@@ -651,7 +656,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, 
         handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), 
         state => blockBuilder
-          .assignFieldN(state.res.asPath.contTrace.last, nextIdent, PureCall(state.cls, state.uid :: Nil))
+          .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(true, state.cls, state.uid.asArg :: Nil))
           .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))
       )
     )
@@ -664,7 +669,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val result = blockBuilder
       .define(defn)
       .define(clsDefn)
-      .assign(h.lhs, Instantiate(Value.Ref(clsDefn.sym), Nil))
+      .assign(h.lhs, Instantiate(true, Value.Ref(clsDefn.sym), Nil))
       .rest(
         ResultPlaceholder(h.res, freshId(), Call(sym.asPath, Nil)(true, true), h.rest)
       )
@@ -711,13 +716,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // Replaces ResultPlaceholders to check for effects and link the effect trace
     def prepareBlock(b: Block): Block =
       val transform = new BlockTransformerShallow(SymbolSubst()):
-        override def applyResult(r: Result): Result = 
+        override def applyResult(r: Result)(k: Result => Block): Block = 
           r match
             case c @ Call(Value.Ref(s: BuiltinSymbol), _) => ()
             case c: Call if !c.mayRaiseEffects => ()
             case _: Call | _: Instantiate => containsCall = true
             case _ => ()
-          super.applyResult(r)
+          super.applyResult(r)(k)
           
         override def applyBlock(b: Block): Block = b match
           case Define(_: (ClsLikeDefn | FunDefn), rst) => applyBlock(rst)
@@ -824,11 +829,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       else
         body
         
-    val resumeBody = if trivial then callSelf match
-      case None => b
-      case Some(value) => callSkipOnce.ret(value)
-    
-    else createResumeBod
+    val resumeBody = 
+      if trivial then callSelf match
+        case None => actualBlock
+        case Some(value) => callSkipOnce.ret(value)
+      else createResumeBod
       
     
     val resumeSym = BlockMemberSymbol("resume", List())

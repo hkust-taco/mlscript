@@ -160,72 +160,7 @@ str
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   handleBlock$7 = function handleBlock$() {
-//│     let h1, tmp11, handleBlock$8, Cont$handleBlock$h1$2, Handler$h1$2;
-//│     globalThis.Object.freeze(class Handler$h1$1 extends Effect1 {
-//│       static {
-//│         Handler$h1$2 = this
-//│       }
-//│       constructor() {
-//│         let tmp12;
-//│         tmp12 = super();
-//│       }
-//│       perform(arg) {
-//│         let lambda;
-//│         lambda = (undefined, function (k) {
-//│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2;
-//│           globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
-//│             static {
-//│               Cont$handler$h1$perform$2 = this
-//│             }
-//│             constructor(pc) {
-//│               let tmp15;
-//│               tmp15 = super(null);
-//│               this.pc = pc;
-//│             }
-//│             resume(value$) {
-//│               if (this.pc === 7) {
-//│                 tmp13 = value$;
-//│               }
-//│               contLoop: while (true) {
-//│                 if (this.pc === 8) {
-//│                   tmp13 = runtime.safeCall(k(arg));
-//│                   if (tmp13 instanceof runtime.EffectSig.class) {
-//│                     this.pc = 7;
-//│                     tmp13.contTrace.last.next = this;
-//│                     tmp13.contTrace.last = this;
-//│                     return tmp13
-//│                   }
-//│                   this.pc = 7;
-//│                   continue contLoop
-//│                 } else if (this.pc === 7) {
-//│                   tmp14 = str + "A";
-//│                   str = tmp14;
-//│                   return runtime.Unit
-//│                 }
-//│                 break;
-//│               }
-//│             }
-//│             toString() { return runtime.render(this); }
-//│             static [definitionMetadata] = ["class", "Cont$handler$h1$perform$"]; 
-//│           });
-//│           tmp12 = str + "A";
-//│           str = tmp12;
-//│           tmp13 = runtime.safeCall(k(arg));
-//│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             tmp13.contTrace.last.next = new Cont$handler$h1$perform$2(7);
-//│             tmp13.contTrace.last = tmp13.contTrace.last.next;
-//│             return tmp13
-//│           }
-//│           tmp14 = str + "A";
-//│           str = tmp14;
-//│           return runtime.Unit
-//│         });
-//│         return runtime.mkEffect(this, lambda)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Handler$h1$"]; 
-//│     });
-//│     h1 = new Handler$h1$2();
+//│     let h22, tmp11, handleBlock$8, Handler$h2$3, Cont$handleBlock$h1$2, doUnwind;
 //│     globalThis.Object.freeze(class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
 //│       static {
 //│         Cont$handleBlock$h1$2 = this
@@ -249,76 +184,12 @@ str
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$handleBlock$h1$"]; 
 //│     });
+//│     doUnwind = function doUnwind(res7, pc) {
+//│       res7.contTrace.last.next = new Cont$handleBlock$h1$2(pc);
+//│       return runtime.handleBlockImpl(res7, h11)
+//│     };
 //│     handleBlock$8 = function handleBlock$() {
-//│       let h2, tmp12, res7, Cont$handleBlock$h2$2, Handler$h2$2;
-//│       globalThis.Object.freeze(class Handler$h2$1 extends Effect1 {
-//│         static {
-//│           Handler$h2$2 = this
-//│         }
-//│         constructor() {
-//│           let tmp13;
-//│           tmp13 = super();
-//│         }
-//│         perform(arg) {
-//│           let lambda;
-//│           lambda = (undefined, function (k) {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2;
-//│             globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
-//│               static {
-//│                 Cont$handler$h2$perform$2 = this
-//│               }
-//│               constructor(pc) {
-//│                 let tmp18;
-//│                 tmp18 = super(null);
-//│                 this.pc = pc;
-//│               }
-//│               resume(value$) {
-//│                 if (this.pc === 4) {
-//│                   tmp15 = value$;
-//│                 }
-//│                 contLoop: while (true) {
-//│                   if (this.pc === 5) {
-//│                     tmp15 = runtime.safeCall(k(arg));
-//│                     if (tmp15 instanceof runtime.EffectSig.class) {
-//│                       this.pc = 4;
-//│                       tmp15.contTrace.last.next = this;
-//│                       tmp15.contTrace.last = this;
-//│                       return tmp15
-//│                     }
-//│                     this.pc = 4;
-//│                     continue contLoop
-//│                   } else if (this.pc === 4) {
-//│                     tmp16 = str + "B";
-//│                     tmp17 = str + tmp16;
-//│                     str = tmp17;
-//│                     return runtime.Unit
-//│                   }
-//│                   break;
-//│                 }
-//│               }
-//│               toString() { return runtime.render(this); }
-//│               static [definitionMetadata] = ["class", "Cont$handler$h2$perform$"]; 
-//│             });
-//│             tmp13 = str + "B";
-//│             tmp14 = str + tmp13;
-//│             str = tmp14;
-//│             tmp15 = runtime.safeCall(k(arg));
-//│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               tmp15.contTrace.last.next = new Cont$handler$h2$perform$2(4);
-//│               tmp15.contTrace.last = tmp15.contTrace.last.next;
-//│               return tmp15
-//│             }
-//│             tmp16 = str + "B";
-//│             tmp17 = str + tmp16;
-//│             str = tmp17;
-//│             return runtime.Unit
-//│           });
-//│           return runtime.mkEffect(this, lambda)
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "Handler$h2$"]; 
-//│       });
-//│       h2 = new Handler$h2$2();
+//│       let tmp12, res7, Cont$handleBlock$h2$2, doUnwind1;
 //│       globalThis.Object.freeze(class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
 //│         static {
 //│           Cont$handleBlock$h2$2 = this
@@ -341,27 +212,17 @@ str
 //│             res7 = value$;
 //│           }
 //│           contLoop: while (true) {
-//│             if (this.pc === 3) {
-//│               tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
-//│               if (tmp12 instanceof runtime.EffectSig.class) {
-//│                 this.pc = 0;
-//│                 tmp12.contTrace.last.next = this;
-//│                 tmp12.contTrace.last = this;
-//│                 return tmp12
-//│               }
-//│               this.pc = 0;
+//│             if (this.pc === 9) {
+//│               this.pc = 11;
 //│               continue contLoop
-//│             } else if (this.pc === 0) {
-//│               this.pc = 2;
-//│               continue contLoop
-//│             } else if (this.pc === 2) {
-//│               res7 = runtime.safeCall(h1.perform(runtime.Unit));
+//│             } else if (this.pc === 11) {
+//│               res7 = runtime.safeCall(h11.perform(runtime.Unit));
 //│               if (res7 instanceof runtime.EffectSig.class) {
 //│                 return this.doUnwind(res7, 10)
 //│               }
-//│               this.pc = 1;
+//│               this.pc = 10;
 //│               continue contLoop
-//│             } else if (this.pc === 1) {
+//│             } else if (this.pc === 10) {
 //│               return res7
 //│             }
 //│             break;
@@ -370,32 +231,36 @@ str
 //│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "Cont$handleBlock$h2$"]; 
 //│       });
-//│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
+//│       doUnwind1 = function doUnwind(res8, pc) {
+//│         res8.contTrace.last.next = new Cont$handleBlock$h2$2(pc);
+//│         return runtime.handleBlockImpl(res8, h22)
+//│       };
+//│       tmp12 = runtime.safeCall(h22.perform(runtime.Unit));
 //│       if (tmp12 instanceof runtime.EffectSig.class) {
-//│         tmp12.contTrace.last.next = new Cont$handleBlock$h2$2(0);
-//│         return runtime.handleBlockImpl(tmp12, h2)
+//│         return doUnwind1(tmp12, 9)
 //│       }
 //│       res7 = runtime.safeCall(h11.perform(runtime.Unit));
 //│       if (res7 instanceof runtime.EffectSig.class) {
-//│         res7.contTrace.last.next = new Cont$handleBlock$h2$2(1);
-//│         return runtime.handleBlockImpl(res7, h2)
+//│         return doUnwind1(res7, 10)
 //│       }
 //│       return res7
 //│     };
-//│     Handler$h2$3 = class Handler$h2$2 extends Effect1 {
+//│     globalThis.Object.freeze(class Handler$h2$2 extends Effect1 {
+//│       static {
+//│         Handler$h2$3 = this
+//│       }
 //│       constructor() {
 //│         let tmp12;
 //│         tmp12 = super();
-//│         return this;
 //│       }
 //│       perform(arg) {
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
 //│           let tmp12, tmp13, tmp14, tmp15, tmp16, Cont$handler$h2$perform$2, doUnwind1;
-//│           Cont$handler$h2$perform$2 = function Cont$handler$h2$perform$(pc1) {
-//│             return new Cont$handler$h2$perform$.class(pc1);
-//│           };
-//│           Cont$handler$h2$perform$2.class = class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
+//│           globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
+//│             static {
+//│               Cont$handler$h2$perform$2 = this
+//│             }
 //│             constructor(pc) {
 //│               let tmp17;
 //│               tmp17 = super(null);
@@ -418,7 +283,7 @@ str
 //│                     return this.doUnwind(tmp14, 5)
 //│                   }
 //│                   this.pc = 5;
-//│                   continue contLoop;
+//│                   continue contLoop
 //│                 } else if (this.pc === 5) {
 //│                   tmp15 = str + "B";
 //│                   tmp16 = str + tmp15;
@@ -428,10 +293,11 @@ str
 //│                 break;
 //│               }
 //│             }
-//│             toString() { return "Cont$handler$h2$perform$(" + runtime.render(this.pc) + ")"; }
-//│           };
+//│             toString() { return runtime.render(this); }
+//│             static [definitionMetadata] = ["class", "Cont$handler$h2$perform$"]; 
+//│           });
 //│           doUnwind1 = function doUnwind(res7, pc) {
-//│             res7.contTrace.last.next = new Cont$handler$h2$perform$2.class(pc);
+//│             res7.contTrace.last.next = new Cont$handler$h2$perform$2(pc);
 //│             res7.contTrace.last = res7.contTrace.last.next;
 //│             return res7
 //│           };
@@ -449,30 +315,32 @@ str
 //│         };
 //│         return runtime.mkEffect(this, hdlrFun)
 //│       }
-//│       toString() { return "Handler$h2$"; }
-//│     };
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Handler$h2$"]; 
+//│     });
 //│     h22 = new Handler$h2$3();
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11.contTrace.last.next = new Cont$handleBlock$h1$2(6);
-//│       return runtime.handleBlockImpl(tmp11, h1)
+//│       return doUnwind(tmp11, 12)
 //│     }
 //│     return tmp11
 //│   };
-//│   Handler$h1$3 = class Handler$h1$2 extends Effect1 {
+//│   globalThis.Object.freeze(class Handler$h1$2 extends Effect1 {
+//│     static {
+//│       Handler$h1$3 = this
+//│     }
 //│     constructor() {
 //│       let tmp11;
 //│       tmp11 = super();
-//│       return this;
 //│     }
 //│     perform(arg) {
 //│       let hdlrFun;
 //│       hdlrFun = function hdlrFun(k) {
 //│         let tmp11, tmp12, tmp13, Cont$handler$h1$perform$2, doUnwind;
-//│         Cont$handler$h1$perform$2 = function Cont$handler$h1$perform$(pc1) {
-//│           return new Cont$handler$h1$perform$.class(pc1);
-//│         };
-//│         Cont$handler$h1$perform$2.class = class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
+//│         globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
+//│           static {
+//│             Cont$handler$h1$perform$2 = this
+//│           }
 //│           constructor(pc) {
 //│             let tmp14;
 //│             tmp14 = super(null);
@@ -495,7 +363,7 @@ str
 //│                   return this.doUnwind(tmp12, 1)
 //│                 }
 //│                 this.pc = 1;
-//│                 continue contLoop;
+//│                 continue contLoop
 //│               } else if (this.pc === 1) {
 //│                 tmp13 = str + "A";
 //│                 str = tmp13;
@@ -504,10 +372,11 @@ str
 //│               break;
 //│             }
 //│           }
-//│           toString() { return "Cont$handler$h1$perform$(" + runtime.render(this.pc) + ")"; }
-//│         };
+//│           toString() { return runtime.render(this); }
+//│           static [definitionMetadata] = ["class", "Cont$handler$h1$perform$"]; 
+//│         });
 //│         doUnwind = function doUnwind(res7, pc) {
-//│           res7.contTrace.last.next = new Cont$handler$h1$perform$2.class(pc);
+//│           res7.contTrace.last.next = new Cont$handler$h1$perform$2(pc);
 //│           res7.contTrace.last = res7.contTrace.last.next;
 //│           return res7
 //│         };
@@ -523,8 +392,9 @@ str
 //│       };
 //│       return runtime.mkEffect(this, hdlrFun)
 //│     }
-//│     toString() { return "Handler$h1$"; }
-//│   };
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h1$"]; 
+//│   });
 //│   h11 = new Handler$h1$3();
 //│   tmp9 = handleBlock$7();
 //│   if (tmp9 instanceof runtime.EffectSig.class) {

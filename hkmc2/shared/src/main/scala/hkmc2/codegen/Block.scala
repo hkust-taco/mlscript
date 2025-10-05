@@ -153,7 +153,7 @@ sealed abstract class Block extends Product:
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case Define(defn, rest) if !ignore(defn) => defn match // TODO: don't touch object or modules
+        case Define(defn, rest) if !ignore(defn) => defn match
           case v: ValDefn => super.applyBlock(b)
           case _ =>
             defns ::= defn

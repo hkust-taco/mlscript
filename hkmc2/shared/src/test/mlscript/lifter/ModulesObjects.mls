@@ -462,7 +462,7 @@ module A with
     f() + g()
 A.x
 //│ JS (unsanitized):
-//│ let A16, h$;
+//│ let h, A16, h$;
 //│ h$ = function h$(f$member) {
 //│   return f$member()
 //│ };
