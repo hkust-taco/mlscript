@@ -290,6 +290,7 @@ extends Importer:
   import tl.*
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
+    sym.annotations = annotations
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
@@ -987,6 +988,7 @@ extends Importer:
         val newAcc = lhs match
           case id: Ident =>
             val sym = new VarSymbol(id)
+            sym.annotations = annotations
             newCtx += id.name -> sym
             RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)) ::
             DefineVar(sym, rhs_t) ::
@@ -1019,6 +1021,7 @@ extends Importer:
           case N =>
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
+            sym.annotations = annotations
             LetDecl(sym, annotations).mkLocWith(kw) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
@@ -1110,7 +1113,8 @@ extends Importer:
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N)
               tsym.defn = S(tdf)
               sym.defn = S(tdf)
-              
+              tsym.annotations = annotations
+              sym.annotations = annotations
               tdf
             go(sts, Nil, tdf :: acc)
           case L(d) =>
@@ -1289,6 +1293,7 @@ extends Importer:
             val pd = PatternDef(owner, patSym, sym, tps,
               patternParams, extractionParams, pat, annotations)
             patSym.defn = S(pd)
+            patSym.annotations = annotations
             pd
         case k: (Mod.type | Obj.type) =>
           val modSym = td.symbol.asInstanceOf[ModuleOrObjectSymbol] // TODO: improve `asInstanceOf`
@@ -1306,6 +1311,7 @@ extends Importer:
                 ModuleOrObjectDef(owner, modSym, sym,
                   tps, pss.headOption, pss.tailOr(Nil), newOf(td), k, ObjBody(bod), comp, annotations)
               modSym.defn = S(md)
+              modSym.annotations = annotations
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
@@ -1318,6 +1324,7 @@ extends Importer:
                 val (bod, c) = mkBody
                 ClassDef(owner, Cls, clsSym, sym, tps, pss, newOf(td), ObjBody(bod), annotations, comp)
               clsSym.defn = S(cd)
+              clsSym.annotations = annotations
               cd
         sym.defn = S(defn)
         go(sts, Nil, defn :: acc)
