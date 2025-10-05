@@ -158,11 +158,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
         val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
         IfLike(Keyword.`if`, branch ~: Split.Else(emptyRecordSymbol.safeRef))
-      LetDecl(subScrutineeVar, Nil) :: DefineVar(subScrutineeVar, conditional) :: Nil
+      LetDecl(subScrutineeVar) :: DefineVar(subScrutineeVar, conditional) :: Nil
     .toList
     // If there are no bindings, we do not need to create the empty record.
     val bindings2 = if bindings.isEmpty then Nil else
-      LetDecl(emptyRecordSymbol, Nil) ::
+      LetDecl(emptyRecordSymbol) ::
         DefineVar(emptyRecordSymbol, emptyRecord) :: bindings
     // For each pattern, we compile a split and bind the result to a variable.
     // The variable will be a field of the output record.
@@ -182,7 +182,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val test = IfLike(Keyword.`if`, split)
         // The corresponding record field should just take the result of the split.
         val field = RcdField(str(label.asFieldName), symbol.safeRef)
-        (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, field :: fields)
+        (DefineVar(symbol, test) :: LetDecl(symbol) :: stmts, field :: fields)
     // Lastly, we return the output record.
     Blk(bindings2 ::: tests.reverse, Rcd(false, recordFields.reverse))
   
@@ -356,7 +356,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       val params = paramList(param(bindingsSymbol))
       // We then bind the variables to fields of the record.
       val letBindings = pattern.symbols.flatMap: symbol =>
-        LetDecl(symbol, Nil) ::
+        LetDecl(symbol) ::
         DefineVar(symbol, sel(bindingsSymbol.safeRef, symbol.name)) :: Nil
       val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
       (makeConsequent, alternative) => Split.Let(

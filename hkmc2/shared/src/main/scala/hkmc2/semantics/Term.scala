@@ -352,7 +352,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
-    case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
+    case LetDecl(sym) => LetDecl(sym)
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
@@ -440,7 +440,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Forall(_, _, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
-    case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms)
+    case LetDecl(sym) => Nil
     case DefineVar(sym, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
@@ -530,7 +530,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"new! ${cls.showDbg}${args.map(_.showAsParams).mkString}"
     case SelProj(pre, cls, proj) => s"${pre.showDbg}.${cls.showDbg}#${proj.name}"
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
-    case LetDecl(sym, _) => s"let ${sym}"
+    case LetDecl(sym) => s"let ${sym}"
     case DefineVar(sym, rhs) => s"${sym} = ${rhs.showDbg}"
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) =>
       s"handle ${lhs} = ${rhs}(${args.mkString(", ")}) ${defs} in ${bod}"
@@ -569,7 +569,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
 
-final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
+final case class LetDecl(sym: LocalSymbol) extends Statement
 
 final case class RcdField(field: Term, rhs: Term) extends Statement
 final case class RcdSpread(rcd: Term) extends Statement

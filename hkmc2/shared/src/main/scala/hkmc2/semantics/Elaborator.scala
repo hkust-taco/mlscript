@@ -291,7 +291,7 @@ extends Importer:
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     sym.annotations = annotations
-    LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
+    LetDecl(sym).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
   
   def resolveField(srcTree: Tree, base: Opt[Symbol], nme: Ident): Opt[FieldSymbol] =
     base match
@@ -368,7 +368,7 @@ extends Importer:
       val lt = subterm(lhs)
       val sym = TempSymbol(S(lt), "old")
       Blk(
-        LetDecl(sym, Nil) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
+        LetDecl(sym) :: DefineVar(sym, lt) :: Nil, Term.Try(Blk(
           Term.Assgn(lt, subterm(rhs)) :: Nil,
           subterm(bod),
       ), Term.Assgn(lt, sym.ref())))
@@ -992,7 +992,7 @@ extends Importer:
             newCtx += id.name -> sym
             RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)) ::
             DefineVar(sym, rhs_t) ::
-            LetDecl(sym, annotations) ::
+            LetDecl(sym) ::
             acc
           case lit: Literal =>
             reportUnusedAnnotations
@@ -1022,7 +1022,7 @@ extends Importer:
             if tups.nonEmpty then
               raise(ErrorReport(msg"Expected a right-hand side for let bindings with parameters" -> hd.toLoc :: Nil))
             sym.annotations = annotations
-            LetDecl(sym, annotations).mkLocWith(kw) :: acc
+            LetDecl(sym).mkLocWith(kw) :: acc
         (ctx + (id.name -> sym)) givenIn:
           go(sts, Nil, newAcc)
       case (tree @ LetLike(Keywrd(`let`), lhs, _, N)) :: sts =>
@@ -1204,7 +1204,7 @@ extends Importer:
                 fdef :: Nil
               else
                 val psym = TermSymbol(LetBind, owner, p.sym.id)
-                val decl = LetDecl(psym, Nil)
+                val decl = LetDecl(psym)
                 val defn = DefineVar(psym, p.sym.ref())
                 p.fldSym = S(psym)
                 decl :: defn :: Nil

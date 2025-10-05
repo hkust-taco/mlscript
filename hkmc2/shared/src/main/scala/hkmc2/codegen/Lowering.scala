@@ -145,11 +145,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         subTerm(lhs): l =>
           subTerm_nonTail(rhs): r =>
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
-    case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
-      reportAnnotations(decl, annotations)
+    case (decl @ LetDecl(sym)) :: (stats @ ((_: DefineVar) :: _)) =>
+      reportAnnotations(decl, decl.sym.annotations)
       blockImpl(stats, res)(k)
-    case (decl @ LetDecl(sym, annotations)) :: stats =>
-      reportAnnotations(decl, annotations)
+    case (decl @ LetDecl(sym)) :: stats =>
+      reportAnnotations(decl, decl.sym.annotations)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
@@ -875,7 +875,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               source = Diagnostic.Source.Compilation
             )
       rec(rhs, Nil)(k)
-    case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
+    case Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
@@ -909,8 +909,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           FunDefn(td.owner, td.sym, paramLists, bodyBlock)
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
-      case decl @ LetDecl(sym: TermSymbol, annotations) =>
-        reportAnnotations(decl, annotations)
+      case decl @ LetDecl(sym: TermSymbol) =>
+        reportAnnotations(decl, sym.annotations)
         sym
     val ctor =
       term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)

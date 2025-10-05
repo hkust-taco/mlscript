@@ -247,7 +247,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
       val cr = freshVar(new TempSymbol(S(unq), "ctx"))
       constrain(tryMkMono(ty, body), BbCtx.codeTy(tv, cr))
       (tv, cr, eff)
-    case blk @ Term.Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, body)
+    case blk @ Term.Blk(LetDecl(sym) :: DefineVar(sym2, rhs) :: Nil, body)
     if sym2 is sym => // TODO: more than one!!
       val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
@@ -441,7 +441,7 @@ class BBTyper(using elState: Elaborator.State, tl: TL):
           case (term: Term) :: stats =>
             effBuff += typeCheck(term)._2
             goStats(stats)
-          case LetDecl(sym, _) :: DefineVar(sym2, rhs) :: stats =>
+          case LetDecl(sym) :: DefineVar(sym2, rhs) :: stats =>
             require(sym2 is sym)
             val (rhsTy, eff) = typeCheck(rhs)
             effBuff += eff

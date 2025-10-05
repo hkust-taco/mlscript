@@ -548,7 +548,7 @@ class NaiveCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       topmost: Split
   ): Ls[Statement] =
     val fieldSymbol = TempSymbol(N, name)
-    val decl = LetDecl(fieldSymbol, Nil)
+    val decl = LetDecl(fieldSymbol)
     val param = Param(FldFlags.empty, scrut, N, Modulefulness.none)
     val paramList = PlainParamList(param :: Nil)
     val lambda = Term.Lam(paramList, Term.IfLike(Keyword.`if`, topmost))
