@@ -352,7 +352,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
     case imp: Import => Import(imp.sym, imp.str, imp.file)
-    case LetDecl(sym) => LetDecl(sym)
+    case LetDecl(sym) =>
+      sym.annotations = sym.annotations.map(_.mkClone)
+      LetDecl(sym)
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
@@ -440,7 +442,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Forall(_, _, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
-    case LetDecl(sym) => Nil
+    case LetDecl(sym) => sym.annotations.flatMap(_.subTerms)
     case DefineVar(sym, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
