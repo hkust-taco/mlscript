@@ -38,7 +38,7 @@ class Importer:
       file.ext match
       
       case "mjs" | "js" =>
-        Import(sym, file.toString)
+        Import(sym, file.toString, file)
         
       case "mls" =>
         
@@ -69,13 +69,13 @@ class Importer:
           case None => lastWords(s"File $file does not define a symbol named $nme")
         
         val jsFile = file / os.up / (file.baseName + ".mjs")
-        Import(sym, jsFile.toString)
+        Import(sym, jsFile.toString, jsFile)
         
       case _ =>
         raise(ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil))
-        Import(sym, file.toString)
+        Import(sym, path, file)
       
     else
-      Import(sym, path)
+      Import(sym, path, file)
     
 

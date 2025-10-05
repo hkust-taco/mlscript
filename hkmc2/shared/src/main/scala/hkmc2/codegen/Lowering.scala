@@ -154,7 +154,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
         Assign(sym, r, blockImpl(stats, res)(k))
-    case (imp @ Import(sym, path)) :: stats =>
+    case (imp: Import) :: stats =>
       raise(ErrorReport(
         msg"Imports must be at the top level" ->
         imp.toLoc :: Nil,
@@ -1029,7 +1029,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val res = MergeMatchArmTransformer.applyBlock(lifted)
     
     Program(
-      imps.map(imp => imp.sym -> imp.file),
+      imps.map(imp => imp.sym -> imp.str),
       res
     )
   

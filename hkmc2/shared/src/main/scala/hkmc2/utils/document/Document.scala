@@ -19,6 +19,9 @@ import scala.annotation.tailrec
  */
 sealed abstract class Document {
   
+  def +(that: Str) = this :: DocText(that)
+  def +(that: Document) = this :: that
+  
   def ::(that: Document): Document = (this, that) match
     case (DocNil, _) => that
     case (_, DocNil) => this
@@ -115,12 +118,11 @@ sealed abstract class Document {
     
   end format
   
-  def mkString(columns: Int): Str =
+  def mkString(columns: Int = 120): Str =
     val w = new StringWriter()
     format(columns, w)
     w.toString
   
-  override def toString: Str = mkString(120)
 }
 
 object Document {
@@ -145,7 +147,7 @@ object Document {
   def group(d: Document): Document = DocGroup(d)
   
   /** A nested document, which will be indented as specified. */
-  def nest(i: Int, d: Document): Document = DocNest(i, d)
+  def nest(doc: Document, indent: Int = DEFAULT_NEST_COUNT): Document = DocNest(indent, doc)
   
   val DEFAULT_NEST_COUNT = 2
   

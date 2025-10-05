@@ -608,7 +608,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       val walker = new BlockDataTransformer(SymbolSubst()):
         // only scan within the block. don't traverse
         
-        override def applyResult(r: Result): Result = r match
+        override def applyResult(r: Result)(k: Result => Block): Block = r match
           // if possible, directly rewrite the call using the efficient version
           case c @ Call(RefOfBms(l), args) => ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
@@ -617,25 +617,25 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 // Instantiation without `new mut` is always immutable 
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
                 case _ => getCallArgs(l, ctx)
-              val newArgs = args.map(applyArg(_))
-              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false)
-            case _ => super.applyResult(r)
+              applyListOf(args)(applyArg): newArgs =>
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false))
+            case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l), args) =>
             ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
-              val newArgs = args.map(applyArg)
-              Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false)
-            case _ => super.applyResult(r)
+              applyListOf(args)(applyArg): newArgs =>
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false))
+            case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
           // variable here. But, since this closure may be re-used later, this doesn't work
           // in general, so we will always create a TempSymbol for it.
           // case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
           //   createCall(l, ctx)
-          case _ => super.applyResult(r)
+          case _ => super.applyResult(r)(k)
         
         // extract the call
-        override def applyPath(p: Path): Path = 
+        override def applyPath(p: Path)(k: Path => Block): Block = 
           p match
           case RefOfBms(l) if ctx.bmsReqdInfo.contains(l) && !ctx.isModOrObj(l) =>
             val newSym = closureMap.get(l) match
@@ -653,8 +653,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
               case Some(value) =>
                 syms.addOne(l -> value)
                 value
-            Value.Ref(newSym)
-          case _ => super.applyPath(p)
+            k(Value.Ref(newSym))
+          case _ => super.applyPath(p)(k)
       (walker.applyBlock(b), syms.toList)
     end rewriteBms
     
@@ -683,17 +683,20 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         // This set needs to be reset after processing an if-else branch or while loop,
         // since closures nested inside each branch may not be re-used elsewhere.
         case Match(scrut, arms, dflt, rst) =>
-          val scrut2 = applyPath(scrut)
-          val arms2 = arms.mapConserve: arm =>
-            val cse2 = applyCase(arm._1)
-            val blk2 = applySubBlockAndReset(arm._2)
-            if (cse2 is arm._1) && (blk2 is arm._2) then arm else (cse2, blk2)
-          val dflt2 = dflt.mapConserve(applySubBlockAndReset)
-          val rst2 = applySubBlock(rst)
-          if (scrut2 is scrut) &&
-              (arms2 is arms) &&
-              (dflt2 is dflt) && (rst2 is rst)
-            then b else Match(scrut2, arms2, dflt2, rst2)
+          applyPath(scrut): scrut2 =>
+            applyListOf(arms)
+              .apply:
+                case tup@(cse, blk) => k =>
+                  val blk2 = applySubBlockAndReset(blk)
+                  applyCase(cse): cse2 =>
+                    if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
+              .apply: arms2 =>
+                val dflt2 = dflt.mapConserve(applySubBlockAndReset)
+                val rst2 = applySubBlock(rst)
+                if (scrut2 is scrut) &&
+                    (arms2 is arms) &&
+                    (dflt2 is dflt) && (rst2 is rst)
+                  then b else Match(scrut2, arms2, dflt2, rst2)
             
         case Label(lbl, bod, rst) =>
           val lbl2 = applyLocal(lbl)
@@ -720,22 +723,27 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                   msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
                   N, Diagnostic.Source.Compilation
                 ))
-              AssignField(value.read, t.id, applyResult(rhs), applyBlock(rest))(N)
+              applyResult(rhs): newRhs =>
+                AssignField(value.read, t.id, newRhs, applyBlock(rest))(N)
             case _ => super.applyBlock(rewritten)
         
         // Assignment to variables
         case Assign(lhs, rhs, rest) => ctx.getLocalCaptureSym(lhs) match
           case Some(captureSym) => 
-            AssignField(ctx.getLocalClosPath(lhs).get.read, captureSym.id, applyResult(rhs), applyBlock(rest))(N)
+            applyResult(rhs): newRhs =>
+              AssignField(ctx.getLocalClosPath(lhs).get.read, captureSym.id, newRhs, applyBlock(rest))(N)
           case None => ctx.getLocalPath(lhs) match
             case None => super.applyBlock(rewritten)
-            case Some(value) => value.assign(applyResult(rhs), applyBlock(rest))
+            case Some(value) =>
+              applyResult(rhs): newRhs =>
+                value.assign(newRhs, applyBlock(rest))
         
         // rewrite ValDefns (in ctors)
         case Define(d: ValDefn, rest: Block) if d.owner.isDefined =>
           ctx.getIsymPath(d.owner.get) match
             case Some(value) if !iSymInScope(d.owner.get) =>
-              AssignField(value.read, Tree.Ident(d.sym.nme), applyResult(d.rhs), applyBlock(rest))(S(d.sym))
+              applyResult(d.rhs): newRhs =>
+                AssignField(value.read, Tree.Ident(d.sym.nme), newRhs, applyBlock(rest))(S(d.sym))
             case _ => super.applyBlock(rewritten)
         
         // rewrite object definitions, assigning to the given symbol in modObjLocals
@@ -757,13 +765,13 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       
       pre.rest(remaining)
     
-    override def applyPath(p: Path): Path = 
+    override def applyPath(p: Path)(k: Path => Block): Block = 
       p match
       // These two cases rewrites `this.whatever` when referencing an outer class's fields.
       case Value.Ref(l: InnerSymbol) =>
         ctx.resolveIsymPath(l) match
-        case Some(value) if !iSymInScope(l) => value.read
-        case _ => super.applyPath(p)
+        case Some(value) if !iSymInScope(l) => k(value.read)
+        case _ => super.applyPath(p)(k)
       case Value.Ref(t: TermSymbol) if t.owner.isDefined =>
         ctx.resolveIsymPath(t.owner.get) match
           case Some(value) if !iSymInScope(t.owner.get) =>
@@ -773,37 +781,38 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 msg"Uses of private fields cannot yet be lifted." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
-            Select(value.read, t.id)(N)
-          case _ => super.applyPath(p)
+            k(Select(value.read, t.id)(N))
+          case _ => super.applyPath(p)(k)
       
       // Rewrites this.className.class to reference the top-level definition
       case s @ Select(RefOfBms(l), Tree.Ident("class")) if !ctx.ignored(l) && ctx.isRelevant(l) =>
         // this class will be lifted, rewrite the ref to strip it of `Select`
-        Select(Value.Ref(l), Tree.Ident("class"))(s.symbol)
+        k(Select(Value.Ref(l), Tree.Ident("class"))(s.symbol))
 
       // For objects inside classes: When an object is nested inside a class, its defn will be
       // replaced by a symbol, to which the object instance is assigned. This rewrites references
       // from the objects BlockMemberSymbol to that new symbol.
       case s @ Select(qual, ident) => 
         s.symbol.flatMap(ctx.getLocalPath) match
-        case Some(LocalPath.Sym(value: MemberSymbol[?])) => Select(qual, Tree.Ident(value.nme))(S(value))
-        case _ => super.applyPath(p) 
+        case Some(LocalPath.Sym(value: MemberSymbol[?])) =>
+          k(Select(qual, Tree.Ident(value.nme))(S(value)))
+        case _ => super.applyPath(p)(k)
 
       // This is to rewrite references to classes that are not lifted (when their BlockMemberSymbol
       // reference is passed as function parameters).
       case RefOfBms(l) if ctx.ignored(l) && ctx.isRelevant(l) => ctx.getIgnoredBmsPath(l) match
-        case Some(value) => value.read
-        case None => super.applyPath(p)
+        case Some(value) => k(value.read)
+        case None => super.applyPath(p)(k)
       
       // This rewrites naked references to locals. If a function is in a capture, then we select that value
       // from the capture; otherwise, we see if that local is passed directly as a parameter to this defn.
       case Value.Ref(l) => ctx.getLocalCaptureSym(l) match
         case Some(captureSym) => 
-          Select(ctx.getLocalClosPath(l).get.read, captureSym.id)(N)
+          k(Select(ctx.getLocalClosPath(l).get.read, captureSym.id)(N))
         case None => ctx.getLocalPath(l) match
-          case Some(value) => value.read
-          case None => super.applyPath(p)
-      case _ => super.applyPath(p)
+          case Some(value) => k(value.read)
+          case None => super.applyPath(p)(k)
+      case _ => super.applyPath(p)(k)
 
   // When calling a lifted function or constructor, we need to pass, as arguments, the local variables,
   // inner symbols, etc that it needs to access. This function creates those arguments for that in

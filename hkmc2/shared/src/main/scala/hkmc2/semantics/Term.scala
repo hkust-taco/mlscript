@@ -351,7 +351,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
   def mkClone(using State): Statement = this match
     case t: Term => lastWords(s"overridden implementation")
     case d: Definition => ???
-    case imp: Import => Import(imp.sym, imp.file)
+    case imp: Import => Import(imp.sym, imp.str, imp.file)
     case LetDecl(sym, annotations) => LetDecl(sym, annotations.map(_.mkClone))
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
@@ -458,7 +458,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       td.rhs.toList ::: td.annotations.flatMap(_.subTerms)
     case pat: PatternDef =>
       pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
-    case Import(sym, pth) => Nil
+    case Import(sym, str, pth) => Nil
     case Try(body, finallyDo) => body :: finallyDo :: Nil
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
@@ -560,7 +560,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       s"${cls.kind} ${cls.sym.nme}${
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.toString)} ${cls.body}"
-    case Import(sym, file) => s"import ${sym} from ${file}"
+    case Import(sym, str, file) => s"import $str from ${file}"
     case Annotated(ann, target) => s"@${ann} ${target.showDbg}"
     case Throw(res) => s"throw ${res.showDbg}"
     case Try(body, finallyDo) => s"try ${body.showDbg} finally ${finallyDo.showDbg}"
@@ -666,7 +666,8 @@ case class ObjBody(blk: Term.Blk):
   override def toString: String = blk.showDbg
 
 
-case class Import(sym: Symbol, file: Str) extends Statement
+/** Note that the `file` Path may not represent a real file; eg when importing "fs". */
+case class Import(sym: Symbol, str: Str, file: os.Path) extends Statement
 
 
 sealed abstract class Declaration:
