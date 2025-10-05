@@ -6,36 +6,8 @@ abstract class Effect with
   fun perform(arg: Str): Str
 
 
-:sjs
 handle h = Effect with
   fun perform()(k) = "b"
-//│ JS (unsanitized):
-//│ let h, tmp, handleBlock$, Handler$h$1;
-//│ handleBlock$ = function handleBlock$() {
-//│   return runtime.Unit
-//│ };
-//│ globalThis.Object.freeze(class Handler$h$ extends Effect1 {
-//│   static {
-//│     Handler$h$1 = this
-//│   }
-//│   constructor() {
-//│     let tmp1;
-//│     tmp1 = super();
-//│   }
-//│   perform() {
-//│     let hdlrFun;
-//│     hdlrFun = function hdlrFun(k) {
-//│       return "b"
-//│     };
-//│     return runtime.mkEffect(this, hdlrFun)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ h = new Handler$h$1();
-//│ tmp = handleBlock$();
-//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
-//│ tmp
 
 :expect 42
 handle h = Effect with
@@ -184,9 +156,28 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let h11, tmp11, handleBlock$11, Handler$h$23;
+//│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, scrut, res, Cont$handleBlock$h$11, doUnwind;
+//│   let f, h, scrut, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
+//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
+//│     static {
+//│       Handler$h$12 = this
+//│     }
+//│     constructor() {
+//│       let tmp12;
+//│       tmp12 = super();
+//│     }
+//│     perform(arg) {
+//│       let hdlrFun;
+//│       hdlrFun = function hdlrFun(k) {
+//│         return arg
+//│       };
+//│       return runtime.mkEffect(this, hdlrFun)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│   });
+//│   h = new Handler$h$12();
 //│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$handleBlock$h$11 = this
@@ -203,20 +194,20 @@ if true do
 //│       return res1
 //│     } 
 //│     resume(value$) {
-//│       if (this.pc === 3) {
+//│       if (this.pc === 1) {
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 4) {
+//│         if (this.pc === 2) {
 //│           break contLoop
-//│         } else if (this.pc === 5) {
+//│         } else if (this.pc === 3) {
 //│           res = f();
 //│           if (res instanceof runtime.EffectSig.class) {
-//│             return this.doUnwind(res, 3)
+//│             return this.doUnwind(res, 1)
 //│           }
-//│           this.pc = 3;
+//│           this.pc = 1;
 //│           continue contLoop
-//│         } else if (this.pc === 3) {
+//│         } else if (this.pc === 1) {
 //│           return res
 //│         }
 //│         break;
@@ -227,7 +218,7 @@ if true do
 //│   });
 //│   doUnwind = function doUnwind(res1, pc) {
 //│     res1.contTrace.last.next = new Cont$handleBlock$h$11(pc);
-//│     return runtime.handleBlockImpl(res1, h11)
+//│     return runtime.handleBlockImpl(res1, h)
 //│   };
 //│   f = function f() {
 //│     return 3
@@ -236,32 +227,13 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 3)
+//│       return doUnwind(res, 1)
 //│     }
 //│     return res
 //│   } else {
 //│     return runtime.Unit
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class Handler$h$22 extends Effect1 {
-//│   static {
-//│     Handler$h$23 = this
-//│   }
-//│   constructor() {
-//│     let tmp12;
-//│     tmp12 = super();
-//│   }
-//│   perform(arg) {
-//│     let hdlrFun;
-//│     hdlrFun = function hdlrFun(k) {
-//│       return arg
-//│     };
-//│     return runtime.mkEffect(this, hdlrFun)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ h11 = new Handler$h$23();
 //│ tmp11 = handleBlock$11();
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
 //│   tmp11 = runtime.topLevelEffect(tmp11, false);
@@ -438,3 +410,13 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ = 123
+
+// Access superclass fields
+handle h1 = Object with
+  fun perf()(k) = k(2)
+class A with
+  val x = 2
+handle h2 = A with
+  fun perf()(k) = k(this.x)
+h2.perf()
+//│ = 2

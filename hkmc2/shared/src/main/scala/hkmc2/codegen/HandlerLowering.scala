@@ -194,7 +194,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _ => false
   
   private class FreshId:
-    var id: Int = 0
+    // IMPORTANT: this must be >= 1 otherwise we get state ID collions with the "entry" state 0.
+    var id: Int = 1
     def apply() =
       val tmp = id
       id += 1
@@ -206,9 +207,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // sym: the variable to which the resumed value should set
   case class BlockState(id: StateId, blk: Block, sym: Opt[Local])
   
-  // coalesce useless states
+  // Coalesce useless states
+  // Note: Currently it doesn't seem to do anything, so it's not used. Maybe the states are already pretty optimal.
   def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
-    return (entryState, states)
     val statesMap = (entryState :: states).map(state => state.id -> state).toMap
     def findEdges(state: BlockState) =
       var edges: List[BlockState] = Nil
@@ -399,7 +400,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     val PartRet(head, states) = go(blk)(using labelIds, N)
     
-    val (headState, restStates) = optParts(BlockState(0, head, N), states)
+    // optParts doesn't seem to do anything, but we'll keep it just in case it's needed in the future
+    // val (headState, restStates) = optParts(BlockState(0, head, N), states)
+    val (headState, restStates) = (BlockState(0, head, N), states)
     
     if inclEntryPoint then headState :: restStates
     else restStates
@@ -613,6 +616,18 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val lbl = freshTmp("handlerBody")
     val lblLoop = freshTmp("handlerLoop")
     
+    val handlerBody = translateBlock(
+      h.body, Set.empty, N, L(sym), // TODO: callSelf 
+      HandlerCtx(
+        false, true,
+        s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, 
+        handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), 
+        state => blockBuilder
+          .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(true, state.cls, state.uid.asArg :: Nil))
+          .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))
+      )
+    )
+    
     val handlerMtds = h.handlers.map: handler =>
       val sym = BlockMemberSymbol("hdlrFun", Nil, true)
       val mtdBdy = translateBlock(handler.body,
@@ -624,8 +639,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         )
       FunDefn(
         S(h.cls),
-        handler.sym, handler.params, Define(fDef, Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym) :: Nil), false)))
+        handler.sym, handler.params,
+        Define(
+          fDef,
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym) :: Nil), false)))
     
+    // some limit handling of effects extending classes and having access to their fields
+    // does not support super() raising effects
     val tmp = freshTmp()
     val ctor = blockBuilder
       .assign(tmp, Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true))
@@ -649,27 +669,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
-    val handlerBody = translateBlock(
-      h.body, Set.empty, N, L(sym), // TODO: callSelf 
-      HandlerCtx(
-        false, true,
-        s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, 
-        handlerCtx.debugInfo.copy(debugNme = s"‹handler body of ${h.lhs.nme}›"), 
-        state => blockBuilder
-          .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(true, state.cls, state.uid.asArg :: Nil))
-          .ret(PureCall(paths.handleBlockImplPath, state.res.asPath :: h.lhs.asPath :: Nil))
-      )
-    )
-    
     val defn = FunDefn(
       N, // no owner
-      sym, PlainParamList(Nil) :: Nil, handlerBody)
+      sym, PlainParamList(Nil) :: Nil, 
+      blockBuilder
+        .define(clsDefn)
+        .assign(h.lhs, Instantiate(true, Value.Ref(clsDefn.sym), Nil))
+        .rest(handlerBody))
     
-    // moved all defns outside
     val result = blockBuilder
       .define(defn)
-      .define(clsDefn)
-      .assign(h.lhs, Instantiate(true, Value.Ref(clsDefn.sym), Nil))
       .rest(
         ResultPlaceholder(h.res, freshId(), Call(sym.asPath, Nil)(true, true), h.rest)
       )

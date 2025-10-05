@@ -5,84 +5,8 @@
 // :elt
 
 :global
-:d
+// :d
 // :todo
 
 
-:effectHandlers
-:stackSafe
-:sjs
-let depth = 0
-fun f(a, b) = ()
-fun whoops()(k) =
-  fun lambda() = whoops()
-  f((), lambda)
-//│ Elab: { let depth‹539›; depth‹539› = 0; fun member:f‹537›(a‹540›, b‹541›) = (); fun member:whoops‹538›()(k‹545›) = { fun member:lambda‹536›() = member:whoops‹538›#666(); member:f‹537›#666((), member:lambda‹536›#666) }; }
-//│ JS (unsanitized):
-//│ let f, whoops, depth;
-//│ f = function f(a, b) {
-//│   return runtime.Unit
-//│ };
-//│ whoops = function whoops() {
-//│   return (k) => {
-//│     let lambda, Cont$func$whoops$1, doUnwind, stackDelayRes;
-//│     globalThis.Object.freeze(class Cont$func$whoops$ extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$func$whoops$1 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp;
-//│         tmp = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         return f(runtime.Unit, lambda)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$func$whoops$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res, pc) {
-//│       res.contTrace.last.next = new Cont$func$whoops$1(pc);
-//│       res.contTrace.last = res.contTrace.last.next;
-//│       return res
-//│     };
-//│     lambda = function lambda() {
-//│       let Cont$func$lambda$1, doUnwind1, stackDelayRes1;
-//│       globalThis.Object.freeze(class Cont$func$lambda$ extends runtime.FunctionContFrame.class {
-//│         static {
-//│           Cont$func$lambda$1 = this
-//│         }
-//│         constructor(pc) {
-//│           let tmp;
-//│           tmp = super(null);
-//│           this.pc = pc;
-//│         }
-//│         resume(value$) {
-//│           runtime.skipOnce = true;
-//│           return lambda()
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "Cont$func$lambda$"]; 
-//│       });
-//│       doUnwind1 = function doUnwind(res, pc) {
-//│         res.contTrace.last.next = new Cont$func$lambda$1(pc);
-//│         res.contTrace.last = res.contTrace.last.next;
-//│         return res
-//│       };
-//│       runtime.stackDepth = runtime.stackDepth + 1;
-//│       stackDelayRes1 = runtime.checkDepth();
-//│       if (stackDelayRes1 instanceof runtime.EffectSig.class) {
-//│         return doUnwind1(stackDelayRes1, 0)
-//│       }
-//│       return whoops()
-//│     };
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│       return doUnwind(stackDelayRes, 0)
-//│     }
-//│     return f(runtime.Unit, lambda)
-//│   }
-//│ };
-//│ depth = 0;
-//│ depth = 0
+

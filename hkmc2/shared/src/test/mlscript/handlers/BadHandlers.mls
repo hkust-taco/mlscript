@@ -1,6 +1,7 @@
 :js
 :effectHandlers
 
+
 :re
 handle h = Object with {}
 h.oops
@@ -17,7 +18,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.18: 	x
+//│ ║  l.19: 	x
 //│ ╙──      	^
 
 
@@ -26,14 +27,13 @@ x
 handle h = Object with
   fun lol(k) = k(())
 h.lol
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$6
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$3
 
 handle h = Object with
   fun lol()(k) = k(42)
 h.lol()
 val x = 1
 
-:noSanityCheck
 object Foo with
   handle h = Object with
     fun lol()(k) = k(42)

@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, h, tmp, handleBlock$, hdlrFun, Handler$h$1, Cont$func$f$1, doUnwind, Cont$handleBlock$h$1, doUnwind1, doUnwind$, Cont$func$f$$, doUnwind$1, Cont$handleBlock$h$$, hdlrFun$;
+//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, doUnwind, Cont$handleBlock$h$1, doUnwind1, hdlrFun, Handler$h$1, f$, doUnwind$, Cont$func$f$$, doUnwind$1, Cont$handleBlock$h$$, hdlrFun$;
 //│ globalThis.Object.freeze(class Effect {
 //│   static {
 //│     Effect1 = this
@@ -22,14 +22,38 @@ f() + f() + f()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Effect"]; 
 //│ });
-//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, tmp$0, tmp$1, tmp$2, tmp$3, pc) {
+//│ hdlrFun$ = function hdlrFun$(Handler$h$$instance, k) {
+//│   return runtime.safeCall(k())
+//│ };
+//│ hdlrFun = function hdlrFun(Handler$h$$instance) {
+//│   return (k) => {
+//│     return hdlrFun$(Handler$h$$instance, k)
+//│   }
+//│ };
+//│ globalThis.Object.freeze(class Handler$h$ extends Effect1 {
+//│   static {
+//│     Handler$h$1 = this
+//│   }
+//│   constructor() {
+//│     let tmp1;
+//│     tmp1 = super();
+//│   }
+//│   perform() {
+//│     let hdlrFun$this;
+//│     hdlrFun$this = runtime.safeCall(hdlrFun(this));
+//│     return runtime.mkEffect(this, hdlrFun$this)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
+//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
 //│   let tmp1, tmp2;
 //│   if (isMut === true) {
 //│     tmp1 = new Cont$handleBlock$h$1(pc);
 //│   } else {
 //│     tmp1 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
 //│   }
-//│   tmp2 = tmp1(tmp$0, tmp$1, tmp$2, tmp$3);
+//│   tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
 //│   return tmp2
 //│ };
 //│ globalThis.Object.freeze(class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
@@ -37,29 +61,33 @@ f() + f() + f()
 //│     Cont$handleBlock$h$1 = this
 //│   }
 //│   constructor(pc) {
-//│     return (tmp$0, tmp$1, tmp$2, tmp$3) => {
+//│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
 //│       let tmp1;
 //│       tmp1 = super(null);
-//│       this.tmp$0 = tmp$0;
+//│       this.h$0 = h$0;
 //│       this.tmp$1 = tmp$1;
 //│       this.tmp$2 = tmp$2;
 //│       this.tmp$3 = tmp$3;
+//│       this.tmp$4 = tmp$4;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
-//│   #tmp$0;
+//│   #h$0;
 //│   #tmp$1;
 //│   #tmp$2;
 //│   #tmp$3;
-//│   get tmp$0() { return this.#tmp$0; }
-//│   set tmp$0(value) { this.#tmp$0 = value; }
+//│   #tmp$4;
+//│   get h$0() { return this.#h$0; }
+//│   set h$0(value) { this.#h$0 = value; }
 //│   get tmp$1() { return this.#tmp$1; }
 //│   set tmp$1(value) { this.#tmp$1 = value; }
 //│   get tmp$2() { return this.#tmp$2; }
 //│   set tmp$2(value) { this.#tmp$2 = value; }
 //│   get tmp$3() { return this.#tmp$3; }
 //│   set tmp$3(value) { this.#tmp$3 = value; }
+//│   get tmp$4() { return this.#tmp$4; }
+//│   set tmp$4(value) { this.#tmp$4 = value; }
 //│   doUnwind(res, newPc) {
 //│     this.pc = newPc;
 //│     res.contTrace.last.next = this;
@@ -67,37 +95,37 @@ f() + f() + f()
 //│     return res
 //│   } 
 //│   resume(value$) {
-//│     if (this.pc === 4) {
-//│       this.tmp$0 = value$;
-//│     } else if (this.pc === 5) {
+//│     if (this.pc === 2) {
 //│       this.tmp$1 = value$;
-//│     } else if (this.pc === 6) {
-//│       this.tmp$3 = value$;
+//│     } else if (this.pc === 3) {
+//│       this.tmp$2 = value$;
+//│     } else if (this.pc === 4) {
+//│       this.tmp$4 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 4) {
-//│         this.pc = 8;
-//│         continue contLoop
-//│       } else if (this.pc === 8) {
-//│         this.tmp$1 = f();
-//│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$1, 5)
-//│         }
-//│         this.pc = 5;
-//│         continue contLoop
-//│       } else if (this.pc === 5) {
-//│         this.tmp$2 = this.tmp$0 + this.tmp$1;
-//│         this.pc = 7;
-//│         continue contLoop
-//│       } else if (this.pc === 7) {
-//│         this.tmp$3 = f();
-//│         if (this.tmp$3 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$3, 6)
-//│         }
+//│       if (this.pc === 2) {
 //│         this.pc = 6;
 //│         continue contLoop
 //│       } else if (this.pc === 6) {
-//│         return this.tmp$2 + this.tmp$3
+//│         this.tmp$2 = f$(this.h$0);
+//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$2, 3)
+//│         }
+//│         this.pc = 3;
+//│         continue contLoop
+//│       } else if (this.pc === 3) {
+//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
+//│         this.pc = 5;
+//│         continue contLoop
+//│       } else if (this.pc === 5) {
+//│         this.tmp$4 = f$(this.h$0);
+//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp$4, 4)
+//│         }
+//│         this.pc = 4;
+//│         continue contLoop
+//│       } else if (this.pc === 4) {
+//│         return this.tmp$3 + this.tmp$4
 //│       }
 //│       break;
 //│     }
@@ -105,13 +133,13 @@ f() + f() + f()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
 //│ });
-//│ doUnwind$1 = function doUnwind$(tmp1, tmp2, tmp3, tmp4, res, pc) {
-//│   res.contTrace.last.next = Cont$handleBlock$h$$(true, tmp1, tmp2, tmp3, tmp4, pc);
+//│ doUnwind$1 = function doUnwind$(h, tmp1, tmp2, tmp3, tmp4, res, pc) {
+//│   res.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, pc);
 //│   return runtime.handleBlockImpl(res, h)
 //│ };
-//│ doUnwind1 = function doUnwind(tmp1, tmp2, tmp3, tmp4) {
+//│ doUnwind1 = function doUnwind(h, tmp1, tmp2, tmp3, tmp4) {
 //│   return (res, pc) => {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, res, pc)
+//│     return doUnwind$1(h, tmp1, tmp2, tmp3, tmp4, res, pc)
 //│   }
 //│ };
 //│ Cont$func$f$$ = function Cont$func$f$$(isMut, tmp$0, pc) {
@@ -141,11 +169,11 @@ f() + f() + f()
 //│   get tmp$0() { return this.#tmp$0; }
 //│   set tmp$0(value) { this.#tmp$0 = value; }
 //│   resume(value$) {
-//│     if (this.pc === 3) {
+//│     if (this.pc === 1) {
 //│       this.tmp$0 = value$;
 //│     }
 //│     contLoop: while (true) {
-//│       if (this.pc === 3) {
+//│       if (this.pc === 1) {
 //│         return 1
 //│       }
 //│       break;
@@ -164,56 +192,37 @@ f() + f() + f()
 //│     return doUnwind$(tmp1, res, pc)
 //│   }
 //│ };
-//│ f = function f() {
+//│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
 //│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$(tmp1, tmp1, 3)
+//│     return doUnwind$(tmp1, tmp1, 1)
 //│   }
 //│   return 1
 //│ };
-//│ handleBlock$ = function handleBlock$() {
-//│   let tmp1, tmp2, tmp3, tmp4;
-//│   tmp1 = f();
-//│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp1, 4)
+//│ f = function f(h) {
+//│   return () => {
+//│     return f$(h)
 //│   }
-//│   tmp2 = f();
+//│ };
+//│ handleBlock$ = function handleBlock$() {
+//│   let h, tmp1, tmp2, tmp3, tmp4;
+//│   h = new Handler$h$1();
+//│   tmp1 = f$(h);
+//│   if (tmp1 instanceof runtime.EffectSig.class) {
+//│     return doUnwind$1(h, tmp1, tmp2, tmp3, tmp4, tmp1, 2)
+//│   }
+//│   tmp2 = f$(h);
 //│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp2, 5)
+//│     return doUnwind$1(h, tmp1, tmp2, tmp3, tmp4, tmp2, 3)
 //│   }
 //│   tmp3 = tmp1 + tmp2;
-//│   tmp4 = f();
+//│   tmp4 = f$(h);
 //│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(tmp1, tmp2, tmp3, tmp4, tmp4, 6)
+//│     return doUnwind$1(h, tmp1, tmp2, tmp3, tmp4, tmp4, 4)
 //│   }
 //│   return tmp3 + tmp4
 //│ };
-//│ hdlrFun$ = function hdlrFun$(Handler$h$$instance, k) {
-//│   return runtime.safeCall(k())
-//│ };
-//│ hdlrFun = function hdlrFun(Handler$h$$instance) {
-//│   return (k) => {
-//│     return hdlrFun$(Handler$h$$instance, k)
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class Handler$h$ extends Effect1 {
-//│   static {
-//│     Handler$h$1 = this
-//│   }
-//│   constructor() {
-//│     let tmp1;
-//│     tmp1 = super();
-//│   }
-//│   perform() {
-//│     let hdlrFun$this;
-//│     hdlrFun$this = runtime.safeCall(hdlrFun(this));
-//│     return runtime.mkEffect(this, hdlrFun$this)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ h = new Handler$h$1();
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
 //│ tmp
@@ -280,11 +289,11 @@ fun f(used1, unused1) =
   Test(unused1)
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h1, Test3, g, f2, tmp2, Test$1, g$, h$;
+//│ let h, Test3, g, f2, tmp2, Test$1, g$, h$;
 //│ h$ = function h$(used3) {
 //│   return used3
 //│ };
-//│ h1 = function h(used3) {
+//│ h = function h(used3) {
 //│   return () => {
 //│     return h$(used3)
 //│   }
@@ -370,11 +379,11 @@ fun f(used1, unused1) =
   new Test
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h3, Test7, g2, f4, tmp4, Test$3, g$2, h$2;
+//│ let h2, Test7, g2, f4, tmp4, Test$3, g$2, h$2;
 //│ h$2 = function h$(used3) {
 //│   return used3
 //│ };
-//│ h3 = function h(used3) {
+//│ h2 = function h(used3) {
 //│   return () => {
 //│     return h$2(used3)
 //│   }
@@ -673,11 +682,11 @@ fun f(x) =
 f(2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
-//│ let h4, f9, tmp9, h$3;
+//│ let h3, f9, tmp9, h$3;
 //│ h$3 = function h$(Test$instance, x) {
 //│   return x
 //│ };
-//│ h4 = function h(Test$instance, x) {
+//│ h3 = function h(Test$instance, x) {
 //│   return () => {
 //│     return h$3(Test$instance, x)
 //│   }
