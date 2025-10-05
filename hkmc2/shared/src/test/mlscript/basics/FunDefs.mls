@@ -33,11 +33,38 @@ fun (>>) foo(a, b) = a * b
 2 >> 2
 
 
-:todo // error
+:e
 fun ~ concat(a, b) = a + b
-//│ /!!!\ Uncaught error: scala.MatchError: App(Ident(concat),Tup(List(Ident(a), Ident(b)))) (of class hkmc2.syntax.Tree$App)
+//│ ╔══[ERROR] Expected a valid parameter, found application
+//│ ║  l.37: 	fun ~ concat(a, b) = a + b
+//│ ╙──      	      ^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: a
+//│ ║  l.37: 	fun ~ concat(a, b) = a + b
+//│ ╙──      	                     ^
+//│ ╔══[ERROR] Name not found: b
+//│ ║  l.37: 	fun ~ concat(a, b) = a + b
+//│ ╙──      	                         ^
 
-:todo // error
+// * Note the strange parsing
+:pt
+:todo // better error?
 fun not(b) = !b
+//│ ╔══[PARSE ERROR] Expected an expression; found dynamic selector instead
+//│ ║  l.51: 	fun not(b) = !b
+//│ ╙──      	             ^^
+//│ Parsed tree:
+//│ DynAccess:
+//│   obj = TermDef:
+//│     k = Fun
+//│     head = PrefixApp:
+//│       kw = Keywrd of keyword 'not'
+//│       rhs = Bra:
+//│         k = Round
+//│         inner = Ident of "b"
+//│     rhs = S of Error
+//│   fld = Ident of "b"
+//│ ╔══[ERROR] Illegal definition in term position.
+//│ ║  l.51: 	fun not(b) = !b
+//│ ╙──      	^^^^^^^^^^^^^^^
 
 

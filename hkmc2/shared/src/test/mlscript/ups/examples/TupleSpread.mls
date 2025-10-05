@@ -1,0 +1,102 @@
+:js
+
+// Extract the first and last elements of a list
+pattern FirstLast = ([x, ..._, y] => [x, y])
+
+[0, 1, 2] is FirstLast([0, 2])
+//│ = true
+
+[5, 8] is FirstLast([5, 8])
+//│ = true
+
+[] is FirstLast
+//│ = false
+
+[1] is FirstLast
+//│ = false
+
+// Test if a list is a palindrome. This example is not very good because it
+// outputs a boolean value, rather than rejecting the input.
+pattern TestPalindrome =
+  ([x, ...TestPalindrome as m, y] => m && x == y) |
+  (([_] | []) => true) | (_ => false)
+
+[1, 2, 1] is TestPalindrome(true)
+//│ = true
+
+[] is TestPalindrome(true)
+//│ = true
+
+[1] is TestPalindrome(true)
+//│ = true
+
+[1, 2] is TestPalindrome(true)
+//│ = false
+
+// A better palindrome tuple, which matches palindrome sequences exactly.
+pattern Palindrome =
+  (([head, ...Palindrome, last] => head === last) as true) | [_] | []
+
+[1, 2, 2, 1] is Palindrome
+//│ = true
+
+[] is Palindrome
+//│ = true
+
+[1] is Palindrome
+//│ = true
+
+[1, 2] is Palindrome
+//│ = false
+
+[1, 2, 3] is Palindrome
+//│ = false
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1] is Palindrome
+//│ = true
+
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+pattern StackLike = ([] => Nil) | ([x, ...StackLike as xs] => x :: xs)
+
+[] is StackLike(Nil)
+//│ = true
+
+[] is StackLike(1 :: Nil)
+//│ = false
+
+[1] is StackLike(1 :: Nil)
+//│ = true
+
+[1, 2, 3, 4, 5] is StackLike(1 :: 2 :: 3 :: 4 :: 5 :: Nil)
+//│ = true
+
+:todo
+[1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
+//│ ║  l.77: 	[1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
+//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ = false
+
+[1, 2, 3, 4, 5] is StackLike(1 :: 2 :: 3 :: 4 :: Nil)
+//│ = false
+
+// Extract elements at even indices in a tuple.
+pattern ElementAtEvenIndex = 
+  ([] => []) | 
+  ([x] => [x]) | 
+  ([x, _, ...ElementAtEvenIndex as rest] => [x, ...rest])
+
+[] is ElementAtEvenIndex([])
+//│ = true
+
+[1] is ElementAtEvenIndex([1])
+//│ = true
+
+[1, 2, 3, 4, 5] is ElementAtEvenIndex([1, 3, 5])
+//│ = true
+
+[1, 2, 3, 4, 5] is ElementAtEvenIndex([1, 3])
+//│ = false

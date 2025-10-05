@@ -66,9 +66,14 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ (class T {
+//│ globalThis.Object.freeze(class T {
 //│   static {
-//│     T1 = T;
+//│     T1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.a = T.t;
 //│     this.b = T.t;
 //│     this.c = T.p;
@@ -80,15 +85,16 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
-//│   static toString() { return "T"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "T"]; 
 //│ });
 
 
 T.a
-//│ = [function t]
+//│ = fun t
 
 T.b
-//│ = [function t]
+//│ = fun t
 
 T.c
 //│ = 2
@@ -102,14 +108,18 @@ module M with
   fun t = 0
 //│ JS (unsanitized):
 //│ let M1;
-//│ (class M {
+//│ globalThis.Object.freeze(class M {
 //│   static {
-//│     M1 = M;
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
 //│   }
 //│   static get t() {
 //│     return 0;
 //│   }
-//│   static toString() { return "M"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
 
@@ -128,9 +138,7 @@ fun test() =
 //│ let test1;
 //│ test1 = function test() {
 //│   let whoops, tmp1;
-//│   whoops = function whoops() {
-//│     return 42
-//│   };
+//│   whoops = function whoops() { return 42 };
 //│   tmp1 = whoops();
 //│   return tmp1
 //│ };
@@ -205,9 +213,7 @@ fun a() =
 //│   };
 //│   c = function c() {
 //│     let d, tmp2, tmp3;
-//│     d = function d() {
-//│       return 2
-//│     };
+//│     d = function d() { return 2 };
 //│     tmp2 = b();
 //│     tmp3 = d();
 //│     return tmp2 + tmp3
@@ -236,9 +242,7 @@ fun b() =
 //│   };
 //│   d = function d() {
 //│     let c1, tmp3;
-//│     c1 = function c() {
-//│       return 2
-//│     };
+//│     c1 = function c() { return 2 };
 //│     tmp3 = c1();
 //│     return tmp3
 //│   };
@@ -287,18 +291,22 @@ data class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = function Foo(x1) {
-//│   return new Foo.class(x1);
+//│ Foo1 = function Foo(x) {
+//│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ Foo1.class = class Foo {
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
+//│   }
 //│   constructor(x) {
 //│     this.x = x;
 //│   }
 //│   get oops() {
 //│     return this.x;
 //│   }
-//│   toString() { return "Foo(" + runtime.render(this.x) + ")"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│ });
 
 
 fun foo(f) =

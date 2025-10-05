@@ -46,7 +46,7 @@ data class Freezed(degree: Num)
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.39: 	@Freezed(-4) let drink = Beverage("Coke")
 //│ ╙──      	 ^^^^^^^^^^^
-//│ drink = Beverage()
+//│ drink = Beverage(_)
 
 module Foo with
   data class Bar(qax: Str)
@@ -106,8 +106,8 @@ fun
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ║  l.88: 	@inline let
 //│ ╙──      	 ^^^^^^
-//│ abs = [function abs]
-//│ clamp = [function clamp]
+//│ abs = fun abs
+//│ clamp = fun clamp
 
 :w
 // Only the first variable is annotated with @inline.

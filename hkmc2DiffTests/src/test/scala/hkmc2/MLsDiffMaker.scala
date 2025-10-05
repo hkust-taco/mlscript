@@ -7,6 +7,7 @@ import utils.*
 
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
+import hkmc2.semantics.Resolvable
 
 import semantics.Elaborator.Ctx
 
@@ -129,7 +130,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       given Config = mkConfig
       importFile(preludeFile, verbose = false)
       prelude = curCtx
-    curCtx = curCtx.nestLocal
     super.run()
   
   
@@ -143,13 +143,13 @@ abstract class MLsDiffMaker extends DiffMaker:
     if file != preludeFile then
       given Config = mkConfig
       processTrees(
-        Modified(`import`, N, StrLit(predefFile.toString))
+        PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
         :: Nil)
     if importQQ.isSet then
       given Config = mkConfig
       processTrees(
-        Modified(`import`, N, StrLit(termFile.toString)) :: Nil)
+        PrefixApp(Keywrd(`import`), StrLit(termFile.toString)) :: Nil)
     super.init()
   
   
@@ -176,7 +176,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
-    given Elaborator.Ctx = curCtx.nestLocal
+    given Elaborator.Ctx = curCtx.nestLocal("import:"+file.baseName)
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
@@ -240,7 +240,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
-    given Elaborator.Ctx = curCtx.nestLocal
+    given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
     val blk = new syntax.Tree.Block(trees)
     val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx
@@ -256,14 +256,20 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+    given Ctx = curCtx
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
     showResolvedTree.get.foreach: post =>
+      case class Unexpanded(origin: Resolvable)
+      val pre: PartialFunction[Product, Product] = 
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
       output(s"Resolved tree:")
-      output(trm.showAsTree(using post))
+      output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     
     if typeCheck.isSet then
       val typer = typing.TypeChecker()

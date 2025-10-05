@@ -90,7 +90,7 @@ handleEffects(f)
 class Eff with
   fun perform(): ()
 data class Box(n)
-let box = Box(0)
+let box = new mut Box(0)
 //│ box = Box(0)
 
 

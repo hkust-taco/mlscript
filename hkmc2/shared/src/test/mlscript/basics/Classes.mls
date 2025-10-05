@@ -40,9 +40,10 @@ class Foo(x: Int) { log("Hello!") }
 
 // *** *** ***
 
-:fixme
 :e
 class Foo(42)
-//│ /!!!\ Uncaught error: scala.MatchError: IntLit(42) (of class hkmc2.syntax.Tree$IntLit)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.44: 	class Foo(42)
+//│ ╙──      	          ^^
 
 

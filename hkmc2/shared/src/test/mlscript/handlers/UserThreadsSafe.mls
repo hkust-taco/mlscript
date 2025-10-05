@@ -4,7 +4,7 @@
 
 class ThreadEffect with
   // task queue
-  val tasks = []
+  val tasks = mut []
   fun drain() =
     while tasks.length != 0 do
       tasks.pop()()

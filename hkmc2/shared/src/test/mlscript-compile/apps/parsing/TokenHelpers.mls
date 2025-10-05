@@ -12,7 +12,7 @@ module TokenHelpers with ...
 fun display(tokens: StackT[Token.Token], limit: Int): Str =
   let
     i = 0
-    values = []
+    values = mut []
   while i < limit and tokens is head :: tail do
     values.push of head Token.summary()
     set

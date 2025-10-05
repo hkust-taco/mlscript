@@ -5,7 +5,7 @@ fun foo() =
   1 + 2
 
 foo
-//│ = [function foo]
+//│ = fun foo
 
 foo()
 //│ = 3
@@ -67,13 +67,13 @@ let f = outerfun(100)
 f(200)
 //│ > 301
 //│ = 401
-//│ f = [function nested]
+//│ f = fun nested
 
 // f(200)
 
 outerfun(100)
 //│ > 301
-//│ = [function nested]
+//│ = fun nested
 
 outerfun(100)(200)
 //│ > 301
@@ -97,10 +97,10 @@ fun test2(y) = y + 1
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res18)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 
 test1(1)
 //│ = 2

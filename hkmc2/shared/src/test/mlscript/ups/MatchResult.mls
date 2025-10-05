@@ -1,0 +1,41 @@
+:js
+
+import "../../mlscript-compile/Runtime.mls"
+
+open Runtime { MatchResult, MatchFailure }
+
+
+MatchResult(0, new Object)
+//│ = MatchResult(0, {})
+
+if MatchResult(0, new Object) is MatchResult(x, _) then x
+//│ = 0
+
+MatchFailure("oops")
+//│ = MatchFailure("oops")
+
+if MatchFailure("oops") is MatchFailure(x) then x
+//│ = "oops"
+
+data class MatchResult(x)
+
+MatchResult(0)
+//│ = MatchResult(0)
+
+pattern Cross = "X"
+
+Cross.unapply("X")
+//│ = MatchResult("X", {})
+
+Cross.unapply("0")
+//│ = MatchFailure(null)
+
+:sjs
+fun foo(x) = x is Cross
+//│ JS (unsanitized):
+//│ let foo;
+//│ foo = function foo(x2) {
+//│   let matchResult;
+//│   matchResult = runtime.safeCall(Cross1.unapply(x2));
+//│   if (matchResult instanceof runtime.MatchResult.class) { return true } else { return false }
+//│ };

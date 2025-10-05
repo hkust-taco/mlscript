@@ -13,19 +13,29 @@ new
   Foo
 //│ = Foo
 
+:e
 :w
 new
   Foo
   Foo
+//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ║  l.20: 	  Foo
+//│ ║        	  ^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.18: 	  Foo
+//│ ║  l.19: 	  Foo
 //│ ╙──      	  ^^^
 //│ = Foo
 
 // * Interesting... it tries to call `Foo()` and instantiate the resulting class value...
+:e
 :re
 new
   Foo()
+//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ║  l.34: 	  Foo()
+//│ ║        	  ^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 :e
@@ -33,17 +43,22 @@ new
   Foo
     ()
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
-//│ ║  l.34: 	    ()
+//│ ║  l.44: 	    ()
 //│ ╙──      	    ^^
 //│ = Foo
 
+:e
 :w
 :re
 new
   Foo
   ()
+//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ║  l.55: 	  ()
+//│ ║        	  ^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.43: 	  Foo
+//│ ║  l.54: 	  Foo
 //│ ╙──      	  ^^^
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
@@ -51,8 +66,23 @@ new
 new Foo
   ()
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (unit).
-//│ ║  l.52: 	  ()
+//│ ║  l.67: 	  ()
 //│ ╙──      	  ^^
 //│ = Foo
+
+
+let xs = [1,2,3]
+//│ xs = [1, 2, 3]
+
+data class Foo(a,b,c)
+
+new Foo(...xs)
+//│ = Foo(1, 2, 3)
+
+new Foo(...[1, 2])
+//│ = Foo(1, 2, undefined)
+
+new Foo(...[1, 2, 3, 4])
+//│ = Foo(1, 2, 3)
 
 

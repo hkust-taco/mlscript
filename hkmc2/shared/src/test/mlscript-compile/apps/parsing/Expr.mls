@@ -1,8 +1,8 @@
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Predef.mls"
 
-open Str { parenthesizedIf }
+open StrOps { parenthesizedIf }
 open Option { Some, None }
 
 type OptionT[A] = Some[A] | None
@@ -30,7 +30,7 @@ module Expr with
   fun prettyPrint(tree: Expr): Str = if tree is
     Lit(value) then value.toString()
     Var(name) then name
-    Inf(op, left, right) then if opPrec(op) is [l, r] then Str.concat of
+    Inf(op, left, right) then if opPrec(op) is [l, r] then StrOps.concat of
       left prettyPrint() parenthesizedIf of 
         left is Inf(op', _, _) and opPrec(op') is [_, r'] and r' < l
       " "

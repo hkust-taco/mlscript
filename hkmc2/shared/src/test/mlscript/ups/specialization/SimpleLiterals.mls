@@ -1,0 +1,46 @@
+:js
+
+open annotations { compile }
+
+pattern Zero = "0"
+pattern One = "1"
+pattern Two = "2"
+
+:ucs normalized
+:fixme
+fun checkZeroOneTwo(x) = if x is
+  @compile Zero then 0
+  @compile One then 1
+  @compile Two then 2
+  else ()
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
+//│ ║  l.12: 	  @compile Zero then 0
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
+//│ ║  l.13: 	  @compile One then 1
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Unrecognized pattern split (annotated).
+//│ ║  l.14: 	  @compile Two then 2
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
+//│ Normalized:
+//│ >  if else <error>
+
+import "../../../mlscript-compile/Option.mls"
+open Option
+
+fun checkSomeZeroOneTwo(x) = if x is
+  Some(@compile Zero) then 0
+  Some(@compile One) then 1
+  Some(@compile Two) then 2
+  else ()
+
+pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+
+:e
+:todo
+let res = "1" is @compile ManyZero
+//│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.37: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
+//│ res = false
+

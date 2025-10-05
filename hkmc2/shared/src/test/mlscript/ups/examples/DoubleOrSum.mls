@@ -1,0 +1,167 @@
+:js
+
+open annotations
+
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Option.mls"
+
+open Stack
+open Option { Some, None }
+
+fun list(...elements) = elements Iter.toStack()
+
+// This is a helper function to print the addition of two numbers.
+fun (++) addWithPrint(x, y) =
+  let result = x + y
+  print of "" + x + " + " + y + " = " + result
+  result
+
+pattern DoubleList = Nil | (Int :: Int :: DoubleList)
+
+pattern SumList = (Nil => 0) | (((Int as hd) :: (SumList as tl)) => hd ++ tl)
+
+Nil is SumList(0)
+//│ = true
+
+let _1234 = list(1, 2, 3, 4)
+let _1234567 = list(1, 2, 3, 4, 5, 6, 7)
+//│ _1234 = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
+//│ _1234567 = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Cons(7, Nil)))))))
+
+_1234 is SumList(10)
+//│ > 4 + 0 = 4
+//│ > 3 + 4 = 7
+//│ > 2 + 7 = 9
+//│ > 1 + 9 = 10
+//│ = true
+
+_1234567 is SumList(28)
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = true
+
+_1234567 is SumList(42)
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = false
+
+_1234 is DoubleList
+//│ = true
+
+_1234567 is DoubleList
+//│ = false
+
+fun sum(xs) = if xs is SumList as output then Some(output) else None
+
+sum of _1234
+//│ > 4 + 0 = 4
+//│ > 3 + 4 = 7
+//│ > 2 + 7 = 9
+//│ > 1 + 9 = 10
+//│ = Some(10)
+
+sum of _1234567
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = Some(28)
+
+sum of Nil
+//│ = Some(0)
+
+// Try to make a disjunction of two patterns.
+
+pattern SumOrDouble = SumList | DoubleList
+
+fun isSumOrDouble__naive(xs) = if xs is SumOrDouble as output then output else "noop"
+
+isSumOrDouble__naive of _1234
+//│ > 4 + 0 = 4
+//│ > 3 + 4 = 7
+//│ > 2 + 7 = 9
+//│ > 1 + 9 = 10
+//│ = 10
+
+isSumOrDouble__naive of _1234567
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = 28
+
+isSumOrDouble__naive of Nil
+//│ = 0
+
+fun isSumOrDouble__compiled(xs) = if xs is (@compile SumOrDouble) as output then output else "noop"
+
+isSumOrDouble__compiled of _1234
+//│ > 4 + 0 = 4
+//│ > 3 + 4 = 7
+//│ > 2 + 7 = 9
+//│ > 1 + 9 = 10
+//│ = 10
+
+isSumOrDouble__compiled of _1234567
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = 28
+
+isSumOrDouble__compiled of Nil
+//│ = 0
+
+// Swap the order of two patterns.
+
+pattern DoubleOrSum = DoubleList | SumList
+
+fun isDoubleOrSum__naive(xs) = if xs is DoubleOrSum as output then output else "noop"
+
+:todo // Fix the return value of the translation.
+isDoubleOrSum__naive of _1234
+//│ = Nil
+
+isDoubleOrSum__naive of list(1, 2, 3)
+//│ > 3 + 0 = 3
+//│ > 2 + 3 = 5
+//│ > 1 + 5 = 6
+//│ = 6
+
+fun isDoubleOrSum__compiled(xs) = if xs is (@compile DoubleOrSum) as output then output else "noop"
+
+isDoubleOrSum__compiled of _1234
+//│ > 4 + 0 = 4
+//│ > 3 + 4 = 7
+//│ > 2 + 7 = 9
+//│ = {head: 1, tail: {head: 2, tail: {head: 3, tail: {head: 4, tail: Nil}}}}
+
+isDoubleOrSum__compiled of _1234567
+//│ > 7 + 0 = 7
+//│ > 6 + 7 = 13
+//│ > 5 + 13 = 18
+//│ > 4 + 18 = 22
+//│ > 3 + 22 = 25
+//│ > 2 + 25 = 27
+//│ > 1 + 27 = 28
+//│ = 28

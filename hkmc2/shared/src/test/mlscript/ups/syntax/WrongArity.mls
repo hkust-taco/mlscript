@@ -1,0 +1,15 @@
+:js
+
+data class Pair[A, B](val first: A, val second: B)
+
+:e
+pattern LessArity = Pair("meow")
+//│ ╔══[ERROR] Expected two arguments, but found only one argument.
+//│ ║  l.6: 	pattern LessArity = Pair("meow")
+//│ ╙──     	                         ^^^^^^
+
+:e
+pattern MoreArity = Pair("meow", "woof", "moo")
+//│ ╔══[ERROR] Expected two arguments, but found three arguments.
+//│ ║  l.12: 	pattern MoreArity = Pair("meow", "woof", "moo")
+//│ ╙──      	                         ^^^^^^^^^^^^^^^^^^^^^

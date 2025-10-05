@@ -1,0 +1,34 @@
+:js
+
+
+:sjs
+:re
+if {}
+//│ JS (unsanitized):
+//│ throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+:re
+if
+  let x = 1
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+:re
+if
+  do print("whoops")
+//│ > whoops
+//│ ═══[RUNTIME ERROR] Error: match error
+
+
+:re
+:e
+if
+  let x
+//│ ╔══[ERROR] Unrecognized term split (let).
+//│ ║  l.28: 	  let x
+//│ ╙──      	      ^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+

@@ -5,18 +5,17 @@ open Predef
 
 import "../../Char.mls"
 import "../../Stack.mls"
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Iter.mls"
 
 import "./Token.mls"
 
 open Stack
-open Str
+open StrOps
 open Option { Some, None}
 open Token { LiteralKind, LineLookupTable }
 
-type StackType = Stack.Cons | Stack.Nil
 type TokenType = Token.Token
 type Opt[T] = Some[T] | None
 
@@ -26,7 +25,7 @@ class Location(start: Int, end: Int)
 
 class Message(description: Str, location: Location)
 
-class Report(messages: StackType[Message])
+class Report(messages: Stack[Message])
 
 pattern IdentifierStart = Char.Letter | "_"
 
@@ -45,7 +44,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
   let
     i = 0
     n = text.length
-    ns = []
+    ns = mut []
   while i < n do
     let i' = text.indexOf("\n", i)
     if i' == -1 then
@@ -57,7 +56,7 @@ fun makeLineLookupTable(text: Str): LineLookupTable =
   LineLookupTable(ns)
 
 fun lex(str: Str, options) =
-  use LineLookupTable = makeLineLookupTable(str)
+  using LineLookupTable = makeLineLookupTable(str)
   
   fun char(idx: Int) = if idx < str.length
     then (Some of str.charAt of idx) else None
@@ -215,7 +214,7 @@ fun lex(str: Str, options) =
         [idx'', Token.decimal(integer ~ "." ~ fraction, idx)]
       else [idx', Token.integer(integer, idx)]
   
-  fun scan(idx: Int, acc: StackType[TokenType]): StackType[TokenType] =
+  fun scan(idx: Int, acc: Stack[TokenType]): Stack[TokenType] =
     fun go(idx: Int, tok: TokenType) = if
       options.noWhitespace and tok is
         Token.Comment then scan(idx, acc)
@@ -226,12 +225,12 @@ fun lex(str: Str, options) =
       None then reverse of acc
       Some(Char.Whitespace) and whitespace(idx) is idx' then
         go(idx', Token.space(idx, idx'))
-      Some("\"") then go(..string(idx + 1))
+      Some("\"") then go(...string(idx + 1))
       Some(Bracket as b) then go(idx + 1, Token.symbol(b, idx))
-      Some("/") then go(..comment(idx + 1))
-      Some(Operator as ch) then go(..operator(idx + 1, ch))
-      Some(Char.Digit as ch) then go(..number(idx + 1, ch))
-      Some(IdentifierStart as ch) then go(..identifier(idx + 1, ch))
+      Some("/") then go(...comment(idx + 1))
+      Some(Operator as ch) then go(...operator(idx + 1, ch))
+      Some(Char.Digit as ch) then go(...number(idx + 1, ch))
+      Some(IdentifierStart as ch) then go(...identifier(idx + 1, ch))
       Some(IdentifierQuote as quote)
         and char(idx + 1) is Some(IdentifierStart as ch)
         and identifier(idx + 2, quote + ch) is [idx', token] and

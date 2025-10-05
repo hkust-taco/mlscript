@@ -1,7 +1,8 @@
+:js
 
 
-data class Some[out T](value: T)
 data class Left[out T](value: T)
+data class Some[out T](value: T)
 data class Right[out T](value: T)
 
 
@@ -9,8 +10,12 @@ fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x
 
+:expect Some(Left(1))
 foo(Some(Left(1)))
+//│ = Some(Left(1))
 
+:expect 2
 foo(Some(2))
+//│ = 2
 
 

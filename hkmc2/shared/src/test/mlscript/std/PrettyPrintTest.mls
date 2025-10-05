@@ -1,0 +1,585 @@
+:js
+
+import "../../mlscript-compile/Rendering.mls"
+
+open Rendering
+
+// We set `breakLength` to 74. With the `print` function and diff test comments
+// added, we can use an 80-character-wide ruler to check whether line breaks
+// work correctly.
+fun show(value) = 
+  let breakLength = 74
+  let rendered = render of value, indent: 2, breakLength: breakLength
+  print of rendered
+    .split("\n")
+    .map of (line, _, _) =>
+      if line.length > breakLength then
+        line
+      else line + " ".repeat(breakLength - line.length) + "┊"
+    .join("\n")
+
+show of [1, 2, 3, 4]
+//│ > [1, 2, 3, 4]                                                              ┊
+
+:silent
+let shortText = "Hello, world!"
+let longText = "This is a very long line. ".repeat(4).trim()
+
+// Long strings can exceed the `breakLength` limit.
+show of longText
+//│ > "This is a very long line. This is a very long line. This is a very long line. This is a very long line."
+
+show of [1, longText, 2, 3, 4, 5]
+//│ > [                                                                         ┊
+//│ >   1,                                                                      ┊
+//│ >   "This is a very long line. This is a very long line. This is a very long line. This is a very long line.",
+//│ >   2,                                                                      ┊
+//│ >   3,                                                                      ┊
+//│ >   4,                                                                      ┊
+//│ >   5                                                                       ┊
+//│ > ]                                                                         ┊
+
+show of x: 0, y: 0
+//│ > {x: 0, y: 0}                                                              ┊
+
+show of x: 0, y: 0, z: longText
+//│ > {                                                                         ┊
+//│ >   x: 0,                                                                   ┊
+//│ >   y: 0,                                                                   ┊
+//│ >   z: "This is a very long line. This is a very long line. This is a very long line. This is a very long line."
+//│ > }                                                                         ┊
+
+show of x: 0, y: 0, z: [shortText, 0, 0]
+//│ > {x: 0, y: 0, z: ["Hello, world!", 0, 0]}                                  ┊
+
+show of x: 0, y: 0, z: [longText, 0, 0]
+//│ > {                                                                         ┊
+//│ >   x: 0,                                                                   ┊
+//│ >   y: 0,                                                                   ┊
+//│ >   z: [                                                                    ┊
+//│ >     "This is a very long line. This is a very long line. This is a very long line. This is a very long line.",
+//│ >     0,                                                                    ┊
+//│ >     0                                                                     ┊
+//│ >   ]                                                                       ┊
+//│ > }                                                                         ┊
+
+show of x: 0, y: [shortText, shortText, shortText], z: [longText, 0, 0]
+//│ > {                                                                         ┊
+//│ >   x: 0,                                                                   ┊
+//│ >   y: ["Hello, world!", "Hello, world!", "Hello, world!"],                 ┊
+//│ >   z: [                                                                    ┊
+//│ >     "This is a very long line. This is a very long line. This is a very long line. This is a very long line.",
+//│ >     0,                                                                    ┊
+//│ >     0                                                                     ┊
+//│ >   ]                                                                       ┊
+//│ > }                                                                         ┊
+
+// It should break `y` but keep `x` and `z` inline.
+show of
+  x: (a: "A", b: "B", c: "C")
+  y: [shortText, shortText, shortText, shortText, shortText]
+  z: [1, 2, 3, 4]
+//│ > {                                                                         ┊
+//│ >   x: {a: "A", b: "B", c: "C"},                                            ┊
+//│ >   y: [                                                                    ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     "Hello, world!"                                                       ┊
+//│ >   ],                                                                      ┊
+//│ >   z: [1, 2, 3, 4]                                                         ┊
+//│ > }                                                                         ┊
+
+show of Array(10)
+//│ > [<10 empty items>]                                                        ┊
+
+show of [-100, ...Array(5), BigInt("10000000")]
+//│ > [-100, undefined, undefined, undefined, undefined, undefined, 10000000n]  ┊
+
+show of [-100, ...Array(5), BigInt("100000000")]
+//│ > [-100, undefined, undefined, undefined, undefined, undefined, 100000000n] ┊
+
+show of ["hello", ...Array(7), "world"]
+//│ > [                                                                         ┊
+//│ >   "hello",                                                                ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   undefined,                                                              ┊
+//│ >   "world"                                                                 ┊
+//│ > ]                                                                         ┊
+
+show of Object.assign of
+  () => 42
+  x: 0
+  y: [...Array(8)]
+  z: 512
+//│ > fun {                                                                     ┊
+//│ >   x: 0,                                                                   ┊
+//│ >   y: [                                                                    ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined,                                                            ┊
+//│ >     undefined                                                             ┊
+//│ >   ],                                                                      ┊
+//│ >   z: 512                                                                  ┊
+//│ > }                                                                         ┊
+
+show of x: new Set([1, 2, 3, 4]), y: new Set([5, 6, 7, 8])
+//│ > {x: Set(4) {1, 2, 3, 4}, y: Set(4) {5, 6, 7, 8}}                          ┊
+
+show of x: new Set([longText])
+//│ > {                                                                         ┊
+//│ >   x: Set(1) {                                                             ┊
+//│ >     "This is a very long line. This is a very long line. This is a very long line. This is a very long line."
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+:silent
+let testSet = new Set([shortText, (), Symbol.for("you"), 1, 2, 3, 4, 5, 6, 7])
+
+show of x: testSet
+//│ > {x: Set(10) {"Hello, world!", (), Symbol("you"), 1, 2, 3, 4, 5, 6, 7}}    ┊
+
+testSet.add(8); show of x: testSet
+//│ > {x: Set(11) {"Hello, world!", (), Symbol("you"), 1, 2, 3, 4, 5, 6, 7, 8}} ┊
+
+testSet.add(9); show of x: testSet
+//│ > {                                                                         ┊
+//│ >   x: Set(12) {                                                            ┊
+//│ >     "Hello, world!",                                                      ┊
+//│ >     (),                                                                   ┊
+//│ >     Symbol("you"),                                                        ┊
+//│ >     1,                                                                    ┊
+//│ >     2,                                                                    ┊
+//│ >     3,                                                                    ┊
+//│ >     4,                                                                    ┊
+//│ >     5,                                                                    ┊
+//│ >     6,                                                                    ┊
+//│ >     7,                                                                    ┊
+//│ >     8,                                                                    ┊
+//│ >     9                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+show of new Map([[1, 2], [3, 4]])
+//│ > Map(2) {1 => 2, 3 => 4}                                                   ┊
+
+show of new Map([[longText, shortText]])
+//│ > Map(1) {                                                                  ┊
+//│ >   "This is a very long line. This is a very long line. This is a very long line. This is a very long line." => "Hello, world!"
+//│ > }                                                                         ┊
+
+show of new Map([[{ x: shortText }, shortText]])
+//│ > Map(1) {{x: "Hello, world!"} => "Hello, world!"}                          ┊
+
+show of new Map([[{ x: longText }, shortText]])
+//│ > Map(1) {                                                                  ┊
+//│ >   {                                                                       ┊
+//│ >     x: "This is a very long line. This is a very long line. This is a very long line. This is a very long line."
+//│ >   } => "Hello, world!"                                                    ┊
+//│ > }                                                                         ┊
+
+:silent
+let testKey = mut { x: 0, y: 0, z: 0 }
+let testMap = new Map([[testKey, testKey]])
+
+show of testMap
+//│ > Map(1) {{x: 0, y: 0, z: 0} => {x: 0, y: 0, z: 0}}                         ┊
+
+set testKey.w = 0, show of testMap
+//│ > Map(1) {{x: 0, y: 0, z: 0, w: 0} => {x: 0, y: 0, z: 0, w: 0}}             ┊
+
+set testKey.a = 42, show of testMap
+//│ > Map(1) {{x: 0, y: 0, z: 0, w: 0, a: 42} => {x: 0, y: 0, z: 0, w: 0, a: 42}}
+
+:todo
+set testKey.b = 404, show of testMap
+//│ > Map(1) {                                                                  ┊
+//│ >   {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404} => {x: 0, y: 0, z: 0, w: 0, a: 42, b: 404}
+//│ > }                                                                         ┊
+
+:silent
+let testKey = mut { a: 1, b: a * 10, c: b * 10, d: c * 10, e: d * 10 }
+let testMap = new Map([[testKey, shortText]])
+
+show of testMap
+//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000} => "Hello, world!"}      ┊
+
+set testKey.x = 42, show of testMap
+//│ > Map(1) {{a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42} => "Hello, world!"}
+
+set testKey.y = 100, show of testMap
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100} => "Hello, world!"
+//│ > }                                                                         ┊
+
+set testKey.z = shortText, show of testMap
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100, z: "Hello, world!"} => "Hello, world!"
+//│ > }                                                                         ┊
+
+testMap.set(testKey, text: shortText), show of testMap
+//│ > Map(1) {                                                                  ┊
+//│ >   {a: 1, b: 10, c: 100, d: 1000, e: 10000, x: 42, y: 100, z: "Hello, world!"} => {text: "Hello, world!"}
+//│ > }                                                                         ┊
+
+:silent
+let fakeAddress =
+  street: "123 Main St"
+  city: "Springfield"
+  state: "IL"
+  zip: "62704"
+  country: "USA"
+
+show of new Set of [fakeAddress]
+//│ > Set(1) {                                                                  ┊
+//│ >   {                                                                       ┊
+//│ >     street: "123 Main St",                                                ┊
+//│ >     city: "Springfield",                                                  ┊
+//│ >     state: "IL",                                                          ┊
+//│ >     zip: "62704",                                                         ┊
+//│ >     country: "USA"                                                        ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+show of
+  firstName: "John"
+  lastName: "Doe"
+  // This object should cause its parent object to be split into multiple lines,
+  // but it should be printed on a single line itself.
+  company:
+    name: "Acme Corp."
+    industry: "Manufacturing"
+  age: 42
+  email: "john.doe@acme.com"
+  phone: "+1 555-1234-888"
+  address: fakeAddress
+  isActive: true
+  roles: ["admin", "user"]
+  metadata:
+    created: "2024-01-01"
+    updated: "2024-06-01"
+//│ > {                                                                         ┊
+//│ >   firstName: "John",                                                      ┊
+//│ >   lastName: "Doe",                                                        ┊
+//│ >   company: {name: "Acme Corp.", industry: "Manufacturing"},               ┊
+//│ >   age: 42,                                                                ┊
+//│ >   email: "john.doe@acme.com",                                             ┊
+//│ >   phone: "+1 555-1234-888",                                               ┊
+//│ >   address: {                                                              ┊
+//│ >     street: "123 Main St",                                                ┊
+//│ >     city: "Springfield",                                                  ┊
+//│ >     state: "IL",                                                          ┊
+//│ >     zip: "62704",                                                         ┊
+//│ >     country: "USA"                                                        ┊
+//│ >   },                                                                      ┊
+//│ >   isActive: true,                                                         ┊
+//│ >   roles: ["admin", "user"],                                               ┊
+//│ >   metadata: {created: "2024-01-01", updated: "2024-06-01"}                ┊
+//│ > }                                                                         ┊
+
+show of
+  level1: 
+    level2:
+      level3:
+        level4:
+          level5:
+            level6:
+              level7:
+                level8:
+                  level9:
+                    level10: "deep value"
+//│ > {                                                                         ┊
+//│ >   level1: {                                                               ┊
+//│ >     level2: {                                                             ┊
+//│ >       level3: {                                                           ┊
+//│ >         level4: {                                                         ┊
+//│ >           level5: {                                                       ┊
+//│ >             level6: {level7: {level8: {level9: {level10: "deep value"}}}} ┊
+//│ >           }                                                               ┊
+//│ >         }                                                                 ┊
+//│ >       }                                                                   ┊
+//│ >     }                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+:silent
+let nested = [[[[[[[[[[[[[[[[[[[[[[[[[[[["hkhkhkhkhkhkhkhk"]]]]]]]]]]]]]]]]]]]]]]]]]]]]
+
+show of nested
+//│ > [[[[[[[[[[[[[[[[[[[[[[[[[[[["hkhkhkhkhkhkhkhk"]]]]]]]]]]]]]]]]]]]]]]]]]]]]┊
+
+show of [nested]
+//│ > [                                                                         ┊
+//│ >   [                                                                       ┊
+//│ >     [[[[[[[[[[[[[[[[[[[[[[[[[[["hkhkhkhkhkhkhkhk"]]]]]]]]]]]]]]]]]]]]]]]]]]]
+//│ >   ]                                                                       ┊
+//│ > ]                                                                         ┊
+
+show of [[[[nested]]]]
+//│ > [                                                                         ┊
+//│ >   [                                                                       ┊
+//│ >     [                                                                     ┊
+//│ >       [                                                                   ┊
+//│ >         [                                                                 ┊
+//│ >           [                                                               ┊
+//│ >             [                                                             ┊
+//│ >               [                                                           ┊
+//│ >                 [[[[[[[[[[[[[[[[[[[[[[[["hkhkhkhkhkhkhkhk"]]]]]]]]]]]]]]]]]]]]]]]]
+//│ >               ]                                                           ┊
+//│ >             ]                                                             ┊
+//│ >           ]                                                               ┊
+//│ >         ]                                                                 ┊
+//│ >       ]                                                                   ┊
+//│ >     ]                                                                     ┊
+//│ >   ]                                                                       ┊
+//│ > ]                                                                         ┊
+
+:silent
+let nested = a: b: c: d: e: f: g: "This property name is very long.": 0
+
+show of nested
+//│ > {a: {b: {c: {d: {e: {f: {g: {"This property name is very long.": 0}}}}}}}}┊
+
+show of x: y: nested
+//│ > {                                                                         ┊
+//│ >   x: {                                                                    ┊
+//│ >     y: {                                                                  ┊
+//│ >       a: {                                                                ┊
+//│ >         b: {                                                              ┊
+//│ >           c: {d: {e: {f: {g: {"This property name is very long.": 0}}}}}  ┊
+//│ >         }                                                                 ┊
+//│ >       }                                                                   ┊
+//│ >     }                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+show of x: y: z: nested
+//│ > {                                                                         ┊
+//│ >   x: {                                                                    ┊
+//│ >     y: {                                                                  ┊
+//│ >       z: {                                                                ┊
+//│ >         a: {                                                              ┊
+//│ >           b: {                                                            ┊
+//│ >             c: {d: {e: {f: {g: {"This property name is very long.": 0}}}}}┊
+//│ >           }                                                               ┊
+//│ >         }                                                                 ┊
+//│ >       }                                                                   ┊
+//│ >     }                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+show of u: v: w:
+  i: j: k: nested
+  x: y: z: [nested, nested]
+//│ > {                                                                         ┊
+//│ >   u: {                                                                    ┊
+//│ >     v: {                                                                  ┊
+//│ >       w: {                                                                ┊
+//│ >         i: {                                                              ┊
+//│ >           j: {                                                            ┊
+//│ >             k: {                                                          ┊
+//│ >               a: {                                                        ┊
+//│ >                 b: {                                                      ┊
+//│ >                   c: {                                                    ┊
+//│ >                     d: {                                                  ┊
+//│ >                       e: {f: {g: {"This property name is very long.": 0}}}┊
+//│ >                     }                                                     ┊
+//│ >                   }                                                       ┊
+//│ >                 }                                                         ┊
+//│ >               }                                                           ┊
+//│ >             }                                                             ┊
+//│ >           }                                                               ┊
+//│ >         },                                                                ┊
+//│ >         x: {                                                              ┊
+//│ >           y: {                                                            ┊
+//│ >             z: [                                                          ┊
+//│ >               {                                                           ┊
+//│ >                 a: {                                                      ┊
+//│ >                   b: {                                                    ┊
+//│ >                     c: {                                                  ┊
+//│ >                       d: {                                                ┊
+//│ >                         e: {                                              ┊
+//│ >                           f: {g: {"This property name is very long.": 0}} ┊
+//│ >                         }                                                 ┊
+//│ >                       }                                                   ┊
+//│ >                     }                                                     ┊
+//│ >                   }                                                       ┊
+//│ >                 }                                                         ┊
+//│ >               },                                                          ┊
+//│ >               {                                                           ┊
+//│ >                 a: {                                                      ┊
+//│ >                   b: {                                                    ┊
+//│ >                     c: {                                                  ┊
+//│ >                       d: {                                                ┊
+//│ >                         e: {                                              ┊
+//│ >                           f: {g: {"This property name is very long.": 0}} ┊
+//│ >                         }                                                 ┊
+//│ >                       }                                                   ┊
+//│ >                     }                                                     ┊
+//│ >                   }                                                       ┊
+//│ >                 }                                                         ┊
+//│ >               }                                                           ┊
+//│ >             ]                                                             ┊
+//│ >           }                                                               ┊
+//│ >         }                                                                 ┊
+//│ >       }                                                                   ┊
+//│ >     }                                                                     ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+class Hola with
+  fun toString() = "Hola.\nMi amigo.\n\u00bfQu\u00e9 tal?\nHasta luego."
+
+// Customized `toString` should be able to trigger breaking lines.
+show of x: y: new Hola
+//│ > {                                                                         ┊
+//│ >   x: {                                                                    ┊
+//│ >     y: Hola. \                                                            ┊
+//│ >       Mi amigo. \                                                         ┊
+//│ >       ¿Qué tal? \                                                         ┊
+//│ >       Hasta luego.                                                        ┊
+//│ >   }                                                                       ┊
+//│ > }                                                                         ┊
+
+class Hello with
+  fun toString() = "Hi there. How's going?"
+
+show of x: y: z: new Hello
+//│ > {x: {y: {z: Hi there. How's going?}}}                                     ┊
+
+//   ___        _   _
+//  / _ \ _ __ | |_(_) ___  _ __  ___
+// | | | | '_ \| __| |/ _ \| '_ \/ __|
+// | |_| | |_) | |_| | (_) | | | \__ \
+//  \___/| .__/ \__|_|\___/|_| |_|___/
+//       |_|
+
+:silent
+let testObject =
+  x: x: x: x: x: 42
+  y: shortText
+
+render of testObject
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, breakLength: null
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, breakLength: undefined
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, breakLength: ()
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, breakLength: "bad options"
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, breakLength: -10
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, indent: null
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, indent: undefined
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, indent: ()
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, indent: "bad options"
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, indent: -10
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, padding: true
+//│ = "{ x: { x: { x: { x: { x: 42 } } } }, y: \"Hello, world!\" }"
+
+render of testObject, padding: null
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, padding: undefined
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, padding: ()
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+render of testObject, padding: "bad value"
+//│ = "{x: {x: {x: {x: {x: 42}}}}, y: \"Hello, world!\"}"
+
+
+// * Strangely, the first line is not broken, but the rest is... @Luyu whyyyy
+[
+  [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
+  [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
+  [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1]
+]
+//│ = [
+//│   [1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1],
+//│   [
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1
+//│   ],
+//│   [
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1,
+//│     2,
+//│     3,
+//│     1
+//│   ]
+//│ ]
+
+

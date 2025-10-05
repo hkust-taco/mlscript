@@ -2,9 +2,9 @@
 
 // Syntaxes
 
-use Int = 42
+using Int = 42
 
-use Int as someInt = 42
+using Int as someInt = 42
 
 module M with
   fun f(using Int) = 42
@@ -51,11 +51,11 @@ module M with
   fun intFoo(using someFoo: Foo[Int]): Int = someFoo.foo()
   fun tFoo[T](using someFoo: Foo[T]): T = someFoo.foo()
 
-use Int as i = 24
+using Int as i = 24
 
-use Foo[Int] = new IntFoo()
+using Foo[Int] = new IntFoo()
 
-use Foo[Str] = new StrFoo()
+using Foo[Str] = new StrFoo()
 
 // should resolve to foo(i)
 :expect 24
@@ -88,7 +88,7 @@ f
 module N with
   fun f(using someNum: Num): Num = someNum
   fun g(using Num): Num = N.f
-use Num = 3.14
+using Num = 3.14
 N.g
 //│ = 3.14
 
@@ -116,8 +116,8 @@ module M with
   fun tBar2[T](using someFoo: Bar[Str, T]): Str = someFoo.bar()
   fun tBar3[A, B](using someFoo: Bar[A, B]): Str = someFoo.bar()
 
-use Bar[Int, Str] = new IntStrBar()
-use Bar[Str, Int] = new StrIntBar()
+using Bar[Int, Str] = new IntStrBar()
+using Bar[Str, Int] = new StrIntBar()
 
 // should resolve to tFoo1(new IntStrBar())
 :expect "IntStr"
@@ -161,24 +161,24 @@ module M with
     m.combine(x1, m.combine(x2, m.combine(x3, m.empty)))
 
 :expect 9
-use Monoid[Int] = IntAddMonoid
+using Monoid[Int] = IntAddMonoid
 M.foldInt(2, 3, 4)
 //│ = 9
 
 :expect 24
-use Monoid[Int] = IntMulMonoid
+using Monoid[Int] = IntMulMonoid
 M.foldInt(2, 3, 4)
 //│ = 24
 
 :expect 6
-use Monoid[Int] = IntAddMonoid
+using Monoid[Int] = IntAddMonoid
 M.fold(1, 2, 3)
 //│ = 6
 
 
 // Generalized Module Methods
 
-use Int = 42
+using Int = 42
 
 :expect 42
 fun foo()(using i: Int) = i

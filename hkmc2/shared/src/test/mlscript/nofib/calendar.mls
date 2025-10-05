@@ -18,7 +18,7 @@ fun emptyPic(hw) = if hw is [h, w] then replicate(h, replicate(w, " "))
 
 fun groop(n, xs) = if xs is
   Nil then Nil
-  else take(n, xs) :: groop(n, drop(n, xs))
+  else take(n, xs) :: groop(n, leave(n, xs))
 
 fun block(n, t)  = stack(map(spread, groop(n, t)))
 

@@ -1,0 +1,252 @@
+:js
+
+import "../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
+open annotations
+
+data class Pair[A, B](first: A, second: B)
+
+pattern SumPair = Pair(a, b) => a + b
+
+fun foo(value) = if value is
+  SumPair as sum then print("sum: " + sum)
+  else print("not a pair")
+
+foo of Pair(1, 2)
+foo of Pair(10, 25)
+foo of ()
+foo of 10
+foo of "hello"
+//│ > sum: 3
+//│ > sum: 35
+//│ > not a pair
+//│ > not a pair
+//│ > not a pair
+
+pattern BoolLike = true | false | ((Int as x) => x !== 0)
+
+fun get_output_using_as(value) = if value is
+  BoolLike as b then print("" + value + " is equivalent to " + b)
+  else print("the input " + value + " is not a boolean")
+
+get_output_using_as of true
+get_output_using_as of false
+get_output_using_as of 0
+get_output_using_as of 1
+get_output_using_as of 2
+//│ > true is equivalent to true
+//│ > false is equivalent to false
+//│ > 0 is equivalent to false
+//│ > 1 is equivalent to true
+//│ > 2 is equivalent to true
+
+fun get_output_using_as'(value) = if value is
+  (@compile BoolLike) as b then print("" + value + " is equivalent to " + b)
+  else print("the input " + value + " is not a boolean")
+
+get_output_using_as' of true
+get_output_using_as' of false
+get_output_using_as' of 0
+get_output_using_as' of 1
+get_output_using_as' of 2
+//│ > true is equivalent to true
+//│ > false is equivalent to false
+//│ > 0 is equivalent to false
+//│ > 1 is equivalent to true
+//│ > 2 is equivalent to true
+
+fun get_output_through_param(value) = if value is
+  BoolLike(b) then print("" + value + " is equivalent to " + b)
+  else print("the input " + value + " is not a boolean")
+
+get_output_through_param of true
+get_output_through_param of false
+get_output_through_param of 0
+get_output_through_param of 1
+get_output_through_param of 2
+//│ > true is equivalent to true
+//│ > false is equivalent to false
+//│ > 0 is equivalent to false
+//│ > 1 is equivalent to true
+//│ > 2 is equivalent to true
+
+pattern TrueLike = BoolLike as true
+
+:expect true
+true is TrueLike
+//│ = true
+
+:expect true
+42 is BoolLike
+//│ = true
+
+:expect true
+42 is TrueLike
+//│ = true
+
+class Term with
+  constructor
+    Literal(val value: Int)
+    Infix(val op: Str, val left: Term, val right: Term)
+    Prefix(val op: Str, val right: Term)
+
+// The following pattern generates a lot of code.
+pattern EvaluatedTerm =
+  (Literal(value) => value) |
+  (Infix("+", EvaluatedTerm as left, EvaluatedTerm as right) => left + right) |
+  (Infix("-", EvaluatedTerm as left, EvaluatedTerm as right) => left - right) |
+  (Infix("*", EvaluatedTerm as left, EvaluatedTerm as right) => left * right) |
+  (Infix("/", EvaluatedTerm as left, EvaluatedTerm as right) => left / right) |
+  (Prefix("-", EvaluatedTerm as operand) => -operand) |
+  (Prefix("+", EvaluatedTerm as operand) => +operand)
+
+// Some helper functions to create `Term`s.
+fun wrapLiteral(value) = if value is Int then Literal(value) else value
+fun (+:+) add(a, b) = Infix("+", wrapLiteral(a), wrapLiteral(b))
+fun (*:*) mul(a, b) = Infix("*", wrapLiteral(a), wrapLiteral(b))
+fun (-:-) sub(a, b) = Infix("-", wrapLiteral(a), wrapLiteral(b))
+fun (/:/) div(a, b) = Infix("/", wrapLiteral(a), wrapLiteral(b))
+
+Literal(1) is EvaluatedTerm(1)
+//│ = true
+
+2 *:* 3 +:+ 1 is EvaluatedTerm(7)
+//│ = true
+
+(4 +:+ 5) *:* (6 -:- 2) is EvaluatedTerm(36)
+//│ = true
+
+Prefix("-", 10 +:+ 2 *:* 3) is EvaluatedTerm(-16)
+//│ = true
+
+(8 /:/ 2) +:+ (3 *:* 4) -:- 5 is EvaluatedTerm(11)
+//│ = true
+
+Infix("**", Literal(1), Literal(2)) is EvaluatedTerm
+//│ = false
+
+fun evaluate(term) = if term is
+  (@compile EvaluatedTerm) as v then Some(v)
+  else None
+
+evaluate of Literal(1)
+//│ = Some(1)
+
+evaluate of Literal(1)
+//│ = Some(1)
+
+evaluate of 2 *:* 3 +:+ 1
+//│ = Some(7)
+
+evaluate of (4 +:+ 5) *:* (6 -:- 2)
+//│ = Some(36)
+
+evaluate of Prefix("-", 10 +:+ 2 *:* 3)
+//│ = Some(-16)
+
+evaluate of (8 /:/ 2) +:+ (3 *:* 4) -:- 5
+//│ = Some(11)
+
+evaluate of Infix("**", Literal(1), Literal(2))
+//│ = None
+
+pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
+
+(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 2))
+//│ = true
+
+(x: 1, y: 2, z: 3) is DropZ((x: 1, y: 3))
+//│ = false
+
+pattern ShapeArea = 
+  (((:radius)) => Math.PI * radius * radius) |  // Circle
+  (((:width, :height)) => width * height) |     // Rectangle
+  (((:base, :height)) => base * height / 2)     // Triangle
+
+fun area(shape) = if shape is
+  ShapeArea(area) then print("area: " + area)
+  else print("invalid shape")
+
+area of radius: 10
+area of width: 10, height: 20
+area of base: 10, height: 20
+//│ > area: 314.1592653589793
+//│ > area: 200
+//│ > area: 100
+
+pattern PairLike = [_, _] | Pair(_, _)
+
+[1, 2] is PairLike
+//│ = true
+
+[] is PairLike
+//│ = false
+
+[1] is PairLike
+//│ = false
+
+Pair(1, 2) is PairLike
+//│ = true
+
+pattern TransformTwice = (((Int as x) => x + 4) as y) => y * 2
+
+2 is TransformTwice(12)
+//│ = true
+
+100 is TransformTwice(0)
+//│ = false
+
+17 is TransformTwice(42)
+//│ = true
+
+fun testTransformTwice(x) =
+  if x is (@compile TransformTwice) as v then Some(v) else None
+
+testTransformTwice of 100
+//│ = Some(208)
+
+testTransformTwice of 2
+//│ = Some(12)
+
+testTransformTwice of 17
+//│ = Some(42)
+
+// We can easily define predicative patterns using `as true`.
+pattern Positive = ((Int as x) => x > 0) as true
+
+print of -100 is Positive
+print of 0 is Positive
+print of 8080 is Positive
+//│ > false
+//│ > false
+//│ > true
+
+// Hmm, but how to make the pattern return the input value?
+Positive.unapply(100)
+//│ = MatchResult(true, {})
+
+// Just use conjunction patterns.
+pattern Positive = (x & (((Int as x) => x > 0) as true)) => x
+
+Positive.unapply(100)
+//│ = MatchResult(100, {})
+
+//  ____  _        _
+// / ___|| |_ _ __(_)_ __   __ _
+// \___ \| __| '__| | '_ \ / _` |
+//  ___) | |_| |  | | | | | (_| |
+// |____/ \__|_|  |_|_| |_|\__, |
+//                         |___/
+// ==============================
+
+pattern HelloWorld =
+  (("hello" as a) ~ " " ~ ("world" as b)) =>
+    "the user said " + a + " to the " + b
+
+"hello world" is HelloWorld
+//│ = true
+
+if "hello world" is HelloWorld as x then x
+//│ = "the user said hello to the world"

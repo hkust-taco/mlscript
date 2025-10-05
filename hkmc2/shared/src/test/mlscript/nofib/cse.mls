@@ -53,7 +53,7 @@ fun update(f) = s => [f(s), s]
 fun set_(s_) = s => [s_, s]
 
 let incr = update(x => x + 1)
-//│ incr = [function]
+//│ incr = fun
 
 data class Node[T](a: T, b: List[Node[T]])
 
@@ -121,16 +121,28 @@ let example1 = plus_(a, a)
 //│ example1 = Node("+", [Node("a", []),Node("a", [])])
 
 let example2 = plus_(mult_(a, b), mult_(a, b))
-//│ example2 = Node("+", [Node("*", [Node("a", []),Node("b", [])]),Node("*", [Node("a", []),Node("b", [])])])
+//│ example2 = Node(
+//│   "+",
+//│   [Node("*", [Node("a", []),Node("b", [])]),Node("*", [Node("a", []),Node("b", [])])]
+//│ )
 
 let example3 = plus_(mult_(plus_(a, b), c), plus_(a, b))
-//│ example3 = Node("+", [Node("*", [Node("+", [Node("a", []),Node("b", [])]),Node("c", [])]),Node("+", [Node("a", []),Node("b", [])])])
+//│ example3 = Node(
+//│   "+",
+//│   [Node("*", [Node("+", [Node("a", []),Node("b", [])]),Node("c", [])]),Node("+", [Node("a", []),Node("b", [])])]
+//│ )
 
 let example4 = prod(scanl(plus_, zerO, a :: b :: c :: d :: Nil))
-//│ example4 = Node("X", [Node("0", []),Node("+", [Node("0", []),Node("a", [])]),Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("+", [Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("d", [])])])
+//│ example4 = Node(
+//│   "X",
+//│   [Node("0", []),Node("+", [Node("0", []),Node("a", [])]),Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("+", [Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("d", [])])]
+//│ )
 
 let example5 = prod(scanr(plus_, zerO, a :: b :: c :: d :: Nil))
-//│ example5 = Node("X", [Node("+", [Node("a", []),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])])]),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])]),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])]),Node("+", [Node("d", []),Node("0", [])]),Node("0", [])])
+//│ example5 = Node(
+//│   "X",
+//│   [Node("+", [Node("a", []),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])])]),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])]),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])]),Node("+", [Node("d", []),Node("0", [])]),Node("0", [])]
+//│ )
 
 fun testCse_nofib(n) = map(
   i => map(

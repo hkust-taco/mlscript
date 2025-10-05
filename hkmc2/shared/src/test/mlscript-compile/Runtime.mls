@@ -1,5 +1,7 @@
 import "./RuntimeJS.mjs"
 import "./Rendering.mls"
+import "./LazyArray.mjs"
+import "./Iter.mjs"
 
 
 module Runtime with ...
@@ -7,6 +9,10 @@ module Runtime with ...
 
 object Unit with
   fun toString() = "()"
+
+
+val short_and = RuntimeJS.short_and
+val short_or = RuntimeJS.short_or
 
 
 fun unreachable = throw Error("unreachable")
@@ -25,7 +31,7 @@ fun checkArgs(functionName, expected, isUB, got) =
       + " but got " + got
 
 fun safeCall(x) =
-  if x is undefined then Unit else x
+  if x is undefined then () else x
 
 fun checkCall(x) =
   if x is undefined
@@ -52,21 +58,25 @@ fun try(f) =
 
 
 // For `pattern` definitions
-data class MatchResult(captures)
+data class MatchResult(output, bindings)
 data class MatchFailure(errors)
 
 // For pattern matching on tuples
 module Tuple with
-  fun slice(xs, i, j) =
-    // * This is more robust than `xs.slice(i, xs.length - j)`
-    // * as it is not affected by users redefining `slice`
-    globalThis.Array.prototype.slice.call(xs, i, xs.length - j)
+  fun slice(xs, i, j) = xs.slice(i, xs.length - j)
+
+  fun lazySlice(xs, i, j) = LazyArray.dropLeftRight(i, j)(xs)
+  fun lazyConcat(...args) = LazyArray.__concat(...args)
 
   fun get(xs, i) =
-    // * Contrary to `xs.[i]`, this supports negative indices (Python-style)
-    if i >= xs.length then
+    if i >= xs.length do
       throw RangeError("Tuple.get: index out of bounds")
-    else globalThis.Array.prototype.at.call(xs, i)
+    if i < -xs.length do
+      throw RangeError("Tuple.get: negative index out of bounds")
+    xs.[i]
+
+  fun isArrayLike(xs) = Iter.isArrayLike(xs)
+  val split = LazyArray.__split
 
 module Str with
   fun startsWith(string, prefix) = string.startsWith(prefix)
@@ -75,13 +85,15 @@ module Str with
     if i >= string.length then
       throw RangeError("Str.get: index out of bounds")
     else string.at(i)
+  
+  fun take(string, n) = string.slice(0, n)
 
-  fun drop(string, n) = string.slice(n)
+  fun leave(string, n) = string.slice(n)
 
 // Re-export rendering functions
 val render = Rendering.render
 
-fun printRaw(x) = console.log(render(x))
+fun printRaw(x) = console.log(render(x, indent: 2, breakLength: 76))
 
 // TraceLogger
 
@@ -235,14 +247,14 @@ fun debugEff(eff) =
 
 // runtime implementations
 fun mkEffect(handler, handlerFun) =
-  let res = new EffectSig(new ContTrace(null, null, null, null, false), handler, handlerFun)
+  let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
     res.contTrace.last = res.contTrace
     res.contTrace.lastHandler = res.contTrace
   res
 
 fun handleBlockImpl(cur, handler) =
-  let handlerFrame = new HandlerContFrame(null, null, handler)
+  let handlerFrame = new mut HandlerContFrame(null, null, handler)
   set
     cur.contTrace.lastHandler.nextHandler = handlerFrame
     cur.contTrace.lastHandler = handlerFrame
@@ -283,7 +295,7 @@ fun handleEffect(cur) =
   let handlerFrame = prevHandlerFrame.nextHandler
 
   // unlink and save frames
-  let saved = new ContTrace(
+  let saved = new mut ContTrace(
     handlerFrame.next,
     cur.contTrace.last,
     handlerFrame.nextHandler,

@@ -1,0 +1,165 @@
+import "./Iter.mls"
+import "./FingerTreeList.mls"
+
+open Iter
+open LazyFingerTree
+open FingerTreeList
+
+fun normIdx(i, len) =
+  if i < 0 then len + i
+  else i
+
+fun concatHelper(a, l, ...args) =
+  let idx = 0
+  let init_len = a.length
+  set a.length = init_len + args.length * 2
+  while (idx < args.length) do
+    let x = args.[idx]
+
+    set a.[init_len + idx * 2] = SpliceMarker
+    set a.[init_len + idx * 2 + 1] = x
+    set l += x.length
+    set idx += 1
+  Splice of a, l
+
+// Follows the semantics of Array.prototype.slice indices:
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+fun normIdxSlice(i, len) =
+  if i < 0 and
+    i >= -len then len + i
+    else 0
+  else i
+
+fun sliceHelper(beg, fin, arr) =
+  let len = arr.length
+  set beg = normIdxSlice(beg, len)
+  set fin = normIdxSlice(fin, len)
+  if beg >= len do
+    return View of [], 0, 0
+  if fin >= len do
+    set fin = len
+  if fin <= beg do
+    return View of [], 0, 0
+  
+  if arr is
+    View(itr, start, end) then View of itr, start + beg, end + (len - fin)
+    Splice(bits, l) as s then s.materialize().slice(beg, fin)
+    ft and
+      FingerTreeList.isFingerTree(ft) 
+        then FingerTreeList.dropLeftRight(beg, (len - fin))(ft)
+        else View of arr, beg, (len - fin)
+
+// Marker base class for View and Splice
+class LazyFT extends IterableBase with
+
+  fun toString() = "[" + this joined(", ") + "]"
+  fun concat(...args) = concatHelper(mut [SpliceMarker, this], this.length, ...args)
+
+class View(val underlying: IterableBase, val start, val end) extends LazyFT with
+
+  fun iterator() =
+    let idx = start
+    let until = underlying.length - end
+    Iterator of () =>
+      if idx < until then
+        let next = underlying.at(idx)
+        set idx = idx + 1
+        Result.Next of next
+      else Result.Done
+
+  fun materialize() = underlying.slice(start, underlying.length - end)
+  
+  fun at(i) =
+    if i < -length || i >= length do
+      throw RangeError("View.at: Index out of bounds")
+    underlying.at(normIdx(i, length) + start)
+  fun slice(beg, fin) = sliceHelper(beg, fin, this)
+
+  val len = underlying.length - start - end
+  fun length = len
+  fun toString() = "[" + this joined(", ") + "]"
+
+object SpliceMarker
+class Splice(val bits, val len) extends LazyFT with
+  let materialized = null
+
+  fun iterator() = materialize().iterator()
+
+  fun reify =
+    let acc = FingerTreeList.mk()
+    let stack = mut []
+    stack.push([0, bits])
+    while stack.length > 0 do
+      let e = stack.pop()
+      let idx = e.[0]
+      let vals = e.[1]
+
+      if vals is Splice do
+        set vals = vals.bits
+
+      while (idx < vals.length and
+          (vals.at(idx) is SpliceMarker) is false) do
+        set acc = acc :+ vals.at(idx)
+        set idx += 1
+
+      if (idx < vals.length and vals.at(idx) is SpliceMarker) do
+        stack.push([idx + 2, vals])
+        let next = vals.at(idx + 1)
+        if FingerTreeList.isFingerTree(next)
+          then set acc = acc ++ next
+          else stack.push([0, next])
+    acc
+
+  fun materialize() =
+    if materialized == null do
+      set materialized = reify
+    materialized
+
+  fun at(i) = materialize().at(i)
+  // called on eager spreads in matches
+  fun slice(beg, fin) = sliceHelper(beg, fin, this)
+  fun concat(...args) =
+    if materialized === null 
+    then concatHelper(mut [SpliceMarker, this], len, ...args)
+    else concatHelper(mut [SpliceMarker, materialized], len, ...args)   
+  
+  fun length = len
+  fun toString() = "[" + materialize() joined(", ") + "]"
+
+
+module LazyFingerTree with...
+
+
+fun mk(...args) = View of FingerTreeList.mk(...args), 0, 0
+fun concat(...args) = concatHelper(mut [], 0, ...args)
+fun dropLeftRight(beg, fin)(xs) = 
+  if beg < 0 || fin < 0 do
+    throw RangeError("LazyFingerTree.dropLeftRight: indices must be non-negative")
+  if beg > xs.length || fin > xs.length do
+    throw RangeError("LazyFingerTree.dropLeftRight: indices out of bounds")
+  sliceHelper(beg, xs.length - fin, xs)
+
+fun equals(xs, ys) =
+  if xs is
+    [x, ...xs] then
+      if ys is
+        [b, ...bs] then x == b && equals(xs, bs)
+        [] then false
+    [] then ys.length === 0
+
+// The following functions are not meant for users; it's meant referred to by Runtime.mls
+// TODO: use `LazyFingerTree.internals.concat` when this is implemented
+
+fun __concat(...args) = 
+  let len = 0
+  let idx = 0
+  while (idx < args.length) do
+    if args.[idx] is SpliceMarker then
+      set len += args.[idx + 1].length
+      set idx += 2
+    else
+      set len += 1
+      set idx += 1
+  Splice of args, len
+
+val __split = SpliceMarker

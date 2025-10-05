@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 
 import llir.{Expr => IExpr, _}
 import utils.{Scope, TraceLogger}
+import Scope.scope
 import semantics._
 
 class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
@@ -85,23 +86,23 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   def getVar(l: Local)(using Raise, Scope): String = l match
     case ts: hkmc2.semantics.TermSymbol =>
       ts.owner match
-      case S(owner) => summon[Scope].lookup_!(ts)
-      case N => summon[Scope].lookup_!(ts)
+      case S(owner) => scope.lookup_!(ts, N)
+      case N => scope.lookup_!(ts, N)
     case ts: hkmc2.semantics.InnerSymbol =>
-      summon[Scope].lookup_!(ts)
-    case _ => summon[Scope].lookup_!(l)
+      scope.lookup_!(ts, N)
+    case _ => scope.lookup_!(l, N)
 
   def allocIfNew(l: Local)(using Raise, Scope): Str =
     trace[Str](s"allocIfNew $l begin", r => s"allocIfNew $l end -> $r"):
-      if summon[Scope].lookup(l).isDefined then
+      if scope.lookup(l).isDefined then
         getVar(l) |> mapName
       else
-        summon[Scope].allocateName(l) |> mapName
+        scope.allocateName(l) |> mapName
   
   def codegenClassInfo(using Ctx, Raise, Scope)(cls: ClassInfo) =
     trace[(Opt[Def], Decl, Ls[Def])](s"codegenClassInfo ${cls.symbol} begin"):
       val fields = cls.fields.map{x => (x |> directName, mlsValType)}
-      cls.fields.foreach(x => summon[Scope].allocateName(x))
+      cls.fields.foreach(x => scope.allocateName(x))
       val parents = if cls.parents.nonEmpty then cls.parents.toList.map(mapClsLikeName) else mlsObject :: Nil
       val decl = Decl.StructDecl(cls.symbol |> mapClsLikeName)
       if mlsIsInternalClass(cls.symbol) then (None, decl, Ls.empty)
@@ -276,7 +277,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   // Topological sort of classes based on inheritance relationships
   def sortClasses(prog: Program)(using Raise, Scope): Ls[ClassInfo] =
     var depgraph = prog.classes.map(x => (x.symbol, x.parents)).toMap
-      ++ builtinClassSymbols.map(x => (x, Set.empty[Symbol]))
+      ++ builtinClassSymbols.map(x => (x, List.empty[Symbol]))
     log(s"depgraph: $depgraph")
     var degree = depgraph.view.mapValues(_.size).toMap
     def removeNode(node: Symbol) =
@@ -287,13 +288,13 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
     val sorted = ListBuffer.empty[ClassInfo]
     given Ordering[Local] with
       def compare(x: Local, y: Local): Int = x.nme.compareTo(y.nme)
-    var work = degree.filter(_._2 === 0).keys.toSortedSet()
+    var work = degree.filter(_._2 === 0).keys.toSortedSet
     while work.nonEmpty do
       val node = work.head
       work -= node
       prog.classes.find(x => (x.symbol) === node).foreach(sorted.addOne)
       removeNode(node)
-      val next = degree.filter(_._2 === 0).keys.toSortedSet()
+      val next = degree.filter(_._2 === 0).keys.toSortedSet
       work ++= next
     if depgraph.nonEmpty then
       val cycle = depgraph.keys.mkString(", ")

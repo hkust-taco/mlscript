@@ -19,7 +19,7 @@ print of
   x + 1
 //│ ╔══[ERROR] Illegal position for 'open' statement.
 //│ ║  l.17: 	  open Predef
-//│ ╙──      	       ^^^^^^
+//│ ╙──      	  ^^^^^^^^^^^
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
 //│ ║  l.18: 	  let x = 1
 //│ ╙──      	      ^^^^^

@@ -26,7 +26,7 @@ fun test(x) =
 //│   } else if (x instanceof None1.class) {
 //│     tmp1 = None1;
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   scrut = tmp1;
 //│   if (scrut instanceof Some1.class) {
@@ -35,9 +35,7 @@ fun test(x) =
 //│     return Predef.print(v1)
 //│   } else if (scrut instanceof None1.class) {
 //│     return Predef.print("none")
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 

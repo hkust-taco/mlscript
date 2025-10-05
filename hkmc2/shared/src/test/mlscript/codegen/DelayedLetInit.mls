@@ -50,14 +50,14 @@ fun f() = 1
 f
 //│ JS (unsanitized):
 //│ f
-//│ = [function f]
+//│ = fun f
 
 
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
 //│ let f1, f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
-//│ f = [function f]
+//│ f = fun f
 
 f(1)
 //│ JS (unsanitized):
@@ -85,9 +85,7 @@ else foo = 1
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   foo1
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ foo = undefined
 
 let foo
@@ -100,13 +98,7 @@ else
 //│ let foo2, scrut1;
 //│ foo2 = undefined;
 //│ scrut1 = true;
-//│ if (scrut1 === true) {
-//│   foo2 = 0;
-//│   runtime.Unit
-//│ } else {
-//│   foo2 = 1;
-//│   runtime.Unit
-//│ }
+//│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
 //│ foo = 0
 
 
@@ -128,7 +120,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.129: 	fun f() = foo = 0
+//│ ║  l.121: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
 //│ let f4; f4 = function f() { return foo2 };

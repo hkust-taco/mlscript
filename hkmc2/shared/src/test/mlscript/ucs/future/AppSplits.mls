@@ -1,3 +1,5 @@
+:js
+
 // AppSplits.mls
 // =============
 // Experimenting with conditional splits on function applications.
@@ -5,38 +7,51 @@
 fun foo(x) = x > 1
 
 :todo
-:pe
 :e
 if foo of
   0 then "a"
   1 then "b"
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IntLit(0),keyword 'then',StrLit(a)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ║  l.11: 	if foo of
+//│ ║        	   ^^^^^^
+//│ ║  l.12: 	  0 then "a"
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.13: 	  1 then "b"
+//│ ╙──      	^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :todo
 :pe
 :e
+:re
 if foo of 1,
   0 then "a"
   1 then "b"
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.19: 	  0 then "a"
+//│ ║  l.28: 	  0 then "a"
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.18: 	if foo of 1,
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.28: 	  0 then "a"
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ║  l.27: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
-//│ ║  l.19: 	  0 then "a"
+//│ ║  l.28: 	  0 then "a"
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 :todo
 :pe
 :e
+:re
 if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[ERROR] Unrecognized term split (juxtaposition).
-//│ ║  l.33: 	if foo
+//│ ║  l.47: 	if foo
 //│ ║        	   ^^^
-//│ ║  l.34: 	  (0) then "a"
+//│ ║  l.48: 	  (0) then "a"
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 

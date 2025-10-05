@@ -22,12 +22,16 @@ module Oops with
     ()
 
 // * We used to forget to reset the owner to None in sub-blocks like this one
+:e
 :re
 object Oops with
   if true then
     val fakeField = 1
     print(fakeField)
   print(this.fakeField) // shouldn't work!
+//│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
+//│ ║  l.31: 	  print(this.fakeField) // shouldn't work!
+//│ ╙──      	        ^^^^^^^^^^^^^^
 //│ > 1
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'
 
@@ -35,7 +39,7 @@ object Oops with
 :re
 Oops.fakeField
 //│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
-//│ ║  l.36: 	Oops.fakeField
+//│ ║  l.40: 	Oops.fakeField
 //│ ╙──      	    ^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'fakeField')
 

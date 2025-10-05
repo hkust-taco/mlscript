@@ -1,0 +1,285 @@
+:js
+
+import "../../mlscript-compile/LazyArray.mls"
+import "../../mlscript-compile/MutMap.mls"
+
+open LazyArray
+
+// Splices
+
+:silent
+val a = concat([0])
+
+:silent
+let b = a.concat([1,2,3,4])
+
+:expect [0, 1, 2, 3, 4]
+[...b]
+//│ = [0, 1, 2, 3, 4]
+
+:expect [0, 1, 2, 3, 4]
+b.materialize()
+//│ = [0, 1, 2, 3, 4]
+
+
+// Views
+
+:silent
+let a = mk(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) dropLeftRight(2, 3)() dropLeftRight(1, 1)()
+
+:expect 4
+a.at(0)
+//│ = 4
+:expect 4
+a.at(-3)
+//│ = 4
+:expect 5
+a.at(1)
+//│ = 5
+:expect 5
+a.at(-2)
+//│ = 5
+:expect 6
+a.at(2)
+//│ = 6
+:expect 6
+a.at(-1)
+//│ = 6
+
+:expect [4, 5, 6]
+a
+//│ = [4, 5, 6]
+
+:expect [4, 5, 6]
+[...a]
+//│ = [4, 5, 6]
+
+:expect [4, 5, 6]
+a.materialize()
+//│ = [4, 5, 6]
+
+:re
+a.at(-4)
+//│ ═══[RUNTIME ERROR] RangeError: View.at: Index out of bounds
+
+:re
+a.at(3)
+//│ ═══[RUNTIME ERROR] RangeError: View.at: Index out of bounds
+
+
+// View and Splices that represent the same array should be equal
+
+:silent
+let xs = mk(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11) dropLeftRight (1, 1)()
+
+:silent
+let ys = concat([1, 2, 3], [4, 5, 6], [7, 8, 9, 10])
+
+:expect true
+equals([...xs], [...ys])
+//│ = true
+
+:expect true
+equals(xs, ys)
+//│ = true
+
+:expect true
+equals(xs.materialize(), ys.materialize())
+//│ = true
+
+
+// Mixing Views and Splices
+
+:silent
+let ys1 = mk(0).concat([1, 2, 3, 4], [5, 6, 7], [8, 9])
+
+:expect [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+[...ys1]
+//│ = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+:expect 10
+ys1.length
+//│ = 10
+
+:silent
+let ys2 = LazyArray.dropLeftRight(2, 2)(ys1)
+
+:expect [2, 3, 4, 5, 6, 7]
+ys2
+//│ = [2, 3, 4, 5, 6, 7]
+
+:silent
+let ys2 = LazyArray.dropLeftRight(0, 2)(ys2)
+
+:expect [2, 3, 4, 5]
+ys2
+//│ = [2, 3, 4, 5]
+
+
+// concat and __concat should do similar things
+
+:silent
+let w1 = __concat(1, __split, xs, __split, ys1, __split,  ys1)
+
+:silent
+let w2 = concat([1], xs, ys1, ys1)
+
+:expect true
+w1.length == w2.length
+//│ = true
+
+:expect true
+equals([...w1], [...w2])
+//│ = true
+
+:expect true
+equals(w1, w2)
+//│ = true
+
+:expect true
+equals(w1.materialize(), w2.materialize())
+//│ = true
+
+
+// object concat and slice
+
+:silent
+let o1 = mk(1, 2, 3, 4, 5).slice(1, 4)
+
+:expect [2, 3, 4]
+o1
+//│ = [2, 3, 4]
+
+:expect [2, 3, 4]
+[...o1]
+//│ = [2, 3, 4]
+
+:expect [2, 3, 4]
+o1.materialize()
+//│ = [2, 3, 4]
+
+let o2 = o1.concat([5, 6, 7])
+//│ o2 = [2, 3, 4, 5, 6, 7]
+
+:silent
+let o3 = concat([1, 2, 3, 4])
+
+:silent
+let o4 = o3.concat([5, 6, 7], [8])
+
+let o5 = o4.slice(1, 7)
+//│ o5 = [2, 3, 4, 5, 6, 7]
+
+:expect true
+equals(o2, o5)
+//│ = true
+
+:expect true
+equals([...o2], [...o5])
+//│ = true
+
+:expect true
+equals(o2.materialize(), o5.materialize())
+//│ = true
+
+
+// slice indices
+
+let r = [1,2,3,4,5,6,7,8,9,10]
+let v = mk(1,2,3,4,5,6,7,8,9,10)
+let s = concat([1,2,3], [4,5,6], [7,8,9,10])
+//│ r = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+//│ s = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+//│ v = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+:expect [4, 5]
+// both positive
+r.slice(3, 5)
+//│ = [4, 5]
+v.slice(3, 5)
+//│ = [4, 5]
+s.slice(3, 5)
+//│ = [4, 5]
+dropLeftRight(3, 5)(r)
+//│ = [4, 5]
+// both negative
+r.slice(-7, -5)
+//│ = [4, 5]
+v.slice(-7, -5)
+//│ = [4, 5]
+s.slice(-7, -5)
+//│ = [4, 5]
+// beg positive, fin negative
+r.slice(3, -5)
+//│ = [4, 5]
+v.slice(3, -5)
+//│ = [4, 5]
+s.slice(3, -5)
+//│ = [4, 5]
+// beg negative, fin positive
+r.slice(-7, 5)
+//│ = [4, 5]
+v.slice(-7, 5)
+//│ = [4, 5]
+s.slice(-7, 5)
+//│ = [4, 5]
+
+:expect []
+// both positive, beg > fin
+r.slice(5, 3)
+//│ = []
+v.slice(5, 3)
+//│ = []
+s.slice(5, 3)
+//│ = []
+// both negative, beg > fin
+r.slice(-5, -7)
+//│ = []
+v.slice(-5, -7)
+//│ = []
+s.slice(-5, -7)
+//│ = []
+// beg > arr length
+r.slice(10, 12)
+//│ = []
+v.slice(10, 12)
+//│ = []
+s.slice(10, 12)
+//│ = []
+// beg = fin = 0
+r.slice(0, 0)
+//│ = []
+v.slice(0, 0)
+//│ = []
+s.slice(0, 0)
+//│ = []
+
+
+// LazyArray on non-arrays
+
+dropLeftRight(1, 1)("hello")
+//│ = [e, l, l]
+
+val mm = MutMap.empty
+//│ mm = MutMap(Map(0) {})
+
+mm |> MutMap.insert of "a", 1
+
+:re
+val uint8Arr = new Uint8Array([1, 2, 3, 4, 5])
+//│ ═══[RUNTIME ERROR] TypeError: Cannot freeze array buffer views with elements
+//│ uint8Arr = undefined
+
+val uint8Arr = new mut Uint8Array([1, 2, 3, 4, 5])
+//│ uint8Arr = Uint8Array { "0": 1, "1": 2, "2": 3, "3": 4, "4": 5 }
+
+dropLeftRight(1, 1)(uint8Arr)
+//│ = [2, 3, 4]
+
+:re
+concat([1, 2, 3], "hello", uint8Arr, mm)
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})
+
+:re
+dropLeftRight(0, 0)(mm)
+//│ ═══[RUNTIME ERROR] Error: Expected an Array, got: MutMap(Map(1) {"a" => 1})

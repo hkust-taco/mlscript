@@ -185,11 +185,30 @@ if true do
 //│ JS (unsanitized):
 //│ let h11, tmp11, handleBlock$11, Handler$h$23;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, scrut, res, Cont$handleBlock$h$11, doUnwind;
-//│   Cont$handleBlock$h$11 = function Cont$handleBlock$h$(pc1) {
-//│     return new Cont$handleBlock$h$.class(pc1);
-//│   };
-//│   Cont$handleBlock$h$11.class = class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│   let f, h, scrut, res, Cont$handleBlock$h$11, Handler$h$12;
+//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
+//│     static {
+//│       Handler$h$12 = this
+//│     }
+//│     constructor() {
+//│       let tmp12;
+//│       tmp12 = super();
+//│     }
+//│     perform(arg) {
+//│       let lambda;
+//│       lambda = (undefined, function (k) {
+//│         return arg
+//│       });
+//│       return runtime.mkEffect(this, lambda)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│   });
+//│   h = new Handler$h$12();
+//│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$handleBlock$h$11 = this
+//│     }
 //│     constructor(pc) {
 //│       let tmp12;
 //│       tmp12 = super(null);
@@ -206,27 +225,24 @@ if true do
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 4) {
-//│           break contLoop;
-//│         } else if (this.pc === 5) {
+//│         if (this.pc === 1) {
+//│           break contLoop
+//│         } else if (this.pc === 2) {
 //│           res = f();
 //│           if (res instanceof runtime.EffectSig.class) {
 //│             return this.doUnwind(res, 3)
 //│           }
-//│           this.pc = 3;
-//│           continue contLoop;
-//│         } else if (this.pc === 3) {
+//│           this.pc = 0;
+//│           continue contLoop
+//│         } else if (this.pc === 0) {
 //│           return res
 //│         }
 //│         break;
 //│       }
 //│     }
-//│     toString() { return "Cont$handleBlock$h$(" + runtime.render(this.pc) + ")"; }
-//│   };
-//│   doUnwind = function doUnwind(res1, pc) {
-//│     res1.contTrace.last.next = Cont$handleBlock$h$11(pc);
-//│     return runtime.handleBlockImpl(res1, h11)
-//│   };
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
+//│   });
 //│   f = function f() {
 //│     return 3
 //│   };
@@ -234,7 +250,8 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 3)
+//│       res.contTrace.last.next = new Cont$handleBlock$h$11(0);
+//│       return runtime.handleBlockImpl(res, h)
 //│     }
 //│     return res
 //│   } else {
@@ -268,11 +285,11 @@ module A with
   data class Effect(x) with
     fun test() = x
     fun perform(arg)
+
 handle h = A.Effect(3) with
-  fun perform()(k) =
-    this.test()
+  fun perform()(k) = 0
 h.perform()
-//│ = 3
+//│ = 0
 
 fun f(perform) =
   handle h = Effect with

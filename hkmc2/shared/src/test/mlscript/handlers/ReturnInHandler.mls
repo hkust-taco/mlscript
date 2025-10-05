@@ -39,10 +39,10 @@ let l = () =>
     fun foo()(r) = r(())
   return 3
   4
-//│ ╔══[ERROR] Return statements are not allowed outside of a function.
-//│ ║  l.40: 	  return 3
-//│ ╙──      	         ^
-//│ l = [function l]
+//│ ╔══[ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.39: 	  return 3
+//│ ╙──      	  ^^^^^^^^
+//│ l = fun l
 
 // should error with sanity checks on
 l()
@@ -57,8 +57,8 @@ let l = () =>
   return 3
   4
 l()
-//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ╔══[ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.57: 	  return 3
-//│ ╙──      	         ^
+//│ ╙──      	  ^^^^^^^^
 
 

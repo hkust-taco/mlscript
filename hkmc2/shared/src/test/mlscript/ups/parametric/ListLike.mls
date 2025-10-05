@@ -1,0 +1,30 @@
+:js
+
+open annotations
+
+import "../../../mlscript-compile/Stack.mls"
+
+open Stack
+
+pattern ListLike(pattern T) = Nil | (T :: ListLike(pattern T))
+
+fun isOddIntList(xs) = xs is ListLike(pattern ((Int as x) => x % 2 === 1) as true)
+
+isOddIntList of Nil
+//│ = true
+
+isOddIntList of 1 :: 3 :: Nil
+//│ = true
+
+isOddIntList of 1 :: 2 :: 3 :: Nil
+//│ = false
+
+isOddIntList of 1 :: 71 :: "bruh" :: Nil
+//│ = false
+
+isOddIntList of "hello" :: "world" :: Nil
+//│ = false
+
+pattern Nullable(pattern T) = null | T
+
+fun isNullableIntList(xs) = xs is @compile ListLike(pattern Nullable(pattern Int))

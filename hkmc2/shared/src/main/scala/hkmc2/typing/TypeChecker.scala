@@ -26,7 +26,7 @@ class TypeChecker(using Raise, Elaborator.State):
       if rc === 1 then P.Flow(sym)
       else P.Lab(P.Flow(sym), L.Exit(sym, rc, false))
     case Ref(cls: ClassSymbol) => P.Ctor(cls, Nil)
-    case Ref(cls: ModuleSymbol) => P.Ctor(cls, Nil)
+    case Ref(cls: ModuleOrObjectSymbol) => P.Ctor(cls, Nil)
     case Ref(ts: TermSymbol) =>
       ts.defn match
         case S(td: TermDefinition) =>
@@ -49,7 +49,7 @@ class TypeChecker(using Raise, Elaborator.State):
         case _: ClassDef =>
           // println(s"TODO ${t.showDbg}")
           // TODO
-        case _: ModuleDef =>
+        case _: ModuleOrObjectDef =>
           // TODO
       typeProd(res)
     case Lit(lit) =>
@@ -106,7 +106,7 @@ class TypeChecker(using Raise, Elaborator.State):
   
   case class CCtx(path: Ls[L])
   
-  def constrain(lhs: P, rhs: C): Unit = constrain(lhs, Nil, Nil, rhs)(CCtx(Nil))
+  def constrain(lhs: P, rhs: C): Unit = constrain(lhs, Nil, Nil, rhs)(using CCtx(Nil))
   
   // def constrain(lhs: P, path: Path, rhs: C): Unit = (lhs, rhs) match
   def constrain(lhs: P, exits: Ls[L.Exit], enter: Ls[L.Enter], rhs: C)(implicit cctx: CCtx): Unit = (lhs, rhs) match

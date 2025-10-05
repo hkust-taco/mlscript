@@ -9,7 +9,7 @@ Example.f(2)
 //│ = [2, 1]
 
 let oops = Example.("f")
-//│ oops = [function f]
+//│ oops = fun f
 
 
 // * JavaScript nonsense
@@ -22,20 +22,19 @@ oops.call(Example, 2)
 
 
 // * We could use that syntax as a shorthand:
-// * TODO need to support varargs...
-fun (.) call(receiver, f)(arg) = f.call(receiver, arg)
+fun (.!.) call(receiver, f)(arg) = f.call(receiver, arg)
 
 
 // * Notice how it parses with the correct precedence:
 :pt
 :sjs
-Example . oops(2)
+Example .!. oops(2)
 //│ Parsed tree:
 //│ App:
-//│   lhs = App:
-//│     lhs = Ident of "."
-//│     rhs = Tup of Ls of 
-//│       Ident of "Example"
+//│   lhs = OpApp:
+//│     lhs = Ident of "Example"
+//│     op = Ident of ".!."
+//│     rhss = Ls of 
 //│       Ident of "oops"
 //│   rhs = Tup of Ls of 
 //│     IntLit of 2
@@ -43,20 +42,14 @@ Example . oops(2)
 //│ let tmp; tmp = call(Example1, oops); runtime.safeCall(tmp(2))
 //│ = [2, 1]
 
-Example. oops(2)
+Example.!. oops(2)
 //│ = [2, 1]
 
-// * This one is a normal method call; there is no `oops` in `Example`
-:e
-:re
-Example .oops(2)
-//│ ╔══[ERROR] Object 'Example' does not contain member 'oops'
-//│ ║  l.52: 	Example .oops(2)
-//│ ╙──      	        ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Example1.oops is not a function
+Example .!.oops(2)
+//│ = [2, 1]
 
 
-id(Example) . oops(2)
+id(Example) .!. oops(2)
 //│ = [2, 1]
 
 
@@ -65,27 +58,27 @@ data class Example2(val a) with
   fun f(inc) = Example2(a + inc)
 
 let oops2 = Example2(0).("f")
-//│ oops2 = [function f]
+//│ oops2 = fun f
 
-Example2(1) . oops2(2) . oops2(2)
+Example2(1) .!. oops2(2) .!. oops2(2)
 //│ = Example2(1)
 
-Example2(1). oops2(2). oops2(2)
+Example2(1).!. oops2(2).!. oops2(2)
 //│ = Example2(1)
 
-(new Example2(1)) . oops2(2)
+(new Example2(1)) .!. oops2(2)
 //│ = Example2(1)
 
 :todo
 new Example2(1)
-  . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+  .!. oops2(2)
+//│ = Example2(1)
 
 :todo
 new Example2(1)
-  . oops2(2)
-  . oops2(2)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+  .!. oops2(2)
+  .!. oops2(2)
+//│ = Example2(1)
 
 
 // * Alternative syntax – precedence is now inappropriate
@@ -96,16 +89,16 @@ fun (.>) call(receiver, f)(arg) = f.call(receiver, arg)
 :re
 Example .> oops(2)
 //│ Parsed tree:
-//│ App:
-//│   lhs = Ident of ".>"
-//│   rhs = Tup of Ls of 
-//│     Ident of "Example"
+//│ OpApp:
+//│   lhs = Ident of "Example"
+//│   op = Ident of ".>"
+//│   rhss = Ls of 
 //│     App:
 //│       lhs = Ident of "oops"
 //│       rhs = Tup of Ls of 
 //│         IntLit of 2
 //│ JS (unsanitized):
-//│ let tmp23; tmp23 = runtime.safeCall(oops(2)); call1(Example1, tmp23)
+//│ let tmp22; tmp22 = runtime.safeCall(oops(2)); call1(Example1, tmp22)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
 
 // * Note:
@@ -127,11 +120,10 @@ Example |>. oops(2)
 Example2(1) |>. oops2(2) |>. oops2(2)
 //│ = Example2(1)
 
-:fixme
 (Example2(1)
   |>. oops2(2)
   |>. oops2(2)
 ).a
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'a')
+//│ = 1
 
 

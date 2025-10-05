@@ -87,16 +87,17 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
         else
           val bd = if v.lvl >= rest.lvl then rest else extrude(rest)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
-            val nc = Type.mkNegType(bd)
+            val nc = Type.mkNegType(bd).toDnf // always cache the normal form to avoid unexpected cache misses
             log(s"New bound: ${v.showDbg} <: ${nc.showDbg}")
             cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
-            log(s"New bound: ${v.showDbg} :> ${bd.showDbg}")
-            cctx.nest(bd -> v) givenIn:
-              v.state.lowerBounds ::= bd
-              v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
+            val c = bd.toDnf // always cache the normal form to avoid unexpected cache misses
+            log(s"New bound: ${v.showDbg} :> ${c.showDbg}")
+            cctx.nest(c -> v) givenIn:
+              v.state.lowerBounds ::= c
+              v.state.upperBounds.foreach(ub => constrainImpl(c, ub))
       case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
@@ -137,9 +138,10 @@ class ConstraintSolver(infVarState: InfVarUid.State, elState: Elaborator.State, 
     case _: ClassLikeType | _: FunType | _: InfVar | Top | Bot => ty
 
   private def constrainImpl(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =
-    if cctx.cache((lhs, rhs)) then log(s"Cached!")
+    val p = lhs.toDnf -> rhs.toDnf
+    if cctx.cache(p) then log(s"Cached!")
     else trace(s"CONSTRAINT ${lhs.showDbg} <: ${rhs.showDbg}"):
-      cctx.nest(lhs -> rhs) givenIn:
+      cctx.nest(p) givenIn:
         val ty = dnf(inlineSkolemBounds(lhs & rhs.!, true)(using Set.empty)) 
         constrainDNF(ty)
   def constrain(lhs: Type, rhs: Type)(using BbCtx, CCtx, TL): Unit =

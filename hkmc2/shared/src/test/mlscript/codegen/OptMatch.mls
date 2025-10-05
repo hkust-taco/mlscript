@@ -16,9 +16,7 @@ fun isDefined(x) = if x is
 //│     return true
 //│   } else if (x instanceof None1.class) {
 //│     return false
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 isDefined(Some(1))
@@ -33,7 +31,7 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp1, lambda;
+//│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
 //│   let param0;
 //│   if (caseScrut instanceof Some1.class) {
@@ -42,12 +40,11 @@ val isDefined = case
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
-//│     throw new globalThis.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ tmp1 = lambda;
-//│ isDefined1 = tmp1;
-//│ isDefined = [function]
+//│ isDefined1 = lambda;
+//│ isDefined = fun
 
 isDefined(Some(1))
 //│ = true
@@ -59,7 +56,7 @@ isDefined(None)
 val isDefined = x => if x is
   Some(_) then true
   None    then false
-//│ isDefined = [function]
+//│ isDefined = fun
 
 isDefined(Some(1))
 //│ = true
@@ -74,7 +71,7 @@ module Foo with
 val isOther = x => if x is
   Foo.Other(_) then true
   None    then false
-//│ isOther = [function]
+//│ isOther = fun
 
 
 fun keepIfGreaterThan(x, y) =
@@ -90,29 +87,43 @@ fun keepIfGreaterThan(x, y) =
   console.log()
 //│ > true
 
-:fixme
 1
-  . keepIfGreaterThan(0)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.95: 	  . keepIfGreaterThan(0)
-//│ ╙──      	                     ^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
-
-
-:fixme // or use an alternative syntax?
-1
-  . keepIfGreaterThan(0)
-  . isDefined()
-  . console.log()
-//│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.104: 	  . keepIfGreaterThan(0)
-//│ ╙──       	                     ^^^
-//│ ═══[RUNTIME ERROR] Error: Function 'keepIfGreaterThan' expected 2 arguments but got 1
+  \ keepIfGreaterThan(0)
+//│ = Some(1)
 
 
 1
-  |> keepIfGreaterThan(_, 0)
-  |> isDefined(_)
+  \ keepIfGreaterThan(0)
+  \ isDefined()
+  \ console.log()
+//│ > true
+
+
+1
+  |> (keepIfGreaterThan(_, 0))
+  |> (isDefined(_))
+//│ = true
+
+1
+  |> {keepIfGreaterThan(_, 0)}
+  |> {isDefined(_)}
+//│ = true
+
+1
+  |>
+    keepIfGreaterThan(_, 0)
+  |>
+    isDefined(_)
+//│ = true
+
+
+let isDefined2 = _ is Some
+//│ isDefined2 = fun isDefined2
+
+Some(1) isDefined2()
+//│ = true
+
+Some(1) |> isDefined2
 //│ = true
 
 

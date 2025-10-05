@@ -8,6 +8,8 @@ import Config.*
 
 def config(using Config): Config = summon
 
+type Cfg[A] = Config ?=> A
+
 case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],

@@ -59,7 +59,7 @@ fun ++ z = 0
 fun (class Lol) foo = 0
 //│ ╔══[ERROR] This type definition is not a valid symbolic name
 //│ ║  l.59: 	fun (class Lol) foo = 0
-//│ ╙──      	           ^^^
+//│ ╙──      	     ^^^^^^^^^
 
 foo
 //│ = 0

@@ -18,10 +18,10 @@ fun res() = 1
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res3)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  undefined
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 
 :showRepl
 2 + 2
@@ -36,10 +36,10 @@ fun res() = 1
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  4
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  4
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ = 4
 
 :showRepl
@@ -54,12 +54,12 @@ res
 //│ >  undefined
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res5)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
-//│ >  [function res]
-//│ >  Unit { class: [class Unit] }
+//│ >  fun res
+//│ >  Unit {}
 //│ REPL> Parsed:
-//│ >  [function res]
-//│ >  Unit { class: [class Unit] }
-//│ = [function res]
+//│ >  fun res
+//│ >  Unit {}
+//│ = fun res
 
 
 :showRepl
@@ -78,23 +78,38 @@ let x = 1, print(x), x
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res6)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  1
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ = 1
 //│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  1
-//│ >  Unit { class: [class Unit] }
+//│ >  Unit {}
 //│ x = 1
 
 
-// FIXME multiline result is treated as part stdout
 ["***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***"]
-//│ = ["***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***", "***"]
+//│ = [
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***",
+//│   "***"
+//│ ]
 
 

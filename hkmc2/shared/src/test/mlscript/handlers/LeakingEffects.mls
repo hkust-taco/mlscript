@@ -7,7 +7,7 @@ abstract class Effect[A] with
 
 
 let
-  xs = []
+  xs = mut []
   count = 0
 fun main() =
   handle g = Effect with
@@ -32,7 +32,7 @@ while xs.pop() is
 //│ > B b
 //│ > ?
 //│ count = 1
-//│ xs = [[function]]
+//│ xs = [fun]
 
 
 // g is non-resumptive, which means g.perform("a") does not resume
@@ -42,7 +42,7 @@ handle h = Effect with
   fun perform(arg)(k) =
     print("A " + arg)
     let
-      xs = []
+      xs = mut []
       count = 0
     handle g = Effect with
       fun perform(arg1)(k1) =

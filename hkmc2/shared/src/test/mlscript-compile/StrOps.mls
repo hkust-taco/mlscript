@@ -1,0 +1,13 @@
+
+module StrOps with ...
+
+
+fun (~) concat2(a, b) = a + b
+
+fun concat(...xs) = xs.join("")
+
+fun from(value) = globalThis.String(value)
+
+fun parenthesizedIf(x, cond) = if cond then "(" + x + ")" else x
+
+

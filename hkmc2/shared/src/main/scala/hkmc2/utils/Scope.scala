@@ -1,7 +1,7 @@
 package hkmc2
 package utils
 
-import scala.collection.mutable.{Map => MutMap}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet}
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -21,10 +21,13 @@ import hkmc2.codegen.js.JSBuilder
   * When `curThis` is Some(None), it means the scope rebinds `this`
   * to something unknown, following JavaScript's inane `this` handling in `function`s.
   * When `curThis` is Some(Some(sym)), it means the scope rebinds `this`
-  * to an inner symbol (e.g., class or module). */
-class Scope
-    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], val bindings: MutMap[Local, Str])
+  * to an inner symbol (e.g., class or module).
+  * Note: I made `Scope` a case class just so that it can benefit from `printAsTree`. */
+case class Scope
+    (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
     (using State):
+  
+  private val existingNames = MutSet.empty[Str]
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
@@ -43,6 +46,11 @@ class Scope
       source = Diagnostic.Source.Compilation))
     die
   
+  def addToBindings(symbol: Local, name: String, shadow: Bool) =
+    if !shadow then assert(lookup(symbol).isEmpty, (symbol, this.showAsTree))
+    bindings += symbol -> name
+    existingNames += name
+  
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
     def getParent = parent.fold(
@@ -53,6 +61,11 @@ class Scope
       else thisError(thisSym)
     )
     curThis match
+    case S(S(sym: TopLevelSymbol)) if sym === State.globalThisSymbol =>
+      // `this` at the top level evaluates to `undefined` in strict mode.
+      // We need this because we generate some code that uses `this`/`globalThis`,
+      // for example the symbol loading code.
+      "globalThis"
     case S(S(`thisSym`)) => "this" // no need to qualify `this`
     case S(_) => getParent(_.findThisProxy_!(thisSym))
     case N => getParent(_.findThis_!(thisSym))
@@ -79,33 +92,43 @@ class Scope
     case S(outer) =>
       (if outer.thisProxyAccessed then S(outer.thisProxy) else N, res)
   
-  // TODO more efficient!
+  
   def inScope(name: Str): Bool =
-    bindings.valuesIterator.contains(name) || parent.exists(_.inScope(name))
+    existingNames.contains(name) || parent.exists(_.inScope(name))
   
   def lookup(l: Local): Opt[Str] =
     // curThis.filter(_ is l).map(_ => thisProxy) orElse
     bindings.get(l).orElse(parent.flatMap(_.lookup(l)))
   
-  def lookup_!(l: Local)(using Raise): Str =
+  def lookup_!(l: Local, loc: Opt[Loc])(using Raise): Str =
     lookup(l).getOrElse:
-      // Prevent long-winded error messages which quote the entire definition.
-      val loc = l match
+      // * Prevent long-winded error messages which quote the entire definition.
+      val extraLoc = l match
         case sym: semantics.BlockMemberSymbol =>
           sym.trees.collectFirst:
             case t: syntax.Tree.TypeDef => t.head.toLoc
           .flatten.orElse(l.toLoc)
         case other => other.toLoc
-      raise(InternalError(msg"Not in scope: ${l.toString} (${l.getClass.toString})" -> loc :: Nil,
+      raise(ErrorReport(msg"No definition found in scope for member '${l.nme}'" -> loc ::
+          (if extraLoc.isEmpty then Nil else msg"which references the symbol introduced here" -> extraLoc :: Nil),
+        extraInfo = Some(l -> l.getClass -> this),
         source = Diagnostic.Source.Compilation))
       l.nme
   
-  def allocateName(l: Local, prefix: Str = ""): Str =
+  // * Note: it is sound for an existing name to have been allocated with a different prefix (which is only cosmetic)
+  def allocateOrGetName(l: Local, prefix: Str = ""): Str =
+    lookup(l).getOrElse(allocateName(l, prefix = prefix))
+  
+  def allocateName(l: Local, prefix: Str = "", shadow: Bool = false): Str =
     
+    // * May be useful later?
+    /* 
     val base: Str = l match
-      case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) === 0 =>
+      case tmp: semantics.TempSymbol if tmp.nameHints.sizeCompare(1) =/= 0 =>
         prefix + tmp.nameHints.head
       case _ => if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
+    */
+    val base = if l.nme.isEmpty && prefix.isEmpty then "tmp" else prefix + l.nme
     
     val realBase = Scope.replaceInvalidCharacters(base)
     
@@ -116,7 +139,7 @@ class Scope
         // Try realBase with an integer.
         (1 to Int.MaxValue).iterator.map(i => s"$realBase$i").filterNot(inScope).next
     
-    bindings += l -> name
+    addToBindings(l, name, shadow = shadow)
     
     name
 

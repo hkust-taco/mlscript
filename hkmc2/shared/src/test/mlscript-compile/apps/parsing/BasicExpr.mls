@@ -1,8 +1,8 @@
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Option.mls"
 import "../../Predef.mls"
 
-open Str { parenthesizedIf }
+open StrOps { parenthesizedIf }
 open Option { Some, None }
 open Predef { mkStr }
 
@@ -26,7 +26,7 @@ module BasicExpr with
     Lit(value) then value.toString()
     Var(name) then name
     Add(left, right) then left prettyPrint() + " + " + right prettyPrint()
-    Mul(left, right) then Str.concat of
+    Mul(left, right) then StrOps.concat of
       left prettyPrint() parenthesizedIf(left is Add)
       " * "
       right prettyPrint() parenthesizedIf(right is Add)

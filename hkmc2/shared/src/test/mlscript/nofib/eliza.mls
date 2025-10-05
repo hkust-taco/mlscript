@@ -19,7 +19,7 @@ fun cycle(xs) = append_lz(xs, lazy of () => cycle(xs))
 
 fun isSpace(c) = c === " "
 
-fun words(s) = if dropWhile(isSpace, s) is
+fun words(s) = if leaveWhile(isSpace, s) is
   Nil then Nil
   h :: t and
     break_(isSpace, h :: t) is [w, s_] then w :: words(s_)
@@ -38,7 +38,7 @@ fun null_lz(ls) = if force(ls) is
 
 fun trim(ls) =
   fun cons(x, xs) = if inList(x, nofibStringToList(" .!?,")) and null_(xs) then Nil else x :: xs
-  foldr(cons, Nil, dropWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
+  foldr(cons, Nil, leaveWhile(x => inList(x, nofibStringToList(" .!?,")), ls))
 
 fun repeated(kt_rp) = if kt_rp is [kt, r :: rp] then [r, [kt, rp]]
 
@@ -246,7 +246,10 @@ let initial =
     Nil then Nil
     [k, rs] :: t then [words(k), cycle(rs)] :: lscomp(t)
   [lscomp(respMsgs), cycle(repeatMsgs)]
-//│ initial = [[[[["C","A","N"],["Y","O","U"]], Lazy([function])],[[["C","A","N"],["I"]], Lazy([function])],[[["Y","O","U"],["A","R","E"]], Lazy([function])],[[["Y","O","U","'","R","E"]], Lazy([function])],[[["I"],["D","O","N","'","T"]], Lazy([function])],[[["I"],["F","E","E","L"]], Lazy([function])],[[["W","H","Y"],["D","O","N","'","T"],["Y","O","U"]], Lazy([function])],[[["W","H","Y"],["C","A","N","'","T"],["I"]], Lazy([function])],[[["A","R","E"],["Y","O","U"]], Lazy([function])],[[["I"],["C","A","N","'","T"]], Lazy([function])],[[["I"],["A","M"]], Lazy([function])],[[["I","'","M"]], Lazy([function])],[[["Y","O","U"]], Lazy([function])],[[["Y","E","S"]], Lazy([function])],[[["N","O"]], Lazy([function])],[[["C","O","M","P","U","T","E","R"]], Lazy([function])],[[["C","O","M","P","U","T","E","R","S"]], Lazy([function])],[[["I"],["W","A","N","T"]], Lazy([function])],[[["W","H","A","T"]], Lazy([function])],[[["H","O","W"]], Lazy([function])],[[["W","H","O"]], Lazy([function])],[[["W","H","E","R","E"]], Lazy([function])],[[["W","H","E","N"]], Lazy([function])],[[["N","A","M","E"]], Lazy([function])],[[["W","H","Y"]], Lazy([function])],[[["C","A","U","S","E"]], Lazy([function])],[[["B","E","C","A","U","S","E"]], Lazy([function])],[[["D","R","E","A","M"]], Lazy([function])],[[["S","O","R","R","Y"]], Lazy([function])],[[["H","I"]], Lazy([function])],[[["D","R","E","A","M","S"]], Lazy([function])],[[["M","A","Y","B","E"]], Lazy([function])],[[["H","E","L","L","O"]], Lazy([function])],[[["A","L","W","A","Y","S"]], Lazy([function])],[[["Y","O","U","R"]], Lazy([function])],[[["A","L","I","K","E"]], Lazy([function])],[[["T","H","I","N","K"]], Lazy([function])],[[["F","R","I","E","N","D","S"]], Lazy([function])],[[["F","R","I","E","N","D"]], Lazy([function])],[[], Lazy([function])]], Lazy([function])]
+//│ initial = [
+//│   [[[["C","A","N"],["Y","O","U"]], Lazy(fun)],[[["C","A","N"],["I"]], Lazy(fun)],[[["Y","O","U"],["A","R","E"]], Lazy(fun)],[[["Y","O","U","'","R","E"]], Lazy(fun)],[[["I"],["D","O","N","'","T"]], Lazy(fun)],[[["I"],["F","E","E","L"]], Lazy(fun)],[[["W","H","Y"],["D","O","N","'","T"],["Y","O","U"]], Lazy(fun)],[[["W","H","Y"],["C","A","N","'","T"],["I"]], Lazy(fun)],[[["A","R","E"],["Y","O","U"]], Lazy(fun)],[[["I"],["C","A","N","'","T"]], Lazy(fun)],[[["I"],["A","M"]], Lazy(fun)],[[["I","'","M"]], Lazy(fun)],[[["Y","O","U"]], Lazy(fun)],[[["Y","E","S"]], Lazy(fun)],[[["N","O"]], Lazy(fun)],[[["C","O","M","P","U","T","E","R"]], Lazy(fun)],[[["C","O","M","P","U","T","E","R","S"]], Lazy(fun)],[[["I"],["W","A","N","T"]], Lazy(fun)],[[["W","H","A","T"]], Lazy(fun)],[[["H","O","W"]], Lazy(fun)],[[["W","H","O"]], Lazy(fun)],[[["W","H","E","R","E"]], Lazy(fun)],[[["W","H","E","N"]], Lazy(fun)],[[["N","A","M","E"]], Lazy(fun)],[[["W","H","Y"]], Lazy(fun)],[[["C","A","U","S","E"]], Lazy(fun)],[[["B","E","C","A","U","S","E"]], Lazy(fun)],[[["D","R","E","A","M"]], Lazy(fun)],[[["S","O","R","R","Y"]], Lazy(fun)],[[["H","I"]], Lazy(fun)],[[["D","R","E","A","M","S"]], Lazy(fun)],[[["M","A","Y","B","E"]], Lazy(fun)],[[["H","E","L","L","O"]], Lazy(fun)],[[["A","L","W","A","Y","S"]], Lazy(fun)],[[["Y","O","U","R"]], Lazy(fun)],[[["A","L","I","K","E"]], Lazy(fun)],[[["T","H","I","N","K"]], Lazy(fun)],[[["F","R","I","E","N","D","S"]], Lazy(fun)],[[["F","R","I","E","N","D"]], Lazy(fun)],[[], Lazy(fun)]],
+//│   Lazy(fun)
+//│ ]
 
 fun prefix(xxs, yys) = if xxs is
   Nil then true
@@ -297,7 +300,7 @@ fun conjug(d, w) =
 
 fun replies(key, l) =
   map_lz of
-    x => conjug(l, drop(listLen(key), x))
+    x => conjug(l, leave(listLen(key), x))
     filter_lz of
       ls => prefix(key, lz_map(ucase, ls))
       tails(l)

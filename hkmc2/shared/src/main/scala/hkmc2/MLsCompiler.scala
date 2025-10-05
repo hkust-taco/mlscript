@@ -8,9 +8,8 @@ import utils.*
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
-import semantics.Elaborator.Ctx
 import hkmc2.syntax.Keyword.`override`
-import semantics.Elaborator.State
+import semantics.Elaborator.{Ctx, State}
 
 
 class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):
@@ -75,18 +74,20 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
     
     val elab = Elaborator(etl, wd, Ctx.empty)
     
-    val initState = State.init.nestLocal
+    val initState = State.init.nestLocal("prelude")
     
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
-    newCtx.nestLocal.givenIn:
+    newCtx.nestLocal("file:"+file.baseName).givenIn:
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       val blk = new semantics.Term.Blk(
-        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: semantics.Import(State.termSymbol, termFile.toString) :: blk0.stats,
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile)
+        :: semantics.Import(State.termSymbol, termFile.toString, termFile)
+        :: blk0.stats,
         blk0.res
       )
       val low = ltl.givenIn:
@@ -99,7 +100,7 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
         utils.Scope.empty
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.
       // * Having `module id"import" with ...` in `prelude.mls` will generate `globalThis.import` that is undefined.
-      baseScp.bindings += Elaborator.State.importSymbol -> "import"
+      baseScp.addToBindings(Elaborator.State.importSymbol, "import", shadow = false)
       val nestedScp = baseScp.nest
       val nme = file.baseName
       val exportedSymbol = parsed.definedSymbols.find(_._1 === nme).map(_._2)

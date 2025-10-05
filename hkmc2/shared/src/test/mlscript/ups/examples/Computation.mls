@@ -1,0 +1,127 @@
+:js
+
+open annotations
+
+data class Celsius(value: Num)
+
+data class Fahrenheit(value: Num)
+
+pattern ToFahrenheit =
+  ((Celsius(c)) => Fahrenheit((c * 9 / 5) + 32)) |
+  ((Fahrenheit as f) => f)
+
+pattern ToCelsius =
+  ((Fahrenheit(f)) => Celsius((f - 32) * 5 / 9)) |
+  ((Celsius as c) => c)
+
+Celsius(0) is ToFahrenheit(Fahrenheit(32))
+//│ = true
+
+Fahrenheit(212) is ToCelsius(Celsius(100))
+//│ = true
+
+Celsius(100) is ToFahrenheit(Fahrenheit(212))
+//│ = true
+
+Fahrenheit(32) is ToCelsius(Celsius(0))
+//│ = true
+
+Celsius(-40) is ToFahrenheit(Fahrenheit(-40))
+//│ = true
+
+Fahrenheit(-40) is ToCelsius(Celsius(-40))
+//│ = true
+
+fun toFahrenheit(c) =
+  if c is (@compile ToFahrenheit) as output then output else "What's this?"
+
+toFahrenheit of Celsius(100)
+//│ = Fahrenheit(212)
+
+toFahrenheit of Fahrenheit(100)
+//│ = Fahrenheit(100)
+
+toFahrenheit of Celsius(-40)
+//│ = Fahrenheit(-40)
+
+toFahrenheit of "Cheers!"
+//│ = "What's this?"
+
+fun toCelsius(f) =
+  if f is (@compile ToCelsius) as output then output else "What's this?"
+
+toCelsius of Fahrenheit(100)
+//│ = Celsius(37.77777777777778)
+
+toCelsius of Celsius(100)
+//│ = Celsius(100)
+
+toCelsius of "Cheers!"
+//│ = "What's this?"
+
+pattern HourAM = (0 => 12) | (1 ..= 11)
+pattern HourPM = 12 | (((13 ..= 23) as hour) => hour - 12)
+pattern Minute = ((0 ..= 59) as minute) => minute.toString().padStart(2, "0")
+
+// Convert 24-hour time format to 12-hour format with AM/PM
+pattern Time12Hour = ((
+  hour: ((HourAM | HourPM) as hour) & (((HourAM => "AM") | (HourPM => "PM")) as flag),
+  minute: Minute as minute
+)) => hour + ":" + minute + " " + flag
+
+fun formatTime(ps) = if ps is Time12Hour as time then time
+
+print of "I had my breakfast at", formatTime of hour: 7, minute: 45
+print of "Let's have lunch at", formatTime of hour: 12, minute: 30
+print of "I plan to have dinner at", formatTime of hour: 18, minute: 45
+print of "I should go to bed before", formatTime of hour: 23, minute: 0
+//│ > I had my breakfast at 7:45 AM
+//│ > Let's have lunch at 12:30 PM
+//│ > I plan to have dinner at 6:45 PM
+//│ > I should go to bed before 11:00 PM
+
+// This makes use of the chain pattern. It generates 29,232 lines of code!
+pattern Time12Hour = ((
+  hour: ((
+    ((0 ..= 11) => "AM") |
+    ((12 ..= 23) => "PM")
+  ) & (
+    (0 => 12) |
+    (1 ..= 11) |
+    12 |
+    ((13 ..= 23) as h => h - 12)
+  )) as [hour, flag],
+  minute: Minute as minute
+)) => hour + ":" + minute + " " + flag
+
+fun formatTime(ps) = if ps is Time12Hour as time then time
+
+print of "I had my breakfast at", formatTime of hour: 7, minute: 45
+print of "Let's have lunch at", formatTime of hour: 12, minute: 30
+print of "I plan to have dinner at", formatTime of hour: 18, minute: 45
+print of "I should go to bed before", formatTime of hour: 23, minute: 0
+//│ > I had my breakfast at AM:45 7
+//│ > Let's have lunch at PM:30 12
+//│ > I plan to have dinner at PM:45 6
+//│ > I should go to bed before PM:00 11
+
+pattern Channel = 0 ..= 255
+
+// Convert a color in RGB format to grayscale
+pattern Grayscale =
+  ((r: Channel as r, g: Channel as g, b: Channel as b)) =>
+    Math.round(r * 0.299 + g * 0.587 + b * 0.114)
+
+fun grayscale(rgb) = if rgb is Grayscale as g then g else -1
+
+grayscale of r: 0, g: 0, b: 0
+//│ = 0
+
+grayscale of r: 1, g: 1, b: 1
+//│ = 1
+
+grayscale of r: 255, g: 255, b: 255
+//│ = 255
+
+grayscale of r: 256, g: 255, b: 255
+//│ = -1

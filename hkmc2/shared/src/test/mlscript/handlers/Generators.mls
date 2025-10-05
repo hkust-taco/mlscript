@@ -12,21 +12,46 @@ fun permutations_impl(gen, l1, l2) =
           result.unshift(f)
           gen.produce(result)
           resume(())
-      permutations_impl(genWithPrefix, [], l1.concat(t))
+      permutations_impl(genWithPrefix, mut [], l1.concat(t))
       l1.push(f)
       permutations_impl(gen, l1, t)
     [] and l1 is [] do
-      gen.produce([])
+      gen.produce(mut [])
 fun permutations(gen, l) =
-  permutations_impl(gen, [], l)
+  permutations_impl(gen, mut [], l)
 
-let res = []
+let res = mut []
 handle gen = Generator with
   fun produce(result)(resume) =
     res.push(result)
     resume(())
 in permutations(gen, [1, 2, 3, 4])
-//│ res = [[1, 2, 3, 4], [1, 2, 4, 3], [1, 3, 2, 4], [1, 3, 4, 2], [1, 4, 2, 3], [1, 4, 3, 2], [2, 1, 3, 4], [2, 1, 4, 3], [2, 3, 1, 4], [2, 3, 4, 1], [2, 4, 1, 3], [2, 4, 3, 1], [3, 1, 2, 4], [3, 1, 4, 2], [3, 2, 1, 4], [3, 2, 4, 1], [3, 4, 1, 2], [3, 4, 2, 1], [4, 1, 2, 3], [4, 1, 3, 2], [4, 2, 1, 3], [4, 2, 3, 1], [4, 3, 1, 2], [4, 3, 2, 1]]
+//│ res = [
+//│   [1, 2, 3, 4],
+//│   [1, 2, 4, 3],
+//│   [1, 3, 2, 4],
+//│   [1, 3, 4, 2],
+//│   [1, 4, 2, 3],
+//│   [1, 4, 3, 2],
+//│   [2, 1, 3, 4],
+//│   [2, 1, 4, 3],
+//│   [2, 3, 1, 4],
+//│   [2, 3, 4, 1],
+//│   [2, 4, 1, 3],
+//│   [2, 4, 3, 1],
+//│   [3, 1, 2, 4],
+//│   [3, 1, 4, 2],
+//│   [3, 2, 1, 4],
+//│   [3, 2, 4, 1],
+//│   [3, 4, 1, 2],
+//│   [3, 4, 2, 1],
+//│   [4, 1, 2, 3],
+//│   [4, 1, 3, 2],
+//│   [4, 2, 1, 3],
+//│   [4, 2, 3, 1],
+//│   [4, 3, 1, 2],
+//│   [4, 3, 2, 1]
+//│ ]
 
 fun permutations_foreach(l, f) =
   handle gen = Generator with
@@ -51,15 +76,15 @@ fun permutations_impl(gen, l1, l2) =
           gen.produce([f, ...result])
           let x = resume(())
           x
-      permutations_impl(genWithPrefix, [], l1.concat(t))
+      permutations_impl(genWithPrefix, mut [], l1.concat(t))
       l1.push(f)
       permutations_impl(gen, l1, t)
     [] and l1 is [] do
       gen.produce([])
 fun permutations(gen, l) =
-  permutations_impl(gen, [], l)
+  permutations_impl(gen, mut [], l)
 
-let res = []
+let res = mut []
 handle gen = Generator with
   fun produce(result)(resume) =
     res.push(result)

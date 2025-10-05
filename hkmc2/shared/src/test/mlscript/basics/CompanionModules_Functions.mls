@@ -1,0 +1,23 @@
+:js
+
+
+:fixme // TODO: support
+// :sjs
+fun foo(x) = x + 1
+module foo with
+  val zero = foo(0)
+//│ ╔══[ERROR] Not yet supported: overloading of function 'foo'
+//│ ║  l.6: 	fun foo(x) = x + 1
+//│ ║       	^^^^^^^^^^^^^^^^^^
+//│ ╟── with module of the same name
+//│ ║  l.7: 	module foo with
+//│ ║       	^^^^^^^^^^^^^^^
+//│ ║  l.8: 	  val zero = foo(0)
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor foo cannot be invoked without 'new'
+
+:fixme
+foo(123)
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor foo cannot be invoked without 'new'
+
+

@@ -3,23 +3,22 @@
 
 
 import "../../js/MyClass.mjs"
-//│ MyClass = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ MyClass = class MyClass
 
 MyClass
-//│ = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ = class MyClass
 
-new MyClass("Bob")
-//│ = [object Object]
+new! MyClass("Bob")
+//│ = MyClass { name: "Bob" }
 
 let C = MyClass
-//│ C = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ C = class MyClass
 
 let c = C
-//│ c = class MyClass {  constructor(name) {    this.name = name;  }  greet() {    console.log(`Hello from ${this.name}!`);  }}
+//│ c = class MyClass
 
-:todo
-new c("Bob")
-//│ = [object Object]
+new! c("Bob")
+//│ = MyClass { name: "Bob" }
 
 :re
 globalThis.MyClass
@@ -31,7 +30,7 @@ fun foo() =
   import "../../js/MyClass.mjs"
   ()
 //│ ╔══[COMPILATION ERROR] Imports must be at the top level
-//│ ║  l.31: 	  import "../../js/MyClass.mjs"
-//│ ╙──      	         ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.30: 	  import "../../js/MyClass.mjs"
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

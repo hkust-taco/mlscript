@@ -4,13 +4,23 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; (class None { static { None1 = None; } static toString() { return "None"; } });
+//│ let None1;
+//│ globalThis.Object.freeze(class None {
+//│   static {
+//│     None1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "None"]; 
+//│ });
 
 :sjs
 None
 //│ JS (unsanitized):
 //│ None1
-//│ = None
+//│ = class None
 
 :sjs
 :re
@@ -19,11 +29,23 @@ None()
 //│ runtime.safeCall(None1())
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor None cannot be invoked without 'new'
 
-:sjs
+:e
 new None
+//│ ╔══[ERROR] Expected a statically known class; found reference of type None.
+//│ ║  l.33: 	new None
+//│ ║        	    ^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ = None
+
+:sjs
+:e
+new! None
+//│ ╔══[ERROR] Unexpected moduleful reference of type None.
+//│ ║  l.42: 	new! None
+//│ ╙──      	     ^^^^
 //│ JS (unsanitized):
-//│ new None1()
-//│ = [object Object]
+//│ globalThis.Object.freeze(new None1())
+//│ = None
 
 
 :sjs
@@ -34,30 +56,44 @@ module M with
   val y = x + 1
 //│ JS (unsanitized):
 //│ let M1;
-//│ (class M {
+//│ globalThis.Object.freeze(class M {
 //│   static {
-//│     M1 = M;
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     let tmp;
-//│     this.C = class C {
+//│     globalThis.Object.freeze(class C {
+//│       static {
+//│         M.C = this
+//│       }
 //│       constructor() {}
-//│       toString() { return "C"; }
-//│     };
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "C"]; 
+//│     });
 //│     this.D = function D() {
-//│       return new D.class();
+//│       return globalThis.Object.freeze(new D.class());
 //│     };
-//│     this.D.class = class D {
+//│     globalThis.Object.freeze(class D {
+//│       static {
+//│         M.D.class = this
+//│       }
 //│       constructor() {}
-//│       toString() { return "D(" + "" + ")"; }
-//│     };
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "D", []]; 
+//│     });
 //│     this.x = 1;
 //│     tmp = M.x + 1;
 //│     this.y = tmp;
 //│   }
-//│   static toString() { return "M"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
 M.C
-//│ = class C {       constructor() {}       toString() { return "C"; }     }
+//│ = class C
 
 new M.C
 //│ = C
@@ -75,8 +111,8 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.76: 	M.oops
-//│ ╙──      	 ^^^^^
+//│ ║  l.112: 	M.oops
+//│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
@@ -87,16 +123,69 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; (class M2 { static { M3 = M2; this.m = M3; } static toString() { return "M"; } });
+//│ let M3;
+//│ globalThis.Object.freeze(class M2 {
+//│   static {
+//│     M3 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     this.m = M3;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
 
 :sjs
 M.m
 //│ JS (unsanitized):
 //│ M3.m
-//│ = M
-
+//│ = class M { m: ref'1 } as ref'1
 
 
 module M()
+
+
+// * Peculiarity (should not be a problem): notice that we have `BB.y`, and not `AA.BB.y`
+:sjs
+module AA with
+  val x = 1
+  module BB with
+    val y = 2
+    [x, y]
+//│ JS (unsanitized):
+//│ let AA1;
+//│ globalThis.Object.freeze(class AA {
+//│   static {
+//│     AA1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     this.x = 1;
+//│     globalThis.Object.freeze(class BB {
+//│       static {
+//│         AA.BB = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static {
+//│         this.y = 2;
+//│         globalThis.Object.freeze([
+//│           AA.x,
+//│           BB.y
+//│         ]);
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "BB"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "AA"]; 
+//│ });
 
 

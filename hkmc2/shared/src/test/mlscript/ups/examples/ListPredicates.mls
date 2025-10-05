@@ -1,0 +1,60 @@
+:js
+
+open annotations
+
+import "../../../mlscript-compile/Stack.mls"
+import "../../../mlscript-compile/Iter.mls"
+
+open Stack
+
+fun contains(xs, x) = if xs is
+  hd :: tl and { hd === x then true, else tl contains(x) }
+  Nil then false
+
+let list1 = 1 :: 2 :: 3 :: Nil
+//│ list1 = Cons(1, Cons(2, Cons(3, Nil)))
+
+list1 contains of 3
+//│ = true
+
+list1 contains of 4
+//│ = false
+
+// Apply a pattern to a list, returns a list of unique elements if the output of
+// each element is unique, and rejects the list otherwise.
+pattern Unique(pattern P) =
+  Nil | (
+    ((((P as hd) :: (Unique(pattern P) as tl)) =>
+      let there = tl contains(hd)
+      [there, if there then tl else hd :: tl]) as [false, list]) => list)
+
+list1 is Unique(pattern _)
+//│ = true
+
+list1 is Unique(pattern (Num as x) => x.toString().length)
+//│ = false
+
+fun addProperty(obj, k, v) = (...obj, (k): v)
+addProperty of (a: 1), "b", 2
+//│ = {a: 1, b: 2}
+
+// A workaround for the above issue.
+fun addProperty(obj, k, v) =
+  let newObj = Object.fromEntries of [[k, v]]
+  (...obj, ...newObj)
+addProperty of (a: 1), "b", 2
+//│ = {a: 1, b: 2}
+
+// I forgot the syntax of empty object.
+fun emptyObject = Object.fromEntries of []
+
+// Convert a list of pairs to a map-like object
+pattern ListToObject = (Nil =>  emptyObject) | (([Str as k, v] :: (ListToObject as rest)) => addProperty(rest, k, v))
+
+fun toObject(ps) = if ps is ListToObject as obj then obj else emptyObject
+
+print of toObject of ["a", 1] :: ["b", 2] :: Nil
+//│ > {b: 2, a: 1}
+
+print of toObject of 0 :: Nil
+//│ > {}

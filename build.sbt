@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.6.1"
+val scala3Version = "3.7.3"
 val directoryWatcherVersion = "0.18.0"
 
 ThisBuild / scalaVersion     := "2.13.14"
@@ -14,6 +14,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-language:higherKinds",
+  "-language:implicitConversions",
   if (insideCI.value) "-Wconf:any:error"
   else                "-Wconf:any:warning",
 )
@@ -36,6 +37,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
+    // scalacOptions ++= Seq("-language:experimental.modularity"), // https://docs.scala-lang.org/scala3/reference/experimental/modularity.html
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
@@ -153,3 +155,16 @@ lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
 lazy val compilerJVM = compiler.jvm
 lazy val compilerJS = compiler.js
 
+lazy val hkmc2Benchmarks = project.in(file("hkmc2Benchmarks"))
+  .settings(
+    name := "benchmark",
+    scalaVersion := scala3Version,
+    sourceDirectory := baseDirectory.value/"src",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    watchSources += WatchSource(
+      baseDirectory.value/"src"/"test"/"bench", "*.mls", NothingFilter),
+
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+  .dependsOn(hkmc2JVM)
+  .dependsOn(hkmc2DiffTests % "compile->compile;test->test")

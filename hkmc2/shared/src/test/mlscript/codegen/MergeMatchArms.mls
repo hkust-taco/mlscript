@@ -27,9 +27,7 @@ if a is
 //│   3
 //│ } else if (a instanceof D1.class) {
 //│   4
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 1
 
 
@@ -48,9 +46,7 @@ if a is
 //│   2
 //│ } else if (a instanceof C1.class) {
 //│   3
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 1
 
 
@@ -68,15 +64,13 @@ if a is
 //│   } else if (b instanceof B1.class) {
 //│     2
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ } else if (a instanceof B1.class) {
 //│   2
 //│ } else if (a instanceof C1.class) {
 //│   3
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 2
 
 // The match arms here are still merged because
@@ -112,7 +106,7 @@ print(x)
 //│   } else if (a instanceof B1.class) {
 //│     tmp2 = 2 + tmp;
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   tmp3 = tmp2;
 //│   tmp1 = Predef.print("done");
@@ -120,7 +114,7 @@ print(x)
 //│   tmp3 = 5;
 //│   tmp1 = Predef.print("done");
 //│ } else {
-//│   throw new this.Error("match error");
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ x = tmp1;
 //│ Predef.print(x)
@@ -142,9 +136,7 @@ if a is
 //│   1
 //│ } else if (a instanceof B1.class) {
 //│   2 + tmp4
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 1
 
 
@@ -167,9 +159,7 @@ if a is
 //│   tmp5 = printAndId(3);
 //│   if (a instanceof B1.class) {
 //│     2 + tmp5
-//│   } else {
-//│     throw new this.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ }
 //│ = 1
 
@@ -196,9 +186,7 @@ if a is
 //│   tmp6 = 3;
 //│   x1 = tmp6;
 //│   Predef.print(x1)
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 1
 
 
@@ -225,7 +213,7 @@ if a is
 //│   } else if (a instanceof C1.class) {
 //│     tmp7 = 3;
 //│   } else {
-//│     throw new this.Error("match error");
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   x2 = tmp7;
 //│   tmp8 = Predef.print(x2);

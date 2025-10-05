@@ -1,7 +1,47 @@
 :js
 :qq
 
-//│ Term = Term
+//│ Term = class Term {
+//│   Symbol: fun Symbol { class: class Symbol },
+//│   Pattern: class Pattern,
+//│   LitPattern: fun LitPattern { class: class LitPattern },
+//│   Var: fun Var { class: class Var },
+//│   ClassLike: fun ClassLike { class: class ClassLike },
+//│   Tuple: fun Tuple { class: class Tuple },
+//│   Record: fun Record { class: class Record },
+//│   Branch: fun Branch { class: class Branch },
+//│   Split: class Split,
+//│   Cons: fun Cons { class: class Cons },
+//│   Let: fun Let { class: class Let },
+//│   Else: fun Else { class: class Else },
+//│   End: class End,
+//│   Keyword: class Keyword { If: If, While: While },
+//│   Statement: class Statement,
+//│   LetDecl: fun LetDecl { class: class LetDecl },
+//│   DefineVar: fun DefineVar { class: class DefineVar },
+//│   Term: class Term,
+//│   Lit: fun Lit { class: class Lit },
+//│   Builtin: fun Builtin { class: class Builtin },
+//│   Ref: fun Ref { class: class Ref },
+//│   CSRef: fun CSRef { class: class CSRef },
+//│   App: fun App { class: class App },
+//│   Sel: fun Sel { class: class Sel },
+//│   DynSel: fun DynSel { class: class DynSel },
+//│   Tup: fun Tup { class: class Tup },
+//│   IfLike: fun IfLike { class: class IfLike },
+//│   Lam: fun Lam { class: class Lam },
+//│   Blk: fun Blk { class: class Blk },
+//│   New: fun New { class: class New },
+//│   Region: fun Region { class: class Region },
+//│   RegRef: fun RegRef { class: class RegRef },
+//│   Assgn: fun Assgn { class: class Assgn },
+//│   Deref: fun Deref { class: class Deref },
+//│   SetRef: fun SetRef { class: class SetRef },
+//│   Ret: fun Ret { class: class Ret },
+//│   Throw: fun Throw { class: class Throw },
+//│   Try: fun Try { class: class Try },
+//│   Context: fun Context { class: class Context }
+//│ }
 
 `42
 //│ = Lit(42)
@@ -36,14 +76,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let x1, tmp6, tmp7, tmp8;
-//│ tmp6 = new Term.Symbol("x");
-//│ x1 = new Term.Ref(tmp6);
+//│ let x1, tmp6, tmp7, tmp8, arr2;
+//│ tmp6 = globalThis.Object.freeze(new Term.Symbol("x"));
+//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp6));
 //│ tmp7 = Predef.print(x1);
-//│ tmp8 = x1;
-//│ new Term.Lam([
+//│ arr2 = globalThis.Object.freeze([
 //│   tmp6
-//│ ], tmp8)
+//│ ]);
+//│ tmp8 = x1;
+//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp8))
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
@@ -53,38 +94,70 @@ let f = x `=> x `+ `1
 
 
 f`(`0)
-//│ = App(Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)]))), Tup([Lit(0)]))
+//│ = App(
+//│   Lam([Symbol("x")], App(Builtin("+"), Tup([Ref(Symbol("x")), Lit(1)]))),
+//│   Tup([Lit(0)])
+//│ )
 
 
 `let x = `42 `in x
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ = Blk(
+//│   [LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))],
+//│   Ref(Symbol("x"))
+//│ )
 
 
 `let x = `42 `in print(x); x
 //│ > Ref(Symbol("x"))
-//│ = Blk([LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))], Ref(Symbol("x")))
+//│ = Blk(
+//│   [LetDecl(Symbol("x")), DefineVar(Symbol("x"), Lit(42))],
+//│   Ref(Symbol("x"))
+//│ )
 
 
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let scrut, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40;
-//│ tmp30 = new Term.Symbol("scrut");
-//│ scrut = new Term.Ref(tmp30);
-//│ tmp31 = new Term.Lit(true);
-//│ tmp34 = scrut;
-//│ tmp35 = new Term.LitPattern(true);
-//│ tmp40 = new Term.Lit(true);
-//│ tmp36 = new Term.Else(tmp40);
-//│ tmp37 = new Term.Branch(tmp34, tmp35, tmp36);
-//│ tmp39 = new Term.Lit(false);
-//│ tmp38 = new Term.Else(tmp39);
-//│ tmp32 = new Term.Cons(tmp37, tmp38);
-//│ tmp33 = new Term.Let(tmp30, tmp31, tmp32);
-//│ new Term.IfLike(Term.Keyword.If, tmp33)
-//│ = IfLike(If, Let(Symbol("scrut"), Lit(true), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))), Else(Lit(false)))))
+//│ let scrut, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39;
+//│ tmp29 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp29));
+//│ tmp30 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp33 = scrut;
+//│ tmp34 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp39 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp35 = globalThis.Object.freeze(new Term.Else(tmp39));
+//│ tmp36 = globalThis.Object.freeze(new Term.Branch(tmp33, tmp34, tmp35));
+//│ tmp38 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp37 = globalThis.Object.freeze(new Term.Else(tmp38));
+//│ tmp31 = globalThis.Object.freeze(new Term.Cons(tmp36, tmp37));
+//│ tmp32 = globalThis.Object.freeze(new Term.Let(tmp29, tmp30, tmp31));
+//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp32))
+//│ = IfLike(
+//│   If,
+//│   Let(
+//│     Symbol("scrut"),
+//│     Lit(true),
+//│     Cons(
+//│       Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(true))),
+//│       Else(Lit(false))
+//│     )
+//│   )
+//│ )
 
 
 x `=> `if x `== `0.0 then `1.0 else x
-//│ = Lam([Symbol("x")], IfLike(If, Let(Symbol("scrut"), App(Builtin("=="), Tup([Ref(Symbol("x")), Lit(0)])), Cons(Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))), Else(Ref(Symbol("x")))))))
+//│ = Lam(
+//│   [Symbol("x")],
+//│   IfLike(
+//│     If,
+//│     Let(
+//│       Symbol("scrut"),
+//│       App(Builtin("=="), Tup([Ref(Symbol("x")), Lit(0)])),
+//│       Cons(
+//│         Branch(Ref(Symbol("scrut")), LitPattern(true), Else(Lit(1))),
+//│         Else(Ref(Symbol("x")))
+//│       )
+//│     )
+//│   )
+//│ )
 

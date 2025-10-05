@@ -15,7 +15,7 @@ class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(path: Str): Import =
+  def importPath(path: Str)(using Config): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -38,7 +38,7 @@ class Importer:
       file.ext match
       
       case "mjs" | "js" =>
-        Import(sym, file.toString)
+        Import(sym, file.toString, file)
         
       case "mls" =>
         
@@ -60,7 +60,7 @@ class Importer:
           val res = p.parseAll(p.block(allowNewlines = true))
           val resBlk = new syntax.Tree.Block(res)
           
-          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal
+          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
           val elab = Elaborator(tl, file / os.up, prelude)
           elab.importFrom(resBlk)
           
@@ -69,13 +69,13 @@ class Importer:
           case None => lastWords(s"File $file does not define a symbol named $nme")
         
         val jsFile = file / os.up / (file.baseName + ".mjs")
-        Import(sym, jsFile.toString)
+        Import(sym, jsFile.toString, jsFile)
         
       case _ =>
         raise(ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil))
-        Import(sym, file.toString)
+        Import(sym, path, file)
       
     else
-      Import(sym, path)
+      Import(sym, path, file)
     
 

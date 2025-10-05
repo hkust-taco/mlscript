@@ -74,13 +74,19 @@ new Nothingness(0)
 //│ ╔══[ERROR] Name not found: Nothingness
 //│ ║  l.73: 	new Nothingness(0)
 //│ ╙──      	    ^^^^^^^^^^^
-//│ ═══[ERROR] Not a valid class: <error>
+//│ ╔══[ERROR] Expected a statically known class; found ‹error›.
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[ERROR] Not a valid class: ‹error›
 //│ Type: ⊥
 
 :e
 new 42
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.83: 	new 42
+//│ ║        	    ^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ╔══[ERROR] Not a valid class: integer literal
-//│ ║  l.81: 	new 42
+//│ ║  l.83: 	new 42
 //│ ╙──      	    ^^
 //│ Type: ⊥
 
@@ -99,7 +105,7 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ ╔══[ERROR] Type error in string literal with expected type Int
-//│ ║  l.100: 	new Foo("1!5!")
+//│ ║  l.106: 	new Foo("1!5!")
 //│ ║         	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
@@ -127,19 +133,13 @@ let t = new Some(true) in t.Some#value
 :fixme
 :pe
 42.Some#value
-//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
-//│ ║  l.129: 	42.Some#value
+//│ ╔══[LEXICAL ERROR] Expected at least one digit after the  decimal point
+//│ ║  l.135: 	42.Some#value
 //│ ╙──       	   ^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
-//│ ║  l.129: 	42.Some#value
-//│ ╙──       	   ^^^^
-//│ ╔══[ERROR] Name not found: #
-//│ ║  l.129: 	42.Some#value
-//│ ╙──       	       ^
-//│ ╔══[ERROR] Name not found: value
-//│ ║  l.129: 	42.Some#value
-//│ ╙──       	        ^^^^^
-//│ Type: ⊥
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (operator application).
+//│ ║  l.135: 	42.Some#value
+//│ ╙──       	   ^^^^^^^^^^
+//│ Type: Num
 
 
 data class Printer[T](f: T -> Str)
@@ -164,9 +164,9 @@ let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
 data class TFun[T](f: T -> T)
@@ -191,9 +191,9 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 //│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  'T
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╟── because: cannot constrain  Str  <:  ¬(¬'T)
 //│ ╟── because: cannot constrain  Str  <:  'T
-//│ ╙── because: cannot constrain  Str  <:  ¬(¬{Int})
+//│ ╟── because: cannot constrain  Str  <:  'T
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str ∨ Int
 
 data class Pair[A, B](fst: A, snd: B)
@@ -309,7 +309,7 @@ throw new Error("oops")
 throw 42
 //│ ╔══[ERROR] Type error in throw
 //│ ║  l.309: 	throw 42
-//│ ║         	      ^^
+//│ ║         	^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Error
 //│ Type: ⊥
 

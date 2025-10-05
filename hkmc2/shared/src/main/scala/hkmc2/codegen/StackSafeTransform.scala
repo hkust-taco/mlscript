@@ -61,17 +61,19 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
 
       override def applyFunDefn(fun: FunDefn): FunDefn = rewriteFn(fun)
       
-      override def applyDefn(defn: Defn): Defn = defn match
-        case defn: ClsLikeDefn => rewriteCls(defn, isTopLevel)
-        case _: FunDefn | _: ValDefn => super.applyDefn(defn)
+      override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+        case defn: ClsLikeDefn => k(rewriteCls(defn, isTopLevel))
+        case _: FunDefn | _: ValDefn => super.applyDefn(defn)(k)
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) =>
-          extract(applyResult(res), true, Return(_, implct), N, curDepth)
+          super.applyResult(res): res =>
+            extract(res, true, Return(_, implct), N, curDepth)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, r, rest) =>
           if usesStack(r) then
-            extract(applyResult(r), false, _ => applyBlock(rest), S(lhs), curDepth)
+            super.applyResult(r): r =>
+              extract(r, false, _ => applyBlock(rest), S(lhs), curDepth)
           else
             super.applyBlock(b)
         
@@ -81,11 +83,11 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
         
         override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
       
-      override def applyResult2(r: Result)(k: Result => Block): Block =
+      override def applyResult(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
           extract(r, false, k, N, curDepth)
         else
-          super.applyResult2(r)(k)
+          super.applyResult(r)(k)
       
       override def applyLam(lam: Value.Lam): Value.Lam = lastWords("Lambda in stack safe transformation")
   
@@ -100,17 +102,29 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
         case _: Call | _: Instantiate => trivial = false
         case _ => ()
     trivial
-
-  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = defn.parentPath match
+  
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =defn.parentPath match
     case Some(value) if value eq paths.contClsPath => defn
     case _ =>
       val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
-        parentPath, methods, privateFields, publicFields, preCtor, ctor) = defn
+        parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
       // TODO: handle preCtor (seems this is not handled in HandlerLowering either)
       ClsLikeDefn(
-        owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods.map(rewriteFn), privateFields,
+        owner, isym, sym, k, paramsOpt, auxParams, parentPath,
+      methods.map(rewriteFn),
+      privateFields,
         publicFields, rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1),
-        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1)
+        rewriteBlk(ctor),
+      mod.map(rewriteObjBody(_, isTopLevel)),
+    )
+  
+  def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
+    ClsLikeBody(
+      defn.isym,
+      defn.methods.map(rewriteFn),
+      defn.privateFields,
+      defn.publicFields,
+      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(isym), 1),
       )
 
   def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
@@ -121,7 +135,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       
     val doUnwindPath = doUnwindMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
-    
     if isTrivial(blk) then
       newBody
     else if doUnwindPath.isEmpty then

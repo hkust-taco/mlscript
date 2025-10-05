@@ -1,0 +1,24 @@
+:js
+
+
+:e
+mut "oops"
+//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ║  l.5: 	mut "oops"
+//│ ╙──     	^^^
+//│ = "oops"
+
+:e
+mut a: 1
+//│ ╔══[ERROR] Unexpected record key shape.
+//│ ║  l.12: 	mut a: 1
+//│ ╙──      	    ^
+
+:e
+mut {"oops"}
+//│ ╔══[ERROR] Expected a record after 'mut' keyword; found a block
+//│ ║  l.18: 	mut {"oops"}
+//│ ╙──      	     ^^^^^^
+//│ = "oops"
+
+

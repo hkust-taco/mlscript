@@ -11,17 +11,20 @@ data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
-//│ Lol1 = function Lol(h1) {
-//│   return new Lol.class(h1);
+//│ Lol1 = function Lol(h) {
+//│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
-//│ Lol1.class = class Lol {
+//│ globalThis.Object.freeze(class Lol {
+//│   static {
+//│     Lol1.class = this
+//│   }
 //│   constructor(h) {
 //│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
-//│     Cont$ctor$Lol$1 = function Cont$ctor$Lol$(pc1) {
-//│       return new Cont$ctor$Lol$.class(pc1);
-//│     };
-//│     Cont$ctor$Lol$1.class = class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│       static {
+//│         Cont$ctor$Lol$1 = this
+//│       }
 //│       constructor(pc) {
 //│         let tmp1;
 //│         tmp1 = super(null);
@@ -45,47 +48,54 @@ data class Lol(h) with
 //│           } else if (this.pc === 4) {
 //│             res = Predef.print(tmp);
 //│             if (res instanceof runtime.EffectSig.class) {
-//│               return this.doUnwind(res, 2)
-//│             }
-//│             this.pc = 2;
-//│             continue contLoop;
-//│           } else if (this.pc === 5) {
-//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
-//│             if (tmp instanceof runtime.EffectSig.class) {
-//│               return this.doUnwind(tmp, 1)
+//│               this.pc = 1;
+//│               res.contTrace.last.next = this;
+//│               res.contTrace.last = this;
+//│               return res
 //│             }
 //│             this.pc = 1;
-//│             continue contLoop;
-//│           } else if (this.pc === 1) {
-//│             this.pc = 4;
-//│             continue contLoop;
-//│           } else if (this.pc === 2) {
+//│             continue contLoop
+//│           } else if (this.pc === 4) {
+//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
+//│             if (tmp instanceof runtime.EffectSig.class) {
+//│               this.pc = 0;
+//│               tmp.contTrace.last.next = this;
+//│               tmp.contTrace.last = this;
+//│               return tmp
+//│             }
+//│             this.pc = 0;
+//│             continue contLoop
+//│           } else if (this.pc === 0) {
 //│             this.pc = 3;
-//│             continue contLoop;
+//│             continue contLoop
+//│           } else if (this.pc === 1) {
+//│             this.pc = 2;
+//│             continue contLoop
 //│           }
 //│           break;
 //│         }
 //│       }
-//│       toString() { return "Cont$ctor$Lol$(" + runtime.render(this.pc) + ")"; }
-//│     };
-//│     doUnwind = function doUnwind(res1, pc) {
-//│       res1.contTrace.last.next = new Cont$ctor$Lol$1.class(pc);
-//│       res1.contTrace.last = res1.contTrace.last.next;
-//│       return res1
-//│     };
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
+//│     });
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp, 1)
+//│       tmp.contTrace.last.next = new Cont$ctor$Lol$1(0);
+//│       tmp.contTrace.last = tmp.contTrace.last.next;
+//│       return tmp
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 2)
+//│       res.contTrace.last.next = new Cont$ctor$Lol$1(1);
+//│       res.contTrace.last = res.contTrace.last.next;
+//│       return res
 //│     }
-//│     res
+//│     res;
 //│   }
-//│   toString() { return "Lol(" + runtime.render(this.h) + ")"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
+//│ });
 
 
 // * This is a weird use of effect handlers where an effect is raised during the construction of a handler.
@@ -147,14 +157,14 @@ let oops =
 oops.h
 //│ = Handler$h$
 
-let obj = {}
-//│ obj = ()
+let obj = mut {s: undefined}
+//│ obj = {s: undefined}
 
 handle h = Effect with
   fun perform(arg)(k) =
     k()
     print(arg)
-set obj.["s"] = h.perform("k")
+set obj.s = h.perform("k")
 //│ > k
 
 fun f() = ()

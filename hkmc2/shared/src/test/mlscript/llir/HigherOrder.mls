@@ -73,7 +73,7 @@ main()
 abstract class List[out T]: Cons[T] | Nil
 data class (::) Cons[out T](head: T, tail: List[T]) extends List[T]
 object Nil extends List
-fun not(c) = if c then false else true
+fun nott(c) = if c then false else true
 fun filter(f, ls) = if ls is
   Nil then Nil
   h :: t and
@@ -81,7 +81,7 @@ fun filter(f, ls) = if ls is
     else filter(f, t)
 fun nubBy(eq, ls) = if ls is
   Nil then Nil
-  h :: t then h :: nubBy(eq, filter(y => not(eq(h, y)), t))
+  h :: t then h :: nubBy(eq, filter(y => nott(eq(h, y)), t))
 nubBy((x, y) => x == y, 1 :: 2 :: 3 :: 3 :: Nil)
 //│ = Cons(1, Cons(2, Cons(3, Nil)))
 //│ 

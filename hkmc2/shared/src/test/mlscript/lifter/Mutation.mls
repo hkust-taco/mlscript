@@ -2,14 +2,44 @@
 :js
 
 
-let xs = []
+let xs = mut []
 //│ xs = []
 
+:sjs
 fun foo() =
   let x = 1
   fun bar() = x
   xs.push(bar)
   set x = 2
+//│ JS (unsanitized):
+//│ let bar, foo, bar$, foo$capture1;
+//│ bar$ = function bar$(foo$capture2) {
+//│   return foo$capture2.x0$
+//│ };
+//│ bar = function bar(foo$capture2) {
+//│   return () => {
+//│     return bar$(foo$capture2)
+//│   }
+//│ };
+//│ globalThis.Object.freeze(class foo$capture {
+//│   static {
+//│     foo$capture1 = this
+//│   }
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "foo$capture"]; 
+//│ });
+//│ foo = function foo() {
+//│   let tmp, capture, bar$this;
+//│   capture = new foo$capture1(null);
+//│   capture.x0$ = 1;
+//│   bar$this = runtime.safeCall(bar(capture));
+//│   tmp = runtime.safeCall(xs.push(bar$this));
+//│   capture.x0$ = 2;
+//│   return runtime.Unit
+//│ };
 
 :expect 2
 foo()
@@ -17,7 +47,7 @@ xs.0()
 //│ = 2
 
 
-let xs = []
+let xs = mut []
 //│ xs = []
 
 // :sjs
@@ -44,7 +74,7 @@ let b_x = foo()
 b_x.0()
 b_x.1()
 //│ = 2
-//│ b_x = [[function], [function]]
+//│ b_x = [fun, fun]
 
 
 :sjs
@@ -55,13 +85,7 @@ fun foo() =
   bar
 //│ JS (unsanitized):
 //│ let bar3, foo3;
-//│ bar3 = function bar() {
-//│   let x;
-//│   x = undefined;
-//│   return x
-//│ };
-//│ foo3 = function foo() {
-//│   return bar3
-//│ };
+//│ bar3 = function bar() { let x; x = undefined; return x };
+//│ foo3 = function foo() { return bar3 };
 
 

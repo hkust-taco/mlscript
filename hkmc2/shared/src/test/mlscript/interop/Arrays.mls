@@ -10,9 +10,36 @@ let arr = [true, false]
 arr.map(_ === false)
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 3
 
-:todo
+:sjs
 arr.map((e, ...) => e === false)
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(12,15,Arrays.mls:+14)),None) (of class hkmc2.syntax.Tree$Spread)
+//│ JS (unsanitized):
+//│ let lambda1;
+//│ lambda1 = (undefined, function (e, ..._) { return e === false });
+//│ runtime.safeCall(arr.map(lambda1))
+//│ = [false, true]
+
+:sjs
+arr.map((_, ...) => 1)
+//│ JS (unsanitized):
+//│ let lambda2;
+//│ lambda2 = (undefined, function (_, ..._1) { return 1 });
+//│ runtime.safeCall(arr.map(lambda2))
+//│ = [1, 1]
+
+:e
+arr.map((..., ...) => 1)
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.30: 	arr.map((..., ...) => 1)
+//│ ╙──      	         ^^^
+//│ = [1, 1]
+
+:e
+:re
+arr.map((..., e) => e)
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.38: 	arr.map((..., e) => e)
+//│ ╙──      	         ^^^
+//│ ═══[RUNTIME ERROR] Error: Function expected 2 arguments but got 3
 
 arr.map(pass1(_ === false))
 //│ = [false, true]
@@ -21,18 +48,36 @@ arr.map(pass1(_ === false))
 [1,3,2].map((x, _, _) => x + 1).sort()
 //│ = [2, 3, 4]
 
-:fixme
 [1,3,2].map((x, _, _) => x + 1)
   .sort()
-//│ ╔══[PARSE ERROR] Expected an expression; found selector instead
-//│ ║  l.26: 	  .sort()
-//│ ╙──      	  ^^^^^
-//│ ╔══[PARSE ERROR] Unexpected selector here
-//│ ║  l.26: 	  .sort()
-//│ ╙──      	  ^^^^^
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (<erroneous syntax>).
-//│ ║  l.26: 	  .sort()
-//│ ╙──      	  ^^^^^
-//│ = [2, 4, 3]
+//│ = [2, 3, 4]
+
+
+Array
+//│ = class Array
+
+Array(1)
+//│ = [<1 empty items>]
+
+:e
+Array()
+//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ║  l.63: 	Array()
+//│ ╙──      	     ^^
+//│ = []
+
+:e
+Array(1, 2, 3)
+//│ ╔══[ERROR] Expected 1 arguments, got 3
+//│ ║  l.70: 	Array(1, 2, 3)
+//│ ╙──      	     ^^^^^^^^^
+//│ = [1, 2, 3]
+
+
+if arr is Array then "ok"
+//│ = "ok"
+
+if arr is Array(n) then n
+//│ = 2
 
 

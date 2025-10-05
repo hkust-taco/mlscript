@@ -13,24 +13,24 @@ open Mod
 //│   |>> -> SelElem(RefElem(member:Mod),pipee,Some(member:pipee),true)
 
 pipee
-//│ = [function pipee]
+//│ = fun pipee
 
 (|>>)
-//│ = [function pipee]
+//│ = fun pipee
 
 |>>
-//│ = [function pipee]
+//│ = fun pipee
 
 :pe
 :e
 Mod.|>>
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	       ^
 //│ ╔══[ERROR] Name not found: .|>>
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	   ^^^^
-//│ ╔══[ERROR] Unexpected moduleful reference.
+//│ ╔══[ERROR] Unexpected moduleful reference of type Mod.
 //│ ║  l.26: 	Mod.|>>
 //│ ╙──      	^^^
 
@@ -42,12 +42,12 @@ Mod.|>>
 :pe
 :e
 open Mod { |>> }
-//│ ╔══[PARSE ERROR] Expected start of statement in this position; found end of input instead
+//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
 //│ ║  l.44: 	open Mod { |>> }
-//│ ╙──      	               ^
+//│ ╙──      	                ^
 //│ ╔══[ERROR] Illegal 'open' statement shape.
 //│ ║  l.44: 	open Mod { |>> }
-//│ ╙──      	     ^^^^^^^^^^
+//│ ╙──      	     ^^^^^^^^^^^
 
 
 :e

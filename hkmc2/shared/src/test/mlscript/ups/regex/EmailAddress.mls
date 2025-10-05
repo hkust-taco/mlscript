@@ -1,0 +1,95 @@
+:js
+
+import "../../../mlscript-compile/Char.mls"
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Stack.mls"
+
+// To match simple email addresses matched by the following regular expressions:
+// ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9-]+\.[a-zA-Z]{2,}$
+
+pattern UserNameLetter = Char.Letter | Char.Digit | "." | "_" | "%" | "+" | "-"
+
+pattern Rep1(pattern S) = S ~ (Rep1(pattern S) | "")
+
+pattern UserName = Rep1(pattern UserNameLetter)
+
+:expect true
+"john.doe" is UserName
+//│ = true
+
+:expect true
+"jane_doe123" is UserName
+//│ = true
+
+:expect true
+"user+name%test" is UserName
+//│ = true
+
+:expect false
+"invalid@email!" is UserName
+//│ = false
+
+:expect false
+"" is UserName
+//│ = false
+
+:todo
+// Nested pattern arguments seem problematic.
+pattern DomainSuffix = Rep1(pattern ("." ~ Char.Letter ~ Rep1(pattern Char.Letter)))
+
+pattern DomainSuffixFragment = "." ~ Char.Letter ~ Rep1(pattern Char.Letter)
+
+[".com", ".hk", ".fr", ".cn"]
+  Iter.mapping of _ is DomainSuffixFragment
+  Iter.folded of true, _ && _
+//│ = true
+
+[".", ".a", "com"]
+  Iter.mapping of _ is DomainSuffixFragment
+  Iter.folded of false, _ || _
+//│ = false
+
+pattern DomainSuffix = Rep1(pattern DomainSuffixFragment)
+
+pattern DomainNameLetter = Char.Letter | Char.Digit | "-"
+
+pattern DomainName = Rep1(pattern DomainNameLetter)
+
+"google" is DomainName
+//│ = true
+
+pattern Domain = DomainName ~ DomainSuffix
+
+"google.com" is Domain
+//│ = true
+
+pattern Email = UserName ~ "@" ~ Domain
+
+:silent
+let emails = [
+  "example@example.com"
+  "john.doe@guardian.co.uk"
+  "alice_bob123@sub-domain.example.org"
+  "user+mailbox@my-domain.net"
+  "test.user%filter@service-provider.co.in"
+  "foo-bar@company-name.io"
+  "simple123@abc.xyz"
+]
+
+emails
+  Iter.mapping of _ is Email
+  Iter.folded of true, _ && _
+//│ = true
+
+open Stack
+
+pattern CommaSep(pattern S) =
+  ("" => Nil) |
+  ((S as head) ~ "," ~ (CommaSep(pattern S) as tail)) => head :: tail
+
+fun parseEmails(input) =
+  if input is CommaSep(pattern Email) as emails then emails else Nil
+
+:todo
+parseEmails of emails.join(",")
+//│ = Nil

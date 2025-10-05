@@ -5,7 +5,7 @@ let rcd = { x: 0, y: undefined, z: null}
 //│ rcd = {x: 0, y: undefined, z: null}
 
 rcd.constructor
-//│ = function Object() { [native code] }
+//│ = class Object
 
 typeof(rcd.constructor)
 //│ = "function"
@@ -25,7 +25,7 @@ let foo = Foo(1,2)
 
 
 Object.entries of Foo
-//│ = [["class", class Foo {   #z;   constructor(x1, y1) {     this.x = x1;     this.y = y1;     this.#z = 2;     this.a = 3;   }   get g$__checkNotMethod() { runtime.deboundMethod("g", "Foo"); }   get f() {     return 4;   }    g(...args) {     runtime.checkArgs("g", 0, true, args.length);     return 5   }   toString() { return "Foo(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; } }]]
+//│ = [["class", class Foo]]
 
 Object.entries of foo
 //│ = [["x", 1], ["y", 2], ["a", 3]]
@@ -37,7 +37,7 @@ Foo.class.name
 //│ = "Foo"
 
 foo.constructor
-//│ = class Foo {   #z;   constructor(x1, y1) {     this.x = x1;     this.y = y1;     this.#z = 2;     this.a = 3;   }   get g$__checkNotMethod() { runtime.deboundMethod("g", "Foo"); }   get f() {     return 4;   }    g(...args) {     runtime.checkArgs("g", 0, true, args.length);     return 5   }   toString() { return "Foo(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; } }
+//│ = class Foo
 
 // ! will be changed by minification
 foo.constructor.name

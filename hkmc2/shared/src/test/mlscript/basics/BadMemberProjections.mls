@@ -11,18 +11,16 @@
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = (undefined, function (self, ...args) {
-//│   return runtime.safeCall(self.x(...args))
-//│ });
+//│ lambda = (undefined, function (self, ...args) { return runtime.safeCall(self.x(...args)) });
 //│ lambda
-//│ = [function]
+//│ = fun
 
 :ssjs
 :e
 :re
 1::x()
 //│ ╔══[ERROR] Integer literal is not a known class.
-//│ ║  l.23: 	1::x()
+//│ ║  l.21: 	1::x()
 //│ ║        	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -52,19 +50,19 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.53: 	"A"::x
+//│ ║  l.51: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ = fun
 
 :e
 "A" ::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.62: 	"A" ::x
+//│ ║  l.60: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
-//│ = [function]
+//│ = fun
 
 

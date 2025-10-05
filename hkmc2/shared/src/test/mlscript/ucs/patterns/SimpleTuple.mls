@@ -10,7 +10,19 @@ sum(1, 2)
 :fixme
 fun sum([x, y]) = x + y
 sum([1, 2])
-//│ /!!!\ Uncaught error: scala.MatchError: Tup(List(Ident(x), Ident(y))) (of class hkmc2.syntax.Tree$Tup)
+//│ ╔══[ERROR] Expected a valid parameter, found tuple
+//│ ║  l.11: 	fun sum([x, y]) = x + y
+//│ ╙──      	        ^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.11: 	fun sum([x, y]) = x + y
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Name not found: y
+//│ ║  l.11: 	fun sum([x, y]) = x + y
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] Expected 0 arguments, got 1
+//│ ║  l.12: 	sum([1, 2])
+//│ ╙──      	   ^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: Function 'sum' expected 0 arguments but got 1
 
 fun sum(pair) =
   if pair is [x, y] then x + y

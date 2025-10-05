@@ -1,0 +1,146 @@
+:js
+
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+open annotations
+
+pattern Itch = Some(Some(Some(Some(Some(Some(Some(42)))))))
+
+fun isItch(x) = x is @compile Itch
+
+:expect true
+isItch of Some(Some(Some(Some(Some(Some(Some(42)))))))
+//│ = true
+
+:expect false
+isItch of Some(Some(Some(Some(Some(Some(Some(Some(42))))))))
+//│ = false
+
+:expect false
+isItch of 42
+//│ = false
+
+pattern Itch' = Some(Some(Some(Some(Some("scratch" as x))))) => x
+
+fun action(x) =
+  if x is (@compile Itch') as output then
+    "Just " + output + "!"
+  else
+    "I don't know."
+
+action of Some(Some(Some(Some(Some("scratch")))))
+//│ = "Just scratch!"
+
+// Test the semantics of biased disjunction.
+
+pattern BiasedOr1 = Some(1 | Some(_))
+
+fun biasedOr1(x) = x is @compile BiasedOr1
+
+biasedOr1 of Some(1)
+//│ = true
+
+biasedOr1 of Some(42)
+//│ = false
+
+biasedOr1 of Some(Some(2))
+//│ = true
+
+biasedOr1 of Some(Some("hello"))
+//│ = true
+
+biasedOr1 of Some(Some(Some(Some(Some(Some(Some(Some(42))))))))
+//│ = true
+
+// Make it a bit more complicated: biased disjunction with transformations.
+
+pattern BiasedOr2 = Some(Some(x) => x + 1) | Some(x => x + 2)
+
+fun biasedOr2__compiled(x) = if x is (@compile BiasedOr2) as output then output
+
+fun biasedOr2__naive(x) = if x is BiasedOr2(output) then output
+
+biasedOr2__compiled of Some(1)
+//│ = {value: 3}
+
+biasedOr2__naive of Some(1)
+//│ = 3
+
+biasedOr2__compiled of Some(Some(1))
+//│ = {value: 2}
+
+biasedOr2__naive of Some(Some(1))
+//│ = 2
+
+// Comments: I think the output from the compiled pattern is semantically
+// correct, but people might expect the output from the translated pattern.
+// The problem is that we can't synthesize a record with the class tags.
+
+data class Pair[A, B](first: A, second: B)
+
+pattern XorPair = Pair(None, Some(_)) | Pair(Some(_), None)
+
+fun xorPair(x) = if x is (@compile XorPair) as output then output else "failed"
+
+xorPair of Pair(None, None)
+//│ = "failed"
+
+xorPair of Pair(None, Some(1))
+//│ = {first: None, second: {value: 1}}
+
+xorPair of Pair(Some(56), None)
+//│ = {first: {value: 56}, second: None}
+
+data class Triplet[A, B, C](first: A, second: B, third: C)
+
+pattern ExactlyOneNone =
+  Triplet(None,    Some(_), Some(_)) |
+  Triplet(Some(_), None,    Some(_)) |
+  Triplet(Some(_), Some(_), None   )
+
+fun exactlyOneNone(x) =
+  if x is (@compile ExactlyOneNone) as output then output else "failed"
+
+fun exactlyOneNone__naive(x) =
+  if x is ExactlyOneNone(output) then output else "failed"
+
+exactlyOneNone of Triplet(None, Some(1), Some(2))
+//│ = {first: None, second: {value: 1}, third: {value: 2}}
+
+exactlyOneNone of Triplet(Some(1), None, Some(2))
+//│ = {first: {value: 1}, second: None, third: {value: 2}}
+
+exactlyOneNone of Triplet(Some(1), Some(2), None)
+//│ = {first: {value: 1}, second: {value: 2}, third: None}
+
+// It seems that the return value of the translation is not correct.
+
+exactlyOneNone__naive of Triplet(None, Some(1), Some(100))
+//│ = 100
+
+exactlyOneNone__naive of Triplet(Some(1), None, Some(400))
+//│ = 400
+
+exactlyOneNone__naive of Triplet(Some(1), Some(2), None)
+//│ = None
+
+:expect "failed"
+exactlyOneNone of Triplet(None, Some(1), None)
+//│ = "failed"
+
+:expect "failed"
+exactlyOneNone of Triplet(None, None, Some(1))
+//│ = "failed"
+
+:expect "failed"
+exactlyOneNone of Triplet(Some(1), None, None)
+//│ = "failed"
+
+:expect "failed"
+exactlyOneNone of Triplet(None, None, None)
+//│ = "failed"
+
+:expect "failed"
+exactlyOneNone of Triplet(Some(1), Some(2), Some(3))
+//│ = "failed"

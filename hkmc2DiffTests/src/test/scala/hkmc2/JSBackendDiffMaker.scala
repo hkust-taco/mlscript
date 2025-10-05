@@ -32,9 +32,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
   
   val runtimeNme = baseScp.allocateName(Elaborator.State.runtimeSymbol)
   val termNme = baseScp.allocateName(Elaborator.State.termSymbol)
+  val definitionMetadataNme = baseScp.allocateName(Elaborator.State.definitionMetadataSymbol)
+  val prettyPrintNme = baseScp.allocateName(Elaborator.State.prettyPrintSymbol)
   
   val ltl = new TraceLogger:
-    override def doTrace = debugLowering.isSet
+    override def doTrace = debugLowering.isSet || scope.exists:
+      showUCS.get.getOrElse(Set.empty).contains
     override def emitDbg(str: String): Unit = output(str)
   
   val replTL = new TraceLogger:
@@ -51,6 +54,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
       case r => output(s"Failed to load $name: $r")
     importRuntimeModule(runtimeNme, runtimeFile)
+    h.execute(s"const $definitionMetadataNme = Symbol.for(\"mlscript.definitionMetadata\");")
+    h.execute(s"const $prettyPrintNme = Symbol.for(\"mlscript.prettyPrint\");")
     if importQQ.isSet then importRuntimeModule(termNme, termFile)
     h
   
@@ -74,11 +79,11 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val jsb = ltl.givenIn:
-        new JSBuilder
+        JSBuilder()
       val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
-        jsb.program(le, N, wd)
+        jsb.programBody(le, N, wd)
       val jsStr = je.stripBreaks.mkString(100)
       output(s"JS (unsanitized):")
       output(jsStr)
@@ -119,7 +124,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       if ppLoweredTree.isSet then
         output(s"Pretty Lowered:")
-        output(Printer.mkDocument(le)(using summon[Raise], nestedScp).toString)
+        output(Printer.mkDocument(le)(using summon[Raise], nestedScp).mkString())
       
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(le)
@@ -183,13 +188,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
-                Arg(false, Value.Ref(sym)) :: Nil)(true, false),
+                Arg(N, Value.Ref(sym)) :: Nil)(true, false),
             implct = true)
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)
           val jsStr = je.stripBreaks.mkString(100)
           mkQuery("", jsStr): out =>
-            val result = out.splitSane('\n').init.mkString // should always ends with "undefined" (TODO: check)
+            // Omit the last line which is always "undefined" or the unit.
+            val result = out.lastIndexOf('\n') match
+              case n if n >= 0 => out.substring(0, n)
+              case _ => ""
             expect match
             case S(expected) if result =/= expected => raise:
               ErrorReport(msg"Expected: '${expected}', got: '${result}'" -> N :: Nil,
@@ -199,7 +207,6 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             result match
             case "undefined" if anon =>
             case "()" if anon =>
-            case _ =>
-              output(s"${if anon then "" else s"$nme "}= ${result.indentNewLines("| ")}")
+            case _ => output(s"${if anon then "" else s"$nme "}= $result")
       
 

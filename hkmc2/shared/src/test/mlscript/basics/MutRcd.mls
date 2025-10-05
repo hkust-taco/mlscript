@@ -1,0 +1,96 @@
+:js
+
+
+let r = {a: 0}
+//│ r = {a: 0}
+
+set
+  r.a = 1
+  r.foo = 1
+
+:expect 0
+r.a
+//│ = 0
+
+:re
+r.foo
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+
+let r = mut {a: 1}
+//│ r = {a: 1}
+
+set
+  r.a = 1
+  r.foo = 1
+
+:expect 1
+r.a
+//│ = 1
+
+:expect 1
+r.foo
+//│ = 1
+
+
+let r = mut {}
+//│ r = {}
+
+set r.foo = 1
+
+:expect 1
+r.foo
+//│ = 1
+
+
+:sjs
+let r = {}
+//│ JS (unsanitized):
+//│ let r3; r3 = runtime.Unit;
+//│ r = ()
+
+:re
+r.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+
+set r.foo = 1
+
+:re
+r.foo
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+:re
+().foo
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+let s = {}
+//│ s = ()
+
+set s.foo = 2
+
+:re
+r.foo
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+
+
+:e
+mut()
+//│ ╔══[ERROR] Illegal position for 'mut' modifier.
+//│ ║  l.77: 	mut()
+//│ ╙──      	^^^
+
+
+let r = mut
+  x: 1
+//│ r = {x: 1}
+
+Object.freeze(r)
+//│ = {x: 1}
+
+set r.x = 2
+
+:expect 1
+r.x
+//│ = 1
+
+

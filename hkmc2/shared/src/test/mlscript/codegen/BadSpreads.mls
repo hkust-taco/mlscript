@@ -1,6 +1,20 @@
 :js
 
 
+:e
+..., 1
+//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ║  l.5: 	..., 1
+//│ ╙──     	^^^
+
+:e
+fun f = ..., 1
+//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ║  l.11: 	fun f = ..., 1
+//│ ╙──      	        ^^^
+//│ = 1
+
+
 :re
 [0, ...1]
 //│ ═══[RUNTIME ERROR] TypeError: 1 is not iterable
@@ -9,20 +23,18 @@
 :e
 fun foo(a, ...b, c) = [a, ...b, c]
 //│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.10: 	fun foo(a, ...b, c) = [a, ...b, c]
-//│ ╙──      	              ^
-//│ ╔══[ERROR] Name not found: c
-//│ ║  l.10: 	fun foo(a, ...b, c) = [a, ...b, c]
-//│ ╙──      	                                ^
+//│ ║  l.24: 	fun foo(a, ...b, c) = [a, ...b, c]
+//│ ╙──      	           ^^^^
 
 :e
 fun foo(a, ...b, c) = [a, ...b]
 //│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.19: 	fun foo(a, ...b, c) = [a, ...b]
-//│ ╙──      	              ^
+//│ ║  l.30: 	fun foo(a, ...b, c) = [a, ...b]
+//│ ╙──      	           ^^^^
 
+:re
 foo(1, 2, 3)
-//│ = [1, 2, 3]
+//│ ═══[RUNTIME ERROR] TypeError: b is not iterable
 
 
 fun foo(a, ...b) = [a, ...b]
@@ -31,17 +43,21 @@ fun foo(a, ...b) = [a, ...b]
 :re
 foo()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.32: 	foo()
+//│ ║  l.44: 	foo()
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 
-:todo // proper error
+:e
 fun foo(1) = 2
-//│ /!!!\ Uncaught error: scala.MatchError: IntLit(1) (of class hkmc2.syntax.Tree$IntLit)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.52: 	fun foo(1) = 2
+//│ ╙──      	        ^
 
-:todo // proper error
+:e
 fun foo(...1) = 2
-//│ /!!!\ Uncaught error: scala.MatchError: Spread(keyword '...',Some(Loc(8,11,BadSpreads.mls:+44)),Some(IntLit(1))) (of class hkmc2.syntax.Tree$Spread)
+//│ ╔══[ERROR] Expected a valid parameter, found spread
+//│ ║  l.58: 	fun foo(...1) = 2
+//│ ╙──      	        ^^^^
 
 

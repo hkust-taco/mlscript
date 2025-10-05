@@ -1,3 +1,5 @@
+:js
+
 import "../../../mlscript-compile/Option.mls"
 
 open Option
@@ -7,6 +9,7 @@ data class Pair[A, B](x: A, y: B)
 fun f(x) = if x is Some(1) then true else false
 
 [f(Some(1)), f(None), f(Some(2)), f(Some(-1))]
+//│ = [true, false, false, false]
 
 fun f(x) = if x is Some(1) then true
 
@@ -15,6 +18,7 @@ fun f(x) = if x is
   Some(2) then false
 
 [f(Some(1)), f(Some(2))]
+//│ = [true, false]
 
 fun g(x) = if x then 1 else 2
 
@@ -23,7 +27,9 @@ fun test_must_be_boolean(x) = if 0 then 1 else 2
 
 fun g(x) = if x is true then 1 else 2
 
+:expect [1, 2, 2]
 [g(true), g(false), g(None)]
+//│ = [1, 2, 2]
 
 fun g(x) = if x && true is true then 1 else 2
 
@@ -35,9 +41,11 @@ fun mix(x) = if x is
   0 then "zero"
 
 [mix(true), mix(Some(1)), mix(0)]
+//│ = ["true", "Some", "zero"]
 
-// :e
+:re
 [mix(false), mix(None)]
+//│ ═══[RUNTIME ERROR] Error: match error
 
 fun string_literals(x) =
   if x is

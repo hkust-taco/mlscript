@@ -103,8 +103,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     HandlerCtx(false, false, contNme, ctorThis, h.debugInfo.copy(debugNme), state =>
       blockBuilder
         .assignFieldN(state.res.asPath.contTrace.last, nextIdent, Instantiate(
-          state.cls.selN(Tree.Ident("class")),
-          state.uid :: Nil))
+          mut = true,
+          state.cls,
+          state.uid.asArg :: Nil))
         .assignFieldN(state.res.asPath.contTrace, lastIdent, state.res.asPath.contTrace.last.next)
         .ret(state.res.asPath))
   private def functionHandlerCtx(nme: Str, debugNme: Str)(using HandlerCtx) = funcLikeHandlerCtx(N, false, nme, debugNme)
@@ -126,17 +127,17 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
   
   private def rtThrowMsg(msg: Str) = Throw(
-    Instantiate(State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
-    Value.Lit(Tree.StrLit(msg)) :: Nil)
+    Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
+    Value.Lit(Tree.StrLit(msg)).asArg :: Nil)
   )
   
   object PureCall:
-    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(false, _)))(true, false)
+    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)))(true, false)
     def unapply(res: Result) = res match
       case Call(fun, args) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
             arg match
-              case Arg(false, p) => S(p :: acc)
+              case Arg(N, p) => S(p :: acc)
               case _ => N
         .map((fun, _))
       case _ => N
@@ -298,8 +299,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           case StateTransition(uid) => uid
           case _ => freshId()
         
-        val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(afterEnd = S(restId))))
-        val dfltParts = dflt.map(blkk => go(blkk)(afterEnd = S(restId)))
+        val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
+        val dfltParts = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
 
         val states_ = restParts.states ::: armsParts.flatMap(_._2.states)
         val states = dfltParts match
@@ -365,11 +366,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val PartRet(restNew, restParts) = go(rest)
         restNew match
           case StateTransition(uid) => 
-            val PartRet(subNew, subParts) = go(sub)(afterEnd = S(uid))
+            val PartRet(subNew, subParts) = go(sub)(using afterEnd = S(uid))
             PartRet(subNew, subParts ::: restParts)
           case _ =>
             val restId = freshId()
-            val PartRet(subNew, subParts) = go(sub)(afterEnd = S(restId))
+            val PartRet(subNew, subParts) = go(sub)(using afterEnd = S(restId))
             PartRet(subNew, BlockState(restId, restNew, N) :: subParts ::: restParts)
 
       case Define(defn, rest) => 
@@ -412,22 +413,24 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def createGetLocalsFn(b: Block, extraLocals: Set[Local])(using h: HandlerCtx) =
     val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
     val localsInfo = locals.toList.sortBy(_.uid).map: s =>
-      FlowSymbol(s.nme) -> Instantiate(localVarInfoPath,
-        Value.Lit(Tree.StrLit(s.nme)) :: s.asPath :: Nil
+      FlowSymbol(s.nme) -> Instantiate(mut = true, localVarInfoPath,
+        Value.Lit(Tree.StrLit(s.nme)).asArg :: s.asPath.asArg :: Nil
       )
     val startSym = FlowSymbol("prev")
     val thisInfo = FlowSymbol("thisInfo")
+    val arrSym = TempSymbol(N, "arr")
     
     val body = blockBuilder
       .assign(startSym, h.debugInfo.prevLocalsFn match
-          case None => Value.Arr(Nil)
+          case None => Tuple(mut = true, Nil)
           case Some(value) => PureCall(value, Nil)
         )
       .foldLeft(localsInfo):
         case (acc, (sym, res)) => acc.assign(sym, res)
-      .assign(thisInfo, Instantiate(fnLocalsPath,
-          Value.Lit(Tree.StrLit(h.debugInfo.debugNme))
-            :: Value.Arr(localsInfo.map(v => v._1.asPath.asArg))
+      .assign(arrSym, Tuple(mut = false, localsInfo.map(v => v._1.asPath.asArg)))
+      .assign(thisInfo, Instantiate(mut = true, fnLocalsPath,
+          Value.Lit(Tree.StrLit(h.debugInfo.debugNme)).asArg
+            :: Value.Ref(arrSym).asArg
             :: Nil
         ))
       .assign(TempSymbol(N, ""), Call(startSym.asPath.selSN("push"), thisInfo.asPath.asArg :: Nil)(false, false))
@@ -456,6 +459,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def firstPass(b: Block)(using HandlerCtx): Block =
     val getLocalsSym = ctx.builtins.debug.getLocals
     val transformer = new BlockTransformerShallow(SymbolSubst()):
+      // FIXME: there is a HUGE amount of error-prone, maintenance-heavy manually duplicated code in there to refactor
       override def applyBlock(b: Block) = b match
         case b: HandleBlock =>
           val rest = applyBlock(b.rest)
@@ -465,46 +469,48 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         // For top level, this correspond to the last statement which should also be checked for effect.
         // For constructor, we will append `return this;` after the implicit return so it is not a tail call.
         case Return(c @ Call(fun, args), false) if !handlerCtx.isHandlerBody =>
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          if c2 is c then b else Return(c2, false)
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, c @ Call(fun, args), rest) if c.mayRaiseEffects =>
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
-        case Assign(lhs, c @ Instantiate(cls, args), rest) =>
-          val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyPath)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
-          ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
+        case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
+          applyPath(cls): cls2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
+              ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case _ => super.applyBlock(b)
-      override def applyResult2(r: Result)(k: Result => Block): Block = r match
+      override def applyResult(r: Result)(k: Result => Block): Block = r match
         case c @ Call(fun, args) if c.mayRaiseEffects =>
           val res = freshTmp("res")
-          val fun2 = applyPath(fun)
-          val args2 = args.mapConserve(applyArg)
-          val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-          ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-        case c @ Instantiate(cls, args) =>
+          applyPath(fun): fun2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
+              ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
+        case c @ Instantiate(mut, cls, args) =>
           val res = freshTmp("res")
-          val cls2 = applyPath(cls)
-          val args2 = args.mapConserve(applyPath)
-          val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(cls2, args2)
-          ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-        case r => super.applyResult2(r)(k)
-      override def applyPath(p: Path): Path = p match
-        case Value.Ref(`getLocalsSym`) => handlerCtx.debugInfo.prevLocalsFn.get
-        case _ => super.applyPath(p)
-      override def applyLam(lam: Value.Lam): Value.Lam =
+          applyPath(cls): cls2 =>
+            applyArgs(args): args2 =>
+              val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
+              ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
+        case r => super.applyResult(r)(k)
+      override def applyPath(p: Path)(k: Path => Block): Block = p match
+        case Value.Ref(`getLocalsSym`) => k(handlerCtx.debugInfo.prevLocalsFn.get)
+        case _ => super.applyPath(p)(k)
+      override def applyLam(lam: Lambda): Lambda =
         // This should normally be unreachable due to prior desugaring of lambda
-        lastWords("Unexpected lambda during handler lowering")
-      override def applyDefn(defn: Defn): Defn = defn match
-        case f: FunDefn => translateFun(f)
-        case c: ClsLikeDefn => translateCls(c)
-        case _: ValDefn => super.applyDefn(defn)
+        raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
+      override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+        case f: FunDefn => k(translateFun(f))
+        case c: ClsLikeDefn => k(translateCls(c))
+        case _: ValDefn => super.applyDefn(defn)(k)
     transformer.applyBlock(b)
     
   private def secondPass(b: Block, fnOrCls: FnOrCls, callSelf: Opt[Result], getLocalsFn: FunDefn)(using h: HandlerCtx): Block =
@@ -574,14 +580,29 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       functionHandlerCtx(s"Cont$$func$$${symToStr(f.sym)}$$", f.sym.nme))
     )
   
-  private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
-    val curCtorCtx = if handlerCtx.isTopLevel && (cls.k is syntax.Mod)
-      then topLevelCtx(s"Cont$$modCtor$$${symToStr(cls.sym)}$$", s"‹constructor of ${cls.sym.nme}›")
+  private def translateBody(cls: ClsLikeBody, sym: BlockMemberSymbol)(using HandlerCtx): ClsLikeBody =
+    val curCtorCtx =
+      if handlerCtx.isTopLevel
+      then 
+        topLevelCtx(s"Cont$$modCtor$$${symToStr(sym)}$$", s"‹constructor of ${sym.nme}›")
       else ctorCtx(
         cls.isym.asPath,
-        s"Cont$$ctor$$${symToStr(cls.sym)}$$", s"‹constructor of ${cls.sym.nme}›")
+        s"Cont$$ctor$$${symToStr(sym)}$$", s"‹constructor of ${sym.nme}›")
+    ClsLikeBody(
+      cls.isym,
+      cls.methods.map(translateFun),
+      cls.privateFields,
+      cls.publicFields,
+      translateBlock(cls.ctor, Set.empty, curCtorCtx),
+    )
+  
+  private def translateCls(cls: ClsLikeDefn)(using HandlerCtx): ClsLikeDefn =
+    val curCtorCtx = ctorCtx(
+      cls.isym.asPath,
+      s"Cont$$ctor$$${symToStr(cls.sym)}$$", s"‹constructor of ${cls.sym.nme}›")
     cls.copy(methods = cls.methods.map(translateFun),
-      ctor = translateBlock(cls.ctor, Set.empty, N, R(cls.isym), curCtorCtx)) // TODO: callSelf
+      ctor = translateBlock(cls.ctor, Set.empty, N, R(cls.isym), curCtorCtx),
+      companion = cls.companion.map(translateBody(_, cls.sym))) // TODO: callSelf
   
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock)(using HandlerCtx): Block =
@@ -824,7 +845,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       
       val localsRes = h.debugInfo.prevLocalsFn match
         case Some(value) => PureCall(value, Nil)
-        case None => Value.Arr(Nil)
+        case None => Tuple(mut = true, Nil)
       
       val getLocalsFnDef = FunDefn(
         S(clsSym),
@@ -858,12 +879,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       clsSym,
       BlockMemberSymbol(clsSym.nme, Nil),
       syntax.Cls,
-      S(PlainParamList({
-        val p = Param(FldFlags.empty.copy(value = true), pcVar, N, Modulefulness.none)
+      N,
+      PlainParamList({
+        val p = Param(FldFlags.empty.copy(isVal = true), pcVar, N, Modulefulness.none)
         pcVar.decl = S(p)
         p
-      } :: Nil)),
-      Nil,
+      } :: Nil) :: Nil,
       S(paths.contClsPath),
       mtds,
       Nil,
@@ -876,7 +897,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         pcVar.id,
         Value.Ref(pcVar),
         End()
-      )(S(pcSymbol))))
+      )(S(pcSymbol)),
+      N,
+    ))
   
   private def genNormalBody(b: Block, clsSym: BlockMemberSymbol, doUnwind: Opt[LazyVal[Path]])(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):

@@ -3,12 +3,12 @@ import "./Predef.mls"
 open Predef
 
 
-// TODO
-// type Option[A] = Option.Some(A) | Option.None
+type Option[A] = Option.{ Some(A) | None }
 
 module Option with ...
 
-data class Some(value)
+
+data class Some[T](value)
 object None
 
 fun isDefined(x) = if x is
@@ -30,3 +30,5 @@ module unsafe with
   fun get(opt) = if opt is
     Some(value) then value
     None then throw Error("None.get")
+
+

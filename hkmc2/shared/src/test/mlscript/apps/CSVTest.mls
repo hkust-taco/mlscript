@@ -3,7 +3,7 @@
 import "../../mlscript-compile/apps/CSV.mls"
 
 
-let csv = CSV()
+let csv = CSV(null)
 //│ csv = CSV(",")
 
 csv.strDelimiter

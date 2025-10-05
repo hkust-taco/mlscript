@@ -11,21 +11,18 @@ open Option { Some, None }
 open Predef { assert, tuple }
 open Stack
 
-type Opt[A] = Some[A] | None
-type StackT[A] = Stack.Cons[A] | Stack.Nil
-
 module ParseRule with ...
 
+abstract class Choice[A]
 module Choice with
-  abstract class Choice[A]
   
   data class Keyword[A](keyword: Keywords.Keyword, rest: ParseRule[A]) extends Choice[A]
   
   data class Ref[A, B](
       kind: Str,
-      process: (Tree.Tree, B) -> A,
-      outerPrec: Opt[Int],
-      innerPrec: Opt[Int],
+      process: (Tree, B) -> A,
+      outerPrec: Option[Int],
+      innerPrec: Option[Int],
       rest: ParseRule[B]
   ) extends Choice[A]
   
@@ -45,7 +42,7 @@ module Choice with
       init: ParseRule[B],
       optional: Bool,
       rest: ParseRule[C],
-      process: (Opt[B], C) -> A
+      process: (Option[B], C) -> A
   ) extends Choice[A]
   
   let ensureChoices(xs, name) = xs
@@ -124,7 +121,7 @@ module Choice with
   
   fun end(value) = End(value)
   
-  fun map[A, B](choice: ChoiceT[A], op: A -> B): ChoiceT[B] = if choice is
+  fun map[A, B](choice: Choice[A], op: A -> B): Choice[B] = if choice is
     Keyword(keyword, rest) then Keyword(keyword, rest.map(op))
     Ref(kind, process, outerPrec, innerPrec, rest) then
       Ref(kind, (x, y) => op(process(x, y)), outerPrec, innerPrec, rest)
@@ -132,10 +129,8 @@ module Choice with
       Siding(init, optional, rest, (x, y) => op(process(x, y)))
     End(value) then End(op(value))
 
-type ChoiceT[A] = Choice.Choice[A]
-
 data class Lazy[out A](init: () -> A) with
-  mut val cached: Opt[A] = None
+  mut val cached: Option[A] = None
   fun reset() = set cached = None
   fun get() = if cached is
     Some(v) then v
@@ -143,6 +138,8 @@ data class Lazy[out A](init: () -> A) with
       let v = init()
       set cached = Some(v)
       v
+
+fun lazy(init) = new Lazy of init
 
 //  ____                     ____        _
 // |  _ \ __ _ _ __ ___  ___|  _ \ _   _| | ___
@@ -152,17 +149,17 @@ data class Lazy[out A](init: () -> A) with
 //
 // =============================================
 
-data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
+data class ParseRule[A](name: Str, mut val choices: Stack[Choice[A]]) with
   open Choice { Keyword, Ref, End, Siding }
   
   fun map[B](op: A -> B) =
-    ParseRule of name, choices
+    new mut ParseRule of name, choices
       Iter.fromStack()
       Iter.mapping of choice => choice Choice.map(op)
       Iter.toStack()
   
   fun andThen[B, C](rest: ParseRule[B], process: (A, B) -> C) =
-    fun go(rule: ParseRule) = ParseRule of rule.name, rule.choices
+    fun go(rule: ParseRule[B]) = new ParseRule of rule.name, rule.choices
       Iter.fromStack()
       Iter.mapping of case
         Keyword(keyword, rest') then [Keyword(keyword, go(rest'))]
@@ -184,7 +181,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
       Iter.toStack()
     go(this).map of res => process(res.0, res.1)
   
-  let _endChoice = Lazy of () => choices
+  let _endChoice = lazy of () => choices
     Iter.fromStack()
     Iter.firstDefined of case
       End(value) then Some(value)
@@ -200,7 +197,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   // Collect the first end choice in this rule.
   fun endChoice = _endChoice.get()
   
-  let _keywordChoices = Lazy of () => choices
+  let _keywordChoices = lazy of () => choices
     Iter.fromStack()
     Iter.mapping of case
       Keyword(keyword, rest) then [[keyword.name, rest]]
@@ -221,7 +218,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   // Collect all keyword choices in this rule.
   fun keywordChoices = _keywordChoices.get()
   
-  let _refChoice = Lazy of () => choices
+  let _refChoice = lazy of () => choices
     Iter.fromStack()
     Iter.firstDefined of case
       Ref as ref then Some(ref)
@@ -240,7 +237,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   
   fun refChoice = _refChoice.get()
   
-  fun extendChoices(newChoices: StackT[ChoiceT[A]]) =
+  fun extendChoices(newChoices: Stack[Choice[A]]) =
     set choices = choices ::: newChoices
     _endChoice.reset()
     _keywordChoices.reset()
@@ -250,7 +247,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
   // Display parse rules as a tree in a BNF-like format.
   fun display =
     /// Display a single `Choice`.
-    fun displayChoice(choice: ChoiceT) = if choice is
+    fun displayChoice[A](choice: Choice[A]) = if choice is
       Choice.Keyword(keyword, rest) then
         "\"" + keyword.name + "\"" + tail(rest).1
       Choice.Ref(kind, _, _, _, rest) then
@@ -293,7 +290,7 @@ data class ParseRule[A](name: Str, choices: StackT[ChoiceT[A]]) with
 
 // Shorthands for constructing parse rules.
 // Automatically adds an end choice to the rule if no choices are provided.
-fun rule(name, ...choices) = ParseRule of
+fun rule(name, ...choices) = new ParseRule of
   name
   if choices.length == 0 then
     Choice.end(()) :: Nil

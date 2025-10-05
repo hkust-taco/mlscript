@@ -3,13 +3,12 @@
 
 data class Foo(x)
 
-let foo = Foo(null)
+let foo = new mut Foo(null)
 //│ foo = Foo(null)
 
 set foo.x = foo
 
-:fixme // Support showing cyclic values
 foo
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = Foo(ref'1) as ref'1
 
 

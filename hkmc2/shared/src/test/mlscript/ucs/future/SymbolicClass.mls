@@ -1,4 +1,4 @@
-
+:js
 
 // :de
 // type List = Nil | Cons
@@ -14,11 +14,43 @@ data class (::) Cons(head: Int, tail: List)
 //│   Nil -> RefElem(member:Nil)
 
 Cons(1, Nil)
+//│ = Cons(1, Nil)
 
 1 :: 2
+//│ = Cons(1, 2)
 
 fun map(f, xs) = if xs is
   Nil then Nil
   x :: xs' then f(x) :: map(f, xs')
+
+
+// TODO?
+:e
+:re
+:sjs
+new 1 :: 2
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.31: 	new 1 :: 2
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ JS (unsanitized):
+//│ let tmp; tmp = globalThis.Object.freeze(new 1()); Cons1(tmp, 2)
+//│ ═══[RUNTIME ERROR] TypeError: 1 is not a constructor
+
+// TODO?
+:e
+:re
+:sjs
+new (1 :: 2)
+//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ║  l.44: 	new (1 :: 2)
+//│ ║        	     ^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ JS (unsanitized):
+//│ let tmp1; tmp1 = Cons1(1, 2); globalThis.Object.freeze(new tmp1())
+//│ ═══[RUNTIME ERROR] TypeError: tmp1 is not a constructor
+
+new ::(1, 2)
+//│ = Cons(1, 2)
 
 

@@ -15,9 +15,7 @@ if Some(0) is Some(x) then x
 //│   param0 = scrut.value;
 //│   x = param0;
 //│   x
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 
@@ -33,9 +31,7 @@ if s is
 //│   param01 = s.value;
 //│   x1 = param01;
 //│   x1
-//│ } else {
-//│   throw new this.Error("match error");
-//│ }
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 if s is
@@ -64,12 +60,10 @@ x => if x is Some(x) then x
 //│     param04 = x3.value;
 //│     x4 = param04;
 //│     return x4
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
-//│ = [function]
+//│ = fun
 
 
 data class C(a)
@@ -96,7 +90,7 @@ M.d
 fun f(x) = if x is M.D then 1 else 0
 
 M.D.class
-//│ = class D {       constructor(a) {         this.a = a;       }       toString() { return "D(" + runtime.render(this.a) + ")"; }     }
+//│ = class D
 
 M is M.D
 //│ = false
@@ -136,11 +130,7 @@ fun f(x) = if x is
 //│     } else {
 //│       return Predef.print("oops")
 //│     }
-//│   } else if (x3 instanceof None1.class) {
-//│     return "ok"
-//│   } else {
-//│     return Predef.print("oops")
-//│   }
+//│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
 //│ };
 
 f(Some(0))
@@ -166,10 +156,10 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f5;
 //│ f5 = function f(x3) {
-//│   let param04, param1, a, b, param05, u;
+//│   let param04, param1, a, b, u;
 //│   if (x3 instanceof Some1.class) {
-//│     param05 = x3.value;
-//│     u = param05;
+//│     param04 = x3.value;
+//│     u = param04;
 //│     return u
 //│   } else if (x3 instanceof Pair1.class) {
 //│     param04 = x3.fst;
@@ -177,9 +167,7 @@ fun f(x) = if x is
 //│     a = param04;
 //│     b = param1;
 //│     return a + b
-//│   } else {
-//│     throw new globalThis.Error("match error");
-//│   }
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 f(Some(123))
@@ -198,20 +186,18 @@ fun f(x) = print of if x is
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x3) {
-//│   let param04, tmp9;
+//│   let param04, tmp8;
 //│   if (x3 instanceof Some1.class) {
 //│     param04 = x3.value;
 //│     if (param04 === 0) {
-//│       tmp9 = "0";
+//│       tmp8 = "0";
 //│     } else {
-//│       tmp9 = "oops";
+//│       tmp8 = "oops";
 //│     }
 //│   } else if (x3 instanceof None1.class) {
-//│     tmp9 = "ok";
-//│   } else {
-//│     tmp9 = "oops";
-//│   }
-//│   return Predef.print(tmp9)
+//│     tmp8 = "ok";
+//│   } else { tmp8 = "oops"; }
+//│   return Predef.print(tmp8)
 //│ };
 
 f(Some(0))

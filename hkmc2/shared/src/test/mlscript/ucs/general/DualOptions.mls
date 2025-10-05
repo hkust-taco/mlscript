@@ -73,7 +73,6 @@ add_3(Some(5), Some(9))
 //│ = 14
 
 
-:fixme
 fun add_4(x, y) =
   if
     x
@@ -90,32 +89,19 @@ fun add_4(x, y) =
               Some(yv) then yv
             is
               None     then 0
-//│ /!!!\ Uncaught error: scala.NotImplementedError: List() (of class Nil$)
 
 
-:fixme
 add_4(None, None)
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.97: 	add_4(None, None)
-//│ ╙──      	^^^^^
+//│ = 0
 
-:fixme
 add_4(Some(5), None)
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.103: 	add_4(Some(5), None)
-//│ ╙──       	^^^^^
+//│ = 5
 
-:fixme
 add_4(None, Some(9))
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.109: 	add_4(None, Some(9))
-//│ ╙──       	^^^^^
+//│ = 9
 
-:fixme
 add_4(Some(5), Some(9))
-//│ ╔══[ERROR] Name not found: add_4
-//│ ║  l.115: 	add_4(Some(5), Some(9))
-//│ ╙──       	^^^^^
+//│ = 14
 
 
 fun add_5(x, y) =

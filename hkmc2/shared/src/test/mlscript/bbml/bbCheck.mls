@@ -14,10 +14,10 @@ fun foo: Int -> Int
 //│ ╔══[ERROR] Multiple declarations of symbol 'foo'
 //│ ╟── declared here
 //│ ║  l.12: 	fun foo: Int -> Int
-//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── declared here
 //│ ║  l.13: 	fun foo: Int -> Int
-//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
@@ -26,10 +26,10 @@ fun id(y) = y
 //│ ╔══[ERROR] Multiple definitions of symbol 'id'
 //│ ╟── defined here
 //│ ║  l.24: 	fun id(x) = x
-//│ ║        	    ^^^^^^^^^
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── defined here
 //│ ║  l.25: 	fun id(y) = y
-//│ ╙──      	    ^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :e
@@ -59,7 +59,7 @@ add(1, 2) as Int
 
 :e
 add(0, 0) as Str
-//│ ╔══[ERROR] Type error in application with expected type Str
+//│ ╔══[ERROR] Type error in application of type ‹not implemented› with expected type Str
 //│ ║  l.61: 	add(0, 0) as Str
 //│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
@@ -180,8 +180,8 @@ foo(42, 1)
 //│ ║  l.178: 	foo(42, 1)
 //│ ║         	        ^
 //│ ╟── because: cannot constrain  Int  <:  ¬'A
-//│ ╟── because: cannot constrain  'A  <:  ¬(Int)
-//│ ╙── because: cannot constrain  Int  <:  ¬(Int)
+//│ ╟── because: cannot constrain  'A  <:  ¬{Int}
+//│ ╙── because: cannot constrain  Int  <:  ¬{Int}
 //│ Type: Int
 
 foo(42, false)

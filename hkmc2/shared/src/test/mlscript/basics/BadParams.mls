@@ -1,0 +1,72 @@
+:js
+
+
+:e
+(val x) => x
+//│ ╔══[ERROR] Illegal function parameter modifiers: val
+//│ ║  l.5: 	(val x) => x
+//│ ╙──     	     ^
+//│ = fun
+
+:e
+(mut x) => x
+//│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
+//│ ║  l.12: 	(mut x) => x
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.12: 	(mut x) => x
+//│ ╙──      	           ^
+//│ = fun
+
+:e
+(mut val x) => x
+//│ ╔══[ERROR] Illegal function parameter modifiers: mut val
+//│ ║  l.22: 	(mut val x) => x
+//│ ╙──      	         ^
+//│ = fun
+
+:e
+fun f(val x) = x
+//│ ╔══[ERROR] Illegal function parameter modifiers: val
+//│ ║  l.29: 	fun f(val x) = x
+//│ ╙──      	          ^
+
+:e
+(...val x) => x
+//│ ╔══[ERROR] Expected a valid parameter, found spread
+//│ ║  l.35: 	(...val x) => x
+//│ ╙──      	 ^^^^^^^^
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.35: 	(...val x) => x
+//│ ╙──      	              ^
+//│ = fun
+
+// TODO: prevent duplicate parameter names?
+:sjs
+(x, x) => x
+//│ JS (unsanitized):
+//│ let lambda4; lambda4 = (undefined, function (x, x1) { return x1 }); lambda4
+//│ = fun
+
+:e
+(...x, ...y) => x
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.52: 	(...x, ...y) => x
+//│ ╙──      	 ^^^^
+//│ = fun
+
+:e
+(..., ...y) => y
+//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.59: 	(..., ...y) => y
+//│ ╙──      	 ^^^
+//│ = fun
+
+
+:e
+class Foo(class C)
+//│ ╔══[ERROR] Expected a valid parameter, found type definition
+//│ ║  l.67: 	class Foo(class C)
+//│ ╙──      	          ^^^^^^^
+
+

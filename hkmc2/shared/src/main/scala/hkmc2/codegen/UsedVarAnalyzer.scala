@@ -1,5 +1,7 @@
 package hkmc2
 
+import scala.collection.mutable
+
 import mlscript.utils.*, shorthands.*
 import utils.*
 
@@ -28,6 +30,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     nestedDefns: Map[BlockMemberSymbol, List[Defn]], // definitions that are a successor of the current defn
     nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions nested within another defn, including that defn (deep)
     nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol], // the definition that a definition is directly nested in
+    companionMap: Map[InnerSymbol, InnerSymbol], // a (bijective) map between companion object symbols and class symbols
   )
   private def createMetadata: DefnMetadata =
     var defnsMap: Map[BlockMemberSymbol, Defn] = Map.empty
@@ -37,6 +40,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     var nestedDefns: Map[BlockMemberSymbol, List[Defn]] = Map.empty
     var nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
     var nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol] = Map.empty
+    var companionMap: Map[InnerSymbol, InnerSymbol] = Map.empty
 
     def createMetadataFn(f: FunDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
       var nested: Set[BlockMemberSymbol] = Set.empty
@@ -71,17 +75,17 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       case c: ClsLikeDefn =>
         createMetadataCls(c, existing, inScope)
       case d => Map.empty
-
+    
     def createMetadataCls(c: ClsLikeDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
       var nested: Set[BlockMemberSymbol] = Set.empty
       
       existingVars += (c.sym -> existing)
       val thisVars = Lifter.getVars(c) -- existing
       val newExisting = existing ++ thisVars
-
-      val thisScopeDefns: List[Defn] =
-        (c.methods ++ c.preCtor.floatOutDefns()._2 ++ c.ctor.floatOutDefns()._2)
-
+      
+      val thisScopeDefns: List[Defn] = c.methods ++ c.preCtor.floatOutDefns()._2 
+        ++ c.ctor.floatOutDefns()._2 ++ c.companion.fold(Nil)(comp => comp.ctor.floatOutDefns()._2 ++ comp.methods)
+      
       nestedDefns += c.sym -> thisScopeDefns
       
       val newInScope = inScope ++ thisScopeDefns.map(_.sym)
@@ -91,28 +95,28 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       
       defnsMap += (c.sym -> c)
       definedLocals += (c.sym -> thisVars)
-
+      
       for d <- thisScopeDefns do
         nestedIn += (d.sym -> c.sym)
         createMetadataDefn(d, newExisting, newInScope)
         nested ++= nestedDeep(d.sym)
       
       nestedDeep += c.sym -> nested
-  
+      
+      c.companion match
+        case None => 
+        case Some(value) => companionMap += (value.isym -> c.isym)
+    
     new BlockTraverserShallow:
       applyBlock(b)
       override def applyDefn(defn: Defn): Unit =
         inScopeDefns += defn.sym -> Set.empty
         createMetadataDefn(defn, b.definedVars, Set.empty)
-    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn)
+    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap)
 
   val DefnMetadata(definedLocals, defnsMap, existingVars, 
-    inScopeDefns, nestedDefns, nestedDeep, nestedIn) = createMetadata
-
-  def isModule(s: BlockMemberSymbol) = defnsMap.get(s) match
-    case S(c: ClsLikeDefn) => c.k is syntax.Mod
-    case _ => false
-    
+    inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap) = createMetadata
+  
   def isHandlerClsPath(p: Path) = handlerPaths match
     case None => false
     case Some(paths) => paths.isHandlerClsPath(p)
@@ -139,7 +143,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         override def applyValue(v: Value): Unit = v match
           case Value.Ref(_: BuiltinSymbol) => super.applyValue(v)
           case RefOfBms(l) =>
-            if !isModule(l) then accessed = accessed.addRefdDefn(l)
+            accessed = accessed.addRefdDefn(l)
           case Value.Ref(l) =>
             accessed = accessed.addAccess(l)
           case _ => super.applyValue(v)
@@ -186,23 +190,26 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
 
   // MUST be called from a top-level defn
   private def findAccesses(d: Defn): Map[BlockMemberSymbol, AccessInfo] =
-    var defns: List[Defn] = Nil
+    var defns: mutable.Buffer[Defn] = mutable.Buffer.empty
     var definedVarsDeep: Set[Local] = Set.empty
 
     new BlockTraverser:
       applyDefn(d)
       
       override def applyFunDefn(f: FunDefn): Unit =
-        defns +:= f; definedVarsDeep ++= definedLocals(f.sym)
+        defns += f
+        definedVarsDeep ++= definedLocals(f.sym)
         super.applyFunDefn(f)
       
       override def applyDefn(defn: Defn): Unit =
         defn match
-          case c: ClsLikeDefn => defns +:= c; definedVarsDeep ++= definedLocals(c.sym)
+          case c: ClsLikeDefn =>
+            defns += c
+            definedVarsDeep ++= definedLocals(c.sym)
           case _ =>
         super.applyDefn(defn)
-
-    val defnSyms = defns.map(_.sym).toSet
+    
+    val defnSyms = defns.iterator.map(_.sym).toSet
     val accessInfo = defns.map: d =>
       val AccessInfo(accessed, mutated, refdDefns) = findAccessesShallow(d)
       d.sym -> AccessInfo(
@@ -210,9 +217,9 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         mutated.intersect(definedVarsDeep),
         refdDefns.intersect(defnSyms) // only care about definitions nested in this top-level definition
       )
-
+    
     val accessInfoMap = accessInfo.toMap
-
+    
     val edges =
       for
         (sym, AccessInfo(_, _, refd)) <- accessInfo
@@ -220,7 +227,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         if defnSyms.contains(r)
       yield sym -> r
     .toSet
-
+    
     // (sccs, sccEdges) forms a directed acyclic graph (DAG)
     val algorithms.SccsInfo(sccs, sccEdges, inDegs, outDegs) = algorithms.sccsWithInfo(edges, defnSyms)
     
@@ -238,12 +245,12 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
           case (acc, nextScc) => acc ++ sccAccessInfo(nextScc)
         dp.addOne(scc -> ret)
         ret
-
+    
     for
       (id, scc) <- sccs
       sym <- scc
     yield sym -> (sccAccessInfo(id).intersectLocals(existingVars(sym)))
-
+  
   private def findAccessesTop =
     var accessMap: Map[BlockMemberSymbol, AccessInfo] = Map.empty
     new BlockTraverserShallow:
@@ -256,7 +263,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     accessMap
   
   val accessMap = findAccessesTop
-
+  
   // TODO: let declarations inside loops (also broken without class lifting)
   // I'll fix it once it's fixed in the IR since we will have more tools to determine
   // what locals belong to what block.
@@ -356,8 +363,8 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
           case Call(RefOfBms(l), args) =>
             args.map(super.applyArg(_))
             handleCalledBms(l)
-          case Instantiate(InstSel(l), args) =>
-            args.map(super.applyPath(_))
+          case Instantiate(mut, InstSel(l), args) =>
+            args.map(super.applyArg)
             handleCalledBms(l)
           case _ => super.applyResult(r)
         

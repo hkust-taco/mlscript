@@ -65,24 +65,24 @@ f()()
 
 :e
 return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ╔══[ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.67: 	return 100
-//│ ╙──      	       ^^^
+//│ ╙──      	^^^^^^^^^^
 
 :e
 if true do
   while false do
     let f = () => return 100
-//│ ╔══[ERROR] Return statements are not allowed outside of a function.
+//│ ╔══[ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.75: 	    let f = () => return 100
-//│ ╙──      	                         ^^^
+//│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
 //│ ║  l.82: 	  type A = return "lol"
-//│ ╙──      	                  ^^^^^
+//│ ╙──      	           ^^^^^^^^^^^^
 
 
 :expect 100

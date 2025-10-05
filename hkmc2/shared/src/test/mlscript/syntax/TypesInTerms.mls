@@ -1,0 +1,22 @@
+:js
+
+
+:ge
+1 | 2
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ║  l.5: 	1 | 2
+//│ ╙──     	^^^^^
+
+:ge
+print("A") & print("B")
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
+//│ ║  l.11: 	print("A") & print("B")
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+
+:ge
+~false
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (negation type)
+//│ ║  l.17: 	~false
+//│ ╙──      	 ^^^^^
+
+

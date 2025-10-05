@@ -24,7 +24,7 @@ fun showAsTree(thing) =
     None then tuple of "None", []
     head :: tail then
       let
-        items = [go(head)]
+        items = mut [go(head)]
         remaining = tail
       while remaining is
         head' :: tail' do
@@ -39,7 +39,7 @@ fun showAsTree(thing) =
     Tree.Error(t, m) then tuple of "Error", [["tree", go(t)], ["message", go(m)]]
     Tree.Ident(n, _) then tuple of "Ident", [["name", go(n)]]
     Tree.Bracketed(k, items) then tuple of
-      "Bracketed#" + k, [["items", go(items)]]
+      "Bracketed#" + k.toString(), [["items", go(items)]]
     Tree.Underscore() then tuple of "Underscore", []
     Tree.Modified(m, s) then
       tuple of "Modified", [["modifier", go(m)], ["subject", go(s)]]

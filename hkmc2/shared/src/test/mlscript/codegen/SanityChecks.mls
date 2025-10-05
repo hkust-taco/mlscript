@@ -92,7 +92,7 @@ f(2)
 //│ block$res6 = runtime.safeCall(f5(2));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
-//│ f = [function f]
+//│ f = fun f
 
 
 :expect NaN
@@ -102,10 +102,13 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls1 = function Cls(x1, y1) {
-//│   return new Cls.class(x1, y1);
+//│ Cls1 = function Cls(x, y) {
+//│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
-//│ Cls1.class = class Cls {
+//│ globalThis.Object.freeze(class Cls {
+//│   static {
+//│     Cls1.class = this
+//│   }
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
@@ -116,8 +119,9 @@ Cls(1, 2).f(3)
 //│     tmp3 = tmp2 + z;
 //│     return tmp3 + p
 //│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
+//│ });
 //│ tmp1 = Cls1(1, 2);
 //│ block$res7 = runtime.safeCall(tmp1.f(3));
 //│ undefined
@@ -129,10 +133,13 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 Cls(1, 2).f(3)
 //│ JS:
-//│ Cls3 = function Cls(...args1) {
-//│   return new Cls.class(...args1);
+//│ Cls3 = function Cls(...args) {
+//│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
-//│ Cls3.class = class Cls2 {
+//│ globalThis.Object.freeze(class Cls2 {
+//│   static {
+//│     Cls3.class = this
+//│   }
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
@@ -147,8 +154,9 @@ Cls(1, 2).f(3)
 //│     tmp4 = tmp3 + z;
 //│     return tmp4 + p
 //│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
+//│ });
 //│ tmp2 = runtime.checkCall(Cls3(1, 2));
 //│ block$res8 = runtime.safeCall(tmp2.f(3));
 //│ undefined
@@ -161,10 +169,13 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 Cls(1, 2).f(3, 4)(5)
 //│ JS:
-//│ Cls5 = function Cls(...args1) {
-//│   return new Cls.class(...args1);
+//│ Cls5 = function Cls(...args) {
+//│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
-//│ Cls5.class = class Cls4 {
+//│ globalThis.Object.freeze(class Cls4 {
+//│   static {
+//│     Cls5.class = this
+//│   }
 //│   constructor(x, y) {
 //│     this.x = x;
 //│     this.y = y;
@@ -186,8 +197,9 @@ Cls(1, 2).f(3, 4)(5)
 //│       return tmp8 + s
 //│     }
 //│   }
-//│   toString() { return "Cls(" + runtime.render(this.x) + ", " + runtime.render(this.y) + ")"; }
-//│ };
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
+//│ });
 //│ tmp3 = runtime.checkCall(Cls5(1, 2));
 //│ tmp4 = tmp3.f(3, 4);
 //│ block$res9 = runtime.safeCall(tmp4(5));
@@ -198,9 +210,9 @@ Cls(1, 2).f(3, 4)(5)
 :ssjs
 console.log(1)
 //│ JS:
-//│ selRes = this.console;
+//│ selRes = globalThis.console;
 //│ if (selRes === undefined) {
-//│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
 //│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
@@ -211,10 +223,10 @@ console.log(1)
 :ssjs
 globalThis.x
 //│ JS:
-//│ selRes1 = this.x;
-//│ discarded = this.x$__checkNotMethod;
+//│ selRes1 = globalThis.x;
+//│ discarded = globalThis.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
-//│   throw new this.Error("Access to required field 'x' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"))
 //│ }
 //│ block$res11 = selRes1;
 //│ undefined
@@ -224,8 +236,8 @@ globalThis.x
 :ssjs
 globalThis.x()
 //│ JS:
-//│ block$res12 = runtime.safeCall(this.x()); undefined
-//│ ═══[RUNTIME ERROR] TypeError: this.x is not a function
+//│ block$res12 = runtime.safeCall(globalThis.x()); undefined
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.x is not a function
 
 
 
@@ -239,13 +251,21 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ (class M {
+//│ globalThis.Object.freeze(class M {
 //│   static {
-//│     M1 = M;
-//│     this.A = function A(...args1) {
-//│       return new A.class(...args1);
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     this.A = function A(...args) {
+//│       return globalThis.Object.freeze(new A.class(...args));
 //│     };
-//│     this.A.class = class A {
+//│     globalThis.Object.freeze(class A {
+//│       static {
+//│         M.A.class = this
+//│       }
 //│       constructor(x1) {
 //│         this.x = x1;
 //│       }
@@ -255,27 +275,23 @@ if M.A(1).y is
 //│         let y = args[0];
 //│         return this.x + y
 //│       }
-//│       toString() { return "A(" + runtime.render(this.x) + ")"; }
-//│     };
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│     });
 //│   }
-//│   static toString() { return "M"; }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp5 = runtime.safeCall(M1.A(1));
+//│ tmp5 = runtime.checkCall(M1.A(1));
 //│ selRes2 = tmp5.y;
 //│ discarded1 = tmp5.y$__checkNotMethod;
 //│ if (selRes2 === undefined) {
-//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = selRes2;
 //│ x = scrut;
 //│ scrut1 = x == 1;
-//│ if (scrut1 === true) {
-//│   block$res13 = x;
-//│   undefined
-//│ } else {
-//│   block$res13 = 0;
-//│   undefined
-//│ }
+//│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
@@ -285,15 +301,15 @@ if M.A(1).y is
 M.A(1).y
   console.log()
 //│ JS:
-//│ selRes3 = this.console;
+//│ selRes3 = globalThis.console;
 //│ if (selRes3 === undefined) {
-//│   throw new this.Error("Access to required field 'console' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
-//│ tmp6 = runtime.safeCall(M1.A(1));
+//│ tmp6 = runtime.checkCall(M1.A(1));
 //│ selRes4 = tmp6.y;
 //│ discarded2 = tmp6.y$__checkNotMethod;
 //│ if (selRes4 === undefined) {
-//│   throw new this.Error("Access to required field 'y' yielded 'undefined'");
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined
@@ -306,9 +322,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
-//│ tmp7 = runtime.safeCall(M1.A(1));
-//│ block$res15 = runtime.safeCall(this.console.log(tmp7.y));
-//│ undefined
+//│ tmp7 = M1.A(1); block$res15 = runtime.safeCall(globalThis.console.log(tmp7.y)); undefined
 //│ > undefined
 
 :noSanityCheck
@@ -324,7 +338,7 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
-//│ tmp10 = runtime.safeCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
+//│ tmp10 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp10.g(0)); undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp10.g is not a function
 
 
@@ -332,7 +346,7 @@ M.A(1).g(0)
 :ssjs
 M.A(1).f(0)
 //│ JS:
-//│ tmp11 = runtime.safeCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
+//│ tmp11 = runtime.checkCall(M1.A(1)); block$res19 = runtime.safeCall(tmp11.f(0)); undefined
 //│ = 1
 
 

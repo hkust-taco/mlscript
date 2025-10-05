@@ -1,0 +1,40 @@
+:lift
+:js
+
+
+:w
+:sjs
+fun f(x) =
+  class A with
+    fun get = x
+  module A
+  fun g = new A
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ JS (unsanitized):
+//│ let g, f, g$;
+//│ g$ = function g$(A$member, A1, x) {
+//│   return globalThis.Object.freeze(new A$member())
+//│ };
+//│ g = function g(A$member, A1, x) {
+//│   return () => {
+//│     return g$(A$member, A1, x)
+//│   }
+//│ };
+//│ f = function f(x) {
+//│   let A1;
+//│   globalThis.Object.freeze(class A {
+//│     static {
+//│       A1 = this
+//│     }
+//│     constructor() {}
+//│     get get() {
+//│       return x;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
+//│   return runtime.Unit
+//│ };
+//│ ═══[WARNING] Modules are not yet lifted.
+
+

@@ -4,15 +4,20 @@
 let a = 1
 //│ a = 1
 
+(a: 1)
+//│ = {a: 1}
+
+(a: a)
+//│ = {a: 1}
+
 (:a)
 //│ = {a: 1}
 
+{:a}
+//│ = {a: 1}
 
-:fixme // should we support this?
+
 fun foo(x) = :x
-//│ ╔══[PARSE ERROR] Expected expression or block after 'fun' binding equals sign; found ':' keyword instead
-//│ ║  l.12: 	fun foo(x) = :x
-//│ ╙──      	             ^
 
 fun foo(x) = (:x)
 foo(1)
@@ -41,8 +46,8 @@ if r is
 :e
 if r is
   a: x then x
-//│ ╔══[ERROR] Unrecognized pattern split.
-//│ ║  l.43: 	  a: x then x
+//│ ╔══[ERROR] Unrecognized pattern split (infix operator ':').
+//│ ║  l.48: 	  a: x then x
 //│ ╙──      	  ^^^^^^^^^^^
 
 if 1 is
@@ -53,12 +58,22 @@ if 1 is
   {1} then true
 //│ = true
 
+:js
+let r2 = {a:2}
+if r2 is
+  {a:0} then false
+  0 then true
+  else 4
+//│ = 4
+//│ r2 = {a: 2}
 
+
+:js
 let foo = case
   (a: 0) then false
   (a: 1) then true
   (:a) then a
-//│ foo = [function]
+//│ foo = fun
 
 foo(r)
 //│ = true
@@ -73,13 +88,23 @@ foo(:a)
 :todo // would mean `val a = ‹the old a›`?
 val =a
 //│ ╔══[PARSE ERROR] Expected expression after 'val' binding keyword; found '=' keyword instead
-//│ ║  l.74: 	val =a
+//│ ║  l.89: 	val =a
 //│ ╙──      	    ^
 
 :pe
 let =a
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found '=' keyword instead
-//│ ║  l.80: 	let =a
+//│ ║  l.95: 	let =a
 //│ ╙──      	    ^
 
+
+import "../../mlscript-compile/LazyArray.mls"
+
+// * Should probably warn that `dropLeftRight` has no effect
+// * (this requires checking it's not an effectful getter!)
+LazyArray.{ dropLeftRight, concat }
+//│ = fun concat
+
+LazyArray.{ :dropLeftRight, :concat }
+//│ = {dropLeftRight: fun dropLeftRight, concat: fun concat}
 
