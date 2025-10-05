@@ -669,13 +669,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // NOTE: the super call is inside the preCtor
     // during resumption we need to resume both the this.x = x bindings done in JSBuilder and the ctor
     
+    val body = blockBuilder
+      .define(clsDefn)
+      .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym), Nil))
+      .rest(handlerBody)
+        
     val defn = FunDefn(
       N, // no owner
-      sym, PlainParamList(Nil) :: Nil, 
-      blockBuilder
-        .define(clsDefn)
-        .assign(h.lhs, Instantiate(true, Value.Ref(clsDefn.sym), Nil))
-        .rest(handlerBody))
+      sym, PlainParamList(Nil) :: Nil, body)
     
     val result = blockBuilder
       .define(defn)
