@@ -194,7 +194,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _ => false
   
   private class FreshId:
-    var id: Int = 1
+    var id: Int = 0
     def apply() =
       val tmp = id
       id += 1

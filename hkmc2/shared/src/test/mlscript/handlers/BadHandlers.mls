@@ -1,30 +1,10 @@
 :js
 :effectHandlers
 
-:noSanityCheck
-:sjs
+:re
 handle h = Object with {}
 h.oops
-//│ JS (unsanitized):
-//│ let h, tmp, handleBlock$, Handler$h$1;
-//│ handleBlock$ = function handleBlock$() {
-//│   return h.oops
-//│ };
-//│ globalThis.Object.freeze(class Handler$h$ extends globalThis.Object {
-//│   static {
-//│     Handler$h$1 = this
-//│   }
-//│   constructor() {
-//│     let tmp1;
-//│     tmp1 = super();
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ h = new Handler$h$1();
-//│ tmp = handleBlock$();
-//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
-//│ tmp
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 handle h = Object with {}
 val x = 1
@@ -37,7 +17,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.38: 	x
+//│ ║  l.18: 	x
 //│ ╙──      	^
 
 
@@ -64,7 +44,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.65: 	Foo.x
+//│ ║  l.45: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
