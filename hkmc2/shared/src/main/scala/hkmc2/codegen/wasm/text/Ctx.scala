@@ -132,7 +132,7 @@ object Ctx:
 
   extension (ref: CtxIdx | Symbol)
     private def prettyString: Str = ref match
-      case idx: CtxIdx => s"type index `${idx.toWat.toString}`"
+      case idx: CtxIdx => s"type index `${idx.toWat.mkString()}`"
       case sym: Symbol => s"symbol `${sym.toString}`"
 
 /**

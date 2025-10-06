@@ -2,42 +2,8 @@
 :global
 :wasm
 
-:wat
-:showRepl
 false
-//│ REPL> Collected:
-//│ >  Welcome to Node.js v24.9.0.
-//│ >  Type ".help" for more information.
-//│ REPL> Sending: console.info = console.error
-//│ REPL> Collected:
-//│ >  [Function: error]
-//│ REPL> Sending: process.chdir('/home/david/programming/mlscript')
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const runtime = (await import("/home/david/programming/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs")).default;
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const definitionMetadata = Symbol.for("mlscript.definitionMetadata");
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const prettyPrint = Symbol.for("mlscript.prettyPrint");
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: const wasm = (await import("/home/david/programming/mlscript/hkmc2/shared/src/test/mlscript-compile/Wasm.mjs")).default;
-//│ REPL> Collected:
-//│ >  undefined
-//│ Wat:
-//│ (module
-//│   (type (func (result (ref null any))))
-//│   (func $entry (type 0) (result (ref null any))
-//│     (ref.i31
-//│       (i32.const 0)))
-//│   (export "entry" (func $entry))
-//│   (elem declare func $entry))
 //│ Wasm result:
-//│ REPL> Sending: await wasm.binaryenRunFunc(`(module   (type (func (result (ref null any))))   (func $entry (type 0) (result (ref null any))     (ref.i31       (i32.const 0)))   (export "entry" (func $entry))   (elem declare func $entry))`, {"system": {"mem": new WebAssembly.Memory({initial: 100})}}, exports => exports.entry());
-//│ REPL> Collected:
-//│ >  0
 //│ = 0
 
 
@@ -66,7 +32,7 @@ x
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.67: 	foo
+//│ ║  l.33: 	foo
 //│ ╙──      	^^^
 
 

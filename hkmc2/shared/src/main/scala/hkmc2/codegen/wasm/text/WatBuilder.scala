@@ -131,7 +131,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     FieldIdx(
       fieldIdx getOrElse:
         lastWords(
-          s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.toString}`"
+          s"Missing field `${sym.toString}` in struct `${thisSym.toString}` with type `${structInfo.toWat.mkString()}`"
         )
     )
   end fieldSelect
@@ -174,7 +174,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 case ty =>
                   errExpr(
                     Ls(
-                      msg"WatBuilder::result for binary builtin symbol '${l.nme.toString}' ($opSide.type=${ty.fold("(none)")(_.toWat.toString)}) not implemented yet" -> r.toLoc
+                      msg"WatBuilder::result for binary builtin symbol '${l.nme.toString}' ($opSide.type=${ty.fold("(none)")(_.toWat.mkString())}) not implemented yet" -> r.toLoc
                     ),
                     extraInfo = S(r.toString)
                   )
@@ -188,7 +188,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               case (lhsType, rhsType) =>
                 errExpr(
                   Ls(
-                    msg"WatBuilder::result for binary builtin symbol '${l.nme.toString}' for (${lhsType.fold("(none)")(_.toWat.toString)}, ${rhsType.fold("(none)")(_.toWat.toString)}) not implemented yet" -> r.toLoc
+                    msg"WatBuilder::result for binary builtin symbol '${l.nme.toString}' for (${lhsType.fold("(none)")(_.toWat.mkString())}, ${rhsType.fold("(none)")(_.toWat.mkString())}) not implemented yet" -> r.toLoc
                   ),
                   extraInfo = S(r.toString)
                 )
