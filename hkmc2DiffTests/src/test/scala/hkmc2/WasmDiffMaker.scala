@@ -6,16 +6,11 @@ import codegen.wasm.*
 import semantics.Elaborator
 import semantics.Term.Blk
 import text.WatBuilder
-import hkmc2.codegen.CompilationTarget
 import Diagnostic.Source
 
 import scala.collection.mutable
 
 abstract class WasmDiffMaker extends LlirDiffMaker:
-  /**
-   * Enables Wasm support. All subsequent options are no-op if this option is not set.
-   */
-  val wasm = NullaryCommand("wasm")
 
   /**
    * Outputs the compiled module as [[WasmGenerator]] implementation-defined text.
@@ -68,7 +63,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         case d => outerRaise(d)
       val low = ltl.givenIn:
         codegen.Lowering()
-      val le = low.program(trm, CompilationTarget.Wasm)
+      val le = low.program(trm)
       val (modWat, mainFnNme) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)

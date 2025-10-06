@@ -15,16 +15,9 @@ import semantics.Term.*
 import sem.Elaborator.State
 
 
-/** The compilation target of a program. */
-enum CompilationTarget:
-  case JS
-  case Wasm
-
-
 case class Program(
   imports: Ls[Local -> Str],
   main: Block,
-  target: CompilationTarget,
 )
 
 

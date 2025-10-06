@@ -5,7 +5,6 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import utils.*
 
-import hkmc2.codegen.CompilationTarget
 import hkmc2.semantics.MemberSymbol
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
@@ -94,7 +93,7 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
           with codegen.LoweringSelSanityChecks
       val jsb = ltl.givenIn:
         codegen.js.JSBuilder()
-      val le = low.program(blk, CompilationTarget.JS)
+      val le = low.program(blk)
       val baseScp: utils.Scope =
         utils.Scope.empty
       // * This line serves for `import.meta.url`, which retrieves directory and file names of mjs files.

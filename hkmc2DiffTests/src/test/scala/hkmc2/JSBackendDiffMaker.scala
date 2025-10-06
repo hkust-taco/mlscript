@@ -80,7 +80,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         codegen.Lowering()
       val jsb = ltl.givenIn:
         JSBuilder()
-      val le = low.program(blk, CompilationTarget.JS)
+      val le = low.program(blk)
       val nestedScp = baseScp.nest
       val je = nestedScp.givenIn:
         jsb.programBody(le, N, wd)
@@ -102,7 +102,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           new JSBuilder
             with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
-      val lowered0 = low.program(blk, CompilationTarget.JS)
+      val lowered0 = low.program(blk)
       val le = lowered0.copy(main = lowered0.main.mapTail:
         case e: End =>
           Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
