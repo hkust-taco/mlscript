@@ -706,8 +706,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     var containsCall = false
     
     // Create the DoUnwind function
-    val doUnwindSym = BlockMemberSymbol("doUnwind", Nil, true)
-    doUnwindMap += R(clsSym) -> Select(clsSym.asPath, Tree.Ident("doUnwind"))(S(doUnwindSym))
+    doUnwindMap += R(clsSym) -> Select(clsSym.asPath, Tree.Ident("doUnwind"))(
+      N /* this refers to the method defined in Runtime.FunctionContFrame */
+    )
     val newPcSym = VarSymbol(Tree.Ident("newPc"))
     val resSym = VarSymbol(Tree.Ident("res"))
     val doUnwindBlk = blockBuilder
@@ -715,13 +716,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .assignFieldN(resSym.asPath.contTrace.last, nextIdent, clsSym.asPath)
       .assignFieldN(resSym.asPath.contTrace, lastIdent, clsSym.asPath)
       .ret(resSym.asPath)
-    val doUnwindDef = FunDefn(
-      S(clsSym), doUnwindSym,
-      PlainParamList(simpleParam(resSym) :: simpleParam(newPcSym) :: Nil) :: Nil,
-      doUnwindBlk
-    )
-    
-    val doUnwindLazy = LazyVal(doUnwindSym)
     
     // Replaces ResultPlaceholders to check for effects and link the effect trace
     def prepareBlock(b: Block): Block =
@@ -784,7 +778,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val transform = new BlockTransformerShallow(SymbolSubst()):
           override def applyBlock(b: Block): Block = b match
             case ReturnCont(res, uid) => Return(Call(
-                Select(clsSym.asPath, Tree.Ident("doUnwind"))(S(doUnwindLazy.get)), 
+                Select(clsSym.asPath, Tree.Ident("doUnwind"))(
+                  N /* this refers to the method defined in Runtime.FunctionContFrame */ ),
                 res.asPath.asArg :: Value.Lit(Tree.IntLit(uid)).asArg :: Nil)(true, false),
                 false
               )
@@ -884,10 +879,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
       getLocalsFnDef :: getLocFnDef :: Nil
     
-    val mtds = if doUnwindLazy.empty then
-      resumeFnDef :: debugMtds
-    else
-      doUnwindDef :: resumeFnDef :: debugMtds
+    val mtds = resumeFnDef :: debugMtds
     
     S(ClsLikeDefn(
       N, // no owner

@@ -182,12 +182,6 @@ str
 //│               tmp15 = super(null);
 //│               this.pc = pc;
 //│             }
-//│             doUnwind(res7, newPc) {
-//│               this.pc = newPc;
-//│               res7.contTrace.last.next = this;
-//│               res7.contTrace.last = this;
-//│               return res7
-//│             } 
 //│             resume(value$) {
 //│               if (this.pc === 9) {
 //│                 tmp13 = value$;
@@ -282,12 +276,6 @@ str
 //│                 tmp18 = super(null);
 //│                 this.pc = pc;
 //│               }
-//│               doUnwind(res8, newPc) {
-//│                 this.pc = newPc;
-//│                 res8.contTrace.last.next = this;
-//│                 res8.contTrace.last = this;
-//│                 return res8
-//│               } 
 //│               resume(value$) {
 //│                 if (this.pc === 4) {
 //│                   tmp15 = value$;
@@ -344,12 +332,6 @@ str
 //│           tmp13 = super(null);
 //│           this.pc = pc;
 //│         }
-//│         doUnwind(res8, newPc) {
-//│           this.pc = newPc;
-//│           res8.contTrace.last.next = this;
-//│           res8.contTrace.last = this;
-//│           return res8
-//│         } 
 //│         resume(value$) {
 //│           if (this.pc === 1) {
 //│             tmp12 = value$;

@@ -133,12 +133,6 @@ sum(10000)
 //│   set tmp$1(value) { this.#tmp$1 = value; }
 //│   get tmp$2() { return this.#tmp$2; }
 //│   set tmp$2(value) { this.#tmp$2 = value; }
-//│   doUnwind(res2, newPc) {
-//│     this.pc = newPc;
-//│     res2.contTrace.last.next = this;
-//│     res2.contTrace.last = this;
-//│     return res2
-//│   } 
 //│   resume(value$) {
 //│     let curDepth;
 //│     curDepth = runtime.stackDepth;

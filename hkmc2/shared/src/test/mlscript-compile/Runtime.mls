@@ -122,6 +122,12 @@ object PrintStackEffect
 
 data abstract class FunctionContFrame(next) with
   fun resume(value)
+  fun doUnwind(res1, newPc) =
+    set
+      (this).pc = newPc
+      res1.contTrace.last.next = this
+      res1.contTrace.last = this
+    res1
 data class HandlerContFrame(next, nextHandler, handler)
 
 data class ContTrace(next, last, nextHandler, lastHandler, resumed)

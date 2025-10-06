@@ -187,12 +187,6 @@ if true do
 //│       tmp12 = super(null);
 //│       this.pc = pc;
 //│     }
-//│     doUnwind(res1, newPc) {
-//│       this.pc = newPc;
-//│       res1.contTrace.last.next = this;
-//│       res1.contTrace.last = this;
-//│       return res1
-//│     } 
 //│     resume(value$) {
 //│       if (this.pc === 1) {
 //│         res = value$;

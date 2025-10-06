@@ -88,12 +88,6 @@ sum(10000)
 //│       tmp2 = super(null);
 //│       this.pc = pc;
 //│     }
-//│     doUnwind(res2, newPc) {
-//│       this.pc = newPc;
-//│       res2.contTrace.last.next = this;
-//│       res2.contTrace.last = this;
-//│       return res2
-//│     } 
 //│     resume(value$) {
 //│       let curDepth1;
 //│       curDepth1 = runtime.stackDepth;

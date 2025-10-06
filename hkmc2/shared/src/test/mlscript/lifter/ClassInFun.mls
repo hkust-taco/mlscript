@@ -88,12 +88,6 @@ f() + f() + f()
 //│   set tmp$3(value) { this.#tmp$3 = value; }
 //│   get tmp$4() { return this.#tmp$4; }
 //│   set tmp$4(value) { this.#tmp$4 = value; }
-//│   doUnwind(res, newPc) {
-//│     this.pc = newPc;
-//│     res.contTrace.last.next = this;
-//│     res.contTrace.last = this;
-//│     return res
-//│   } 
 //│   resume(value$) {
 //│     if (this.pc === 2) {
 //│       this.tmp$1 = value$;

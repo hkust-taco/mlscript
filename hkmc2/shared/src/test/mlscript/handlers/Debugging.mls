@@ -52,12 +52,6 @@ fun f() =
 //│       tmp2 = super(null);
 //│       this.pc = pc;
 //│     }
-//│     doUnwind(res1, newPc) {
-//│       this.pc = newPc;
-//│       res1.contTrace.last.next = this;
-//│       res1.contTrace.last = this;
-//│       return res1
-//│     } 
 //│     resume(value$) {
 //│       if (this.pc === 1) {
 //│         tmp = value$;
@@ -139,8 +133,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:139:3)
-//│ 	at lambda_test (Debugging.mls:136:3)
+//│ 	at lambda (Debugging.mls:133:3)
+//│ 	at lambda_test (Debugging.mls:130:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -219,9 +213,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:212:3) with locals: j=200
+//│ > 	at f (Debugging.mls:206:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:214:3)
+//│ > 	at f (Debugging.mls:208:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:215:3) with locals: j=300
+//│ > 	at f (Debugging.mls:209:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

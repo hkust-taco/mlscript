@@ -268,6 +268,12 @@ globalThis.Object.freeze(class Runtime {
       constructor(next) {
         this.next = next;
       }
+      doUnwind(res1, newPc) {
+        this.pc = newPc;
+        res1.contTrace.last.next = this;
+        res1.contTrace.last = this;
+        return res1
+      }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "FunctionContFrame", ["next"]]; 
     });
