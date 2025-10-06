@@ -616,7 +616,6 @@ object Normalization:
     case (Class(blt.`Int`), Class(blt.`Num`)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
     // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
-    // case (Lit(Tree.IntLit(_)), Class(blt.`Int` | blt.`Int31` | blt.wasm.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.IntLit(_)), Class(blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), Class(blt.`Str`)) => true
     case (Lit(Tree.DecLit(_)), Class(blt.`Num`)) => true

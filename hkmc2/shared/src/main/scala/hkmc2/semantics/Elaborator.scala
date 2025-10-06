@@ -178,7 +178,6 @@ object Elaborator:
         val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
-        // val Int31 = assumeObject("Int31")
         val plus_impl = assumeObject("plus_impl")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")

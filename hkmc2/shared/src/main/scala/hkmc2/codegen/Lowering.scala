@@ -370,7 +370,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case bs: BlockMemberSymbol =>
         bs.defn match
         case S(_) if bs.asCls.exists(_ is ctx.builtins.Int31) =>
-        // case S(_) if bs.asCls.exists(sym => (sym is ctx.builtins.Int31) || (sym is ctx.builtins.wasm.Int31)) =>
           return term(Sel(State.runtimeSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
         case S(d) if d.hasDeclareModifier.isDefined =>
           return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
@@ -450,7 +449,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
       case t if t.resolvedSym.exists(_ is ctx.builtins.wasm.plus_impl) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
-      // case t if t.resolvedSym.exists(sym => (sym is ctx.builtins.Int31) || (sym is ctx.builtins.wasm.Int31)) =>
       case t if t.resolvedSym.exists(_ is ctx.builtins.Int31) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
       case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.debug.printStack) =>
