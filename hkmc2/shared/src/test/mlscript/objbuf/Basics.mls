@@ -4,10 +4,10 @@ import "../../mlscript-compile/ObjectBuffer.mls"
 open ObjectBuffer
 open annotations
 
+
 :sjs
 @bufferable
 class A(x) with
-  val z = x
   fun f(y) = x + y
 //│ JS (unsanitized):
 //│ let A1;
@@ -20,19 +20,15 @@ class A(x) with
 //│   }
 //│   constructor(x) {
 //│     this.#x = x;
-//│     this.z = this.#x;
 //│   }
 //│   static {
-//│     this.size = 2;
+//│     this.size = 1;
 //│   }
 //│   static ctor(buf, idx) {
 //│     return (x) => {
-//│       let idx1, idx2, idx3;
-//│       idx3 = idx + 0;
-//│       buf.buf[idx3] = x;
+//│       let idx1;
 //│       idx1 = idx + 0;
-//│       idx2 = idx + 1;
-//│       buf.buf[idx2] = buf.buf.at(idx1);
+//│       buf.buf[idx1] = x;
 //│       return idx
 //│     }
 //│   } 
@@ -55,7 +51,7 @@ class A(x) with
 @buffered
 class A2(x)
 //│ ╔══[WARNING] This annotation is not supported yet.
-//│ ║  l.55: 	@buffered
+//│ ║  l.51: 	@buffered
 //│ ╙──      	 ^^^^^^^^
 
 :ge
@@ -63,9 +59,9 @@ class A2(x)
 @bufferable
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.62: 	@bufferable
+//│ ║  l.58: 	@bufferable
 //│ ║        	 ^^^^^^^^^^
-//│ ║  l.63: 	@bufferable
+//│ ║  l.59: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
@@ -74,12 +70,12 @@ class B1(x)
 @bufferable
 class B2(x)
 //│ ╔══[WARNING] This annotation is not supported yet.
-//│ ║  l.73: 	@buffered
+//│ ║  l.69: 	@buffered
 //│ ╙──      	 ^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.73: 	@buffered
+//│ ║  l.69: 	@buffered
 //│ ║        	 ^^^^^^^^
-//│ ║  l.74: 	@bufferable
+//│ ║  l.70: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :breakme
@@ -120,3 +116,62 @@ A.class.f(buf, obj1)(1)
 
 A.class.f(buf, obj3)(1)
 //│ = 11
+
+
+:sjs
+@bufferable
+class Oops with
+  fun hi = print("hi")
+//│ JS (unsanitized):
+//│ let Oops1;
+//│ globalThis.Object.freeze(class Oops {
+//│   static {
+//│     Oops1 = this
+//│   }
+//│   constructor() {}
+//│   static {
+//│     this.size = 0;
+//│   }
+//│   static ctor(buf1, idx) {
+//│     return idx
+//│   } 
+//│   static hi(buf1, idx) {
+//│     return Predef.print("hi")
+//│   }
+//│   get hi() {
+//│     return Predef.print("hi");
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Oops"]; 
+//│ });
+
+let obj1 = buf.mkNew(Oops)
+//│ obj1 = 4
+
+
+Oops.hi(buf, obj2)
+//│ > hi
+
+let obj2 = buf.mkNew(A.class)(3)
+//│ obj2 = 4
+
+A.class.f(buf, obj2)(1)
+//│ = 4
+
+buf.del(Oops, obj1)
+
+:fixme
+:expect 4
+A.class.f(buf, obj2)(1)
+//│ ═══[RUNTIME ERROR] Expected: '4', got: '1'
+//│ = 1
+
+
+:fixme
+@bufferable
+class A(x) with
+  val z = x
+  fun f(y) = x + y + z
+//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:A
+
+
