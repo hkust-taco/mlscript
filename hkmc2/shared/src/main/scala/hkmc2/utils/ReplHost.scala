@@ -138,7 +138,7 @@ object ReplHost {
     * The syntax error beginning text from Node.js.
     */
   private val syntaxErrorHead = "Uncaught SyntaxError: "
-  private val uncaughtErrorHead = "Uncaught "
+  val uncaughtErrorHead = "Uncaught "
 
   /**
     * The base class of all kinds of REPL replies.

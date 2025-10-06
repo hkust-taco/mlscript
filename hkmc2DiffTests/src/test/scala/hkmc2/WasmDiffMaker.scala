@@ -33,7 +33,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       s"const $wasmSuppNme = (await import(\"${wasmSuppFile}\")).default;"
     ) match
       case ReplHost.Result(msg) =>
-        if msg.startsWith("Uncaught") then
+        if msg.startsWith(ReplHost.uncaughtErrorHead) then
           output(s"Failed to load wasm support library: $msg")
       case r => output(s"Failed to load wasm support library: $r")
     ()
