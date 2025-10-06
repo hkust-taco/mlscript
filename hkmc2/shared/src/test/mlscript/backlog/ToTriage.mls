@@ -226,11 +226,27 @@ class D extends id(C)
 let x = 0
 //│ x = 0
 
+// This somehow parses as `set (x += 1; ())`
+:fixme
 set x += 1; ()
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(Keywrd(keyword 'set'),OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Unt())),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ ╔══[ERROR] Expected a right-hand side for this assignment
+//│ ║  l.231: 	set x += 1; ()
+//│ ╙──       	    ^^^^^^^^^^
 
+:e
+set (x += 1; ())
+//│ ╔══[ERROR] Expected a right-hand side for this assignment
+//│ ║  l.237: 	set (x += 1; ())
+//│ ╙──       	    ^^^^^^^^^^^^
+
+(set x += 1); ()
+
+:fixme
 [x, set x += 1; x]
-//│ /!!!\ Uncaught error: scala.MatchError: LetLike(Keywrd(keyword 'set'),OpApp(OpApp(Ident(x),Ident(+=),List(IntLit(1))),Ident(;),List(Ident(x))),None,None) (of class hkmc2.syntax.Tree$LetLike)
+//│ ╔══[ERROR] Expected a right-hand side for this assignment
+//│ ║  l.245: 	[x, set x += 1; x]
+//│ ╙──       	        ^^^^^^^^^
+//│ = [1]
 
 // ——— ——— ———
 
@@ -241,7 +257,7 @@ fun bar() = baz
 //│ JS (unsanitized):
 //│ let bar, baz;
 //│ baz = function baz() { return 1 };
-//│ bar = function bar() { let tmp3; tmp3 = baz(); return tmp3 };
+//│ bar = function bar() { let tmp4; tmp4 = baz(); return tmp4 };
 
 // ——— ——— ———
 
@@ -250,13 +266,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.251: 	open Stack { ::, Nil }
+//│ ║  l.267: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.257: 	open Stack { (::), Nil }
+//│ ║  l.273: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -264,7 +280,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.265: 	1 :: Nil
+//│ ║  l.281: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -275,9 +291,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.275: 	mkStr of ... // hello
+//│ ║  l.291: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.276: 	"oops"
+//│ ║  l.292: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -300,22 +316,22 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread)
-//│ ║  l.301: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.317: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.301: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.317: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.310: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.326: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.316: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.332: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -349,10 +365,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.349: 	  let bar(x: Str): Str = x + x
+//│ ║  l.365: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.350: 	  bar("test")
+//│ ║  l.366: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -362,7 +378,7 @@ fun foo() =
 module Foo(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.362: 	module Foo(x)
+//│ ║  l.378: 	module Foo(x)
 //│ ╙──       	           ^
 //│ JS (unsanitized):
 //│ let Foo5;
@@ -386,7 +402,7 @@ module Foo(x)
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.386: 	module Foo(val x)
+//│ ║  l.402: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ JS (unsanitized):
 //│ let Foo7;
@@ -409,7 +425,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.410: 	data class Foo(mut x)
+//│ ║  l.426: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -417,5 +433,31 @@ data class Foo(mut x)
 // FIXME should report an error
 fun Foo
 class Foo
+
+// ——— ——— ———
+
+// Somehow these parse:
+:e
+set this.pc = 0
+set
+  (this).pc = 0
+//│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
+//│ ║  l.441: 	set this.pc = 0
+//│ ╙──       	    ^^^^
+//│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
+//│ ║  l.443: 	  (this).pc = 0
+//│ ╙──       	   ^^^^
+
+// But this doesn't...
+:fixme
+:e
+set
+  this.pc = 0
+//│ ╔══[PARSE ERROR] Unexpected static selector here
+//│ ║  l.455: 	  this.pc = 0
+//│ ╙──       	      ^^^
+//│ ╔══[ERROR] Expected a right-hand side for this assignment
+//│ ║  l.455: 	  this.pc = 0
+//│ ╙──       	  ^^^^
 
 // ——— ——— ———
