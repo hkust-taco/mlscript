@@ -104,7 +104,7 @@ class Watcher(dirs: Ls[File]):
             super.unhandled(blockLineNum, exc)
         dm.run()
       
-      
+  
   def show(file: File) =
     fansi.Color.Yellow:
       file.toString.stripPrefix(dirs.head.toString)

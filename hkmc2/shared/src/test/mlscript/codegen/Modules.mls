@@ -145,7 +145,47 @@ M.m
 //│ = class M { m: ref'1 } as ref'1
 
 
-
 module M()
+
+
+// * Peculiarity (should not be a problem): notice that we have `BB.y`, and not `AA.BB.y`
+:sjs
+module AA with
+  val x = 1
+  module BB with
+    val y = 2
+    [x, y]
+//│ JS (unsanitized):
+//│ let AA1;
+//│ globalThis.Object.freeze(class AA {
+//│   static {
+//│     AA1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     this.x = 1;
+//│     globalThis.Object.freeze(class BB {
+//│       static {
+//│         AA.BB = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static {
+//│         this.y = 2;
+//│         globalThis.Object.freeze([
+//│           AA.x,
+//│           BB.y
+//│         ]);
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "BB"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "AA"]; 
+//│ });
 
 
