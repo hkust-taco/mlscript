@@ -363,6 +363,11 @@ extends Importer:
       block(LetLike(kw, lhs, rhso, N) :: Nil, hasResult = true)._1
     case LetLike(Keywrd(`set`), lhs, S(rhs), N) =>
       Term.Assgn(subterm(lhs), subterm(rhs))
+    case LetLike(Keywrd(`set`), lhs, N, N) =>
+      raise(ErrorReport(
+        msg"Expected a right-hand side for this assignment" ->
+          tree.toLoc :: Nil))
+      Term.Error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
       val lt = subterm(lhs)
