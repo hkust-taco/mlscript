@@ -30,7 +30,6 @@
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│   target = JS
 //│ = 2
 
 
@@ -63,7 +62,6 @@ print("Hi")
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│   target = JS
 //│ > Hi
 //│ = 2
 

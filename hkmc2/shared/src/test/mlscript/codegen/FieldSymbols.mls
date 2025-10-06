@@ -139,7 +139,6 @@ case
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
-//│   target = JS
 //│ = fun
 
 
