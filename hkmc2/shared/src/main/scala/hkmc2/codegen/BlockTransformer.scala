@@ -33,7 +33,7 @@ class BlockTransformer(subst: SymbolSubst):
       applyPath(scrut): scrut2 =>
         applyListOf(
           arms,
-          tup => k =>
+          (tup, k) =>
             val (cse, blk) = tup
             val blk2 = applySubBlock(blk)
             applyCase(cse): cse2 =>
@@ -79,7 +79,7 @@ class BlockTransformer(subst: SymbolSubst):
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       applyPath(par): par2 =>
-        applyListOf(args, applyPath): args2 =>
+        applyListOf(args, applyPath(_)(_)): args2 =>
           val cls2 = cls.subst
           val hdr2 = hdr.mapConserve(applyHandler)
           val bod2 = applySubBlock(bod)
@@ -108,10 +108,10 @@ class BlockTransformer(subst: SymbolSubst):
       case None => toBeIdxed(idx)
   
   def applyRcdArgs(rcdArgs: List[RcdArg])(k: List[RcdArg] => Block): Block =
-    applyListOf(rcdArgs, applyRcdArg)(k)
+    applyListOf(rcdArgs, applyRcdArg(_)(_))(k)
   
   def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
-    applyListOf(args, applyArg)(k)
+    applyListOf(args, applyArg(_)(_))(k)
   
   def applyResult(r: Result)(k: Result => Block): Block =
     r match
@@ -255,13 +255,11 @@ class BlockTransformer(subst: SymbolSubst):
     val body2 = applySubBlock(lam.body)
     if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
   
-  def applyListOf[A](ls: List[A], f: A => (A => Block) => Block)(k: List[A] => Block): Block =
-    def rec(ls: List[A], k: List[A] => Block): Block =
-      ls match
-        case Nil => k(Nil)
-        case a :: t =>
-          f(a): (a2: A) =>
-            rec(t, t2 => if (a2 is a) && (t2 is t) then k(ls) else k(a2 :: t2))
+  def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
+    def rec(ls: List[A], k: List[A] => Block): Block = ls match
+      case Nil => k(Nil)
+      case a :: t =>
+        f(a, a2 => rec(t, t2 => if (a2 is a) && (t2 is t) then k(ls) else k(a2 :: t2)))
     rec(ls, k)
 
 
@@ -280,7 +278,7 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       applyPath(par): par2 =>
-        applyListOf(args, applyPath): args2 =>
+        applyListOf(args, applyPath(_)(_)): args2 =>
           val cls2 = cls.subst
           val hdr2 = hdr.mapConserve(applyHandler)
           val rst2 = applySubBlock(rst)
