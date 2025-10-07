@@ -2,7 +2,6 @@
 :js
 
 :expect 5
-:sjs
 fun f(used1, unused1) =
   let used2 = unused1
   fun g(g_arg) =
@@ -11,30 +10,9 @@ fun f(used1, unused1) =
   let unused2 = 2
   g(used2) + unused2
 f(1, 2)
-//│ JS (unsanitized):
-//│ let g, f, g$;
-//│ g$ = function g$(used1, used2, g_arg) {
-//│   let used3;
-//│   used3 = 2;
-//│   return used1 + used2
-//│ };
-//│ g = function g(used1, used2) {
-//│   return (g_arg) => {
-//│     return g$(used1, used2, g_arg)
-//│   }
-//│ };
-//│ f = function f(used1, unused1) {
-//│   let used2, unused2, tmp;
-//│   used2 = unused1;
-//│   unused2 = 2;
-//│   tmp = g$(used1, used2, used2);
-//│   return tmp + unused2
-//│ };
-//│ f(1, 2)
 //│ = 5
 
 :expect 9
-:sjs
 fun f(used1, unused1) =
   let used2 = unused1
   fun g(g_arg)(g_arg2) =
@@ -43,31 +21,6 @@ fun f(used1, unused1) =
   let unused2 = 2
   g(used2)(used2) + unused2
 f(1, 2)
-//│ JS (unsanitized):
-//│ let g1, f1, g$1;
-//│ g$1 = function g$(used1, used2, g_arg) {
-//│   return (g_arg2) => {
-//│     let used3, tmp, tmp1;
-//│     used3 = 2;
-//│     tmp = used1 + used2;
-//│     tmp1 = tmp + g_arg;
-//│     return tmp1 + g_arg2
-//│   }
-//│ };
-//│ g1 = function g(used1, used2) {
-//│   return (g_arg) => {
-//│     return g$1(used1, used2, g_arg)
-//│   }
-//│ };
-//│ f1 = function f(used1, unused1) {
-//│   let used2, unused2, tmp, tmp1;
-//│   used2 = unused1;
-//│   unused2 = 2;
-//│   tmp = g$1(used1, used2, used2);
-//│   tmp1 = runtime.safeCall(tmp(used2));
-//│   return tmp1 + unused2
-//│ };
-//│ f1(1, 2)
 //│ = 9
 
 :expect 9
@@ -106,10 +59,11 @@ f(1, 2)
 //│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
-//│   let used2, unused2, foo, tmp;
+//│   let used2, unused2, foo, tmp, g$here;
 //│   used2 = unused1;
 //│   unused2 = 2;
-//│   foo = runtime.safeCall(g3(used1, used2));
+//│   g$here = runtime.safeCall(g3(used1, used2));
+//│   foo = g$here;
 //│   tmp = runtime.safeCall(foo(used2));
 //│   return tmp + unused2
 //│ };
@@ -146,7 +100,6 @@ f(1,2,3,4,5,6)
 //│ = 21
 
 :expect "01"
-:sjs
 data class Tuple(a, b)
 fun f() =
   let a = 0
@@ -160,66 +113,6 @@ let x = f2().toString()
 f1()
 let y = f2().toString()
 x + y
-//│ JS (unsanitized):
-//│ let g5, h, f5, Tuple1, ret, f11, f21, x, y, tmp, tmp1, tmp2, h$, g$5, f$capture1;
-//│ g$5 = function g$(f$capture2) {
-//│   f$capture2.a0$ = 1;
-//│   return runtime.Unit
-//│ };
-//│ g5 = function g(f$capture2) {
-//│   return () => {
-//│     return g$5(f$capture2)
-//│   }
-//│ };
-//│ h$ = function h$(f$capture2) {
-//│   return f$capture2.a0$
-//│ };
-//│ h = function h(f$capture2) {
-//│   return () => {
-//│     return h$(f$capture2)
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class f$capture {
-//│   static {
-//│     f$capture1 = this
-//│   }
-//│   constructor(a0$) {
-//│     this.a0$ = a0$;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f5 = function f() {
-//│   let capture, g$this, h$this;
-//│   capture = new f$capture1(null);
-//│   capture.a0$ = 0;
-//│   g$this = runtime.safeCall(g5(capture));
-//│   h$this = runtime.safeCall(h(capture));
-//│   return Tuple1(g$this, h$this)
-//│ };
-//│ Tuple1 = function Tuple(a, b) {
-//│   return globalThis.Object.freeze(new Tuple.class(a, b));
-//│ };
-//│ globalThis.Object.freeze(class Tuple {
-//│   static {
-//│     Tuple1.class = this
-//│   }
-//│   constructor(a, b) {
-//│     this.a = a;
-//│     this.b = b;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Tuple", ["a", "b"]]; 
-//│ });
-//│ ret = f5();
-//│ f11 = ret.a;
-//│ f21 = ret.b;
-//│ tmp = runtime.safeCall(f21());
-//│ x = runtime.safeCall(tmp.toString());
-//│ tmp1 = runtime.safeCall(f11());
-//│ tmp2 = runtime.safeCall(f21());
-//│ y = runtime.safeCall(tmp2.toString());
-//│ x + y
 //│ = "01"
 //│ f1 = fun
 //│ f2 = fun
@@ -239,7 +132,6 @@ fun f(used1) =
   fun g22() = used1
   Tuple(g1(10), g22)
 
-:sjs
 :expect "11110110"
 let ret = f(1)
 let gRet = ret.a
@@ -252,22 +144,6 @@ hFun()
 let c = g2()
 let d = iFun()
 a.toString() + b + c + d
-//│ JS (unsanitized):
-//│ let ret1, gRet, g21, hFun, iFun, a, b, c, d, tmp3, tmp4, tmp5, tmp6;
-//│ ret1 = f6(1);
-//│ gRet = ret1.a;
-//│ g21 = ret1.b;
-//│ hFun = gRet.a;
-//│ iFun = gRet.b;
-//│ a = runtime.safeCall(iFun());
-//│ b = runtime.safeCall(g21());
-//│ tmp3 = runtime.safeCall(hFun());
-//│ c = runtime.safeCall(g21());
-//│ d = runtime.safeCall(iFun());
-//│ tmp4 = runtime.safeCall(a.toString());
-//│ tmp5 = tmp4 + b;
-//│ tmp6 = tmp5 + c;
-//│ tmp6 + d
 //│ = "11110110"
 //│ a = 11
 //│ b = 1
@@ -350,45 +226,12 @@ fun f() =
 f()
 //│ = 2
 
-:sjs
 :expect 2
 fun f(arg) =
   fun g(n) = if n <= 0 then arg else h(n-1)
   fun h(n) = if n <= 0 then arg else g(n-1)
   h(5)
 f(2)
-//│ JS (unsanitized):
-//│ let g9, h3, f10, h$3, g$9;
-//│ g$9 = function g$(arg, n) {
-//│   let scrut, tmp7;
-//│   scrut = n <= 0;
-//│   if (scrut === true) {
-//│     return arg
-//│   } else {
-//│     tmp7 = n - 1;
-//│     return h$3(arg, tmp7)
-//│   }
-//│ };
-//│ g9 = function g(arg) {
-//│   return (n) => {
-//│     return g$9(arg, n)
-//│   }
-//│ };
-//│ h$3 = function h$(arg, n) {
-//│   let scrut, tmp7;
-//│   scrut = n <= 0;
-//│   if (scrut === true) {
-//│     return arg
-//│   } else {
-//│     tmp7 = n - 1;
-//│     return g$9(arg, tmp7)
-//│   }
-//│ };
-//│ h3 = function h(arg) {
-//│   return (n) => { return h$3(arg, n) }
-//│ };
-//│ f10 = function f(arg) { return h$3(arg, 5) };
-//│ f10(2)
 //│ = 2
 
 :expect 1
@@ -400,20 +243,11 @@ fun f() =
 f()
 //│ = 1
 
-:sjs
 fun f() = 3
 fun g() =
   fun h() = 3
   h()
 g()
-//│ JS (unsanitized):
-//│ let h4, f14, g12;
-//│ f14 = function f() {
-//│   return 3
-//│ };
-//│ h4 = function h() { return 3 };
-//│ g12 = function g() { return h4() };
-//│ g12()
 //│ = 3
 
 :sjs
@@ -465,10 +299,11 @@ g()(1)
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
 //│ g13 = function g() {
-//│   let capture;
+//│   let capture, f$here;
 //│   capture = new g$capture1(null);
 //│   capture.y0$ = 0;
-//│   return runtime.safeCall(f15(capture))
+//│   f$here = runtime.safeCall(f15(capture));
+//│   return f$here
 //│ };
 //│ tmp7 = g13();
 //│ runtime.safeCall(tmp7(1))
@@ -488,7 +323,6 @@ ret()
 //│ ret = fun
 
 :expect 6
-:lift
 fun f(x, y, z) =
   fun g() =
     set x = 1
@@ -503,7 +337,6 @@ fun f(x, y, z) =
 f(0, 0, 0)()
 //│ = 6
 
-:sjs
 fun f(x, cond) =
   set x = 1
   set x = 2
@@ -512,33 +345,7 @@ fun f(x, cond) =
   else
     set x = 3
     () => x
-//│ JS (unsanitized):
-//│ let f18, lambda, lambda1, lambda$, lambda$1;
-//│ lambda$1 = function lambda$(x1) {
-//│   return x1
-//│ };
-//│ lambda = (undefined, function (x1) {
-//│   return () => {
-//│     return lambda$1(x1)
-//│   }
-//│ });
-//│ lambda$ = function lambda$(x1) {
-//│   return x1
-//│ };
-//│ lambda1 = (undefined, function (x1) {
-//│   return () => {
-//│     return lambda$(x1)
-//│   }
-//│ });
-//│ f18 = function f(x1, cond) {
-//│   x1 = 1;
-//│   x1 = 2;
-//│   if (cond === true) {
-//│     return runtime.safeCall(lambda(x1))
-//│   } else { x1 = 3; return runtime.safeCall(lambda1(x1)) }
-//│ };
 
-:sjs
 :expect 1
 fun f() =
   let x = 1
@@ -547,38 +354,6 @@ fun f() =
   f()
   x
 f()
-//│ JS (unsanitized):
-//│ let f19, g16, f20, f$2, f$capture15;
-//│ g16 = function g() {
-//│   return 1
-//│ };
-//│ f$2 = function f$(f$capture16) {
-//│   f$capture16.x0$ = 1;
-//│   return runtime.Unit
-//│ };
-//│ f19 = function f(f$capture16) {
-//│   return () => {
-//│     return f$2(f$capture16)
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class f$capture14 {
-//│   static {
-//│     f$capture15 = this
-//│   }
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f20 = function f() {
-//│   let tmp10, capture;
-//│   capture = new f$capture15(null);
-//│   capture.x0$ = 1;
-//│   tmp10 = f$2(capture);
-//│   return capture.x0$
-//│ };
-//│ f20()
 //│ = 1
 
 let n = 0
@@ -592,36 +367,107 @@ fun f() =
   g()
 f()
 
-:sjs
 fun f(es, vs) =
   let v' = es
   class A with
     val fld = v'
   new A
-//│ JS (unsanitized):
-//│ let A1, f23, A$;
-//│ A$ = function A$(isMut, v$_$0) {
-//│   let tmp10;
-//│   if (isMut === true) {
-//│     tmp10 = new A1(v$_$0);
-//│   } else {
-//│     tmp10 = globalThis.Object.freeze(new A1(v$_$0));
-//│   }
-//│   return tmp10
-//│ };
-//│ globalThis.Object.freeze(class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor(v$_$0) {
-//│     this["v'$0"] = v$_$0;
-//│     this.fld = this["v'$0"];
-//│   }
-//│   #v$_$0;
-//│   get ["v'$0"]() { return this.#v$_$0; }
-//│   set ["v'$0"](value) { this.#v$_$0 = value; }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ f23 = function f(es, vs) { let v$_; v$_ = es; return A$(false, v$_) };
 
+// try to avoid creating multiple closures
+
+fun f(x) =
+  fun g() = x
+  [g, g]
+
+:sjs
+fun f(x) =
+  let y
+  fun g() = y
+  if x < 0 then
+    set y = 1
+    [g, g]
+  else
+    set y = 2
+    [g, g]
+//│ JS (unsanitized):
+//│ let g19, f25, g$14;
+//│ g$14 = function g$(y1) {
+//│   return y1
+//│ };
+//│ g19 = function g(y1) {
+//│   return () => {
+//│     return g$14(y1)
+//│   }
+//│ };
+//│ f25 = function f(x1) {
+//│   let y1, scrut, g$here;
+//│   y1 = undefined;
+//│   scrut = x1 < 0;
+//│   if (scrut === true) {
+//│     y1 = 1;
+//│     g$here = runtime.safeCall(g19(y1));
+//│     return globalThis.Object.freeze([
+//│       g$here,
+//│       g$here
+//│     ])
+//│   } else {
+//│     y1 = 2;
+//│     g$here = runtime.safeCall(g19(y1));
+//│     return globalThis.Object.freeze([ g$here, g$here ])
+//│   }
+//│ };
+
+:sjs
+fun f(x) =
+  fun g() = x
+  let a = g
+  set x += 1
+  [a, g]
+//│ JS (unsanitized):
+//│ let g20, f26, g$15, f$capture17;
+//│ g$15 = function g$(f$capture18) {
+//│   return f$capture18.x0$
+//│ };
+//│ g20 = function g(f$capture18) {
+//│   return () => {
+//│     return g$15(f$capture18)
+//│   }
+//│ };
+//│ globalThis.Object.freeze(class f$capture16 {
+//│   static {
+//│     f$capture17 = this
+//│   }
+//│   constructor(x0$) {
+//│     this.x0$ = x0$;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "f$capture"]; 
+//│ });
+//│ f26 = function f(x1) {
+//│   let a1, tmp10, capture, g$here;
+//│   capture = new f$capture17(x1);
+//│   g$here = runtime.safeCall(g20(capture));
+//│   a1 = g$here;
+//│   tmp10 = capture.x0$ + 1;
+//│   capture.x0$ = tmp10;
+//│   g$here = runtime.safeCall(g20(capture));
+//│   return globalThis.Object.freeze([ a1, g$here ])
+//│ };
+
+// Can be avoided in `h` by passing the initialized closure, but this is more complicated
+// Note that automatically rewriting `fun h() = g` to `fun h() = a` would resolve this,
+// but it requires some more analysis
+fun f(x) =
+  fun g() = x
+  let a = g
+  fun h() = g
+  [a, h()]
+
+// Requires analysis of all branches
+fun f(x) =
+  fun g() = x
+  if true then
+    g
+  else
+    g
+  g
