@@ -96,7 +96,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             return
 
       output("Wasm result:")
-      s"""await wasm.binaryenRunFunc(`${modWat.mkString()}`, {"system": {"mem": new WebAssembly.Memory({initial: 100})}}, exports => exports.${mainFnNme}());"""
+      s"""await wasm.binaryenRunFunc(`${modWat.mkString()}`, {"system": {"mem": new WebAssembly.Memory({initial: 100})}}, exports => exports.${mainFnNme}(), true);"""
         .replace('\n', ' ') |> host.execute match
         case ReplHost.Result(content) =>
           output(s"= $content")

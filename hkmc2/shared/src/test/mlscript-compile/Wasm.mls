@@ -1,4 +1,5 @@
 import "binaryen"
+import "./Runtime.mls"
 
 module Wasm with ...
 
@@ -36,7 +37,11 @@ fun binaryenCompileToModule(wat, importObject): Promise =
     loadWasmBinary of modBuf, importObject
   )
 
-fun binaryenRunFunc(wat, importObject, func): Promise =
-  binaryenCompileToModule(wat, importObject).then(wasmMod =>
-    func(wasmMod.instance.exports)
-  )
+fun binaryenRunFunc(wat, importObject, func, render): Promise =
+  binaryenCompileToModule(wat, importObject)
+    .then(wasmMod =>
+      func(wasmMod.instance.exports)
+    )
+    .then(result =>
+      if render then Runtime.render(result) else result
+    )

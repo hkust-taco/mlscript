@@ -2,37 +2,38 @@
 :global
 :wasm
 
+
 false
 //│ Wasm result:
-//│ = 0
+//│ = '0'
 
 
 true
 //│ Wasm result:
-//│ = 1
+//│ = '1'
 
 
 2
 //│ Wasm result:
-//│ = 2
+//│ = '2'
 
 
 1 + 1
 //│ Wasm result:
-//│ = 2
+//│ = '2'
 
 
 let x = 0
 x
 //│ Wasm result:
-//│ = 0
+//│ = '0'
 
 
 :ge
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.33: 	foo
+//│ ║  l.34: 	foo
 //│ ╙──      	^^^
 
 
@@ -58,19 +59,19 @@ foo()
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
-//│ = 42
+//│ = '42'
 
 
 fun foo() = 42
 foo() + foo()
 //│ Wasm result:
-//│ = 84
+//│ = '84'
 
 
 fun foo(x) = x + 1
 foo(41)
 //│ Wasm result:
-//│ = 42
+//│ = '42'
 
 
 :wat
@@ -106,10 +107,10 @@ new Foo(0)
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
-//│ = [Object: null prototype] {}
+//│ = '{}'
 
 
 class Foo(val a)
 (new Foo(42)).Foo#a
 //│ Wasm result:
-//│ = 42
+//│ = '42'
