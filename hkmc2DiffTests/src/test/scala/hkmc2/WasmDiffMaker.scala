@@ -70,7 +70,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
       if wat.isSet then
         output("Wat:")
-        output(modWat.toString)
+        output(modWat.mkString())
 
       // A program with errors may have a WAT that is worth inspecting, but anything that involves
       // using Binaryen requires a valid WAT
