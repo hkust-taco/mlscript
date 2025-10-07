@@ -93,7 +93,7 @@ abstract class MLsDiffMaker extends DiffMaker:
         ,
       )),
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
-      if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
+      target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
     )
   
   
