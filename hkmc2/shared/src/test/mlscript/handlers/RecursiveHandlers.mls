@@ -183,18 +183,11 @@ str
 //│               this.pc = pc;
 //│             }
 //│             resume(value$) {
-//│               if (this.pc === 9) {
+//│               if (this.pc === 7) {
 //│                 tmp13 = value$;
 //│               }
 //│               contLoop: while (true) {
-//│                 if (this.pc === 10) {
-//│                   tmp13 = runtime.safeCall(k(arg));
-//│                   if (tmp13 instanceof runtime.EffectSig.class) {
-//│                     return this.doUnwind(tmp13, 9)
-//│                   }
-//│                   this.pc = 9;
-//│                   continue contLoop
-//│                 } else if (this.pc === 9) {
+//│                 if (this.pc === 7) {
 //│                   tmp14 = str + "A";
 //│                   str = tmp14;
 //│                   return runtime.Unit
@@ -214,7 +207,7 @@ str
 //│           str = tmp12;
 //│           tmp13 = runtime.safeCall(k(arg));
 //│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             return doUnwind1(tmp13, 9)
+//│             return doUnwind1(tmp13, 7)
 //│           }
 //│           tmp14 = str + "A";
 //│           str = tmp14;
@@ -236,11 +229,11 @@ str
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 8) {
+//│         if (this.pc === 6) {
 //│           tmp11 = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 8) {
+//│           if (this.pc === 6) {
 //│             return tmp11
 //│           }
 //│           break;
@@ -277,18 +270,11 @@ str
 //│                 this.pc = pc;
 //│               }
 //│               resume(value$) {
-//│                 if (this.pc === 4) {
+//│                 if (this.pc === 3) {
 //│                   tmp15 = value$;
 //│                 }
 //│                 contLoop: while (true) {
-//│                   if (this.pc === 5) {
-//│                     tmp15 = runtime.safeCall(k(arg));
-//│                     if (tmp15 instanceof runtime.EffectSig.class) {
-//│                       return this.doUnwind(tmp15, 4)
-//│                     }
-//│                     this.pc = 4;
-//│                     continue contLoop
-//│                   } else if (this.pc === 4) {
+//│                   if (this.pc === 3) {
 //│                     tmp16 = str + "B";
 //│                     tmp17 = str + tmp16;
 //│                     str = tmp17;
@@ -310,7 +296,7 @@ str
 //│             str = tmp14;
 //│             tmp15 = runtime.safeCall(k(arg));
 //│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               return doUnwind2(tmp15, 4)
+//│               return doUnwind2(tmp15, 3)
 //│             }
 //│             tmp16 = str + "B";
 //│             tmp17 = str + tmp16;
@@ -340,9 +326,6 @@ str
 //│           }
 //│           contLoop: while (true) {
 //│             if (this.pc === 1) {
-//│               this.pc = 3;
-//│               continue contLoop
-//│             } else if (this.pc === 3) {
 //│               res7 = runtime.safeCall(h1.perform(runtime.Unit));
 //│               if (res7 instanceof runtime.EffectSig.class) {
 //│                 return this.doUnwind(res7, 2)
@@ -374,7 +357,7 @@ str
 //│     };
 //│     tmp11 = handleBlock$8();
 //│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp11, 8)
+//│       return doUnwind(tmp11, 6)
 //│     }
 //│     return tmp11
 //│   };

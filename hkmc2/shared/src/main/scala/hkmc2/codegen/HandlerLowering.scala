@@ -207,8 +207,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // sym: the variable to which the resumed value should set
   case class BlockState(id: StateId, blk: Block, sym: Opt[Local])
   
-  // Coalesce useless states
+  // Tries to remove states that jump directly to other states
   // Note: Currently it doesn't seem to do anything, so it's not used. Maybe the states are already pretty optimal.
+  
+  /*
   def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
     val statesMap = (entryState :: states).map(state => state.id -> state).toMap
     def findEdges(state: BlockState) =
@@ -271,6 +273,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val rewrittenStates = states.map(rewriteState)
     
     (rewrittenEntry, rewrittenStates)
+  */
       
   def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
     // for some reason, functions sometimes start with Begin(End, ...)
@@ -353,6 +356,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             return PartRet(blk, Nil)
           case S(value) => value
         PartRet(StateTransition(end), Nil)
+
       case Continue(label) =>
         val (start, end) = labelIds.get(label) match
           case N => raise(InternalError(
@@ -362,6 +366,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             return PartRet(blk, Nil)
           case S(value) => value
         PartRet(StateTransition(start), Nil)
+
+      case Begin(End(_), blk) => go(blk)
 
       case Begin(sub, rest) => 
         val PartRet(restNew, restParts) = go(rest)
@@ -377,22 +383,28 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case Define(defn, rest) => 
         val PartRet(head, parts) = go(rest)
         PartRet(Define(defn, head), parts)
+
       // implicit returns is used inside constructors when call occur in tail position,
       // which may transition to `return this;` (inserted in second pass) after the implicit return
       case End(_) | Return(_, true) => afterEnd match
         case None => PartRet(FnEnd(), Nil)
         case Some(value) => PartRet(StateTransition(value), Nil)
+
       // identity cases
       case Assign(lhs, rhs, rest) =>
         val PartRet(head, parts) = go(rest)
         PartRet(Assign(lhs, rhs, head), parts)
+
       case blk @ AssignField(lhs, nme, rhs, rest) =>
         val PartRet(head, parts) = go(rest)
         PartRet(AssignField(lhs, nme, rhs, head)(blk.symbol), parts)
+
       case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
         val PartRet(head, parts) = go(rest)
         PartRet(AssignDynField(lhs, fld, arrayIdx, rhs, head), parts)
+
       case Return(_, _) => PartRet(blk, Nil)
+
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
       case Throw(_) => PartRet(blk, Nil)

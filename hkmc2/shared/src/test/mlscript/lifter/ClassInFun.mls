@@ -98,9 +98,6 @@ f() + f() + f()
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 2) {
-//│         this.pc = 6;
-//│         continue contLoop
-//│       } else if (this.pc === 6) {
 //│         this.tmp$2 = f$(this.h$0);
 //│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
 //│           return this.doUnwind(this.tmp$2, 3)
@@ -109,9 +106,6 @@ f() + f() + f()
 //│         continue contLoop
 //│       } else if (this.pc === 3) {
 //│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.pc = 5;
-//│         continue contLoop
-//│       } else if (this.pc === 5) {
 //│         this.tmp$4 = f$(this.h$0);
 //│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
 //│           return this.doUnwind(this.tmp$4, 4)
