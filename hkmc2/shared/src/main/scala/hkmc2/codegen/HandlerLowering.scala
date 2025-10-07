@@ -323,7 +323,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         
         val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
         val dfltParts = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
-        
+
         val states_ = restParts.states ::: armsParts.flatMap(_._2.states)
         val states = dfltParts match
           case N => states_
@@ -698,7 +698,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .define(clsDefn)
       .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym), Nil))
       .rest(handlerBody)
-        
+    
     val defn = FunDefn(
       N, // no owner
       sym, PlainParamList(Nil) :: Nil, body)

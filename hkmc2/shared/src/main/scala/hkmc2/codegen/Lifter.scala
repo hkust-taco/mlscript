@@ -559,7 +559,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case None => S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
         case Some(value) => S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
       case _ => N
-
+    
     if ctx.ignored(d.sym) ||
       (includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty && refBms.isEmpty) then
       d match
