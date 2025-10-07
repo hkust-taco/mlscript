@@ -209,7 +209,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   // Tries to remove states that jump directly to other states
   // Note: Currently it doesn't seem to do anything, so it's not used. Maybe the states are already pretty optimal.
-  
   /*
   def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
     val statesMap = (entryState :: states).map(state => state.id -> state).toMap
@@ -274,7 +273,34 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     (rewrittenEntry, rewrittenStates)
   */
-      
+  
+  // removes states that are not reachable from any resumption point
+  def removeUselessStates(states: Ls[BlockState], resumptionPoints: Ls[StateId]): Ls[BlockState] =
+    def findEdges(state: BlockState) =
+      var edges: Set[StateId] = Set.empty
+      new BlockTraverser:
+        applyBlock(state.blk)
+        override def applyBlock(b: Block): Unit = b match
+          case StateTransition(id) => edges += id
+          case _ => super.applyBlock(b)
+      state.id -> edges
+    // build edges
+    val edges = states.map(findEdges).toMap
+
+    var visited: Set[StateId] = Set.empty
+    var remaining: Set[StateId] = resumptionPoints.toSet
+
+    def dfs(state: StateId): Unit =
+      visited += state
+      remaining -= state
+      for e <- edges(state) do
+        if !visited.contains(e) then dfs(e)
+
+    while !remaining.isEmpty do
+      dfs(remaining.head)
+
+    states.filter(state => visited.contains(state.id))
+
   def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
     // for some reason, functions sometimes start with Begin(End, ...)
     blk match
@@ -283,17 +309,19 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     // for readability :)
     case class PartRet(head: Block, states: Ls[BlockState])
+    
+    var resumptionPoints: List[StateId] = List.empty
 
     // * returns (truncated input block, child block states)
     // * blk: The block to transform
     // * labelIds: maps label IDs to the state at the start of the label and the state after the label
-    // * jumpTo: what state End should jump to, if at all 
-    // * freshState: uid generator
+    // * afterEnd: what state End should jump to, if at all 
     // TODO: don't split within Match, Begin and Labels when not needed, ideally keep it intact.
     // Need careful analysis for this.
     def go(blk: Block)(implicit labelIds: Map[Symbol, (StateId, StateId)], afterEnd: Option[StateId]): PartRet =
       blk match
       case ResumptionPoint(result, uid, rest) =>
+        resumptionPoints ::= uid
         val PartRet(head, states) = go(rest)
         PartRet(StateTransition(uid), BlockState(uid, head, S(result)) :: states)
 
@@ -305,7 +333,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         
         val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
         val dfltParts = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
-
+        
         val states_ = restParts.states ::: armsParts.flatMap(_._2.states)
         val states = dfltParts match
           case N => states_
@@ -411,13 +439,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val PartRet(head, states) = go(blk)(using labelIds, N)
-    
-    // optParts doesn't seem to do anything, but we'll keep it just in case it's needed in the future
-    // val (headState, restStates) = optParts(BlockState(0, head, N), states)
-    val (headState, restStates) = (BlockState(0, head, N), states)
-    
-    if inclEntryPoint then headState :: restStates
-    else restStates
+
+    if inclEntryPoint then BlockState(0, head, N) :: states
+    else removeUselessStates(states, resumptionPoints)
   
   private val runtimePath = State.runtimeSymbol.asPath
   private val skipOncePath: Path = runtimePath.selN(Tree.Ident("skipOnce"))

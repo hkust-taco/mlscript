@@ -192,9 +192,7 @@ if true do
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 2) {
-//│           break contLoop
-//│         } else if (this.pc === 1) {
+//│         if (this.pc === 1) {
 //│           return res
 //│         }
 //│         break;
