@@ -87,9 +87,9 @@ class A with
 //│     A3 = this
 //│   }
 //│   constructor() {
-//│     let g$this;
-//│     g$this = runtime.safeCall(g(this));
-//│     this.x = g$this;
+//│     let g$here;
+//│     g$here = runtime.safeCall(g(this));
+//│     this.x = g$here;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 

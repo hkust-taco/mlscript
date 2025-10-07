@@ -3,7 +3,6 @@
 
 // make sure class fields are discriminated properly for immutable captures when supported
 :effectHandlers
-:sjs
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -12,282 +11,17 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, lambda, Handler$h$1, f$, Cont$func$f$$, Cont$handleBlock$h$$, lambda$;
-//│ globalThis.Object.freeze(class Effect {
-//│   static {
-//│     Effect1 = this
-//│   }
-//│   constructor() {}
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Effect"]; 
-//│ });
-//│ lambda$ = function lambda$(Handler$h$$instance, k) {
-//│   return runtime.safeCall(k())
-//│ };
-//│ lambda = (undefined, function (Handler$h$$instance) {
-//│   return (k) => {
-//│     return lambda$(Handler$h$$instance, k)
-//│   }
-//│ });
-//│ globalThis.Object.freeze(class Handler$h$ extends Effect1 {
-//│   static {
-//│     Handler$h$1 = this
-//│   }
-//│   constructor() {
-//│     let tmp1;
-//│     tmp1 = super();
-//│   }
-//│   perform() {
-//│     let lambda$this;
-//│     lambda$this = runtime.safeCall(lambda(this));
-//│     return runtime.mkEffect(this, lambda$this)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
-//│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$handleBlock$h$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
-//│   }
-//│   tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
-//│   return tmp2
-//│ };
-//│ globalThis.Object.freeze(class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$handleBlock$h$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.h$0 = h$0;
-//│       this.tmp$1 = tmp$1;
-//│       this.tmp$2 = tmp$2;
-//│       this.tmp$3 = tmp$3;
-//│       this.tmp$4 = tmp$4;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #h$0;
-//│   #tmp$1;
-//│   #tmp$2;
-//│   #tmp$3;
-//│   #tmp$4;
-//│   get h$0() { return this.#h$0; }
-//│   set h$0(value) { this.#h$0 = value; }
-//│   get tmp$1() { return this.#tmp$1; }
-//│   set tmp$1(value) { this.#tmp$1 = value; }
-//│   get tmp$2() { return this.#tmp$2; }
-//│   set tmp$2(value) { this.#tmp$2 = value; }
-//│   get tmp$3() { return this.#tmp$3; }
-//│   set tmp$3(value) { this.#tmp$3 = value; }
-//│   get tmp$4() { return this.#tmp$4; }
-//│   set tmp$4(value) { this.#tmp$4 = value; }
-//│   resume(value$) {
-//│     if (this.pc === 2) {
-//│       this.tmp$1 = value$;
-//│     } else if (this.pc === 3) {
-//│       this.tmp$2 = value$;
-//│     } else if (this.pc === 4) {
-//│       this.tmp$4 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 7) {
-//│         this.tmp$1 = f$(this.h$0);
-//│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 2;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
-//│         }
-//│         this.pc = 2;
-//│         continue contLoop
-//│       } else if (this.pc === 2) {
-//│         this.pc = 6;
-//│         continue contLoop
-//│       } else if (this.pc === 6) {
-//│         this.tmp$2 = f$(this.h$0);
-//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           this.pc = 3;
-//│           this.tmp$2.contTrace.last.next = this;
-//│           this.tmp$2.contTrace.last = this;
-//│           return this.tmp$2
-//│         }
-//│         this.pc = 3;
-//│         continue contLoop
-//│       } else if (this.pc === 3) {
-//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.pc = 5;
-//│         continue contLoop
-//│       } else if (this.pc === 5) {
-//│         this.tmp$4 = f$(this.h$0);
-//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
-//│           this.pc = 4;
-//│           this.tmp$4.contTrace.last.next = this;
-//│           this.tmp$4.contTrace.last = this;
-//│           return this.tmp$4
-//│         }
-//│         this.pc = 4;
-//│         continue contLoop
-//│       } else if (this.pc === 4) {
-//│         return this.tmp$3 + this.tmp$4
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
-//│ });
-//│ Cont$func$f$$ = function Cont$func$f$$(isMut, h$0, tmp$1, pc) {
-//│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$func$f$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$f$1(pc));
-//│   }
-//│   tmp2 = tmp1(h$0, tmp$1);
-//│   return tmp2
-//│ };
-//│ globalThis.Object.freeze(class Cont$func$f$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$f$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (h$0, tmp$1) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.h$0 = h$0;
-//│       this.tmp$1 = tmp$1;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #h$0;
-//│   #tmp$1;
-//│   get h$0() { return this.#h$0; }
-//│   set h$0(value) { this.#h$0 = value; }
-//│   get tmp$1() { return this.#tmp$1; }
-//│   set tmp$1(value) { this.#tmp$1 = value; }
-//│   resume(value$) {
-//│     if (this.pc === 0) {
-//│       this.tmp$1 = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       if (this.pc === 1) {
-//│         this.tmp$1 = runtime.safeCall(this.h$0.perform());
-//│         if (this.tmp$1 instanceof runtime.EffectSig.class) {
-//│           this.pc = 0;
-//│           this.tmp$1.contTrace.last.next = this;
-//│           this.tmp$1.contTrace.last = this;
-//│           return this.tmp$1
-//│         }
-//│         this.pc = 0;
-//│         continue contLoop
-//│       } else if (this.pc === 0) {
-//│         return 1
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$f$"]; 
-//│ });
-//│ f$ = function f$(h) {
-//│   let tmp1;
-//│   tmp1 = runtime.safeCall(h.perform());
-//│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$func$f$$(true, h, tmp1, 0);
-//│     tmp1.contTrace.last = tmp1.contTrace.last.next;
-//│     return tmp1
-//│   }
-//│   return 1
-//│ };
-//│ f = function f(h) {
-//│   return () => {
-//│     return f$(h)
-//│   }
-//│ };
-//│ handleBlock$ = function handleBlock$() {
-//│   let h, tmp1, tmp2, tmp3, tmp4;
-//│   h = new Handler$h$1();
-//│   tmp1 = f$(h);
-//│   if (tmp1 instanceof runtime.EffectSig.class) {
-//│     tmp1.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 2);
-//│     return runtime.handleBlockImpl(tmp1, h)
-//│   }
-//│   tmp2 = f$(h);
-//│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 3);
-//│     return runtime.handleBlockImpl(tmp2, h)
-//│   }
-//│   tmp3 = tmp1 + tmp2;
-//│   tmp4 = f$(h);
-//│   if (tmp4 instanceof runtime.EffectSig.class) {
-//│     tmp4.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, 4);
-//│     return runtime.handleBlockImpl(tmp4, h)
-//│   }
-//│   return tmp3 + tmp4
-//│ };
-//│ tmp = handleBlock$();
-//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
-//│ tmp
 //│ = 3
 
 :expect 1
-:sjs
 fun f(x) =
   class Test() with
     fun get() = x
   Test()
 f(1).get()
-//│ JS (unsanitized):
-//│ let Test1, f1, tmp1, Test$;
-//│ Test$ = function Test$(isMut, x$0) {
-//│   let tmp2, tmp3;
-//│   if (isMut === true) {
-//│     tmp2 = new Test1.class();
-//│   } else {
-//│     tmp2 = globalThis.Object.freeze(new Test1.class());
-//│   }
-//│   tmp3 = tmp2(x$0);
-//│   return tmp3
-//│ };
-//│ Test1 = function Test() {
-//│   return (x$0) => {
-//│     return globalThis.Object.freeze(new Test.class()(x$0));
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class Test {
-//│   static {
-//│     Test1.class = this
-//│   }
-//│   constructor() {
-//│     return (x$0) => {
-//│       this.x$0 = x$0;
-//│       return this;
-//│     }
-//│   }
-//│   #x$0;
-//│   get x$0() { return this.#x$0; }
-//│   set x$0(value) { this.#x$0 = value; }
-//│   get() {
-//│     return this.x$0
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test", []]; 
-//│ });
-//│ f1 = function f(x) { return Test$(false, x) };
-//│ tmp1 = f1(1);
-//│ runtime.safeCall(tmp1.get())
 //│ = 1
 
 :expect 1
-:sjs
 fun f(used1, unused1) =
   fun g(g_arg) =
     let used3 = 2
@@ -298,69 +32,6 @@ fun f(used1, unused1) =
     fun get() = used1
   Test(unused1)
 f(1, 2).get()
-//│ JS (unsanitized):
-//│ let h, Test3, g, f2, tmp2, Test$1, g$, h$;
-//│ h$ = function h$(used3) {
-//│   return used3
-//│ };
-//│ h = function h(used3) {
-//│   return () => {
-//│     return h$(used3)
-//│   }
-//│ };
-//│ g$ = function g$(used1, g_arg) {
-//│   let used3, tmp3;
-//│   used3 = 2;
-//│   tmp3 = h$(used3);
-//│   return used1 + tmp3
-//│ };
-//│ g = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$(used1, g_arg)
-//│   }
-//│ };
-//│ Test$1 = function Test$(isMut, used1$0, a) {
-//│   let tmp3, tmp4;
-//│   if (isMut === true) {
-//│     tmp3 = new Test3.class(a);
-//│   } else {
-//│     tmp3 = globalThis.Object.freeze(new Test3.class(a));
-//│   }
-//│   tmp4 = tmp3(used1$0);
-//│   return tmp4
-//│ };
-//│ Test3 = function Test(a) {
-//│   return (used1$0) => {
-//│     return globalThis.Object.freeze(new Test.class(a)(used1$0));
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class Test2 {
-//│   static {
-//│     Test3.class = this
-//│   }
-//│   constructor(a) {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
-//│       this.a = a;
-//│       return this;
-//│     }
-//│   }
-//│   #used1$0;
-//│   get used1$0() { return this.#used1$0; }
-//│   set used1$0(value) { this.#used1$0 = value; }
-//│   get() {
-//│     return this.used1$0
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test", ["a"]]; 
-//│ });
-//│ f2 = function f(used1, unused1) {
-//│   let unused2;
-//│   unused2 = 2;
-//│   return Test$1(false, used1, unused1)
-//│ };
-//│ tmp2 = f2(1, 2);
-//│ runtime.safeCall(tmp2.get())
 //│ = 1
 
 :expect 1
@@ -376,7 +47,6 @@ fun f(used1, unused1) =
 f(1, 2).get()
 //│ = 1
 
-:sjs
 :expect 1
 fun f(used1, unused1) =
   fun g(g_arg) =
@@ -388,62 +58,8 @@ fun f(used1, unused1) =
     fun get() = used1
   new Test
 f(1, 2).get()
-//│ JS (unsanitized):
-//│ let h2, Test7, g2, f4, tmp4, Test$3, g$2, h$2;
-//│ h$2 = function h$(used3) {
-//│   return used3
-//│ };
-//│ h2 = function h(used3) {
-//│   return () => {
-//│     return h$2(used3)
-//│   }
-//│ };
-//│ g$2 = function g$(used1, g_arg) {
-//│   let used3, tmp5;
-//│   used3 = 2;
-//│   tmp5 = h$2(used3);
-//│   return used1 + tmp5
-//│ };
-//│ g2 = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$2(used1, g_arg)
-//│   }
-//│ };
-//│ Test$3 = function Test$(isMut, used1$0) {
-//│   let tmp5;
-//│   if (isMut === true) {
-//│     tmp5 = new Test7(used1$0);
-//│   } else {
-//│     tmp5 = globalThis.Object.freeze(new Test7(used1$0));
-//│   }
-//│   return tmp5
-//│ };
-//│ globalThis.Object.freeze(class Test6 {
-//│   static {
-//│     Test7 = this
-//│   }
-//│   constructor(used1$0) {
-//│     this.used1$0 = used1$0;
-//│   }
-//│   #used1$0;
-//│   get used1$0() { return this.#used1$0; }
-//│   set used1$0(value) { this.#used1$0 = value; }
-//│   get() {
-//│     return this.used1$0
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Test"]; 
-//│ });
-//│ f4 = function f(used1, unused1) {
-//│   let unused2;
-//│   unused2 = 2;
-//│   return Test$3(false, used1)
-//│ };
-//│ tmp4 = f4(1, 2);
-//│ runtime.safeCall(tmp4.get())
 //│ = 1
 
-:sjs
 :expect 2
 fun f(x) =
   class A() with
@@ -451,61 +67,6 @@ fun f(x) =
   A().f()
   x
 f(1)
-//│ JS (unsanitized):
-//│ let A1, f5, A$, f$capture1;
-//│ A$ = function A$(isMut, f$capture$0) {
-//│   let tmp5, tmp6;
-//│   if (isMut === true) {
-//│     tmp5 = new A1.class();
-//│   } else {
-//│     tmp5 = globalThis.Object.freeze(new A1.class());
-//│   }
-//│   tmp6 = tmp5(f$capture$0);
-//│   return tmp6
-//│ };
-//│ A1 = function A() {
-//│   return (f$capture$0) => {
-//│     return globalThis.Object.freeze(new A.class()(f$capture$0));
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class A {
-//│   static {
-//│     A1.class = this
-//│   }
-//│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
-//│       return this;
-//│     }
-//│   }
-//│   #f$capture$0;
-//│   get f$capture$0() { return this.#f$capture$0; }
-//│   set f$capture$0(value) { this.#f$capture$0 = value; }
-//│   f() {
-//│     this.f$capture$0.x0$ = 2;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", []]; 
-//│ });
-//│ globalThis.Object.freeze(class f$capture {
-//│   static {
-//│     f$capture1 = this
-//│   }
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
-//│ });
-//│ f5 = function f(x) {
-//│   let tmp5, tmp6, capture;
-//│   capture = new f$capture1(x);
-//│   tmp5 = A$(false, capture);
-//│   tmp6 = runtime.safeCall(tmp5.f());
-//│   return capture.x0$
-//│ };
-//│ f5(1)
 //│ = 2
 
 // only w should be in a capture
@@ -679,7 +240,6 @@ f().get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 0
 
-:sjs
 :lift
 :w
 fun f(x) =
@@ -690,38 +250,6 @@ fun f(x) =
   let foo = Test
   foo()
 f(2).get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ JS (unsanitized):
-//│ let h3, f9, tmp9, h$3;
-//│ h$3 = function h$(Test$instance, x) {
-//│   return x
-//│ };
-//│ h3 = function h(Test$instance, x) {
-//│   return () => {
-//│     return h$3(Test$instance, x)
-//│   }
-//│ };
-//│ f9 = function f(x) {
-//│   let Test10, foo1;
-//│   Test10 = function Test() {
-//│     return globalThis.Object.freeze(new Test.class());
-//│   };
-//│   globalThis.Object.freeze(class Test9 {
-//│     static {
-//│       Test10.class = this
-//│     }
-//│     constructor() {}
-//│     get() {
-//│       return h$3(this, x)
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Test", []]; 
-//│   });
-//│   foo1 = Test10;
-//│   return runtime.safeCall(foo1())
-//│ };
-//│ tmp9 = f9(2);
-//│ runtime.safeCall(tmp9.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2
 
