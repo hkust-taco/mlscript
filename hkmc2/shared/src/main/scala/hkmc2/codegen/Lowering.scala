@@ -1019,6 +1019,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val l = new TempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))
   
+  
   def program(main: st.Blk): Program =
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
