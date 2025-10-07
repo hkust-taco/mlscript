@@ -886,6 +886,9 @@ final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extend
     flags.show + sym
 
 
+object Param:
+  def simple(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
+
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness) 
 extends Declaration, AutoLocated:
   var fldSym: Opt[FieldSymbol] = N

@@ -13,7 +13,7 @@ fun f() =
   1
 f() + f() + f()
 //│ JS (unsanitized):
-//│ let f, Effect1, tmp, handleBlock$, Cont$func$f$1, doUnwind, Cont$handleBlock$h$1, doUnwind1, hdlrFun, Handler$h$1, f$, doUnwind$, Cont$func$f$$, doUnwind$1, Cont$handleBlock$h$$, hdlrFun$;
+//│ let Effect1, tmp, handleBlock$, Cont$func$f$1, Cont$handleBlock$h$1, hdlrFun, Handler$h$1, f$, doUnwind$, Cont$func$f$$, doUnwind$1, Cont$handleBlock$h$$, hdlrFun$;
 //│ globalThis.Object.freeze(class Effect {
 //│   static {
 //│     Effect1 = this
@@ -46,74 +46,74 @@ f() + f() + f()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│ });
-//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, h$0, tmp$1, tmp$2, tmp$3, tmp$4, pc) {
-//│   let tmp1, tmp2;
+//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, h, tmp1, tmp2, tmp3, tmp4, pc) {
+//│   let tmp5, tmp6;
 //│   if (isMut === true) {
-//│     tmp1 = new Cont$handleBlock$h$1(pc);
+//│     tmp5 = new Cont$handleBlock$h$1(pc);
 //│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
+//│     tmp5 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
 //│   }
-//│   tmp2 = tmp1(h$0, tmp$1, tmp$2, tmp$3, tmp$4);
-//│   return tmp2
+//│   tmp6 = tmp5(h, tmp1, tmp2, tmp3, tmp4);
+//│   return tmp6
 //│ };
 //│ globalThis.Object.freeze(class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
 //│   static {
 //│     Cont$handleBlock$h$1 = this
 //│   }
 //│   constructor(pc) {
-//│     return (h$0, tmp$1, tmp$2, tmp$3, tmp$4) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.h$0 = h$0;
-//│       this.tmp$1 = tmp$1;
-//│       this.tmp$2 = tmp$2;
-//│       this.tmp$3 = tmp$3;
-//│       this.tmp$4 = tmp$4;
+//│     return (h, tmp1, tmp2, tmp3, tmp4) => {
+//│       let tmp5;
+//│       tmp5 = super(null);
+//│       this.h = h;
+//│       this.tmp = tmp1;
+//│       this.tmp = tmp2;
+//│       this.tmp = tmp3;
+//│       this.tmp = tmp4;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
-//│   #h$0;
-//│   #tmp$1;
-//│   #tmp$2;
-//│   #tmp$3;
-//│   #tmp$4;
-//│   get h$0() { return this.#h$0; }
-//│   set h$0(value) { this.#h$0 = value; }
-//│   get tmp$1() { return this.#tmp$1; }
-//│   set tmp$1(value) { this.#tmp$1 = value; }
-//│   get tmp$2() { return this.#tmp$2; }
-//│   set tmp$2(value) { this.#tmp$2 = value; }
-//│   get tmp$3() { return this.#tmp$3; }
-//│   set tmp$3(value) { this.#tmp$3 = value; }
-//│   get tmp$4() { return this.#tmp$4; }
-//│   set tmp$4(value) { this.#tmp$4 = value; }
+//│   #h;
+//│   #tmp;
+//│   #tmp1;
+//│   #tmp2;
+//│   #tmp3;
+//│   get h() { return this.#h; }
+//│   set h(value) { this.#h = value; }
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
+//│   get tmp() { return this.#tmp1; }
+//│   set tmp(value) { this.#tmp1 = value; }
+//│   get tmp() { return this.#tmp2; }
+//│   set tmp(value) { this.#tmp2 = value; }
+//│   get tmp() { return this.#tmp3; }
+//│   set tmp(value) { this.#tmp3 = value; }
 //│   resume(value$) {
 //│     if (this.pc === 2) {
-//│       this.tmp$1 = value$;
+//│       this.tmp = value$;
 //│     } else if (this.pc === 3) {
-//│       this.tmp$2 = value$;
+//│       this.tmp = value$;
 //│     } else if (this.pc === 4) {
-//│       this.tmp$4 = value$;
+//│       this.tmp = value$;
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 2) {
-//│         this.tmp$2 = f$(this.h$0);
-//│         if (this.tmp$2 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$2, 3)
+//│         this.tmp = f$(this.h);
+//│         if (this.tmp instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp, 3)
 //│         }
 //│         this.pc = 3;
 //│         continue contLoop
 //│       } else if (this.pc === 3) {
-//│         this.tmp$3 = this.tmp$1 + this.tmp$2;
-//│         this.tmp$4 = f$(this.h$0);
-//│         if (this.tmp$4 instanceof runtime.EffectSig.class) {
-//│           return this.doUnwind(this.tmp$4, 4)
+//│         this.tmp = this.tmp + this.tmp;
+//│         this.tmp = f$(this.h);
+//│         if (this.tmp instanceof runtime.EffectSig.class) {
+//│           return this.doUnwind(this.tmp, 4)
 //│         }
 //│         this.pc = 4;
 //│         continue contLoop
 //│       } else if (this.pc === 4) {
-//│         return this.tmp$3 + this.tmp$4
+//│         return this.tmp + this.tmp
 //│       }
 //│       break;
 //│     }
@@ -125,40 +125,35 @@ f() + f() + f()
 //│   res.contTrace.last.next = Cont$handleBlock$h$$(true, h, tmp1, tmp2, tmp3, tmp4, pc);
 //│   return runtime.handleBlockImpl(res, h)
 //│ };
-//│ doUnwind1 = function doUnwind(h, tmp1, tmp2, tmp3, tmp4) {
-//│   return (res, pc) => {
-//│     return doUnwind$1(h, tmp1, tmp2, tmp3, tmp4, res, pc)
-//│   }
-//│ };
-//│ Cont$func$f$$ = function Cont$func$f$$(isMut, tmp$0, pc) {
-//│   let tmp1, tmp2;
+//│ Cont$func$f$$ = function Cont$func$f$$(isMut, tmp1, pc) {
+//│   let tmp2, tmp3;
 //│   if (isMut === true) {
-//│     tmp1 = new Cont$func$f$1(pc);
+//│     tmp2 = new Cont$func$f$1(pc);
 //│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$f$1(pc));
+//│     tmp2 = globalThis.Object.freeze(new Cont$func$f$1(pc));
 //│   }
-//│   tmp2 = tmp1(tmp$0);
-//│   return tmp2
+//│   tmp3 = tmp2(tmp1);
+//│   return tmp3
 //│ };
 //│ globalThis.Object.freeze(class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│   static {
 //│     Cont$func$f$1 = this
 //│   }
 //│   constructor(pc) {
-//│     return (tmp$0) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.tmp$0 = tmp$0;
+//│     return (tmp1) => {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.tmp = tmp1;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
-//│   #tmp$0;
-//│   get tmp$0() { return this.#tmp$0; }
-//│   set tmp$0(value) { this.#tmp$0 = value; }
+//│   #tmp;
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
 //│   resume(value$) {
 //│     if (this.pc === 1) {
-//│       this.tmp$0 = value$;
+//│       this.tmp = value$;
 //│     }
 //│     contLoop: while (true) {
 //│       if (this.pc === 1) {
@@ -175,11 +170,6 @@ f() + f() + f()
 //│   res.contTrace.last = res.contTrace.last.next;
 //│   return res
 //│ };
-//│ doUnwind = function doUnwind(tmp1) {
-//│   return (res, pc) => {
-//│     return doUnwind$(tmp1, res, pc)
-//│   }
-//│ };
 //│ f$ = function f$(h) {
 //│   let tmp1;
 //│   tmp1 = runtime.safeCall(h.perform());
@@ -187,11 +177,6 @@ f() + f() + f()
 //│     return doUnwind$(tmp1, tmp1, 1)
 //│   }
 //│   return 1
-//│ };
-//│ f = function f(h) {
-//│   return () => {
-//│     return f$(h)
-//│   }
 //│ };
 //│ handleBlock$ = function handleBlock$() {
 //│   let h, tmp1, tmp2, tmp3, tmp4;
@@ -214,7 +199,7 @@ f() + f() + f()
 //│ tmp = handleBlock$();
 //│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
 //│ tmp
-//│ = 3
+//│ = 2
 
 :expect 1
 :sjs
@@ -224,20 +209,20 @@ fun f(x) =
   Test()
 f(1).get()
 //│ JS (unsanitized):
-//│ let Test1, f1, tmp1, Test$;
-//│ Test$ = function Test$(isMut, x$0) {
+//│ let Test1, f, tmp1, Test$;
+//│ Test$ = function Test$(isMut, x) {
 //│   let tmp2, tmp3;
 //│   if (isMut === true) {
 //│     tmp2 = new Test1.class();
 //│   } else {
 //│     tmp2 = globalThis.Object.freeze(new Test1.class());
 //│   }
-//│   tmp3 = tmp2(x$0);
+//│   tmp3 = tmp2(x);
 //│   return tmp3
 //│ };
 //│ Test1 = function Test() {
-//│   return (x$0) => {
-//│     return globalThis.Object.freeze(new Test.class()(x$0));
+//│   return (x) => {
+//│     return globalThis.Object.freeze(new Test.class()(x));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class Test {
@@ -245,22 +230,22 @@ f(1).get()
 //│     Test1.class = this
 //│   }
 //│   constructor() {
-//│     return (x$0) => {
-//│       this.x$0 = x$0;
+//│     return (x) => {
+//│       this.x = x;
 //│       return this;
 //│     }
 //│   }
-//│   #x$0;
-//│   get x$0() { return this.#x$0; }
-//│   set x$0(value) { this.#x$0 = value; }
+//│   #x;
+//│   get x() { return this.#x; }
+//│   set x(value) { this.#x = value; }
 //│   get() {
-//│     return this.x$0
+//│     return this.x
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test", []]; 
 //│ });
-//│ f1 = function f(x) { return Test$(false, x) };
-//│ tmp1 = f1(1);
+//│ f = function f(x) { return Test$(false, x) };
+//│ tmp1 = f(1);
 //│ runtime.safeCall(tmp1.get())
 //│ = 1
 
@@ -277,14 +262,9 @@ fun f(used1, unused1) =
   Test(unused1)
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h, Test3, g, f2, tmp2, Test$1, g$, h$;
+//│ let Test3, f1, tmp2, Test$1, g$, h$;
 //│ h$ = function h$(used3) {
 //│   return used3
-//│ };
-//│ h = function h(used3) {
-//│   return () => {
-//│     return h$(used3)
-//│   }
 //│ };
 //│ g$ = function g$(used1, g_arg) {
 //│   let used3, tmp3;
@@ -292,24 +272,19 @@ f(1, 2).get()
 //│   tmp3 = h$(used3);
 //│   return used1 + tmp3
 //│ };
-//│ g = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$(used1, g_arg)
-//│   }
-//│ };
-//│ Test$1 = function Test$(isMut, used1$0, a) {
+//│ Test$1 = function Test$(isMut, used1, a) {
 //│   let tmp3, tmp4;
 //│   if (isMut === true) {
 //│     tmp3 = new Test3.class(a);
 //│   } else {
 //│     tmp3 = globalThis.Object.freeze(new Test3.class(a));
 //│   }
-//│   tmp4 = tmp3(used1$0);
+//│   tmp4 = tmp3(used1);
 //│   return tmp4
 //│ };
 //│ Test3 = function Test(a) {
-//│   return (used1$0) => {
-//│     return globalThis.Object.freeze(new Test.class(a)(used1$0));
+//│   return (used1) => {
+//│     return globalThis.Object.freeze(new Test.class(a)(used1));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class Test2 {
@@ -317,27 +292,27 @@ f(1, 2).get()
 //│     Test3.class = this
 //│   }
 //│   constructor(a) {
-//│     return (used1$0) => {
-//│       this.used1$0 = used1$0;
+//│     return (used1) => {
+//│       this.used1 = used1;
 //│       this.a = a;
 //│       return this;
 //│     }
 //│   }
-//│   #used1$0;
-//│   get used1$0() { return this.#used1$0; }
-//│   set used1$0(value) { this.#used1$0 = value; }
+//│   #used1;
+//│   get used1() { return this.#used1; }
+//│   set used1(value) { this.#used1 = value; }
 //│   get() {
-//│     return this.used1$0
+//│     return this.used1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test", ["a"]]; 
 //│ });
-//│ f2 = function f(used1, unused1) {
+//│ f1 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
 //│   return Test$1(false, used1, unused1)
 //│ };
-//│ tmp2 = f2(1, 2);
+//│ tmp2 = f1(1, 2);
 //│ runtime.safeCall(tmp2.get())
 //│ = 1
 
@@ -367,14 +342,9 @@ fun f(used1, unused1) =
   new Test
 f(1, 2).get()
 //│ JS (unsanitized):
-//│ let h2, Test7, g2, f4, tmp4, Test$3, g$2, h$2;
+//│ let Test7, f3, tmp4, Test$3, g$2, h$2;
 //│ h$2 = function h$(used3) {
 //│   return used3
-//│ };
-//│ h2 = function h(used3) {
-//│   return () => {
-//│     return h$2(used3)
-//│   }
 //│ };
 //│ g$2 = function g$(used1, g_arg) {
 //│   let used3, tmp5;
@@ -382,17 +352,12 @@ f(1, 2).get()
 //│   tmp5 = h$2(used3);
 //│   return used1 + tmp5
 //│ };
-//│ g2 = function g(used1) {
-//│   return (g_arg) => {
-//│     return g$2(used1, g_arg)
-//│   }
-//│ };
-//│ Test$3 = function Test$(isMut, used1$0) {
+//│ Test$3 = function Test$(isMut, used1) {
 //│   let tmp5;
 //│   if (isMut === true) {
-//│     tmp5 = new Test7(used1$0);
+//│     tmp5 = new Test7(used1);
 //│   } else {
-//│     tmp5 = globalThis.Object.freeze(new Test7(used1$0));
+//│     tmp5 = globalThis.Object.freeze(new Test7(used1));
 //│   }
 //│   return tmp5
 //│ };
@@ -400,24 +365,24 @@ f(1, 2).get()
 //│   static {
 //│     Test7 = this
 //│   }
-//│   constructor(used1$0) {
-//│     this.used1$0 = used1$0;
+//│   constructor(used1) {
+//│     this.used1 = used1;
 //│   }
-//│   #used1$0;
-//│   get used1$0() { return this.#used1$0; }
-//│   set used1$0(value) { this.#used1$0 = value; }
+//│   #used1;
+//│   get used1() { return this.#used1; }
+//│   set used1(value) { this.#used1 = value; }
 //│   get() {
-//│     return this.used1$0
+//│     return this.used1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
-//│ f4 = function f(used1, unused1) {
+//│ f3 = function f(used1, unused1) {
 //│   let unused2;
 //│   unused2 = 2;
 //│   return Test$3(false, used1)
 //│ };
-//│ tmp4 = f4(1, 2);
+//│ tmp4 = f3(1, 2);
 //│ runtime.safeCall(tmp4.get())
 //│ = 1
 
@@ -430,20 +395,20 @@ fun f(x) =
   x
 f(1)
 //│ JS (unsanitized):
-//│ let A1, f5, A$, f$capture1;
-//│ A$ = function A$(isMut, f$capture$0) {
+//│ let A1, f4, A$, f$capture1;
+//│ A$ = function A$(isMut, f$capture2) {
 //│   let tmp5, tmp6;
 //│   if (isMut === true) {
 //│     tmp5 = new A1.class();
 //│   } else {
 //│     tmp5 = globalThis.Object.freeze(new A1.class());
 //│   }
-//│   tmp6 = tmp5(f$capture$0);
+//│   tmp6 = tmp5(f$capture2);
 //│   return tmp6
 //│ };
 //│ A1 = function A() {
-//│   return (f$capture$0) => {
-//│     return globalThis.Object.freeze(new A.class()(f$capture$0));
+//│   return (f$capture2) => {
+//│     return globalThis.Object.freeze(new A.class()(f$capture2));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class A {
@@ -451,16 +416,16 @@ f(1)
 //│     A1.class = this
 //│   }
 //│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
+//│     return (f$capture2) => {
+//│       this.f$capture = f$capture2;
 //│       return this;
 //│     }
 //│   }
-//│   #f$capture$0;
-//│   get f$capture$0() { return this.#f$capture$0; }
-//│   set f$capture$0(value) { this.#f$capture$0 = value; }
+//│   #f$capture;
+//│   get f$capture() { return this.#f$capture; }
+//│   set f$capture(value) { this.#f$capture = value; }
 //│   f() {
-//│     this.f$capture$0.x0$ = 2;
+//│     this.f$capture.x$capture$0 = 2;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -470,20 +435,20 @@ f(1)
 //│   static {
 //│     f$capture1 = this
 //│   }
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
+//│   constructor(x$capture$0) {
+//│     this.x$capture$0 = x$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
-//│ f5 = function f(x) {
+//│ f4 = function f(x) {
 //│   let tmp5, tmp6, capture;
 //│   capture = new f$capture1(x);
 //│   tmp5 = A$(false, capture);
 //│   tmp6 = runtime.safeCall(tmp5.f());
-//│   return capture.x0$
+//│   return capture.x$capture$0
 //│ };
-//│ f5(1)
+//│ f4(1)
 //│ = 2
 
 // only w should be in a capture
@@ -505,20 +470,20 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
-//│ Good$ = function Good$(isMut, x$1, y$2, z$3, f$capture$0) {
+//│ let Bad1, Good1, f5, tmp5, Bad$, Good$, f$capture3;
+//│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp6, tmp7;
 //│   if (isMut === true) {
 //│     tmp6 = new Good1.class();
 //│   } else {
 //│     tmp6 = globalThis.Object.freeze(new Good1.class());
 //│   }
-//│   tmp7 = tmp6(x$1, y$2, z$3, f$capture$0);
+//│   tmp7 = tmp6(x, y, z, f$capture4);
 //│   return tmp7
 //│ };
 //│ Good1 = function Good() {
-//│   return (x$1, y$2, z$3, f$capture$0) => {
-//│     return globalThis.Object.freeze(new Good.class()(x$1, y$2, z$3, f$capture$0));
+//│   return (x, y, z, f$capture4) => {
+//│     return globalThis.Object.freeze(new Good.class()(x, y, z, f$capture4));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class Good {
@@ -526,49 +491,49 @@ f().foo()
 //│     Good1.class = this
 //│   }
 //│   constructor() {
-//│     return (x$1, y$2, z$3, f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
-//│       this.x$1 = x$1;
-//│       this.y$2 = y$2;
-//│       this.z$3 = z$3;
+//│     return (x, y, z, f$capture4) => {
+//│       this.f$capture = f$capture4;
+//│       this.x = x;
+//│       this.y = y;
+//│       this.z = z;
 //│       return this;
 //│     }
 //│   }
-//│   #f$capture$0;
-//│   #x$1;
-//│   #y$2;
-//│   #z$3;
-//│   get f$capture$0() { return this.#f$capture$0; }
-//│   set f$capture$0(value) { this.#f$capture$0 = value; }
-//│   get x$1() { return this.#x$1; }
-//│   set x$1(value) { this.#x$1 = value; }
-//│   get y$2() { return this.#y$2; }
-//│   set y$2(value) { this.#y$2 = value; }
-//│   get z$3() { return this.#z$3; }
-//│   set z$3(value) { this.#z$3 = value; }
+//│   #f$capture;
+//│   #x;
+//│   #y;
+//│   #z;
+//│   get f$capture() { return this.#f$capture; }
+//│   set f$capture(value) { this.#f$capture = value; }
+//│   get x() { return this.#x; }
+//│   set x(value) { this.#x = value; }
+//│   get y() { return this.#y; }
+//│   set y(value) { this.#y = value; }
+//│   get z() { return this.#z; }
+//│   set z(value) { this.#z = value; }
 //│   foo() {
 //│     let tmp6, tmp7;
-//│     this.z$3 = 100;
-//│     tmp6 = this.x$1 + this.y$2;
-//│     tmp7 = tmp6 + this.z$3;
-//│     return tmp7 + this.f$capture$0.w0$
+//│     this.z = 100;
+//│     tmp6 = this.x + this.y;
+//│     tmp7 = tmp6 + this.z;
+//│     return tmp7 + this.f$capture.w$capture$0
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Good", []]; 
 //│ });
-//│ Bad$ = function Bad$(isMut, f$capture$0) {
+//│ Bad$ = function Bad$(isMut, f$capture4) {
 //│   let tmp6, tmp7;
 //│   if (isMut === true) {
 //│     tmp6 = new Bad1.class();
 //│   } else {
 //│     tmp6 = globalThis.Object.freeze(new Bad1.class());
 //│   }
-//│   tmp7 = tmp6(f$capture$0);
+//│   tmp7 = tmp6(f$capture4);
 //│   return tmp7
 //│ };
 //│ Bad1 = function Bad() {
-//│   return (f$capture$0) => {
-//│     return globalThis.Object.freeze(new Bad.class()(f$capture$0));
+//│   return (f$capture4) => {
+//│     return globalThis.Object.freeze(new Bad.class()(f$capture4));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class Bad {
@@ -576,16 +541,16 @@ f().foo()
 //│     Bad1.class = this
 //│   }
 //│   constructor() {
-//│     return (f$capture$0) => {
-//│       this.f$capture$0 = f$capture$0;
+//│     return (f$capture4) => {
+//│       this.f$capture = f$capture4;
 //│       return this;
 //│     }
 //│   }
-//│   #f$capture$0;
-//│   get f$capture$0() { return this.#f$capture$0; }
-//│   set f$capture$0(value) { this.#f$capture$0 = value; }
+//│   #f$capture;
+//│   get f$capture() { return this.#f$capture; }
+//│   set f$capture(value) { this.#f$capture = value; }
 //│   foo() {
-//│     this.f$capture$0.w0$ = 10000;
+//│     this.f$capture.w$capture$0 = 10000;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -595,24 +560,24 @@ f().foo()
 //│   static {
 //│     f$capture3 = this
 //│   }
-//│   constructor(w0$) {
-//│     this.w0$ = w0$;
+//│   constructor(w$capture$0) {
+//│     this.w$capture$0 = w$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
-//│ f6 = function f() {
+//│ f5 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;
 //│   capture = new f$capture3(null);
 //│   x = 1;
 //│   y = 10;
 //│   z = 10;
-//│   capture.w0$ = 1000;
+//│   capture.w$capture$0 = 1000;
 //│   tmp6 = Bad$(false, capture);
 //│   tmp7 = runtime.safeCall(tmp6.foo());
 //│   return Good$(false, x, y, z, capture)
 //│ };
-//│ tmp5 = f6();
+//│ tmp5 = f5();
 //│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
@@ -670,17 +635,12 @@ fun f(x) =
 f(2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ JS (unsanitized):
-//│ let h3, f9, tmp9, h$3;
+//│ let f8, tmp9, h$3;
 //│ h$3 = function h$(Test$instance, x) {
 //│   return x
 //│ };
-//│ h3 = function h(Test$instance, x) {
-//│   return () => {
-//│     return h$3(Test$instance, x)
-//│   }
-//│ };
-//│ f9 = function f(x) {
-//│   let Test10, foo1;
+//│ f8 = function f(x) {
+//│   let Test10, foo;
 //│   Test10 = function Test() {
 //│     return globalThis.Object.freeze(new Test.class());
 //│   };
@@ -695,10 +655,10 @@ f(2).get()
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Test", []]; 
 //│   });
-//│   foo1 = Test10;
-//│   return runtime.safeCall(foo1())
+//│   foo = Test10;
+//│   return runtime.safeCall(foo())
 //│ };
-//│ tmp9 = f9(2);
+//│ tmp9 = f8(2);
 //│ runtime.safeCall(tmp9.get())
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
 //│ = 2

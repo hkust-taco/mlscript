@@ -21,15 +21,15 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, Cont$func$hi$1, doUnwind, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
-//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n$0, pc) {
+//│ let hi, Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
+//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
 //│   let tmp, tmp1;
 //│   if (isMut === true) {
 //│     tmp = new Cont$func$hi$1(pc);
 //│   } else {
 //│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
 //│   }
-//│   tmp1 = tmp(n$0);
+//│   tmp1 = tmp(n);
 //│   return tmp1
 //│ };
 //│ globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
@@ -37,20 +37,19 @@ hi(0)
 //│     Cont$func$hi$1 = this
 //│   }
 //│   constructor(pc) {
-//│     return (n$0) => {
+//│     return (n) => {
 //│       let tmp;
 //│       tmp = super(null);
-//│       this.n$0 = n$0;
+//│       this.n = n;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
-//│   #n$0;
-//│   get n$0() { return this.#n$0; }
-//│   set n$0(value) { this.#n$0 = value; }
+//│   #n;
+//│   get n() { return this.#n; }
+//│   set n(value) { this.#n = value; }
 //│   resume(value$) {
-//│     runtime.skipOnce = true;
-//│     return hi(this.n$0)
+//│     return hi(this.n)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
@@ -59,11 +58,6 @@ hi(0)
 //│   res1.contTrace.last.next = Cont$func$hi$$(true, n, pc);
 //│   res1.contTrace.last = res1.contTrace.last.next;
 //│   return res1
-//│ };
-//│ doUnwind = function doUnwind(n) {
-//│   return (res1, pc) => {
-//│     return doUnwind$(n, res1, pc)
-//│   }
 //│ };
 //│ hi = function hi(n) {
 //│   let scrut, tmp, stackDelayRes;
@@ -98,50 +92,49 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, Cont$func$sum$1, doUnwind1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n$0, tmp$1, pc) {
-//│   let tmp, tmp1;
+//│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
+//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
+//│   let tmp1, tmp2;
 //│   if (isMut === true) {
-//│     tmp = new Cont$func$sum$1(pc);
+//│     tmp1 = new Cont$func$sum$1(pc);
 //│   } else {
-//│     tmp = globalThis.Object.freeze(new Cont$func$sum$1(pc));
+//│     tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
 //│   }
-//│   tmp1 = tmp(n$0, tmp$1);
-//│   return tmp1
+//│   tmp2 = tmp1(n, tmp);
+//│   return tmp2
 //│ };
 //│ globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│   static {
 //│     Cont$func$sum$1 = this
 //│   }
 //│   constructor(pc) {
-//│     return (n$0, tmp$1) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.n$0 = n$0;
-//│       this.tmp$1 = tmp$1;
+//│     return (n, tmp) => {
+//│       let tmp1;
+//│       tmp1 = super(null);
+//│       this.n = n;
+//│       this.tmp = tmp;
 //│       this.pc = pc;
 //│       return this;
 //│     }
 //│   }
-//│   #n$0;
-//│   #tmp$1;
-//│   get n$0() { return this.#n$0; }
-//│   set n$0(value) { this.#n$0 = value; }
-//│   get tmp$1() { return this.#tmp$1; }
-//│   set tmp$1(value) { this.#tmp$1 = value; }
+//│   #n;
+//│   #tmp;
+//│   get n() { return this.#n; }
+//│   set n(value) { this.#n = value; }
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
 //│   resume(value$) {
 //│     let curDepth;
 //│     curDepth = runtime.stackDepth;
 //│     if (this.pc === 1) {
-//│       this.tmp$1 = value$;
+//│       this.tmp = value$;
 //│     }
 //│     contLoop: while (true) {
 //│       runtime.stackDepth = curDepth;
 //│       if (this.pc === 0) {
-//│         runtime.skipOnce = true;
-//│         return sum1(this.n$0)
+//│         return sum1(this.n)
 //│       } else if (this.pc === 1) {
-//│         return this.n$0 + this.tmp$1
+//│         return this.n + this.tmp
 //│       }
 //│       break;
 //│     }
@@ -153,11 +146,6 @@ sum(10000)
 //│   res2.contTrace.last.next = Cont$func$sum$$(true, n, tmp, pc);
 //│   res2.contTrace.last = res2.contTrace.last.next;
 //│   return res2
-//│ };
-//│ doUnwind1 = function doUnwind(n, tmp) {
-//│   return (res2, pc) => {
-//│     return doUnwind$1(n, tmp, res2, pc)
-//│   }
 //│ };
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1, curDepth, stackDelayRes;

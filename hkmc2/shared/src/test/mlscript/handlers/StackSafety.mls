@@ -33,7 +33,6 @@ hi(0)
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       runtime.skipOnce = true;
 //│       return hi(n)
 //│     }
 //│     toString() { return runtime.render(this); }
@@ -97,7 +96,6 @@ sum(10000)
 //│       contLoop: while (true) {
 //│         runtime.stackDepth = curDepth1;
 //│         if (this.pc === 0) {
-//│           runtime.skipOnce = true;
 //│           return sum1(n)
 //│         } else if (this.pc === 1) {
 //│           return n + tmp1
@@ -308,3 +306,59 @@ h.whoops()
 //│ = 0
 //│ depth = 50000
 
+// TODO: the stack depth is not accurately tracked in the runtime functions
+// for now this works, but it's not very safe
+:effectHandlers
+:stackSafe
+:expect 10000
+fun dummy = ()
+fun f(h) =
+  let n = 0
+  while n < 100000 do
+    h.perform()
+    set n += 1
+  n
+handle h = Object with
+  fun perform()(k) = 
+    k()
+f(h)
+//│ = 10000
+
+abstract class Eff with
+  fun raise()
+
+:re
+:effectHandlers
+fun shift_stack(n, f) =
+  if n >= 0 then
+    shift_stack(n - 1, f)
+  else
+    f()
+fun handler_stack(n) =
+  handle h = Eff with
+    fun raise()(k) =
+      shift_stack(100, k)
+  h.raise()
+  if n >= 0 do
+    handler_stack(n - 1)
+  "ok"
+handler_stack(100)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+:stackSafe
+:effectHandlers
+fun shift_stack(n, f) =
+  if n >= 0 then
+    shift_stack(n - 1, f)
+  else
+    f()
+fun handler_stack(n) =
+  handle h = Eff with
+    fun raise()(k) =
+      shift_stack(100, k)
+  h.raise()
+  if n >= 0 do
+    handler_stack(n - 1)
+  "ok"
+handler_stack(100)
+//│ = "ok"

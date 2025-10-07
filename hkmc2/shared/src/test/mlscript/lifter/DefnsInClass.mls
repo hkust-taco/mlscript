@@ -8,19 +8,19 @@ data class A(x) with
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
 //│ let B1, A1, B$;
-//│ B$ = function B$(isMut, A$instance$0, y) {
+//│ B$ = function B$(isMut, A$instance, y) {
 //│   let tmp, tmp1;
 //│   if (isMut === true) {
 //│     tmp = new B1.class(y);
 //│   } else {
 //│     tmp = globalThis.Object.freeze(new B1.class(y));
 //│   }
-//│   tmp1 = tmp(A$instance$0);
+//│   tmp1 = tmp(A$instance);
 //│   return tmp1
 //│ };
 //│ B1 = function B(y) {
-//│   return (A$instance$0) => {
-//│     return globalThis.Object.freeze(new B.class(y)(A$instance$0));
+//│   return (A$instance) => {
+//│     return globalThis.Object.freeze(new B.class(y)(A$instance));
 //│   }
 //│ };
 //│ globalThis.Object.freeze(class B {
@@ -28,17 +28,17 @@ data class A(x) with
 //│     B1.class = this
 //│   }
 //│   constructor(y) {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
+//│     return (A$instance) => {
+//│       this.A$instance = A$instance;
 //│       this.y = y;
 //│       return this;
 //│     }
 //│   }
-//│   #A$instance$0;
-//│   get A$instance$0() { return this.#A$instance$0; }
-//│   set A$instance$0(value) { this.#A$instance$0 = value; }
+//│   #A$instance;
+//│   get A$instance() { return this.#A$instance; }
+//│   set A$instance(value) { this.#A$instance = value; }
 //│   getB() {
-//│     return this.A$instance$0.x + this.y
+//│     return this.A$instance.x + this.y
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "B", ["y"]]; 

@@ -922,22 +922,16 @@ globalThis.Object.freeze(class Runtime {
     return tmp4
   } 
   static checkDepth() {
-    let scrut, scrut1, tmp, lambda;
-    scrut1 = Runtime.skipOnce;
-    if (scrut1 === true) {
-      Runtime.skipOnce = false;
-      return runtime.Unit
+    let scrut, tmp, lambda;
+    tmp = Runtime.stackDepth >= Runtime.stackLimit;
+    lambda = (undefined, function () {
+      return Runtime.stackHandler !== null
+    });
+    scrut = runtime.short_and(tmp, lambda);
+    if (scrut === true) {
+      return runtime.safeCall(Runtime.stackHandler.delay())
     } else {
-      tmp = Runtime.stackDepth >= Runtime.stackLimit;
-      lambda = (undefined, function () {
-        return Runtime.stackHandler !== null
-      });
-      scrut = runtime.short_and(tmp, lambda);
-      if (scrut === true) {
-        return runtime.safeCall(Runtime.stackHandler.delay())
-      } else {
-        return runtime.Unit
-      }
+      return runtime.Unit
     }
   } 
   static runStackSafe(limit, f) {
@@ -955,6 +949,7 @@ globalThis.Object.freeze(class Runtime {
         Runtime.stackResume = null;
         tmp = runtime.safeCall(saved());
         result = tmp;
+        Runtime.stackDepth = 1;
         tmp1 = runtime.Unit;
         continue tmp2
       } else {

@@ -12,16 +12,11 @@ fun f(used1, unused1) =
   g(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let g, f, g$;
+//│ let f, g$;
 //│ g$ = function g$(used1, used2, g_arg) {
 //│   let used3;
 //│   used3 = 2;
 //│   return used1 + used2
-//│ };
-//│ g = function g(used1, used2) {
-//│   return (g_arg) => {
-//│     return g$(used1, used2, g_arg)
-//│   }
 //│ };
 //│ f = function f(used1, unused1) {
 //│   let used2, unused2, tmp;
@@ -44,7 +39,7 @@ fun f(used1, unused1) =
   g(used2)(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let g1, f1, g$1;
+//│ let f1, g$1;
 //│ g$1 = function g$(used1, used2, g_arg) {
 //│   return (g_arg2) => {
 //│     let used3, tmp, tmp1;
@@ -52,11 +47,6 @@ f(1, 2)
 //│     tmp = used1 + used2;
 //│     tmp1 = tmp + g_arg;
 //│     return tmp1 + g_arg2
-//│   }
-//│ };
-//│ g1 = function g(used1, used2) {
-//│   return (g_arg) => {
-//│     return g$1(used1, used2, g_arg)
 //│   }
 //│ };
 //│ f1 = function f(used1, unused1) {
@@ -94,13 +84,13 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let g3, f3, g$3;
+//│ let g1, f3, g$3;
 //│ g$3 = function g$(used1, used2, g_arg) {
 //│   let used3;
 //│   used3 = 2;
 //│   return used1 + used2
 //│ };
-//│ g3 = function g(used1, used2) {
+//│ g1 = function g(used1, used2) {
 //│   return (g_arg) => {
 //│     return g$3(used1, used2, g_arg)
 //│   }
@@ -109,7 +99,7 @@ f(1, 2)
 //│   let used2, unused2, foo, tmp;
 //│   used2 = unused1;
 //│   unused2 = 2;
-//│   foo = runtime.safeCall(g3(used1, used2));
+//│   foo = runtime.safeCall(g1(used1, used2));
 //│   tmp = runtime.safeCall(foo(used2));
 //│   return tmp + unused2
 //│ };
@@ -123,7 +113,7 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let g4, f4, g$4;
+//│ let f4, g$4;
 //│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
 //│   let tmp, tmp1, tmp2, tmp3;
 //│   tmp = a1 + a2;
@@ -131,11 +121,6 @@ f(1,2,3,4,5,6)
 //│   tmp2 = tmp1 + a4;
 //│   tmp3 = tmp2 + a5;
 //│   return tmp3 + a6
-//│ };
-//│ g4 = function g(a1, a2, a3, a4, a5, a6) {
-//│   return () => {
-//│     return g$4(a1, a2, a3, a4, a5, a6)
-//│   }
 //│ };
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
@@ -161,18 +146,18 @@ f1()
 let y = f2().toString()
 x + y
 //│ JS (unsanitized):
-//│ let g5, h, f5, Tuple1, ret, f11, f21, x, y, tmp, tmp1, tmp2, h$, g$5, f$capture1;
+//│ let g2, h, f5, Tuple1, ret, f11, f21, x, y, tmp, tmp1, tmp2, h$, g$5, f$capture1;
 //│ g$5 = function g$(f$capture2) {
-//│   f$capture2.a0$ = 1;
+//│   f$capture2.a$capture$0 = 1;
 //│   return runtime.Unit
 //│ };
-//│ g5 = function g(f$capture2) {
+//│ g2 = function g(f$capture2) {
 //│   return () => {
 //│     return g$5(f$capture2)
 //│   }
 //│ };
 //│ h$ = function h$(f$capture2) {
-//│   return f$capture2.a0$
+//│   return f$capture2.a$capture$0
 //│ };
 //│ h = function h(f$capture2) {
 //│   return () => {
@@ -183,8 +168,8 @@ x + y
 //│   static {
 //│     f$capture1 = this
 //│   }
-//│   constructor(a0$) {
-//│     this.a0$ = a0$;
+//│   constructor(a$capture$0) {
+//│     this.a$capture$0 = a$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -192,8 +177,8 @@ x + y
 //│ f5 = function f() {
 //│   let capture, g$this, h$this;
 //│   capture = new f$capture1(null);
-//│   capture.a0$ = 0;
-//│   g$this = runtime.safeCall(g5(capture));
+//│   capture.a$capture$0 = 0;
+//│   g$this = runtime.safeCall(g2(capture));
 //│   h$this = runtime.safeCall(h(capture));
 //│   return Tuple1(g$this, h$this)
 //│ };
@@ -291,30 +276,20 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let g6, h2, f7, h$2, g$6, f$capture5;
+//│ let f7, h$2, g$6, f$capture5;
 //│ g$6 = function g$(immutable, f$capture6) {
-//│   f$capture6.mutated0$ = 2;
-//│   return immutable + f$capture6.mutated0$
-//│ };
-//│ g6 = function g(immutable, f$capture6) {
-//│   return () => {
-//│     return g$6(immutable, f$capture6)
-//│   }
+//│   f$capture6.mutated$capture$0 = 2;
+//│   return immutable + f$capture6.mutated$capture$0
 //│ };
 //│ h$2 = function h$(f$capture6) {
-//│   return f$capture6.mutated0$
-//│ };
-//│ h2 = function h(f$capture6) {
-//│   return () => {
-//│     return h$2(f$capture6)
-//│   }
+//│   return f$capture6.mutated$capture$0
 //│ };
 //│ globalThis.Object.freeze(class f$capture4 {
 //│   static {
 //│     f$capture5 = this
 //│   }
-//│   constructor(mutated0$) {
-//│     this.mutated0$ = mutated0$;
+//│   constructor(mutated$capture$0) {
+//│     this.mutated$capture$0 = mutated$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
@@ -358,7 +333,7 @@ fun f(arg) =
   h(5)
 f(2)
 //│ JS (unsanitized):
-//│ let g9, h3, f10, h$3, g$9;
+//│ let f10, h$3, g$9;
 //│ g$9 = function g$(arg, n) {
 //│   let scrut, tmp7;
 //│   scrut = n <= 0;
@@ -367,11 +342,6 @@ f(2)
 //│   } else {
 //│     tmp7 = n - 1;
 //│     return h$3(arg, tmp7)
-//│   }
-//│ };
-//│ g9 = function g(arg) {
-//│   return (n) => {
-//│     return g$9(arg, n)
 //│   }
 //│ };
 //│ h$3 = function h$(arg, n) {
@@ -383,9 +353,6 @@ f(2)
 //│     tmp7 = n - 1;
 //│     return g$9(arg, tmp7)
 //│   }
-//│ };
-//│ h3 = function h(arg) {
-//│   return (n) => { return h$3(arg, n) }
 //│ };
 //│ f10 = function f(arg) { return h$3(arg, 5) };
 //│ f10(2)
@@ -407,13 +374,13 @@ fun g() =
   h()
 g()
 //│ JS (unsanitized):
-//│ let h4, f14, g12;
-//│ f14 = function f() {
+//│ let h2, f13, g5;
+//│ f13 = function f() {
 //│   return 3
 //│ };
-//│ h4 = function h() { return 3 };
-//│ g12 = function g() { return h4() };
-//│ g12()
+//│ h2 = function h() { return 3 };
+//│ g5 = function g() { return h2() };
+//│ g5()
 //│ = 3
 
 :sjs
@@ -432,24 +399,19 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let h5, f15, g13, tmp7, f$1, h$4, g$capture1;
+//│ let f14, g6, tmp7, f$1, h$4, g$capture1;
 //│ h$4 = function h$(x1, k, g$capture2) {
 //│   k = 5;
 //│   x1 = 4;
-//│   return x1 + g$capture2.y0$
-//│ };
-//│ h5 = function h(x1, k, g$capture2) {
-//│   return () => {
-//│     return h$4(x1, k, g$capture2)
-//│   }
+//│   return x1 + g$capture2.y$capture$0
 //│ };
 //│ f$1 = function f$(g$capture2, x1) {
 //│   let k;
 //│   k = 4;
-//│   g$capture2.y0$ = 2;
+//│   g$capture2.y$capture$0 = 2;
 //│   return x1
 //│ };
-//│ f15 = function f(g$capture2) {
+//│ f14 = function f(g$capture2) {
 //│   return (x1) => {
 //│     return f$1(g$capture2, x1)
 //│   }
@@ -458,19 +420,19 @@ g()(1)
 //│   static {
 //│     g$capture1 = this
 //│   }
-//│   constructor(y0$) {
-//│     this.y0$ = y0$;
+//│   constructor(y$capture$0) {
+//│     this.y$capture$0 = y$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
-//│ g13 = function g() {
+//│ g6 = function g() {
 //│   let capture;
 //│   capture = new g$capture1(null);
-//│   capture.y0$ = 0;
-//│   return runtime.safeCall(f15(capture))
+//│   capture.y$capture$0 = 0;
+//│   return runtime.safeCall(f14(capture))
 //│ };
-//│ tmp7 = g13();
+//│ tmp7 = g6();
 //│ runtime.safeCall(tmp7(1))
 //│ = 1
 
@@ -513,7 +475,7 @@ fun f(x, cond) =
     set x = 3
     () => x
 //│ JS (unsanitized):
-//│ let f18, lambda, lambda1, lambda$, lambda$1;
+//│ let f17, lambda, lambda1, lambda$, lambda$1;
 //│ lambda$1 = function lambda$(x1) {
 //│   return x1
 //│ };
@@ -530,7 +492,7 @@ fun f(x, cond) =
 //│     return lambda$(x1)
 //│   }
 //│ });
-//│ f18 = function f(x1, cond) {
+//│ f17 = function f(x1, cond) {
 //│   x1 = 1;
 //│   x1 = 2;
 //│   if (cond === true) {
@@ -548,37 +510,32 @@ fun f() =
   x
 f()
 //│ JS (unsanitized):
-//│ let f19, g16, f20, f$2, f$capture15;
-//│ g16 = function g() {
+//│ let g9, f18, f$2, f$capture15;
+//│ g9 = function g() {
 //│   return 1
 //│ };
 //│ f$2 = function f$(f$capture16) {
-//│   f$capture16.x0$ = 1;
+//│   f$capture16.x$capture$0 = 1;
 //│   return runtime.Unit
-//│ };
-//│ f19 = function f(f$capture16) {
-//│   return () => {
-//│     return f$2(f$capture16)
-//│   }
 //│ };
 //│ globalThis.Object.freeze(class f$capture14 {
 //│   static {
 //│     f$capture15 = this
 //│   }
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
+//│   constructor(x$capture$0) {
+//│     this.x$capture$0 = x$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
-//│ f20 = function f() {
+//│ f18 = function f() {
 //│   let tmp10, capture;
 //│   capture = new f$capture15(null);
-//│   capture.x0$ = 1;
+//│   capture.x$capture$0 = 1;
 //│   tmp10 = f$2(capture);
-//│   return capture.x0$
+//│   return capture.x$capture$0
 //│ };
-//│ f20()
+//│ f18()
 //│ = 1
 
 let n = 0
@@ -599,13 +556,13 @@ fun f(es, vs) =
     val fld = v'
   new A
 //│ JS (unsanitized):
-//│ let A1, f23, A$;
-//│ A$ = function A$(isMut, v$_$0) {
+//│ let A1, f20, A$;
+//│ A$ = function A$(isMut, v$_) {
 //│   let tmp10;
 //│   if (isMut === true) {
-//│     tmp10 = new A1(v$_$0);
+//│     tmp10 = new A1(v$_);
 //│   } else {
-//│     tmp10 = globalThis.Object.freeze(new A1(v$_$0));
+//│     tmp10 = globalThis.Object.freeze(new A1(v$_));
 //│   }
 //│   return tmp10
 //│ };
@@ -613,15 +570,15 @@ fun f(es, vs) =
 //│   static {
 //│     A1 = this
 //│   }
-//│   constructor(v$_$0) {
-//│     this["v'$0"] = v$_$0;
-//│     this.fld = this["v'$0"];
+//│   constructor(v$_) {
+//│     this["v'"] = v$_;
+//│     this.fld = this["v'"];
 //│   }
-//│   #v$_$0;
-//│   get ["v'$0"]() { return this.#v$_$0; }
-//│   set ["v'$0"](value) { this.#v$_$0 = value; }
+//│   #v$_;
+//│   get ["v'"]() { return this.#v$_; }
+//│   set ["v'"](value) { this.#v$_ = value; }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
-//│ f23 = function f(es, vs) { let v$_; v$_ = es; return A$(false, v$_) };
+//│ f20 = function f(es, vs) { let v$_; v$_ = es; return A$(false, v$_) };
 

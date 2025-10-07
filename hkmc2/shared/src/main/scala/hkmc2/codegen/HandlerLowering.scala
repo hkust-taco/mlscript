@@ -13,8 +13,6 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
-import mlscript.utils.algorithms.topologicalSort
-import mlscript.utils.algorithms.CyclicGraphError
 
 object HandlerLowering:
 
@@ -78,9 +76,6 @@ object HandlerLowering:
     def topLevel(debugNme: Str) = DebugInfo(debugNme, Set.empty, N)
   
   type StateId = BigInt
-  
-  // TODO: move somewhere else, not sure where
-  def simpleParam(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
 
 import HandlerLowering.*
 
@@ -302,11 +297,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     states.filter(state => visited.contains(state.id))
 
   def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
-    // for some reason, functions sometimes start with Begin(End, ...)
-    blk match
-      case Begin(End(_), blkk) => return partitionBlock(blkk, inclEntryPoint, labelIds)
-      case _ => ()
-    
     // for readability :)
     case class PartRet(head: Block, states: Ls[BlockState])
     
@@ -395,6 +385,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           case S(value) => value
         PartRet(StateTransition(start), Nil)
 
+      // for some reason, blocks sometimes start with Begin(End, ...)
       case Begin(End(_), blk) => go(blk)
 
       case Begin(sub, rest) => 
@@ -444,7 +435,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     else removeUselessStates(states, resumptionPoints)
   
   private val runtimePath = State.runtimeSymbol.asPath
-  private val skipOncePath: Path = runtimePath.selN(Tree.Ident("skipOnce"))
   private val stackDepthIdent = new Tree.Ident("stackDepth")
   private val stackDepthPath: Path = runtimePath.selN(stackDepthIdent)
   private val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
@@ -569,10 +559,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val doUnwindBlk = h.linkAndHandle(
           LinkState(resSym, cls.sym.asPath, pcSym.asPath)
         )
-        def simpleParam(sym: VarSymbol) = Param(FldFlags.empty, sym, N, Modulefulness.none)
         val doUnwindDef = FunDefn(
           N, doUnwindSym,
-          PlainParamList(simpleParam(resSym) :: simpleParam(pcSym) :: Nil) :: Nil,
+          PlainParamList(Param.simple(resSym) :: Param.simple(pcSym) :: Nil) :: Nil,
           doUnwindBlk
         )
         val doUnwindLazy = LazyVal(doUnwindSym.asPath)
@@ -653,7 +642,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val lblLoop = freshTmp("handlerLoop")
     
     val handlerBody = translateBlock(
-      h.body, Set.empty, N, L(sym), // TODO: callSelf 
+      h.body, Set.empty, S(Call(sym.asPath, Nil)(true, false)), L(sym),
       HandlerCtx(
         false, true,
         s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, 
@@ -680,8 +669,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           fDef,
           Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym) :: Nil), false)))
     
-    // some limit handling of effects extending classes and having access to their fields
-    // does not support super() raising effects
+    // Some limited handling of effects extending classes and having access to their fields.
+    // Currently does not support super() raising effects.
     val tmp = freshTmp()
     val ctor = blockBuilder
       .assign(tmp, Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true))
@@ -720,9 +709,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         ResultPlaceholder(h.res, freshId(), Call(sym.asPath, Nil)(true, true), h.rest)
       )
     result
-  
-  // this is a failsafe against infinte loops. skipOnce will prevent checkDepth from raising an effect exactly once
-  private val callSkipOnce = blockBuilder.assignFieldN(runtimePath, Tree.Ident("skipOnce"), Value.Lit(Tree.BoolLit(true)))
   
   private def genContClass(b: Block, callSelf: Opt[Result])(using h: HandlerCtx): Opt[ClsLikeDefn] =
     val clsSym = ClassSymbol(
@@ -806,7 +792,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           case None => partitionBlock(actualBlock, true)
           case Some(value) => 
             val someParts = partitionBlock(actualBlock, false)
-            BlockState(0, callSkipOnce.ret(value), N) :: someParts
+            BlockState(0, Return(value, false), N) :: someParts
         else
           partitionBlock(actualBlock, false)
         
@@ -873,7 +859,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val resumeBody = 
       if trivial then callSelf match
         case None => actualBlock
-        case Some(value) => callSkipOnce.ret(value)
+        case Some(value) => Return(value, false)
       else createResumeBod
       
     

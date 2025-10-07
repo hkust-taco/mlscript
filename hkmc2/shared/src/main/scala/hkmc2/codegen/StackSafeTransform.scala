@@ -136,6 +136,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       
     val doUnwindPath = doUnwindMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
+    
     if isTrivial(blk) then
       newBody
     else if doUnwindPath.isEmpty then
