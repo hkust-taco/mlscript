@@ -1,6 +1,3 @@
-// TODO: Implement this in Lowering of MLsCompiler
-// wasm
-
 import "./RuntimeJS.mjs"
 import "./Rendering.mls"
 import "./LazyArray.mjs"
