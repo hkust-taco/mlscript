@@ -156,7 +156,6 @@ declare module js with
 declare module wasm with
   fun
     plus_impl
-  // declare class Int31
 
 declare module debug with
   fun printStack
