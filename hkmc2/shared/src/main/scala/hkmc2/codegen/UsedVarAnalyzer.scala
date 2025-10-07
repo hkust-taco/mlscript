@@ -108,10 +108,13 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         case Some(value) => companionMap += (value.isym -> c.isym)
     
     new BlockTraverserShallow:
+      // If there's any variables available at the top-level we need to explicitly ignore,
+      // then we add them here
+      val ignoredVars = b.definedVars
       applyBlock(b)
       override def applyDefn(defn: Defn): Unit =
         inScopeDefns += defn.sym -> Set.empty
-        createMetadataDefn(defn, b.definedVars, Set.empty)
+        createMetadataDefn(defn, ignoredVars, Set.empty)
     DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap)
 
   val DefnMetadata(definedLocals, defnsMap, existingVars, 

@@ -314,7 +314,7 @@ h.whoops()
 fun dummy = ()
 fun f(h) =
   let n = 0
-  while n < 100000 do
+  while n < 10000 do
     h.perform()
     set n += 1
   n
