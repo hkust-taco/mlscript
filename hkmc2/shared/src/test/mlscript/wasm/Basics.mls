@@ -36,8 +36,27 @@ foo
 //│ ╙──      	^^^
 
 
+:wat
 fun foo() = 42
 foo()
+//│ Wat:
+//│ (module
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func $foo (type 0) (result (ref null any))
+//│     (return
+//│       (ref.i31
+//│         (i32.const 42))))
+//│   (export "foo" (func $foo))
+//│   (elem declare func $foo)
+//│   (func $entry (type 1) (result (ref null any))
+//│     (local $foo (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call_ref 0
+//│         (ref.func $foo))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
 //│ Wasm result:
 //│ = 42
 
@@ -54,8 +73,38 @@ foo(41)
 //│ = 42
 
 
+:wat
 class Foo(val x)
 new Foo(0)
+//│ Wat:
+//│ (module
+//│   (type $Foo (struct (field $x (mut (ref null any)))))
+//│   (type (func (param $x (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func $Foo (type 1) (param $x (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (block
+//│         (struct.set $Foo 0
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $x))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo" (func $Foo))
+//│   (elem declare func $Foo)
+//│   (func $entry (type 2) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call $Foo
+//│         (ref.i31
+//│           (i32.const 0)))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
 //│ Wasm result:
 //│ = [Object: null prototype] {}
 
