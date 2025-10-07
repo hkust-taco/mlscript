@@ -703,10 +703,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val bod2 = applySubBlockAndReset(bod)
           val rst2 = applySubBlock(rst)
           if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, bod2, rst2)
-        case Begin(sub, rst) =>
-          val sub2 = applySubBlockAndReset(sub)
-          val rst2 = applySubBlock(rst)
-          if (sub2 is sub) && (rst2 is rst) then b else Begin(sub2, rst2)
         case TryBlock(sub, fin, rst) =>
           val sub2 = applySubBlockAndReset(sub)
           val fin2 = applySubBlockAndReset(fin)
