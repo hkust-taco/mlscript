@@ -5,28 +5,28 @@
 
 false
 //│ Wasm result:
-//│ = '0'
+//│ = 0
 
 
 true
 //│ Wasm result:
-//│ = '1'
+//│ = 1
 
 
 2
 //│ Wasm result:
-//│ = '2'
+//│ = 2
 
 
 1 + 1
 //│ Wasm result:
-//│ = '2'
+//│ = 2
 
 
 let x = 0
 x
 //│ Wasm result:
-//│ = '0'
+//│ = 0
 
 
 :ge
@@ -40,7 +40,7 @@ foo
 fun foo() = 42
 foo()
 //│ Wasm result:
-//│ = '42'
+//│ = 42
 
 
 :wat
@@ -93,19 +93,19 @@ foo() + foo()
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
-//│ = '84'
+//│ = 84
 
 
 fun foo(x) = x + 1
 foo(41)
 //│ Wasm result:
-//│ = '42'
+//│ = 42
 
 
 class Foo(val x)
 new Foo(0)
 //│ Wasm result:
-//│ = '{}'
+//│ = {}
 
 
 :wat
@@ -147,4 +147,4 @@ class Foo(val a)
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
-//│ = '42'
+//│ = 42

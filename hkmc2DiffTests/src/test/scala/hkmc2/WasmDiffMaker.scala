@@ -8,6 +8,7 @@ import semantics.Elaborator
 import semantics.Term.Blk
 import text.WatBuilder
 import Diagnostic.Source
+import Message.MessageContext
 
 import scala.collection.mutable
 
@@ -100,14 +101,50 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             output(s"Error: $err")
             return
 
+      def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
+        val queryStr = jsStr.replaceAll("\n", " ")
+        val (reply, stderr) = host.query(
+          preStr,
+          queryStr,
+          !expectRuntimeOrCodeGenErrors && fixme.isUnset && todo.isUnset
+        )
+        reply match
+          case ReplHost.Result(content) => k(content)
+          case ReplHost.Empty =>
+          case ReplHost.Unexecuted(message) => ???
+          case ReplHost.Error(isSyntaxError, message, otherOutputs) =>
+            if otherOutputs.nonEmpty then
+              otherOutputs.splitSane('\n').foreach: line =>
+                output(s"> ${line}")
+            if isSyntaxError then
+              // If there is a syntax error in the generated code,
+              // it should be a code generation error.
+              raise(ErrorReport(
+                msg"[Uncaught SyntaxError] ${message}" -> N :: Nil,
+                source = Diagnostic.Source.Compilation
+              ))
+            else
+              // Otherwise, it is considered a simple runtime error.
+              raise(ErrorReport(
+                msg"${message}" -> N :: Nil,
+                source = Diagnostic.Source.Runtime
+              ))
+        if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
+      end mkQuery
+
+      val importObj =
+        doc"""{ #{  # "system": { #{  # "mem": new WebAssembly.Memory({initial: 100}) #}  # } #}  # }"""
+      val jsStr =
+        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), # true #}  # );"""
+          .stripBreaks
+          .mkString(100)
       output("Wasm result:")
-      s"""await wasm.binaryenRunFunc(`${modWat.mkString()}`, {"system": {"mem": new WebAssembly.Memory({initial: 100})}}, exports => exports.${mainFnNme}(), true);"""
-        .replace('\n', ' ') |> host.execute match
-        case ReplHost.Result(content) =>
-          output(s"= $content")
-        case err =>
-          output(s"Error while executing Wasm: $err")
-          return
+      mkQuery("", jsStr): out =>
+        // Omit the last line which is always "undefined" or the unit.
+        val result = out.lastIndexOf('\n') match
+          case n if n >= 0 => out.substring(0, n)
+          case _ => ""
+        output(s"= $result")
     end if
   end processTerm
 end WasmDiffMaker
