@@ -14,7 +14,7 @@ fun dumpWasmImpExp(wasmMod) =
   console.log of "Exports: %s", WebAssembly.Module.exports(wasmMod.module)
 
 // Binaryen helpers
-fun binaryenFmtWat(wat, foldExprs): Promise =
+fun binaryenFmtWat(wat, foldExprs): String =
   val mod = binaryen.parseText of wat
   mod.setFeatures(binaryen.Features.All)
   console.assert of mod.validate of mod
@@ -22,7 +22,7 @@ fun binaryenFmtWat(wat, foldExprs): Promise =
   val fmtWat = if foldExprs then mod.emitText() else mod.emitStackIR()
 
   mod.dispose()
-  Promise.resolve(fmtWat)
+  fmtWat
 
 fun binaryenCompileToModule(wat, importObject): Promise =
   val mod = binaryen.parseText of wat

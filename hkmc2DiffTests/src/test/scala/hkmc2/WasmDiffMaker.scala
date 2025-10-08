@@ -3,6 +3,7 @@ package hkmc2
 import mlscript.utils.*, shorthands.*
 
 import codegen.wasm.*
+import document.*
 import semantics.Elaborator
 import semantics.Term.Blk
 import text.WatBuilder
@@ -78,7 +79,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
 
       if fwat.isSet then
         output("Formatted Wat (Folded):")
-        s"JSON.stringify(await wasm.binaryenFmtWat(`${modWat.mkString()}`, true));"
+        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, true));"
+          .stripBreaks
+          .mkString(100)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
@@ -87,7 +90,9 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
             return
       if swat.isSet then
         output("Formatted Wat (Stack):")
-        s"JSON.stringify(await wasm.binaryenFmtWat(`${modWat.mkString()}`, false));"
+        doc"JSON.stringify(wasm.binaryenFmtWat(`$modWat`, false));"
+          .stripBreaks
+          .mkString(100)
           .replace('\n', ' ') |> host.execute match
           case ReplHost.Result(content) =>
             output(prettifyBinaryenWat(content))
