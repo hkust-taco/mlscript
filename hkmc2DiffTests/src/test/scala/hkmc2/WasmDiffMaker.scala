@@ -135,7 +135,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val importObj =
         doc"""{ #{  # "system": { #{  # "mem": new WebAssembly.Memory({initial: 100}) #}  # } #}  # }"""
       val jsStr =
-        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), # true #}  # );"""
+        doc"""await wasm.binaryenPrintFuncRes( #  #{ `$modWat # `, # $importObj, # exports => exports.${mainFnNme}(), #}  # );"""
           .stripBreaks
           .mkString(100)
       output("Wasm result:")

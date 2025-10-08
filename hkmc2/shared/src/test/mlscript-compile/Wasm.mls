@@ -45,8 +45,8 @@ fun binaryenRunFunc(wat, importObject, func): Promise =
       func(wasmMod.instance.exports)
     )
 
-fun binaryenPrintFuncRes(wat, importObject, func, render): Promise = 
+fun binaryenPrintFuncRes(wat, importObject, func): Promise = 
   binaryenRunFunc(wat, importObject, func)
     .then(result =>
-      Predef.print of if render then Runtime.render of result else result
+      Predef.print of Runtime.render of result
     )
