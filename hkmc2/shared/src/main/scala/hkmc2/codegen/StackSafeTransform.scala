@@ -79,7 +79,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
           val l2 = applyLocal(l)
           val res2 = applyLocal(res)
           applyPath(par): par2 =>
-            applyListOf(args)(applyPath): args2 =>
+            applyListOf(args, applyPath(_)(_)): args2 =>
               val cls2 = cls.subst
               val hdr2 = hdr.mapConserve(applyHandler)
               val bod2 = rewriteBlk(bod)

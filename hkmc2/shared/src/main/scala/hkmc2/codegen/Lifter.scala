@@ -617,14 +617,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 // Instantiation without `new mut` is always immutable 
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
                 case _ => getCallArgs(l, ctx)
-              applyListOf(args)(applyArg): newArgs =>
+              applyListOf(args, applyArg(_)(_)): newArgs =>
                 k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false))
             case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l), args) =>
             ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
-              applyListOf(args)(applyArg): newArgs =>
+              applyListOf(args, applyArg(_)(_)): newArgs =>
                 k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false))
             case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
@@ -684,13 +684,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         // since closures nested inside each branch may not be re-used elsewhere.
         case Match(scrut, arms, dflt, rst) =>
           applyPath(scrut): scrut2 =>
-            applyListOf(arms)
-              .apply:
-                case tup@(cse, blk) => k =>
-                  val blk2 = applySubBlockAndReset(blk)
-                  applyCase(cse): cse2 =>
-                    if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
-              .apply: arms2 =>
+            applyListOf(
+              arms,
+              (tup, k) =>
+                val (cse, blk) = tup
+                val blk2 = applySubBlockAndReset(blk)
+                applyCase(cse): cse2 =>
+                  if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
+            ): arms2 =>
                 val dflt2 = dflt.mapConserve(applySubBlockAndReset)
                 val rst2 = applySubBlock(rst)
                 if (scrut2 is scrut) &&
