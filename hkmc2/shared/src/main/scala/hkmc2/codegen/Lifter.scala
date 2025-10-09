@@ -1280,7 +1280,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val walker1 = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case Define(d, rest) =>
-          // val LifterMetadata(unliftable, modules, objects, firstClsFns) = createMetadata(d, ctx)
           val LifterMetadata(unliftable, modules, objects, firstClsFns) = createMetadata(d, ctx)
 
           val modObjLocals = (modules ++ objects).map: c =>
