@@ -44,6 +44,10 @@ globalThis.Object.freeze(class Runtime {
     });
     this.short_and = RuntimeJS.short_and;
     this.short_or = RuntimeJS.short_or;
+    this.bitand = RuntimeJS.bitand;
+    this.bitnot = RuntimeJS.bitnot;
+    this.bitor = RuntimeJS.bitor;
+    this.shl = RuntimeJS.shl;
     this.try_catch = RuntimeJS.try_catch;
     this.EffectHandle = function EffectHandle(_reified) {
       return globalThis.Object.freeze(new EffectHandle.class(_reified));
@@ -380,6 +384,31 @@ globalThis.Object.freeze(class Runtime {
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "StackDelayHandler"]; 
+    });
+    this.Int31 = function Int31(v) {
+      return globalThis.Object.freeze(new Int31.class(v));
+    };
+    globalThis.Object.freeze(class Int31 {
+      static {
+        Runtime.Int31.class = this
+      }
+      constructor(v) {
+        this.#v = v;
+      }
+      #v;
+      zext() {
+        let tmp, tmp1;
+        tmp = Runtime.shl(1, 31);
+        tmp1 = runtime.safeCall(Runtime.bitnot(tmp));
+        return Runtime.bitand(this.#v, tmp1)
+      } 
+      sext() {
+        let tmp;
+        tmp = Runtime.shl(1, 31);
+        return Runtime.bitor(this.#v, tmp)
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "Int31", [null]]; 
     });
   }
   static get unreachable() {
@@ -956,6 +985,17 @@ globalThis.Object.freeze(class Runtime {
     Runtime.stackDepth = 0;
     Runtime.stackHandler = null;
     return result
+  } 
+  static plus_impl(lhs, rhs) {
+    if (lhs instanceof Runtime.Int31.class) {
+      if (rhs instanceof Runtime.Int31.class) {
+        return lhs + rhs
+      } else {
+        return Runtime.unreachable()
+      }
+    } else {
+      return Runtime.unreachable()
+    }
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Runtime"]; 

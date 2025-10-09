@@ -43,6 +43,10 @@ fun deboundMethod(mtdName, clsName) =
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
 
+val bitand = RuntimeJS.bitand
+val bitnot = RuntimeJS.bitnot
+val bitor = RuntimeJS.bitor
+val shl = RuntimeJS.shl
 val try_catch = RuntimeJS.try_catch
 
 class EffectHandle(_reified) with
@@ -398,3 +402,11 @@ fun runStackSafe(limit, f) =
     stackDepth = 0
     stackHandler = null
   result
+
+class Int31(v) with
+  fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
+  fun sext() = bitor(v, shl(1, 31)) as Int
+
+fun plus_impl(lhs, rhs) = if lhs is
+  Int31 and rhs is Int31 then lhs + rhs
+  else unreachable()

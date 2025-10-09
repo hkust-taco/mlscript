@@ -64,6 +64,7 @@ abstract class LlirDiffMaker extends BbmlDiffMaker:
     if llir.isSet then
       val low = ltl.givenIn:
         codegen.Lowering()
+      // TODO: There should be a third compilation target of CPP?
       var le = low.program(trm)
       given Scope = scope
       given Ctx = ctx

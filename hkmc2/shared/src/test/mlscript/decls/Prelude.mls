@@ -60,6 +60,9 @@ declare object Symbol with
   fun for: Str -> Any = ()
   val iterator: Any
 
+// MLwasm-specific types
+declare class Int31
+
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math
 declare module Math with
   declare
@@ -116,6 +119,20 @@ declare val process
 declare val fs
 declare val Infinity
 
+// Wasm support
+declare class Promise with
+  fun resolve
+declare object WebAssembly with
+  declare class Memory
+  declare object Module with
+    fun
+      exports
+      imports
+
+  fun
+    instantiate
+    validate
+
 // declare fun typeof: (Any) -> Str
 
 declare fun parseInt(str: Str, radix: Int): Int
@@ -130,7 +147,15 @@ declare module source with
 
 declare module js with
   fun
+    bitand
+    bitnot
+    bitor
+    shl
     try_catch
+
+declare module wasm with
+  fun
+    plus_impl
 
 declare module debug with
   fun printStack
