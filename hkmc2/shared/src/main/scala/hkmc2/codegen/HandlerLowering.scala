@@ -30,16 +30,6 @@ object HandlerLowering:
     
   extension (b: Block) def userDefinedVars: Set[Local] = b.definedVars.collect:
     case s: VarSymbol => s
-  
-  private class LazyVal[T](value: => T):
-    var evaled: Opt[T] = N
-    def empty = evaled.isEmpty 
-    def get = evaled match
-      case None => 
-        val e = value
-        evaled = S(e)
-        e
-      case Some(v) => v
         
   private case class LinkState(res: Local, cls: Path, uid: Path)
   
@@ -564,10 +554,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           PlainParamList(Param.simple(resSym) :: Param.simple(pcSym) :: Nil) :: Nil,
           doUnwindBlk
         )
-        val doUnwindLazy = LazyVal(doUnwindSym.asPath)
+        val doUnwindLazy = Lazy(doUnwindSym.asPath)
         val rst = genNormalBody(b, cls.sym, S(doUnwindLazy))
         
-        if doUnwindLazy.empty && opt.stackSafety.isEmpty then
+        if doUnwindLazy.isEmpty && opt.stackSafety.isEmpty then
           blockBuilder
             .define(cls)
             .rest(rst)
@@ -930,13 +920,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N,
     ))
   
-  private def genNormalBody(b: Block, clsSym: BlockMemberSymbol, doUnwind: Opt[LazyVal[Path]])(using HandlerCtx): Block =
+  private def genNormalBody(b: Block, clsSym: BlockMemberSymbol, doUnwind: Opt[Lazy[Path]])(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case ResultPlaceholder(res, uid, c, rest) => 
           val doUnwindBlk = doUnwind match
             case None => Assign(res, topLevelCall(LinkState(res, clsSym.asPath, Value.Lit(Tree.IntLit(uid)))), End())
-            case Some(doUnwind) => Return(PureCall(doUnwind.get, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
+            case Some(doUnwind) => Return(PureCall(doUnwind.get_!, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
           blockBuilder
             .assign(res, c)
             .ifthen(
