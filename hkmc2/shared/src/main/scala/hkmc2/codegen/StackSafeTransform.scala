@@ -125,7 +125,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       defn.privateFields,
       defn.publicFields,
       if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(defn.isym), 1),
-      )
+    )
 
   // fnOrCls points us to the doUnwind function
   def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
@@ -154,13 +154,16 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
           resSym.asPath,
           Case.Cls(paths.effectSigSym, paths.effectSigPath),
           Return(
-            // Call(Value.Lit(Tree.StrLit(doUnwindPath.get.toString())), resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
             Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
             false
           )
         )
         .rest(newBody)
-      // float out defns to move the doUnwind function behind 
+      // Float out defns, including the doUnwind function, so that they appear at the top of the block
+      // This is because the doUnwind function must appear before the checks inserted by the stack
+      // safety pass.
+      // However, due to how tightly coupled the stack safety and handler lowering are, it might be
+      // better to simply merge the two passes in the future.
       val (blk, defns) = doUnwindPath.get match
         case Value.Ref(sym) => rewritten.floatOutDefns()
         case _ => (rewritten, Nil)

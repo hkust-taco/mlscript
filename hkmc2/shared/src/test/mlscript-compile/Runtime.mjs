@@ -16,15 +16,12 @@ globalThis.Object.freeze(class Runtime {
   }
   static #stackLimit;
   static #stackDepth;
-  static #skipOnce;
   static #stackHandler;
   static #stackResume;
   static get stackLimit() { return Runtime.#stackLimit; }
   static set stackLimit(value) { Runtime.#stackLimit = value; }
   static get stackDepth() { return Runtime.#stackDepth; }
   static set stackDepth(value) { Runtime.#stackDepth = value; }
-  static get skipOnce() { return Runtime.#skipOnce; }
-  static set skipOnce(value) { Runtime.#skipOnce = value; }
   static get stackHandler() { return Runtime.#stackHandler; }
   static set stackHandler(value) { Runtime.#stackHandler = value; }
   static get stackResume() { return Runtime.#stackResume; }
@@ -362,7 +359,6 @@ globalThis.Object.freeze(class Runtime {
     });
     this.stackLimit = 0;
     this.stackDepth = 0;
-    this.skipOnce = false;
     this.stackHandler = null;
     this.stackResume = null;
     globalThis.Object.freeze(class StackDelayHandler {
@@ -939,7 +935,6 @@ globalThis.Object.freeze(class Runtime {
     Runtime.stackLimit = limit;
     Runtime.stackDepth = 1;
     Runtime.stackHandler = Runtime.StackDelayHandler;
-    Runtime.skipOnce = false;
     result = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f);
     Runtime.stackDepth = 1;
     tmp2: while (true) {

@@ -530,8 +530,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         dfs(b)
     for s <- ignored do
       dfs(s)
-  
-    // LifterMetadata(ignored ++ newUnliftable, modules.toList, objects.toList, firstClsFns)
+    
     LifterMetadata(ignored ++ newUnliftable, modules.toList, objects.toList, firstClsFns)
   
   extension (b: Block)

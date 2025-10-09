@@ -64,7 +64,6 @@ hi(0)
 //│ res
 //│ = 0
 
-
 :stackSafe 1000
 :effectHandlers
 :expect 50005000

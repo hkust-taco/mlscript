@@ -323,7 +323,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         
         val armsParts = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
         val dfltParts = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
-
+        
         val states_ = restParts.states ::: armsParts.flatMap(_._2.states)
         val states = dfltParts match
           case N => states_
@@ -773,8 +773,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val trivial = pcToLoc.isEmpty
     
     // there are three types of functions:
-    // (1) functions which have no calls, indicated by `containsCall`
-    // (2) functions have only tail calls, indicated by `trivial`
+    // (1) functions that have no calls, indicated by `containsCall`
+    // (2) functions that have only tail calls, indicated by `trivial`
     // (3) all other functions
     //
     // Here, (2) and (3) need a continuation class when stack safety is enabled, otherwise only (3) needs it
