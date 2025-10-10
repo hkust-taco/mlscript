@@ -43,6 +43,11 @@ class BufferableTransform()(using Ctx, State, Raise):
                     fieldMap.get(l).fold(super.applyBlock(b)): off =>
                       applyResult(r): r2 =>
                         assignToOffset(off, r2, applyBlock(rst))
+                  case af @ AssignField(l, n, r, rst) =>
+                    af.symbol.flatMap(pubFieldMap.get(_)).flatMap(fieldMap.get(_))
+                      .fold(super.applyBlock(b)): off =>
+                        applyResult(r): r2 =>
+                          assignToOffset(off, r2, applyBlock(rst))
                   case Define(defn: ValDefn, rst) =>
                     fieldMap.get(defn.tsym).fold(super.applyBlock(b)): off =>
                       applyResult(defn.rhs): r2 =>

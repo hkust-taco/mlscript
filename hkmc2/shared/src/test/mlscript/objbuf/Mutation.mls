@@ -88,7 +88,6 @@ A.class.f(buf, obj3)(1)
 //│ = 12
 
 
-:fixme
 :sjs
 @bufferable
 class A(x) with
@@ -96,6 +95,56 @@ class A(x) with
   fun f(y) =
     set z += 1
     z
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:A
+//│ JS (unsanitized):
+//│ let A3;
+//│ A3 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
+//│ };
+//│ globalThis.Object.freeze(class A2 {
+//│   static {
+//│     A3.class = this
+//│   }
+//│   constructor(x) {
+//│     this.#x = x;
+//│     this.z = this.#x;
+//│   }
+//│   static {
+//│     this.size = 2;
+//│   }
+//│   static ctor(buf1, idx) {
+//│     return (x) => {
+//│       let idx1, idx2, idx3;
+//│       idx3 = idx + 0;
+//│       buf1.buf[idx3] = x;
+//│       idx1 = idx + 0;
+//│       idx2 = idx + 1;
+//│       buf1.buf[idx2] = buf1.buf.at(idx1);
+//│       return idx
+//│     }
+//│   } 
+//│   static f(buf1, idx) {
+//│     return (y) => {
+//│       let tmp8, idx1, idx2, idx3;
+//│       idx1 = idx + 1;
+//│       tmp8 = buf1.buf.at(idx1) + 1;
+//│       idx3 = idx + 1;
+//│       buf1.buf[idx3] = tmp8;
+//│       idx2 = idx + 1;
+//│       return buf1.buf.at(idx2)
+//│     }
+//│   }
+//│   #x;
+//│   #z;
+//│   get z() { return this.#z; }
+//│   set z(value) { this.#z = value; }
+//│   f(y) {
+//│     let tmp8;
+//│     tmp8 = this.z + 1;
+//│     this.z = tmp8;
+//│     return this.z
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null]]; 
+//│ });
 
 
