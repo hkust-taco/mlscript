@@ -18,12 +18,12 @@ module ObjectBuffer with
       buf.[1] = -1
 
     fun mkNew(cls) =
-      if cls.size == 0 do return 0
+      if cls.size === 0 do return 0
       val idx = _alloc(getBlockSize(cls.size))
       cls.ctor(this, idx)
 
     fun del(cls, inst) =
-      if cls.size != 0 do
+      if cls.size !== 0 do
         _free(inst, getBlockSize(cls.size))
 
     fun read(idx) = buf.[idx]
@@ -50,9 +50,9 @@ module ObjectBuffer with
       let prev = -1
       let cur = freeListHead
       // first-fit
-      while cur != -1 do
-        if buf.[cur] == sz do
-          if prev == -1 then
+      while cur !== -1 do
+        if buf.[cur] === sz do
+          if prev === -1 then
             set freeListHead = buf.[cur + 1]
           else
             set buf.[prev] = buf.[cur + 1]
@@ -62,7 +62,7 @@ module ObjectBuffer with
           set
             buf.[cur + sz] = buf.[cur] - sz
             buf.[cur + sz + 1] = buf.[cur + 1]
-          if prev == -1 then
+          if prev === -1 then
             set freeListHead = cur + sz
           else
             set buf.[prev] = cur + sz
@@ -73,17 +73,17 @@ module ObjectBuffer with
       -1
 
     fun alloc(sz) =
-      if sz == 0 do return 0
+      if sz === 0 do return 0
       _alloc(getBlockSize(sz))
 
     fun _alloc(bsz) =
       let res = _tryAlloc(bsz)
-      if res != -1 do return res
+      if res !== -1 do return res
       grow(bsz)
       _tryAlloc(bsz)
 
     fun free(ptr, sz) =
-      if sz != 0 do _free(ptr, getBlockSize(sz))
+      if sz !== 0 do _free(ptr, getBlockSize(sz))
 
     fun _free(ptr, bsz) =
       set
