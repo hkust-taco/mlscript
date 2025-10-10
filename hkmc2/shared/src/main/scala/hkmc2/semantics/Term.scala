@@ -711,8 +711,9 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   def extraAnnotations(using Ctx): Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract` | Keyword.`data`) => false
     case Annot.Trm(trm: SynthSel) if
-      trm.sym.contains(ctx.builtins.annotations.bufferable) ||
-      trm.sym.contains(ctx.builtins.annotations.buffered) => false
+      (kind is Cls) &&
+        (trm.sym.contains(ctx.builtins.annotations.bufferable) ||
+        trm.sym.contains(ctx.builtins.annotations.buffered)) => false
     case _ => true
 
 

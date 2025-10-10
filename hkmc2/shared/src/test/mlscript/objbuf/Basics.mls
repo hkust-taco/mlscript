@@ -90,17 +90,19 @@ class B2(x)
 //│ ║  l.85: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
-:breakme
-:ge
+:w
 @bufferable
 module B3
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.94: 	@bufferable
+//│ ╙──      	 ^^^^^^^^^^
 
-:ge
+:w
 @bufferable
 object B3
-//│ ╔══[COMPILATION ERROR] Only class can be annotated with @buffered or @bufferable.
-//│ ║  l.99: 	@bufferable
-//│ ╙──      	 ^^^^^^^^^^
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.101: 	@bufferable
+//│ ╙──       	 ^^^^^^^^^^
 
 
 let buf = new DefaultObjectBuffer(10)

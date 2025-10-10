@@ -232,11 +232,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             source = Diagnostic.Source.Compilation
           ))
         if bufferableAnnots.length >= 1 then
-          if defn.kind isnt syntax.Cls then
-            raise(ErrorReport(
-              msg"Only class can be annotated with @buffered or @bufferable." -> defn.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation
-            ))
           if defn.companion.isDefined then
             raise(ErrorReport(
               msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
@@ -250,6 +245,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case S(sym) =>
             sym.defn match
             case S(mod: ModuleOrObjectDef) =>
+              reportAnnotations(mod, mod.extraAnnotations)
               mod.ext match
               case S(ext) => fail:
                 ErrorReport(
