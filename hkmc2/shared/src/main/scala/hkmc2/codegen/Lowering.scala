@@ -231,6 +231,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             msg"Only one of bufferable annotation is allowed." -> defn.toLoc :: Nil,
             source = Diagnostic.Source.Compilation
           ))
+        if bufferableAnnots.length >= 1 then
+          if defn.kind isnt syntax.Cls then
+            raise(ErrorReport(
+              msg"Only class can be annotated with @buffered or @bufferable." -> defn.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            ))
+          if defn.companion.isDefined then
+            raise(ErrorReport(
+              msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            ))
         val bufferable = bufferableAnnots.headOption
         val (mtds, publicFlds, privateFlds, ctor) = defn match
           case pd: PatternDef => compilePatternMethods(pd)

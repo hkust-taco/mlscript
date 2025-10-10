@@ -71,14 +71,14 @@ class A2(x)
 //│ });
 
 :ge
-@bufferable
-@bufferable
+@buffered
+@buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.74: 	@bufferable
-//│ ║        	 ^^^^^^^^^^
-//│ ║  l.75: 	@bufferable
-//│ ╙──      	^^^^^^^^^^^
+//│ ║  l.74: 	@buffered
+//│ ║        	 ^^^^^^^^
+//│ ║  l.75: 	@buffered
+//│ ╙──      	^^^^^^^^^
 
 :ge
 @buffered
@@ -95,11 +95,12 @@ class B2(x)
 @bufferable
 module B3
 
-:fixme
 :ge
 @bufferable
 object B3
-//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed
+//│ ╔══[COMPILATION ERROR] Only class can be annotated with @buffered or @bufferable.
+//│ ║  l.99: 	@bufferable
+//│ ╙──      	 ^^^^^^^^^^
 
 
 let buf = new DefaultObjectBuffer(10)
