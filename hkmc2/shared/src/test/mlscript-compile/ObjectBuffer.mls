@@ -18,11 +18,13 @@ module ObjectBuffer with
       buf.[1] = -1
 
     fun mkNew(cls) =
+      if cls.size == 0 do return 0
       val idx = _alloc(getBlockSize(cls.size))
       cls.ctor(this, idx)
 
     fun del(cls, inst) =
-      _free(inst, getBlockSize(cls.size))
+      if cls.size != 0 do
+        _free(inst, getBlockSize(cls.size))
 
     fun read(idx) = buf.[idx]
 
@@ -70,7 +72,9 @@ module ObjectBuffer with
           cur = buf.[cur + 1]
       -1
 
-    fun alloc(sz) = _alloc(getBlockSize(sz))
+    fun alloc(sz) =
+      if sz == 0 do return 0
+      _alloc(getBlockSize(sz))
 
     fun _alloc(bsz) =
       let res = _tryAlloc(bsz)
@@ -78,7 +82,8 @@ module ObjectBuffer with
       grow(bsz)
       _tryAlloc(bsz)
 
-    fun free(ptr, sz) = _free(ptr, getBlockSize(sz))
+    fun free(ptr, sz) =
+      if sz != 0 do _free(ptr, getBlockSize(sz))
 
     fun _free(ptr, bsz) =
       set

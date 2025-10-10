@@ -68,7 +68,7 @@ class BufferableTransform()(using Ctx, State, Raise):
             val fakeCtor = transformFunDefn(FunDefn(S(companionSym), BlockMemberSymbol("ctor", Nil, false), cls.paramsOpt.toList, Begin(cls.preCtor, cls.ctor)), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
-              fakeCtor :: cls.methods.map(transformFunDefn(_, false)), // TODO: methods
+              fakeCtor :: cls.methods.map(transformFunDefn(_, false)),
               Nil,
               clsSizeSym -> clsSizeTermSym :: Nil,
               Define(ValDefn(clsSizeTermSym, clsSizeSym, Value.Lit(Tree.IntLit(fields.size))), End()),
@@ -79,14 +79,14 @@ class BufferableTransform()(using Ctx, State, Raise):
                 cls.isym,
                 cls.sym,
                 cls.k,
-                cls.paramsOpt,
-                cls.auxParams,
+                if bufferable then cls.paramsOpt else N,
+                if bufferable then cls.auxParams else Nil,
                 cls.parentPath,
-                cls.methods,
+                if bufferable then cls.methods else Nil,
                 cls.privateFields,
                 cls.publicFields,
-                cls.preCtor,
-                cls.ctor,
+                if bufferable then cls.preCtor else End(),
+                if bufferable then cls.ctor else End(),
                 S(fakeCompanion),
                 cls.bufferable,
               )

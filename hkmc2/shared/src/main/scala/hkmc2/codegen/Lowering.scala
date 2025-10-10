@@ -220,10 +220,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val bufferableAnnots = defn.annotations.flatMap:
           case Annot.Trm(trm: SynthSel) =>
             if trm.sym.contains(ctx.builtins.annotations.buffered) then
-              raise(WarningReport(
-                  msg"This annotation is not supported yet." -> trm.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation
-              ))
               S(false)
             else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
               S(true)
