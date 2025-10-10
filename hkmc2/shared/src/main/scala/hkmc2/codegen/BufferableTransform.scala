@@ -25,6 +25,7 @@ class BufferableTransform()(using Ctx, State, Raise):
             val companionSym = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), new Tree.Ident(cls.sym.nme))
             val clsSizeSym = BlockMemberSymbol("size", Nil, false)
             val clsSizeTermSym = TermSymbol(syntax.ImmutVal, S(companionSym), new Tree.Ident("size"))
+            val pubFieldMap: Map[Symbol, Symbol] = cls.publicFields.toMap
             val fields = cls.privateFields ++ cls.publicFields.map(_._2)
             val fieldMap: Map[Symbol, Int] = fields.zipWithIndex.toMap
             def mkFieldReplacer(buf: Local, baseIdx: Local) =
@@ -50,7 +51,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                 override def applyPath(p: Path)(k: Path => Block): Block = p match
                   case sel: Select =>
                     sel.symbol.fold(super.applyPath(p)(k)): sym =>
-                      fieldMap.get(sym).fold(super.applyPath(p)(k)): off =>
+                      fieldMap.get(sym).orElse(pubFieldMap.get(sym).flatMap(fieldMap.get(_))).fold(super.applyPath(p)(k)): off =>
                         getOffset(off): res =>
                           k(res)
                   case Value.Ref(l) =>

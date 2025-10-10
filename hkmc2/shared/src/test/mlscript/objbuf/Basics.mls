@@ -177,11 +177,44 @@ A.f(buf, obj2)(1)
 //│ = 4
 
 
-:fixme
-@bufferable
+:sjs
+@buffered
 class A(x) with
   val z = x
   fun f(y) = x + y + z
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:A
+//│ JS (unsanitized):
+//│ let A4;
+//│ globalThis.Object.freeze(class A3 {
+//│   static {
+//│     A4 = this
+//│   }
+//│   constructor() {}
+//│   static {
+//│     this.size = 2;
+//│   }
+//│   static ctor(buf1, idx) {
+//│     return (x) => {
+//│       let idx1, idx2, idx3;
+//│       idx3 = idx + 0;
+//│       buf1.buf[idx3] = x;
+//│       idx1 = idx + 0;
+//│       idx2 = idx + 1;
+//│       buf1.buf[idx2] = buf1.buf.at(idx1);
+//│       return idx
+//│     }
+//│   } 
+//│   static f(buf1, idx) {
+//│     return (y) => {
+//│       let tmp10, idx1, idx2;
+//│       idx1 = idx + 0;
+//│       tmp10 = buf1.buf.at(idx1) + y;
+//│       idx2 = idx + 1;
+//│       return tmp10 + buf1.buf.at(idx2)
+//│     }
+//│   }
+//│   #x;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
 
 
