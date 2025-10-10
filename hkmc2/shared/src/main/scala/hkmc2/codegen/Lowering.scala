@@ -4,6 +4,7 @@ package codegen
 import scala.language.implicitConversions
 import scala.annotation.tailrec
 import os.{Path as AbsPath, RelPath}
+import sourcecode.Line
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -154,7 +155,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
         Assign(sym, r, blockImpl(stats, res)(k))
-    case (imp @ Import(sym, path)) :: stats =>
+    case (imp: Import) :: stats =>
       raise(ErrorReport(
         msg"Imports must be at the top level" ->
         imp.toLoc :: Nil,
@@ -342,7 +343,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       args(fs)(args => k(Tuple(mut = false, args)))
     case ref @ st.Ref(sym) =>
       sym match
-      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
+      case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.wasm.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
         return fail:
           ErrorReport(
             msg"Module '${sym.nme}' is virtual (i.e., \"compiler fiction\"); cannot be used directly" -> t.toLoc ::
@@ -391,6 +392,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
       case bs: BlockMemberSymbol =>
         bs.defn match
+        case S(_) if bs.asCls.exists(_ is ctx.builtins.Int31) =>
+          return term(Sel(State.runtimeSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
         case S(d) if d.hasDeclareModifier.isDefined =>
           return term(Sel(State.globalThisSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
         case S(td: TermDefinition) if td.k is syntax.Fun =>
@@ -457,8 +460,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
       // * function is not called again with f. See below `Sel` and `SelProj` cases.
       f.instantiated match
+      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitand) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitand")))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitnot) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitnot")))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.js.bitor) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitor")))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.js.shl) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("shl")))
       case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.wasm.plus_impl) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.Int31) =>
+        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
       case t if t.resolvedSym.isDefined && (t.resolvedSym.get is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
           return fail:
@@ -1037,13 +1052,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val desug = LambdaRewriter.desugar(blk)
     
     val handlerPaths = new HandlerPaths
-    val stackSafe = config.stackSafety match
-      case N => desug
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths).transformTopLevel(desug)
-    val withHandlers = config.effectHandlers.fold(stackSafe): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(stackSafe)
     
-    val flattened = withHandlers.flattened
+    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+      
+    val stackSafe = config.stackSafety match
+      case N => withHandlers
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers)
+    
+    val flattened = stackSafe.flattened
     
     val lifted = 
       if lift then Lifter(S(handlerPaths)).transform(flattened)
@@ -1054,7 +1071,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val res = MergeMatchArmTransformer.applyBlock(bufferable)
     
     Program(
-      imps.map(imp => imp.sym -> imp.file),
+      imps.map(imp => imp.sym -> imp.str),
       res
     )
   

@@ -53,14 +53,15 @@ fun foo() =
 //│   }
 //│ });
 //│ foo2 = function foo() {
-//│   let x, scrut, tmp2, tmp3;
+//│   let x, scrut, tmp2, tmp3, lambda$here;
 //│   x = 1;
 //│   tmp4: while (true) {
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp2 = x + 1;
 //│       x = tmp2;
-//│       return runtime.safeCall(lambda2(x))
+//│       lambda$here = runtime.safeCall(lambda2(x));
+//│       return lambda$here
 //│     } else { tmp3 = runtime.Unit; }
 //│     break;
 //│   }

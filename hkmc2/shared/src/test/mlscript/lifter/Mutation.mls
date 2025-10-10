@@ -14,7 +14,7 @@ fun foo() =
 //│ JS (unsanitized):
 //│ let bar, foo, bar$, foo$capture1;
 //│ bar$ = function bar$(foo$capture2) {
-//│   return foo$capture2.x0$
+//│   return foo$capture2.x$capture$0
 //│ };
 //│ bar = function bar(foo$capture2) {
 //│   return () => {
@@ -25,19 +25,19 @@ fun foo() =
 //│   static {
 //│     foo$capture1 = this
 //│   }
-//│   constructor(x0$) {
-//│     this.x0$ = x0$;
+//│   constructor(x$capture$0) {
+//│     this.x$capture$0 = x$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo = function foo() {
-//│   let tmp, capture, bar$this;
+//│   let tmp, capture, bar$here;
 //│   capture = new foo$capture1(null);
-//│   capture.x0$ = 1;
-//│   bar$this = runtime.safeCall(bar(capture));
-//│   tmp = runtime.safeCall(xs.push(bar$this));
-//│   capture.x0$ = 2;
+//│   capture.x$capture$0 = 1;
+//│   bar$here = runtime.safeCall(bar(capture));
+//│   tmp = runtime.safeCall(xs.push(bar$here));
+//│   capture.x$capture$0 = 2;
 //│   return runtime.Unit
 //│ };
 

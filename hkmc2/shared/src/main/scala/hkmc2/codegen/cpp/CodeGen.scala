@@ -277,7 +277,7 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
   // Topological sort of classes based on inheritance relationships
   def sortClasses(prog: Program)(using Raise, Scope): Ls[ClassInfo] =
     var depgraph = prog.classes.map(x => (x.symbol, x.parents)).toMap
-      ++ builtinClassSymbols.map(x => (x, Set.empty[Symbol]))
+      ++ builtinClassSymbols.map(x => (x, List.empty[Symbol]))
     log(s"depgraph: $depgraph")
     var degree = depgraph.view.mapValues(_.size).toMap
     def removeNode(node: Symbol) =

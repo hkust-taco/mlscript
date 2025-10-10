@@ -115,3 +115,19 @@ Foo.res
 //│ = 11
 
 
+fun bar =
+  using Int = 42
+  Foo.foo
+mut val x = 1
+print(x)
+module Foo with
+  set x += 1
+  fun foo(using Int) = use[Int]
+print(x)
+bar
+//│ > 1
+//│ > 2
+//│ = 42
+//│ x = 2
+
+

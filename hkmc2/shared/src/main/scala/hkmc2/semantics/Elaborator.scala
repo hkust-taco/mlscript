@@ -144,6 +144,8 @@ object Elaborator:
         assumeBuiltin(nme).asMod.getOrElse(throw new NoSuchElementException(
           s"builtin module symbol $nme"))
       val Int = assumeBuiltinCls("Int")
+      // TODO(Derppening): Can we move the Int31 builtin in the wasm module?
+      val Int31 = assumeBuiltinCls("Int31")
       val Num = assumeBuiltinCls("Num")
       val Str = assumeBuiltinCls("Str")
       val BigInt = assumeBuiltinCls("BigInt")
@@ -170,7 +172,13 @@ object Elaborator:
         val name = assumeObject("name")
         val file = assumeObject("file")
       object js extends VirtualModule(assumeBuiltinMod("js")):
+        val bitand = assumeObject("bitand")
+        val bitnot = assumeObject("bitnot")
+        val bitor = assumeObject("bitor")
+        val shl = assumeObject("shl")
         val try_catch = assumeObject("try_catch")
+      object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
+        val plus_impl = assumeObject("plus_impl")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
         val getLocals = assumeObject("getLocals")
@@ -225,6 +233,7 @@ object Elaborator:
     val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
     val termSymbol = TempSymbol(N, "Term")
+    val wasmSymbol = TempSymbol(N, "wasm")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
@@ -364,6 +373,11 @@ extends Importer:
       block(LetLike(kw, lhs, rhso, N) :: Nil, hasResult = true)._1
     case LetLike(Keywrd(`set`), lhs, S(rhs), N) =>
       Term.Assgn(subterm(lhs), subterm(rhs))
+    case LetLike(Keywrd(`set`), lhs, N, N) =>
+      raise(ErrorReport(
+        msg"Expected a right-hand side for this assignment" ->
+          tree.toLoc :: Nil))
+      Term.Error
     case LetLike(Keywrd(`set`), lhs, S(rhs), S(bod)) =>
       // * Backtracking assignment
       val lt = subterm(lhs)
@@ -1007,7 +1021,6 @@ extends Importer:
           go(sts, Nil, newAcc)
       case (hd @ LetLike(kw @ Keywrd(`let`), Apps(id: Ident, tups), rhso, N)) :: sts
       if tups.isEmpty || id.name.headOption.exists(_.isLower) =>
-        reportUnusedAnnotations
         val sym =
           fieldOrVarSym(LetBind, id)
         log(s"Processing `let` statement $id (${sym}) ${ctx.outer}")

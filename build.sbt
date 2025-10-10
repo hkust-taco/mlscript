@@ -14,6 +14,7 @@ ThisBuild / scalacOptions ++= Seq(
   "-feature",
   "-unchecked",
   "-language:higherKinds",
+  "-language:implicitConversions",
   if (insideCI.value) "-Wconf:any:error"
   else                "-Wconf:any:warning",
 )

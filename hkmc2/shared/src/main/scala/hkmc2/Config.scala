@@ -6,6 +6,12 @@ import utils.*
 import Config.*
 
 
+/** The compilation target of a program. */
+enum CompilationTarget:
+  case JS
+  case Wasm
+
+
 def config(using Config): Config = summon
 
 type Cfg[A] = Config ?=> A
@@ -14,6 +20,7 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  target: CompilationTarget,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -28,6 +35,7 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    target = CompilationTarget.JS
   )
   
   case class SanityChecks(light: Bool)

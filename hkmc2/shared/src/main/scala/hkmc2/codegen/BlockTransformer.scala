@@ -31,13 +31,14 @@ class BlockTransformer(subst: SymbolSubst):
         if exc2 is exc then b else Throw(exc2)
     case Match(scrut, arms, dflt, rst) =>
       applyPath(scrut): scrut2 =>
-        applyListOf(arms)
-          .apply:
-            case tup@(cse, blk) => k =>
-              val blk2 = applySubBlock(blk)
-              applyCase(cse): cse2 =>
-                if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
-          .apply: arms2 =>
+        applyListOf(
+          arms,
+          (tup, k) =>
+            val (cse, blk) = tup
+            val blk2 = applySubBlock(blk)
+            applyCase(cse): cse2 =>
+              if (cse2 is cse) && (blk is blk2) then k(tup) else k(cse2 -> blk2)
+        ): arms2 =>
             val dflt2 = dflt.mapConserve(applySubBlock)
             val rst2 = applySubBlock(rst)
             if (scrut2 is scrut) &&
@@ -78,7 +79,7 @@ class BlockTransformer(subst: SymbolSubst):
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       applyPath(par): par2 =>
-        applyListOf(args)(applyPath): args2 =>
+        applyListOf(args, applyPath(_)(_)): args2 =>
           val cls2 = cls.subst
           val hdr2 = hdr.mapConserve(applyHandler)
           val bod2 = applySubBlock(bod)
@@ -107,10 +108,10 @@ class BlockTransformer(subst: SymbolSubst):
       case None => toBeIdxed(idx)
   
   def applyRcdArgs(rcdArgs: List[RcdArg])(k: List[RcdArg] => Block): Block =
-    applyListOf(rcdArgs)(applyRcdArg)(k)
+    applyListOf(rcdArgs, applyRcdArg(_)(_))(k)
   
   def applyArgs(args: List[Arg])(k: List[Arg] => Block): Block =
-    applyListOf(args)(applyArg)(k)
+    applyListOf(args, applyArg(_)(_))(k)
   
   def applyResult(r: Result)(k: Result => Block): Block =
     r match
@@ -254,16 +255,12 @@ class BlockTransformer(subst: SymbolSubst):
     val body2 = applySubBlock(lam.body)
     if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
   
-  def applyListOf[A](ls: List[A])(f: A => (A => Block) => Block)(k: List[A] => Block): Block =
-    @scala.annotation.tailrec
-    def rec(ls: List[A])(k: List[A] => Block): Block =
-      ls match
-        case Nil => k(Nil)
-        case a :: t =>
-          rec(t): t2 =>
-            f(a): (a2: A) =>
-              if (a2 is a) && (t2 is t) then k(ls) else k(a2 :: t2)
-    rec(ls.reverse)(ls => k(ls.reverse))
+  def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =
+    def rec(ls: List[A], k: List[A] => Block): Block = ls match
+      case Nil => k(Nil)
+      case a :: t =>
+        f(a, a2 => rec(t, t2 => if (a2 is a) && (t2 is t) then k(ls) else k(a2 :: t2)))
+    rec(ls, k)
 
 
 
@@ -281,7 +278,7 @@ class BlockTransformerShallow(subst: SymbolSubst) extends BlockTransformer(subst
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       applyPath(par): par2 =>
-        applyListOf(args)(applyPath): args2 =>
+        applyListOf(args, applyPath(_)(_)): args2 =>
           val cls2 = cls.subst
           val hdr2 = hdr.mapConserve(applyHandler)
           val rst2 = applySubBlock(rst)

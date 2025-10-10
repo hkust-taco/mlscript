@@ -158,7 +158,7 @@ if true do
 //│ JS (unsanitized):
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, res, Cont$handleBlock$h$11, Handler$h$12;
+//│   let f, h, scrut, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
 //│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
 //│     static {
 //│       Handler$h$12 = this
@@ -168,11 +168,11 @@ if true do
 //│       tmp12 = super();
 //│     }
 //│     perform(arg) {
-//│       let lambda;
-//│       lambda = (undefined, function (k) {
+//│       let hdlrFun;
+//│       hdlrFun = function hdlrFun(k) {
 //│         return arg
-//│       });
-//│       return runtime.mkEffect(this, lambda)
+//│       };
+//│       return runtime.mkEffect(this, hdlrFun)
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Handler$h$"]; 
@@ -188,23 +188,11 @@ if true do
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 0) {
+//│       if (this.pc === 1) {
 //│         res = value$;
 //│       }
 //│       contLoop: while (true) {
 //│         if (this.pc === 1) {
-//│           break contLoop
-//│         } else if (this.pc === 2) {
-//│           res = f();
-//│           if (res instanceof runtime.EffectSig.class) {
-//│             this.pc = 0;
-//│             res.contTrace.last.next = this;
-//│             res.contTrace.last = this;
-//│             return res
-//│           }
-//│           this.pc = 0;
-//│           continue contLoop
-//│         } else if (this.pc === 0) {
 //│           return res
 //│         }
 //│         break;
@@ -213,6 +201,10 @@ if true do
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
 //│   });
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$handleBlock$h$11(pc);
+//│     return runtime.handleBlockImpl(res1, h)
+//│   };
 //│   f = function f() {
 //│     return 3
 //│   };
@@ -220,8 +212,7 @@ if true do
 //│   if (scrut === true) {
 //│     res = f();
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = new Cont$handleBlock$h$11(0);
-//│       return runtime.handleBlockImpl(res, h)
+//│       return doUnwind(res, 1)
 //│     }
 //│     return res
 //│   } else {
@@ -404,3 +395,13 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ = 123
+
+// Access superclass fields
+handle h1 = Object with
+  fun perf()(k) = k(2)
+class A with
+  val x = 2
+handle h2 = A with
+  fun perf()(k) = k(this.x)
+h2.perf()
+//│ = 2

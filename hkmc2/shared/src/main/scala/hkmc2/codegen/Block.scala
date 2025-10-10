@@ -14,6 +14,7 @@ import semantics.*
 import semantics.Term.*
 import sem.Elaborator.State
 
+
 case class Program(
   imports: Ls[Local -> Str],
   main: Block,
