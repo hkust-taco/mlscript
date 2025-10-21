@@ -47,10 +47,10 @@ trait SplitElaborator:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ (Keywrd[Connective], Tree))] = tree match
       case InfixApp(lhs, Keywrd(`and`), rhs) => S((lhs, L(rhs)))
       case InfixApp(lhs, kw @ Keywrd[`then`.type](`then`), rhs) =>
-        kwLocSets._2 ++= tree.toLoc
+        kwLocSets._2 ++= kw.toLoc
         S((lhs, R((kw, rhs))))
       case InfixApp(lhs, kw @ Keywrd[`do`.type](`do`), rhs) =>
-        kwLocSets._1 ++= tree.toLoc
+        kwLocSets._1 ++= kw.toLoc
         S((lhs, R((kw, rhs))))
       case _ => N
   
