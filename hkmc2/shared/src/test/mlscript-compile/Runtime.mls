@@ -43,6 +43,10 @@ fun deboundMethod(mtdName, clsName) =
     "[debinding error] Method '" + mtdName + "' of class '" + clsName + "' was accessed without being called."
 
 
+val bitand = RuntimeJS.bitand
+val bitnot = RuntimeJS.bitnot
+val bitor = RuntimeJS.bitor
+val shl = RuntimeJS.shl
 val try_catch = RuntimeJS.try_catch
 
 class EffectHandle(_reified) with
@@ -122,6 +126,12 @@ object PrintStackEffect
 
 data abstract class FunctionContFrame(next) with
   fun resume(value)
+  fun doUnwind(res1, newPc) =
+    set
+      (this).pc = newPc
+      res1.contTrace.last.next = this
+      res1.contTrace.last = this
+    res1
 data class HandlerContFrame(next, nextHandler, handler)
 
 data class ContTrace(next, last, nextHandler, lastHandler, resumed)
@@ -332,11 +342,14 @@ fun resume(contTrace)(value) =
   handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace, value) =
+  // TODO: increment stackDepth by some constant amount
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
+  let curDepth = stackDepth 
   while
     cont is FunctionContFrame then
       set value = cont.resume(value)
+      set stackDepth = curDepth
       if value is EffectSig then
         set
           value.contTrace.last.next = cont.next
@@ -356,8 +369,7 @@ fun resumeContTrace(contTrace, value) =
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
-mut val stackDepth = 0 // Tracks the virtual + real stack depth
-mut val stackOffset = 0 // How much to offset stackDepth by to get the true stack depth (i.e. the virtual depth)
+mut val stackDepth = 0
 mut val stackHandler = null
 mut val stackResume = null
 
@@ -366,34 +378,35 @@ object StackDelayHandler with
     set stackResume = k
 
 fun checkDepth() =
-  if stackDepth - stackOffset >= stackLimit && stackHandler !== null then
+  if stackDepth >= stackLimit && stackHandler !== null then
     // this is a tail call to effectful function
     stackHandler.delay()
   else
     ()
 
-fun resetDepth(tmp, curDepth) =
-  set stackDepth = curDepth
-  if curDepth < stackOffset do
-    set stackOffset = curDepth
-  tmp
-
 fun runStackSafe(limit, f) =
   set
     stackLimit = limit
     stackDepth = 1
-    stackOffset = 0
     stackHandler = StackDelayHandler
   let result = enterHandleBlock(StackDelayHandler, f)
+  set stackDepth = 1
   while stackResume !== null do
     let saved = stackResume
     set
       stackResume = null
-      stackOffset = stackDepth
       result = saved()
+      stackDepth = 1
   set
     stackLimit = 0
     stackDepth = 0
-    stackOffset = 0
     stackHandler = null
   result
+
+class Int31(v) with
+  fun zext() = bitand(v, bitnot(shl(1, 31))) as Int
+  fun sext() = bitor(v, shl(1, 31)) as Int
+
+fun plus_impl(lhs, rhs) = if lhs is
+  Int31 and rhs is Int31 then lhs + rhs
+  else unreachable()

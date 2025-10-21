@@ -429,9 +429,12 @@ object Normalization:
     case (ClassLike(_, cs: ModuleOrObjectSymbol, _, _), ClassLike(symbol = blt.`Object`)) => true
     case (Tuple(n1, false), Tuple(n2, false)) if n1 === n2 => true
     case (Tuple(n1, _), Tuple(n2, true)) if n2 <= n1 => true
+    // Note: We don't make Int31 compatible with Num, since Int31 needs to know how it should be
+    // sign-extended in order to convert into a Num.
     case (ClassLike(symbol = blt.`Int`), ClassLike(symbol = blt.`Num`)) => true
     // case (s1: ClassSymbol, s2: ClassSymbol) => s1 <:< s2 // TODO: find a way to check inheritance
-    case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Num`)) => true
+    // TODO(Derppening): Do we limit IntLit to (1 << 31) - 1 for `Int31`?
+    case (Lit(Tree.IntLit(_)), ClassLike(symbol = blt.`Int` | blt.`Int31` | blt.`Num`)) => true
     case (Lit(Tree.StrLit(_)), ClassLike(symbol = blt.`Str`)) => true
     case (Lit(Tree.DecLit(_)), ClassLike(symbol = blt.`Num`)) => true
     case (Lit(Tree.BoolLit(_)), ClassLike(symbol = blt.`Bool`)) => true

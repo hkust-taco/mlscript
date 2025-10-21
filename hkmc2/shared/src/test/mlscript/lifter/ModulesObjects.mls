@@ -28,12 +28,12 @@ fun foo(y) =
 foo(10)
 //│ JS (unsanitized):
 //│ let M3, foo1, M$;
-//│ M$ = function M$(isMut, y$0) {
+//│ M$ = function M$(isMut, y) {
 //│   let tmp;
 //│   if (isMut === true) {
-//│     tmp = new M3(y$0);
+//│     tmp = new M3(y);
 //│   } else {
-//│     tmp = globalThis.Object.freeze(new M3(y$0));
+//│     tmp = globalThis.Object.freeze(new M3(y));
 //│   }
 //│   return tmp
 //│ };
@@ -41,14 +41,14 @@ foo(10)
 //│   static {
 //│     M3 = this
 //│   }
-//│   constructor(y$0) {
-//│     this.y$0 = y$0;
+//│   constructor(y) {
+//│     this.y = y;
 //│   }
-//│   #y$0;
-//│   get y$0() { return this.#y$0; }
-//│   set y$0(value) { this.#y$0 = value; }
+//│   #y;
+//│   get y() { return this.#y; }
+//│   set y(value) { this.#y = value; }
 //│   foo() {
-//│     this.y$0 = 2;
+//│     this.y = 2;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -100,7 +100,6 @@ set o.x = 1
 o.x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
-
 :sjs
 fun foo(x, y) =
   object M with
@@ -110,32 +109,27 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M5, foo31, foo4, foo3$, foo$capture3;
+//│ let M5, foo4, foo3$, foo$capture3;
 //│ foo3$ = function foo3$(M6, x, foo$capture4) {
 //│   return M6.foo2()
-//│ };
-//│ foo31 = function foo3(M6, x, foo$capture4) {
-//│   return () => {
-//│     return foo3$(M6, x, foo$capture4)
-//│   }
 //│ };
 //│ globalThis.Object.freeze(class M4 {
 //│   static {
 //│     M5 = this
 //│   }
-//│   constructor(x$1, foo$capture$0) {
-//│     this.foo$capture$0 = foo$capture$0;
-//│     this.x$1 = x$1;
+//│   constructor(x, foo$capture4) {
+//│     this.foo$capture = foo$capture4;
+//│     this.x = x;
 //│   }
-//│   #foo$capture$0;
-//│   #x$1;
-//│   get foo$capture$0() { return this.#foo$capture$0; }
-//│   set foo$capture$0(value) { this.#foo$capture$0 = value; }
-//│   get x$1() { return this.#x$1; }
-//│   set x$1(value) { this.#x$1 = value; }
+//│   #foo$capture;
+//│   #x;
+//│   get foo$capture() { return this.#foo$capture; }
+//│   set foo$capture(value) { this.#foo$capture = value; }
+//│   get x() { return this.#x; }
+//│   set x(value) { this.#x = value; }
 //│   foo2() {
-//│     this.foo$capture$0.y0$ = 2;
-//│     return this.x$1 + this.foo$capture$0.y0$
+//│     this.foo$capture.y$capture$0 = 2;
+//│     return this.x + this.foo$capture.y$capture$0
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
@@ -144,8 +138,8 @@ fun foo(x, y) =
 //│   static {
 //│     foo$capture3 = this
 //│   }
-//│   constructor(y0$) {
-//│     this.y0$ = y0$;
+//│   constructor(y$capture$0) {
+//│     this.y$capture$0 = y$capture$0;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
@@ -163,46 +157,10 @@ foo(10, 0)
 //│ = 12
 
 
-:sjs
 data class A(x) with
   object M with
     fun getB() = x
   fun getA() = M.getB()
-//│ JS (unsanitized):
-//│ let M7, A1;
-//│ globalThis.Object.freeze(class M6 {
-//│   static {
-//│     M7 = this
-//│   }
-//│   constructor(A$instance$0) {
-//│     this.A$instance$0 = A$instance$0;
-//│   }
-//│   #A$instance$0;
-//│   get A$instance$0() { return this.#A$instance$0; }
-//│   set A$instance$0(value) { this.#A$instance$0 = value; }
-//│   getB() {
-//│     return this.A$instance$0.x
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
-//│ A1 = function A(x) {
-//│   return globalThis.Object.freeze(new A.class(x));
-//│ };
-//│ globalThis.Object.freeze(class A {
-//│   static {
-//│     A1.class = this
-//│   }
-//│   constructor(x) {
-//│     this.x = x;
-//│     this.M$ = globalThis.Object.freeze(new M7(this));
-//│   }
-//│   getA() {
-//│     return this.M$.getB()
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
-//│ });
 
 :expect 2
 A(2).getA()
@@ -306,7 +264,6 @@ M.B().get
 // newA_B should reference the BlockMemberSymbol
 // note: no warning because A is not lifted
 :lift
-:sjs
 module M with
   data class A(x) with
     class B() with
@@ -316,86 +273,6 @@ module M with
     fun newB = B()
   0 is A
 M.A(2).newB.newA_B(3).newB.get
-//│ JS (unsanitized):
-//│ let B2, M21, tmp5, tmp6, B$;
-//│ B$ = function B$(isMut, A$instance$0) {
-//│   let tmp7, tmp8;
-//│   if (isMut === true) {
-//│     tmp7 = new B2.class();
-//│   } else {
-//│     tmp7 = globalThis.Object.freeze(new B2.class());
-//│   }
-//│   tmp8 = tmp7(A$instance$0);
-//│   return tmp8
-//│ };
-//│ B2 = function B() {
-//│   return (A$instance$0) => {
-//│     return globalThis.Object.freeze(new B.class()(A$instance$0));
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class B1 {
-//│   static {
-//│     B2.class = this
-//│   }
-//│   constructor() {
-//│     return (A$instance$0) => {
-//│       this.A$instance$0 = A$instance$0;
-//│       return this;
-//│     }
-//│   }
-//│   #A$instance$0;
-//│   get A$instance$0() { return this.#A$instance$0; }
-//│   set A$instance$0(value) { this.#A$instance$0 = value; }
-//│   get get() {
-//│     return this.A$instance$0.x;
-//│   } 
-//│   newA_B(y) {
-//│     return M21.A(y)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "B", []]; 
-//│ });
-//│ globalThis.Object.freeze(class M20 {
-//│   static {
-//│     M21 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     let scrut;
-//│     this.A = function A(x) {
-//│       return globalThis.Object.freeze(new A.class(x));
-//│     };
-//│     globalThis.Object.freeze(class A7 {
-//│       static {
-//│         M20.A.class = this
-//│       }
-//│       constructor(x) {
-//│         this.x = x;
-//│       }
-//│       get newA() {
-//│         return M20.A(42);
-//│       } 
-//│       get newB() {
-//│         return B$(false, this);
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A", ["x"]]; 
-//│     });
-//│     scrut = 0;
-//│     if (scrut instanceof M20.A.class) {
-//│       true
-//│     } else {
-//│       false
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
-//│ tmp5 = M21.A(2);
-//│ tmp6 = runtime.safeCall(tmp5.newB.newA_B(3));
-//│ tmp6.newB.get
 //│ = 3
 
 module M with
@@ -413,35 +290,10 @@ fun foo(x) =
 foo(123)
 //│ = [true, [true, false], true]
 
-:sjs
 module A with
   fun g = 1
   fun f = () => g
   f()
-//│ JS (unsanitized):
-//│ let A10, lambda;
-//│ lambda = (undefined, function () {
-//│   return A10.g
-//│ });
-//│ globalThis.Object.freeze(class A9 {
-//│   static {
-//│     A10 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     A9.f();
-//│   }
-//│   static get g() {
-//│     return 1;
-//│   } 
-//│   static get f() {
-//│     return lambda;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
 
 module A with
   val a = (() => 1)()
@@ -452,7 +304,6 @@ module A with
     fun f() = 1
     f()
 
-:sjs
 module A with
   val x =
     fun f() = 1
@@ -461,44 +312,9 @@ module A with
       h()
     f() + g()
 A.x
-//│ JS (unsanitized):
-//│ let h, A16, h$;
-//│ h$ = function h$(f$member) {
-//│   return f$member()
-//│ };
-//│ h = function h(f$member) {
-//│   return () => {
-//│     return h$(f$member)
-//│   }
-//│ };
-//│ globalThis.Object.freeze(class A15 {
-//│   static {
-//│     A16 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     let f, g2, tmp7, tmp8, tmp9;
-//│     f = function f() {
-//│       return 1
-//│     };
-//│     g2 = function g() {
-//│       return h$(f)
-//│     };
-//│     tmp7 = f();
-//│     tmp8 = g2();
-//│     tmp9 = tmp7 + tmp8;
-//│     this.x = tmp9;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ A16.x
 //│ = 2
 
 // private fields in modules
-:sjs
 :fixme
 module A with
   let x = 1
@@ -507,29 +323,6 @@ module A with
     nested()
 A.mtd
 //│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ JS (unsanitized):
-//│ let nested, A18;
-//│ nested = function nested() {
-//│   return A18.x
-//│ };
-//│ globalThis.Object.freeze(class A17 {
-//│   static {
-//│     A18 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static #x;
-//│   static {
-//│     A17.#x = 1;
-//│   }
-//│   static get mtd() {
-//│     return nested();
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ A18.mtd
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

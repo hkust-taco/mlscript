@@ -19,7 +19,7 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1;
+//│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
 //│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       static {
@@ -31,39 +31,26 @@ data class Lol(h) with
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 0) {
+//│         if (this.pc === 1) {
 //│           tmp = value$;
-//│         } else if (this.pc === 1) {
+//│         } else if (this.pc === 2) {
 //│           res = value$;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 2) {
+//│           if (this.pc === 3) {
 //│             return this$Lol
-//│           } else if (this.pc === 3) {
+//│           } else if (this.pc === 4) {
 //│             res = Predef.print(tmp);
 //│             if (res instanceof runtime.EffectSig.class) {
-//│               this.pc = 1;
-//│               res.contTrace.last.next = this;
-//│               res.contTrace.last = this;
-//│               return res
+//│               return this.doUnwind(res, 2)
 //│             }
-//│             this.pc = 1;
-//│             continue contLoop
-//│           } else if (this.pc === 4) {
-//│             tmp = runtime.safeCall(this$Lol.h.perform("k"));
-//│             if (tmp instanceof runtime.EffectSig.class) {
-//│               this.pc = 0;
-//│               tmp.contTrace.last.next = this;
-//│               tmp.contTrace.last = this;
-//│               return tmp
-//│             }
-//│             this.pc = 0;
-//│             continue contLoop
-//│           } else if (this.pc === 0) {
-//│             this.pc = 3;
+//│             this.pc = 2;
 //│             continue contLoop
 //│           } else if (this.pc === 1) {
-//│             this.pc = 2;
+//│             this.pc = 4;
+//│             continue contLoop
+//│           } else if (this.pc === 2) {
+//│             this.pc = 3;
 //│             continue contLoop
 //│           }
 //│           break;
@@ -72,18 +59,19 @@ data class Lol(h) with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
 //│     });
+//│     doUnwind = function doUnwind(res1, pc) {
+//│       res1.contTrace.last.next = new Cont$ctor$Lol$1(pc);
+//│       res1.contTrace.last = res1.contTrace.last.next;
+//│       return res1
+//│     };
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       tmp.contTrace.last.next = new Cont$ctor$Lol$1(0);
-//│       tmp.contTrace.last = tmp.contTrace.last.next;
-//│       return tmp
+//│       return doUnwind(tmp, 1)
 //│     }
 //│     res = Predef.print(tmp);
 //│     if (res instanceof runtime.EffectSig.class) {
-//│       res.contTrace.last.next = new Cont$ctor$Lol$1(1);
-//│       res.contTrace.last = res.contTrace.last.next;
-//│       return res
+//│       return doUnwind(res, 2)
 //│     }
 //│     res;
 //│   }

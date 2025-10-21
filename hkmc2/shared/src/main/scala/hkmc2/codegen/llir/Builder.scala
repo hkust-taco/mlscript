@@ -221,15 +221,15 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
-        def parentFromPath(p: Path): Set[Local] = p match
-          case Value.Ref(l) => Set(fromMemToClass(l))
-          case Select(Value.Ref(l), Tree.Ident("class")) => Set(fromMemToClass(l))
+        def parentFromPath(p: Path): Ls[Local] = p match
+          case Value.Ref(l) => fromMemToClass(l) :: Nil
+          case Select(Value.Ref(l), Tree.Ident("class")) => fromMemToClass(l) :: Nil
           case _ => bErrStop(msg"Unsupported parent path ${p.toString()}")
         ClassInfo(
           uid.make,
           isym,
           clsParams,
-          parentSym.fold(Set.empty)(parentFromPath),
+          parentSym.fold(Nil)(parentFromPath),
           funcs.map(f => f.name -> f).toMap,
         )
   
@@ -267,7 +267,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         uid.make,
         name,
         clsParams,
-        Set(builtinCallable),
+        builtinCallable :: Nil,
         Map(method.name -> method),
       )
       val v: Local = newTemp
@@ -533,7 +533,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   def registerBuiltinClasses(using ctx: Ctx)(using Raise, Scope): Ctx =
     ctx.builtinSym.tupleSym.foldLeft(ctx):
       case (ctx, (len, sym)) =>
-        val c = ClassInfo(uid.make, sym, (0 until len).map(x => builtinField(x)).toList, Set.empty, Map.empty)
+        val c = ClassInfo(uid.make, sym, (0 until len).map(x => builtinField(x)).toList, Nil, Map.empty)
         ctx.class_acc += c
         ctx.addClassInfo(sym, BlockMemberSymbol(sym.nme, Nil), c)
   

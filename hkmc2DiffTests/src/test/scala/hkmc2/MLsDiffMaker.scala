@@ -54,6 +54,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val typeCheck = FlagCommand(false, "typeCheck")
   
+  /**
+   * Enables Wasm support. All options in [[WasmDiffMaker]] are no-op if this option is not set.
+   */
+  val wasm = NullaryCommand("wasm")
+  
   
   // * Compiler configuration
   
@@ -87,7 +92,8 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
     )
   
   

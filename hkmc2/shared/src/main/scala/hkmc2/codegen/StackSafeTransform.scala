@@ -7,13 +7,18 @@ import hkmc2.codegen.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.semantics.*
 import hkmc2.syntax.Tree
+import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[FnOrCls, Path])(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
+  
+  val doUnwindFns = doUnwindMap.values.collect:
+      case s: Select if s.symbol.isDefined => s.symbol.get
+      case Value.Ref(sym) => sym
+    .toSet
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
-  private val resetDepthPath: Path = runtimePath.selN(Tree.Ident("resetDepth"))
   private val runStackSafePath: Path = runtimePath.selN(Tree.Ident("runStackSafe"))
   private val stackDepthPath: Path = runtimePath.selN(STACK_DEPTH_IDENT)
 
@@ -24,18 +29,13 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
-    if isTailCall then
-      blockBuilder
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
-        .ret(res)
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol): Block =
+    if isTailCall then Return(res, false)
     else
       val tmp = sym getOrElse TempSymbol(None, "tmp")
-      val offsetGtDepth = TempSymbol(None, "offsetGtDepth")
       blockBuilder
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(1)))
         .assign(tmp, res)
-        .assign(tmp, Call(resetDepthPath, tmp.asPath.asArg :: curDepth.asPath.asArg :: Nil)(true, false))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asPath)
         .rest(f(tmp.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
@@ -51,6 +51,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
       case Call(Value.Ref(_: BuiltinSymbol), _) => false
+      case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects
       case _: Call | _: Instantiate => true
       case _ => false
 
@@ -75,30 +76,12 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
               extract(r, false, _ => applyBlock(rest), S(lhs), curDepth)
           else
             super.applyBlock(b)
-        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
-          val l2 = applyLocal(l)
-          val res2 = applyLocal(res)
-          applyPath(par): par2 =>
-            applyListOf(args)(applyPath): args2 =>
-              val cls2 = cls.subst
-              val hdr2 = hdr.mapConserve(applyHandler)
-              val bod2 = rewriteBlk(bod)
-              val rst2 = applyBlock(rst)
-              if isTopLevel then
-                val newRes = TempSymbol(N, "res")
-                val newHandler = HandleBlock(l2, newRes, par2, args2, cls2, hdr2, bod2, Ret(newRes.asPath))
-                wrapStackSafe(newHandler, res2, rst2)
-              else
-                HandleBlock(l2, res2, par2, args2, cls2, hdr2, bod2, rst2)
+        
+        case HandleBlock(l, res, par, args, cls, hdr, bod, rst) => lastWords("HandleBlock in stack safe transformation")
         
         case _ => super.applyBlock(b)
         
-        override def applyHandler(hdr: Handler): Handler =
-          val sym2 = hdr.sym.subst
-          val resumeSym2 = hdr.resumeSym.subst
-          val params2 = hdr.params.mapConserve(applyParamList)
-          val body2 = rewriteBlk(hdr.body)
-          Handler(sym2, resumeSym2, params2, body2)
+        override def applyHandler(hdr: Handler): Handler = lastWords("HandleBlock in stack safe transformation")
       
       override def applyResult(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
@@ -106,8 +89,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         else
           super.applyResult(r)(k)
       
-      override def applyLam(lam: Lambda): Lambda =
-        Lambda(lam.params, rewriteBlk(lam.body))
+      override def applyLam(lam: Lambda): Lambda = lastWords("Lambda in stack safe transformation")
   
     transform.applyBlock(b)
   
@@ -121,17 +103,20 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
         case _ => ()
     trivial
   
-  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn =
-    val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
-      parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
-    ClsLikeDefn(
-      owner, isym, sym, k, paramsOpt, auxParams, parentPath,
-      methods.map(rewriteFn),
-      privateFields,
-      publicFields, rewriteBlk(preCtor),
-      rewriteBlk(ctor),
-      mod.map(rewriteObjBody(_, isTopLevel)),
-    )
+  def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = defn.parentPath match
+    case Some(value) if value eq paths.contClsPath => defn
+    case _ =>
+      val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
+        parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
+      ClsLikeDefn(
+        owner, isym, sym, k, paramsOpt, auxParams, parentPath,
+        methods.map(rewriteFn),
+        privateFields,
+        publicFields, 
+        rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1), // TODO: preCtor is not translated in handler lowering
+        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1),
+        mod.map(rewriteObjBody(_, isTopLevel)),
+      )
   
   def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =
     ClsLikeBody(
@@ -139,22 +124,54 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths)(using State):
       defn.methods.map(rewriteFn),
       defn.privateFields,
       defn.publicFields,
-      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor),
+      if isTopLevel then transformTopLevel(defn.ctor) else rewriteBlk(defn.ctor, R(defn.isym), 1),
     )
 
-  def rewriteBlk(blk: Block) =
-    val curDepth =
+  // fnOrCls points us to the doUnwind function
+  def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
+    var usedDepth = false
+    lazy val curDepth =
+      usedDepth = true
       TempSymbol(None, "curDepth")
+      
+    val doUnwindPath = doUnwindMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
+    
     if isTrivial(blk) then
       newBody
-    else
+    else if doUnwindPath.isEmpty then
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
-        .assign(curDepth, stackDepthPath)
-        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .rest(newBody)
-  
-  def rewriteFn(defn: FunDefn) = FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body))
+    else
+      val resSym = TempSymbol(None, "stackDelayRes")
+      val rewritten = blockBuilder
+        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
+        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        .ifthen(
+          resSym.asPath,
+          Case.Cls(paths.effectSigSym, paths.effectSigPath),
+          Return(
+            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
+            false
+          )
+        )
+        .rest(newBody)
+      // Float out defns, including the doUnwind function, so that they appear at the top of the block
+      // This is because the doUnwind function must appear before the checks inserted by the stack
+      // safety pass.
+      // However, due to how tightly coupled the stack safety and handler lowering are, it might be
+      // better to simply merge the two passes in the future.
+      val (blk, defns) = doUnwindPath.get match
+        case Value.Ref(sym) => rewritten.floatOutDefns()
+        case _ => (rewritten, Nil)
+      defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
+
+     
+  def rewriteFn(defn: FunDefn) = 
+    if doUnwindFns.contains(defn.sym) then defn
+    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

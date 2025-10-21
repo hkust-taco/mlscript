@@ -15,6 +15,8 @@ declare class TypedArray
 
 declare class BigInt
 
+declare class Int31
+
 data
   class
     CodeBase[T, C, S]
@@ -50,7 +52,16 @@ declare object Symbol with
   val iterator: Any
 
 declare module js with
-  fun try_catch
+  fun
+    bitand
+    bitnot
+    bitor
+    shl
+    try_catch
+
+declare module wasm with
+  fun
+    plus_impl
 
 declare module debug with
   fun printStack

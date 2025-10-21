@@ -61,7 +61,7 @@ object Printer:
   
   def mkDocument(defn: Defn)(using Raise, Scope): Document = defn match
     case FunDefn(own, sym, params, body) =>
-      val docParams = doc"${own.fold("")(_.toString+"::")}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkString("(", ", ", ")")).mkString}"
+      val docParams = doc"${own.fold("")(_.toString+"::")}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = mkDocument(body)
       doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
@@ -81,7 +81,7 @@ object Printer:
       val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
       val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
-      val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkString(", ")})"
+      val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
       doc"class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
@@ -103,18 +103,18 @@ object Printer:
     case _ => TODO(path)
 
   def mkDocument(result: Result)(using Raise, Scope): Document = result match
-    case Call(fun, args) => doc"${mkDocument(fun)}(${args.map(mkDocument).mkString(", ")})"
+    case Call(fun, args) => doc"${mkDocument(fun)}(${args.map(mkDocument).mkDocument(", ")})"
     case Instantiate(mut, cls, args) =>
-      doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkString(", ")})"
+      doc"new ${if mut then "mut " else ""}${mkDocument(cls)}(${args.map(mkDocument).mkDocument(", ")})"
     case Lambda(params, body) =>
-      val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkString(", ")
+      val docParams = params.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument(", ")
       doc"(${docParams}) => ${mkDocument(body)}"
     case Tuple(mut, elems) =>
-      val docElems = elems.map(x => mkDocument(x)).mkString(", ")
+      val docElems = elems.map(x => mkDocument(x)).mkDocument(", ")
       doc"${if mut then "mut " else ""}[${docElems}]"
     case Record(mut, args) =>
       doc"${if mut then "mut " else ""}{ ${
-        args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkString(", ")
+        args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkDocument(", ")
       } }"
     case x: Path => mkDocument(x)
   

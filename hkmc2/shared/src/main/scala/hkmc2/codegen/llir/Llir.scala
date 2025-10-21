@@ -40,7 +40,7 @@ case class ClassInfo(
   id: Int,
   symbol: MemberSymbol[? <: ClassLikeDef],
   fields: Ls[VarSymbol],
-  parents: Set[Local],
+  parents: Ls[Local],
   methods: Map[Local, Func],
 ):
   override def hashCode: Int = id
@@ -119,18 +119,18 @@ abstract class LlirPrinting:
       case Expr.Ref(sym) => doc"${mkDocument(sym)}"
       case Expr.Literal(lit) => doc"${lit.idStr}"
       case Expr.CtorApp(cls, args) =>
-        doc"${mkDocument(cls)}(${args.map(mkDocument).mkString(",")})"
+        doc"${mkDocument(cls)}(${args.map(mkDocument).mkDocument(",")})"
       case Expr.Select(name, cls, field) =>
         doc"${mkDocument(name)}.<${mkDocument(cls)}:$field>"
       case Expr.BasicOp(sym, args) =>
-        doc"${sym.nme}(${args.map(mkDocument).mkString(",")})"
+        doc"${sym.nme}(${args.map(mkDocument).mkDocument(",")})"
       case Expr.AssignField(assignee, clsInfo, fieldName, value) => 
         doc"${mkDocument(assignee)}.${fieldName} := ${mkDocument(value)}"
   def mkDocument(node: Node): Document =
     node match
-      case Node.Result(res) => doc"${res.map(mkDocument).mkString(",")}"
+      case Node.Result(res) => doc"${res.map(mkDocument).mkDocument(",")}"
       case Node.Jump(func, args) =>
-        doc"jump ${mkDocument(func)}(${args.map(mkDocument).mkString(",")})"
+        doc"jump ${mkDocument(func)}(${args.map(mkDocument).mkDocument(",")})"
       case Node.Case(scrutinee, cases, default) =>
         val docFirst = doc"case ${mkDocument(scrutinee)} of"
         val docCases = cases.map {
@@ -146,20 +146,20 @@ abstract class LlirPrinting:
       case Node.LetExpr(x, expr, body) => 
         doc"let ${mkDocument(x)} = ${mkDocument(expr)} in # ${mkDocument(body)}"
       case Node.LetMethodCall(xs, cls, method, args, body) =>
-        doc"let ${xs.map(mkDocument).mkString(",")} = ${mkDocument(cls)}.${method.nme}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+        doc"let ${xs.map(mkDocument).mkDocument(",")} = ${mkDocument(cls)}.${method.nme}(${args.map(mkDocument).mkDocument(",")}) in # ${mkDocument(body)}"
       case Node.LetCall(xs, func, args, body) => 
-        doc"let* (${xs.map(mkDocument).mkString(",")}) = ${mkDocument(func)}(${args.map(mkDocument).mkString(",")}) in # ${mkDocument(body)}"
+        doc"let* (${xs.map(mkDocument).mkDocument(",")}) = ${mkDocument(func)}(${args.map(mkDocument).mkDocument(",")}) in # ${mkDocument(body)}"
   def mkDocument(defn: Func): Document =
     def docParams(params: Ls[Local]): Document =
-      params.map(mkDocument).mkString("(", ",", ")")
+      params.map(mkDocument).mkDocument("(", ",", ")")
     given Conversion[String, Document] = raw
     val docFirst = doc"def ${mkDocument(defn.name)}${docParams(defn.params)} ="
     val docBody = mkDocument(defn.body)
     doc"$docFirst #{  # $docBody #} "
   def mkDocument(cls: ClassInfo): Document =
     given Conversion[String, Document] = raw
-    val ext = if cls.parents.isEmpty then "" else " extends " + cls.parents.map(mkDocument).mkString(", ")
-    val docFirst = doc"class ${mkDocument(cls.symbol)}(${cls.fields.map(_.nme).mkString(",")})$ext"
+    val ext = if cls.parents.isEmpty then doc"" else " extends " :: cls.parents.map(mkDocument).mkDocument(", ")
+    val docFirst = doc"class ${mkDocument(cls.symbol)}(${cls.fields.map(_.nme).mkDocument(",")})$ext"
     if cls.methods.isEmpty then
       doc"$docFirst"
     else
