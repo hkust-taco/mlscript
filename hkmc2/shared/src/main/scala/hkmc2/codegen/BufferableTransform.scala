@@ -18,8 +18,8 @@ class BufferableTransform()(using Ctx, State, Raise):
   def transform(blk: Block): Block =
     val transformer = new BlockTransformer(SymbolSubst()):
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
-        case cls: ClsLikeDefn =>
-          cls.bufferable.flatMap(_.optionIf(cls.k is syntax.Cls)).fold(super.applyDefn(defn)(k)): bufferable =>
+        case cls: ClsLikeDefn if cls.k is syntax.Cls =>
+          cls.bufferable.fold(super.applyDefn(defn)(k)): bufferable =>
             val companionSym = ModuleOrObjectSymbol(DummyTypeDef(syntax.Mod), new Tree.Ident(cls.sym.nme))
             val clsSizeSym = BlockMemberSymbol("size", Nil, false)
             val clsSizeTermSym = TermSymbol(syntax.ImmutVal, S(companionSym), new Tree.Ident("size"))

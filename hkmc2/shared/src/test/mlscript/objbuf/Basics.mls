@@ -5,79 +5,22 @@ open ObjectBuffer
 open annotations
 
 
-:sjs
 @buffered
 class A(x) with
   fun f(y) = x + y
-//│ JS (unsanitized):
-//│ let A1;
-//│ globalThis.Object.freeze(class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {}
-//│   static {
-//│     this.size = 1;
-//│   }
-//│   static ctor(buf, idx) {
-//│     return (x) => {
-//│       let idx1;
-//│       idx1 = idx + 0;
-//│       buf.buf[idx1] = x;
-//│       return idx
-//│     }
-//│   } 
-//│   static f(buf, idx) {
-//│     return (y) => {
-//│       let idx1;
-//│       idx1 = idx + 0;
-//│       return buf.buf.at(idx1) + y
-//│     }
-//│   }
-//│   #x;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
 
-:sjs
 @bufferable
-class A2(x)
-//│ JS (unsanitized):
-//│ let A21;
-//│ A21 = function A2(x) {
-//│   return globalThis.Object.freeze(new A2.class(x));
-//│ };
-//│ globalThis.Object.freeze(class A2 {
-//│   static {
-//│     A21.class = this
-//│   }
-//│   constructor(x) {
-//│     this.#x = x;
-//│   }
-//│   static {
-//│     this.size = 1;
-//│   }
-//│   static ctor(buf, idx) {
-//│     return (x) => {
-//│       let idx1;
-//│       idx1 = idx + 0;
-//│       buf.buf[idx1] = x;
-//│       return idx
-//│     }
-//│   }
-//│   #x;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A2", [null]]; 
-//│ });
+class A2(x) with
+  fun f(y) = x + y
 
 :ge
 @buffered
 @buffered
 class B1(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.74: 	@buffered
+//│ ║  l.17: 	@buffered
 //│ ║        	 ^^^^^^^^
-//│ ║  l.75: 	@buffered
+//│ ║  l.18: 	@buffered
 //│ ╙──      	^^^^^^^^^
 
 :ge
@@ -85,24 +28,24 @@ class B1(x)
 @bufferable
 class B2(x)
 //│ ╔══[COMPILATION ERROR] Only one of bufferable annotation is allowed.
-//│ ║  l.84: 	@buffered
+//│ ║  l.27: 	@buffered
 //│ ║        	 ^^^^^^^^
-//│ ║  l.85: 	@bufferable
+//│ ║  l.28: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
 
 :w
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.94: 	@bufferable
+//│ ║  l.37: 	@bufferable
 //│ ╙──      	 ^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.101: 	@bufferable
-//│ ╙──       	 ^^^^^^^^^^
+//│ ║  l.44: 	@bufferable
+//│ ╙──      	 ^^^^^^^^^^
 
 
 let buf = new DefaultObjectBuffer(10)
@@ -133,32 +76,9 @@ A.f(buf, obj3)(1)
 //│ = 11
 
 
-:sjs
 @bufferable
 class Oops with
   fun hi = print("hi")
-//│ JS (unsanitized):
-//│ let Oops1;
-//│ globalThis.Object.freeze(class Oops {
-//│   static {
-//│     Oops1 = this
-//│   }
-//│   constructor() {}
-//│   static {
-//│     this.size = 0;
-//│   }
-//│   static ctor(buf1, idx) {
-//│     return idx
-//│   } 
-//│   static hi(buf1, idx) {
-//│     return Predef.print("hi")
-//│   }
-//│   get hi() {
-//│     return Predef.print("hi");
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Oops"]; 
-//│ });
 
 let obj1 = buf.mkNew(Oops)
 //│ obj1 = 0
@@ -180,44 +100,9 @@ A.f(buf, obj2)(1)
 //│ = 4
 
 
-:sjs
 @buffered
 class A(x) with
   val z = x
   fun f(y) = x + y + z
-//│ JS (unsanitized):
-//│ let A4;
-//│ globalThis.Object.freeze(class A3 {
-//│   static {
-//│     A4 = this
-//│   }
-//│   constructor() {}
-//│   static {
-//│     this.size = 2;
-//│   }
-//│   static ctor(buf1, idx) {
-//│     return (x) => {
-//│       let idx1, idx2, idx3;
-//│       idx3 = idx + 0;
-//│       buf1.buf[idx3] = x;
-//│       idx1 = idx + 0;
-//│       idx2 = idx + 1;
-//│       buf1.buf[idx2] = buf1.buf.at(idx1);
-//│       return idx
-//│     }
-//│   } 
-//│   static f(buf1, idx) {
-//│     return (y) => {
-//│       let tmp10, idx1, idx2;
-//│       idx1 = idx + 0;
-//│       tmp10 = buf1.buf.at(idx1) + y;
-//│       idx2 = idx + 1;
-//│       return tmp10 + buf1.buf.at(idx2)
-//│     }
-//│   }
-//│   #x;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
 
 

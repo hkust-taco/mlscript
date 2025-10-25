@@ -298,7 +298,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       sortedVars.iterator.foldLeft[Block](End()):
         case (acc, (_, _, vd)) => Define(vd, acc),
       N,
-      N, // TODO: capture class is likely bufferable
+      N,
     )
     
     (defn, sortedVars.iterator.map(_._1).toMap, sortedVars.iterator.map(_._1._1).toList)
