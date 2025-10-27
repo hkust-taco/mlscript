@@ -8,6 +8,7 @@ import syntax.*
 
 import Elaborator.State
 import hkmc2.typing.Type
+import hkmc2.semantics.Elaborator.{Ctx, ctx}
 
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
@@ -726,8 +727,12 @@ sealed abstract class ClassLikeDef extends TypeLikeDef:
   def moduleCompanion = companion match
     case S(sym: ModuleOrObjectSymbol) => S(sym)
     case _ => N
-  def extraAnnotations: Ls[Annot] = annotations.filter:
+  def extraAnnotations(using Ctx): Ls[Annot] = annotations.filter:
     case Annot.Modifier(Keyword.`declare` | Keyword.`abstract` | Keyword.`data`) => false
+    case Annot.Trm(trm: SynthSel) if
+      (kind is Cls) &&
+        (trm.sym.contains(ctx.builtins.annotations.bufferable) ||
+        trm.sym.contains(ctx.builtins.annotations.buffered)) => false
     case _ => true
 
 
@@ -788,7 +793,7 @@ sealed abstract class ClassDef extends ClassLikeDef:
   val annotations: Ls[Annot]
   def isData: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`data`) => mod
-  override def extraAnnotations: Ls[Annot] = super.extraAnnotations.filter:
+  override def extraAnnotations(using Ctx): Ls[Annot] = super.extraAnnotations.filter:
     case Annot.Modifier(Keyword.`data`) => false
     case _ => true
 

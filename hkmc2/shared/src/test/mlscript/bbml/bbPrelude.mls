@@ -69,6 +69,8 @@ declare module debug with
 
 declare module annotations with
   object compile
+  object buffered
+  object bufferable
 
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T

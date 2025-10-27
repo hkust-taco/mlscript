@@ -163,6 +163,8 @@ declare module debug with
 
 declare module annotations with
   object compile
+  object buffered
+  object bufferable
 
 
 // HTML DOM API definitions.

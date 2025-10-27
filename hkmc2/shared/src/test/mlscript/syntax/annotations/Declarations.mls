@@ -63,6 +63,12 @@ module Foo with
 //│ ║  l.61: 	@(1 + 2) class Qux
 //│ ╙──      	  ^^^^^
 
+:w
+@1 module Qux
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ║  l.67: 	@1 module Qux
+//│ ╙──      	 ^
+
 object inline
 
 :w
@@ -72,10 +78,10 @@ fun
   min(x, y) = if x < y then x else y
   max(x, y) = if x > y then x else y
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.70: 	@inline
+//│ ║  l.76: 	@inline
 //│ ╙──      	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.70: 	@inline
+//│ ║  l.76: 	@inline
 //│ ╙──      	 ^^^^^^
 
 :w
@@ -83,10 +89,10 @@ fun
   abs(x) = if x < 0 then -x else x
   clamp(x, lo, hi) = min(max(x, lo), hi)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.82: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ╙──      	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.82: 	@inline let
+//│ ║  l.88: 	@inline let
 //│ ╙──      	 ^^^^^^
 //│ abs = fun abs
 //│ clamp = fun clamp
@@ -97,8 +103,8 @@ let
   @inline success = 0
   failure = 1
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.97: 	  @inline success = 0
-//│ ╙──      	   ^^^^^^
+//│ ║  l.103: 	  @inline success = 0
+//│ ╙──       	   ^^^^^^
 //│ failure = 1
 //│ success = 0
 
@@ -109,10 +115,10 @@ let
 @inline @tailrec fun fib(n) =
   if n < 2 then n else fib(n - 1) + fib(n - 2)
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.109: 	@inline @tailrec fun fib(n) =
+//│ ║  l.115: 	@inline @tailrec fun fib(n) =
 //│ ╙──       	 ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.109: 	@inline @tailrec fun fib(n) =
+//│ ║  l.115: 	@inline @tailrec fun fib(n) =
 //│ ╙──       	         ^^^^^^^
 
 object internal
@@ -124,16 +130,16 @@ object internal
   transient
   volatile
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.121: 	@internal object
+//│ ║  l.127: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.121: 	@internal object
+//│ ║  l.127: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.121: 	@internal object
+//│ ║  l.127: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.121: 	@internal object
+//│ ║  l.127: 	@internal object
 //│ ╙──       	 ^^^^^^^^
 
 :w
@@ -143,31 +149,31 @@ object internal
   @volatile @transient empty = ""
   normal = ()
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.140: 	@volatile let
+//│ ║  l.146: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.141: 	  @shared counter = 0
+//│ ║  l.147: 	  @shared counter = 0
 //│ ╙──       	   ^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.140: 	@volatile let
+//│ ║  l.146: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.142: 	  @transient @thread_local cache = ()
+//│ ║  l.148: 	  @transient @thread_local cache = ()
 //│ ╙──       	   ^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.142: 	  @transient @thread_local cache = ()
+//│ ║  l.148: 	  @transient @thread_local cache = ()
 //│ ╙──       	              ^^^^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.140: 	@volatile let
+//│ ║  l.146: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	  @volatile @transient empty = ""
+//│ ║  l.149: 	  @volatile @transient empty = ""
 //│ ╙──       	   ^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.143: 	  @volatile @transient empty = ""
+//│ ║  l.149: 	  @volatile @transient empty = ""
 //│ ╙──       	             ^^^^^^^^^
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.140: 	@volatile let
+//│ ║  l.146: 	@volatile let
 //│ ╙──       	 ^^^^^^^^
 //│ cache = ()
 //│ counter = 0

@@ -107,7 +107,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
     case Some(value) if value eq paths.contClsPath => defn
     case _ =>
       val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
-        parentPath, methods, privateFields, publicFields, preCtor, ctor, mod) = defn
+        parentPath, methods, privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
       ClsLikeDefn(
         owner, isym, sym, k, paramsOpt, auxParams, parentPath,
         methods.map(rewriteFn),
@@ -116,6 +116,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
         rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil)), 1), // TODO: preCtor is not translated in handler lowering
         if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym), 1),
         mod.map(rewriteObjBody(_, isTopLevel)),
+        bufferable,
       )
   
   def rewriteObjBody(defn: ClsLikeBody, isTopLevel: Bool): ClsLikeBody =

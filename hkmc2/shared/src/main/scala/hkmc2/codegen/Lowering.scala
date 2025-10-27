@@ -218,6 +218,27 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )
           case _ => _defn
         reportAnnotations(defn, defn.extraAnnotations)
+        val bufferableAnnots = defn.annotations.flatMap:
+          case Annot.Trm(trm: SynthSel) =>
+            if trm.sym.contains(ctx.builtins.annotations.buffered) then
+              S(false)
+            else if trm.sym.contains(ctx.builtins.annotations.bufferable) then
+              S(true)
+            else
+              N
+          case _ => N
+        if bufferableAnnots.length > 1 then
+          raise(ErrorReport(
+            msg"Only one of bufferable annotation is allowed." -> defn.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation
+          ))
+        if bufferableAnnots.length >= 1 then
+          if defn.companion.isDefined then
+            raise(ErrorReport(
+              msg"No companion class is allowed with @buffered or @bufferable." -> defn.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation
+            ))
+        val bufferable = bufferableAnnots.headOption
         val (mtds, publicFlds, privateFlds, ctor) = defn match
           case pd: PatternDef => compilePatternMethods(pd)
           case _ => gatherMembers(defn.body)
@@ -225,6 +246,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case S(sym) =>
             sym.defn match
             case S(mod: ModuleOrObjectDef) =>
+              reportAnnotations(mod, mod.extraAnnotations)
               mod.ext match
               case S(ext) => fail:
                 ErrorReport(
@@ -247,6 +269,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               End(),
               ctor,
               mod,
+              bufferable,
             ),
             blockImpl(stats, res)(k))
         case S(ext) =>
@@ -256,7 +279,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             Define(
               ClsLikeDefn(
                 defn.owner, defn.sym, defn.bsym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
-                mtds, privateFlds, publicFlds, pctor, ctor, mod
+                mtds, privateFlds, publicFlds, pctor, ctor, mod, bufferable,
               ),
               blockImpl(stats, res)(k)
             )
@@ -581,7 +604,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
-            mtds, privateFlds, publicFlds, pctor, ctor, N)
+            mtds, privateFlds, publicFlds, pctor, ctor, N, N)
           val inner = new New(sym.ref().resolve, Nil, N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
@@ -910,7 +933,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if lift then Lifter(S(handlerPaths)).transform(flattened)
       else flattened
     
-    val res = MergeMatchArmTransformer.applyBlock(lifted)
+    val bufferable = BufferableTransform().transform(lifted)
+    
+    val res = MergeMatchArmTransformer.applyBlock(bufferable)
     
     Program(
       imps.map(imp => imp.sym -> imp.str),
