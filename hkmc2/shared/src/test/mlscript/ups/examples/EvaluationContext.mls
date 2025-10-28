@@ -4,6 +4,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 
+open annotations
 open Option { Some, None }
 
 data class Term with
@@ -233,3 +234,18 @@ eval(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
 
 eval(App(succ, zero)).show
 //│ = "λf. λx. f ((λf. λx. x) f x)"
+
+:fixme
+// More inconsistent origin locations to fix...
+fun eval'(term) =
+  while term is
+    (@compile Context(Redex)) as [subterm, remake] then
+      set term = remake(subterm)
+    else term
+//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ║  l.192: 	    App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ║  l.195: 	    App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(EvaluationContext.mls:+188, EvaluationContext.mls:+165),Let($transform,Lam(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None),Blk(List(LetDecl(hole,List()), DefineVar(hole,SynthSel(Ref(args),Ident(hole)))),Tup(List(Fld(‹›,Ref(hole),None), Fld(‹›,SynthSel(Ref(member:Predef),Ident(id)),None))))),Let($transform,Lam(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None),Blk(List(LetDecl(x,List()), DefineVar(x,SynthSel(Ref(args),Ident(x))), LetDecl(m,List()), DefineVar(m,SynthSel(Ref(args),Ident(m))), LetDecl(n,List()), DefineVar(n,SynthSel(Ref(args),Ident(n)))),App(Ref(member:subst),Tup(List(Fld(‹›,Ref(m),None), Fld(‹›,Ref(x),None), Fld(‹›,Ref(n),None)))))),Let($result1$,SynthSel(Ref(lhs),Ident(p_1)),Cons(Branch(Ref($result1$),ClassLike(SynthSel(SynthSel(Ref($runtime),Ident(MatchResult)),Ident(class)),class:MatchResult,Some(List(($output1$,None), ($bindings,None))),false),Let($fieldBindings,Rcd(false,List()),Let($result2$,SynthSel(Ref(rhs),Ident(p_2)),Cons(Branch(Ref($result2$),ClassLike(SynthSel(SynthSel(Ref($runtime),Ident(MatchResult)),Ident(class)),class:MatchResult,Some(List(($output2$,None), ($bindings,None))),false),Let($fieldBindings,Rcd(false,List(RcdField(Lit(StrLit(n)),Ref($output2$)))),Let($transformResult,App(Ref($transform),Tup(List(Fld(‹›,Rcd(false,List(RcdSpread(Ref($bindings)), RcdSpread(Ref($fieldBindings)), RcdSpread(Ref($bindings)), RcdSpread(Ref($fieldBindings)))),None)))),Let($bindings,Rcd(false,List(RcdField(Lit(StrLit(hole)),Ref($transformResult)))),Let($transformResult,App(Ref($transform),Tup(List(Fld(‹›,Ref($bindings),None)))),Let($bindings,Rcd(false,List()),Else(App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Ref($transformResult),None), Fld(‹›,Ref($bindings),None))))))))))),End)))),Else(App(SynthSel(Ref($runtime),Ident(MatchFailure)),Tup(List(Fld(‹›,Lit(StrLit(topmost)),None))))))))))
