@@ -62,6 +62,7 @@ sealed trait ResolvableImpl:
       case t: Term.Sel => t.copy()(t.sym, t.typ)
       case t: Term.SynthSel => t.copy()(t.sym, t.typ)
       case t: Term.SelProj => t.copy()(t.sym, t.typ)
+      case t: Term.New => t.copy()(t.typ)
     .withLocOf(this)
     .asInstanceOf
   
@@ -83,6 +84,7 @@ sealed trait ResolvableImpl:
       case t: Term.Sel => t.copy()(t.sym, S(typ))
       case t: Term.SynthSel => t.copy()(t.sym, S(typ))
       case t: Term.SelProj => t.copy()(t.sym, S(typ))
+      case t: Term.New => t.copy()(S(typ))
     .withLocOf(this)
     .asInstanceOf
   
@@ -227,6 +229,7 @@ enum Term extends Statement:
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: Term, args: Ls[Term], rft: Opt[ClassSymbol -> ObjBody])
+    (val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynNew(cls: Term, args: Ls[Term])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
@@ -284,6 +287,7 @@ enum Term extends Statement:
     case app: TyApp => app.typ
     case sel: Sel => sel.typ
     case sel: SynthSel => sel.typ
+    case nu: New => nu.typ
     case _ => N
   
   def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
@@ -332,8 +336,8 @@ enum Term extends Statement:
     case Rcd(mut, stats) => Rcd(mut, stats.map(_.mkClone))
     case Quoted(body) => Quoted(body.mkClone)
     case Unquoted(body) => Unquoted(body.mkClone)
-    case New(cls, args, rft) =>
-      New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })
+    case term @ New(cls, args, rft) =>
+      New(cls.mkClone, args.map(_.mkClone), rft.map { case (cs, ob) => cs -> ObjBody(ob.blk.mkBlkClone) })(term.typ)
     case DynNew(cls, args) => DynNew(cls.mkClone, args.map(_.mkClone))
     case term @ SelProj(prefix, cls, proj) =>
       SelProj(prefix.mkClone, cls.mkClone, Tree.Ident(proj.name))(term.sym, term.typ)
@@ -988,6 +992,11 @@ object Apps:
     case Term.App(Apps(base, args), arg) => S(base, args :+ arg)
     case t => S(t, Nil)
 
+
+object ResolvedOpt:
+  def unapply(t: Term): S[(Term, Opt[Symbol])] = t match
+    case r: Resolved => S((r.t, S(r.sym)))
+    case _ => S((t, N))
 
 trait BlkImpl:
   this: Blk =>

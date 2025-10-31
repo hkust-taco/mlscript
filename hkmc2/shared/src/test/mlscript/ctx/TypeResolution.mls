@@ -2,13 +2,12 @@
 class Foo with
   val foo: Foo = new Foo
 
-// * TODO: new-expression should also be resolvable for its type
 :rt
 new Foo
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = New:
+//│   res = New{typ=class:Foo}:
 //│     cls = Resolved{sym=class:Foo}:
 //│       t = Ref{sym=member:Foo} of member:Foo
 //│       sym = class:Foo
@@ -52,13 +51,12 @@ foo.foo
 class Foo2[A, B] with
   val foo: Foo2[Int, Str] = new Foo2
 
-// * TODO: new-expression should also be resolvable for its type
 :rt
 new Foo2
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = New:
+//│   res = New{typ=class:Foo2}:
 //│     cls = Resolved{sym=class:Foo2}:
 //│       t = Ref{sym=member:Foo2} of member:Foo2
 //│       sym = class:Foo2

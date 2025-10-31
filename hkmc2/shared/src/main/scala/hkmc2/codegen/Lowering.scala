@@ -505,19 +505,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym.flatMap(_.asDefnSym_TODO)).withLocOf(sel))
+          conclude(Select(p, nme)(N).withLocOf(sel))
       case Resolved(sel @ Sel(prefix, nme), sym) =>
         subTerm(prefix): p =>
-          // conclude(Select(p, nme)(sel.sym, S(sym)).withLocOf(sel))
-          // TODO @Harry: Check this logic.
           conclude(Select(p, nme)(S(sym)).withLocOf(sel))
       case sel @ SelProj(prefix, _, nme) =>
         subTerm(prefix): p =>
-          conclude(Select(p, nme)(sel.sym.flatMap(_.asDefnSym_TODO)).withLocOf(sel))
+          conclude(Select(p, nme)(N).withLocOf(sel))
       case Resolved(sel @ SelProj(prefix, _, nme), sym) =>
         subTerm(prefix): p =>
-          // conclude(Select(p, nme)(sel.sym, S(sym)).withLocOf(sel))
-          // TODO @Harry: Check this logic.
           conclude(Select(p, nme)(S(sym)).withLocOf(sel))
       case _ => subTerm(f)(conclude)
     case h @ Handle(lhs, rhs, as, cls, defs, bod) =>
@@ -717,19 +713,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         )
       
     case sel @ Sel(prefix, nme) =>
-      setupSelection(prefix, nme, sel.sym, N)(k)
+      setupSelection(prefix, nme, N)(k)
     case Resolved(sel @ Sel(prefix, nme), sym) =>
-      setupSelection(prefix, nme, sel.sym, S(sym))(k)
+      setupSelection(prefix, nme, S(sym))(k)
     
     case sel @ SynthSel(prefix, nme) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        k(Select(p, nme)(sel.sym.flatMap(_.asDefnSym_TODO)))
+        k(Select(p, nme)(N))
     case Resolved(sel @ SynthSel(prefix, nme), sym) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        // k(Select(p, nme)(sel.sym, S(sym)))
-        // TODO @Harry: Check this logic.
         k(Select(p, nme)(S(sym)))
     
     case DynSel(prefix, fld, ai) =>
@@ -767,7 +761,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
             mtds, privateFlds, publicFlds, pctor, ctor, N, N)
-          val inner = new New(sym.ref().resolved(isym), Nil, N)
+          val inner = new New(sym.ref().resolved(isym), Nil, N)(N)
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
@@ -782,9 +776,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     // * BbML-specific cases: t.Cls#field and mutable operations
     case sp @ SelProj(prefix, _, proj) =>
-      setupSelection(prefix, proj, sp.sym, N)(k)
+      setupSelection(prefix, proj, N)(k)
     case Resolved(sp @ SelProj(prefix, _, proj), sym) =>
-      setupSelection(prefix, proj, sp.sym, S(sym))(k)
+      setupSelection(prefix, proj, S(sym))(k)
     case Region(reg, body) =>
       Assign(reg, Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil),
         term_nonTail(body)(k))
@@ -1109,11 +1103,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     )
   
   
-  def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol], disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using Subst): Block =
+  def setupSelection(prefix: Term, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using Subst): Block =
     subTerm(prefix): p =>
-      val selRes = TempSymbol(N, "selRes") // TODO @LP: why is it here?
-      // k(Select(p, nme)(sym, disamb))
-      k(Select(p, nme)(disamb.orElse(sym.flatMap(_.asDefnSym_TODO))))
+      k(Select(p, nme)(disamb))
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
@@ -1138,16 +1130,16 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
   
   private val instrument: Bool = config.sanityChecks.isDefined
 
-  override def setupSelection(prefix: st, nme: Tree.Ident, sym: Opt[FieldSymbol], disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using Subst): Block =
-    if !instrument then return super.setupSelection(prefix, nme, sym, disamb)(k)
+  override def setupSelection(prefix: st, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using Subst): Block =
+    if !instrument then return super.setupSelection(prefix, nme, disamb)(k)
     subTerm(prefix): p =>
       val selRes = TempSymbol(N, "selRes")
       // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
       val b0 = blockBuilder
-        .assign(selRes, Select(p, nme)(disamb.orElse(sym.flatMap(_.asDefnSym_TODO))))
-      (if sym.isDefined then
-        // * If the symbol is known, the elaborator will have already checked the access [invariant:1]
+        .assign(selRes, Select(p, nme)(disamb))
+      (if disamb.isDefined then
+        // * If the symbol is known, the resolver will have already checked the access [invariant:1]
         b0
       else b0
         .assign(TempSymbol(N, "discarded"), Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N)))

@@ -674,11 +674,11 @@ extends Importer:
           subterm(c2), // * Note: we'll catch bad `new` targets during type checking
           args.map(subterm(_)),
           bodo
-        ).withLocOf(tree)
+        )(N).withLocOf(tree)
         if mut then Term.Mut(inner) else inner
       case N =>
         Term.New(State.globalThisSymbol.ref().sel(Ident("Object"), S(ctx.builtins.Object)),
-          Nil, bodo).withLocOf(tree)
+          Nil, bodo)(N).withLocOf(tree)
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       

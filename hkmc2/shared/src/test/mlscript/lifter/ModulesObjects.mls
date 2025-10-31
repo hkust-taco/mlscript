@@ -54,7 +54,7 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return runtime.safeCall(tmp.foo()) };
+//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
 
 
@@ -211,9 +211,9 @@ M.hi.get
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] TypeError: this.A is not a function
-//│     at new M12 (REPL62:1:1139)
-//│     at <static_initializer> (REPL62:1:1043)
-//│     at REPL62:1:1292
+//│     at new M12 (REPL62:1:1151)
+//│     at <static_initializer> (REPL62:1:1055)
+//│     at REPL62:1:1304
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:593:22)
 //│     at bound (node:domain:433:15)
@@ -306,8 +306,8 @@ M.A(2).newB.newA_B(3).newB.get
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
-//│     at get newB (REPL74:1:1717)
-//│     at REPL74:1:2101
+//│     at get newB (REPL74:1:1732)
+//│     at REPL74:1:2116
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:593:22)
 //│     at bound (node:domain:433:15)

@@ -319,11 +319,6 @@ class Resolver(tl: TraceLogger)
         args.foreach(traverse(_, expect = NonModule(N)))
         defs.foreach(d => traverseDefn(d.td))
         traverse(body, expect = NonModule(N))
-        
-      case Term.New(cls, args, rft) =>
-        traverse(cls, expect = Class(S("The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.")))
-        args.foreach(traverse(_, expect = NonModule(N)))
-        rft.foreach((sym, bdy) => traverseBlock(bdy.blk))
       
       case t: Resolvable =>
         resolve(t, prefer = expect, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
@@ -566,6 +561,13 @@ class Resolver(tl: TraceLogger)
       case AnySel(pre, id, cls) =>
         traverse(pre, expect = Selectable(N))
         cls.foreach(traverse(_, expect = Class(N)))
+        (t.callableDefn, ictx)
+      
+      case Term.New(cls, args, rft) =>
+        // Term.New has only a type, but does not have a symbol.
+        traverse(cls, expect = Class(S("The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.")))
+        args.foreach(traverse(_, expect = NonModule(N)))
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       
       case Term.Ref(_: BlockMemberSymbol) =>
@@ -903,6 +905,17 @@ class Resolver(tl: TraceLogger)
                 //     extraInfo = S(defn))'
           case defn =>
             log(s"Unsupported selection from definition: ${defn}")
+      
+      case t @ Term.New(cls, _, N) =>
+        // cls is already resolved, so the symbol should be present;
+        // otherwise, there is already an error raised.
+        cls.resolvedSym match
+          case S(clsSym: ClassSymbol) =>
+            t.expand(S(Term.Resolved(t.duplicate, clsSym)(N)))
+          case S(sym) =>
+            lastWords(s"Expected a class symbol; found ${sym} for term ${t}.")
+          case N =>
+      
       case _ =>
   
   /**
@@ -925,6 +938,14 @@ class Resolver(tl: TraceLogger)
         case _: (Any.type | NonModule) => bms.asPrincipal
       
       t match
+      case Term.New(cls, _, N) => cls.resolvedSym match
+        case S(clsSym: ClassSymbol) =>
+          val ty = Type.Ref(clsSym, Nil)
+          t.expand(S(t.withTyp(ty)))
+        case _ =>
+          // cls is already resolved, so the symbol should be present;
+          // otherwise, there is already an error raised.
+          ()
       case t @ Apps(base: Resolvable, ass) => 
         val decl = base.resolvedSym match
           case S(bms: BlockMemberSymbol) => 
