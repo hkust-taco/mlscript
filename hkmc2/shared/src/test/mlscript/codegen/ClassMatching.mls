@@ -130,7 +130,7 @@ fun f(x) = if x is
 //│     } else {
 //│       return Predef.print("oops")
 //│     }
-//│   } else if (x3 === None1) { return "ok" } else { return Predef.print("oops") }
+//│   } else if (x3 instanceof None1.class) { return "ok" } else { return Predef.print("oops") }
 //│ };
 
 f(Some(0))
@@ -194,7 +194,9 @@ fun f(x) = print of if x is
 //│     } else {
 //│       tmp8 = "oops";
 //│     }
-//│   } else if (x3 === None1) { tmp8 = "ok"; } else { tmp8 = "oops"; }
+//│   } else if (x3 instanceof None1.class) {
+//│     tmp8 = "ok";
+//│   } else { tmp8 = "oops"; }
 //│   return Predef.print(tmp8)
 //│ };
 

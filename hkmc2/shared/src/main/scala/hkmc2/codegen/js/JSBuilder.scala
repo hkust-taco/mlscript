@@ -469,7 +469,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           case Elaborator.ctx.builtins.BigInt => doc"typeof $sd === 'bigint'"
           case Elaborator.ctx.builtins.Symbol.module => doc"typeof $sd === 'symbol'"
           case Elaborator.ctx.builtins.TypedArray => doc"globalThis.ArrayBuffer.isView($sd) && !($sd instanceof globalThis.DataView)"
-          case _: ModuleOrObjectSymbol => doc"$sd === ${result(pth)}"
+          case _: ModuleOrObjectSymbol => doc"$sd instanceof ${result(pth)}.class"
           case _ => doc"$sd instanceof ${result(pth)}"
         case Case.Tup(len, inf) => doc"$runtimeVar.Tuple.isArrayLike($sd) && $sd.length ${if inf then ">=" else "==="} ${len}"
         case Case.Field(name = n, safe = false) =>
