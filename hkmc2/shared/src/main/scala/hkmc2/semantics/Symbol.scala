@@ -238,14 +238,6 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
   
   def isParameterizedMethod: Bool = trmTree.exists(_.isParameterizedMethod)
   
-  /**
-    * Indicate if this BMS stores a `.class` for its overload in its code generation.
-    * 
-    * During lowering, 
-    */
-  lazy val hasLiftedClass: Bool =
-    trmTree.isDefined || clsTree.exists(_.paramLists.nonEmpty)
-  
   override def toString: Str =
     s"member:$nme${State.dbgUid(uid)}"
   
@@ -333,9 +325,6 @@ sealed trait DefinitionSymbol[Defn <: Definition] extends Symbol:
   
   def asMemSym: MemberSymbol[Defn] = this
   
-  def hasLiftedClass: Bool =
-    this.asBlkMember.exists(_.hasLiftedClass) ||
-    this.asCls.flatMap(_.defn).exists(_.paramsOpt.isDefined)
 
 /** This is the symbol associated to specific definitions.
   * One overloaded `BlockMemberSymbol` may correspond to multiple `InnerSymbol`s

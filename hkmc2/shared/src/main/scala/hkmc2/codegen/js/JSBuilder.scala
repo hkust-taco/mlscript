@@ -112,11 +112,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       if l.nullary then l.nme
       else errExpr(msg"Illegal reference to builtin symbol '${l.nme}'")
     case Value.Ref(l, disamb) => l match
-      case l: BlockMemberSymbol if {
-        // println(disamb.flatMap(d => d.asModOrObj orElse d.asCls))
-        l.hasLiftedClass && 
-        disamb.flatMap(s => s.asCls orElse s.asMod).exists(_ isnt ctx.builtins.Array)
-      } =>
+      case l: BlockMemberSymbol if disamb.exists(_.shouldBeLifted) =>
         doc"${getVar(l, l.toLoc)}.class"
       case _ =>
         getVar(l, r.toLoc)
@@ -155,10 +151,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
       val dotClass = s.symbol_SelectSymbol match
-        case S(ds) if {
-          (ds.hasLiftedClass) && 
-          (ds.asModOrObj orElse ds.asCls).exists(_ isnt ctx.builtins.Array)
-        } => doc".class"
+        case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val name = id.name
       doc"${result(qual)}${
@@ -716,7 +709,16 @@ object JSBuilder:
         then c.toString
         else f"\\u${c.toInt}%04X"
     }.mkString
-    
+  
+  extension (dsym: DefinitionSymbol[?])
+    def shouldBeLifted: Bool = 
+      val bsym = dsym.asBlkMember
+      (
+        (dsym.asTrm orElse bsym.flatMap(_.asTrm)).isDefined ||
+        (dsym.asCls orElse bsym.flatMap(_.asCls)).flatMap(_.defn).exists(_.paramsOpt.isDefined)
+      ) && 
+        (dsym.asModOrObj orElse dsym.asCls).isDefined
+  
 end JSBuilder
 
 
