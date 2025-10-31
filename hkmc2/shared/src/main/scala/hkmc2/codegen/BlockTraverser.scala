@@ -65,7 +65,7 @@ class BlockTraverser:
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual); applyPath(fld)
     case p @ Select(qual, name) =>
-      applyPath(qual); p.symbol_SelectSymbol.foreach(_.traverse)
+      applyPath(qual); p.symbol.foreach(_.traverse)
     case v: Value => applyValue(v)
   
   def applyValue(v: Value): Unit = v match

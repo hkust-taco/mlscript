@@ -139,8 +139,8 @@ class BlockTransformer(subst: SymbolSubst):
           k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx))
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
-        val sym2 = p.symbol_SelectSymbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol_SelectSymbol) then p else Select(qual2, name)(sym2))
+        val sym2 = p.symbol.mapConserve(_.subst)
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match

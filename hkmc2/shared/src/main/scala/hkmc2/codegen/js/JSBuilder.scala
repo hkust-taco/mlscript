@@ -150,7 +150,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
       doc"($params) => ${ braced(bodyDoc) }"
     case s @ Select(qual, id) => 
-      val dotClass = s.symbol_SelectSymbol match
+      val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
         case _ => doc""
       val name = id.name

@@ -53,7 +53,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                   case _ => super.applyBlock(b)
                 override def applyPath(p: Path)(k: Path => Block): Block = p match
                   case sel: Select =>
-                    sel.symbol_SelectSymbol.fold(super.applyPath(p)(k)): sym =>
+                    sel.symbol.fold(super.applyPath(p)(k)): sym =>
                       fieldMap.get(sym).orElse(pubFieldMap.get(sym).flatMap(fieldMap.get(_))).fold(super.applyPath(p)(k)): off =>
                         getOffset(off): res =>
                           k(res)

@@ -103,7 +103,7 @@ object Lifter:
   object RefOfBms:
     def unapply(p: Path) = p match
       case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
-      case s @ Select(_, _) => s.symbol_SelectSymbol match
+      case s @ Select(_, _) => s.symbol match
         case Some(value: BlockMemberSymbol) => S(value, N)
         case _ => N
       case _ => N
@@ -809,7 +809,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       // Rewrites this.className.class to reference the top-level definition
       case s @ Select(RefOfBms(l, disamb), Tree.Ident("class")) if !ctx.ignored(l) && ctx.isRelevant(l) =>
         // this class will be lifted, rewrite the ref to strip it of `Select`
-        k(Select(Value.Ref(l, disamb), Tree.Ident("class"))(s.symbol_SelectSymbol))
+        k(Select(Value.Ref(l, disamb), Tree.Ident("class"))(s.symbol))
         // TODO:            ^
         // TODO: Ref Refactorization
 
@@ -817,7 +817,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       // replaced by a symbol, to which the object instance is assigned. This rewrites references
       // from the objects BlockMemberSymbol to that new symbol.
       case s @ Select(qual, ident) => 
-        s.symbol_SelectSymbol.flatMap(ctx.getLocalPath) match
+        s.symbol.flatMap(ctx.getLocalPath) match
         case Some(LocalPath.Sym(value: DefinitionSymbol[?])) =>
           k(Select(qual, Tree.Ident(value.nme))(S(value)))
         case _ => super.applyPath(p)(k)

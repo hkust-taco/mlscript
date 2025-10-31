@@ -231,7 +231,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case sel @ Select(qual, id) =>
       val qualRes = result(qual)
-      val selSym = sel.symbol_SelectSymbol getOrElse:
+      val selSym = sel.symbol getOrElse:
         lastWords(s"Symbol for Select(...) expression must be resolved")
       val selTrmSym = selSym match
         case termSym: TermSymbol => termSym
@@ -254,7 +254,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Instantiate(_, cls, as) =>
       val ctorClsSymOpt = cls match
         case ref: Value.Ref => ref.disamb
-        case sel: Select => sel.symbol_SelectSymbol
+        case sel: Select => sel.symbol
         case cls => return errExpr(
             Ls(
               msg"WatBuilder::result for Instantiate(...) where `cls` is not a Ref(...) or Select(...) path not implemented yet " -> cls.toLoc

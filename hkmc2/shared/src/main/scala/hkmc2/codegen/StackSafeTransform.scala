@@ -13,7 +13,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
   
   val doUnwindFns = doUnwindMap.values.collect:
-      case s: Select if s.symbol_SelectSymbol.isDefined => s.symbol_SelectSymbol.get
+      case s: Select if s.symbol.isDefined => s.symbol.get
       case Value.Ref(sym, _) => sym
     .toSet
 

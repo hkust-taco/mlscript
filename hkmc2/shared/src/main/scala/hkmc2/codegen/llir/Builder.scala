@@ -325,7 +325,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case s @ Select(Value.Ref(sym, _), Tree.Ident("Unit")) if sym is ctx.builtinSym.runtimeSym.get =>
         bPath(Value.Lit(Tree.UnitLit(false)))(k)
       case s @ Select(Value.Ref(cls: ClassSymbol, _), name) if ctx.method_class.contains(cls) =>
-        s.symbol_SelectSymbol match
+        s.symbol match
           case None =>
             ctx.flow_ctx.get(p) match
               case Some(cls) =>
@@ -337,8 +337,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case s @ DynSelect(qual, fld, arrayIdx) =>
         bErrStop(msg"Unsupported dynamic selection")
       case s @ Select(qual, name) =>
-        log(s"bPath Select: $qual.$name with ${s.symbol_SelectSymbol}")
-        s.symbol_SelectSymbol match
+        log(s"bPath Select: $qual.$name with ${s.symbol}")
+        s.symbol match
           case None =>
             ctx.flow_ctx.get(qual) match
               case Some(cls) =>
@@ -356,7 +356,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
             bPath(qual):
               case q: Expr.Ref =>
                 val v: Local = newTemp
-                val cls = getClassOfField(s.symbol_SelectSymbol.get)
+                val cls = getClassOfField(s.symbol.get)
                 val field = name.name
                 Node.LetExpr(v, Expr.Select(q.sym, cls, field), k(v |> sr))
               case q: Expr.Literal =>
@@ -408,14 +408,14 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetCall(Ls(v), builtin, Expr.Literal(Tree.StrLit(mathPrimitive)) :: args, k(v |> sr))
-      case Call(s @ Select(r @ Value.Ref(sym, _), Tree.Ident(fld)), args) if s.symbol_SelectSymbol.isDefined =>
+      case Call(s @ Select(r @ Value.Ref(sym, _), Tree.Ident(fld)), args) if s.symbol.isDefined =>
         bPath(r):
           case r =>
             bArgs(args):
               case args: Ls[TrivialExpr] =>
                 val v: Local = newTemp
-                log(s"Method Call Select: $r.$fld with ${s.symbol_SelectSymbol}")
-                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol_SelectSymbol.get), s.symbol_SelectSymbol.get, r :: args, k(v |> sr))
+                log(s"Method Call Select: $r.$fld with ${s.symbol}")
+                Node.LetMethodCall(Ls(v), getClassOfField(s.symbol.get), s.symbol.get, r :: args, k(v |> sr))
       case Call(_, _) => bErrStop(msg"Unsupported kind of Call ${r.toString()}")
       case Instantiate(
         false,
