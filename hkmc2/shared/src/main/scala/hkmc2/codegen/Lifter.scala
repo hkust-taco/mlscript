@@ -101,10 +101,10 @@ object Lifter:
       case s: LocalVarSymbol => s
 
   object RefOfBms:
-    def unapply(p: Path) = p match
+    def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]])] = p match
       case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
       case s @ Select(_, _) => s.symbol match
-        case Some(value: BlockMemberSymbol) => S(value, N)
+        case Some(value) => value.asBlkMember.map((_, S(value)))
         case _ => N
       case _ => N
   
@@ -175,7 +175,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val isymPaths: Map[InnerSymbol, LocalPath] = Map.empty,
     val replacedDefns: Map[BlockMemberSymbol, Defn] = Map.empty,
     val firstClsFns: Set[BlockMemberSymbol] = Set.empty,
-    val companionMap: Map[InnerSymbol, InnerSymbol] = Map.empty
+    val companionMap: Map[InnerSymbol, InnerSymbol] = Map.empty,
   ):
     // gets the function to which a local belongs
     def lookup(l: Local) = usedLocals.lookup(l)
@@ -558,11 +558,9 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val clsCaptures: List[InnerSymbol] = ctx.prevClsDefns.map(_.isym)
     val refBms = inScopeRefs.intersect(ctx.ignoredDefns).toList.sortBy(_.uid)
     
-    val modLocal = d match
-      case c: ClsLikeDefn if modOrObj(c) && !ctx.ignored(c.sym) => parentCls match
-        case None => S(VarSymbol(Tree.Ident(c.sym.nme + "$")))
-        case Some(value) => S(TermSymbol(syntax.ImmutVal, S(value.isym), Tree.Ident(c.sym.nme + "$")))
-      case _ => N
+    val isModLocal = d match
+      case c: ClsLikeDefn if modOrObj(c) && !ctx.ignored(c.sym) => true
+      case _ => false
     
     if ctx.ignored(d.sym) ||
       (includedCaptures.isEmpty && includedLocals.isEmpty && clsCaptures.isEmpty && refBms.isEmpty) then
@@ -574,7 +572,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case _ => Map.empty
     else
       val fakeCtorBms = d match
-        case c: ClsLikeDefn if !modLocal.isDefined => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
+        case c: ClsLikeDefn if !isModLocal => S(BlockMemberSymbol(d.sym.nme + "$ctor", Nil))
         case _ => N
       
       val singleCallBms = BlockMemberSymbol(d.sym.nme + "$", Nil)
@@ -769,15 +767,16 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             case _ => super.applyBlock(rewritten)
         
         // rewrite object definitions, assigning to the given symbol in modObjLocals
-        case Define(d: Defn, rest: Block) => ctx.modObjLocals.get(d.sym) match 
+        case Define(d: ClsLikeDefn, rest: Block) => ctx.modObjLocals.get(d.sym) match
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => // has args
               blockBuilder
                 .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(d.sym, ctx)))
                 .rest(applyBlock(rest))
             case None => // has no args
+              // Objects with no parameters are instantiated statically
               blockBuilder
-                .assign(sym, Instantiate(mut = false, d.sym.asPath, Nil))
+                .assign(sym, d.sym.asPath)
                 .rest(applyBlock(rest))
           case _ => ctx.replacedDefns.get(d.sym) match
             case Some(value) => Define(value, applyBlock(rest))
@@ -1119,10 +1118,12 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     // ctorIncluded: ditto, but lifted
     val (ctorIgnored, ctorIncluded) = allCtorDefns.partition(d => ctxx.ignored(d.sym))
 
+    // Symbols containing refernces to nested classes and nested objects are here
+    
     // Deals with references to lifted objects defined within the class
     val nestedClsPaths: Map[Local, LocalPath] = ctorIncluded.map:
         case c: ClsLikeDefn if modOrObj(c) => ctxx.modObjLocals.get(c.sym) match
-          case Some(sym) => S(c.sym -> LocalPath.Sym(sym))
+          case Some(sym) => S(c.isym -> LocalPath.Sym(sym))
           case _ => S(c.sym -> LocalPath.Sym(c.sym))
         case _ => None
       .collect:
@@ -1299,7 +1300,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Some(bms) =>
                   val nestedIn = analyzer.defnsMap(bms)
                   nestedIn match
-                    case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme + "$")))
+                    // These will be the names of the objects/modules after being lifted
+                    // We should use the nested object/module's **original name** if nested inside a class,
+                    // so they can be accesed directly by name from te outside.
+                    // For example, if a class C has an object M, (new C).M as a dynamic selection works
+                    case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme)))
                     case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
                 case _ => N
             .collect:

@@ -55,7 +55,7 @@ data class A(x) with
 //│   }
 //│   getA() {
 //│     let tmp;
-//│     tmp = this.B(2);
+//│     tmp = B$(false, this, 2);
 //│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -64,22 +64,7 @@ data class A(x) with
 
 :expect 3
 A(1).getA()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
-//│     at A.getA (REPL10:1:1488)
-//│     at REPL13:1:82
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:593:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:922:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:203)
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ = 3
 
 :sjs
 class A with
