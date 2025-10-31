@@ -591,9 +591,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         f.owner match
         case None => S(Call(f.sym.asPath, params)(true, true))
         case Some(owner) => 
-          S(Call(Select(owner.asPath, Tree.Ident(f.sym.nme))(f.innerSym.asInstanceOf), params)(true, true))
-          // TODO:                                               ^^^^^^^^
-          // TODO: @Harry check again on asInstanceOf
+          S(Call(Select(owner.asPath, Tree.Ident(f.sym.nme))(N), params)(true, true))
       case _ => None // TODO: more than one plist
     
     FunDefn(f.owner, f.sym, f.params, translateBlock(f.body,
