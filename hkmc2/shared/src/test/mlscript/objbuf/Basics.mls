@@ -58,19 +58,9 @@ let obj2 = buf.mkNew(A)(5)
 //│ obj2 = 2
 
 A.f(buf, obj1)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.60: 	A.f(buf, obj1)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 4
 
 A.f(buf, obj2)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.63: 	A.f(buf, obj2)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 6
 
 buf.del(A, obj1)
@@ -80,19 +70,9 @@ let obj3 = buf.mkNew(A)(10)
 
 // UAF
 A.f(buf, obj1)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.72: 	A.f(buf, obj1)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 11
 
 A.f(buf, obj3)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.75: 	A.f(buf, obj3)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 11
 
 
@@ -111,22 +91,12 @@ let obj2 = buf.mkNew(A)(3)
 //│ obj2 = 4
 
 A.f(buf, obj2)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.93: 	A.f(buf, obj2)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 4
 
 buf.del(Oops, obj1)
 
 :expect 4
 A.f(buf, obj2)(1)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: newDefn (Resolver.scala:652)
-//│ ╔══[ERROR] Expected 1 arguments, got 2
-//│ ║  l.99: 	A.f(buf, obj2)(1)
-//│ ╙──      	   ^^^^^^^^^^^
 //│ = 4
 
 

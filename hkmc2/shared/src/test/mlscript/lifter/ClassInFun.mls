@@ -192,7 +192,7 @@ f().foo()
 //│   z = 10;
 //│   capture.w$capture$0 = 1000;
 //│   tmp6 = Bad$(false, capture);
-//│   tmp7 = runtime.safeCall(tmp6.foo());
+//│   tmp7 = tmp6.foo();
 //│   return Good$(false, x, y, z, capture)
 //│ };
 //│ tmp5 = f5();

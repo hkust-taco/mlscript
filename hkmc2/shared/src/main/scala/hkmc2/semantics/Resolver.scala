@@ -875,7 +875,7 @@ class Resolver(tl: TraceLogger)
                   extraInfo = S(defn))
         
         // Class-Like Definitions
-        (clsDefn orElse lhs.defn).foreach: 
+        (clsDefn orElse lhs.typDefn).foreach: 
           case defn: ClassLikeDef =>
             // A reference to a member within the class is elaborated into a SynthSel, e.g.,
             // class C with
@@ -947,6 +947,11 @@ class Resolver(tl: TraceLogger)
         case S(defn: ModuleOrObjectDef) if ass.isEmpty =>
           val ty = Type.Ref(defn.sym, Nil)
           t.expand(S(t.withTyp(ty)))
+        case S(defn: ClassDef) => base match
+          case Term.Ref(inner: InnerSymbol) =>
+            val ty = Type.Ref(defn.sym, Nil)
+            t.expand(S(t.withTyp(ty)))
+          case _ =>
         case _ =>
       case _ =>
   end resolveType

@@ -56,7 +56,7 @@ data class A(x) with
 //│   getA() {
 //│     let tmp;
 //│     tmp = this.B(2);
-//│     return runtime.safeCall(tmp.getB())
+//│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]]; 
@@ -68,7 +68,7 @@ A(1).getA()
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
 //│     at A.getA (REPL10:1:1488)
-//│     at REPL13:1:81
+//│     at REPL13:1:82
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:593:22)
 //│     at bound (node:domain:433:15)
