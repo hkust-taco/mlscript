@@ -565,7 +565,7 @@ sealed abstract class Path extends TrivialResult:
   def asArg = Arg(spread = N, this)
 
 /**
- * @param symbol The symbol, representing the definition that this selection refers to, if known.
+ * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]]) extends Path with ProductWithExtraInfo:
   def extraInfo: Str = 
@@ -577,6 +577,10 @@ case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
 enum Value extends Path with ProductWithExtraInfo:
+  /**
+   * @param disamb The symbol disambiguating the definition that the reference refers to. This
+   * exists if and only if l is a BlockMemberSymbol.
+   */
   case Ref(l: Local, disamb: Opt[DefinitionSymbol[?]])
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
@@ -587,7 +591,10 @@ enum Value extends Path with ProductWithExtraInfo:
 
 object Value:
   object Ref:
+    // * Some helper constructors that allow omitting the disambiguation symbol.
+    // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
     def apply(l: DefinitionSymbol[?]): Ref = Ref(l, S(l))
+    // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
     def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
 
 case class Arg(spread: Opt[Bool], value: Path)
