@@ -4,6 +4,7 @@
 
 import "../../../mlscript-compile/Option.mls"
 import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Runtime.mls"
 
 open annotations
 open Option { Some, None }
@@ -47,6 +48,15 @@ let TBool = TPrim("Bool")
 //│ TBool = TPrim("Bool")
 //│ TInt = TPrim("Int")
 
+pattern ShowTerm =
+  (Var(name) => name) |
+  (App(Abs as ShowTerm as lhs, rhs) => "(" + lhs + ") " + rhs) |
+  (App(ShowTerm as lhs, App as ShowTerm as rhs) => lhs + " (" + rhs + ")") |
+  (App(ShowTerm as lhs, ShowTerm as rhs) => lhs + " " + rhs) |
+  (Abs(name, ShowTerm as body) => "λ" + name + ". " + body) |
+  (IntLit(value) => value.toString()) |
+  (BoolLit(value) => if value then "true" else "false")
+//
 data class Term with
   constructor
     Var(name: Str)
@@ -55,14 +65,9 @@ data class Term with
     IntLit(value: Int)
     BoolLit(value: Bool)
   
-  fun show = if this is
-    Var(name) then name
-    App(Abs as lhs, rhs) then "(" + lhs.show + ") " + rhs.show
-    App(lhs, App as rhs) then lhs.show + " (" + rhs.show + ")"
-    App(lhs, rhs) then lhs.show + " " + rhs.show
-    Abs(name, body) then "λ" + name + ". " + body.show
-    IntLit(value) then value.toString
-    BoolLit(value) then if value then "true" else "false"
+  // Any more convenient way to apply a pattern?
+  // For example, `this through ShowTerm`?
+  fun show = if this is ShowTerm as result then result
 
 // Note: missing type arguments for `Set`.
 data class Scheme(vars: Set, typ: Type) with
@@ -103,6 +108,33 @@ data class Subst(map: Map) with
 let emptySub = Subst(new Map())
 //│ emptySub = Subst(Map(0) {})
 
+fun (~>) applyPattern(x, P) =
+  if P.unapply(x) is Runtime.MatchResult(result, _) then result
+
+// Note that how we use `where` clauses in disjunction patterns with bindings.
+pattern Unify =
+  (
+    ([TFun(l1, r1), TFun(l2, r2)]) =>
+      let s1 = [l1, l2] ~> Unify
+      let s2 = [s1.apply(r1), s1.apply(r2)] ~> Unify
+      s2.compose(s1)
+  ) | (
+    (
+      ([TVar(name1), TVar(name2)] | [TPrim(name1), TPrim(name2)])
+        where name1 === name2
+    ) => emptySub
+  ) | (
+    (
+      ([TVar(nme), Type as typ] | [Type as typ, TVar(nme)])
+        where not(typ.hasFreeVar(nme))
+    ) =>
+      Subst(new Map([[nme, typ]]))
+  ) | (
+    ([TPrim(name1), TPrim(name2)] where name1 === name2) => emptySub
+  )
+
+fun unify'(t1, t2) = [t1, t2] ~> Unify
+
 fun unify(t1, t2) = if
   t1 is TVar(name1) and t2 is TVar(name2) and name1 === name2 then emptySub
   t1 is TVar(name) and
@@ -121,17 +153,30 @@ fun unify(t1, t2) = if
 unify(TInt, TInt).show
 //│ = "{}"
 
+unify'(TInt, TInt).show
+//│ = "{}"
+
 :expect "{t1 -> Int}"
 unify(TVar("t1"), TInt).show
+//│ = "{t1 -> Int}"
+
+unify'(TVar("t1"), TInt).show
 //│ = "{t1 -> Int}"
 
 :expect "{}"
 unify(TFun(TVar("t2"), TVar("t3")), TFun(TVar("t2"), TVar("t3"))).show
 //│ = "{}"
 
+unify'(TFun(TVar("t2"), TVar("t3")), TFun(TVar("t2"), TVar("t3"))).show
+//│ = "{}"
+
 :re
 unify(TVar("t1"), TFun(TVar("t1"), TInt)).show
 //│ ═══[RUNTIME ERROR] Error: Occurs check failed
+
+:re
+unify'(TVar("t1"), TFun(TVar("t1"), TInt)).show
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // Note: missing type arguments for `Map`.
 data class Env(bindings: Map) with
