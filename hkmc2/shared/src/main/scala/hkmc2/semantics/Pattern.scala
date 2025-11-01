@@ -265,20 +265,6 @@ enum Pattern extends AutoLocated:
     case Alias(pattern, alias) => pattern :: alias :: Nil
     case Transform(pattern, transform) => pattern :: transform :: Nil
   
-  def subPatterns: Ls[Pattern] = this match
-    case Constructor(_, patternArguments, arguments) =>
-      patternArguments ::: arguments.fold(Nil)(_.toList)
-    case Composition(_, left, right) => left :: right :: Nil
-    case Negation(pattern) => pattern :: Nil
-    case _: (Wildcard | Literal | Range) => Nil
-    case Concatenation(left, right) => left :: right :: Nil
-    case Tuple(leading, spread, trailing) =>
-      leading ::: spread.toList ::: trailing
-    case Record(fields) => fields.map(_._2)
-    case Chain(first, second) => first :: second :: Nil
-    case Alias(pattern, _) => pattern :: Nil
-    case Transform(pattern, _) => pattern :: Nil
-  
   def subTerms: Ls[Term] = this match
     case Constructor(target, patternArguments, arguments) =>
       target :: patternArguments.flatMap(_.subTerms) ::: arguments.fold(Nil)(_.flatMap(_.subTerms))
