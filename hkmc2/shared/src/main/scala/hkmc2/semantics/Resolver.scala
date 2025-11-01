@@ -897,12 +897,9 @@ class Resolver(tl: TraceLogger)
                 log(s"Resolved symbol for ${t}: ${bms}")
               case N =>
                 // TODO @Harry: Appropriately resolve all selections on classes.
-                // t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
-                // raise: 
-                //   ErrorReport(
-                //     msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
-                //     msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
-                //     extraInfo = S(defn))'
+                // The type annotations in the current code bases are largely incomplete,
+                // so many selections on classes cannot be resolved properly.
+                // We will refactor this later...
           case defn =>
             log(s"Unsupported selection from definition: ${defn}")
       
