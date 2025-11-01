@@ -12,10 +12,10 @@ import Elaborator.State
 import Resolvable.*
 import typing.Type
 
+import semantics.ucs.FlatPattern
+
 import Message.MessageContext
 import scala.annotation.tailrec
-import hkmc2.semantics.ucs.FlatPattern
-import hkmc2.syntax.Keyword.__
 
 object Resolver:
   
