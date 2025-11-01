@@ -688,7 +688,7 @@ object ObjBody:
     .groupBy(_._1.nme)
     .partitionMap: (nme, syms) =>
       if syms.map(_._1).distinct.tail.nonEmpty then L:
-        (msg"Found duplicate members with the same name '${nme}'." -> N) ::
+        (msg"Duplicate definition of member named '${nme}'." -> N) ::
         syms.map(_._2).map(msg"Defined at: " -> _.toLoc)
       else R:
         nme -> syms.head._1
