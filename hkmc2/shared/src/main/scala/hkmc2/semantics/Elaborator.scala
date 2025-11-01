@@ -1396,7 +1396,6 @@ extends Importer:
                   )
                 ctsym.defn = S(ctdef)
                 sym.tdefn = S(ctdef)
-                log(s"Constructor: ${ctdef}")
               cd
         sym.defn = S(defn)
         go(sts, Nil, defn :: acc)
