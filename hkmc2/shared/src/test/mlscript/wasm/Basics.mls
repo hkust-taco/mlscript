@@ -2,6 +2,7 @@
 :global
 :wasm
 
+
 false
 //│ Wasm result:
 //│ = 0
@@ -32,7 +33,7 @@ x
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.33: 	foo
+//│ ║  l.34: 	foo
 //│ ╙──      	^^^
 
 
@@ -100,7 +101,7 @@ foo(41)
 //│ Wasm result:
 //│ = 42
 
-:lot
+
 class Foo(val x)
 new Foo(0)
 //│ Wasm result:
