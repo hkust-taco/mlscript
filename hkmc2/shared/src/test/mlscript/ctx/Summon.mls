@@ -62,6 +62,7 @@ fun f(using Int) = use[Num]
 
 data class Some[T](value: T)
 
+
 :expect 42
 fun f[T](using Some[T]) = use[Some[T]].value
 using Some[Int] = Some(42)
@@ -72,10 +73,10 @@ f
 :re
 use{[Some[Int]].value}
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.73: 	use{[Some[Int]].value}
+//│ ║  l.74: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.73: 	use{[Some[Int]].value}
+//│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
@@ -87,7 +88,7 @@ use{[Some[Int]].value}
 :re
 use([Some[Int]].value)
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.88: 	use([Some[Int]].value)
+//│ ║  l.89: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
@@ -106,10 +107,10 @@ f[Int]
 :re
 f
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.107: 	f
+//│ ║  l.108: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.100: 	fun f[T](using T) = use[T]
+//│ ║  l.101: 	fun f[T](using T) = use[T]
 //│ ║         	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0

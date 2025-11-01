@@ -4,33 +4,6 @@
 import "../../mlscript-compile/Stack.mls"
 open Stack
 
-:rt
-val x: Stack[Int]
-//│ Resolved tree:
-//│ Blk:
-//│   stats = Ls of 
-//│     TermDefinition:
-//│       k = ImmutVal
-//│       sym = member:x
-//│       tsym = term:x
-//│       params = Nil
-//│       tparams = N
-//│       sign = S of TyApp{sym=type:Stack}:
-//│         lhs = Resolved{sym=type:Stack}:
-//│           t = Ref{sym=member:Stack} of member:Stack
-//│           sym = type:Stack
-//│         targs = Ls of 
-//│           Resolved{sym=class:Int}:
-//│             t = Ref{sym=member:Int} of member:Int
-//│             sym = class:Int
-//│       body = N
-//│       resSym = ‹result of member:x›
-//│       flags = ()
-//│       modulefulness = Modulefulness of N
-//│       annotations = Nil
-//│       companion = N
-//│   res = Lit of UnitLit of false
-
 class Generator with
   fun produce(result: Stack[Int]): ()
 
