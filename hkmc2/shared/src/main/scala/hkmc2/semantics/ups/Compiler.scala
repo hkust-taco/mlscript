@@ -408,14 +408,14 @@ object Compiler:
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
       elem.symbol.flatMap(_.asClsLike).collectFirst:
         // Check the element's symbol.
-        case `symbol` => S(Term.Resolved(elem.ref(new Ident(symbol.nme)).withLoc(loc), symbol)(N))
+        case `symbol` => S(elem.ref(new Ident(symbol.nme)).withLoc(loc).resolved(symbol))
         // Look up the symbol in module members.
         case module: ModuleOrObjectSymbol =>
           val moduleRef = module.defn.get.bsym.ref()
           module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
             case (key, S(`symbol`)) =>
               val memberSymbol = symbol.defn.get.bsym
-              Term.Resolved(SynthSel(moduleRef, Ident(key))(S(memberSymbol), N), symbol)(N)
+              SynthSel(moduleRef, Ident(key))(S(memberSymbol), N).resolved(symbol)
       .flatten
     @tailrec def go(ctx: Ctx): Opt[Term] =
       ctx.env.values.iterator.map(findSymbol).firstSome match

@@ -40,9 +40,7 @@ trait TermSynthesizer(using Ctx, State):
 
   /** Make a term that looks like `runtime.MatchResult` with its symbol. */
   protected lazy val matchResultClass =
-    Term.Resolved
-      (sel(runtimeRef, "MatchResult", State.matchResultClsSymbol), State.matchResultClsSymbol)
-      (N)
+    sel(runtimeRef, "MatchResult", State.matchResultClsSymbol).resolved(State.matchResultClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchResult.class`. */
   protected def matchResultPattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
@@ -50,9 +48,7 @@ trait TermSynthesizer(using Ctx, State):
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
-    Term.Resolved
-      (sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol), State.matchFailureClsSymbol)
-      (N)
+    sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol).resolved(State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =

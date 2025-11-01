@@ -844,7 +844,7 @@ class Resolver(tl: TraceLogger)
         log(s"Resolving symbol for reference ${t} (bsym = ${bsym}, defn = ${bsym.defn})")
         val sym = disambSym(prefer, sign = sign)(bsym)
         sym.foreach: sym =>
-          t.expand(S(Term.Resolved(t.duplicate, sym)(N)))
+          t.expand(S((t.duplicate.resolved(sym))))
         resolveType(t, prefer = prefer)
         log(s"Resolved symbol for ${t}: ${sym}")
       
@@ -863,7 +863,7 @@ class Resolver(tl: TraceLogger)
               log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
               disambSym(prefer, sign)(bms) match
                 case S(ds) =>
-                  t.expand(S(Term.Resolved(t.withSym(bms), ds)(N)))
+                  t.expand(S(t.withSym(bms).resolved(ds)))
                 case N =>
                   log(s"Unable to disambiguate ${bms}")
                   t.expand(S(t.withSym(bms)))
@@ -890,7 +890,7 @@ class Resolver(tl: TraceLogger)
                 log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
                 disambSym(prefer, sign)(bms) match
                   case S(ds) =>
-                    t.expand(S(Term.Resolved(t.withSym(bms), ds)(N)))
+                    t.expand(S(t.withSym(bms).resolved(ds)))
                   case N =>
                     log(s"Unable to disambiguate ${bms}")
                     t.expand(S(t.withSym(bms)))
@@ -911,7 +911,7 @@ class Resolver(tl: TraceLogger)
         // otherwise, there is already an error raised.
         cls.resolvedSym match
           case S(clsSym: ClassSymbol) =>
-            t.expand(S(Term.Resolved(t.duplicate, clsSym)(N)))
+            t.expand(S(t.duplicate.resolved(clsSym)))
           case S(sym) =>
             lastWords(s"Expected a class symbol; found ${sym} for term ${t}.")
           case N =>

@@ -117,17 +117,13 @@ abstract class Symbol(using State) extends Located:
     asPat orElse
     asMod
   
-  def asDefnSym_TODO: Opt[DefinitionSymbol[?]] = this match
-    case defn: DefinitionSymbol[?] => S(defn)
-    case _ => N
-
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
     case _ => false
   override def hashCode: Int = uid.hashCode
-
+  
   def subst(using SymbolSubst): Symbol
-
+  
 end Symbol
 
 

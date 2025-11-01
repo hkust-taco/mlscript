@@ -194,19 +194,19 @@ object Elaborator:
   object Ctx:
     abstract class Elem:
       def nme: Str
-      def ref(id: Ident)(using Elaborator.State): Term
+      def ref(id: Ident)(using Elaborator.State): Resolvable
       def symbol: Opt[Symbol]
       def isImport: Bool
     final case class RefElem(sym: Symbol) extends Elem:
       val nme = sym.nme
-      def ref(id: Ident)(using Elaborator.State): Term =
+      def ref(id: Ident)(using Elaborator.State): Resolvable =
         // * Note: due to symbolic ops, we may have `id.name =/= nme`;
         // * e.g., we can have `id.name = "|>"` and `nme = "pipe"`.
         Term.Ref(sym)(id, 666, N) // FIXME: 666 is a temporary placeholder
       def symbol = S(sym)
       def isImport: Bool = false
     final case class SelElem(base: Elem, nme: Str, symOpt: Opt[FieldSymbol], isImport: Bool) extends Elem:
-      def ref(id: Ident)(using Elaborator.State): Term =
+      def ref(id: Ident)(using Elaborator.State): Resolvable =
         // * Same remark as in RefElem#ref
         Term.SynthSel(base.ref(Ident(base.nme)),
           new Ident(nme).withLocOf(id))(symOpt, N)
