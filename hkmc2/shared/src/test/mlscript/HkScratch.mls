@@ -9,23 +9,4 @@
 // :todo
 
 
-:sjs
-object Foo
-Foo is Foo
-//│ JS (unsanitized):
-//│ let Foo1, scrut;
-//│ globalThis.Object.freeze(class Foo {
-//│   static {
-//│     Foo1 = globalThis.Object.freeze(new this)
-//│   }
-//│   constructor() {
-//│     Object.defineProperty(this, "class", {
-//│       value: Foo
-//│     })
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "Foo"]; 
-//│ });
-//│ scrut = Foo1;
-//│ if (scrut instanceof Foo1.class) { true } else { false }
-//│ = true
+
