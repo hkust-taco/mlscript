@@ -235,7 +235,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def read = this match
       case Sym(l) => l.asPath
       case PubField(isym, sym) => Select(isym.asPath, Tree.Ident(sym.nme))(N)
-      // TODO: isym.asInstanceOf
       
     def asArg = read.asArg
     
@@ -675,8 +674,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 syms.addOne(l -> value)
                 value
             k(Value.Ref(newSym, disamb))
-            //                  ^^^^^^
-            // TODO: Ref Refactorization
           case _ => super.applyPath(p)(k)
       (walker.applyBlock(b), syms.toList)
     end rewriteBms
@@ -804,13 +801,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
               ))
             k(Select(value.read, t.id)(N))
           case _ => super.applyPath(p)(k)
-      
-      // Rewrites this.className.class to reference the top-level definition
-      case s @ Select(RefOfBms(l, disamb), Tree.Ident("class")) if !ctx.ignored(l) && ctx.isRelevant(l) =>
-        // this class will be lifted, rewrite the ref to strip it of `Select`
-        k(Select(Value.Ref(l, disamb), Tree.Ident("class"))(s.symbol))
-        // TODO:            ^
-        // TODO: Ref Refactorization
 
       // For objects inside classes: When an object is nested inside a class, its defn will be
       // replaced by a symbol, to which the object instance is assigned. This rewrites references
