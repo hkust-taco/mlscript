@@ -63,7 +63,7 @@ data class Example2(val a) with
 //│ ║        	                        ^
 //│ ╟── Defined at: 
 //│ ║  l.58: 	  val a = 1
-//│ ╙──      	          ^
+//│ ╙──      	  ^^^^^^^^^
 
 let oops2 = Example2(0).("f")
 //│ oops2 = fun f

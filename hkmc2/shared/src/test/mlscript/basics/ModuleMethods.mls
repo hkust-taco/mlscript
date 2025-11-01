@@ -173,7 +173,7 @@ class C with
   val bar: module M = M
 //│ ╔══[ERROR] Function returning modules should not be a class member.
 //│ ║  l.172: 	  fun foo: module M = M
-//│ ╙──       	                  ^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Value returning modules should not be a class member.
 //│ ║  l.173: 	  val bar: module M = M
-//│ ╙──       	                  ^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^
