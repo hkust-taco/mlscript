@@ -38,21 +38,6 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
         case Split.Cons(head, tail) => Split.Cons(head, tail ++ those)
         case Split.Let(name, term, tail) => Split.Let(name, term, tail ++ those)
         case Split.Else(_) /* impossible */ | Split.End => those)
-
-  extension (lhs: FlatPattern.ClassLike)
-    /** Generate a term that really resolves to the class at runtime. */
-    def selectClass: FlatPattern.ClassLike =
-      // val constructor = lhs.constructor.symbol match
-      //   case S(cls: ClassSymbol) => lhs.constructor
-      //   case S(mem: BlockMemberSymbol) =>
-      //     // If the class is declaration-only, we do not need to select the
-      //     // class.
-      //     if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then
-      //       lhs.constructor
-      //     else
-      //       Term.SynthSel(lhs.constructor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
-      //   case _ => lhs.constructor
-      lhs.copy(lhs.constructor)(lhs.tree, lhs.output)
   
   extension (lhs: FlatPattern)
     /** Checks if two patterns are the same. */
@@ -173,7 +158,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
                 normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-              Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
+              Branch(scrutinee, pattern, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
               log("BROKEN"); normalizeImpl(alternative)
           case S(S(mod: ModuleOrObjectSymbol)) =>
@@ -182,7 +167,7 @@ class Normalization(using tl: TL)(using Raise, Ctx, State) extends TermSynthesiz
               val whenTrue = aliasOutputSymbols(scrutinee, pattern.output,
                 normalize(specialize(consequent ++ alternative, +, scrutinee, pattern)))
               val whenFalse = normalizeImpl(specialize(alternative, -, scrutinee, pattern).clearFallback)
-              Branch(scrutinee, pattern.selectClass, whenTrue) ~: whenFalse
+              Branch(scrutinee, pattern, whenTrue) ~: whenFalse
             else // If any errors were raised, we skip the branch.
               log("BROKEN"); normalizeImpl(alternative)
           case S(S(pat: PatternSymbol)) => mode match
