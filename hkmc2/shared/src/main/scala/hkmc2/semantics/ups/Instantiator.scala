@@ -25,7 +25,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** We instantiate patterns in a breadth-first manner. The queue contains all
    *  patterns that need to be instantiated. */
-  val thingsToDo: MutQueue[Instantiation] = MutQueue.empty
+  val worklist: MutQueue[Instantiation] = MutQueue.empty
   
   /** Instantiate an anonymous pattern. */
   def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
@@ -46,8 +46,8 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** Run the loop to recursively instantiate needed patterns. */
   private def runInstantiationLoop: Context =
-    while thingsToDo.nonEmpty do
-      val instantiation = thingsToDo.dequeue()
+    while worklist.nonEmpty do
+      val instantiation = worklist.dequeue()
       val defn = instantiation.symbol.defn.get
       // Check if the number of pattern parameters and pattern arguments match.
       if defn.patternParams.size != instantiation.arguments.size then
@@ -78,7 +78,7 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   def schedule(instantiation: Instantiation): Instantiation =
     if !progress.contains(instantiation) then
       progress += (instantiation -> N)
-      thingsToDo.enqueue(instantiation)
+      worklist.enqueue(instantiation)
     else
       log(s"Already instantiated ${instantiation.showDbg}")
     progress(instantiation)
