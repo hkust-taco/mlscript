@@ -65,17 +65,20 @@ App(Var("a"), Var("a_1")).freshVar("a")
 Var("a").freshVar("b")
 //│ = Var("b")
 
-fun subst(term, name, target) = if term is
-  Var(name') and
-    name === name' then target
-    else term
-  Abs(Var(name'), body) and
-    name === name' then term
-    let target' = if target.freeVars.has(name')
-      then subst(target, name', target.freshVar(name'))
-      else target
-    else Abs(Var(name'), subst(body, name, target'))
-  App(lhs, rhs) then App(subst(lhs, name, target), subst(rhs, name, target))
+fun (<~>) alphaEquivalent(lhs, rhs) =
+  let varMap = new Map()
+  pattern Var' = Var(n) => if varMap.has(n) then varMap.get(n) else n
+  fun go(lhs, rhs) = if lhs is
+    Var(n) and rhs is Var' as n' then n === n'
+    App(l, r) and r is App(l', r') then go(l, l') and go(r, r')
+    Abs(Var(n), b) and rhs is Abs(Var(n'), b') then
+      let no = if varMap.has(n) then Some(varMap.get(n)) else None
+      varMap.set(n', n)
+      let equal = go(b, b')
+      if no is Some(n'') do varMap.set(n', n'') else varMap.delete(n')
+      equal
+    else false
+  go(lhs, rhs)
 
 :silent
 // A few frequently used terms.
@@ -128,6 +131,30 @@ print of or_.show
 //│ > λp. λq. p q p
 //│ > λp. λq. p p q
 
+id_x <~> id_y
+//│ = true
+
+id_x <~> id_a
+//│ = true
+
+id_x <~> succ
+//│ = false
+
+zero <~> false_
+//│ = true
+
+fun subst(term, name, target) = if term is
+  Var(name') and
+    name === name' then target
+    else term
+  Abs(Var(name'), body) and
+    name === name' then term
+    let target' = if target.freeVars.has(name')
+      then subst(target, name', target.freshVar(name'))
+      else target
+    else Abs(Var(name'), subst(body, name, target'))
+  App(lhs, rhs) then App(subst(lhs, name, target), subst(rhs, name, target))
+
 :expect Abs(Var("a"), Var("a"))
 subst(Var("c"), "c", id_a)
 //│ = Abs(Var("a"), Var("a"))
@@ -161,10 +188,31 @@ subst(Abs(Var("a"), App(Var("b"), Var("a"))), "b", Var("a"))
 
 pattern Value = Abs
 
-// This pattern matches a reducible term and performs the substitution.
-pattern Redex = App(Abs(Var(x), m), Value as n) => subst(m, x, n)
+object ByValue with
+  // This pattern matches a beta redex where the argument is a value and
+  // performs the substitution.
+  pattern Redex = App(Abs(Var(x), m), Value as n) => subst(m, x, n)
+  
+  // Call-by-value evaluation contexts
+  //
+  // E ::= □
+  //     | E t
+  //     | v E
+  //
+  // It matches any terms that can take at least one step and extracts the next
+  // redex that we should make a progress and a function to reconstruct the term.
+  pattern Context(pattern Hole) =
+    (
+      (Hole as hole) => [hole, id]
+    ) | (
+      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+        [rhs, App(lhs, _)]
+    ) | (
+      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+        [lhs, lhs' => App(remake(lhs'), rhs)]
+    )
 
-fun redex(term) = if term is Redex as term' then term'
+fun redex(term) = if term is ByValue.Redex as term' then term'
 
 redex of App(id_x, id_y)
 //│ = Abs(Var("y"), Var("y"))
@@ -177,27 +225,8 @@ redex of id_x
 redex of Var("a")
 //│ ═══[RUNTIME ERROR] Error: match error
 
-// Call-by-value evaluation contexts
-//
-// E ::= □
-//     | E t
-//     | v E
-//
-// It matches any terms that can take at least one step and extracts the next
-// redex that we should make a progress and a function to reconstruct the term.
-pattern Context(pattern Hole) =
-  (
-    (Hole as hole) => [hole, id]
-  ) | (
-    App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
-      [rhs, App(lhs, _)]
-  ) | (
-    App(Context(Hole) as [lhs, remake], Term as rhs) =>
-      [lhs, lhs' => App(remake(lhs'), rhs)]
-  )
-
 fun step(term) =
-  if term is Context(Redex) as [subterm, remake] then remake(subterm)
+  if term is ByValue.Context(ByValue.Redex) as [subterm, remake] then remake(subterm)
 
 :re
 step of Var("x")
@@ -223,29 +252,132 @@ step(App(App(id_a, id_b), id_x)).show
 step(App(id_x, id_y)).show
 //│ = "λy. y"
 
-fun eval(term) =
+fun evalByValue(term) =
   while term is
-    Context(Redex) as [subterm, remake] then
+    ByValue.Context(ByValue.Redex) as [subterm, remake] then
       set term = remake(subterm)
     else term
 
-eval(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
+evalByValue(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
 //│ = "λy. y"
 
-eval(App(succ, zero)).show
+evalByValue(App(succ, zero)).show
 //│ = "λf. λx. f ((λf. λx. x) f x)"
+
+evalByValue(App(succ, App(succ, zero))).show
+//│ = "λf. λx. f ((λf. λx. f ((λf. λx. x) f x)) f x)"
 
 :fixme
 // More inconsistent origin locations to fix...
-fun eval'(term) =
+fun evalByValue'(term) =
   while term is
-    (@compile Context(Redex)) as [subterm, remake] then
+    (@compile ByValue.Context(ByValue.Redex)) as [subterm, remake] then
       set term = remake(subterm)
     else term
 //│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.192: 	    App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
-//│ ╙──       	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.195: 	    App(Context(Hole) as [lhs, remake], Term as rhs) =>
-//│ ╙──       	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (List(EvaluationContext.mls:+188, EvaluationContext.mls:+165),Let($transform,Lam(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None),Blk(List(LetDecl(hole,List()), DefineVar(hole,SynthSel(Ref(args),Ident(hole)))),Tup(List(Fld(‹›,Ref(hole),None), Fld(‹›,SynthSel(Ref(member:Predef),Ident(id)),None))))),Let($transform,Lam(ParamList(‹›,List(Param(‹›,args,None,Modulefulness(None))),None),Blk(List(LetDecl(x,List()), DefineVar(x,SynthSel(Ref(args),Ident(x))), LetDecl(m,List()), DefineVar(m,SynthSel(Ref(args),Ident(m))), LetDecl(n,List()), DefineVar(n,SynthSel(Ref(args),Ident(n)))),App(Ref(member:subst),Tup(List(Fld(‹›,Ref(m),None), Fld(‹›,Ref(x),None), Fld(‹›,Ref(n),None)))))),Let($result1$,SynthSel(Ref(lhs),Ident(p_1)),Cons(Branch(Ref($result1$),ClassLike(SynthSel(SynthSel(Ref($runtime),Ident(MatchResult)),Ident(class)),class:MatchResult,Some(List(($output1$,None), ($bindings,None))),false),Let($fieldBindings,Rcd(false,List()),Let($result2$,SynthSel(Ref(rhs),Ident(p_2)),Cons(Branch(Ref($result2$),ClassLike(SynthSel(SynthSel(Ref($runtime),Ident(MatchResult)),Ident(class)),class:MatchResult,Some(List(($output2$,None), ($bindings,None))),false),Let($fieldBindings,Rcd(false,List(RcdField(Lit(StrLit(n)),Ref($output2$)))),Let($transformResult,App(Ref($transform),Tup(List(Fld(‹›,Rcd(false,List(RcdSpread(Ref($bindings)), RcdSpread(Ref($fieldBindings)), RcdSpread(Ref($bindings)), RcdSpread(Ref($fieldBindings)))),None)))),Let($bindings,Rcd(false,List(RcdField(Lit(StrLit(hole)),Ref($transformResult)))),Let($transformResult,App(Ref($transform),Tup(List(Fld(‹›,Ref($bindings),None)))),Let($bindings,Rcd(false,List()),Else(App(SynthSel(Ref($runtime),Ident(MatchResult)),Tup(List(Fld(‹›,Ref($transformResult),None), Fld(‹›,Ref($bindings),None))))))))))),End)))),Else(App(SynthSel(Ref($runtime),Ident(MatchFailure)),Tup(List(Fld(‹›,Lit(StrLit(topmost)),None))))))))))
+//│ ║  l.211: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+object ByName with
+  // Call-by-name allows reducing any beta redex. The argument `n` may be any
+  // term, not necessarily a value.
+  pattern Redex = App(Abs(Var(x), m), Term as n) => subst(m, x, n)
+  
+  // Call-by-name evaluation contexts
+  //
+  // E ::= □
+  //     | E t
+  pattern Context(pattern Hole) =
+    (
+      (Hole as hole) => [hole, id]
+    ) | (
+      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+        [lhs, lhs' => App(remake(lhs'), rhs)]
+    )
+
+:silent
+let t = App(Abs(Var("x"), id_a), App(id_x, id_y))
+print of t.show
+//│ > (λx. λa. a) (λx. x) λy. y
+
+import "../../../mlscript-compile/Runtime.mls"
+
+fun stepByStep(system, term, maxSteps) =
+  let numSteps = 0
+  print of "Term: " + term.show
+  while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is
+    Runtime.MatchResult([subterm, remake], _) do
+      set numSteps += 1
+      set term = remake(subterm)
+      print of "Step " + numSteps + ": " + term.show
+  if numSteps == maxSteps do
+    print of "Stopped due to too many steps."
+
+:silent
+let applySelf = Abs(Var("x"), App(Var("x"), Var("x")))
+let omega = App(applySelf, applySelf)
+print of applySelf.show
+print of omega.show
+//│ > λx. x x
+//│ > (λx. x x) λx. x x
+
+stepByStep(ByValue, t, 10)
+//│ > Term: (λx. λa. a) (λx. x) λy. y
+//│ > Step 1: (λx. λa. a) λy. y
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, id_y), 10)
+//│ > Term: (λx. x) λy. y
+//│ > Step 1: λy. y
+
+stepByStep(ByValue, App(id_x, App(id_y, id_a)), 10)
+//│ > Term: (λx. x) (λy. y) λa. a
+//│ > Step 1: (λx. x) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, App(id_y, id_a)), 10)
+//│ > Term: (λx. x) (λy. y) λa. a
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(App(id_x, id_y), id_a), 10)
+//│ > Term: (λx. x) λy. y λa. a
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, App(id_a, id_b)), 10)
+//│ > Term: (λx. x) (λa. a) λb. b
+//│ > Step 1: (λa. a) λb. b
+//│ > Step 2: λb. b
+
+stepByStep(ByName, App(Abs(Var("u"), id_a), omega), 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: λa. a
+
+// The following term is evaluated differently in two systems.
+
+:silent
+let t = App(Abs(Var("u"), id_a), omega)
+print of t.show
+//│ > (λu. λa. a) (λx. x x) λx. x x
+
+stepByStep(ByValue, t, 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 2: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 3: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 4: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 5: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 6: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 7: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 8: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 9: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 10: (λu. λa. a) (λx. x x) λx. x x
+//│ > Stopped due to too many steps.
+
+stepByStep(ByName, t, 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: λa. a
