@@ -13,23 +13,29 @@ pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                  ^^
 
+:fixme
+// Hypothetical syntax: put pattern parameters in the type parameter list but
+// prefixed with `pattern`.
+pattern Rep0[pattern A] = "" | A ~ Rep0[A]
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None) (of class hkmc2.syntax.Tree$TypeDef)
+
 :e
 // Hypothetical syntax: separate parameter list for the extraction.
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.18: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║  l.24: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.19: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (application).
-//│ ║  l.19: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.19: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ║        	             ^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.19: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	  ^^
 
 pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
@@ -43,7 +49,7 @@ pattern Email(name, domain) =
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.44: 	  n and n > value then n
+//│ ║  l.50: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
 :e
@@ -56,11 +62,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator 'as').
-//│ ║  l.55: 	  view as
+//│ ║  l.61: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.56: 	    Unit then ....
+//│ ║  l.62: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	    Arrow(...) then ....
+//│ ║  l.63: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -78,10 +84,10 @@ pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.75: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.81: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.75: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.81: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
 :pe
@@ -89,10 +95,10 @@ pattern Email(name, domains) =
 // Hypothetical syntax: use `to` instead of ugly `..=`
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.90: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                        ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.90: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                 ^^^^^^
 
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
