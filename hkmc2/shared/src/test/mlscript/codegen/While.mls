@@ -309,3 +309,45 @@ while
 //│ ╙──       	  ^^^^
 
 
+// Mix of local mutable variable, while loop and lambdas
+:fixme
+:expect 2
+fun f() =
+  let
+    cnt = 2
+    savedLambda = null
+  while cnt > 0 do
+    let local = cnt
+    if cnt == 2 do
+      // This lambda should always return 2,
+      // since local is 2 and not reassigned in the while loop
+      savedLambda = () => local
+    set cnt -= 1
+  // Calls the saved lambda
+  savedLambda()
+f()
+//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
+//│ = 1
+
+class Lazy[out A](f: () -> A) with
+  mut val cached: A | () = ()
+  fun get =
+    if cached === () do
+      set cached = f()
+    cached
+
+:fixme
+:expect [1, 2, 3]
+let arr = [1, 2, 3]
+let output = mut []
+let i = 0
+while i < arr.length do
+  let elem = arr.[i]
+  output.push(new Lazy(() => elem))
+  set i += 1
+[output.[0].get, output.[1].get, output.[2].get]
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[3, 3, 3]'
+//│ = [3, 3, 3]
+//│ arr = [1, 2, 3]
+//│ i = 3
+//│ output = [Lazy(_), Lazy(_), Lazy(_)]
