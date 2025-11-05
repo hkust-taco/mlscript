@@ -24,11 +24,11 @@ import Document._
  */
 
 object DocumentContext:
-  case object Nest;        type Nest       = Nest.type
-  case object UnNest;      type UnNest     = UnNest.type
-  case object BeginGroup;  type BeginGroup = BeginGroup.type
-  case object EndGroup;    type EndGroup   = EndGroup.type
-  case object Insert;      type Insert     = Insert.type
+  case object Nest; type Nest = Nest.type
+  case object UnNest; type UnNest = UnNest.type
+  case object BeginGroup; type BeginGroup = BeginGroup.type
+  case object EndGroup; type EndGroup = EndGroup.type
+  case object Insert; type Insert = Insert.type
   case class RawDocText(s: String) // avoids the "\n chars" warning of DocText
 import DocumentContext.*
 
@@ -47,7 +47,7 @@ class DocumentContext(ctx: StringContext) {
       
       def splitOn(mark: String, interleaved: DocsMarkersInsert) = (ds: Ls[DocsMarkersInsert]) => ds.flatMap:
         case RawDocText(str) => interleave(unsafeWrapArray(str.split(mark, -1)).map(RawDocText(_)), interleaved)
-        case d: DocsMarkersInsert => Seq(d)
+        case d: DocsMarkersInsert     => Seq(d)
       
       // Makes a sequence of the parts separated with Nest, UnNest and Insert (for positions where docs are to be inserted)
       val parts = (
@@ -66,10 +66,9 @@ class DocumentContext(ctx: StringContext) {
         case Insert      => diter.next()
         case d: DocsMarkers => d
       
-      // * Processes the sequence, replacing Nest/UnNest pairs by a nest(...) call
-      // * and BeginGroup/EndGroup pairs by a group(...) call;
-      // * the `outer` parameter indicates current innermost pair (Insert indicates none)
-      var curDocs = allDocs 
+      // Processes the sequence, replacing Nest..UnNest pairs by a nest(..) call
+      // and BeginGroup..EndGroup pairs by a group(..) call
+      var curDocs = allDocs
       def process(acc: Document, outer: Insert | Nest | BeginGroup): Document = curDocs match
         case Nil =>
           outer match
