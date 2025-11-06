@@ -80,7 +80,7 @@ Pair(3, 2) is OrderedPair
 Pair(42, 96) is OrderedPair as 54
 //│ = true
 
-pattern OrderedPairLike = ((Pair(a, b) | [a, b]) where a < b) => b - a
+pattern OrderedPairLike = (Pair(a, b) | [a, b] where a < b) => b - a
 
 :expect [true, false, true]
 tuple of
@@ -95,3 +95,5 @@ tuple of
   [3, 2] is OrderedPairLike
   [42, 96] is OrderedPairLike as 54
 //│ = [true, false, true]
+
+
