@@ -7,8 +7,8 @@ import syntax.*, Tree.Ident, Elaborator.State
 
 /**
   * Flattened patterns used in splits for `Normalization` and `Lowering`. All
-  * cases of patterns declared hereby can be matched in constant time and fixed
-  * number of comparisons. Non-trivial patterns (e.g., unions, intersections,
+  * cases of patterns declared hereby can be matched in constant time.
+  * Non-trivial patterns (e.g., unions, intersections,
   * transformations, etc) have been compiled to `Split`.
   */
 enum FlatPattern extends AutoLocated:
