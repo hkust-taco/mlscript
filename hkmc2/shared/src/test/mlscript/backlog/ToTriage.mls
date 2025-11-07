@@ -464,3 +464,15 @@ set
 //│ ╙──       	  ^^^^
 
 // ——— ——— ———
+
+pattern A(pattern B) = B
+
+// What @compile actually annotates is `A(0) as y` instead of `A(0)`.
+// We should tighten the precedence of annotations.
+
+fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.473: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╙──       	                                                         ^
+
+// ——— ——— ———
