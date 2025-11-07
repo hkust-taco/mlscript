@@ -4,6 +4,9 @@ package semantics
 import mlscript.utils.*, shorthands.*, syntax.*, Tree.{BoolLit, Keywrd}
 import Keyword.{`do`, `else`, `then`}, utils.TL, Elaborator.{Ctx, State}
 
+/**
+  * Similar to `Split` but contains nested patterns (i.e., class `Pattern`).
+  */
 enum SimpleSplit extends AutoLocated with ProductWithTail:
   import SimpleSplit.Head
   
