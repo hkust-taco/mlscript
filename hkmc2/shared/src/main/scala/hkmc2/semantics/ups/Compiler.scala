@@ -174,9 +174,9 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
           // There's no transform in the topmost pattern. So, we just make and
-          // return a `MatchResult` instance.
+          // return a `MatchSuccess` instance.
           makeConsequent = (outputSymbol, bindings) => Split.Else:
-            makeMatchResult(outputSymbol.use, bindings.use),
+            makeMatchSuccess(outputSymbol.use, bindings.use),
           // Here the string "topmost" is just to indicate the failure is
           // passed from the topmost split for the purpose of debugging.
           alternative = Split.Else(makeMatchFailure(str("topmost"))))
@@ -211,20 +211,20 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
    *  @param output The default output of the pattern. It will not be evaluated
    *                if there is a transform term.
    */
-  private def completeMatchResult(
+  private def completeMatchSuccess(
     transformOpt: Opt[TempSymbol],
     output: => Term,
     bindings: => Term
   ): Split = transformOpt match
     // If no transform is provided, we just return the current scrutinee and
-    // the bindings through `MatchResult`.
+    // the bindings through `MatchSuccess`.
     case N => Split.Else:
-      makeMatchResult(output, bindings)
+      makeMatchSuccess(output, bindings)
     case S(transform) =>
       val resultSymbol = TempSymbol(N, "transformResult")
       val transformTerm = app(transform.safeRef, tup(fld(bindings)), "the transform's result")
       Split.Let(resultSymbol, transformTerm, Split.Else(
-        makeMatchResult(resultSymbol.safeRef)))
+        makeMatchSuccess(resultSymbol.safeRef)))
   
   def completePattern(
       pattern: SpPat,
@@ -266,7 +266,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = sel(subScrutinees(field).safeRef, label.asFieldName)
-          // This is the symbol for `MatchResult`.
+          // This is the symbol for `MatchSuccess`.
           val resultSymbol = TempSymbol(N, s"result$label$$")
           // This is the symbol for the output of the pattern.
           val outputSymbol = TempSymbol(N, s"output$label$$")
@@ -281,7 +281,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val bindingsSymbol = TempSymbol(N, "bindings")
               Split.Let(resultSymbol, target, Branch(
                 scrutinee = resultSymbol.safeRef,
-                pattern = matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
+                pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
                 continuation = Split.Let(
                   fieldBindingsSymbol,
                   fieldBindingsTerm,
@@ -312,7 +312,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       (makeConsequent, alternative) => functions.foldRight(alternative):
         case (makeSplit, innerSplit) => makeSplit(makeConsequent, innerSplit)
     // The conjunction case should check all results from patterns and only
-    // return `MatchResult` if all patterns succeed.
+    // return `MatchSuccess` if all patterns succeed.
     case And(patterns) =>
       val functions = patterns.map:
         completePattern(_, scrutinee, subScrutinees, aliases)

@@ -109,7 +109,7 @@ let emptySub = Subst(new Map())
 //│ emptySub = Subst(Map(0) {})
 
 fun (~>) applyPattern(x, P) =
-  if P.unapply(x) is Runtime.MatchResult(result, _) then result
+  if P.unapply(x) is Runtime.MatchSuccess(result, _) then result
 
 // Note that how we use `where` clauses in disjunction patterns with bindings.
 pattern Unify =

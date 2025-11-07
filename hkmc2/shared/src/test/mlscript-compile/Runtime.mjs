@@ -77,19 +77,19 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "EffectHandle", [null]]; 
     });
-    this.MatchResult = function MatchResult(output, bindings) {
-      return globalThis.Object.freeze(new MatchResult.class(output, bindings));
+    this.MatchSuccess = function MatchSuccess(output, bindings) {
+      return globalThis.Object.freeze(new MatchSuccess.class(output, bindings));
     };
-    globalThis.Object.freeze(class MatchResult {
+    globalThis.Object.freeze(class MatchSuccess {
       static {
-        Runtime.MatchResult.class = this
+        Runtime.MatchSuccess.class = this
       }
       constructor(output, bindings) {
         this.output = output;
         this.bindings = bindings;
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "MatchResult", ["output", "bindings"]]; 
+      static [definitionMetadata] = ["class", "MatchSuccess", ["output", "bindings"]]; 
     });
     this.MatchFailure = function MatchFailure(errors) {
       return globalThis.Object.freeze(new MatchFailure.class(errors));

@@ -312,7 +312,7 @@ fun stepByStep(system, term, maxSteps) =
   let numSteps = 0
   print of "Term: " + term.show
   while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is
-    Runtime.MatchResult([subterm, remake], _) do
+    Runtime.MatchSuccess([subterm, remake], _) do
       set numSteps += 1
       set term = remake(subterm)
       print of "Step " + numSteps + ": " + term.show

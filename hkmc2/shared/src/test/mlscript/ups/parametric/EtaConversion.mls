@@ -13,7 +13,7 @@ pattern Zero = 0
 //│ >    let $scrut = 0
 //│ >    let $patternArgument0$ = member:Zero
 //│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, $scrut)
-//│ >    $unapplyResult is $runtime.MatchResult.class(output, bindings) then true
+//│ >    $unapplyResult is $runtime.MatchSuccess.class(output, bindings) then true
 //│ >    else false
 //│ = true
 
@@ -25,7 +25,7 @@ fun foo(x) = x is Nullable(Char.Letter)
 //│ >  if
 //│ >    let $patternArgument0$ = (member:Char.)Letter‹member:Letter›
 //│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, x)
-//│ >    $unapplyResult is $runtime.MatchResult.class(output, bindings) then true
+//│ >    $unapplyResult is $runtime.MatchSuccess.class(output, bindings) then true
 //│ >    else false
 
 foo of null

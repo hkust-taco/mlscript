@@ -36,15 +36,15 @@ trait TermSynthesizer(using State):
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
 
-  /** Make a term that looks like `runtime.MatchResult` with its symbol. */
-  protected lazy val matchResultClass =
-    sel(runtimeRef, "MatchResult", State.matchResultClsSymbol)
+  /** Make a term that looks like `runtime.MatchSuccess` with its symbol. */
+  protected lazy val matchSuccessClass =
+    sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol)
 
-  /** Make a pattern that looks like `runtime.MatchResult.class`. */
-  protected def matchResultPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    val constructor = sel(matchResultClass, "class", State.matchResultClsSymbol)
+  /** Make a pattern that looks like `runtime.MatchSuccess.class`. */
+  protected def matchSuccessPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+    val constructor = sel(matchSuccessClass, "class", State.matchSuccessClsSymbol)
     val parameters = parametersOpt.map(_.map(_ -> N))
-    FlatPattern.ClassLike(constructor, State.matchResultClsSymbol, parameters, false)(Tree.Dummy)
+    FlatPattern.ClassLike(constructor, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
@@ -100,14 +100,14 @@ trait TermSynthesizer(using State):
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
   
-  protected final def makeMatchResult(output: Term) =
-    app(matchResultClass, tup(fld(output), fld(rcd())), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term) =
+    app(matchSuccessClass, tup(fld(output), fld(rcd())), "result of `MatchSuccess`")
   
-  protected final def makeMatchResult(output: Term, bindings: Term) =
-    app(matchResultClass, tup(fld(output), fld(bindings)), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term, bindings: Term) =
+    app(matchSuccessClass, tup(fld(output), fld(bindings)), "result of `MatchSuccess`")
   
-  protected final def makeMatchResult(output: Term, fields: Ls[RcdField | RcdSpread]) =
-    app(matchResultClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term, fields: Ls[RcdField | RcdSpread]) =
+    app(matchSuccessClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchSuccess`")
     
   protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
     app(matchFailureClass, tup(fld(errors)), "result of `MatchFailure`")
@@ -119,8 +119,8 @@ trait TermSynthesizer(using State):
       inner: => Split,
   )(fallback: Split): Split =
     val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
-    tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.safeRef, matchResultPattern(N), inner) ~: fallback
+    tempLet("matchSuccess", call): resultSymbol =>
+      Branch(resultSymbol.safeRef, matchSuccessPattern(N), inner) ~: fallback
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,

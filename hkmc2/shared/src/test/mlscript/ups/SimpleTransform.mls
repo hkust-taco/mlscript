@@ -28,7 +28,7 @@ pattern SumPair = Pair(a, b) => a + b
 //│       argument1$ = input.second;
 //│       transformResult = runtime.safeCall(transform(argument0$, argument1$));
 //│       tmp = globalThis.Object.freeze({});
-//│       return runtime.MatchResult(transformResult, tmp)
+//│       return runtime.MatchSuccess(transformResult, tmp)
 //│     } else {
 //│       return runtime.MatchFailure(null)
 //│     }
@@ -255,13 +255,13 @@ print of 8080 is Positive
 
 // Hmm, but how to make the pattern return the input value?
 Positive.unapply(100)
-//│ = MatchResult(true, {})
+//│ = MatchSuccess(true, {})
 
 // Just use conjunction patterns.
 pattern Positive = (x & (((Int as x) => x > 0) as true)) => x
 
 Positive.unapply(100)
-//│ = MatchResult(100, {})
+//│ = MatchSuccess(100, {})
 
 //  ____  _        _
 // / ___|| |_ _ __(_)_ __   __ _

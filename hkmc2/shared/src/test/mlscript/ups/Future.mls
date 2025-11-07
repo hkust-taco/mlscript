@@ -107,10 +107,10 @@ pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
 //│ = true
 
 :fixme
-:expect MatchResult(["foo", "bar"], {})
+:expect MatchSuccess(["foo", "bar"], {})
 Test.unapply("foobar")
-//│ ═══[RUNTIME ERROR] Expected: 'MatchResult(["foo", "bar"], {})', got: 'MatchResult("foobar", {})'
-//│ = MatchResult("foobar", {})
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["foo", "bar"], {})', got: 'MatchSuccess("foobar", {})'
+//│ = MatchSuccess("foobar", {})
 
 :todo
 :pt

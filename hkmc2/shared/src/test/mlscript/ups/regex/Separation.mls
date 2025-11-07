@@ -29,7 +29,7 @@ pattern Integer = Digit ~ (Integer | "")
 //│ = true
 
 Integer.unapplyStringPrefix("123")
-//│ = MatchResult(["123", ""], {})
+//│ = MatchSuccess(["123", ""], {})
 
 // Beautiful!
 "123\n456\n789" is Lines of Integer
