@@ -240,7 +240,20 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             ))
         val bufferable = bufferableAnnots.headOption
         val (mtds, publicFlds, privateFlds, ctor) = defn match
-          case pd: PatternDef => compilePatternMethods(pd)
+          case pd: PatternDef =>
+            // Compile the pattern definition into `unapply` and `unapplyStringPrefix`
+            // methods using the `SplitCompiler`, which transliterate the pattern into
+            // UCS splits that backtrack without any optimizations.
+            val compiler = new ups.SplitCompiler
+            val methods = compiler.compilePattern(pd)
+            // We only need `owner`, `sym`, `params` and `body`
+            val mtds = methods.map:
+              case (sym, params, split) =>
+                val paramLists = params :: Nil
+                val bodyBlock = ucs.Normalization(this)(split)(Ret)
+                FunDefn(N, sym, paramLists, bodyBlock)
+            // The return type is intended to be consistent with `gatherMembers`
+            (mtds, Nil, Nil, End())
           case _ => gatherMembers(defn.body)
         val mod = defn.companion match
           case S(sym) =>
@@ -825,21 +838,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           case t => t
     (mtds, publicFlds, privateFlds, ctor)
   
-  /** Compile the pattern definition into `unapply` and `unapplyStringPrefix`
-   *  methods using the `SplitCompiler`, which transliterate the pattern into
-   *  UCS splits that backtrack without any optimizations. */
-  def compilePatternMethods(defn: PatternDef)(using Subst):
-      // The return type is intended to be consistent with `gatherMembers`
-      (Ls[FunDefn], Ls[BlockMemberSymbol -> TermSymbol], Ls[TermSymbol], Block) =
-    val compiler = new ups.SplitCompiler
-    val methods = compiler.compilePattern(defn)
-    // We only need `owner`, `sym`, `params` and `body`
-    val mtds = methods.map:
-      case (sym, params, split) =>
-        val (paramLists, bodyBlock) = setupFunctionDef(params :: Nil, split, S(sym.nme))
-        FunDefn(N, sym, paramLists, bodyBlock)
-    (mtds, Nil, Nil, End())
-  
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using Subst): Block =
     val as = elems.map:
       case sem.Fld(sem.FldFlags.benign(), value, N) => R(N -> value)
@@ -958,11 +956,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
     (paramLists, returnedTerm(bodyTerm))
-  
-  /** Same as the other overload, but expect the body to be a `Split`. */
-  def setupFunctionDef(paramLists: List[ParamList], bodySplit: Split, name: Option[Str])
-      (using Subst): (List[ParamList], Block) =
-    (paramLists, ucs.Normalization(this)(bodySplit)(Ret))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:
