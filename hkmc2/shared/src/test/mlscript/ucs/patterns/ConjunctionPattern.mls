@@ -5,26 +5,30 @@ import "../../../mlscript-compile/Stack.mls"
 open Stack
 
 
-object A
-object B
-data class C(a)
+abstract class Q
+abstract class A extends Q
+abstract class B extends Q
 
-// Note: It is normalization that caused the following tests to generate
-// incorrect code. Because the specialization rejects the intersection patterns.
+// Note: The following tests expose a normalization issue where conjunction
+// patterns involving overlapping classes (A and B) generate incorrect code.
+// The normalization assumes all classes are mutually exclusive, causing
+// patterns like `A & B` to be optimized away instead of properly testing both
+// classes.
 
-if A is
-  A & A & B then 0
-  B & A & B then 1
-  A & A & A then 2
-  else 3
-//│ = 2
 
 if A is
   A & A & B then 0
   B & A & B then 1
   A & A & A then 2
   else 3
-//│ = 2
+//│ = 3
+
+if A is
+  A & A & B then 0
+  B & A & B then 1
+  A & A & A then 2
+  else 3
+//│ = 3
 
 :sjs
 fun foo(v) =
@@ -37,9 +41,7 @@ fun foo(v) =
 //│   let tmp2;
 //│   split_root$2: {
 //│     split_1$2: {
-//│       if (v instanceof A1.class) {
-//│         break split_1$2
-//│       } else { break split_1$2 }
+//│       if (v instanceof A1) { break split_1$2 } else { break split_1$2 }
 //│     }
 //│     tmp2 = 0;
 //│   }
@@ -78,6 +80,7 @@ suffixes(range(0, 0))
 if 5 is a & b & c then a+b+c
 //│ = 15
 
+data class C(a)
 
 fun foo(x) = if x is
   {a:_ & a} & C and
