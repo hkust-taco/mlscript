@@ -118,7 +118,7 @@ object Pattern:
     /** Report all invalid variables. */
     def report(using Raise): Unit = invalidVars.foreach:
       case (Alias(_, id), Duplicated(previous)) => raise(ErrorReport(
-        msg"Duplicate pattern variable." -> id.toLoc ::
+        msg"Duplicated pattern variable." -> id.toLoc ::
         msg"The previous definition ${if previous.size === 1 then "is" else "are"} as follows." -> previous.head.toLoc ::
         previous.tail.map(msg"" -> _.toLoc)))
       case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) => error(

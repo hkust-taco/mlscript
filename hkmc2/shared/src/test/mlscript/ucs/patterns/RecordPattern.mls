@@ -62,7 +62,7 @@ let r = {x: 2, y : 4}
 :e
 if r is
   {x:a, y:a} then a
-//│ ╔══[ERROR] Duplicate pattern variable.
+//│ ╔══[ERROR] Duplicated pattern variable.
 //│ ║  l.64: 	  {x:a, y:a} then a
 //│ ║        	          ^
 //│ ╟── The previous definition is as follows.

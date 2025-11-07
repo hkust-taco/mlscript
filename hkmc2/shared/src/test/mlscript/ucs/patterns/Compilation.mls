@@ -2,14 +2,15 @@
 
 open annotations
 
+// * Note that `(@compile (...))` is currently parsed as `(@compile(...) ())`...
 :e
 fun trimStart(str) =
   if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╔══[ERROR] Unrecognized pattern (unit).
-//│ ║  l.7: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──     	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: rest
-//│ ║  l.7: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
 //│ ╙──     	                                                            ^^^^
 
 :pe
@@ -19,18 +20,18 @@ fun trimStart(str) =
 fun trimStart(str) =
   if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
-//│ ║  l.20: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                                           ^^^^
 //│ ╔══[ERROR] Unrecognized pattern (‹erroneous syntax›).
-//│ ║  l.20: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                                           ^^^^
 //│ ╔══[ERROR] Name not found: rest
-//│ ║  l.20: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                                     ^^^^
 //│ ╔══[ERROR] Name not found: rest
-//│ ║  l.20: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ╙──      	                                                          ^^^^
 //│ ╔══[WARNING] This annotation is not supported here.
-//│ ║  l.20: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: Patterns only support the `@compile` annotation.

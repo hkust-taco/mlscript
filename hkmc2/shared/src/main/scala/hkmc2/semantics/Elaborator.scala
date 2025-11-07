@@ -1438,9 +1438,9 @@ extends Importer with ucs.SplitElaborator:
     /** String range bounds must be single characters. */
     def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
       val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]
-      if lo.value.length != 1 then
+      if lo.value.length =/= 1 then
         ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
-      if hi.value.length != 1 then
+      if hi.value.length =/= 1 then
         ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
       if ds.nonEmpty then error(ds.toSeq*)
       ds.nonEmpty
