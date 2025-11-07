@@ -685,7 +685,7 @@ sealed abstract class Declaration:
   val sym: Symbol
   
   /** Whether this declares a class, a pattern, an object, or a pattern
-    * parameter. Only they can be at the constructor position in patterns. */
+    * parameter. Only these can be in patterns constructor position. */
   def isPatternConstructor: Bool = this match
     case _: (TermDefinition | TypeDef | TyParam) => false
     case d: ModuleOrObjectDef => d.kind isnt Mod
