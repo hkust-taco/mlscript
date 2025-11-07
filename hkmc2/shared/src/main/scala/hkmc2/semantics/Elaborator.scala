@@ -1492,7 +1492,7 @@ extends Importer with ucs.SplitElaborator:
       Transform(pattern, correspondence, term(rhs)(using ctx ++ contextEntries))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
-      // We are accumulating two components: the leading patterns, the spred
+      // We are accumulating two components: the leading patterns, the spread
       // part including the trailing patterns.
       val z = (Ls[Pattern](), N: Opt[(SpreadKind, Pattern, Ls[Pattern])])
       val (leading, spread) = ts.foldLeft(z):
