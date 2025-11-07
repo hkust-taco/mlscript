@@ -3,6 +3,7 @@
 // This is an interesting experiment in evaluation context.
 
 import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/MutMap.mls"
 
 open annotations
 open Option { Some, None }
@@ -66,16 +67,18 @@ Var("a").freshVar("b")
 //│ = Var("b")
 
 fun (<~>) alphaEquivalent(lhs, rhs) =
-  let varMap = new Map()
-  pattern Var' = Var(n) => if varMap.has(n) then varMap.get(n) else n
+  let varMap = MutMap.empty
+  pattern Var' = Var(n) => varMap |> MutMap.get(n) |. Option.getOrElse(n)
   fun go(lhs, rhs) = if lhs is
     Var(n) and rhs is Var' as n' then n === n'
     App(l, r) and r is App(l', r') then go(l, l') and go(r, r')
     Abs(Var(n), b) and rhs is Abs(Var(n'), b') then
-      let no = if varMap.has(n) then Some(varMap.get(n)) else None
-      varMap.set(n', n)
+      let prev = varMap |> MutMap.get(n)
+      varMap |> MutMap.insert(n', n)
       let equal = go(b, b')
-      if no is Some(n'') do varMap.set(n', n'') else varMap.delete(n')
+      varMap |> if prev is
+        Some(n'') then MutMap.insert(n', n'')
+        None then MutMap.delete(n')
       equal
     else false
   go(lhs, rhs)
@@ -275,10 +278,10 @@ fun evalByValue'(term) =
       set term = remake(subterm)
     else term
 //│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.208: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ║  l.211: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
 //│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
-//│ ║  l.211: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ║  l.214: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 object ByName with
