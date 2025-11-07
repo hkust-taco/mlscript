@@ -49,13 +49,10 @@ bmi of height: 1.75
 //│ = None
 
 :todo // Make it happen!
-fun bmi'(record) = if record is @compile MatchOrNone(RoundedBMI) as value then value
+fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then value
 //│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
 //│ ║  l.20: 	pattern RoundedBMI = CalculateBMI as Rounded
 //│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'value'
-//│ ║  l.52: 	fun bmi'(record) = if record is @compile MatchOrNone(RoundedBMI) as value then value
-//│ ╙──      	                                                                               ^^^^^
 
 // Calculate the area of different shapes
 pattern ShapeArea = 
