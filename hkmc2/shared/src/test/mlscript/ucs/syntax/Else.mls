@@ -129,7 +129,7 @@ fun foo(x) = if x is
   else "I can't tell you what's inside the box."
   else "I don't want to tell you what's inside the box."
   else "I shouldn't tell you what's inside the box."
-//│ ╔══[WARNING] This else clause makes the following branches unreachable.
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
 //│ ║  l.129: 	  else "I can't tell you what's inside the box."
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── This branch is unreachable.

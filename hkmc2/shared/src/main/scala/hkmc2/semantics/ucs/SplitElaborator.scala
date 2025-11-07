@@ -132,7 +132,7 @@ trait SplitElaborator:
           msg"This branch is unreachable." -> split.toLoc
         .toList
         if messages.nonEmpty then
-          raise(WarningReport((msg"This else clause makes the following branches unreachable." -> default.toLoc :: messages)))
+          raise(WarningReport((msg"This catch-all clause makes the following branches unreachable." -> default.toLoc :: messages)))
       case N => ()
     // Reconstruct the split from the reachable `heads`.
     reachables.foldLeft(elseRest.fold(SimpleSplit.End)(_._1)):
