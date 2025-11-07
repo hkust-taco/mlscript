@@ -113,6 +113,7 @@ object Keyword:
   val `abstract` = Keyword("abstract", N, N)
   val `constructor` = Keyword("constructor", N, N)
   val `virtual` = Keyword("virtual", N, N)
+  val `staged` = Keyword("staged", N, N)
   val `true` = Keyword("true", N, N)
   val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
@@ -168,5 +169,5 @@ object Keyword:
   type LetLike = `let`.type | `set`.type
   
   type Modifier = `in`.type | `out`.type | `mut`.type | `abstract`.type | `declare`.type | `data`.type | `virtual`.type | `override`.type |
-    `public`.type | `private`.type
+    `public`.type | `private`.type | `staged`.type
 

@@ -233,6 +233,8 @@ object Elaborator:
     val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
     val termSymbol = TempSymbol(N, "Term")
+    val blockSymbol = TempSymbol(N, "Block")
+    val shapeSymbol = TempSymbol(N, "Shape")
     val wasmSymbol = TempSymbol(N, "wasm")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
@@ -319,7 +321,7 @@ extends Importer with ucs.SplitElaborator:
     case _ => N
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
-    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data`)) => S(Annot.Modifier(kw))
+    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
     case _ => term(tree) match
       case Term.Error => N
       case trm =>

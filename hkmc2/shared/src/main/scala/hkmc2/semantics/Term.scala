@@ -696,6 +696,8 @@ sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]
   def hasDeclareModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
+  def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`staged`) => mod
 
 sealed trait CompanionValue extends Definition
 

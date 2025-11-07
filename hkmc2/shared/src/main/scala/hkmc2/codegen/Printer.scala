@@ -82,7 +82,8 @@ object Printer:
       val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
-      doc"class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
+      val docStaged = if sym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+      doc"${docStaged}class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
     val doc = mkDocument(arg.value)
