@@ -29,20 +29,8 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** Instantiate an anonymous pattern. */
   def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
-    // TODO: We should not pass an empty map to the `instantiate` method if the
-    // caller is from the `SplitCompiler`.
     val entryPoint = instantiate(pattern)(using Map.empty)
     (entryPoint, runInstantiationLoop)
-  
-  /** Instantiate a pattern and patterns used in it. */
-  def apply(
-    symbol: PatternSymbol,
-    arguments: Ls[SP],
-    useSiteLoc: Opt[Loc]
-  ): (Pat, Context) = scoped("ucs:instantiation"):
-    val entryPoint = Instantiation(symbol, arguments.map(instantiate(_)(using Map.empty)))(useSiteLoc)
-    val result = schedule(entryPoint)
-    (Synonym(result), runInstantiationLoop)
   
   /** Run the loop to recursively instantiate needed patterns. */
   private def runInstantiationLoop: Context =
