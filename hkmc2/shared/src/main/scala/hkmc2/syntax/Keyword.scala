@@ -78,6 +78,7 @@ object Keyword:
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
+  val `where` = Keyword("where", nextPrec, curPrec)
   val `of` = Keyword("of", N, N) // * Note that `of` is parsed specially, so its precedence is not listed here
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, nextPrec)
@@ -105,7 +106,6 @@ object Keyword:
   val `object` = Keyword("object", N, N)
   val `open` = Keyword("open", N, curPrec)
   val `type` = Keyword("type", N, N)
-  val `where` = Keyword("where", curPrec, curPrec)
   val `forall` = Keyword("forall", N, N)
   val `exists` = Keyword("exists", N, N)
   val `null` = Keyword("null", N, N)

@@ -103,3 +103,8 @@ a === "a" || b === "b"
 //│ 	OpApp(OpApp(Ident(a),Ident(===),List(StrLit(a))),Ident(||),List(OpApp(Ident(b),Ident(===),List(StrLit(b)))))
 
 
+A is B where C is D
+//│ Parsed:
+//│ 	InfixApp(InfixApp(Ident(A),Keywrd(keyword 'is'),Ident(B)),Keywrd(keyword 'where'),InfixApp(Ident(C),Keywrd(keyword 'is'),Ident(D)))
+
+
