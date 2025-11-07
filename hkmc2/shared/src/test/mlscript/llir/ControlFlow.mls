@@ -259,7 +259,7 @@ f(A(1))
 
 :sllir
 :intl
-:fixme // Started failing since split deduplication have been introduced.
+:fixme // Started failing since split deduplication was introduced.
 data class A(x)
 data class B(y)
 fun f(a) =
