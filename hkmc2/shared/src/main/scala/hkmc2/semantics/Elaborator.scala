@@ -1483,7 +1483,7 @@ extends Importer with ucs.SplitElaborator:
       val (contextEntries, correspondence) = variables.iterator.map:
         case (name, symbol) =>
           // We create a symbol specifically for `Param` for each variable to
-          // avoid repetitively declare symbols in `Scope` during code
+          // avoid redundantly redeclaring symbols in `Scope` during code
           // generation, which triggers the assertion in `Scope.addToBindings`.
           val parameterSymbol = VarSymbol(new Ident(symbol.name))
           (name -> parameterSymbol, symbol -> parameterSymbol)
