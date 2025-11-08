@@ -5,17 +5,16 @@ if exists("b:current_syntax")
 endif
 
 " keywords and constants
-syn keyword     mlsType         Int String
-syn keyword     mlsKeyword      let set fun var val rec mut declare
+syn keyword     mlsKeyword      let set fun val rec mut declare
 syn keyword     mlsKeyword      override super new of forall exists
 syn keyword     mlsKeyword      class object module pattern trait mixin
 syn keyword     mlsKeyword      interface extends namespace type where with
-syn keyword     mlsKeyword      break return continue unravel as in out
+syn keyword     mlsKeyword      break return continue as in out
 syn keyword     mlsKeyword      constructor abstract virtual throw
 syn keyword     mlsKeyword      case and or enum data
 syn keyword     mlsConditional  if then else
 syn keyword     mlsRepeat       while for do
-syn keyword     mlsExternal     access from import
+syn keyword     mlsExternal     import
 syn keyword     mlsExternal     open
 syn keyword     mlsConstant     null true false undefined
 
