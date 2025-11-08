@@ -306,7 +306,7 @@ sealed trait ClassLikeSymbol extends IdentifiedSymbol:
 
 
 /**
- * A symbol that the entity it represents has a definition.
+ * A symbol for entities with a definition.
  *
  * This is different from `MemberSymbol` because `BlockMemberSymbol` extends `MemberSymbol`, and its
  * definition is ambiguous in the sense that a `BlockMemberSymbol` corresponds to multiple
