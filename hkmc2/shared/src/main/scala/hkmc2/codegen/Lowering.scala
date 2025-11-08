@@ -468,24 +468,26 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case sym => (sym is State.matchResultClsSymbol) ||
           (sym is State.matchFailureClsSymbol)
       def conclude(fr: Path) = lowerCall(fr, isMlsFun, arg, t.toLoc)(k)
+      
+      lazy val resolvedBms = t.resolvedSym.flatMap(_.asBlkMember)
       // * We have to instantiate `f` again because, if `f` is a Sel, the `term`
       // * function is not called again with f. See below `Sel` and `SelProj` cases.
       f.instantiated match
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.js.bitand) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.js.bitand) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitand")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.js.bitnot) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.js.bitnot) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitnot")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.js.bitor) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.js.bitor) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("bitor")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.js.shl) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.js.shl) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("shl")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.js.try_catch) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.wasm.plus_impl) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.wasm.plus_impl) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.Int31) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.Int31) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.debug.printStack) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
           return fail:
             ErrorReport(
@@ -493,7 +495,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               t.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if t.resolvedSym.flatMap(_.asBlkMember).exists(_ is ctx.builtins.debug.getLocals) =>
+      case t if resolvedBms.exists(_ is ctx.builtins.debug.getLocals) =>
         if !config.effectHandlers.exists(_.debug) then
           return fail:
             ErrorReport(
