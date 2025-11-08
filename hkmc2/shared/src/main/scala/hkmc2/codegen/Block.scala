@@ -568,11 +568,7 @@ sealed abstract class Path extends TrivialResult:
  * @param symbol The symbol representing the definition that the selection refers to, if known.
  */
 case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]]) extends Path with ProductWithExtraInfo:
-  def extraInfo: Str = 
-    (symbol.map(s => s"sym=${s}") :: Nil)
-      .collect:
-        case S(info) => info
-      .mkString(",")
+  def extraInfo: Str = symbol.map(s => s"sym=${s}").mkString
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
