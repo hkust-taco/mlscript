@@ -241,10 +241,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     def assign(value: Result, rest: Block) = this match
       case Sym(l) => Assign(l, value, rest)
       case PubField(isym, sym) => AssignField(isym.asPath, Tree.Ident(sym.nme), value, rest)(S(sym))
-  
+    
     def readDisamb(d: Opt[DefinitionSymbol[?]]) = this match
       case Sym(l) => Value.Ref(l, d)
       case PubField(isym, sym) => Select(isym.asPath, Tree.Ident(sym.nme))(d)
+  
   
   def isHandlerClsPath(p: Path) = handlerPaths match
     case None => false
