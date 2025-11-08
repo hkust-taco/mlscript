@@ -897,9 +897,8 @@ class Resolver(tl: TraceLogger)
                 log(s"Resolved symbol for ${t}: ${bms}")
               case N =>
                 // TODO @Harry: Appropriately resolve all selections on classes.
-                // The type annotations in the current code bases are largely incomplete,
-                // so many selections on classes cannot be resolved properly.
-                // We will refactor this later...
+                // - MLscript programs selecting JS members without properly defining them.
+                // - Inherited members.
           case defn =>
             log(s"Unsupported selection from definition: ${defn}")
       
