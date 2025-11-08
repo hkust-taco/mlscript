@@ -1133,7 +1133,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     extends Lowering:
   
   private val instrument: Bool = config.sanityChecks.isDefined
-
+  
   override def setupSelection(prefix: st, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using Subst): Block =
     if !instrument then return super.setupSelection(prefix, nme, disamb)(k)
     subTerm(prefix): p =>
