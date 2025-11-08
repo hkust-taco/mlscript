@@ -997,11 +997,6 @@ object Apps:
     case t => S(t, Nil)
 
 
-object ResolvedOpt:
-  def unapply(t: Term): S[(Term, Opt[Symbol])] = t match
-    case r: Resolved => S((r.t, S(r.sym)))
-    case _ => S((t, N))
-
 trait BlkImpl:
   this: Blk =>
   def mkBlkClone(using State): Blk = Blk(stats.map(_.mkClone), res.mkClone)
