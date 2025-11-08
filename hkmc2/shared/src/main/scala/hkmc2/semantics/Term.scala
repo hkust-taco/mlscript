@@ -203,7 +203,8 @@ enum Term extends Statement:
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
-  /** A term that wraps another term, indicating that the symbol of the inner term is resolved. */
+  /** A term that wraps another term, indicating that the symbol of the inner term is resolved.
+    * This is mainly used to disambiguate overloaded definitions. */
   case Resolved(t: Term, sym: DefinitionSymbol[?])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case Ref(sym: Symbol)
