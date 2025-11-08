@@ -257,21 +257,6 @@ object Elaborator:
         Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, Nil),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
-      ts.defn = S:
-        TermDefinition(
-          syntax.Fun,
-          BlockMemberSymbol(id.name, td :: Nil),
-          ts,
-          ps :: Nil,
-          N,
-          N,
-          N,
-          FlowSymbol("MatchResult-constructor"),
-          TermDefFlags.empty,
-          Modulefulness(N)(false),
-          Nil,
-          N,
-        )
       cs -> ts
     val (matchFailureClsSymbol, matchFailureTrmSymbol) =
       val id = new Ident("MatchFailure")
@@ -282,21 +267,6 @@ object Elaborator:
       val ps = PlainParamList(Param(flag, VarSymbol(Ident("errors")), N, Modulefulness(N)(false)) :: Nil)
       cs.defn = S(ClassDef.Parameterized(N, syntax.Cls, cs, BlockMemberSymbol(cs.name, td :: Nil),
         Nil, ps, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), N, Nil))
-      ts.defn = S:
-        TermDefinition(
-          syntax.Fun,
-          BlockMemberSymbol(id.name, td :: Nil),
-          ts,
-          ps :: Nil,
-          N,
-          N,
-          N,
-          FlowSymbol("MatchFailure-constructor"),
-          TermDefFlags.empty,
-          Modulefulness(N)(false),
-          Nil,
-          N,
-        )
       cs -> ts
     val builtinOpsMap =
       val baseBuiltins = builtins.map: op =>
@@ -1140,8 +1110,7 @@ extends Importer:
                         Fun, mtdSym, tsym, PlainParamList(Param(FldFlags.empty, valueSym, N, Modulefulness.none) :: Nil) :: Nil,
                         N, N, S(valueSym.ref(Ident("value"))), FlowSymbol(s"‹result of non-local return›"), TermDefFlags.empty, Modulefulness.none, Nil, N)
                       tsym.defn = S(td)
-                      mtdSym.defn = S(td)
-                      mtdSym.tdefn = S(td)
+                      mtdSym.tsym = S(tsym)
                       val htd = HandlerTermDefinition(resumeSym, td)
                       Term.Handle(nonLocalRetHandler, state.nonLocalRetHandlerTrm, Nil, clsSym, htd :: Nil, b)
               val r = FlowSymbol(s"‹result of ${sym}›")
@@ -1160,7 +1129,7 @@ extends Importer:
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
               tsym.defn = S(tdf)
               sym.defn = S(tdf)
-              sym.tdefn = S(tdf)
+              sym.tsym = S(tsym)
               
               tdf
             go(sts, Nil, tdf :: acc)
@@ -1247,7 +1216,7 @@ extends Importer:
                 assert(p.fldSym.isEmpty)
                 p.fldSym = S(fsym)
                 fsym.defn = S(fdef)
-                fsym.tdefn = S(fdef)
+                fsym.tsym = S(tsym)
                 tsym.defn = S(fdef)
                 fdef :: Nil
               else
@@ -1395,7 +1364,7 @@ extends Importer:
                     S(clsSym),
                   )
                 ctsym.defn = S(ctdef)
-                sym.tdefn = S(ctdef)
+                sym.tsym = S(ctsym)
               cd
         sym.defn = S(defn)
         go(sts, Nil, defn :: acc)

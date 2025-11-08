@@ -74,9 +74,7 @@ abstract class Symbol(using State) extends Located:
   // * So, the symbol is from the `TermDefinition`. 
   def asTrm: Opt[TermSymbol] = this match
     case trm: TermSymbol => S(trm)
-    case mem: BlockMemberSymbol => mem.tdefn match
-      case S(defn: TermDefinition) => S(defn.tsym)
-      case N => N
+    case mem: BlockMemberSymbol => mem.tsym
     case _ => N
   def asPat: Opt[PatternSymbol] = this match
     case pat: PatternSymbol => S(pat)
@@ -204,10 +202,7 @@ class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMe
     extends MemberSymbol[Definition]:
   
   // * This is a hack for that `TermDef` currently doesn't have a symbol. 
-  // * So, the symbol is from the `TermDefinition`. 
-  // * To prevent the `TermDefinition` from being overridden by other definitions,
-  // * we use a special field here.
-  var tdefn: Opt[TermDefinition] = N
+  var tsym: Opt[TermSymbol] = N
   
   def toLoc: Option[Loc] = Loc(trees)
   
