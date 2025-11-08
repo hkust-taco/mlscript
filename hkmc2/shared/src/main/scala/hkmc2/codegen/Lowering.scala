@@ -318,7 +318,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       raise:
         WarningReport(msg"Pure expression in statement position" -> ref.toLoc :: Nil, S(ref))
     
-    val sym = ref.symbol
+    val sym = ref.sym
     sym match
       case ctx.builtins.source.bms | ctx.builtins.js.bms | ctx.builtins.wasm.bms | ctx.builtins.debug.bms | ctx.builtins.annotations.bms =>
         return fail:
