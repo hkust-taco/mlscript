@@ -230,7 +230,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     
   enum LocalPath:
     case Sym(l: Local)
-    case PubField(isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol, sym: BlockMemberSymbol)
+    case PubField(isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, sym: BlockMemberSymbol)
     
     def read = this match
       case Sym(l) => l.asPath
@@ -1022,10 +1022,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             val isMutSym = VarSymbol(Tree.Ident("isMut"))
             
             var curSym = TempSymbol(None, "tmp")
-            // TODO: This special case Select(..., "class") is redundant after this PR.
-            def instInner(isMut: Bool) = if c.paramsOpt.isDefined
-              then Instantiate(mut = isMut, Select(c.sym.asPath, Tree.Ident("class"))(N), paramArgs)
-              else Instantiate(mut = isMut, c.sym.asPath, paramArgs)
+            def instInner(isMut: Bool) =
+              Instantiate(mut = isMut, Value.Ref(c.sym, S(c.isym)), paramArgs)
             
             val initSym = curSym
             
@@ -1186,13 +1184,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case c: ClsLikeDefn => c.copy(owner = N)
       case d => d
 
-    // TODO: The special case Select(..., "class") is redundant after the PR.
     def rewriteExtends(p: Path): Path = p match
       case RefOfBms(b, _) if !ctx.ignored(b) && ctx.isRelevant(b) => b.asPath
-      case Select(RefOfBms(b, _), Tree.Ident("class")) if !ctx.ignored(b) && ctx.isRelevant(b) => 
-        Select(b.asPath, Tree.Ident("class"))(N)
       case _ => return p
-      
+    
     // if this class extends something, rewrite
     val newPar = c.parentPath.map(rewriteExtends)
 

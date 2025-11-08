@@ -31,7 +31,7 @@ final case class BuiltinSymbols(
   var builtinSym: Opt[Local] = None,
   fieldSym: MutMap[Int, VarSymbol] = MutMap.empty,
   applySym: MutMap[Int, BlockMemberSymbol] = MutMap.empty,
-  tupleSym: MutMap[Int, MemberSymbol[? <: ClassLikeDef]] = MutMap.empty,
+  tupleSym: MutMap[Int, DefinitionSymbol[? <: ClassLikeDef]] = MutMap.empty,
   runtimeSym: Opt[TempSymbol] = None,
 ):
   def hiddenClasses = callableSym.toSet
@@ -41,28 +41,28 @@ final case class Ctx(
   class_acc: ListBuffer[ClassInfo],
   symbol_ctx: Map[Local, Local] = Map.empty,
   fn_ctx: Map[Local, FuncInfo] = Map.empty, // is a known function
-  class_ctx: Map[MemberSymbol[? <: ClassLikeDef], ClassInfo] = Map.empty,
-  class_sym_ctx: Map[BlockMemberSymbol, MemberSymbol[? <: ClassLikeDef]] = Map.empty,
+  class_ctx: Map[DefinitionSymbol[? <: ClassLikeDef], ClassInfo] = Map.empty,
+  class_sym_ctx: Map[BlockMemberSymbol, DefinitionSymbol[? <: ClassLikeDef]] = Map.empty,
   flow_ctx: Map[Path, Local] = Map.empty,
   isTopLevel: Bool = true,
-  method_class: Opt[MemberSymbol[? <: ClassLikeDef]] = None,
+  method_class: Opt[DefinitionSymbol[? <: ClassLikeDef]] = None,
   builtinSym: BuiltinSymbols = BuiltinSymbols()
 ):
   def addFuncName(n: Local, paramsSize: Int) = copy(fn_ctx = fn_ctx + (n -> FuncInfo(paramsSize)))
   def findFuncName(n: Local)(using Raise) = fn_ctx.get(n) match
     case None => bErrStop(msg"Function name not found: ${n.toString()}")
     case Some(value) => value
-  def addClassInfo(n: MemberSymbol[? <: ClassLikeDef], bsym: BlockMemberSymbol, m: ClassInfo) =
+  def addClassInfo(n: DefinitionSymbol[? <: ClassLikeDef], bsym: BlockMemberSymbol, m: ClassInfo) =
     copy(class_ctx = class_ctx + (n -> m), class_sym_ctx = class_sym_ctx + (bsym -> n))
   def addName(n: Local, m: Local) = copy(symbol_ctx = symbol_ctx + (n -> m))
   def findName(n: Local)(using Raise) = symbol_ctx.get(n) match
     case None => bErrStop(msg"Name not found: ${n.toString}")
     case Some(value) => value
-  def findClassInfo(n: MemberSymbol[? <: ClassLikeDef])(using Raise) = class_ctx.get(n) match
+  def findClassInfo(n: DefinitionSymbol[? <: ClassLikeDef])(using Raise) = class_ctx.get(n) match
     case None => bErrStop(msg"Class not found: ${n.toString}")
     case Some(value) => value
   def addKnownClass(n: Path, m: Local) = copy(flow_ctx = flow_ctx + (n -> m))
-  def setClass(c: MemberSymbol[? <: ClassLikeDef]) = copy(method_class = Some(c))
+  def setClass(c: DefinitionSymbol[? <: ClassLikeDef]) = copy(method_class = Some(c))
   def nonTopLevel = copy(isTopLevel = false)
 
 object Ctx:
@@ -308,8 +308,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case Some(value) => bErrStop(msg"Member symbol without class definition ${value.toString}")
         case None => bErrStop(msg"Member symbol without definition ${ms.toString}") 
   
-  private def fromMemToClass(m: Symbol)(using ctx: Ctx)(using Raise, Scope): MemberSymbol[? <: ClassLikeDef] =
-    trace[MemberSymbol[? <: ClassLikeDef]](s"bFromMemToClass $m", x => s"bFromMemToClass end: $x"):
+  private def fromMemToClass(m: Symbol)(using ctx: Ctx)(using Raise, Scope): DefinitionSymbol[? <: ClassLikeDef] =
+    trace[DefinitionSymbol[? <: ClassLikeDef]](s"bFromMemToClass $m", x => s"bFromMemToClass end: $x"):
       m match
       case ms: MemberSymbol[?] =>
         ms.defn match

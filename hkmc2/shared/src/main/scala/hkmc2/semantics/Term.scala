@@ -744,7 +744,7 @@ sealed abstract class TypeLikeDef extends Definition:
 sealed abstract class ClassLikeDef extends TypeLikeDef:
   val owner: Opt[InnerSymbol]
   val kind: ClsLikeKind
-  val sym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol
+  val sym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol
   val bsym: BlockMemberSymbol
   val tparams: Ls[TyParam]
   val paramsOpt: Opt[ParamList]

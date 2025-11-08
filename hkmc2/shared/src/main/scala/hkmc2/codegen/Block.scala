@@ -399,7 +399,7 @@ object ValDefn:
 // * a lone module is represented as an empty class with a `companion` module.
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol,
+    isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
@@ -414,12 +414,12 @@ final case class ClsLikeDefn(
     bufferable: Option[Bool],
 ) extends Defn:
   require(k isnt syntax.Mod)
-  val innerSym = S(isym)
+  val innerSym = S(isym.asMemSym)
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: MemberSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
