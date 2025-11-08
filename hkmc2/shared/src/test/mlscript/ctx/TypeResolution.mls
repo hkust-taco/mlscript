@@ -234,7 +234,7 @@ fun f(o: O) = o
 //│       companion = N
 //│   res = Lit of UnitLit of false
 
-// The implicit `this` should be resolved correctly...
+// The implicit `this` (class:Foo) in the SynthSel(class:Foo, "foo") should be resolved correctly.
 :rt
 class Foo with
   val foo = 42
@@ -273,7 +273,7 @@ class Foo with
 //│       annotations = Nil
 //│   res = Lit of UnitLit of false
 
-// ... as well as an explicit `this`.
+// The explicit `this` (class:Foo) in the Sel(class:Foo, "foo") should be resolved correctly.
 :rt
 class Foo with
   val foo = 42
