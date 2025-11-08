@@ -1292,7 +1292,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                   nestedIn match
                     // These will be the names of the objects/modules after being lifted
                     // We should use the nested object/module's **original name** if nested inside a class,
-                    // so they can be accesed directly by name from te outside.
+                    // so they can be accesed directly by name from the outside.
                     // For example, if a class C has an object M, (new C).M as a dynamic selection works
                     case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme)))
                     case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
