@@ -38,8 +38,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   
   val MAX_FUEL = 1000
   
-  def typeBody(b: ObjBody): Unit =
-    typeProd(b.blk)
+  def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
   def typeProd(t: Term): Producer = typeProdImpl(t.expanded)
   
@@ -56,10 +55,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case _: BuiltinSymbol =>
-        P.Unknown(t)
-      case bms: BlockMemberSymbol =>
-        P.Flow(bms.flow)
+      case _: BuiltinSymbol => P.Unknown(t)
+      case bms: BlockMemberSymbol => P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
         P.Unknown(t)
@@ -70,8 +67,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case stmt: DefineVar =>
           val rhs = typeProd(stmt.rhs)
           stmt.sym match
-          case sym: FlowSymbol =>
-            constrain(rhs, C.Flow(sym))
+            case sym: FlowSymbol => constrain(rhs, C.Flow(sym))
+            case _ => ()
         case t: TermDefinition =>
           val sign_ty = t.sign.map(typeProd) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
@@ -80,8 +77,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             val fun_ty = ps.foldRight(bod_ty): (pl, acc) =>
               P.Fun(C.Tup(pl, N), acc, Nil)
             constrain(fun_ty, C.Flow(t.sym.flow))
-        case t: Term =>
-          typeProd(t)
+        case t: Term => typeProd(t)
           
         case cd: ClassDef =>
           
@@ -116,33 +112,27 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
       typeProd(res)
     
-    case Lit(lit) =>
-      P.Ctor(LitSymbol(lit), Nil)(t)
-    
+    case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
+
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
-      val pre1 = typeProd(pre)
-      log(s"SEL ${sel.showDbg} ${sel.typ}")
-      // log(s"SEL ${sel.showAsTree}")
+      val pre_t = typeProd(pre)
+      // log(s"Selection ${sel.showDbg} ${sel.typ}")
       sel.resolvedSym match
-      case S(sym: BlockMemberSymbol) =>
-        P.Flow(sym.flow)
-      case S(sym) => ???
-      case N =>
-        val sym = sel.resSym
-        constrain(pre1, C.Sel(nme, C.Flow(sym))(sel))
-        P.Flow(sym)
-    
-    case nw @ New(cls, args, rft) =>
-      rft match
-      case N =>
-      cls.resolvedSym.flatMap(_.asCls) match
-      case N => ???
-      case S(sym) =>
-        sym match
-        case sym: ClassSymbol =>
-          val args_t = args.map(typeProd)
-          P.Ctor(sym, args_t)(t)
+        case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
+        case S(_) => P.Unknown(sel)
+        case N =>
+          val sym = sel.resSym
+          constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
+          P.Flow(sym)
+
+    case nw @ New(cls, args, rft) => rft match
+      case N => cls.resolvedSym.flatMap(_.asCls) match
+        case N => P.Unknown(nw)
+        case S(sym) => sym match
+          case sym: ClassSymbol =>
+            val args_t = args.map(typeProd)
+            P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
       val sym = app.resSym
@@ -161,12 +151,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Tup(fields) =>
       P.Tup(fields.map:
-        case f: Fld => N -> typeProd(f.term))
+        case f: Fld => N -> typeProd(f.term)
+      )
     
-    case Error =>
-      P.Ctor(Extr(false), Nil)(t)
+    case Error => P.Ctor(Extr(false), Nil)(t)
+
+    case Missing => P.Unknown(Missing)
     
-    // case _ => P.Flow(FlowSymbol("TODO"))
+    case _ => P.Flow(FlowSymbol("TODO"))
   
   
   def typeType(t: Term): Type =
@@ -235,7 +227,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
               case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
-  def solveConstraints() =
+  def solveConstraints(): Unit =
     
     var fuel = MAX_FUEL
     val toSolve: mutable.Stack[Constraint] = mutable.Stack.empty
@@ -256,119 +248,109 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           def dig(lhs: P, rhs: C, path: Path): Unit =
             
-            log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})")
-            
+            log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})   [${path.mkString(", ")}]")
+
             (lhs, rhs) match
-            case (P.Flow(sym), rhs)
-            if inCache.contains(sym -> rhs)
-              => log(s"In (in) cache!")
-            case (lhs, C.Flow(sym))
-            if outCache.contains(lhs -> sym)
-              => log(s"In (out) cache!")
-            case (P.Flow(sym), C.Flow(sym2)) =>
-              log(s"New flow $sym ~> $sym2")
-              sym.outFlows += sym2
-              sym.producers.foreach(cp =>
-                dig(cp.ctor, rhs, cp.path ++ path))
-            case (lhs: ProdCtor, C.Flow(sym)) =>
-              log(s"New flow $lhs ~> $sym")
-              sym.producers += ConcreteProd(path, lhs)
-              sym.consumers.foreach: c =>
-                dig(lhs, c, path)
-            case (P.Flow(sym), rhs) =>
-              log(s"New flow $sym ~> $rhs")
-              sym.consumers += rhs
-              sym.producers.foreach: cp =>
-                dig(cp.ctor, rhs, cp.path ++ path)
-              sym.outFlows.foreach: fs =>
-                dig(P.Flow(fs), rhs, fs +: path)
-            case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
-              dig(cl, pl, path) // FIXME path
-              dig(pr, cr, path) // FIXME path
-            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
-            if (sym1 is sym2) && args1.size === args2.size // TODO generalize
-              =>
-              args1.zip(args2).foreach: (a1, a2) =>
-                dig(a1, a2, path) // FIXME path
-            case (P.Tup(args), C.Tup(ini, rst)) =>
-              def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit
-                    = (args, cons) match
-                case (Nil, Nil) => ()
-                case ((N, a1) :: args, c1 :: cons) =>
-                  dig(a1, c1, path) // FIXME path
-                  zip(args, cons, rst, path)
-                case ((S(spd), a1) :: args, Nil) =>
-                  ???
-                case ((spdo, a1) :: args, Nil) =>
-                  // extra producers can be matched by spread in consumer
-                  rst match
-                  case S((spd, a2, post)) => ???
+              case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
+              case (lhs, C.Flow(sym)) if outCache.contains(lhs -> sym) => log(s"In (out) cache!")
+              case (P.Flow(lsym), C.Flow(rsym)) =>
+                log(s"New flow: $lsym ~> $rsym")
+                lsym.outFlows += rsym
+                lsym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
+              case (lhs: ProdCtor, C.Flow(sym)) =>
+                log(s"New flow: $lhs ~> $sym")
+                sym.producers += ConcreteProd(path, lhs)
+                sym.consumers.foreach(c => dig(lhs, c, path))
+              case (P.Flow(sym), rhs) =>
+                log(s"New flow: $sym ~> $rhs")
+                sym.consumers += rhs
+                sym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
+                sym.outFlows.foreach(fs => dig(P.Flow(fs), rhs, sym +: path)) // TODO sym or fs?
+              case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
+                dig(cl, pl, path) // FIXME path
+                dig(pr, cr, path) // FIXME path
+              case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
+              if (sym1 is sym2) && args1.size === args2.size // TODO generalize
+                =>
+                args1.zip(args2).foreach: (a1, a2) =>
+                  dig(a1, a2, path) // FIXME path
+              case (P.Tup(args), C.Tup(ini, rst)) =>
+                def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit =
+                  (args, cons) match
+                    case (Nil, Nil) => ()
+                    case ((N, a1) :: args, c1 :: cons) =>
+                      dig(a1, c1, path) // FIXME path
+                      zip(args, cons, rst, path)
+                    case ((S(spd), a1) :: args, Nil) =>
+                      ???
+                    case ((spdo, a1) :: args, Nil) =>
+                      // extra producers can be matched by spread in consumer
+                      rst match
+                      case S((spd, a2, post)) => ???
+                      case N =>
+                        raise(ErrorReport(
+                          msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
+                zip(args, ini, rst, path)
+              case (lhs, sel: C.Sel) => lhs match
+                case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
+                  if targs.nonEmpty then TODO(targs)
+                  toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
+                case P.Unknown(Missing) => ???
+                case P.Ctor(sym: ClassSymbol, args) =>
+                  // log(s"Selection ${sym.defn}")
+                  val d = sym.defn.getOrElse(die)
+                  d.body.members.get(sel.nme.name) match
+                  case S(memb: BlockMemberSymbol) =>
+                    sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
+                    log(s"Found immediate member ${memb}")
+                    val lhs = P.Flow(memb.flow)
+                    toSolve.push(Constraint(lhs, sel.res))
+                  case S(memb) => TODO(memb)
                   case N =>
-                    raise(ErrorReport(
-                      msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
-              zip(args, ini, rst, path)
-            case (lhs, sel: C.Sel) =>
-              // selsToExpand += sel.trm
-              lhs match
-              case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
-                if targs.nonEmpty then TODO(targs)
-                toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
-              case P.Ctor(sym: ClassSymbol, args) =>
-                // log(s"Selection ${sym.defn}")
-                val d = sym.defn.getOrElse(die)
-                d.body.members.get(sel.nme.name) match
-                case S(memb: BlockMemberSymbol) =>
-                  sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
-                  log(s"Found immediate member ${memb}")
-                  val lhs = P.Flow(memb.flow)
-                  toSolve.push(Constraint(lhs, sel.res))
-                case S(memb) => TODO(memb)
-                case N =>
-                  d.moduleCompanion match
-                  case S(comp) =>
-                    val cd = comp.defn.getOrElse(die)
-                    cd.body.members.get(sel.nme.name) match
-                    case S(memb) =>
-                      log(s"Found companion member ${memb}")
-                      sel.trm.originalCtx match
-                      case S(oc) =>
-                        val patho = findAccessPath(oc, cd.path, comp)
-                        log(s"Access path: ${patho}")
-                        patho match
-                        case S(path) =>
-                          sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                          val lhs = memb match
-                            case memb: BlockMemberSymbol => P.Flow(memb.flow)
-                            case _ => TODO(memb)
-                          toSolve.push(Constraint(lhs, sel.res))
-                        case N => raise:
-                          sel.trm.isErroneous = true
-                          ErrorReport:
-                            msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
-                            :: Nil
+                    d.moduleCompanion match
+                    case S(comp) =>
+                      val cd = comp.defn.getOrElse(die)
+                      cd.body.members.get(sel.nme.name) match
+                      case S(memb) =>
+                        log(s"Found companion member ${memb}")
+                        sel.trm.originalCtx match
+                        case S(oc) =>
+                          val patho = findAccessPath(oc, cd.path, comp)
+                          log(s"Access path: ${patho}")
+                          patho match
+                          case S(path) =>
+                            sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                            val lhs = memb match
+                              case memb: BlockMemberSymbol => P.Flow(memb.flow)
+                              case _ => TODO(memb)
+                            toSolve.push(Constraint(lhs, sel.res))
+                          case N => raise:
+                            sel.trm.isErroneous = true
+                            ErrorReport:
+                              msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
+                              :: Nil
+                        case N => ???
                       case N => ???
-                    case N => ???
-                  case N => raise:
-                    sel.trm.isErroneous = true
-                    ErrorReport(
-                      // TODO construct proper error message
-                      msg"Field ${sel.nme.name} is not a member of ${d.kind.desc} ${d.sym.name}" -> trm.toLoc :: Nil)
-              case _ => raise:
-                sel.trm.isErroneous = true
-                ErrorReport(
-                  // TODO construct proper error message
-                  msg"Unresolved selection:" -> sel.trm.toLoc
-                  :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
-                  :: Nil)
-            case _ =>
-              log(s"/!\\ Unhandled constraint /!\\")
+                    case N => raise:
+                      sel.trm.isErroneous = true
+                      ErrorReport(
+                        // TODO construct proper error message
+                        msg"Field ${sel.nme.name} is not a member of ${d.kind.desc} ${d.sym.name}" -> trm.toLoc :: Nil)
+                case _ => raise:
+                  sel.trm.isErroneous = true
+                  ErrorReport(
+                    // TODO construct proper error message
+                    msg"Unresolved selection:" -> sel.trm.toLoc
+                    :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
+                    :: Nil)
+              case _ =>
+                log(s"/!\\ Unhandled constraint /!\\")
           end dig
           
           dig(c.lhs, c.rhs, Vector.empty)
           
         if fuel === 0 then
-          raise(ErrorReport(
-            msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
+          raise(ErrorReport(msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
     log(s"outermostAcessibleBase ${dst.outermostAcessibleBase}")
