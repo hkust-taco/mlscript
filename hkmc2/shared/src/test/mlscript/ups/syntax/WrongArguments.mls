@@ -2,11 +2,30 @@
 
 class Foo(val bar: Int)
 
+pattern Bar = Foo(0)
+
+Foo(0) is Bar
+//│ = true
+
+Foo(1) is Bar
+//│ = false
+
+pattern Baz(pattern A) = A
+
 :e
-pattern Bar = Foo(pattern 0)
-//│ ╔══[ERROR] This literal pattern cannot be used as an argument here.
-//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
-//│ ╙──     	                          ^
-//│ ╔══[ERROR] Expected one argument, but found only zero arguments.
-//│ ║  l.6: 	pattern Bar = Foo(pattern 0)
-//│ ╙──     	              ^^^
+pattern Baz(pattern A) = A()
+//│ ╔══[ERROR] `A` is a pattern parameter.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ║        	                    ^
+//│ ╟── It cannot be applied.
+//│ ║  l.16: 	pattern Baz(pattern A) = A()
+//│ ╙──      	                         ^
+
+:e
+pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╔══[ERROR] `A` is a pattern parameter.
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ║        	                    ^
+//│ ╟── It cannot be applied to any arguments.
+//│ ║  l.25: 	pattern Baz(pattern A) = A(1, 2, 3)
+//│ ╙──      	                         ^^^^^^^^^

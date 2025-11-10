@@ -3,13 +3,13 @@ package semantics
 package ucs
 
 import mlscript.utils.*, shorthands.*
-import syntax.Tree.*, Elaborator.{Ctx, State, ctx}
+import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 
 /** This trait includes some helpers for synthesizing `Term`s which look like 
   * they have already been processed by the `Resolver`. Its methods should only
   * be called in stages after the `Resolver`. Currently, its derived classes are
-  * `Normalization`, `Compiler`, and `NaiveCompiler`. */
-trait TermSynthesizer(using Ctx, State):
+  * `Normalization`, `Compiler`, and `SplitCompiler`. */
+trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
     (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
@@ -36,21 +36,25 @@ trait TermSynthesizer(using Ctx, State):
     
   private lazy val runtimeRef: Term.Ref = State.runtimeSymbol.ref().resolve
 
-  /** Make a term that looks like `runtime.MatchResult` with its symbol. */
-  protected lazy val matchResultClass =
-    sel(runtimeRef, "MatchResult", State.matchResultClsSymbol)
+  /** Make a term that looks like `runtime.MatchSuccess` with its symbol. */
+  protected lazy val matchSuccessClass =
+    sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol)
 
-  /** Make a pattern that looks like `runtime.MatchResult.class`. */
-  protected def matchResultPattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchResultClass, "class", State.matchResultClsSymbol), parameters)
+  /** Make a pattern that looks like `runtime.MatchSuccess.class`. */
+  protected def matchSuccessPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+    val constructor = sel(matchSuccessClass, "class", State.matchSuccessClsSymbol)
+    val parameters = parametersOpt.map(_.map(_ -> N))
+    FlatPattern.ClassLike(constructor, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
     sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
-  protected def matchFailurePattern(parameters: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    FlatPattern.ClassLike(sel(matchFailureClass, "class", State.matchFailureClsSymbol), parameters)
+  protected def matchFailurePattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
+    val constructor = sel(matchFailureClass, "class", State.matchFailureClsSymbol)
+    val parameters = parametersOpt.map(_.map(_ -> N))
+    FlatPattern.ClassLike(constructor, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
   protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")
@@ -96,14 +100,14 @@ trait TermSynthesizer(using Ctx, State):
     val s = TempSymbol(N, dbgName)
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
   
-  protected final def makeMatchResult(output: Term) =
-    app(matchResultClass, tup(fld(output), fld(rcd())), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term) =
+    app(matchSuccessClass, tup(fld(output), fld(rcd())), "result of `MatchSuccess`")
   
-  protected final def makeMatchResult(output: Term, bindings: Term) =
-    app(matchResultClass, tup(fld(output), fld(bindings)), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term, bindings: Term) =
+    app(matchSuccessClass, tup(fld(output), fld(bindings)), "result of `MatchSuccess`")
   
-  protected final def makeMatchResult(output: Term, fields: Ls[RcdField | RcdSpread]) =
-    app(matchResultClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchResult`")
+  protected final def makeMatchSuccess(output: Term, fields: Ls[RcdField | RcdSpread]) =
+    app(matchSuccessClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchSuccess`")
     
   protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
     app(matchFailureClass, tup(fld(errors)), "result of `MatchFailure`")
@@ -115,8 +119,8 @@ trait TermSynthesizer(using Ctx, State):
       inner: => Split,
   )(fallback: Split): Split =
     val call = app(localPatternSymbol.safeRef, tup(fld(scrut)), s"result of ${localPatternSymbol.nme}")
-    tempLet("matchResult", call): resultSymbol =>
-      Branch(resultSymbol.safeRef, matchResultPattern(N), inner) ~: fallback
+    tempLet("matchSuccess", call): resultSymbol =>
+      Branch(resultSymbol.safeRef, matchSuccessPattern(N), inner) ~: fallback
   
   protected final def makeTupleBranch(
     scrut: => Term.Ref,
@@ -124,7 +128,7 @@ trait TermSynthesizer(using Ctx, State):
     consequent: => Split,
     alternative: Split
   ): Split =
-    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false)(Nil),
+    Branch(scrut, FlatPattern.Tuple(subScrutinees.size, false),
       subScrutinees.iterator.zipWithIndex.foldRight(consequent):
         case ((arg, index), innerSplit) =>
           val label = s"the $index-th element of the match result"
@@ -150,4 +154,4 @@ trait TermSynthesizer(using Ctx, State):
       case ((arg, index), innerSplit) =>
         val label = s"the first ${index + 1}-th element of the tuple"
         Split.Let(arg, callTupleGet(scrut, index, label), innerSplit)
-    Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true)(Nil), split2) ~: alternative
+    Branch(scrut, FlatPattern.Tuple(leading.size + trailing.size, true), split2) ~: alternative

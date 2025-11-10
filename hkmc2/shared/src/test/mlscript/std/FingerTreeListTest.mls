@@ -99,12 +99,12 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ JS (unsanitized):
-//│ let rest, first0, a, ls;
+//│ let ls, a, middleElements, element0$;
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
-//│   first0 = runtime.Tuple.get(xs1, 0);
-//│   rest = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
-//│   a = first0;
-//│   ls = rest;
+//│   element0$ = runtime.Tuple.get(xs1, 0);
+//│   middleElements = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
+//│   ls = middleElements;
+//│   a = element0$;
 //│   globalThis.Object.freeze([
 //│     a,
 //│     ls

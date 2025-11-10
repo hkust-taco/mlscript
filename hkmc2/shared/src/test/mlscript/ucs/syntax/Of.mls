@@ -46,3 +46,24 @@ check(Some(42))
 
 check(Some(77))
 //│ = false
+
+data class Left(leftValue)
+data class Right(rightValue)
+
+fun getBothOrElse(either, defaultValue) = if either is
+  None then defaultValue
+  Some of
+    Left of value then value
+    Right of value then value
+
+:expect 42
+getBothOrElse of None, 42
+//│ = 42
+
+:expect 7
+getBothOrElse of Some(Left(7)), 42
+//│ = 7
+
+:expect "noice"
+getBothOrElse of Some(Left("noice")), 42
+//│ = "noice"

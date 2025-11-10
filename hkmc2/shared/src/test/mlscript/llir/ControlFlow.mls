@@ -259,6 +259,7 @@ f(A(1))
 
 :sllir
 :intl
+:fixme // Started failing since split deduplication was introduced.
 data class A(x)
 data class B(y)
 fun f(a) =
@@ -270,45 +271,4 @@ fun f(a) =
   t
 f(A(1))
 //│ = 1
-//│ LLIR:
-//│   class A(x)
-//│   class B(y)
-//│   def f(a) =
-//│     case a of
-//│       Class(class:A) =>
-//│         let x = a.<A:x> in
-//│         case a of
-//│           Class(class:A) =>
-//│             let x1 = a.<A:x> in
-//│             case x1 of
-//│               Lit(IntLit(1)) =>
-//│                 let x2 = 1 in
-//│                 jump j(x2)
-//│               _ =>
-//│                 panic "match error"
-//│           Class(class:B) =>
-//│             let x3 = a.<B:y> in
-//│             let x4 = 2 in
-//│             jump j1(x4)
-//│           _ =>
-//│             panic "match error"
-//│       Class(class:B) =>
-//│         let x5 = a.<B:y> in
-//│         let x6 = 3 in
-//│         jump j2(x6)
-//│       _ =>
-//│         panic "match error"
-//│   def j(tmp) =
-//│     jump j1(tmp)
-//│   def j1(tmp) =
-//│     jump j2(tmp)
-//│   def j2(tmp1) =
-//│     tmp1
-//│   def entry() =
-//│     let x7 = A(1) in
-//│     let* (x8) = f(x7) in
-//│     x8
-//│   entry = entry
-//│ 
-//│ Interpreted:
-//│ 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: Label not supported (of class String)

@@ -234,6 +234,8 @@ object Elaborator:
     val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
     val termSymbol = TempSymbol(N, "Term")
+    val blockSymbol = TempSymbol(N, "Block")
+    val shapeSymbol = TempSymbol(N, "Shape")
     val wasmSymbol = TempSymbol(N, "wasm")
     val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
@@ -246,8 +248,8 @@ object Elaborator:
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
-    val matchResultClsSymbol =
-      val id = new Ident("MatchResult")
+    val matchSuccessClsSymbol =
+      val id = new Ident("MatchSuccess")
       val td = TypeDef(syntax.Cls, App(id, Tup(Ident("output") :: Ident("bindings") :: Nil)), N)
       val cs = ClassSymbol(td, id)
       val flag = FldFlags.empty.copy(isVal = true)
@@ -298,7 +300,7 @@ import Elaborator.*
 
 class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 (using val raise: Raise, val state: State)
-extends Importer:
+extends Importer with ucs.SplitElaborator:
   import tl.*
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
@@ -320,7 +322,7 @@ extends Importer:
     case _ => N
   
   def annot(tree: Tree): Ctxl[Opt[Annot]] = tree match
-    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data`)) => S(Annot.Modifier(kw))
+    case Keywrd(kw @ (Keyword.`abstract` | Keyword.`declare` | Keyword.`data` | Keyword.`staged`)) => S(Annot.Modifier(kw))
     case _ => term(tree) match
       case Term.Error => N
       case trm =>
@@ -451,7 +453,7 @@ extends Importer:
           Term.WildcardTy(S(subterm(arg1)), S(subterm(arg2)))
         case arg => subterm(arg)
       })(N).withLocOf(tree)
-    case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
+    case InfixApp(TyTup(tvs), Keywrd(Keyword.`->`), body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       def genSym(id: Tree.Ident) =
         val sym = VarSymbol(id)
@@ -460,9 +462,9 @@ extends Importer:
         sym
       val syms = (tvs.collect:
         case id: Tree.Ident => (genSym(id), N, N)
-        case InfixApp(id: Tree.Ident, Keyword.`extends`, ub) => (genSym(id), S(ub), N)
-        case InfixApp(id: Tree.Ident, Keyword.`restricts`, lb) => (genSym(id), N, S(lb))
-        case InfixApp(InfixApp(id: Tree.Ident, Keyword.`extends`, ub), Keyword.`restricts`, lb) => (genSym(id), S(ub), S(lb))
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub) => (genSym(id), S(ub), N)
+        case InfixApp(id: Tree.Ident, Keywrd(Keyword.`restricts`), lb) => (genSym(id), N, S(lb))
+        case InfixApp(InfixApp(id: Tree.Ident, Keywrd(Keyword.`extends`), ub), Keywrd(Keyword.`restricts`), lb) => (genSym(id), S(ub), S(lb))
       )
       val outer = (tvs.collect:
         case Outer(S(name: Tree.Ident)) => genSym(name)
@@ -483,26 +485,23 @@ extends Importer:
           case (sym, ub, lb) =>
             QuantVar(sym, ub.map(ub => subterm(ub)), lb.map(lb => subterm(lb)))
         Term.Forall(bds, outer, subterm(body))
-    case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
+    case InfixApp(lhs, Keywrd(Keyword.`->`), Effectful(eff, rhs)) =>
       Term.FunTy(subterm(lhs), subterm(rhs), S(subterm(eff)))
-    case InfixApp(lhs, Keyword.`->`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`->`), rhs) =>
       Term.FunTy(subterm(lhs), subterm(rhs), N)
-    case InfixApp(lhs, Keyword.`=>`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`=>`), rhs) =>
       ctx.nest(OuterCtx.LambdaOrHandlerBlock).givenIn:
         val (syms, nestCtx) = funParams(lhs)
         Term.Lam(syms, term(rhs)(using nestCtx))
-    case InfixApp(lhs, Keyword.`as`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`as`), rhs) =>
       Term.Asc(subterm(lhs), subterm(rhs))
-    case InfixApp(lhs, Keyword.`:`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       block(tree :: Nil, hasResult = false)._1
     case PrefixApp(kw @ Keywrd(Keyword.`not`), rhs) =>
       Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
-    case tree @ InfixApp(lhs, Keyword.`is` | Keyword.`and` | Keyword.`or`, rhs) =>
-      val des = new ucs.Desugarer(this)(tree)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${des.prettyPrint}")
-      Term.IfLike(Keyword.`if`, des)
+    case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
+      Term.IfLike(Keyword.`if`, shorthandSplit(tree))
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -651,21 +650,14 @@ extends Importer:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
-    case tree @ IfLike(kw, split) =>
-      val desugared = new ucs.Desugarer(this)(tree)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${desugared.prettyPrint}")
-      Term.IfLike(kw.kw, desugared)
+    case tree: IfLike => Term.IfLike(tree.kw.kw, split(tree))
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
-    case tree @ Case(kw, branches) =>
+    case tree @ Case(kw, _) =>
       val scrut = VarSymbol(Ident("caseScrut"))
-      val des = new ucs.Desugarer(this)(tree, scrut)
-      scoped("ucs:desugared"):
-        log(s"Desugared:\n${des.prettyPrint}")
-      Term.Lam(PlainParamList(
-          Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
-        ), Term.IfLike(Keyword.`if`, des)).mkLocWith(kw)
+      val body = Term.IfLike(Keyword.`if`, caseSplit(scrut, tree))
+      val params = Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
+      Term.Lam(PlainParamList(params), body).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
       ctx.getRetHandler match
       case ReturnHandler.Required(sym) =>
@@ -804,9 +796,9 @@ extends Importer:
     case u: Under => subterm(tree) // Note: currently `f(a, _, c)` is treated the same as `f of a, _, c`
     case _ => term(tree)
   def fld(tree: Tree)(using UnderCtx): Ctxl[Elem] = tree match
-    case InfixApp(id: Ident, Keyword.`:`, rhs) =>
+    case InfixApp(id: Ident, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, Term.Lit(StrLit(id.name).withLocOf(id)), S(arg(rhs)))
-    case InfixApp(lhs, Keyword.`:`, rhs) =>
+    case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
       Spd(false, arg(trm))
@@ -996,19 +988,24 @@ extends Importer:
       case Spread(Keywrd(Keyword.`...`), S(body)) :: sts =>
         reportUnusedAnnotations
         go(sts, Nil, RcdSpread(term(body)) :: acc)
-      case InfixApp(lhs, Keyword.`:`, rhs) :: sts =>
+      case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) :: sts =>
         var newCtx = ctx
-        val rhs_t = rhs match
-          case _: Under => subterm(rhs)
-          case _ => term(rhs)
-        val newAcc = lhs match
+        val (rlhs, rhs_t) = rhs match
+          case _: Under => (lhs, subterm(rhs))
+          case _ =>
+            lhs match
+            case Apps(base, tups) =>
+              val rrhs = tups.foldRight(rhs):
+                InfixApp(_, Keywrd(Keyword.`=>`), _)
+              (base, term(rrhs))
+        val newAcc = rlhs match
           case id: Ident =>
             val sym = new VarSymbol(id)
             newCtx += id.name -> sym
-            RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id)) ::
-            DefineVar(sym, rhs_t) ::
-            LetDecl(sym, annotations) ::
-            acc
+            RcdField(Term.Lit(StrLit(id.name)).withLocOf(id), sym.ref(id))
+              :: DefineVar(sym, rhs_t)
+              :: LetDecl(sym, annotations)
+              :: acc
           case lit: Literal =>
             reportUnusedAnnotations
             RcdField(Term.Lit(lit).withLocOf(lit), rhs_t) :: acc
@@ -1016,7 +1013,7 @@ extends Importer:
             reportUnusedAnnotations
             RcdField(term(inner), rhs_t) :: acc
           case _ =>
-            raise(ErrorReport(msg"Unexpected record key shape." -> lhs.toLoc :: Nil))
+            raise(ErrorReport(msg"Unexpected record key shape." -> rlhs.toLoc :: Nil))
             RcdField(Term.Error, rhs_t) :: acc
         newCtx.givenIn:
           go(sts, Nil, newAcc)
@@ -1031,7 +1028,7 @@ extends Importer:
         val newAcc = rhso match
           case S(rhs) =>
             val rrhs = tups.foldRight(rhs):
-              InfixApp(_, Keyword.`=>`, _)
+              InfixApp(_, Keywrd(Keyword.`=>`), _)
             mkLetBinding(kw, sym, term(rrhs), annotations) reverse_::: acc
           case N =>
             if tups.nonEmpty then
@@ -1056,7 +1053,7 @@ extends Importer:
             raise(ErrorReport(msg"Name not found: ${id.name}" -> id.toLoc :: Nil))
             go(sts, Nil, Term.Error :: acc)
         case App(base, args) =>
-          go(Def(base, InfixApp(args, Keyword.`=>`, rhs)) :: sts, Nil, acc)
+          go(Def(base, InfixApp(args, Keywrd(Keyword.`=>`), rhs)) :: sts, Nil, acc)
         case _ =>
           raise(ErrorReport(msg"Unrecognized definitional assignment left-hand side: ${lhs.describe}"
             -> lhs.toLoc :: Nil)) // TODO BE
@@ -1267,11 +1264,7 @@ extends Importer:
             // Pattern definition should not have a body like class definition.
             assert(body.isEmpty)
             val ps = pss.headOption
-            // The following iteration filters out:
-            // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
-            // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
-            // 3. the rest are reported as invalid parameters.
-            val (patternParams, extractionParams) = ps.fold((Nil, Nil)):
+            val allParams = ps.fold(Nil):
               _.params.flatMap:
                 // Only `pat` flag is `true`.
                 case p @ Param(flags = FldFlags(false, false, true, false)) => S(p)
@@ -1280,7 +1273,11 @@ extends Importer:
                 case Param(flags, sym, _, _) =>
                   raise(ErrorReport(msg"Unexpected pattern parameter ${sym.name} with modifiers: ${flags.show}" -> sym.toLoc :: Nil))
                   N
-              .partition(_.flags.pat)
+            // The following iteration filters out:
+            // 1. pattern parameters, e.g., `T` in `pattern Nullable(pattern T) = ...`;
+            // 2. extraction bindings, e.g., `value` in `pattern Middle(value) = ...`; and
+            // 3. the rest are reported as invalid parameters.
+            val (patternParams, extractionParams) = allParams.partition(_.flags.pat)
             log(s"`${patSym.nme}`'s pattern parameters: ${patternParams.mkString("[", ", ", "]")}")
             log(s"`${patSym.nme}`'s extraction parameters: ${extractionParams.mkString("[", ", ", "]")}")
             // Empty pattern body is considered as wildcard patterns.
@@ -1303,7 +1300,7 @@ extends Importer:
             scoped("ucs:ups:tree")(log(s"elaborated pattern body: ${pat.showAsTree}"))
             // `paramsOpt` is set to `N` because we don't want parameters to
             // appear in the generated class's constructor.
-            val pd = PatternDef(owner, patSym, sym, tps,
+            val pd = PatternDef(owner, patSym, sym, tps, allParams,
               patternParams, extractionParams, pat, annotations)
             patSym.defn = S(pd)
             pd
@@ -1444,46 +1441,95 @@ extends Importer:
       case N => N
   
   def pattern(t: Tree): Ctxl[Pattern] =
-    import ucs.Desugarer.{Ctor, unapply}, Keyword.*, Pattern.*, InvalidReason.*
-    import ups.NaiveCompiler.isInvalidStringBounds, ucs.extractors.to
+    import ucs.{Ctor, unapply, error}, ucs.extractors.*, Keyword.*, Pattern.*, InvalidReason.*
     given TraceLogger = tl
+    /** String range bounds must be single characters. */
+    def isInvalidStringBounds(lo: StrLit, hi: StrLit)(using Raise): Bool =
+      val ds = collection.mutable.Buffer.empty[(Message, Option[Loc])]
+      if lo.value.length =/= 1 then
+        ds += msg"The lower bound of character ranges must be a single character." -> lo.toLoc
+      if hi.value.length =/= 1 then
+        ds += msg"The upper bound of character ranges must be a single character." -> hi.toLoc
+      if ds.nonEmpty then error(ds.toSeq*)
+      ds.nonEmpty
+    /** Resolve an identifier. We need to perform a very preliminary check to
+     *  determine whether this identifier refers to a pattern, a class, an
+     *  object, or creates a new binding.
+     * 
+     *  FIXME: This routine is insufficient to look up definitions defined
+     *  later in the program. */
+    def ident(id: Ident)(using Ctx): Ctxl[Opt[Term]] = scoped("ucs:pattern:resolution"):
+      log(s"resolve ${id}")
+      ctx.get(id.name) match
+      case S(elem) =>
+        log("has elem!")
+        elem.symbol.flatMap:
+          case vs: VarSymbol => vs.decl match
+            case S(d) if d.isPatternConstructor => S(elem.ref(id))
+            case S(_) | N => N
+          case sym: Symbol => sym.asCls.orElse(sym.asObj).orElse(sym.asPat) match
+            case S(_) => S(elem.ref(id))
+            case N => N
+      case N =>
+        state.builtinOpsMap.get(id.name) match
+        case S(bi) => S(bi.ref(id))
+        case N => N
     /** Elaborate arrow patterns like `p => t`. Meanwhile, report all invalid
      *  variables we found in `p`. */
     def arrow(lhs: Tree, rhs: Tree): Ctxl[Pattern] =
       val pattern = go(lhs)
-      val termCtx = ctx ++ pattern.variables.allocate
+      // The symbol allocated here will be bound in `split` to the values
+      // destructed from the scrutinee.
+      val variables = pattern.variables.allocate
+      // The `VarSymbol` created here is used as the parameters of the
+      // lambda expression generated by extraction (such as `p => t`).
+      // To avoid duplicating `t`, we generate a lambda function before the
+      // branch starts, which will be called if the `split` succeeds.
+      // - `contextEntries` will be added to the context
+      // - `correspondence` is mapping from symbols representing variables
+      //   in the pattern to symbols for parameters to be used in the `term`.
+      val (contextEntries, correspondence) = variables.iterator.map:
+        case (name, symbol) =>
+          // We create a symbol specifically for `Param` for each variable to
+          // avoid redundantly redeclaring symbols in `Scope` during code
+          // generation, which triggers the assertion in `Scope.addToBindings`.
+          val parameterSymbol = VarSymbol(new Ident(symbol.name))
+          (name -> parameterSymbol, symbol -> parameterSymbol)
+      .toList.unzip
       pattern.variables.report // Report all invalid variables we found in `pattern`.
-      Transform(pattern, term(rhs)(using termCtx))
+      Transform(pattern, correspondence, term(rhs)(using ctx ++ contextEntries))
     /** Elaborate tuple patterns like `[p1, p2, ...ps, pn]`. */
     def tuple(ts: Ls[Tree]): Ctxl[Pattern.Tuple] =
-      // We are accumulating three components: the leading patterns, the spread
-      // pattern, and the trailing patterns.
-      val z = (Ls[Pattern](), N: Opt[Pattern], Ls[Pattern]())
-      val (leading, spread, trailing) = ts.foldLeft(z):
-        case (acc @ (_, S(_), _), Spread(Keywrd(`...`), _)) =>
-          // Found two `...p` in the same tuple pattern. Report an error.
+      // We are accumulating two components: the leading patterns, the spread
+      // part including the trailing patterns.
+      val z = (Ls[Pattern](), N: Opt[(SpreadKind, Pattern, Ls[Pattern])])
+      val (leading, spread) = ts.foldLeft(z):
+        case (acc @ (_, S(_)), t: Spread) =>
+          // Found two `...p`s in the same tuple pattern. Report an error.
           raise(ErrorReport(msg"Multiple spread patterns are not supported." -> t.toLoc :: Nil))
           acc // Do not modify the accumulator and skip this `Spread`.
-        case ((leading, N, trailing), Spread(Keywrd(`...`), S(t))) =>
+        case ((leading, N), Spread(ellipsis, S(t))) =>
           // Found `...p`, elaborate `p` and assign it to the spread pattern.
-          (leading, S(go(t)), trailing)
-        case ((leading, N, trailing), Spread(Keywrd(`...`), N)) =>
+          (leading, S(SpreadKind.fromKw(ellipsis), go(t), Nil))
+        case ((leading, N), Spread(ellipsis, N)) =>
           // Found `...` (no following patterns), which means the spread part
           // will not be further matched. Set the spread pattern to `Wildcard`.
-          (leading, S(Wildcard()), trailing)
-        case ((leading, N, trailing), t) => 
+          (leading, S(SpreadKind.fromKw(ellipsis), Wildcard(), Nil))
+        case ((leading, N), t) => 
           // Found a tuple field while the spread pattern is not set. Add the
           // elaborated pattern to the leading patterns.
-          (go(t) :: leading, N, trailing)
-        case ((leading, spread @ S(_), trailing), t) => 
+          (go(t) :: leading, N)
+        case ((leading, S((spreadKind, spread, trailing))), t) => 
           // Found a tuple field while the spread pattern has been set. Add the
           // elaborated pattern to the trailing patterns.
-          (leading, spread, go(t) :: trailing)
-      Tuple(leading.reverse, spread, trailing.reverse)
+          (leading, S((spreadKind, spread, go(t) :: trailing)))
+      Tuple(leading.reverse, spread)
     /** Elaborate record patterns like `(a: p1, b: p2, ...pn)`. */
     def record(ps: Ls[Tree]): Ctxl[Pattern.Record] =
       val entries = ps.foldLeft(List[(Ident, Pattern)]()):
-        case (acc, InfixApp(id: Ident, Keyword.`:`, p)) => (id, go(p)) :: acc
+        case (acc, InfixApp(id: Ident, Keywrd(Keyword.`:`), p)) => (id, go(p)) :: acc
+        case (acc, InfixApp(key: StrLit, Keywrd(Keyword.`:`), p)) =>
+          ((Ident(key.value): Ident).withLocOf(key), go(p)) :: acc
         case (acc, Pun(false, p)) => (p, Variable(p)) :: acc
         case (acc, t) =>
           raise(ErrorReport(msg"Unexpected record property pattern." -> t.toLoc :: Nil))
@@ -1494,8 +1540,11 @@ extends Importer:
       case TypeDef(syntax.Pat, body, N) => L(go(body))
       case _ => R(go(t))
     def go(t: Tree): Ctxl[Pattern] = t match
+      // Annotated patterns like `@compile P`.
+      case Tree.Annotated(annotation, target) =>
+        go(target).annotate(term(annotation), t.toLoc)
       // Brackets.
-      case Bra(BracketKind.Round, t) => go(t)
+      case Bra(BracketKind.Round | BracketKind.Curly, t) => go(t)
       // Tuple patterns like `[p1, p2, ...ps, pn]`.
       case TyTup(ps) => tuple(ps)
       case Tup(ps) => tuple(ps)
@@ -1512,14 +1561,13 @@ extends Importer:
         Composition(op === "|", go(lhs), go(rhs))
       // Constructor patterns with pattern arguments and arguments.
       case App(ctor: Ctor, Tup(argTrees)) =>
-        val (patArgs, args) = argTrees.partitionMap(arg(_))
-        Constructor(term(ctor), patArgs, S(args))
+        Constructor(term(ctor), S(argTrees.map(go(_))))
       // `[p1, p2, ...ps, pn] => term`: All patterns are in the `TyTup`.
       case (lhs: TyTup) `=>` rhs => arrow(lhs, rhs)
       // `pattern => term`: Note that `pattern` is wrapped in a `Tup`.
       case Tup(lhs) `=>` rhs => lhs match
         case p @ Pun(false, _) :: Nil => record(p)
-        case p @ InfixApp(_: Ident, Keyword.`:`, _) :: Nil => record(p)
+        case p @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) :: Nil => record(p)
         case lhs :: Nil => arrow(lhs, rhs)
         case _ :: _ | Nil => ??? // TODO: When is this case reached?
       case p as q => q match
@@ -1533,13 +1581,18 @@ extends Importer:
           case N => go(p) binds id // Fallback to alias.
         // `p as q` where `q` is not an identifier is elaborated into chain.
         case _: Tree => Chain(go(p), go(q))
-      case Under() => Pattern.Wildcard()
+      case p where t =>
+        val q = go(p)
+        Guarded(q, term(t)(using ctx ++ q.variables.allocate))
+      case Under() => Pattern.Wildcard().withLocOf(t)
+      // Singleton blocks like `{1}`.
+      case Block(p :: Nil) => go(p)
       // Record patterns like `(a: p1, b: p2, ...pn)`.
       case Block(ps) => record(ps)
       // A single pun pattern is a record pattern.
       case p @ Pun(false, _) => record(p :: Nil)
       // A single record field is a record pattern.
-      case p @ InfixApp(_, Keyword.`:`, _) => record(p :: Nil)
+      case p @ InfixApp(_, Keywrd(Keyword.`:`), _) => record(p :: Nil)
       // Range patterns. We can also desugar them into disjunctions of all the
       // literals in the range.
       case (lower: StrLit) to (incl, upper: StrLit) =>

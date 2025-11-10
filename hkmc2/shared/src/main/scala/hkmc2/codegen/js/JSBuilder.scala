@@ -487,11 +487,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Continue(lbl) =>
       doc" # continue ${getVar(lbl, lbl.toLoc)}${mkSemi}"
       
-    case Label(lbl, bod, rst) =>
+    case Label(lbl, loop, bod, rst) =>
       scope.allocateName(lbl)
       
-      doc" # ${getVar(lbl, lbl.toLoc)}: while (true) " :: braced {
-          returningTerm(bod, endSemi = true) :/: doc"break;"
+      doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
+          returningTerm(bod, endSemi = true) :: (if loop then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>

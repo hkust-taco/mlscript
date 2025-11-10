@@ -27,8 +27,14 @@ fun (\) huh(x) = x
 \(0)
 //│ = 0
 
-
+:e
+// Writing record patterns in this way is strange. In the previous `Desugarer`,
+// the logic from two methods happened to work together and supported this
+// syntax. In the new `Desugarer`, we chose not to support this syntax.
 fun f(x) = if x is {( Int then 1, Bool then 2 )}
+//│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
+//│ ║  l.34: 	fun f(x) = if x is {( Int then 1, Bool then 2 )}
+//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 // * Potential alternative syntaxes for UCS splits
@@ -36,23 +42,44 @@ fun f(x) = if x is {( Int then 1, Bool then 2 )}
 :e
 fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╔══[ERROR] Unrecognized pattern split (parenthesis section).
-//│ ║  l.37: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
+//│ ║  l.43: 	fun f(x) = if x is ( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╔══[ERROR] Unrecognized pattern split (juxtaposition).
-//│ ║  l.43: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
+//│ ║  l.49: 	fun f(x) = if x is \{ Int then 1, Bool then 2 }
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :e
 fun f(x) = if x is \( Int then 1, Bool then 2 )
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.49: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Cannot use this reference as a pattern.
+//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.49: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
+//│ ╔══[ERROR] Cannot use this reference as a pattern.
+//│ ║  l.55: 	fun f(x) = if x is \( Int then 1, Bool then 2 )
 //│ ╙──      	                   ^
 
+class Box[T](val content: T)
 
+:ucs desugared
+fun interesting(x) =
+  if x is Box( Int then 1, Bool then 2 )
+//│ Split with nested patterns:
+//│ >  if
+//│ >    x is Box(Int) then 1
+//│ >    x is Box(Bool) then 2
+//│ Expanded split with flattened patterns:
+//│ >  if
+//│ >    x is Box(argument0$) and $argument0$ is Int then 1
+//│ >    x is Box(argument0$) and $argument0$ is Bool then 2
 
+interesting of Box(42)
+//│ = 1
+
+interesting of Box(true)
+//│ = 2
+
+:re
+interesting of Box("str")
+//│ ═══[RUNTIME ERROR] Error: match error

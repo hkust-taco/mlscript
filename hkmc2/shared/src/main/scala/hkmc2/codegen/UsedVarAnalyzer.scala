@@ -138,7 +138,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             accessed = accessed.addMutated(lhs)
             applyResult(rhs)
             applyBlock(rest)
-          case Label(label, body, rest) =>
+          case Label(label, loop, body, rest) =>
             accessed ++= blkAccessesShallow(body, S(label))
             applyBlock(rest)
           case _ => super.applyBlock(b)
@@ -312,7 +312,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             infos.map(merge) // IMPORTANT: rec all first, then merge, since each branch is mutually exclusive
             dfltInfo.map(merge)
             applyBlock(rest)
-          case Label(label, body, rest) =>
+          case Label(label, loop, body, rest) =>
             // for now, if the loop body mutates a variable and that variable is accessed or mutated by a defn,
             // or if it reads a variable that is later mutated by an instance inside the loop,
             // we put it in a capture. this preserves the current semantics of the IR (even though it's incorrect).

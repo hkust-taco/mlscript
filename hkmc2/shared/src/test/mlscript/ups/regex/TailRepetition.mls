@@ -9,7 +9,7 @@ Zero
 //│ = pattern Zero
 
 :expect true
-Zero.unapply("0") is Runtime.MatchResult
+Zero.unapply("0") is Runtime.MatchSuccess
 //│ = true
 
 :expect true
@@ -42,7 +42,7 @@ pattern ManyZeros = "0" ~ (ManyZeros | "")
 "1000" is ManyZeros
 //│ = false
 
-pattern Rep(pattern S) = S ~ (Rep(pattern S) | "")
+pattern Rep(pattern S) = S ~ (Rep(S) | "")
 
-"00000" is Rep(pattern "0")
+"00000" is Rep("0")
 //│ = true

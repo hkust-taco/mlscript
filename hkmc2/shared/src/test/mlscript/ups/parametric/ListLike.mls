@@ -6,9 +6,9 @@ import "../../../mlscript-compile/Stack.mls"
 
 open Stack
 
-pattern ListLike(pattern T) = Nil | (T :: ListLike(pattern T))
+pattern ListLike(pattern T) = Nil | (T :: ListLike(T))
 
-fun isOddIntList(xs) = xs is ListLike(pattern ((Int as x) => x % 2 === 1) as true)
+fun isOddIntList(xs) = xs is ListLike(((Int as x) => x % 2 === 1) as true)
 
 isOddIntList of Nil
 //│ = true
@@ -27,4 +27,4 @@ isOddIntList of "hello" :: "world" :: Nil
 
 pattern Nullable(pattern T) = null | T
 
-fun isNullableIntList(xs) = xs is @compile ListLike(pattern Nullable(pattern Int))
+fun isNullableIntList(xs) = xs is @compile ListLike(Nullable(Int))

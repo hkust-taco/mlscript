@@ -1,0 +1,386 @@
+:js
+
+// This is an interesting experiment in evaluation context.
+
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/MutMap.mls"
+
+open annotations
+open Option { Some, None }
+
+data class Term with
+  constructor
+    Var(name: Str)
+    App(lhs: Term, rhs: Term)
+    Abs(lhs: Var, rhs: Term)
+  
+  // A cached set of free variables
+  let _freeVars = None
+  
+  // Compute free variables. Retrieve the cache if it exists.
+  fun freeVars = if _freeVars is
+    Some(fv) then fv
+    None then
+      let fv = if this is
+        Var(name) then new Set([name])
+        App(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
+        Abs(name, body) then body.freeVars.difference(new Set([name]))
+      set _freeVars = Some(fv)
+      fv
+  
+  // Keep increasing the index until the based name with the index is not a free
+  // variable in this term.
+  fun freshName(baseName) =
+    let
+      freeVars = this.freeVars
+      nameIndex = 1
+    if freeVars.has(baseName) is false then baseName else...
+    while (baseName + "_" + nameIndex) is currentName and
+      freeVars.has(currentName) then set nameIndex += 1
+      else currentName
+  
+  fun freshVar(baseName) = Var of freshName(baseName)
+  
+  fun equals(that) = if this is
+    Var(name) and that is Var(name') then name === name'
+    App(lhs, rhs) and that is App(lhs', rhs') then
+      lhs.equals(lhs') && rhs.equals(rhs')
+    Abs(Var(name), body) and that is Abs(Var(name'), body') then
+      name === name' && body.equals(body')
+    else false
+  
+  // Pretty-print the term.
+  fun show = if this is
+    Var(name) then name
+    App(Abs as lhs, rhs) then "(" + lhs.show + ") " + rhs.show
+    App(lhs, App as rhs) then lhs.show + " (" + rhs.show + ")"
+    App(lhs, rhs) then lhs.show + " " + rhs.show
+    Abs(Var(name), body) then "λ" + name + ". " + body.show
+
+Var("a").freshVar("a")
+//│ = Var("a_1")
+
+App(Var("a"), Var("a_1")).freshVar("a")
+//│ = Var("a_2")
+
+Var("a").freshVar("b")
+//│ = Var("b")
+
+fun (<~>) alphaEquivalent(lhs, rhs) =
+  let varMap = MutMap.empty
+  pattern Var' = Var(n) => varMap |> MutMap.get(n) |. Option.getOrElse(n)
+  fun go(lhs, rhs) = if lhs is
+    Var(n) and rhs is Var' as n' then n === n'
+    App(l, r) and r is App(l', r') then go(l, l') and go(r, r')
+    Abs(Var(n), b) and rhs is Abs(Var(n'), b') then
+      let prev = varMap |> MutMap.get(n)
+      varMap |> MutMap.insert(n', n)
+      let equal = go(b, b')
+      varMap |> if prev is
+        Some(n'') then MutMap.insert(n', n'')
+        None then MutMap.delete(n')
+      equal
+    else false
+  go(lhs, rhs)
+
+:silent
+// A few frequently used terms.
+let id_x = Abs(Var("x"), Var("x"))
+let id_y = Abs(Var("y"), Var("y"))
+let id_a = Abs(Var("a"), Var("a"))
+let id_b = Abs(Var("b"), Var("b"))
+// λf. λx. x
+let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
+// λn. λf. λx. f (n f x)
+let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
+// λm. λn. λf. λx. m f (n f x)
+let plus = Abs(Var("m"), Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(App(Var("m"), Var("f")), App(App(Var("n"), Var("f")), Var("x")))))))
+// λm. λn. λf. m (n f)
+let multiply = Abs(Var("m"), Abs(Var("n"), Abs(Var("f"), App(Var("m"), App(Var("n"), Var("f"))))))
+// λx. λy. x
+let true_ = Abs(Var("x"), Abs(Var("y"), Var("x")))
+let false_ = Abs(Var("x"), Abs(Var("y"), Var("y"))) 
+// λb. λx. λy. b y x
+let not_ = Abs(Var("b"), Abs(Var("x"), Abs(Var("y"), App(App(Var("b"), Var("y")), Var("x")))))
+// λp. λq. p q p
+let and_ = Abs(Var("p"), Abs(Var("q"), App(App(Var("p"), Var("q")), Var("p"))))
+// λp. λq. p p q
+let or_ = Abs(Var("p"), Abs(Var("q"), App(App(Var("p"), Var("p")), Var("q"))))
+
+print of id_x.show
+print of id_y.show
+print of id_a.show
+print of id_b.show
+print of zero.show
+print of succ.show
+print of plus.show
+print of multiply.show
+print of true_.show
+print of false_.show
+print of not_.show
+print of and_.show
+print of or_.show
+//│ > λx. x
+//│ > λy. y
+//│ > λa. a
+//│ > λb. b
+//│ > λf. λx. x
+//│ > λn. λf. λx. f (n f x)
+//│ > λm. λn. λf. λx. m f (n f x)
+//│ > λm. λn. λf. m (n f)
+//│ > λx. λy. x
+//│ > λx. λy. y
+//│ > λb. λx. λy. b y x
+//│ > λp. λq. p q p
+//│ > λp. λq. p p q
+
+id_x <~> id_y
+//│ = true
+
+id_x <~> id_a
+//│ = true
+
+id_x <~> succ
+//│ = false
+
+zero <~> false_
+//│ = true
+
+fun subst(term, name, target) = if term is
+  Var(name') and
+    name === name' then target
+    else term
+  Abs(Var(name'), body) and
+    name === name' then term
+    let target' = if target.freeVars.has(name')
+      then subst(target, name', target.freshVar(name'))
+      else target
+    else Abs(Var(name'), subst(body, name, target'))
+  App(lhs, rhs) then App(subst(lhs, name, target), subst(rhs, name, target))
+
+:expect Abs(Var("a"), Var("a"))
+subst(Var("c"), "c", id_a)
+//│ = Abs(Var("a"), Var("a"))
+
+:expect Var("a")
+subst(Var("a"), "b", id_a)
+//│ = Var("a")
+
+:expect Abs(Var("b"), Var("b"))
+subst(Var("b"), "b", id_b)
+//│ = Abs(Var("b"), Var("b"))
+
+:expect App(Abs(Var("x"), Var("x")), Var("y"))
+subst(App(Var("x"), Var("y")), "x", id_x)
+//│ = App(Abs(Var("x"), Var("x")), Var("y"))
+
+:expect Abs(Var("y"), Abs(Var("x"), Var("x")))
+subst(Abs(Var("y"), Var("x")), "x", id_x)
+//│ = Abs(Var("y"), Abs(Var("x"), Var("x")))
+
+:expect Abs(Var("x"), Var("x"))
+subst(Abs(Var("x"), Var("x")), "x", id_y)
+//│ = Abs(Var("x"), Var("x"))
+
+:expect App(Var("z"), Var("z"))
+subst(App(Var("x"), Var("x")), "x", Var("z"))
+//│ = App(Var("z"), Var("z"))
+
+subst(Abs(Var("a"), App(Var("b"), Var("a"))), "b", Var("a"))
+//│ = Abs(Var("a"), App(Var("a_1"), Var("a")))
+
+pattern Value = Abs
+
+object ByValue with
+  // This pattern matches a beta redex where the argument is a value and
+  // performs the substitution.
+  pattern Redex = App(Abs(Var(x), m), Value as n) => subst(m, x, n)
+  
+  // Call-by-value evaluation contexts
+  //
+  // E ::= □
+  //     | E t
+  //     | v E
+  //
+  // It matches any terms that can take at least one step and extracts the next
+  // redex that we should make a progress and a function to reconstruct the term.
+  pattern Context(pattern Hole) =
+    (
+      (Hole as hole) => [hole, id]
+    ) | (
+      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+        [rhs, App(lhs, _)]
+    ) | (
+      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+        [lhs, lhs' => App(remake(lhs'), rhs)]
+    )
+
+fun redex(term) = if term is ByValue.Redex as term' then term'
+
+redex of App(id_x, id_y)
+//│ = Abs(Var("y"), Var("y"))
+
+:re
+redex of id_x
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+redex of Var("a")
+//│ ═══[RUNTIME ERROR] Error: match error
+
+fun step(term) =
+  if term is ByValue.Context(ByValue.Redex) as [subterm, remake] then remake(subterm)
+
+:re
+step of Var("x")
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+step of App(App(Var("a"), Var("b")), Var("c"))
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+step of id_x
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+step of App(App(id_x, Var("b")), Var("c"))
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:expect "(λb. b) λx. x"
+step(App(App(id_a, id_b), id_x)).show
+//│ = "(λb. b) λx. x"
+
+:expect "λy. y"
+step(App(id_x, id_y)).show
+//│ = "λy. y"
+
+fun evalByValue(term) =
+  while term is
+    ByValue.Context(ByValue.Redex) as [subterm, remake] then
+      set term = remake(subterm)
+    else term
+
+evalByValue(App(id_x, App(id_x, App(id_x, App(id_x, id_y))))).show
+//│ = "λy. y"
+
+evalByValue(App(succ, zero)).show
+//│ = "λf. λx. f ((λf. λx. x) f x)"
+
+evalByValue(App(succ, App(succ, zero))).show
+//│ = "λf. λx. f ((λf. λx. f ((λf. λx. x) f x)) f x)"
+
+:fixme
+// More inconsistent origin locations to fix...
+fun evalByValue'(term) =
+  while term is
+    (@compile ByValue.Context(ByValue.Redex)) as [subterm, remake] then
+      set term = remake(subterm)
+    else term
+//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ║  l.211: 	      App(Abs as lhs, Context(Hole) as [rhs, remake]) =>
+//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ║  l.214: 	      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+object ByName with
+  // Call-by-name allows reducing any beta redex. The argument `n` may be any
+  // term, not necessarily a value.
+  pattern Redex = App(Abs(Var(x), m), Term as n) => subst(m, x, n)
+  
+  // Call-by-name evaluation contexts
+  //
+  // E ::= □
+  //     | E t
+  pattern Context(pattern Hole) =
+    (
+      (Hole as hole) => [hole, id]
+    ) | (
+      App(Context(Hole) as [lhs, remake], Term as rhs) =>
+        [lhs, lhs' => App(remake(lhs'), rhs)]
+    )
+
+:silent
+let t = App(Abs(Var("x"), id_a), App(id_x, id_y))
+print of t.show
+//│ > (λx. λa. a) (λx. x) λy. y
+
+import "../../../mlscript-compile/Runtime.mls"
+
+fun stepByStep(system, term, maxSteps) =
+  let numSteps = 0
+  print of "Term: " + term.show
+  while numSteps < maxSteps and system.Context.unapply(system.Redex, term) is
+    Runtime.MatchSuccess([subterm, remake], _) do
+      set numSteps += 1
+      set term = remake(subterm)
+      print of "Step " + numSteps + ": " + term.show
+  if numSteps == maxSteps do
+    print of "Stopped due to too many steps."
+
+:silent
+let applySelf = Abs(Var("x"), App(Var("x"), Var("x")))
+let omega = App(applySelf, applySelf)
+print of applySelf.show
+print of omega.show
+//│ > λx. x x
+//│ > (λx. x x) λx. x x
+
+stepByStep(ByValue, t, 10)
+//│ > Term: (λx. λa. a) (λx. x) λy. y
+//│ > Step 1: (λx. λa. a) λy. y
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, id_y), 10)
+//│ > Term: (λx. x) λy. y
+//│ > Step 1: λy. y
+
+stepByStep(ByValue, App(id_x, App(id_y, id_a)), 10)
+//│ > Term: (λx. x) (λy. y) λa. a
+//│ > Step 1: (λx. x) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, App(id_y, id_a)), 10)
+//│ > Term: (λx. x) (λy. y) λa. a
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(App(id_x, id_y), id_a), 10)
+//│ > Term: (λx. x) λy. y λa. a
+//│ > Step 1: (λy. y) λa. a
+//│ > Step 2: λa. a
+
+stepByStep(ByName, App(id_x, App(id_a, id_b)), 10)
+//│ > Term: (λx. x) (λa. a) λb. b
+//│ > Step 1: (λa. a) λb. b
+//│ > Step 2: λb. b
+
+stepByStep(ByName, App(Abs(Var("u"), id_a), omega), 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: λa. a
+
+// The following term is evaluated differently in two systems.
+
+:silent
+let t = App(Abs(Var("u"), id_a), omega)
+print of t.show
+//│ > (λu. λa. a) (λx. x x) λx. x x
+
+stepByStep(ByValue, t, 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 2: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 3: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 4: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 5: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 6: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 7: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 8: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 9: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 10: (λu. λa. a) (λx. x x) λx. x x
+//│ > Stopped due to too many steps.
+
+stepByStep(ByName, t, 10)
+//│ > Term: (λu. λa. a) (λx. x x) λx. x x
+//│ > Step 1: λa. a

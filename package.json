@@ -1,4 +1,5 @@
 {
+  "name": "mlscript",
   "dependencies": {
     "benchmark": "^2.1.4",
     "binaryen": "^124.0.0",

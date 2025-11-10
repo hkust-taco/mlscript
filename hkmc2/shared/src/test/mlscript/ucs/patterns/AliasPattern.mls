@@ -12,11 +12,9 @@ fun map(f) = case
   Some(x as n) then Some of f(n)
   None as n then n
 
-:ucs desugared
+
 fun foo = case
   Some(Some(a as b) as c) as d then [a, b, c, d]
-//│ Desugared:
-//│ >  if caseScrut is Option.Some(param0) as d and $param0 is Option.Some(param0) as c and
-//│ >    let a = $param0
-//│ >    let b = $param0
-//│ >    else [a, b, c, d]
+
+foo of Some(Some(42))
+//│ = [42, 42, Some(42), Some(Some(42))]

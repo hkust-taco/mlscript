@@ -102,11 +102,11 @@ print of cnf6 is Dnf
 //│ > false
 //│ > false
 
-pattern Dnf'(pattern P) = Or(Dnf'(pattern P), Dnf'(pattern P)) | Atoms'(pattern P)
-pattern Atoms'(pattern P) = And(Atoms'(pattern P), Atoms'(pattern P)) | Atom'(pattern P)
+pattern Dnf'(pattern P) = Or(Dnf'(P), Dnf'(P)) | Atoms'(P)
+pattern Atoms'(pattern P) = And(Atoms'(P), Atoms'(P)) | Atom'(P)
 pattern Atom'(pattern P) = Pred(_, P) | Var
 
-pattern DeepDnf = Dnf'(pattern DeepDnf)
+pattern DeepDnf = Dnf'(DeepDnf)
 
 fun isDeepDnf(f) = f is @compile DeepDnf
 
@@ -134,5 +134,5 @@ print of isDeepDnf of cnf6
 //│ > false
 //│ > false
 
-pattern Cnf'(pattern P) = And(Cnf'(pattern P), Cnf'(pattern P))
-pattern DnfOrCnf = Dnf'(pattern DnfOrCnf) | Cnf'(pattern DnfOrCnf)
+pattern Cnf'(pattern P) = And(Cnf'(P), Cnf'(P))
+pattern DnfOrCnf = Dnf'(DnfOrCnf) | Cnf'(DnfOrCnf)

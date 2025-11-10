@@ -319,7 +319,7 @@ fun f(x) = if x
 //│             op = Ident of "=="
 //│             rhss = Ls of 
 //│               IntLit of 0
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "a"
 //│         InfixApp:
 //│           lhs = OpApp:
@@ -327,7 +327,7 @@ fun f(x) = if x
 //│             op = Ident of ">"
 //│             rhss = Ls of 
 //│               IntLit of 1
-//│           kw = keyword 'then'
+//│           kw = Keywrd of keyword 'then'
 //│           rhs = StrLit of "b"
 
 f(0)
@@ -358,7 +358,7 @@ f(1)
 fun f(x) = if x
   foo(A) then a
   bar(B) then b
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
+//│ ╔══[ERROR] Unrecognized term split (juxtaposition)
 //│ ║  l.358: 	fun f(x) = if x
 //│ ║         	              ^
 //│ ║  l.359: 	  foo(A) then a

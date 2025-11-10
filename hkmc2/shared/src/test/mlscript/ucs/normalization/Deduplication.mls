@@ -1,0 +1,471 @@
+:js
+
+let x = 0
+let y = 0
+let z = 0
+//│ x = 0
+//│ y = 0
+//│ z = 0
+
+:sjs
+if x === 0 then 1 else 2
+//│ JS (unsanitized):
+//│ let scrut; scrut = x === 0; if (scrut === true) { 1 } else { 2 }
+//│ = 1
+
+:sjs
+let a = if x === 0 then 1 else 2
+//│ JS (unsanitized):
+//│ let a, scrut1, tmp; scrut1 = x === 0; if (scrut1 === true) { tmp = 1; } else { tmp = 2; } a = tmp;
+//│ a = 1
+
+:sjs
+print of if x === 0 then 1 else 2
+//│ JS (unsanitized):
+//│ let scrut2, tmp1;
+//│ scrut2 = x === 0;
+//│ if (scrut2 === true) { tmp1 = 1; } else { tmp1 = 2; }
+//│ Predef.print(tmp1)
+//│ > 1
+
+:sjs
+if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else ""
+//│ JS (unsanitized):
+//│ let tmp2;
+//│ split_root$: {
+//│   split_1$: {
+//│     if (x === 0) {
+//│       if (y === 0) {
+//│         if (z === 0) {
+//│           tmp2 = "000";
+//│           break split_root$
+//│         } else if (z === 1) {
+//│           tmp2 = "001";
+//│           break split_root$
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (y === 1) {
+//│         tmp2 = "01";
+//│         break split_root$
+//│       } else {
+//│         break split_1$
+//│       }
+//│     } else if (x === 1) {
+//│       tmp2 = "1";
+//│       break split_root$
+//│     } else { break split_1$ }
+//│   }
+//│   tmp2 = "";
+//│ }
+//│ tmp2
+//│ = "000"
+
+:sjs
+let qqq = if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else ""
+//│ JS (unsanitized):
+//│ let qqq, tmp3;
+//│ split_root$1: {
+//│   split_1$1: {
+//│     if (x === 0) {
+//│       if (y === 0) {
+//│         if (z === 0) {
+//│           tmp3 = "000";
+//│           break split_root$1
+//│         } else if (z === 1) {
+//│           tmp3 = "001";
+//│           break split_root$1
+//│         } else {
+//│           break split_1$1
+//│         }
+//│       } else if (y === 1) {
+//│         tmp3 = "01";
+//│         break split_root$1
+//│       } else {
+//│         break split_1$1
+//│       }
+//│     } else if (x === 1) {
+//│       tmp3 = "1";
+//│       break split_root$1
+//│     } else { break split_1$1 }
+//│   }
+//│   tmp3 = "";
+//│ }
+//│ qqq = tmp3;
+//│ qqq = "000"
+
+:sjs
+print of if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else ""
+//│ JS (unsanitized):
+//│ let tmp4;
+//│ split_root$2: {
+//│   split_1$2: {
+//│     if (x === 0) {
+//│       if (y === 0) {
+//│         if (z === 0) {
+//│           tmp4 = "000";
+//│           break split_root$2
+//│         } else if (z === 1) {
+//│           tmp4 = "001";
+//│           break split_root$2
+//│         } else {
+//│           break split_1$2
+//│         }
+//│       } else if (y === 1) {
+//│         tmp4 = "01";
+//│         break split_root$2
+//│       } else {
+//│         break split_1$2
+//│       }
+//│     } else if (x === 1) {
+//│       tmp4 = "1";
+//│       break split_root$2
+//│     } else { break split_1$2 }
+//│   }
+//│   tmp4 = "";
+//│ }
+//│ Predef.print(tmp4)
+//│ > 000
+
+:sjs
+fun foo(x, y, z) =
+  if x is
+    0 and y is
+      0 and z is
+        0 then "000"
+        1 then "001"
+      1 then "01"
+    1 then "1"
+    else ""
+//│ JS (unsanitized):
+//│ let foo;
+//│ foo = function foo(x1, y1, z1) {
+//│   let tmp5;
+//│   split_root$3: {
+//│     split_1$3: {
+//│       if (x1 === 0) {
+//│         if (y1 === 0) {
+//│           if (z1 === 0) {
+//│             tmp5 = "000";
+//│             break split_root$3
+//│           } else if (z1 === 1) {
+//│             tmp5 = "001";
+//│             break split_root$3
+//│           } else {
+//│             break split_1$3
+//│           }
+//│         } else if (y1 === 1) {
+//│           tmp5 = "01";
+//│           break split_root$3
+//│         } else {
+//│           break split_1$3
+//│         }
+//│       } else if (x1 === 1) {
+//│         tmp5 = "1";
+//│         break split_root$3
+//│       } else { break split_1$3 }
+//│     }
+//│     tmp5 = "";
+//│   }
+//│   return tmp5
+//│ };
+
+foo(0, 0, 0)
+//│ = "000"
+
+:sjs
+print of if
+  x is 0 and
+    y is 0 and
+      z is 0 then "000"
+    y is 1 then "01_"
+    z is 1 then "0_1"
+  x is 1 then "1__"
+  y is 2 then "_2_"
+  else "___"
+//│ JS (unsanitized):
+//│ let tmp5;
+//│ split_root$3: {
+//│   split_1$3: {
+//│     split_2$: {
+//│       split_3$: {
+//│         if (x === 0) {
+//│           if (y === 0) {
+//│             if (z === 0) {
+//│               tmp5 = "000";
+//│               break split_root$3
+//│             } else if (z === 1) {
+//│               break split_1$3
+//│             } else {
+//│               break split_2$
+//│             }
+//│           } else if (y === 1) {
+//│             tmp5 = "01_";
+//│             break split_root$3
+//│           } else {
+//│             if (z === 1) {
+//│               break split_1$3
+//│             } else {
+//│               if (y === 2) {
+//│                 break split_3$
+//│               } else {
+//│                 break split_2$
+//│               }
+//│             }
+//│           }
+//│         } else if (x === 1) {
+//│           tmp5 = "1__";
+//│           break split_root$3
+//│         } else {
+//│           if (y === 2) {
+//│             break split_3$
+//│           } else {
+//│             break split_2$
+//│           }
+//│         }
+//│       }
+//│       tmp5 = "_2_";
+//│       break split_root$3;
+//│     }
+//│     tmp5 = "___";
+//│     break split_root$3;
+//│   }
+//│   tmp5 = "0_1";
+//│ }
+//│ Predef.print(tmp5)
+//│ > 000
+
+:sjs
+fun foo(x, y, z) = if
+  x is 0 and
+    y is 0 and
+      z is 0 then "000"
+    y is 1 then "01_"
+    z is 1 then "0_1"
+  x is 1 then "1__"
+  y is 2 then "_2_"
+  else "___"
+//│ JS (unsanitized):
+//│ let foo1;
+//│ foo1 = function foo(x1, y1, z1) {
+//│   let tmp6;
+//│   split_root$4: {
+//│     split_1$4: {
+//│       split_2$1: {
+//│         split_3$1: {
+//│           if (x1 === 0) {
+//│             if (y1 === 0) {
+//│               if (z1 === 0) {
+//│                 tmp6 = "000";
+//│                 break split_root$4
+//│               } else if (z1 === 1) {
+//│                 break split_1$4
+//│               } else {
+//│                 break split_2$1
+//│               }
+//│             } else if (y1 === 1) {
+//│               tmp6 = "01_";
+//│               break split_root$4
+//│             } else {
+//│               if (z1 === 1) {
+//│                 break split_1$4
+//│               } else {
+//│                 if (y1 === 2) {
+//│                   break split_3$1
+//│                 } else {
+//│                   break split_2$1
+//│                 }
+//│               }
+//│             }
+//│           } else if (x1 === 1) {
+//│             tmp6 = "1__";
+//│             break split_root$4
+//│           } else {
+//│             if (y1 === 2) {
+//│               break split_3$1
+//│             } else {
+//│               break split_2$1
+//│             }
+//│           }
+//│         }
+//│         tmp6 = "_2_";
+//│         break split_root$4;
+//│       }
+//│       tmp6 = "___";
+//│       break split_root$4;
+//│     }
+//│     tmp6 = "0_1";
+//│   }
+//│   return tmp6
+//│ };
+
+fun expensive_call(str) = Math.pow(2, str.length)
+
+:sjs
+fun foo(x, y, z) = if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else
+    let value = "hello"
+    expensive_call(value)
+//│ JS (unsanitized):
+//│ let foo2;
+//│ foo2 = function foo(x1, y1, z1) {
+//│   let value, tmp6;
+//│   split_root$4: {
+//│     split_1$4: {
+//│       if (x1 === 0) {
+//│         if (y1 === 0) {
+//│           if (z1 === 0) {
+//│             tmp6 = "000";
+//│             break split_root$4
+//│           } else if (z1 === 1) {
+//│             tmp6 = "001";
+//│             break split_root$4
+//│           } else {
+//│             break split_1$4
+//│           }
+//│         } else if (y1 === 1) {
+//│           tmp6 = "01";
+//│           break split_root$4
+//│         } else {
+//│           break split_1$4
+//│         }
+//│       } else if (x1 === 1) {
+//│         tmp6 = "1";
+//│         break split_root$4
+//│       } else { break split_1$4 }
+//│     }
+//│     value = "hello";
+//│     tmp6 = expensive_call(value);
+//│   }
+//│   return tmp6
+//│ };
+
+object A
+object B
+object C
+
+:sjs
+// Since no branch is duplicated, there is no label or `break`.
+fun foo(x, y, z) =
+  if x is A then "Hello"
+  else "Goodbye"
+//│ JS (unsanitized):
+//│ let foo3;
+//│ foo3 = function foo(x1, y1, z1) {
+//│   if (x1 instanceof A1.class) { return "Hello" } else { return "Goodbye" }
+//│ };
+
+:sjs
+// Before the deduplication is introduced:
+// let foo;
+// foo = function foo(x1, y, z) {
+//   if (x1 instanceof A1) {
+//     if (y instanceof B1) {
+//       if (z instanceof C1) {
+//         return "Hello"
+//       } else { return "Goodbye" }
+//     } else { return "Goodbye" }
+//   } else { return "Goodbye" }
+// };
+fun foo(x, y, z) =
+  if x is A and y is B and z is C then "Hello"
+  else "Goodbye"
+//│ JS (unsanitized):
+//│ let foo4;
+//│ foo4 = function foo(x1, y1, z1) {
+//│   let tmp6;
+//│   split_root$4: {
+//│     split_1$4: {
+//│       if (x1 instanceof A1.class) {
+//│         if (y1 instanceof B1.class) {
+//│           if (z1 instanceof C1.class) {
+//│             tmp6 = "Hello";
+//│             break split_root$4
+//│           } else {
+//│             break split_1$4
+//│           }
+//│         } else { break split_1$4 }
+//│       } else { break split_1$4 }
+//│     }
+//│     tmp6 = "Goodbye";
+//│   }
+//│   return tmp6
+//│ };
+
+:sjs
+// The default branch which throws the match error should be also deduplicated.
+fun foo(x, y, z) =
+  if x is A and y is B and z is C then "Hello"
+//│ JS (unsanitized):
+//│ let foo5;
+//│ foo5 = function foo(x1, y1, z1) {
+//│   let tmp6;
+//│   split_root$4: {
+//│     split_default$: {
+//│       if (x1 instanceof A1.class) {
+//│         if (y1 instanceof B1.class) {
+//│           if (z1 instanceof C1.class) {
+//│             tmp6 = "Hello";
+//│             break split_root$4
+//│           } else {
+//│             break split_default$
+//│           }
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp6
+//│ };
+
+:expect "Hello"
+foo(A, B, C)
+//│ = "Hello"
+
+:re
+foo(A, A, A)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:re
+foo(A, B, B)
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:sjs
+let y = if true then 1 else 2
+//│ JS (unsanitized):
+//│ let y1, scrut3, tmp6;
+//│ scrut3 = true;
+//│ if (scrut3 === true) { tmp6 = 1; } else { tmp6 = 2; }
+//│ y1 = tmp6;
+//│ y = 1

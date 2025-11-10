@@ -70,16 +70,14 @@ pattern StackLike = ([] => Nil) | ([x, ...StackLike as xs] => x :: xs)
 [1] is StackLike(1 :: Nil)
 //│ = true
 
+:expect true
 [1, 2, 3, 4, 5] is StackLike(1 :: 2 :: 3 :: 4 :: 5 :: Nil)
 //│ = true
 
-:todo
 [1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
-//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
-//│ ║  l.77: 	[1, 2, 3, 4, 5] is StackLike as (1 :: 2 :: 3 :: 4 :: 5 :: Nil)
-//│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ = false
+//│ = true
 
+:expect false
 [1, 2, 3, 4, 5] is StackLike(1 :: 2 :: 3 :: 4 :: Nil)
 //│ = false
 

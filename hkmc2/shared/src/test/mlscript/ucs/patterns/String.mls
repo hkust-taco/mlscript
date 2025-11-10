@@ -1,0 +1,37 @@
+:js
+
+fun parseIntegerSimple(str) = if str is
+  "0x" ~ body then parseInt(body, 16)
+  "0b" ~ body then parseInt(body, 2)
+  "0o" ~ body then parseInt(body, 8)
+  else parseInt(str, 10)
+
+:expect 65535
+parseIntegerSimple("0xFFFF")
+//│ = 65535
+
+:expect 255
+parseIntegerSimple("0b11111111")
+//│ = 255
+
+:expect 4095
+parseIntegerSimple("0o7777")
+//│ = 4095
+
+:expect 7777
+parseIntegerSimple("07777")
+//│ = 7777
+
+fun trimStart(str) = if str is (" " | "\t") ~ rest then trimStart(rest) else str
+
+:expect "up"
+trimStart of "       up"
+//│ = "up"
+
+:expect ""
+trimStart of ""
+//│ = ""
+
+:expect "hello"
+trimStart of "\thello"
+//│ = "hello"

@@ -1,0 +1,43 @@
+:js
+
+open annotations
+
+// After sharing UCS desugaring with UPS, we can selectively efficiently compile
+// sub-patterns in a naively compiled pattern.
+
+pattern ZeroOne = 0 | 1
+
+pattern SevenEight = 7 | 8
+
+:ucs instantiation
+// Note that only `ZeroOne` is instantiated.
+pattern Bar = SevenEight | @compile ZeroOne
+//│ | Instantiating ZeroOne
+//│ | Instantiated ZeroOne
+//│ | >  arity = 0
+//│ | >  arguments = 
+//│ | >  instantiated = (0 ∨ 1)
+
+:expect true
+0 is Bar
+//│ = true
+
+:expect true
+1 is Bar
+//│ = true
+
+:expect false
+2 is Bar
+//│ = false
+
+:expect true
+0 is @compile Bar
+//│ = true
+
+:expect true
+1 is @compile Bar
+//│ = true
+
+:expect false
+2 is @compile Bar
+//│ = false

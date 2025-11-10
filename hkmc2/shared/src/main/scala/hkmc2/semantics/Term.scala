@@ -203,7 +203,12 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, desugared: Split)
+  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: SimpleSplit)
+  /** `If` expressions synthesized by the pattern compiler. It should only be
+   *  created and used in `Lowering`. One must make sure that all terms in the
+   *  split are correctly resolved. In the future, we might look for a way to
+   *  remove `SynthIf` by generating IR `Match` blocks directly. */
+  case SynthIf(split: Split)
   case Lam(params: ParamList, body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[QuantVar], outer: Opt[VarSymbol], body: Term)
@@ -306,7 +311,8 @@ enum Term extends Statement:
       case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
       case s: Spd => s.copy(term = s.term.mkClone)
     })(term.tree)
-    case IfLike(kw, desugared) => IfLike(kw, desugared) // desugared is Split, which is immutable
+    case IfLike(kw, split) => IfLike(kw, split)
+    case SynthIf(split) => SynthIf(split.mkClone)
     case Lam(params, body) => Lam(params, body.mkClone)
     case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
     case Forall(tvs, outer, body) => Forall(tvs, outer, body.mkClone)
@@ -373,6 +379,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case CtxTup(fields) => "contextual tuple literal"
       case IfLike(Keyword.`if`, body) => "`if` expression"
       case IfLike(Keyword.`while`, body) => "`while` expression"
+      case SynthIf(split) => "synthetic `if` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
       case Forall(tvs, outer, body) => "universal quantification"
@@ -426,7 +433,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Tup(fields) => fields.flatMap(_.subTerms)
     case Mut(und) => und :: Nil
     case CtxTup(fields) => fields.flatMap(_.subTerms)
-    case IfLike(_, body) => body.subTerms
+    case IfLike(_, split) => split.subTerms
+    case SynthIf(split) => split.subTerms
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Rcd(mut, stats) => stats.flatMap(_.subTerms)
@@ -476,7 +484,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
     case t: App => treeOrSubterms(t.tree)
-    case IfLike(kw, desug) => desug :: Nil
+    case IfLike(_, split) => split :: Nil
+    case SynthIf(split) => split :: Nil
     case SynthSel(pre, nme) => pre :: nme :: Nil
     case Sel(pre, nme) => pre :: nme :: Nil
     case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
@@ -516,7 +525,8 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
-    case IfLike(kw, body) => s"${kw.name} { ${body.showDbg} }"
+    case IfLike(kw, split) => s"${kw.name} { ${split.showDbg} }"
+    case SynthIf(split) => s"if { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(false)) => "" case x => x.showDbg + " " }))
@@ -673,11 +683,21 @@ case class Import(sym: Symbol, str: Str, file: os.Path) extends Statement
 
 sealed abstract class Declaration:
   val sym: Symbol
+  
+  /** Whether this declares a class, a pattern, an object, or a pattern
+    * parameter. Only these can be in patterns constructor position. */
+  def isPatternConstructor: Bool = this match
+    case _: (TermDefinition | TypeDef | TyParam) => false
+    case d: ModuleOrObjectDef => d.kind isnt Mod
+    case _: (PatternDef | ClassDef) => true
+    case p: Param => p.flags.pat
 
 sealed abstract class Definition extends Declaration, Statement:
   val annotations: Ls[Annot]
   def hasDeclareModifier: Opt[Annot.Modifier] = annotations.collectFirst:
     case mod @ Annot.Modifier(Keyword.`declare`) => mod
+  def hasStagedModifier: Opt[Annot.Modifier] = annotations.collectFirst:
+    case mod @ Annot.Modifier(Keyword.`staged`) => mod
 
 sealed trait CompanionValue extends Definition
 
@@ -737,6 +757,8 @@ case class PatternDef(
     sym: PatternSymbol,
     bsym: BlockMemberSymbol,
     tparams: Ls[TyParam],
+    /** All parameters. */
+    parameters: Ls[Param],
     /** The pattern parameters, for example, `T` in
      *  `pattern Nullable(pattern T) = null | T`. */
     patternParams: Ls[Param],

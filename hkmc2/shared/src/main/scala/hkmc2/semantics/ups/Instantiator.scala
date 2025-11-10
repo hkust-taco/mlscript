@@ -25,18 +25,17 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
   
   /** We instantiate patterns in a breadth-first manner. The queue contains all
    *  patterns that need to be instantiated. */
-  val thingsToDo: MutQueue[Instantiation] = MutQueue.empty
+  val worklist: MutQueue[Instantiation] = MutQueue.empty
   
-  /** Instantiate a pattern and patterns used in it. */
-  def apply(
-    symbol: PatternSymbol,
-    arguments: Ls[SP],
-    useSiteLoc: Opt[Loc]
-  ): (Pat, Context) = scoped("ucs:instantiation"):
-    val entryPoint = Instantiation(symbol, arguments.map(instantiate(_)(using Map.empty)))(useSiteLoc)
-    val result = schedule(entryPoint)
-    while thingsToDo.nonEmpty do
-      val instantiation = thingsToDo.dequeue()
+  /** Instantiate an anonymous pattern. */
+  def apply(pattern: SP): (Pat, Context) = scoped("ucs:instantiation"):
+    val entryPoint = instantiate(pattern)(using Map.empty)
+    (entryPoint, runInstantiationLoop)
+  
+  /** Run the loop to recursively instantiate needed patterns. */
+  private def runInstantiationLoop: Context =
+    while worklist.nonEmpty do
+      val instantiation = worklist.dequeue()
       val defn = instantiation.symbol.defn.get
       // Check if the number of pattern parameters and pattern arguments match.
       if defn.patternParams.size != instantiation.arguments.size then
@@ -61,21 +60,21 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     val definitions = progress.view.mapValues:
       _.getOrElse(lastWords("The pattern is expected to be instantiated."))
     .toMap
-    (Synonym(result), Context(definitions))
+    new Context(definitions)
   
   /** Add the instantiation to the queue if it has not been instantiated yet. */
   def schedule(instantiation: Instantiation): Instantiation =
     if !progress.contains(instantiation) then
       progress += (instantiation -> N)
-      thingsToDo.enqueue(instantiation)
+      worklist.enqueue(instantiation)
     else
       log(s"Already instantiated ${instantiation.showDbg}")
-    progress(instantiation) 
+    progress(instantiation)
     instantiation
   
   /** Instantiate the given pattern with a substitution map. */
   def instantiate(pattern: SP)(using subst: Map[VarSymbol, Pat]): Pat = pattern match
-    case SP.Constructor(target, patternArguments, arguments) => target.symbol match
+    case SP.Constructor(target, arguments) => target.symbol match
       // Look up the corresponding pattern from the substitution.
       case S(symbol: VarSymbol) => subst(symbol)
       // Recursively instantiate the arguments of constructor patterns.
@@ -111,8 +110,11 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
               msg"`${symbol.nme}` is a module, thus it cannot have arguments." -> Loc(arguments))
           ClassLike(symbol, N)
         case S(symbol: PatternSymbol) =>
-          val arguments = patternArguments.map(instantiate(_))
-          val instantiation = Instantiation(symbol, arguments)(pattern.toLoc)
+          // TODO(after we defined the semantics of pattern parameters): We need
+          // to partition the arguments into pattern arguments and extraction
+          // arguments here.
+          val patternArguments = arguments.getOrElse(Nil).map(instantiate(_))
+          val instantiation = Instantiation(symbol, patternArguments)(pattern.toLoc)
           Synonym(schedule(instantiation))
     case SP.Composition(true, left, right) => instantiate(left) or instantiate(right)
     case SP.Composition(false, left, right) => instantiate(left) and instantiate(right)
@@ -134,8 +136,13 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
     case SP.Concatenation(left, right) =>
       error(msg"String concatenation is not supported in pattern compilation." -> pattern.toLoc)
       Never
-    case SP.Tuple(leading, spread, trailing) => Tuple(leading.map(instantiate(_)), spread.map(instantiate(_)), trailing.map(instantiate(_)))
-    case SP.Record(fields) => Record(fields.iterator.map((id, pattern) => (id, instantiate(pattern))).to(SeqMap))
+    case SP.Tuple(leading, spread) =>
+      val instantiatedSpread = spread.map:
+        case (spreadKind, middle, trailing) =>
+          (spreadKind, instantiate(middle), trailing.map(instantiate(_)))
+      Tuple(leading.map(instantiate(_)), instantiatedSpread)
+    case SP.Record(fields) => Record:
+      fields.iterator.map((id, pattern) => (id, instantiate(pattern))).to(SeqMap)
     case SP.Chain(first, second) =>
       error(msg"Pattern chaining is not supported in pattern compilation." -> pattern.toLoc)
       Never
@@ -143,4 +150,22 @@ class Instantiator(using tl: TL)(using Ctx, State, Raise):
       case N => instantiate(pattern)
       case S(symbol) => Rename(instantiate(pattern), symbol)
     // Pattern arguments are accessible throughout the pattern.
-    case SP.Transform(pattern, transform) => Extract(instantiate(pattern), transform)
+    case SP.Transform(pattern, parameters, transform) =>
+      Extract(instantiate(pattern), parameters.toMap, transform)
+    case SP.Annotated(pattern, annotations) =>
+      // Currently, we only support `@compile` annotation, so here we only
+      // check whether this annotation exists, and report an error for all
+      // other annotations.
+      val shouldCompile = annotations.foldLeft(true): (acc, termOrLoc) =>
+        val res = termOrLoc match
+          case R(term) => term.resolvedSym match
+            case S(symbol) if symbol is ctx.builtins.annotations.compile => N
+            case S(_) | N => S(term.toLoc)
+          case L(loc) => S(loc)
+        res match
+          case S(loc) =>
+            warn(msg"This annotation is not supported here." -> loc,
+              msg"Note: Patterns only support the `@compile` annotation." -> pattern.toLoc)
+            acc
+          case N => true
+      instantiate(pattern)

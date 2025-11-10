@@ -121,6 +121,28 @@ id of { x: 1, y: 2 }
 //│ = {x: 1, y: 2}
 
 
+let m0 = {get(k): k + 1}
+//│ m0 = {get: fun get}
+
+m0.get(41)
+//│ = 42
+
+
+let m0 = {("get")(k): k + 1}
+//│ m0 = {get: fun}
+
+m0.get(41)
+//│ = 42
+
+
+:e
+{get(k): _}
+//│ ╔══[ERROR] Unexpected record key shape.
+//│ ║  l.139: 	{get(k): _}
+//│ ╙──       	 ^^^^^^
+//│ = fun
+
+
 
 :silent
 import "../../mlscript-compile/Iter.mls"
@@ -171,14 +193,14 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.172: 	t("group")
+//│ ║  l.194: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.179: 	t("group")
+//│ ║  l.201: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

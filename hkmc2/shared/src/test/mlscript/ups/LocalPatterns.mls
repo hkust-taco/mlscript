@@ -21,7 +21,7 @@ Playground.Zero
 //│ = pattern Zero
 
 Playground.Zero.unapply("0")
-//│ = MatchResult("0", {})
+//│ = MatchSuccess("0", {})
 
 :expect true
 "0" is Playground.Zero
@@ -34,7 +34,7 @@ Playground.DoubleZero
 //│ = pattern DoubleZero
 
 Playground.DoubleZero.unapply("00")
-//│ = MatchResult("00", {})
+//│ = MatchSuccess("00", {})
 
 :expect true
 "00" is Playground.DoubleZero
@@ -47,7 +47,7 @@ Playground.ZeroOne
 //│ = pattern ZeroOne
 
 Playground.ZeroOne.unapply("01")
-//│ = MatchResult("01", {})
+//│ = MatchSuccess("01", {})
 
 :expect true
 "01" is Playground.ZeroOne
@@ -62,7 +62,7 @@ TripleZero
 //│ = pattern TripleZero
 
 TripleZero.unapply("000")
-//│ = MatchResult("000", {})
+//│ = MatchSuccess("000", {})
 
 :expect true
 "000" is TripleZero

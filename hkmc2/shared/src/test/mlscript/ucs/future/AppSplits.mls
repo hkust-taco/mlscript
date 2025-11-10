@@ -11,7 +11,7 @@ fun foo(x) = x > 1
 if foo of
   0 then "a"
   1 then "b"
-//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ╔══[ERROR] Unrecognized term split (application)
 //│ ║  l.11: 	if foo of
 //│ ║        	   ^^^^^^
 //│ ║  l.12: 	  0 then "a"
@@ -33,7 +33,7 @@ if foo of 1,
 //│ ╔══[PARSE ERROR] Unexpected literal here
 //│ ║  l.28: 	  0 then "a"
 //│ ╙──      	  ^
-//│ ╔══[ERROR] Unrecognized term split (application).
+//│ ╔══[ERROR] Unrecognized term split (application)
 //│ ║  l.27: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
 //│ ║  l.28: 	  0 then "a"
@@ -47,7 +47,7 @@ if foo of 1,
 if foo
   (0) then "a"
   (1) then "b"
-//│ ╔══[ERROR] Unrecognized term split (juxtaposition).
+//│ ╔══[ERROR] Unrecognized term split (juxtaposition)
 //│ ║  l.47: 	if foo
 //│ ║        	   ^^^
 //│ ║  l.48: 	  (0) then "a"

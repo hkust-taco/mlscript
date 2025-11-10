@@ -177,7 +177,7 @@ P.x
 //│   k = Mod
 //│   head = InfixApp:
 //│     lhs = Ident of "P"
-//│     kw = keyword 'with'
+//│     kw = Keywrd of keyword 'with'
 //│     rhs = Block of Ls of 
 //│       App:
 //│         lhs = Ident of "print"

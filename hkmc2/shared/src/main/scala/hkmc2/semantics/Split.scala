@@ -2,15 +2,21 @@ package hkmc2
 package semantics
 
 import mlscript.utils.*, shorthands.*
-import syntax.*, ucs.FlatPattern
+import syntax.*, Elaborator.State, ucs.FlatPattern
 
 final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation: Split) extends AutoLocated:
+  def mkClone(using State): Branch =
+    val scrutineeClone = new Term.Ref(scrutinee.sym)
+        (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
+    Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
+  
   override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+  
   def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
 object Branch:
   def apply(scrutinee: Term.Ref, continuation: Split): Branch =
-    Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true))(Nil), continuation)
+    Branch(scrutinee, FlatPattern.Lit(Tree.BoolLit(true)), continuation)
 
 enum Split extends AutoLocated with ProductWithTail:
   case Cons(head: Branch, tail: Split)
@@ -19,6 +25,29 @@ enum Split extends AutoLocated with ProductWithTail:
   case End
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
+  
+  def mkClone(using State): Split = this match
+    case Cons(head, tail) => Cons(head.mkClone, tail.mkClone)
+    case Let(sym, term, tail) => Let(sym, term.mkClone, tail.mkClone)
+    case Else(default) => Else(default.mkClone)
+    case End => End
+  
+  /** Used to indicate whether the `Split` was duplicated during desugaring or
+    * normalization. */
+  def duplicated: Bool = false
+  
+  private var _duplicated: Bool = false
+  
+  def setDuplicated: this.type =
+    if this != End then _duplicated = true
+    this
+  
+  def duplicate: Split =
+    (this match
+      case Cons(head, tail) => Cons(head, tail.duplicate)
+      case Let(name, term, tail) => Let(name, term, tail.duplicate)
+      case Else(default) => Else(default)
+      case End => End).setDuplicated
   
   lazy val isFull: Bool = this match
     case Split.Cons(_, tail) => tail.isFull
@@ -75,6 +104,31 @@ extension (split: Split)
 
 object Split:
   def default(term: Term): Split = Split.Else(term)
+  
+  import SimpleSplit as SS
+  import Elaborator.{Ctx, State}
+  import utils.{tl, TL}
+  import collection.mutable.{Map as MutMap}
+  import ups.SplitCompiler, SplitCompiler.{MakeConsequent, Scrut, SymbolScrut}
+  import Term.Ref
+  
+  def from(rootSplit: SS)(using tl: TL)(using Ctx, Raise, State): Split =
+    val compiler = new SplitCompiler()
+    val scrutCache = MutMap.empty[Ref, Scrut]
+    def go(split: SS): Split = split match
+      case SS.Cons(branch, tail) => branch match
+        case SS.Head.Match(ref, pattern, consequent) =>
+          lazy val alternative = go(tail)
+          val makeConsequent: MakeConsequent = (output, bindings) =>
+            bindings.iterator.foldLeft(go(consequent)):
+              case (innerSplit, (symbol, mkTerm)) => Let(symbol, mkTerm(), innerSplit)
+          compiler.makeMatchSplit
+            (scrutCache.getOrElseUpdate(ref, Scrut.from(ref)), pattern)
+            (makeConsequent, alternative)
+        case SS.Head.Let(binding, term) => Let(binding, term, go(tail))
+      case SS.Else(default) => Else(default)
+      case SS.End => End
+    go(rootSplit)
 
   private object prettyPrint:
     /** Represents lines with indentations. */
@@ -110,20 +164,28 @@ object Split:
        *  @param isFirst whether this is the first and frontmost branch
        *  @param isTopLevel whether this is the top-level split
        */
-      def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines = s match
-        case Split.Cons(head, tail) => (branch(head, isTopLevel) match
-          case (n, line) :: tail => (n, line) :: tail
-          case Nil => Nil
-        ) ::: split(tail, false, isTopLevel)
-        case Split.Let(nme, rhs, tail) =>
-          (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
-        case Split.Else(t) =>
-          (if isFirst && !isTopLevel then "" else "else") #: term(t)
-        case Split.End => Nil
+      def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines =
+        val lines = s match
+          case Split.Cons(head, tail) => (branch(head, isTopLevel) match
+            case (n, line) :: tail => (n, line) :: tail
+            case Nil => Nil
+          ) ::: split(tail, false, isTopLevel)
+          case Split.Let(nme, rhs, tail) =>
+            (0, s"let $nme = ${rhs.showDbg}") :: split(tail, false, true)
+          case Split.Else(t) =>
+            (if isFirst && !isTopLevel then "" else "else") #: term(t)
+          case Split.End => Nil
+        if s.duplicated then lines.map:
+          case (n, line) if !line.endsWith("// duplicated") => (n, s"$line // duplicated")
+          case other => other
+        else
+          lines
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.IfLike(Keyword.`if`, splt)) =>
+            case DefineVar(sym, Term.IfLike(kw, splt)) =>
+              s"$sym = ${kw.name}" #: SimpleSplit.prettyPrint.split(splt, true, true)
+            case DefineVar(sym, Term.SynthIf(splt)) =>
               s"$sym = if" #: split(splt, true, true)
             case stmt => (0, stmt.showDbg) :: Nil
           .toList

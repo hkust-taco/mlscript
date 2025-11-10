@@ -69,9 +69,7 @@ pattern D = Box(Box(Box) | Bowl)
 
 pattern D_0 = Box(Box(Box) | Box(Bowl))
 
-:todo
 pattern D_1 = Box(Box(Bowl) | Box)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'output'
 
 pattern D_2 = Box(Bowl | Bowl | Bowl)
 
@@ -111,14 +109,13 @@ pattern G_0 = Triplet(Box, Bowl, Basket) | Triplet(Box, Bowl, Basket)
 
 pattern G_0 = Triplet(Triplet(Box, Box, Box), Bowl, Basket) | Triplet(Triplet(Box, Box, Box), Bowl, Basket)
 
-:todo
 pattern G_1 =
   Triplet(Triplet(Box, Bowl, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Box), Bowl, Basket) |
   Triplet(Triplet(Box, Box, Bowl), Bowl, Basket)
 
-:todo
-// pattern BinSeq(pattern D) = D | Pair(0 | 1, BinSeq)
+pattern BinSeq'(pattern D) = D | Pair(0 | 1, BinSeq'(D))
+
 pattern BinSeq = null | Pair(0 | 1, BinSeq)
 
 fun (::) cons(head, tail) = Pair(head, tail)
@@ -137,18 +134,27 @@ fun (::) cons(head, tail) = Pair(head, tail)
 ]
 //│ = [true, true, true, true, false, false, false]
 
+[
+  null is @compile BinSeq'(null),
+  0 :: null is @compile BinSeq'(null),
+  0 :: 1 :: null is @compile BinSeq'(null),
+  0 :: 1 :: 0 :: null is @compile BinSeq'(null),
+  0 is @compile BinSeq'(null),
+  1 is @compile BinSeq'(null),
+  0 :: 1 :: 2 :: null is @compile BinSeq'(null),
+]
+//│ = [true, true, true, true, false, false, false]
+
 0 :: 1 :: 0 :: null is @compile BinSeq
 //│ = true
 
-:todo
-// Note the location of `null` is missing because of the parse rule doesn't
-// attach location information to `UnitLit(true)`.
+:e
 pattern List(a) = null | Pair(a, List)
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.152: 	pattern List(a) = null | Pair(a, List)
 //│ ║         	                              ^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.146: 	pattern List(a) = null | Pair(a, List)
+//│ ║  l.152: 	pattern List(a) = null | Pair(a, List)
 //│ ╙──       	                  ^^^^
 
 null is @compile List

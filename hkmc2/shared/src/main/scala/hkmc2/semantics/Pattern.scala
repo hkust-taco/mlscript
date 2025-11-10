@@ -3,7 +3,8 @@ package semantics
 
 import mlscript.utils.*, shorthands.*
 import collection.immutable.HashMap, collection.mutable.Buffer
-import syntax.Tree, Tree.Ident, Elaborator.State, Message.MessageContext, ucs.error
+import syntax.{Keyword, SpreadKind, Tree}, Tree.{Ident, StrLit}
+import Elaborator.State, Message.MessageContext, ucs.error
 import scala.annotation.tailrec, util.chaining.*
 import utils.{TraceLogger, tl}
 
@@ -24,14 +25,6 @@ object Pattern:
   
   import InvalidReason.*
   
-  extension (aliases: Ls[Pattern.Alias])
-    /** Allocate the symbol for the variable. This should be called in the
-     *  elaborator and before elaborating the term from `Transform`. */
-    def allocate(id: Ident)(using State): VarSymbol =
-      val symbol = VarSymbol(id)
-      aliases.foreach(_.symbol = symbol)
-      symbol
-  
   /** A set of variables that present in a pattern.
    *  
    *  These variables are represented by `Tree.Ident` because not every identifier
@@ -50,13 +43,23 @@ object Pattern:
     /** Allocate symbols for all variables. */
     def allocate(using State, TraceLogger): Seq[(Str, VarSymbol)] =
       varMap.iterator.map: (name, aliases) =>
-        tl.scoped("ucs:translation"):
-          tl.log(s"allocating symbols for variable: ${name}")
-        val symbol = VarSymbol(Ident(name)) // Location is lost.
+        // We need to assign the same symbol to the same name. But I realize
+        // that the following cases will break this constraint: `(x where x > 0)
+        // | (x where x < 0)`. In both alternatives, `x` needs to be allocated
+        // in advanced, but at the level of the disjunction, `x` needs to be
+        // assigned to the same variable. This represents an edge case which
+        // needs to be fixed later.
+        val symbols = aliases.iterator.flatMap(_.symbolOption).toSet
+        // TODO: The above edge case would fail the following assertion.
+        assert(symbols.size <= 1)
+        // If no symbol had been created before, create a new symbol now.
+        val symbol = symbols.headOption.getOrElse(VarSymbol(Ident(name)))
         aliases.foreach: alias =>
-          tl.scoped("ucs:translation"):
-            tl.log(s"allocated symbol for alias: ${alias.showDbg}")
-          alias.symbol = symbol
+          // For guarded patterns (`p where t`), the variables in `p` have to be
+          // allocated before `t` is elaborated. In that case, we don't need to
+          // allocate the variables in `p` again when the variables of pattern
+          // containing `p` are allocated.
+          if alias.symbolOption.isEmpty then alias.symbol = symbol
         (name, symbol)
       .toSeq
     
@@ -85,6 +88,12 @@ object Pattern:
             (name, aliases),
         invalidVars ::: that.invalidVars ::: duplicated.toList)
     
+    /** For debugging purpose only. */
+    def display: Str = varMap.iterator.map:
+      case (key, aliases) =>
+        key + " -> " + aliases.iterator.map(_.id.name).mkString(", ")
+    .mkString("{", "; ", "}")
+    
     /** Intersect two variable sets and move variables that are only present in
      *  one side to the invalid variables. This method considers `this` as the
      *  left side, and `that` as the right side. */
@@ -109,7 +118,7 @@ object Pattern:
     /** Report all invalid variables. */
     def report(using Raise): Unit = invalidVars.foreach:
       case (Alias(_, id), Duplicated(previous)) => raise(ErrorReport(
-        msg"Duplicate pattern variable." -> id.toLoc ::
+        msg"Duplicated pattern variable." -> id.toLoc ::
         msg"The previous definition ${if previous.size === 1 then "is" else "are"} as follows." -> previous.head.toLoc ::
         previous.tail.map(msg"" -> _.toLoc)))
       case (Alias(_, id), Inconsistent(disjunction, missingOnTheLeft)) => error(
@@ -131,10 +140,6 @@ object Pattern:
   
   /** A shorthand for creating a variable pattern. */
   def Variable = Pattern.Wildcard() binds (_: Ident)
-  
-  object Constructor:
-    def apply(target: Term, arguments: Opt[Ls[Pattern]]): Constructor =
-      Constructor(target, Nil, arguments)
   
   trait ConstructorImpl:
     self: Pattern.Constructor =>
@@ -164,15 +169,11 @@ import Pattern.*, InvalidReason.*
 enum Pattern extends AutoLocated:
   /** A pattern that matches a constructor and its arguments.
    *  @param target The term representing the constructor.
-   *  @param patternArguments Arguments of higher-order patterns. They are only
-   *      meaningful when the `target` refers to a pattern symbol. They can't
-   *      have any free variables.
    *  @param arguments `None` if the pattern does not have a parameter list. The
    *      patterns that are used to destruct the constructor's arguments.
    */
   case Constructor(
       target: Term,
-      patternArguments: Ls[Pattern],
       arguments: Opt[Ls[Pattern]]
   ) extends Pattern with ConstructorImpl
   
@@ -202,9 +203,16 @@ enum Pattern extends AutoLocated:
   case Concatenation(left: Pattern, right: Pattern)
   
   /** A pattern that matches a tuple. At most one `spread` pattern is allowed.
-   *  When the `spread` pattern is absent, sub-patterns should be placed in the 
-   *  `leading` field. */
-  case Tuple(leading: Ls[Pattern], spread: Opt[Pattern], trailing: Ls[Pattern])
+    * When the `spread` pattern is absent, sub-patterns should be placed in the 
+    * `leading` field.
+    * @param leading matches a fixed number of leading elements in the tuple.
+    * @param spread matches a variable number of elements in the tuple plus
+    *               the trailing elements.
+    */
+  case Tuple(
+      leading: Ls[Pattern],
+      spread: Opt[(SpreadKind, Pattern, Ls[Pattern])],
+  )
   
   /** A pattern that matches a record consisting of a list of fields. Note that
    *  the fields are not ordered semantically. */
@@ -222,17 +230,39 @@ enum Pattern extends AutoLocated:
   case Alias(pattern: Pattern, id: Ident) extends Pattern with AliasImpl
   
   /** A pattern that matches the same value as other pattern, with an additional
-   *  function applied to the bound variables in the pattern.
+    * function applied to the bound variables in the pattern.
+    *
+    * @param pattern The pattern to be matched against.
+    * @param parameters A map from the variable symbols to parameter symbols.
+    * @param transform The term that should be applied to the extracted values.
    */
-  case Transform(pattern: Pattern, transform: Term)
+  case Transform(pattern: Pattern, parameters: Ls[(VarSymbol, VarSymbol)], transform: Term)
+  
+  /** If the term is `Error`, we add `Opt[Loc]` to the list instead. */
+  case Annotated(pattern: Pattern, annotations: Vector[Opt[Loc] \/ Term])
+  
+  /** A pattern that comes with an extra condition. It works in a way similar to
+   *  `and` in split. */
+  case Guarded(pattern: Pattern, guard: Term)
   
   infix def binds(id: Ident): Pattern.Alias = Pattern.Alias(this, id)
+  
+  /** Annotate the pattern using the given term. If the term is `Error`, then
+    * use the location of the original tree for error reporting. */
+  inline def annotate(annotation: Term, treeLoc: Opt[Loc]): Pattern.Annotated =
+    val elem = if annotation is Term.Error then L(treeLoc) else R(annotation)
+    this match
+      case Annotated(pattern, annotations) =>
+        Annotated(pattern, annotations :+ elem)
+      case _ => Annotated(this, Vector(elem))
+  
+  inline def withGuard(guard: Term) = Pattern.Guarded(this, guard)
   
   /** Collect all variables in the pattern. Meanwhile, list invalid variables,
    *  which will be reported when constructing symbols for variables. We use a
    *  map because we want to replace variables. */
   lazy val variables: Variables = this match
-    case Constructor(_, _, arguments) => arguments.fold(Variables.empty)(_.variables)
+    case Constructor(_, arguments) => arguments.fold(Variables.empty)(_.variables)
     case Composition(false, left, right) => left.variables ++ right.variables
     case union @ Composition(true, left, right) => left.variables.intersect(right.variables, union)
     // If we only allow negation patterns to be used as the top-level pattern
@@ -243,44 +273,52 @@ enum Pattern extends AutoLocated:
     case negation @ Negation(pattern) => pattern.variables.invalidated(Negated(negation))
     case _: (Wildcard | Literal | Range | Transform) => Variables.empty
     case Concatenation(left, right) => left.variables ++ right.variables
-    case Tuple(leading, spread, trailing) =>
-      leading.variables ++ spread.map(_.variables).getOrElse(Variables.empty) ++ trailing.variables
+    case Tuple(leading, spread) => leading.variables ++ spread.fold(Variables.empty):
+      case (_, middle, trailing) => middle.variables ++ trailing.variables
     case Record(fields) => fields.iterator.map(_._2).variables
     case alias @ Alias(pattern, _) => pattern.variables + alias
     case Chain(first, second) => first.variables ++ second.variables
+    case Annotated(pattern, _) => pattern.variables
+    case Guarded(pattern, _) => pattern.variables
   
   def children: Ls[Located] = this match
-    case Constructor(target, patternArguments, arguments) =>
-      target :: patternArguments ::: arguments.getOrElse(Nil)
+    case Constructor(target, arguments) => target :: arguments.getOrElse(Nil)
     case Composition(polarity, left, right) => left :: right :: Nil
     case Negation(pattern) => pattern :: Nil
     case Wildcard() => Nil
     case Literal(literal) => literal :: Nil
     case Range(lower, upper, rightInclusive) => lower :: upper :: Nil
     case Concatenation(left, right) => left :: right :: Nil
-    case Tuple(leading, spread, trailing) => leading ::: spread.toList ::: trailing
+    case Tuple(leading, spread) => leading ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle :: trailing
     case Record(fields) => fields.flatMap:
       case (name, pattern) => name :: pattern.children
     case Chain(first, second) => first :: second :: Nil
     case Alias(pattern, alias) => pattern :: alias :: Nil
-    case Transform(pattern, transform) => pattern :: transform :: Nil
+    case Transform(pattern, _, transform) => pattern :: transform :: Nil
+    case Annotated(pattern, annotations) => pattern ::
+      annotations.iterator.collect { case R(term) => term }.toList
+    case Guarded(pattern, guard) => pattern.children :+ guard
   
   def subTerms: Ls[Term] = this match
-    case Constructor(target, patternArguments, arguments) =>
-      target :: patternArguments.flatMap(_.subTerms) ::: arguments.fold(Nil)(_.flatMap(_.subTerms))
+    case Constructor(target, arguments) =>
+      target :: arguments.fold(Nil)(_.flatMap(_.subTerms))
     case Composition(_, left, right) => left.subTerms ::: right.subTerms
     case Negation(pattern) => pattern.subTerms
     case _: (Wildcard | Literal | Range) => Nil
     case Concatenation(left, right) => left.subTerms ::: right.subTerms
-    case Tuple(leading, spread, trailing) => leading.flatMap(_.subTerms) :::
-      spread.fold(Nil)(_.subTerms) ::: trailing.flatMap(_.subTerms)
+    case Tuple(leading, spread) => leading.flatMap(_.subTerms) ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle.subTerms ::: trailing.flatMap(_.subTerms)
     case Record(fields) => fields.flatMap(_._2.subTerms)
     case Chain(first, second) => first.subTerms ::: second.subTerms
     case Alias(pattern, _) => pattern.subTerms
-    case Transform(pattern, transform) => pattern.subTerms :+ transform
+    case Transform(pattern, _, transform) => pattern.subTerms :+ transform
+    case Annotated(pattern, annotations) => pattern.subTerms :::
+      annotations.iterator.collect { case R(term) => term }.toList
+    case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
   def describe: Str = this match
-    case Constructor(_, _, _) => "constructor"
+    case Constructor(_, _) => "constructor"
     case Composition(true, _, _) => "disjunction"
     case Composition(false, _, _) => "conjunction"
     case Negation(_) => "negation"
@@ -288,28 +326,25 @@ enum Pattern extends AutoLocated:
     case Literal(_) => "literal"
     case Range(_, _, _) => "range"
     case Concatenation(_, _) => "concatenation"
-    case Tuple(_, _, _) => "tuple"
+    case Tuple(_, _) => "tuple"
     case Record(_) => "record"
     case Chain(_, _) => "chain"
     case Alias(_, _) => "alias"
-    case Transform(_, _) => "transform"
+    case Transform(_, _, _) => "transform"
+    case Annotated(_, _) => "annotated pattern"
+    case Guarded(_, _) => "guarded pattern"
   
   private def showDbgWithPar =
     val addPar = this match
-      case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation) => false
+      case _: (Constructor | Wildcard | Literal | Tuple | Record | Negation | Annotated) => false
       case Alias(Wildcard(), _) => false
-      case _: (Alias | Composition | Transform | Range | Concatenation | Chain) => true
+      case _: (Alias | Composition | Transform | Range | Concatenation | Chain | Guarded) => true
     if addPar then s"(${showDbg})" else showDbg
   
   def showDbg: Str = this match
-    case Constructor(target, patternArguments, arguments) =>
-      val targetText = target.symbol.fold(target.showDbg)(_.toString())
-      val patternArgumentsText = if patternArguments.isEmpty then "" else
-        patternArguments.iterator.map(_.showDbg)
-          .map("pattern " + _).mkString("(", ", ", ")")
-      val argumentsText = arguments.fold(""): args =>
-        s"(${args.map(_.showDbg).mkString(", ")})"
-      s"$targetText$patternArgumentsText$argumentsText"
+    case Constructor(target, arguments) =>
+      target.symbol.fold(target.showDbg)(_.nme) + arguments.fold(""):
+        args => s"(${args.map(_.showDbg).mkString(", ")})"
     case Composition(true, left, right) => s"${left.showDbg} ∨ ${right.showDbg}"
     case Composition(false, left, right) => s"${left.showDbg} ∧ ${right.showDbg}"
     case Negation(pattern) => s"¬${pattern.showDbgWithPar}"
@@ -318,12 +353,18 @@ enum Pattern extends AutoLocated:
     case Range(lower, upper, rightInclusive) =>
       s"${lower.idStr} ${if rightInclusive then "to" else "until"} ${upper.idStr}"
     case Concatenation(left, right) => s"${left.showDbg} ~ ${right.showDbg}"
-    case Tuple(leading, spread, trailing) =>
-      (leading.iterator.map(_.showDbg) ++
-        spread.iterator.map(s => "..." + s.showDbg) ++
-        trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
+    case Tuple(leading, spread) =>
+      (leading.iterator.map(_.showDbg) ++ spread.fold(Iterator.empty):
+        case (spreadKind, middle, trailing) =>
+          Iterator.single(spreadKind.str + middle.showDbg) ++
+            trailing.iterator.map(_.showDbg)).mkString("[", ", ", "]")
     case Record(fields) => s"{${fields.map((k, v) => s"${k.name}: ${v.showDbg}").mkString(", ")}}"
     case Chain(first, second) => s"${first.showDbgWithPar} as ${second.showDbgWithPar}"
     case Alias(Wildcard(), alias) => alias.name
     case Alias(pattern, alias) => s"${pattern.showDbgWithPar} as ${alias.name}"
-    case Transform(pattern, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
+    case Transform(pattern, _, transform) => s"${pattern.showDbgWithPar} => ${transform.showDbg}"
+    case Annotated(pattern, annotations) => annotations.iterator.map:
+        case L(errorLoc) => "error"
+        case R(term) => term.showDbg
+      .mkString("@", " @", " ") + pattern.showDbgWithPar
+    case Guarded(pattern, guard) => pattern.showDbg + " where " + guard.showDbg

@@ -332,7 +332,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               Match(scrut, newArms, dfltParts.map(_.head), StateTransition(restId)),
               BlockState(restId, restParts.head, N) :: states
             )
-      case l @ Label(label, body, rest) =>
+      case l @ Label(label, loop, body, rest) =>
         val startId = freshId() // start of body
 
         val PartRet(restNew, restParts) = go(rest)
@@ -820,7 +820,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           AssignField(runtimePath, stackDepthIdent, depthSym.asPath, mainMatchBlk)(N)
         else mainMatchBlk
 
-      val lbl = blockBuilder.label(loopLbl, withResetDepth).rest(End())
+      val lbl = blockBuilder.label(loopLbl, loop = true, withResetDepth).rest(End())
 
       def createAssignment(sym: Local) = Assign(sym, resumedVal.asPath, End())
       

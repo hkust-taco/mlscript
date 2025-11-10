@@ -5,7 +5,7 @@ package ups
 
 import mlscript.utils.*, shorthands.*
 import semantics.Pattern as SP
-import syntax.Tree, Tree.Ident
+import syntax.{Tree, SpreadKind}, Tree.{Ident, StrLit}
 import Message.MessageContext
 import ucs.{error, warn}
 import Context.*
@@ -53,12 +53,13 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case ClassLike(sym, arguments) => arguments.fold(Nil):
       _.map((id, p) => p).toList
     case Record(entries) => entries.values.toList
-    case Tuple(leading, spread, trailing) => leading ++ spread.toList ++ trailing
+    case Tuple(leading, spread) => leading ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle :: trailing
     case And(patterns) => patterns
     case Or(patterns) => patterns
     case Not(pattern) => pattern :: Nil
     case Rename(pattern, name) => pattern :: Nil
-    case Extract(pattern, term) => pattern :: term :: Nil
+    case Extract(pattern, _, term) => pattern :: term :: Nil
     case Synonym(pattern) => pattern.symbol :: pattern.arguments
   
   lazy val symbols: Ls[VarSymbol] = this match
@@ -66,8 +67,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case ClassLike(sym, arguments) =>
       arguments.fold(Nil)(_.values.flatMap(_.symbols).toList)
     case Record(entries) => entries.values.flatMap(_.symbols).toList
-    case Tuple(leading, spread, trailing) => leading.flatMap(_.symbols) :::
-      spread.fold(Nil)(_.symbols) ::: trailing.flatMap(_.symbols)
+    case Tuple(leading, spread) => leading.flatMap(_.symbols) ::: spread.fold(Nil):
+      case (_, middle, trailing) => middle.symbols ::: trailing.flatMap(_.symbols)
     case Synonym(_) => Nil
     case And(patterns) => patterns.flatMap(_.symbols)
     case Or(patterns) =>
@@ -76,7 +77,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       patterns.find(_ != Never).fold(Nil)(_.symbols)
     case Not(_) => Nil
     case Rename(pattern, name) => name :: pattern.symbols
-    case Extract(_, _) => Nil
+    case Extract(_, _, _) => Nil
   
   /** Apply a partial function to every node in the pattern tree. Replace each
    *  node with the result of the partial function. If the partial function is
@@ -89,7 +90,8 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) => Or[L](patterns.map(_.map(f)))
     case Not(pattern) => Not[L](pattern.map(f))
     case Rename(pattern, name) => Rename[L](pattern.map(f), name)
-    case Extract(pattern, term) => Extract[L](pattern.map(f), term)
+    case Extract(pattern, correspondence, term) =>
+      Extract[L](pattern.map(f), correspondence, term)
   
   /** A simplified reduce for ``Pattern``.
     * It is designed to be used when we want to
@@ -105,16 +107,16 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Or(patterns) => merge(patterns.map(_.reduce(merge)(f)))
     case Not(pattern) => pattern.reduce(merge)(f)
     case Rename(pattern, _) => pattern.reduce(merge)(f)
-    case Extract(pattern, _) => pattern.reduce(merge)(f)
+    case Extract(pattern, _, _) => pattern.reduce(merge)(f)
 
   def heads: Set[Head] = reduce[Set[Head]](_.toSet.flatten):
     case Literal(lit) => Set(lit)
     case ClassLike(sym, _) => Set(sym)
 
   def fields: Set[Ident | Int] = reduce[Set[Ident | Int]](_.toSet.flatten):
-    case Record(entries) => entries.keys.toSet[Ident | Int]
-    case Tuple(leading, spread, trailing) =>
-      val n = leading.size + trailing.size
+    case Record(entries) => entries.keys.toSet
+    case Tuple(leading, spread) =>
+      val n = leading.size + spread.fold(0)(_._3.size)
       val subfields = Range(0, n).toSet[Ident | Int]
       // if this is strict, then a condition is imposed on field n
       if spread.isEmpty then subfields + n else subfields
@@ -127,9 +129,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
         case Some(arguments) =>
           arguments.find((id1, _) => id === id).map((_, p) => p).toSet
       case Record(entries) => entries.get(id).toSet
-      case Tuple(leading, spread, trailing) => Set()
-    case n : Int => this.reduce[Set[Pat]](_.toSet.flatten):
-      case Tuple(leading, spread, trailing) => trailing.lift(n).toSet
+      case Tuple(leading, spread) => Set()
+    case n: Int => this.reduce[Set[Pat]](_.toSet.flatten):
+      case Tuple(leading, S(_, _, trailing)) => trailing.lift(n).toSet
   
   /** Simplify the pattern by removing `Never` patterns. */
   def simplify: Pattern[K] = this match
@@ -139,12 +141,16 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Record(entries) =>
       val simplify = entries.map((id, p) => (id, p.simplify))
       if simplify.exists((_, p) => p === Never) then Never else Record(simplify)
-    case Tuple(leading, spread, trailing) =>
+    case Tuple(leading, N) =>
+      val simplified = leading.map(_.simplify)
+      if simplified contains Never then Never else Tuple(simplified, N)
+    case Tuple(leading, S((spreadKind, middle, trailing))) =>
       val leading2 = leading.map(_.simplify)
-      val spread2 = spread.map(_.simplify)
+      val middle2 = middle.simplify
       val trailing2 = trailing.map(_.simplify)
-      if leading2.contains(Never) || spread2.contains(Never) || trailing2.contains(Never)
-      then Never else Tuple(leading2, spread2, trailing2)
+      if leading2.contains(Never) || middle2 === Never ||
+        trailing2.contains(Never) then Never
+      else Tuple(leading2, S((spreadKind, middle2, trailing2)))
     case And(patterns) =>
       // TODO: Complete the simplification logic here.
       val simplified = patterns.foldRight(Nil: Ls[Pattern[K]]):
@@ -174,9 +180,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       .foldSingleton(Or.apply)(identity)
     case Not(pattern) => Not(pattern.simplify)
     case Rename(pattern, name) => Rename(pattern.simplify, name)
-    case Extract(pattern, term) => pattern.simplify match
+    case Extract(pattern, correspondence, term) => pattern.simplify match
       case `Never` => Never // Lift up `Never`. Let the caller reduce it.
-      case simplified => Extract(simplified, term)
+      case simplified => Extract(simplified, correspondence, term)
     case Synonym(sym) => this
   
   /** Expand the pattern by replacing any top-level synonym with its body.
@@ -214,11 +220,13 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       if entries.isEmpty then "{}" else entries.iterator.map:
         case (id, p) => s"${id.name}: ${p.showDbg}"
       .mkString("{ ", ", ", " }")
-    case Tuple(leading, spread, trailing) =>
-      val leadingText = leading.map(_.showDbg).mkString(", ")
-      val spreadText = spread.map(_.showDbg).mkString(", ")
-      val trailingText = trailing.map(_.showDbg).mkString(", ")
-      List(leadingText, spreadText, trailingText).mkString("[", ", ", "]")
+    case Tuple(leading, N) =>
+      leading.iterator.map(_.showDbg).mkString("[", ", ", "]")
+    case Tuple(leading, S(spreadKind, spread, trailing)) =>
+      val leadingItems = leading.iterator.map(_.showDbg)
+      val spreadItem = Iterator.single(spreadKind.str + spread.showDbg)
+      val trailingItems = trailing.iterator.map(_.showDbg)
+      (leadingItems ++ spreadItem ++ trailingItems).mkString("[", ", ", "]")
     case And(Nil) => "⊤"
     case And(pattern :: Nil) => pattern.showDbg
     case And(patterns) =>
@@ -230,7 +238,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
     case Not(pattern) => s"!${pattern.showDbg}"
     case Rename(Or(Nil), name) => name.name
     case Rename(pattern, name) => s"${pattern.showDbg} as $name"
-    case Extract(pattern, term) => s"${pattern.showDbg} => ${term.showDbg}"
+    case Extract(pattern, _, term) => s"${pattern.showDbg} => ${term.showDbg}"
     case Synonym(sym) => sym.showDbg
 
 object Pattern:
@@ -268,8 +276,7 @@ object Pattern:
     */
   final case class Tuple(
       leading: List[Pat],
-      spread: Opt[Pat],
-      trailing: List[Pat]
+      spread: Opt[(SpreadKind, Pat, List[Pat])],
   ) extends NonCompositional[Kind.Specialized]
   
   /** Represents a pattern synonym.
@@ -282,7 +289,19 @@ object Pattern:
   final case class Or[+K <: Kind.Complete](patterns: List[Pattern[K]]) extends Pattern[K]
   final case class Not[+K <: Kind.Complete](pattern: Pattern[K]) extends Pattern[K]
   final case class Rename[+K <: Kind.Complete](pattern: Pattern[K], name: VarSymbol) extends Pattern[K]
-  final case class Extract[+K <: Kind.Complete](pattern: Pattern[K], term: Term) extends Pattern[K]
+  /**
+    * Similar to `Pattern.Transform`.
+    *
+    * @param pattern The pattern to be matched against.
+    * @param correspondence The correspondence between symbols in the pattern
+    *        and symbols in the transformation term.
+    * @param term The term to be applied to the extracted values.
+    */
+  final case class Extract[+K <: Kind.Complete](
+      pattern: Pattern[K],
+      correspondence: Map[VarSymbol, VarSymbol],
+      term: Term
+  ) extends Pattern[K]
   
   val Wildcard = Or(Nil)
   

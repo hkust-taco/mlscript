@@ -52,16 +52,16 @@ fun sum2 = case
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let last03, rest3, first0, x, xs, y, tmp5, tmp6, tmp7;
+//│     let x, xs, y, lastElement0$3, middleElements3, element0$, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
-//│       first0 = runtime.Tuple.get(caseScrut, 0);
-//│       rest3 = runtime.safeCall(runtime.Tuple.lazySlice(caseScrut, 1, 1));
-//│       last03 = runtime.Tuple.get(caseScrut, -1);
-//│       x = first0;
-//│       xs = rest3;
-//│       y = last03;
+//│       element0$ = runtime.Tuple.get(caseScrut, 0);
+//│       middleElements3 = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 1));
+//│       lastElement0$3 = runtime.Tuple.get(caseScrut, -1);
+//│       y = lastElement0$3;
+//│       xs = middleElements3;
+//│       x = element0$;
 //│       tmp5 = x + y;
 //│       tmp6 = sum2();
 //│       tmp7 = tmp6(xs);

@@ -718,11 +718,11 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                     (dflt2 is dflt) && (rst2 is rst)
                   then b else Match(scrut2, arms2, dflt2, rst2)
             
-        case Label(lbl, bod, rst) =>
+        case Label(lbl, loop, bod, rst) =>
           val lbl2 = applyLocal(lbl)
           val bod2 = applySubBlockAndReset(bod)
           val rst2 = applySubBlock(rst)
-          if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, bod2, rst2)
+          if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
         case TryBlock(sub, fin, rst) =>
           val sub2 = applySubBlockAndReset(sub)
           val fin2 = applySubBlockAndReset(fin)

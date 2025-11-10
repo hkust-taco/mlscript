@@ -377,6 +377,7 @@ class ParseRules(using State):
     modified(`public`),
     modified(`private`),
     modified(`out`),
+    modified(`staged`),
     singleKw(`true`)(BoolLit(true)),
     singleKw(`false`)(BoolLit(false)),
     singleKw(`undefined`)(UnitLit(false)),
@@ -421,27 +422,33 @@ class ParseRules(using State):
         ) { case (rhs, _) => S(rhs) }
       )
   
-  def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
-    discardKw(kw):
+  def keywordThenTree[A, K <: Keyword](kw: K)(k: (Keywrd[kw.type], Tree) => A): Alt[A] =
+    keepKw(kw):
       ParseRule(s"'${kw}' operator")(
-        Expr(ParseRule(s"'${kw}' operator right-hand side")(end(())))(k)
+        Expr(ParseRule(s"'${kw}' operator right-hand side")(end(()))):
+          case (tree, ()) => tree
         // * Interestingly, this does not seem to change anything:
         // exprOrBlk(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)*
       )
+    .map(k.tupled)
+  
+  def makeInfixRule[K <: Infix](kw: K): Alt[Tree => Tree] =
+    keywordThenTree(kw):
+      case (kw, rhs) => lhs => InfixApp(lhs, kw, rhs)
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of expression")(
-    genInfixRule(`and`, (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs)),
-    genInfixRule(`or`, (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs)),
-    genInfixRule(`is`, (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs)),
-    genInfixRule(`as`, (rhs, _: Unit) => lhs => InfixApp(lhs, `as`, rhs)),
-    genInfixRule(`then`, (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs)),
-    // genInfixRule(`else`, (rhs, _: Unit) => lhs => InfixApp(lhs, `else`, rhs)),
-    genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
-    genInfixRule(`extends`, (rhs, _: Unit) => lhs => InfixApp(lhs, `extends`, rhs)),
-    genInfixRule(`restricts`, (rhs, _: Unit) => lhs => InfixApp(lhs, `restricts`, rhs)),
-    genInfixRule(`do`, (rhs, _: Unit) => lhs => InfixApp(lhs, `do`, rhs)),
-    genInfixRule(`where`, (rhs, _: Unit) => lhs => InfixApp(lhs, `where`, rhs)),
-    genInfixRule(`with`, (rhs, _: Unit) => lhs => InfixApp(lhs, `with`, rhs)),
+    makeInfixRule(`and`),
+    makeInfixRule(`or`),
+    makeInfixRule(`is`),
+    makeInfixRule(`as`),
+    makeInfixRule(`then`),
+    // makeInfixRule(`else`),
+    makeInfixRule(`:`),
+    makeInfixRule(`extends`),
+    makeInfixRule(`restricts`),
+    makeInfixRule(`do`),
+    makeInfixRule(`where`),
+    makeInfixRule(`with`),
   )
 
 end ParseRules

@@ -20,6 +20,7 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  stageCode: Bool,
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
 ):
@@ -38,6 +39,7 @@ object Config:
     liftDefns = N,
     target = CompilationTarget.JS,
     rewriteWhileLoops = true,
+    stageCode = false,
   )
   
   case class SanityChecks(light: Bool)

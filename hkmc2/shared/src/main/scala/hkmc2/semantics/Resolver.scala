@@ -302,20 +302,20 @@ class Resolver(tl: TraceLogger)
         traverseStmts(stats)
       
       case t: Term.IfLike =>
-        def split(s: Split): Unit = s match
-          case Split.Cons(head, tail) =>
+        def simpleSplit(s: SimpleSplit): Unit = s match
+          case SimpleSplit.Cons(head: SimpleSplit.Head.Match, tail) =>
             traverse(head.scrutinee, expect = NonModule(N))
             head.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
-            split(head.continuation)
-            split(tail)
-          case Split.Let(sym, term, tail) =>
+            simpleSplit(head.consequent)
+            simpleSplit(tail)
+          case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, term), tail) =>
             traverse(term, expect = NonModule(N))
-            split(tail)
-          case Split.Else(default) =>
+            simpleSplit(tail)
+          case SimpleSplit.Else(default) =>
             traverse(default, expect = Any)
-          case Split.End =>
-        split(t.desugared)
-      
+          case SimpleSplit.End =>
+        simpleSplit(t.split)
+        
       case Term.Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         traverse(rhs, expect = Class(S("The 'handle' keyword requires a statically known class.")))
         args.foreach(traverse(_, expect = NonModule(N)))

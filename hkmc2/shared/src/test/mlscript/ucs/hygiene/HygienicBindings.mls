@@ -40,16 +40,16 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some.class(param0) and
-//│ >      let x = $param0
-//│ >      x is Left.class(param0) and
-//│ >        let y = $param0
+//│ >    a is Option.Some(argument0$) and
+//│ >      let x = $argument0$
+//│ >      x is Left(argument0$) and
+//│ >        let y = $argument0$
 //│ >        else y
-//│ >      let y = $param0
-//│ >      y is Right.class(param0) and
-//│ >        let z = $param0
+//│ >      let y = $argument0$
+//│ >      y is Right(argument0$) and
+//│ >        let z = $argument0$
 //│ >        else z
-//│ >    a is Option.None.class then 0
+//│ >    a is Option.None then 0
 
 h1(Some(Left(42)))
 //│ = 42
@@ -72,18 +72,18 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some.class(param0) and
-//│ >      let x = $param0
+//│ >    a is Option.Some(argument0$) and
+//│ >      let x = $argument0$
 //│ >      let x' = x
-//│ >      x' is Left.class(param0) and
-//│ >        let y = $param0
+//│ >      x' is Left(argument0$) and
+//│ >        let y = $argument0$
 //│ >        else y
-//│ >      let y = $param0
+//│ >      let y = $argument0$
 //│ >      let y' = y
-//│ >      y' is Right.class(param0) and
-//│ >        let z = $param0
+//│ >      y' is Right(argument0$) and
+//│ >        let z = $argument0$
 //│ >        else z
-//│ >    a is Option.None.class then 0
+//│ >    a is Option.None then 0
 
 // :w
 fun h3(x, y, f, p) =
