@@ -15,6 +15,8 @@ import syntax.Tree
 import Elaborator.{State, Ctx, ctx}
 import Producer as P
 import Consumer as C
+import hkmc2.semantics.BuiltinSymbol
+import P.Unknown
 
 
 
@@ -55,7 +57,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case _: BuiltinSymbol => P.Unknown(t)
+      case bs: BuiltinSymbol => P.Flow(bs)
       case bms: BlockMemberSymbol => P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
@@ -297,7 +299,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
                 case P.Unknown(Missing) => ???
                 case P.Ctor(sym: ClassSymbol, args) =>
-                  // log(s"Selection ${sym.defn}")
+                  log(s"Selection result ${sel.res}")
                   val d = sym.defn.getOrElse(die)
                   d.body.members.get(sel.nme.name) match
                   case S(memb: BlockMemberSymbol) =>
