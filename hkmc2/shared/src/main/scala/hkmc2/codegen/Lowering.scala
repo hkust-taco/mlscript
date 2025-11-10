@@ -607,8 +607,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         usesResTmp = true
         new TempSymbol(S(t))
       
-      lazy val lbl =
-        new TempSymbol(S(t))
+      lazy val f =
+        new BlockMemberSymbol("while", Nil, false)
       
       def go(split: Split, topLevel: Bool)(using Subst): Block = split match
         case Split.Let(sym, trm, tl) =>
@@ -671,7 +671,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           else
             term_nonTail(els): r =>
               Assign(l, r,
-                if isWhile && !topLevel then Continue(lbl)
+                if isWhile && !topLevel then Return(Call(Value.Ref(f), Nil)(true, true), false)
                 else End()
               )
         case Split.End =>
@@ -687,7 +687,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if k.isInstanceOf[TailOp] && isIf then go(normalized, topLevel = true)
       else
         val body = if isWhile
-          then Label(lbl, go(normalized, topLevel = true), End())
+          then blockBuilder
+            .assign(l, unit)
+            .define(FunDefn(N, f, PlainParamList(Nil) :: Nil,
+              Begin(go(normalized, topLevel = false), Return(unit, false))
+            ))
+            .assign(new TempSymbol(N), Call(Value.Ref(f), Nil)(true, true))
+            .end
           else go(normalized, topLevel = true)
         Begin(
           body,

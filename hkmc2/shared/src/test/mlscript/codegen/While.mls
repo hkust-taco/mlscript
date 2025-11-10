@@ -6,17 +6,20 @@
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function () {
-//│   let scrut, tmp;
-//│   tmp1: while (true) {
+//│   let tmp, while1, tmp1;
+//│   tmp = runtime.Unit;
+//│   while1 = (undefined, function () {
+//│     let scrut;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
-//│       continue tmp1
+//│       return while1()
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     break;
-//│   }
+//│     return runtime.Unit
+//│   });
+//│   tmp1 = while1();
 //│   return tmp
 //│ });
 //│ lambda
@@ -53,17 +56,20 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let tmp4, tmp5;
-//│ tmp6: while (true) {
+//│ let tmp4, while3, tmp5;
+//│ tmp4 = runtime.Unit;
+//│ while3 = (undefined, function () {
+//│   let tmp6;
 //│   if (x2 === true) {
-//│     tmp4 = Predef.print("Hello World");
+//│     tmp6 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp5 = runtime.Unit;
-//│     continue tmp6
-//│   } else { tmp5 = 42; }
-//│   break;
-//│ }
-//│ tmp5
+//│     tmp4 = runtime.Unit;
+//│     return while3()
+//│   } else { tmp4 = 42; }
+//│   return runtime.Unit
+//│ });
+//│ tmp5 = while3();
+//│ tmp4
 //│ > Hello World
 //│ = 42
 
@@ -105,19 +111,24 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let i2, scrut3, tmp19, tmp20;
-//│   tmp21: while (true) {
+//│   let tmp12, while7, tmp13;
+//│   tmp12 = runtime.Unit;
+//│   while7 = (undefined, function () {
+//│     let i2, scrut, tmp14;
 //│     i2 = 0;
-//│     scrut3 = i2 < 10;
-//│     if (scrut3 === true) {
-//│       tmp19 = i2 + 1;
-//│       i2 = tmp19;
-//│       tmp20 = runtime.Unit;
-//│       continue tmp21
-//│     } else { tmp20 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp20
+//│     scrut = i2 < 10;
+//│     if (scrut === true) {
+//│       tmp14 = i2 + 1;
+//│       i2 = tmp14;
+//│       tmp12 = runtime.Unit;
+//│       return while7()
+//│     } else {
+//│       tmp12 = runtime.Unit;
+//│     }
+//│     return runtime.Unit
+//│   });
+//│   tmp13 = while7();
+//│   return tmp12
 //│ });
 //│ lambda2
 //│ = fun
@@ -197,20 +208,25 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let param0, param1, h, tl, tmp28;
-//│   tmp29: while (true) {
+//│   let tmp18, while10, tmp19;
+//│   tmp18 = runtime.Unit;
+//│   while10 = (undefined, function () {
+//│     let param0, param1, h, tl;
 //│     if (ls instanceof Cons1.class) {
 //│       param0 = ls.hd;
 //│       param1 = ls.tl;
 //│       h = param0;
 //│       tl = param1;
 //│       ls = tl;
-//│       tmp28 = Predef.print(h);
-//│       continue tmp29
-//│     } else { tmp28 = Predef.print("Done!"); }
-//│     break;
-//│   }
-//│   return tmp28
+//│       tmp18 = Predef.print(h);
+//│       return while10()
+//│     } else {
+//│       tmp18 = Predef.print("Done!");
+//│     }
+//│     return runtime.Unit
+//│   });
+//│   tmp19 = while10();
+//│   return tmp18
 //│ };
 
 f(0)
@@ -248,15 +264,17 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37;
-//│ tmp38: while (true) {
+//│ let tmp27, while11, tmp28;
+//│ tmp27 = runtime.Unit;
+//│ while11 = (undefined, function () {
 //│   if (x3 instanceof Object) {
-//│     tmp37 = runtime.Unit;
-//│     continue tmp38
-//│   } else { tmp37 = runtime.Unit; }
-//│   break;
-//│ }
-//│ tmp37
+//│     tmp27 = runtime.Unit;
+//│     return while11()
+//│   } else { tmp27 = runtime.Unit; }
+//│   return runtime.Unit
+//│ });
+//│ tmp28 = while11();
+//│ tmp27
 
 
 // ——— FIXME: ———
@@ -270,10 +288,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.270: 	  then 0(0)
+//│ ║  l.288: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal).
-//│ ║  l.269: 	while print("Hello World"); false
+//│ ║  l.287: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -283,12 +301,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.282: 	while { print("Hello World"), false }
+//│ ║  l.300: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.283: 	  then 0(0)
+//│ ║  l.301: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.284: 	  else 1
+//│ ║  l.302: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -298,19 +316,18 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.296: 	    print("Hello World")
+//│ ║  l.314: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.297: 	    false
+//│ ║  l.315: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.298: 	  then 0(0)
+//│ ║  l.316: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.299: 	  else 1
+//│ ║  l.317: 	  else 1
 //│ ╙──       	  ^^^^
 
 
 // Mix of local mutable variable, while loop and lambdas
-:fixme
 :expect 2
 fun f() =
   let
@@ -326,8 +343,7 @@ fun f() =
   // Calls the saved lambda
   savedLambda()
 f()
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '1'
-//│ = 1
+//│ = 2
 
 class Lazy[out A](f: () -> A) with
   mut val cached: A | () = ()
@@ -336,7 +352,6 @@ class Lazy[out A](f: () -> A) with
       set cached = f()
     cached
 
-:fixme
 :expect [1, 2, 3]
 let arr = [1, 2, 3]
 let output = mut []
@@ -346,8 +361,7 @@ while i < arr.length do
   output.push(new Lazy(() => elem))
   set i += 1
 [output.[0].get, output.[1].get, output.[2].get]
-//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: '[3, 3, 3]'
-//│ = [3, 3, 3]
+//│ = [1, 2, 3]
 //│ arr = [1, 2, 3]
 //│ i = 3
 //│ output = [Lazy(_), Lazy(_), Lazy(_)]
