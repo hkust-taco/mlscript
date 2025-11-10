@@ -42,6 +42,18 @@ globalThis.Object.freeze(class Runtime {
       [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["object", "Unit"]; 
     });
+    globalThis.Object.freeze(class LoopEnd {
+      static {
+        Runtime.LoopEnd = globalThis.Object.freeze(new this)
+      }
+      constructor() {
+        Object.defineProperty(this, "class", {
+          value: LoopEnd
+        })
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["object", "LoopEnd"]; 
+    });
     this.short_and = RuntimeJS.short_and;
     this.short_or = RuntimeJS.short_or;
     this.bitand = RuntimeJS.bitand;
