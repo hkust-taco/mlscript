@@ -48,7 +48,8 @@ class CompileTestRunner
         
         val preludePath = mainTestDir/"mlscript"/"decls"/"Prelude.mls"
         
-        // while loop is currently not rewritten so that stack safety works correctly as runtime relies on them.
+        // Stack safety relies on the fact that runtime uses while loops for resumption
+        // and does not create extra stack depth. Hence we disable while loop rewriting here.
         given Config = Config.default.copy(rewriteWhileLoops = false)
         
         val compiler = MLsCompiler(

@@ -51,8 +51,8 @@ class LoweringCtx(initMap: Map[Local, Value], val mayRet: Bool):
     case _ => v
 object LoweringCtx:
   val empty = LoweringCtx(Map.empty, false)
-  val func = LoweringCtx(Map.empty, true)
   def subst(using sub: LoweringCtx): LoweringCtx = sub
+  def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true)
 end LoweringCtx
 
 import LoweringCtx.subst
@@ -84,7 +84,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   // type Rcd = (mut: Bool, args: List[RcdArg]) // * Better, but Scala's patmat exhaustiveness chokes on it
   type Rcd = (Bool, List[RcdArg])
   
-  def returnedTerm(t: st)(using LoweringCtx): Block = term(t)(Ret)(using LoweringCtx.func)
+  def returnedTerm(t: st)(using LoweringCtx): Block = term(t)(Ret)(using LoweringCtx.nestFunc)
   
   def parentConstructor(cls: Term, args: Ls[Term])(using LoweringCtx) = 
     if args.length > 1 then 
@@ -178,7 +178,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               // Assign(td.sym, r,
               //   term(st.Blk(stats, res))(k)))
               Define(ValDefn(td.tsym, td.sym, r),
-                blockImpl(stats, res)(k)))(using LoweringCtx.func)
+                blockImpl(stats, res)(k)))(using LoweringCtx.nestFunc)
           case syntax.Fun =>
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
             Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock),
@@ -572,9 +572,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     
     case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
-
-    case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
     
+    case iftrm: st.SynthIf => ucs.Normalization(this)(iftrm)(k)
+      
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
         
@@ -1073,7 +1073,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       TempSymbol(N) -> pureCall(traceLogFn, Arg(N, Value.Ref(retMsgSym)) :: Nil)
     ) |>:
       Ret(Value.Ref(resSym))
-    )(using LoweringCtx.func)
+    )(using LoweringCtx.nestFunc)
 
 
 object TrivialStatementsAndMatch:
