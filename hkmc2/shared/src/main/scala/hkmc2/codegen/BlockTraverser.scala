@@ -51,6 +51,7 @@ class BlockTraverser:
       applyResult(rhs)
       applyPath(fld)
       applySubBlock(rest)
+    case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)

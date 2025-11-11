@@ -501,6 +501,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         braced(returningTerm(fin, endSemi = false))
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
+
+    case Scoped(syms, body) =>
+      val vars = syms.toArray.sortBy(_.uid).iterator.map(l => l -> scope.allocateName(l))
+      (if vars.isEmpty then doc"" else
+        doc" # let " :: vars.map: (_, nme) =>
+          nme
+        .toList.mkDocument(", ")
+        :: doc";\n") :: returningTerm(body, endSemi)
     
     // case _ => ???
   

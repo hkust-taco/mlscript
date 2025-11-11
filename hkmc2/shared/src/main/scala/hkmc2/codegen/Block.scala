@@ -49,6 +49,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
+    case Scoped(syms, body) => syms.toSet ++ body.definedVars
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -62,6 +63,7 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
+    case Scoped(_, body) => 1 + body.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
@@ -101,6 +103,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
+    case Scoped(syms, body) => body.freeVars -- syms.toSet
     case End(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -121,6 +124,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
+    case Scoped(syms, body) => body.freeVars -- syms.toSet
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -133,6 +137,7 @@ sealed abstract class Block extends Product:
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
     case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     case Label(_, _, body, rest) => body :: rest :: Nil
+    case Scoped(_, body) => body :: Nil
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
@@ -247,6 +252,12 @@ sealed abstract class Block extends Product:
       then this
       else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
 
+    case Scoped(syms, body) =>
+      val newBody = body.flatten(k)
+      if newBody is body
+      then this
+      else Scoped(syms, newBody)
+
     case e: End => k(e)
     case t: BlockTail => this
   
@@ -271,6 +282,8 @@ case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Blo
 
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
+
+case class Scoped(syms: Ls[Local], body: Block) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail

@@ -95,6 +95,9 @@ class BlockTransformer(subst: SymbolSubst):
             if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
             then b
             else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
+    case Scoped(s, bd) =>
+      val nb = applySubBlock(bd)
+      if nb is bd then b else Scoped(s, nb)
   
   def applyRcdArg(rcdArg: RcdArg)(k: RcdArg => Block): Block =
     val RcdArg(idx, p) = rcdArg
