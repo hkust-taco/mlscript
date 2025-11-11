@@ -70,21 +70,16 @@ case
 //│       restParam = N
 //│     body = IfLike:
 //│       kw = keyword 'if'
-//│       desugared = Cons:
-//│         head = Branch:
+//│       split = Cons:
+//│         branch = Match:
 //│           scrutinee = Ref{sym=caseScrut} of caseScrut
-//│           pattern = ClassLike:
-//│             constructor = Ref{sym=member:Foo} of member:Foo
+//│           pattern = Constructor:
+//│             target = Ref{sym=member:Foo} of member:Foo
 //│             arguments = S of Ls of 
-//│               Term:
-//│                 scrutinee = $param0
-//│                 tree = Ident of "a"
-//│             mode = Default
-//│             refined = false
-//│           continuation = Let:
-//│             sym = a
-//│             term = Ref{sym=$param0} of $param0
-//│             tail = Else of Ref{sym=a} of a
+//│               Alias:
+//│                 pattern = Wildcard
+//│                 id = Ident of "a"
+//│           consequent = Else of Ref{sym=a} of a
 //│         tail = End
 //│ Lowered:
 //│ Program:
@@ -115,7 +110,7 @@ case
 //│                 l = member:Foo
 //│                 disamb = S of class:Foo
 //│             _2 = Assign:
-//│               lhs = $param0
+//│               lhs = $argument0$
 //│               rhs = Select{sym=term:class:Foo.x}:
 //│                 qual = Ref:
 //│                   l = caseScrut
@@ -124,7 +119,7 @@ case
 //│               rest = Assign: \
 //│               lhs = a
 //│               rhs = Ref:
-//│                 l = $param0
+//│                 l = $argument0$
 //│                 disamb = N
 //│               rest = Return: \
 //│               res = Ref:

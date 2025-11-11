@@ -35,27 +35,27 @@
 
 1 => 2
 //│ Parsed:
-//│ 	InfixApp(Tup(List(IntLit(1))),keyword '=>',IntLit(2))
+//│ 	InfixApp(Tup(List(IntLit(1))),Keywrd(keyword '=>'),IntLit(2))
 
 1 =>
   2
 //│ Parsed:
-//│ 	InfixApp(Tup(List(IntLit(1))),keyword '=>',Block(List(IntLit(2))))
+//│ 	InfixApp(Tup(List(IntLit(1))),Keywrd(keyword '=>'),Block(List(IntLit(2))))
 
 x =>
   1
   2
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(IntLit(1), IntLit(2))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(IntLit(1), IntLit(2))))
 
 x => x : t
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',InfixApp(Ident(x),keyword ':',Ident(t)))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),InfixApp(Ident(x),Keywrd(keyword ':'),Ident(t)))
 
 x =>
   x : t
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(InfixApp(Ident(x),keyword ':',Ident(t)))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(InfixApp(Ident(x),Keywrd(keyword ':'),Ident(t)))))
 
 
 1 +
@@ -101,5 +101,10 @@ x =>
 a === "a" || b === "b"
 //│ Parsed:
 //│ 	OpApp(OpApp(Ident(a),Ident(===),List(StrLit(a))),Ident(||),List(OpApp(Ident(b),Ident(===),List(StrLit(b)))))
+
+
+A is B where C is D
+//│ Parsed:
+//│ 	InfixApp(InfixApp(Ident(A),Keywrd(keyword 'is'),Ident(B)),Keywrd(keyword 'where'),InfixApp(Ident(C),Keywrd(keyword 'is'),Ident(D)))
 
 

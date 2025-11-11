@@ -11,13 +11,11 @@ pattern CalculateBMI = ((:weight, :height)) => weight / (height * height)
 
 pattern Rounded = (Num as value) => Math.round(value)
 
-:todo // This looks decent! Make this happen!
-// Note: This needs refactoring the desugarer.
 (weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
-//│ ╔══[ERROR] Unrecognized pattern (infix operator 'as')
-//│ ║  l.16: 	(weight: 70, height: 1.75) is CalculateBMI as Rounded(22)
-//│ ╙──      	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ = false
+
+(weight: 70, height: 1.75) is CalculateBMI as Rounded(23)
+//│ = true
 
 pattern RoundedBMI = CalculateBMI as Rounded
 
@@ -34,20 +32,27 @@ bmi of weight: 70
 // returns `Some` if the pattern matches, and `None` otherwise.
 pattern MatchOrNone(pattern P) = ((P as x) => Some(x)) | (_ => None)
 
-fun bmi(record) = if record is MatchOrNone(pattern RoundedBMI) as value then value
+fun bmi(record) = if record is MatchOrNone(RoundedBMI) as value then value
 
 :e
 // alternatively?
 fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
-//│ ╔══[ERROR] Unrecognized pattern (application)
-//│ ║  l.41: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
+//│ ╔══[ERROR] Unrecognized pattern (application).
+//│ ║  l.39: 	fun bmi'(record) = if record is MatchOrNone[RoundedBMI] as value then value
 //│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^^^^^
 
+:expect Some(23)
 bmi of weight: 70, height: 1.75
 //│ = Some(23)
 
 bmi of height: 1.75
 //│ = None
+
+:todo // Make it happen!
+fun bmi'(record) = if record is (@compile MatchOrNone(RoundedBMI)) as value then value
+//│ ╔══[ERROR] Pattern chaining is not supported in pattern compilation.
+//│ ║  l.20: 	pattern RoundedBMI = CalculateBMI as Rounded
+//│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^^^
 
 // Calculate the area of different shapes
 pattern ShapeArea = 
@@ -93,14 +98,19 @@ pattern NumberSystem =
   (((:digits, radix: "o")) => parseInt(digits, 8)) |
   (((:digits, radix: "b")) => parseInt(digits, 2))
 
-:todo // This looks decent! Make this happen!
 fun parseIntegerLiteral(value) = if
   value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
     (:radix, :digits) is NumberSystem as value then Some(value)
   else None
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.98: 	  value is "0" ~ (("x" | "o" | "b") as radix) ~ digits and
-//│ ╙──      	                                              ^
+
+parseIntegerLiteral of "0xFF"
+//│ = Some(255)
+
+parseIntegerLiteral of "0b11111111"
+//│ = Some(255)
+
+parseIntegerLiteral of "0o377"
+//│ = Some(255)
 
 pattern IntegerLiteral =
   ("0" ~ (("x" | "o" | "b") as radix) ~ digits) => (:radix, :digits)

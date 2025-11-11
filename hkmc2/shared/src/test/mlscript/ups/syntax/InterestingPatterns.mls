@@ -10,7 +10,7 @@ pattern DropZ = ((:x, :y, :z)) => (x: x, y: y)
 
 :ucs ups
 pattern SumList = (Nil => 0) | ((Int as hd) :: (SumList as tl)) => hd + tl
-//│ elaborated pattern body: member:Nil => 0 ∨ member:Cons(member:Int as hd, member:SumList as tl) => builtin:+(hd, tl)
+//│ elaborated pattern body: Nil => 0 ∨ Cons(Int as hd, SumList as tl) => builtin:+(hd, tl)
 
 // Flatten the nested tuples. Note that it makes use of biased union.
 pattern Flatten = ([Flatten as hd, ...Flatten as tl] => Array.concat(hd, tl)) | _
@@ -33,7 +33,7 @@ pattern Transpose = (null => null) | (([[a, b], [c, d]]) => [[a, c], [b, d]])
 // Return the middle element of a list. It won't match if the length is even.
 :ucs ups
 pattern Middle = ([x] => x) | ([x, ...(Middle as m), y] => m)
-//│ elaborated pattern body: [x] => x ∨ [x, ...member:Middle as m, y] => m
+//│ elaborated pattern body: [x] => x ∨ [x, ...Middle as m, y] => m
 
 // Return the leaves of a tree.
 pattern Leaves = (null => Nil) | ([x] => x :: Nil) | ([Leaves as left, Leaves as right] => left ::: right)

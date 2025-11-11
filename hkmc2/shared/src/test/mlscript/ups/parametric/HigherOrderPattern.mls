@@ -17,50 +17,50 @@ null is @compile Nullable
 //│ = false
 
 :e
-null is @compile Nullable(pattern A, pattern A)
+null is @compile Nullable(A, A)
 //│ ╔══[ERROR] Pattern `Nullable` has one pattern parameter.
 //│ ║  l.5: 	pattern Nullable(pattern T) = null | T
 //│ ║       	                         ^
 //│ ╟── But two pattern arguments were provided.
-//│ ║  l.20: 	null is @compile Nullable(pattern A, pattern A)
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	null is @compile Nullable(A, A)
+//│ ╙──      	                 ^^^^^^^^^^^^^
 //│ = false
 
 pattern Nullable(pattern T) = null | T
 
-null is @compile Nullable(pattern Int)
+null is @compile Nullable(Int)
 //│ = true
 
-A is @compile Nullable(pattern A)
+A is @compile Nullable(A)
 //│ = true
 
-2 is @compile Nullable(pattern 1 | 2)
+2 is @compile Nullable(1 | 2)
 //│ = true
 
 data class Pair[A, B](val first: A, val second: B)
 
-pattern Stack(pattern T) = null | Pair(T, Stack(pattern T))
+pattern Stack(pattern T) = null | Pair(T, Stack(T))
 
-null is @compile Stack(pattern A)
+null is @compile Stack(A)
 //│ = true
 
 fun (#:) pair(a, b) = Pair(a, b)
 
-A #: null is @compile Stack(pattern A)
+A #: null is @compile Stack(A)
 //│ = true
 
-A #: A #: null is @compile Stack(pattern A)
+A #: A #: null is @compile Stack(A)
 //│ = true
 
-A #: A #: A #: null is @compile Stack(pattern A)
+A #: A #: A #: null is @compile Stack(A)
 //│ = true
 
 object B
 
-A #: B #: A #: null is @compile Stack(pattern A)
+A #: B #: A #: null is @compile Stack(A)
 //│ = false
 
-A #: B #: A #: null is @compile Stack(pattern B)
+A #: B #: A #: null is @compile Stack(B)
 //│ = false
 
 let zeroOne = 0 #: 1 #: null
@@ -71,32 +71,32 @@ let oneZero = 1 #: 0 #: null
 :global
 :expect true
 
-A #: B #: A #: null is @compile Stack(pattern A | B)
+A #: B #: A #: null is @compile Stack(A | B)
 //│ = true
 
-A #: B #: A #: null is @compile Stack(pattern B | A)
+A #: B #: A #: null is @compile Stack(B | A)
 //│ = true
 
-zeroOne is @compile Stack(pattern 0 | 1)
+zeroOne is @compile Stack(0 | 1)
 //│ = true
 
-oneZero is @compile Stack(pattern 0 | 1)
+oneZero is @compile Stack(0 | 1)
 //│ = true
 
-null #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+null #: null is @compile Stack(Stack(0 | 1))
 //│ = true
 
-zeroOne #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+zeroOne #: null is @compile Stack(Stack(0 | 1))
 //│ = true
 
-null #: (1 #: null) #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+null #: (1 #: null) #: null is @compile Stack(Stack(0 | 1))
 //│ = true
 
-zeroOne #: oneZero #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+zeroOne #: oneZero #: null is @compile Stack(Stack(0 | 1))
 //│ = true
 
-zeroOne #: null #: oneZero #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+zeroOne #: null #: oneZero #: null is @compile Stack(Stack(0 | 1))
 //│ = true
 
-null #: zeroOne #: zeroOne #: null is @compile Stack(pattern Stack(pattern 0 | 1))
+null #: zeroOne #: zeroOne #: null is @compile Stack(Stack(0 | 1))
 //│ = true

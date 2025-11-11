@@ -1,15 +1,52 @@
 :js
 
+import "../../../mlscript-compile/Iter.mls"
 
 pattern TailLines(pattern L) =
-  ("" => []) |
-  ("\n" ~ (Lines(pattern L) as t)) => t
+  (("\n" ~ (Lines(L) as t)) => t) |
+  ("" => [])
 pattern Lines(pattern L) = 
-  ("" => []) |
-  (((L as h) ~ (TailLines(pattern L) as t)) => [h, ...t])
+  ((((L as h) ~ (TailLines(L) as t)) => [h, ...t])) |
+  ("" => [])
 
-fun foo(input) = input is Lines("hello")
+:expect true
+"hello" is Lines("hello")
+//│ = true
 
-:fixme
-foo of "hello"
-//│ ═══[RUNTIME ERROR] Error: Function 'unapply' expected 2 arguments but got 1
+:expect true
+"hello\nworld" is Lines("hello" | "world")
+//│ = true
+
+:expect false
+"hello\nworld" is Lines("hello")
+//│ = false
+
+pattern Digit = "0" ..= "9"
+
+pattern Integer = Digit ~ (Integer | "")
+
+"12345" is Integer
+//│ = true
+
+Integer.unapplyStringPrefix("123")
+//│ = MatchSuccess(["123", ""], {})
+
+// Beautiful!
+"123\n456\n789" is Lines of Integer
+//│ = true
+
+fun parseIntegers(input) =
+  if input is (Lines of (Integer as n) => parseInt(n, 10)) as n then n
+
+parseIntegers of "123\n456\n789"
+//│ = [123, 456, 789]
+
+:e
+:re
+// We may need a shorthand syntax to obtain the result of pattern matching.
+// `t through P` means match `t` against `P` and returns the result.
+"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
+//│ ║  l.48: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
+//│ ╙──      	                ^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Lines1 is not a function

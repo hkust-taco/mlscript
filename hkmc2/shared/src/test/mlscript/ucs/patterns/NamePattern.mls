@@ -4,7 +4,11 @@ fun id(x) = x
 
 :ucs desugared
 if id(0) is t then t
-//│ Desugared:
+//│ Split with nested patterns:
+//│ >  if
+//│ >    let $scrut = member:id(0)
+//│ >    $scrut is t then t
+//│ Expanded split with flattened patterns:
 //│ >  if
 //│ >    let $scrut = member:id(0)
 //│ >    let t = $scrut

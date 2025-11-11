@@ -197,13 +197,13 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let param0, param1, h, tl, tmp28;
+//│   let tl, h, argument0$, argument1$, tmp28;
 //│   tmp29: while (true) {
 //│     if (ls instanceof Cons1.class) {
-//│       param0 = ls.hd;
-//│       param1 = ls.tl;
-//│       h = param0;
-//│       tl = param1;
+//│       argument0$ = ls.hd;
+//│       argument1$ = ls.tl;
+//│       tl = argument1$;
+//│       h = argument0$;
 //│       ls = tl;
 //│       tmp28 = Predef.print(h);
 //│       continue tmp29
@@ -250,10 +250,14 @@ while x is {} do()
 //│ JS (unsanitized):
 //│ let tmp37;
 //│ tmp38: while (true) {
-//│   if (x3 instanceof Object) {
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x3 instanceof Object) {
+//│         break split_1$
+//│       } else { break split_1$ }
+//│     }
 //│     tmp37 = runtime.Unit;
-//│     continue tmp38
-//│   } else { tmp37 = runtime.Unit; }
+//│   }
 //│   break;
 //│ }
 //│ tmp37
@@ -270,10 +274,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.270: 	  then 0(0)
+//│ ║  l.274: 	  then 0(0)
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unrecognized term split (false literal).
-//│ ║  l.269: 	while print("Hello World"); false
+//│ ╔══[ERROR] Unrecognized term split (false literal)
+//│ ║  l.273: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -283,12 +287,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.282: 	while { print("Hello World"), false }
+//│ ║  l.286: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.283: 	  then 0(0)
+//│ ║  l.287: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.284: 	  else 1
+//│ ║  l.288: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -298,14 +302,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.296: 	    print("Hello World")
+//│ ║  l.300: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.297: 	    false
+//│ ║  l.301: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.298: 	  then 0(0)
+//│ ║  l.302: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.299: 	  else 1
+//│ ║  l.303: 	  else 1
 //│ ╙──       	  ^^^^
 
 

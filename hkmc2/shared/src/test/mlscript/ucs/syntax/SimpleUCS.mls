@@ -1,4 +1,4 @@
-
+:js
 
 abstract class Option[A]: Some[A] | None
 data class Some[A](value: A) extends Option[A]
@@ -164,9 +164,16 @@ fun g(a, b) =
       None    then x
 
 g(5, None)
+//│ = 5
+
 g(5, Some(7))
+//│ = 35
+
 g(0 - 5, None)
+//│ = 25
+
 g(0 - 5, Some(9))
+//│ = 4
 
 data class Var(name: Str)
 abstract class ValBase: (IntVal | BoolVal)
@@ -192,9 +199,9 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Unrecognized pattern split (operator application).
-//│ ║  l.192: 	    0 ::
+//│ ║  l.199: 	    0 ::
 //│ ║         	    ^^^^
-//│ ║  l.193: 	      Nil() then "oh"
+//│ ║  l.200: 	      Nil() then "oh"
 //│ ╙──       	^^^^^^
 
 
@@ -225,10 +232,15 @@ fun test(x) = if x then 0 else "oops"
 
 
 test(true)
-test(false)
+//│ = 0
 
+test(false)
+//│ = "oops"
 
 test(0)
+//│ = "oops"
+
 test(1)
+//│ = "oops"
 
 

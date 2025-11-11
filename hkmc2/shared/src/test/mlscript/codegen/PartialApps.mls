@@ -245,10 +245,28 @@ _ - _ of 1, 2
 
 // `_` here is interpreted as a UCS default case...
 :sjs
+:w
 let f = if _ then 1 else 0
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ║         	             ^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.249: 	let f = if _ then 1 else 0
+//│ ╙──       	                    ^^^^^^
 //│ JS (unsanitized):
 //│ let f15, tmp21; tmp21 = 1; f15 = tmp21;
 //│ f = 1
 
-
+:sjs
+fun f(x) =
+  if x ==
+    0 then 1
+    _ then 2
+//│ JS (unsanitized):
+//│ let f16;
+//│ f16 = function f(x3) {
+//│   let scrut;
+//│   scrut = x3 == 0;
+//│   if (scrut === true) { return 1 } else { return 2 }
+//│ };
 

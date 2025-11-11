@@ -1,15 +1,10 @@
 :js
 
 
-:ucs desugared
+:re
 class x
 if 0 is
   x then 12
-//│ Desugared:
-//│ >  if
-//│ >    let $scrut = 0
-//│ >    let x = $scrut
-//│ >    else 12
-//│ = 12
+//│ ═══[RUNTIME ERROR] Error: match error
 
 

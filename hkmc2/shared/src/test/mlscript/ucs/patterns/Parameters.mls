@@ -118,7 +118,7 @@ fun foo(x) = if x is A() then 0
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
 //│ ║  l.115: 	fun foo(x) = if x is A() then 0
-//│ ╙──       	                     ^^^
+//│ ╙──       	                     ^
 
 :e
 fun foo(x) = if x is A(y) then y
@@ -127,7 +127,7 @@ fun foo(x) = if x is A(y) then y
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have arguments.
 //│ ║  l.124: 	fun foo(x) = if x is A(y) then y
-//│ ╙──       	                     ^^^^
+//│ ╙──       	                     ^^^
 
 0 is Foo
 //│ = false

@@ -138,9 +138,8 @@ pattern DoubleOrSum = DoubleList | SumList
 
 fun isDoubleOrSum__naive(xs) = if xs is DoubleOrSum as output then output else "noop"
 
-:todo // Fix the return value of the translation.
 isDoubleOrSum__naive of _1234
-//│ = Nil
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
 isDoubleOrSum__naive of list(1, 2, 3)
 //│ > 3 + 0 = 3

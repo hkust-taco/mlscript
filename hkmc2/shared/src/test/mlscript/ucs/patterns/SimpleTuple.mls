@@ -1,7 +1,7 @@
 :js
 
-// We test the support for simple tuple patterns in this file.
-// Splice tuple patterns will be implement in the future.
+
+
 
 fun sum(x, y) = x + y
 sum(1, 2)

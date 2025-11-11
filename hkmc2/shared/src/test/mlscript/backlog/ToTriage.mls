@@ -315,23 +315,26 @@ Foo(1, 2, 3).args
 
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╔══[ERROR] Unrecognized pattern (spread)
+//│ ╔══[ERROR] Unrecognized pattern (spread).
 //│ ║  l.317: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
+//│ ╔══[ERROR] Name not found: args
+//│ ║  l.317: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ╙──       	                                     ^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.317: 	if Foo(1, 2, 3) is Foo(...args) then args
-//│ ╙──       	                       ^^^^^^^
+//│ ╙──       	                   ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.326: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.329: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.332: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.335: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -365,10 +368,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.365: 	  let bar(x: Str): Str = x + x
+//│ ║  l.368: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.366: 	  bar("test")
+//│ ║  l.369: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -378,7 +381,7 @@ fun foo() =
 module Foo(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.378: 	module Foo(x)
+//│ ║  l.381: 	module Foo(x)
 //│ ╙──       	           ^
 //│ JS (unsanitized):
 //│ let Foo5;
@@ -402,7 +405,7 @@ module Foo(x)
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.402: 	module Foo(val x)
+//│ ║  l.405: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ JS (unsanitized):
 //│ let Foo7;
@@ -425,7 +428,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.426: 	data class Foo(mut x)
+//│ ║  l.429: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -442,10 +445,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.441: 	set this.pc = 0
+//│ ║  l.444: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.443: 	  (this).pc = 0
+//│ ║  l.446: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 
 // But this doesn't...
@@ -454,10 +457,22 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.455: 	  this.pc = 0
+//│ ║  l.458: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.455: 	  this.pc = 0
+//│ ║  l.458: 	  this.pc = 0
 //│ ╙──       	  ^^^^
+
+// ——— ——— ———
+
+pattern A(pattern B) = B
+
+// What @compile actually annotates is `A(0) as y` instead of `A(0)`.
+// We should tighten the precedence of annotations.
+
+fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
+//│ ║  l.473: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ╙──       	                                                         ^
 
 // ——— ——— ———

@@ -37,9 +37,9 @@ object Printer:
       doc"match ${mkDocument(scrut)} #{  # ${docCases} # else #{  # ${docDefault} #}  #}  # in # ${mkDocument(rest)}"
     case Return(res, implct) => doc"return ${mkDocument(res)}"
     case Throw(exc) => doc"throw ${mkDocument(exc)}"
-    case Label(label, body, rest) =>
+    case Label(label, loop, body, rest) =>
       val l2 = summon[Scope].allocateName(label)
-      doc"label $l2 = ${mkDocument(body)} in # ${mkDocument(rest)}"
+      doc"labelled ${if loop then "loop" else "block"} $l2 = ${mkDocument(body)} in # ${mkDocument(rest)}"
     case Break(label) =>
       doc"break ${getVar(label)}"
     case Continue(label) =>
@@ -82,7 +82,8 @@ object Printer:
       val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
-      doc"class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
+      val docStaged = if sym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+      doc"${docStaged}class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
     val doc = mkDocument(arg.value)

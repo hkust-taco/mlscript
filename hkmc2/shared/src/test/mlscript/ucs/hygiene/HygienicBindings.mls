@@ -40,14 +40,14 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some(param0) and
-//│ >      let x = $param0
-//│ >      x is Left(param0) and
-//│ >        let y = $param0
+//│ >    a is Option.Some(argument0$) and
+//│ >      let x = $argument0$
+//│ >      x is Left(argument0$) and
+//│ >        let y = $argument0$
 //│ >        else y
-//│ >      let y = $param0
-//│ >      y is Right(param0) and
-//│ >        let z = $param0
+//│ >      let y = $argument0$
+//│ >      y is Right(argument0$) and
+//│ >        let z = $argument0$
 //│ >        else z
 //│ >    a is Option.None then 0
 
@@ -72,16 +72,16 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some(param0) and
-//│ >      let x = $param0
+//│ >    a is Option.Some(argument0$) and
+//│ >      let x = $argument0$
 //│ >      let x' = x
-//│ >      x' is Left(param0) and
-//│ >        let y = $param0
+//│ >      x' is Left(argument0$) and
+//│ >        let y = $argument0$
 //│ >        else y
-//│ >      let y = $param0
+//│ >      let y = $argument0$
 //│ >      let y' = y
-//│ >      y' is Right(param0) and
-//│ >        let z = $param0
+//│ >      y' is Right(argument0$) and
+//│ >        let z = $argument0$
 //│ >        else z
 //│ >    a is Option.None then 0
 

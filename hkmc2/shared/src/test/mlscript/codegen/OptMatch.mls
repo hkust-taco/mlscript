@@ -33,9 +33,9 @@ val isDefined = case
 //│ JS (unsanitized):
 //│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
-//│   let param0;
+//│   let argument0$;
 //│   if (caseScrut instanceof Some1.class) {
-//│     param0 = caseScrut.value;
+//│     argument0$ = caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false

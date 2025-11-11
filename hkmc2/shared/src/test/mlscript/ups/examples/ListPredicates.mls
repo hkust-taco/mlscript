@@ -24,14 +24,15 @@ list1 contains of 4
 // each element is unique, and rejects the list otherwise.
 pattern Unique(pattern P) =
   Nil | (
-    ((((P as hd) :: (Unique(pattern P) as tl)) =>
+    ((((P as hd) :: (Unique(P) as tl)) =>
       let there = tl contains(hd)
       [there, if there then tl else hd :: tl]) as [false, list]) => list)
 
-list1 is Unique(pattern _)
+list1 is Unique(_)
 //│ = true
 
-list1 is Unique(pattern (Num as x) => x.toString().length)
+:expect false
+list1 is Unique((Num as x) => x.toString().length)
 //│ = false
 
 fun addProperty(obj, k, v) = (...obj, (k): v)

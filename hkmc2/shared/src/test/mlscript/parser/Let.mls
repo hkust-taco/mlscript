@@ -223,34 +223,34 @@ let x = 1 in
 
 x => let x = 1 in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
 
 x => let x = 1 in
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Block(List(Ident(x))))))
 
 x => let x = 1
   in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))
 
 x =>
   let x = 1
   in x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),Some(Ident(x))))))
 
 x =>
   let x = 1
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(LetLike(Keywrd(keyword 'let'),Ident(x),Some(IntLit(1)),None), Ident(x))))
 
 x => let x = 1
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',LetLike(Keywrd(keyword 'let'),Ident(x),Some(Jux(IntLit(1),Block(List(Ident(x))))),None))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),LetLike(Keywrd(keyword 'let'),Ident(x),Some(Jux(IntLit(1),Block(List(Ident(x))))),None))
 
 
 :pe

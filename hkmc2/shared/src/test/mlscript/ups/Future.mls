@@ -1,51 +1,59 @@
 :js
 
-:todo // Parameterized patterns declared by type parameters?
+:e
+// Hypothetical syntax: parameterized patterns declared by type parameters.
 pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╔══[ERROR] Unrecognized pattern (application).
-//│ ║  l.4: 	pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
 //│ ╙──     	                           ^^^^^^^
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ║       	                       ^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.5: 	pattern Rep0[A] = "" | A ~ Rep0[A]
+//│ ╙──     	                  ^^
 
-:todo
+:fixme
+// Hypothetical syntax: put pattern parameters in the type parameter list but
+// prefixed with `pattern`.
+pattern Rep0[pattern A] = "" | A ~ Rep0[A]
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None) (of class hkmc2.syntax.Tree$TypeDef)
+
+:e
+// Hypothetical syntax: separate parameter list for the extraction.
 pattern Rep0(pattern A, B, C)(head) =
   "" | (A as head) ~ Rep0[A]
 //│ ╔══[ERROR] Multiple parameter lists are not supported for this definition.
-//│ ║  l.10: 	pattern Rep0(pattern A, B, C)(head) =
+//│ ║  l.24: 	pattern Rep0(pattern A, B, C)(head) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unrecognized pattern (application).
-//│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	                     ^^^^^^^
 //│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
-//│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ║        	             ^^^^
 //│ ╟── The variable is missing from this sub-pattern.
-//│ ║  l.11: 	  "" | (A as head) ~ Rep0[A]
+//│ ║  l.25: 	  "" | (A as head) ~ Rep0[A]
 //│ ╙──      	  ^^
 
-:todo // Pattern extractions via aliases.
+pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
+
+// Pattern extractions through non-`pattern` parameters.
 pattern Email(name, domain) =
   (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╔══[ERROR] Duplicate pattern variable.
-//│ ║  l.29: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ║        	                                ^^^^^^^^^^
-//│ ╟── The previous definition is as follows.
-//│ ║  l.29: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╙──      	   ^^^^^^^^^^
-//│ ╔══[WARNING] Useless pattern binding: Identifier.
-//│ ║  l.29: 	  (Identifier as name) ~ "@" ~ (Identifier as domain)
-//│ ╙──      	                                ^^^^^^^^^^
 
-:todo // View patterns
+:e
+// Hypothetical syntax (very unlikely to implement): view patterns
 pattern GreaterThan(value) = case
   n and n > value then n
 //│ ╔══[ERROR] Unrecognized pattern (case).
-//│ ║  l.42: 	  n and n > value then n
+//│ ║  l.50: 	  n and n > value then n
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^
 
-:todo
-// Normal view pattern
+:e
+// Hypothetical syntax (very unlikely to implement): normal view patterns
 fun view = case
   n and n > 5 then n
   else undefined
@@ -54,11 +62,11 @@ fun foo(x) = if x is
     Unit then ....
     Arrow(...) then ....
 //│ ╔══[ERROR] Unrecognized pattern split (infix operator 'as').
-//│ ║  l.53: 	  view as
+//│ ║  l.61: 	  view as
 //│ ║        	  ^^^^^^^
-//│ ║  l.54: 	    Unit then ....
+//│ ║  l.62: 	    Unit then ....
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.55: 	    Arrow(...) then ....
+//│ ║  l.63: 	    Arrow(...) then ....
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -67,41 +75,53 @@ fun foo(x) = if x is
 //  (case { ... }) as ...
 
 
-:todo // `to` instead of ugly `..=`
-// in-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
-// out-type: "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+:pe
+:e
+// Hypothetical syntax: use `to` instead of ugly `..=`
 pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 pattern Many(pattern T) = T ~ (Many(T) | "")
 pattern Star(pattern T) = "" | Many(T)
 pattern Email(name, domains) =
   Rep(Char | ".") as name ~ "@" ~ Rep(Rep(Char) ~ ) as domain
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.73: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.81: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	                      ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.73: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
+//│ ║  l.81: 	pattern Char = "a" to "z" | "A" to "Z" | "0" to "9" | "_" | "-"
 //│ ╙──      	               ^^^^^^
 
-:todo
+:pe
+:e
+// Hypothetical syntax: use `to` instead of ugly `..=`
 pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.86: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                        ^^^
 //│ ╔══[ERROR] Unrecognized pattern (juxtaposition).
-//│ ║  l.86: 	pattern Digits = "0" to "9" ~ (Digits | "")
+//│ ║  l.96: 	pattern Digits = "0" to "9" ~ (Digits | "")
 //│ ╙──      	                 ^^^^^^
 
-:todo // Extraction parameters.
 pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.95: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──      	                                   ^^^
-//│ ╔══[ERROR] Cannot use this reference as a pattern
-//│ ║  l.95: 	pattern Test(foo, bar) = ("foo" as foo) ~ ("bar" as bar)
-//│ ╙──      	                                   ^^^
+
+"foobar" is Test
+//│ = true
+
+:fixme
+:expect MatchSuccess(["foo", "bar"], {})
+Test.unapply("foobar")
+//│ ═══[RUNTIME ERROR] Expected: 'MatchSuccess(["foo", "bar"], {})', got: 'MatchSuccess("foobar", {})'
+//│ = MatchSuccess("foobar", {})
 
 :todo
-// This is tokenized into:
-// ┊pattern┊ ┊Email┊(⟨┊name┊,┊ ┊domain┊⟩)┊ ┊=┊ ┊→⟨┊undefined┊⟩←┊
-// We should report this error.
+:pt
+// We cannot distinguish between `...` and `undefined` in the `Elaborator` now.
 pattern Email(name, domain) = ...
+//│ Parsed tree:
+//│ TypeDef:
+//│   k = Pat
+//│   head = App:
+//│     lhs = Ident of "Email"
+//│     rhs = Tup of Ls of 
+//│       Ident of "name"
+//│       Ident of "domain"
+//│   rhs = S of UnitLit of false

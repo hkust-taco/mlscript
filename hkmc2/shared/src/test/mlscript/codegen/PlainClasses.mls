@@ -18,14 +18,14 @@ class Foo
 
 Foo is Foo
 //│ JS (unsanitized):
-//│ let scrut; scrut = Foo1; if (scrut instanceof Foo1) { true } else { false }
+//│ if (Foo1 instanceof Foo1) { true } else { false }
 //│ = false
 
 (new Foo) is Foo
 //│ JS (unsanitized):
-//│ let scrut1;
-//│ scrut1 = globalThis.Object.freeze(new Foo1());
-//│ if (scrut1 instanceof Foo1) { true } else { false }
+//│ let scrut;
+//│ scrut = globalThis.Object.freeze(new Foo1());
+//│ if (scrut instanceof Foo1) { true } else { false }
 //│ = true
 
 new Foo

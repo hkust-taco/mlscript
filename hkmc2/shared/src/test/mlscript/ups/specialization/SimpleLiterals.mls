@@ -6,24 +6,22 @@ pattern Zero = "0"
 pattern One = "1"
 pattern Two = "2"
 
-:ucs normalized
-:fixme
 fun checkZeroOneTwo(x) = if x is
   @compile Zero then 0
   @compile One then 1
   @compile Two then 2
   else ()
-//│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.12: 	  @compile Zero then 0
-//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.13: 	  @compile One then 1
-//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unrecognized pattern split (annotated).
-//│ ║  l.14: 	  @compile Two then 2
-//│ ╙──      	   ^^^^^^^^^^^^^^^^^^
-//│ Normalized:
-//│ >  if else <error>
+
+checkZeroOneTwo of "0"
+//│ = 0
+
+checkZeroOneTwo of "1"
+//│ = 1
+
+checkZeroOneTwo of "2"
+//│ = 2
+
+checkZeroOneTwo of "hello"
 
 import "../../../mlscript-compile/Option.mls"
 open Option
@@ -40,7 +38,7 @@ pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 :todo
 let res = "1" is @compile ManyZero
 //│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
-//│ ║  l.37: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
+//│ ║  l.35: 	pattern ManyZero = ("0" ~ (ManyZero | "")) | ""
 //│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^
 //│ res = false
 

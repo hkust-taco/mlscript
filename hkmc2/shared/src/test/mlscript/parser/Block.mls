@@ -42,18 +42,18 @@ foo of
 
 x => x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Ident(x))
 
 x =>
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(Ident(x))))
 
 x =>
   foo
   x
 //│ Parsed:
-//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Ident(foo), Ident(x))))
+//│ 	InfixApp(Tup(List(Ident(x))),Keywrd(keyword '=>'),Block(List(Ident(foo), Ident(x))))
 
 
 let a = 1, 2

@@ -62,7 +62,7 @@ fun try(f) =
 
 
 // For `pattern` definitions
-data class MatchResult(output, bindings)
+data class MatchSuccess(output, bindings)
 data class MatchFailure(errors)
 
 // For pattern matching on tuples

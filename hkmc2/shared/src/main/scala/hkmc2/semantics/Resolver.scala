@@ -294,26 +294,20 @@ class Resolver(tl: TraceLogger)
         traverseStmts(stats)
       
       case t: Term.IfLike =>
-        def split(s: Split): Unit = s match
-          case Split.Cons(head, tail) =>
+        def simpleSplit(s: SimpleSplit): Unit = s match
+          case SimpleSplit.Cons(head: SimpleSplit.Head.Match, tail) =>
             traverse(head.scrutinee, expect = NonModule(N))
-            head.pattern match
-              case FlatPattern.ClassLike(constructor = t) =>
-                head.pattern.subTerms.foreach:
-                  case `t` => traverse(t, expect = PatternConstructor(N))
-                  case other => traverse(other, expect = NonModule(N))
-              case _ =>
-                head.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
-            split(head.continuation)
-            split(tail)
-          case Split.Let(sym, term, tail) =>
+            traversePattern(head.pattern)
+            simpleSplit(head.consequent)
+            simpleSplit(tail)
+          case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, term), tail) =>
             traverse(term, expect = NonModule(N))
-            split(tail)
-          case Split.Else(default) =>
+            simpleSplit(tail)
+          case SimpleSplit.Else(default) =>
             traverse(default, expect = Any)
-          case Split.End =>
-        split(t.desugared)
-      
+          case SimpleSplit.End =>
+        simpleSplit(t.split)
+        
       case Term.Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
         traverse(rhs, expect = Class(S("The 'handle' keyword requires a statically known class.")))
         args.foreach(traverse(_, expect = NonModule(N)))
@@ -419,35 +413,6 @@ class Resolver(tl: TraceLogger)
 
       traverseBlock(cld.body.blk)(using withCtxParams)
     
-    def traversePattern(p: Pattern): Unit = p match
-      case _: (Pattern.Wildcard | Pattern.Literal | Pattern.Range) => ()
-      case Pattern.Constructor(target, patternArguments, arguments) =>
-        traverse(target, expect = PatternConstructor(N))
-        patternArguments.foreach(traversePattern(_))
-        arguments.foreach(_.foreach(traversePattern(_)))
-      case Pattern.Composition(_, left, right) =>
-        traversePattern(left)
-        traversePattern(right)
-      case Pattern.Negation(pattern) =>
-        traversePattern(pattern)
-      case Pattern.Concatenation(left, right) =>
-        traversePattern(left)
-        traversePattern(right)
-      case Pattern.Tuple(leading, spread, trailing) =>
-        leading.foreach(traversePattern(_))
-        spread.foreach(traversePattern(_))
-        trailing.foreach(traversePattern(_))
-      case Pattern.Record(fields) =>
-        fields.map((id, p) => traversePattern(p))
-      case Pattern.Chain(first, second) =>
-        traversePattern(first)
-        traversePattern(second)
-      case Pattern.Alias(pattern, _) =>
-        traversePattern(pattern)
-      case Pattern.Transform(pattern, transform) =>
-        traversePattern(pattern)
-        traverse(transform, expect = NonModule(N))
-    
     defn match
     
     // Case: instance definition. Add the instance to the context.
@@ -486,6 +451,41 @@ class Resolver(tl: TraceLogger)
     case t =>
       t.subTerms.foreach(traverse(_, expect = NonModule(N)))
       ictx
+  
+  def traversePattern(p: Pattern)(using ICtx): Unit = p match
+    case _: (Pattern.Wildcard | Pattern.Literal | Pattern.Range) => ()
+    case Pattern.Constructor(target, patternArguments) =>
+      traverse(target, expect = PatternConstructor(N))
+      patternArguments.foreach(_.foreach(traversePattern(_)))
+    case Pattern.Composition(_, left, right) =>
+      traversePattern(left)
+      traversePattern(right)
+    case Pattern.Negation(pattern) =>
+      traversePattern(pattern)
+    case Pattern.Concatenation(left, right) =>
+      traversePattern(left)
+      traversePattern(right)
+    case Pattern.Tuple(leading, spread) =>
+      leading.foreach(traversePattern(_))
+      spread.foreach: (_, spd, trailing) =>
+        traversePattern(spd)
+        trailing.foreach(traversePattern(_))
+    case Pattern.Record(fields) =>
+      fields.map((id, p) => traversePattern(p))
+    case Pattern.Chain(first, second) =>
+      traversePattern(first)
+      traversePattern(second)
+    case Pattern.Alias(pattern, _) =>
+      traversePattern(pattern)
+    case Pattern.Transform(pattern, _, transform) =>
+      traversePattern(pattern)
+      traverse(transform, expect = NonModule(N))
+    case Pattern.Annotated(pattern, annotations) =>
+      traversePattern(pattern)
+      annotations.map(_.toOption).flatten.foreach(traverse(_, expect = NonModule(N)))
+    case Pattern.Guarded(pattern, guard) =>
+      traversePattern(pattern)
+      traverse(guard, expect = NonModule(N))
   
   /**
     * Resolve a resolvable term. This involves:

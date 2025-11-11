@@ -20,6 +20,7 @@ case class Config(
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
+  stageCode: Bool,
   target: CompilationTarget,
 ):
   
@@ -35,6 +36,7 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    stageCode = false,
     target = CompilationTarget.JS
   )
   

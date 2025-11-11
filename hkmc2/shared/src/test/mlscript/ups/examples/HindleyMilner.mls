@@ -1,0 +1,347 @@
+:js
+
+// Hindley-Milner type inference implementation
+
+import "../../../mlscript-compile/Option.mls"
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Runtime.mls"
+
+open annotations
+open Option { Some, None }
+
+data class Type with
+  constructor
+    TVar(name: Str)
+    TFun(lhs: Type, rhs: Type)
+    TPrim(name: Str)
+  
+  fun show = if this is
+    TVar(name) then name
+    TFun(TFun as lhs, rhs) then "(" + lhs.show + ") -> " + rhs.show
+    TFun(lhs, rhs) then lhs.show + " -> " + rhs.show
+    TPrim(name) then name
+  
+  fun equals(that) = if this is
+    TVar(name) and that is TVar(name') then name === name'
+    TFun(lhs, rhs) and that is TFun(lhs', rhs') then
+      lhs.equals(lhs') and rhs.equals(rhs')
+    TPrim(name) and that is TPrim(name') then name === name'
+    else false
+  
+  let _freeVars = None
+  
+  // Get free type variables
+  fun freeVars = if _freeVars is
+    Some(vars) then vars
+    None then
+      let vars = if this is
+        TVar(name) then new Set([name])
+        TFun(lhs, rhs) then lhs.freeVars.union(rhs.freeVars)
+        TPrim(_) then new Set([])
+      set _freeVars = Some(vars)
+      vars
+  
+  fun hasFreeVar(name) = freeVars.has(name)
+
+let TInt = TPrim("Int")
+let TBool = TPrim("Bool")
+//│ TBool = TPrim("Bool")
+//│ TInt = TPrim("Int")
+
+pattern ShowTerm =
+  (Var(name) => name) |
+  (App(Abs as ShowTerm as lhs, rhs) => "(" + lhs + ") " + rhs) |
+  (App(ShowTerm as lhs, App as ShowTerm as rhs) => lhs + " (" + rhs + ")") |
+  (App(ShowTerm as lhs, ShowTerm as rhs) => lhs + " " + rhs) |
+  (Abs(name, ShowTerm as body) => "λ" + name + ". " + body) |
+  (IntLit(value) => value.toString()) |
+  (BoolLit(value) => if value then "true" else "false")
+//
+data class Term with
+  constructor
+    Var(name: Str)
+    App(lhs: Term, rhs: Term)
+    Abs(name: Str, body: Term)
+    IntLit(value: Int)
+    BoolLit(value: Bool)
+  
+  // Any more convenient way to apply a pattern?
+  // For example, `this through ShowTerm`?
+  fun show = if this is ShowTerm as result then result
+
+// Note: missing type arguments for `Set`.
+data class Scheme(vars: Set, typ: Type) with
+  fun show =
+    if vars.size === 0 then typ.show
+    else "∀" + vars Iter.joined(", ") + ". " + typ.show
+
+// Substitution for types
+data class Subst(map: Map) with
+  
+  fun apply(typ) = if typ is
+    TVar(name) and this is Subst(map) and
+      map.has(name) then map.get(name)
+      else typ
+    TFun(lhs, rhs) then TFun(apply(lhs), apply(rhs))
+    else typ
+  
+  fun applyScheme(scheme) = if scheme is Scheme(vars, typ) then
+    let newMap = new Map()
+    this.map Iter.each of case [key, value] then
+      if vars.has(key) is false then newMap.set(key, value)
+    Subst(newMap).apply(typ)
+  
+  fun compose(that) =
+    let newMap = new Map()
+    that.map Iter.each of case [key, value] then
+      newMap.set(key, apply(value))
+    this.map Iter.each of case [key, value] then
+      newMap.set(key, value)
+    Subst(newMap)
+  
+  fun show =
+    let pairs = mut []
+    map Iter.each of case [key, value] then
+      pairs.push(key + " -> " + value.show)
+    "{" + pairs.join(", ") + "}"
+
+let emptySub = Subst(new Map())
+//│ emptySub = Subst(Map(0) {})
+
+fun (~>) applyPattern(x, P) =
+  if P.unapply(x) is Runtime.MatchSuccess(result, _) then result
+
+// Note that how we use `where` clauses in disjunction patterns with bindings.
+pattern Unify =
+  (
+    ([TFun(l1, r1), TFun(l2, r2)]) =>
+      let s1 = [l1, l2] ~> Unify
+      let s2 = [s1.apply(r1), s1.apply(r2)] ~> Unify
+      s2.compose(s1)
+  ) | (
+    (
+      ([TVar(name1), TVar(name2)] | [TPrim(name1), TPrim(name2)])
+        where name1 === name2
+    ) => emptySub
+  ) | (
+    (
+      ([TVar(nme), Type as typ] | [Type as typ, TVar(nme)])
+        where not(typ.hasFreeVar(nme))
+    ) =>
+      Subst(new Map([[nme, typ]]))
+  ) | (
+    ([TPrim(name1), TPrim(name2)] where name1 === name2) => emptySub
+  )
+
+fun unify'(t1, t2) = [t1, t2] ~> Unify
+
+fun unify(t1, t2) = if
+  t1 is TVar(name1) and t2 is TVar(name2) and name1 === name2 then emptySub
+  t1 is TVar(name) and
+    t2.hasFreeVar(name) then throw new Error("Occurs check failed")
+    else Subst(new Map([[name, t2]]))
+  t2 is TVar(name) and
+    t1.hasFreeVar(name) then throw new Error("Occurs check failed")
+    else Subst(new Map([[name, t1]]))
+  t1 is TFun(l1, r1) and t2 is TFun(l2, r2) then
+    let s1 = unify(l1, l2)
+    let s2 = unify(s1.apply(r1), s1.apply(r2))
+    s2.compose(s1)
+  t1 is TPrim(name) and t2 is TPrim(name') and name === name' then emptySub
+  else throw new Error("Cannot unify " + t1.show + " with " + t2.show)
+
+unify(TInt, TInt).show
+//│ = "{}"
+
+unify'(TInt, TInt).show
+//│ = "{}"
+
+:expect "{t1 -> Int}"
+unify(TVar("t1"), TInt).show
+//│ = "{t1 -> Int}"
+
+unify'(TVar("t1"), TInt).show
+//│ = "{t1 -> Int}"
+
+:expect "{}"
+unify(TFun(TVar("t2"), TVar("t3")), TFun(TVar("t2"), TVar("t3"))).show
+//│ = "{}"
+
+unify'(TFun(TVar("t2"), TVar("t3")), TFun(TVar("t2"), TVar("t3"))).show
+//│ = "{}"
+
+:re
+unify(TVar("t1"), TFun(TVar("t1"), TInt)).show
+//│ ═══[RUNTIME ERROR] Error: Occurs check failed
+
+:re
+unify'(TVar("t1"), TFun(TVar("t1"), TInt)).show
+//│ ═══[RUNTIME ERROR] Error: match error
+
+// Note: missing type arguments for `Map`.
+data class Env(bindings: Map) with
+  fun lookup(name) =
+    if bindings.has(name) then bindings.get(name)
+    else throw new Error("Unbound variable: " + name)
+  
+  fun extend(name, scheme) =
+    let newBindings = new Map(bindings)
+    newBindings.set(name, scheme)
+    Env(newBindings)
+  
+  fun freeVars =
+    let vars = new Set([])
+    bindings.values() Iter.each of scheme =>
+      scheme => scheme.typ.freeVars Iter.each of v => vars.add(v)
+    vars
+  
+  fun generalize(typ) =
+    let envFree = freeVars
+    let typeFree = typ.freeVars
+    let genVars = new Set([])
+    typeFree Iter.each of v =>
+      if envFree.has(v) is false then genVars.add(v)
+    Scheme(genVars, typ)
+
+let emptyEnv = Env(new Map())
+//│ emptyEnv = Env(Map(0) {})
+
+class Gen with
+  let counter = 0
+  
+  fun subscript =
+    let
+      value = counter
+      text = ""
+    while value > 0 || text.length === 0 do
+      set text += String.fromCodePoint(0x2080 + value % 10)
+      set value = Math.floor(value / 10)
+    text
+  
+  fun fresh =
+    let name = "t" + subscript
+    set counter += 1
+    TVar(name)
+
+fun infer(env, term)(using gen: Gen) = if term is
+  IntLit then [emptySub, TInt]
+  BoolLit then [emptySub, TBool]
+  Var(name) and env.lookup(name) is Scheme(vars, typ) then
+    // Instantiate the type scheme
+    let subst = new Map()
+    vars Iter.each of v => subst.set(v, gen.fresh)
+    let s = Subst(subst)
+    [emptySub, s.apply(typ)]
+  App(lhs, rhs) and infer(env, lhs) is [s1, t1] then
+    let env1 = Env(new Map())
+    env.bindings Iter.each of case [name, scheme] then
+      env1.bindings.set(name, Scheme(scheme.vars, s1.apply(scheme.typ)))
+    if infer(env1, rhs) is [s2, t2] then...
+    let tv = gen.fresh
+    let s3 = unify(s2.apply(t1), TFun(t2, tv))
+    [s3.compose(s2).compose(s1), s3.apply(tv)]
+  Abs(name, body) and
+    let tv = gen.fresh
+    let env1 = env.extend(name, Scheme(new Set([]), tv))
+    infer(env1, body) is [s, t] then [s, TFun(s.apply(tv), t)]
+
+// Type inference with generalization
+fun inferTop(env, name, term)(using Gen) =
+  if infer(env, term) is [subst, typ] then...
+  [subst, env.generalize(typ)]
+
+fun (|-) inferType(env, term) =
+  using Gen = new Gen
+  env.generalize(infer(env, term).1).show
+
+:silent
+// Example terms
+let id = Abs("x", Var("x"))
+let const = Abs("x", Abs("y", Var("x")))
+let apply = Abs("f", Abs("x", App(Var("f"), Var("x"))))
+let compose = Abs("f", Abs("g", Abs("x", App(Var("f"), App(Var("g"), Var("x"))))))
+
+print of id.show
+print of const.show
+print of apply.show
+print of compose.show
+//│ > λx. x
+//│ > λx. λy. x
+//│ > λf. λx. f x
+//│ > λf. λg. λx. f (g x)
+
+emptyEnv |- id
+//│ = "∀t₀. t₀ -> t₀"
+
+emptyEnv |- const
+//│ = "∀t₀, t₁. t₀ -> t₁ -> t₀"
+
+emptyEnv |- apply
+//│ = "∀t₁, t₂. (t₁ -> t₂) -> t₁ -> t₂"
+
+emptyEnv |- compose
+//│ = "∀t₃, t₄, t₂. (t₃ -> t₄) -> (t₂ -> t₃) -> t₂ -> t₄"
+
+:expect "Int"
+emptyEnv |- IntLit(42)
+//│ = "Int"
+
+:expect "Bool"
+emptyEnv |- BoolLit(true)
+//│ = "Bool"
+
+:expect "Int"
+emptyEnv |- App(id, IntLit(5))
+//│ = "Int"
+
+:expect "Int"
+emptyEnv |-  App(id, App(id, IntLit(5)))
+//│ = "Int"
+
+:silent
+let env1 = emptyEnv.extend of
+  "id"
+  Scheme(new Set(["a"]), TFun(TVar("a"), TVar("a")))
+
+:expect "Int"
+env1 |- App(Var("id"), IntLit(5))
+//│ = "Int"
+
+:expect "Bool"
+env1 |- App(Var("id"), BoolLit(true))
+//│ = "Bool"
+
+:silent
+let env2 = env1.extend of
+  "add"
+  Scheme(new Set(), TFun(TInt, TFun(TInt, TInt)))
+
+env2 |- App(App(Var("add"), IntLit(5)), IntLit(5))
+//│ = "Int"
+
+:re
+env2 |- App(App(Var("add"), IntLit(5)), BoolLit(true))
+//│ ═══[RUNTIME ERROR] Error: Cannot unify Int with Bool
+
+:silent
+let env3 = env2.extend of
+  "if"
+  Scheme(new Set(["a"]), TFun(TBool, TFun(TVar("a"), TFun(TVar("a"), TVar("a")))))
+
+env3 |- Var("if")
+//│ = "∀t₀. Bool -> t₀ -> t₀ -> t₀"
+
+:silent
+let t = App(App(App(Var("if"), BoolLit(true)), App(Var("id"), Var("id"))), Var("id"))
+print of t.show
+print of env3 |- t
+//│ > if true (id id) id
+//│ > ∀t₆. t₆ -> t₆
+
+:silent
+:re
+let t = App(App(App(Var("if"), BoolLit(true)), App(Var("id"), Var("id"))), Var("add"))
+print of t.show
+print of env3 |- t
+//│ > if true (id id) add
+//│ ═══[RUNTIME ERROR] Error: Cannot unify Int with Int -> Int

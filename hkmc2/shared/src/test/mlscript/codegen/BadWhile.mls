@@ -6,7 +6,7 @@
 while {} do()
 //│ ╔══[ERROR] Unexpected infix use of keyword 'do' here
 //│ ║  l.6: 	while {} do()
-//│ ╙──     	           ^^
+//│ ╙──     	         ^^^^
 //│ JS (unsanitized):
 //│ /* error */
 

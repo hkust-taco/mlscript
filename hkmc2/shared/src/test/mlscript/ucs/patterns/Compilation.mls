@@ -1,0 +1,48 @@
+:js
+
+open annotations
+
+// * Note that `(@compile (...))` is currently parsed as `(@compile(...) ())`...
+:e
+fun trimStart(str) =
+  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╔══[ERROR] Unrecognized pattern (unit).
+//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──     	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Name not found: rest
+//│ ║  l.8: 	  if str is (@compile ((" " | "\t") ~ rest)) then trimStart(rest) else str
+//│ ╙──     	                                                            ^^^^
+
+:pe
+:e
+:w
+// Note: `compile ((" " | "\t") ~ rest)` is parsed as an annotation.
+fun trimStart(str) =
+  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╔══[PARSE ERROR] Unexpected keyword 'then' in this position
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                           ^^^^
+//│ ╔══[ERROR] Unrecognized pattern (‹erroneous syntax›).
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                           ^^^^
+//│ ╔══[ERROR] Name not found: rest
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                     ^^^^
+//│ ╔══[ERROR] Name not found: rest
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ╙──      	                                                          ^^^^
+//│ ╔══[WARNING] This annotation is not supported here.
+//│ ║  l.21: 	  if str is @compile ((" " | "\t") ~ rest) then trimStart(rest) else str
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: Patterns only support the `@compile` annotation.
+
+:todo
+// Note: the syntax works but the compilation doesn't support.
+fun trimStart(str) =
+  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╔══[ERROR] String concatenation is not supported in pattern compilation.
+//│ ║  l.42: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──      	                        ^^^^^^^^^^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rest'
+//│ ║  l.42: 	  if str is @compile { (" " | "\t") ~ rest } then trimStart(rest) else str
+//│ ╙──      	                                                            ^^^^

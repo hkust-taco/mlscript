@@ -1,4 +1,4 @@
-
+:js
 
 :ucs desugared
 // * Note that this always associates to the left
@@ -7,10 +7,16 @@ fun f(x) =
     1 +
       2 then 0
       _ then 1
-//│ Desugared:
+//│ Split with nested patterns:
 //│ >  if
-//│ >    let $scrut = builtin:==(x, 1)
-//│ >    let $scrut = builtin:+($scrut, 2)
+//│ >    let $scrut = 1
+//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
+//│ >    $scrut is true then 0
+//│ >    else 1
+//│ Expanded split with flattened patterns:
+//│ >  if
+//│ >    let $scrut = 1
+//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0
 //│ >    else 1
 

@@ -25,19 +25,28 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ JS (unsanitized):
-//│ let scrut6, scrut7;
-//│ scrut6 = true;
-//│ if (scrut6 === true) {
-//│   scrut7 = test(42);
-//│   if (scrut7 === true) { true } else { false }
-//│ } else { false }
+//│ let scrut6, scrut7, tmp4;
+//│ split_root$3: {
+//│   split_1$3: {
+//│     scrut6 = true;
+//│     if (scrut6 === true) {
+//│       scrut7 = test(42);
+//│       if (scrut7 === true) {
+//│         tmp4 = true;
+//│         break split_root$3
+//│       } else { break split_1$3 }
+//│     } else { break split_1$3 }
+//│   }
+//│   tmp4 = false;
+//│ }
+//│ tmp4
 //│ > 42
 //│ = false
 
 :fixme
 true or test(42)
 //│ ╔══[ERROR] Logical `or` is not yet supported.
-//│ ║  l.38: 	true or test(42)
+//│ ║  l.47: 	true or test(42)
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ > 42
 //│ = false

@@ -576,7 +576,8 @@ object Lexer:
     "undefined",
     "abstract",
     "constructor",
-    "virtual"
+    "virtual",
+    "staged"
   )
   
   private val SEP = "┊"

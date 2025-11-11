@@ -21,6 +21,10 @@ fun insert(key, value)(m) =
   m.underlying.set(key, value)
   ()
 
+fun delete(key)(m) =
+  m.underlying.delete(key)
+  ()
+
 fun updateWith(key)(op)(m) =
   if op(m |> get(key)) is
     Some(value) then m.underlying.set(key, value)
