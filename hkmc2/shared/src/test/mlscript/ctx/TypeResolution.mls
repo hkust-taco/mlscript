@@ -44,7 +44,9 @@ foo.foo
 //│   stats = Nil
 //│   res = Resolved{sym=term:class:Foo.foo,typ=class:Foo}:
 //│     t = Sel{sym=member:foo}:
-//│       prefix = Ref{sym=member:foo,typ=class:Foo} of member:foo
+//│       prefix = Resolved{sym=term:foo,typ=class:Foo}:
+//│         t = Ref{sym=member:foo} of member:foo
+//│         sym = term:foo
 //│       nme = Ident of "foo"
 //│     sym = term:class:Foo.foo
 
@@ -93,7 +95,9 @@ foo.foo
 //│   stats = Nil
 //│   res = Resolved{sym=term:class:Foo2.foo,typ=class:Foo2[class:Int, class:Str]}:
 //│     t = Sel{sym=member:foo}:
-//│       prefix = Ref{sym=member:foo,typ=class:Foo2[class:Str, class:Int]} of member:foo
+//│       prefix = Resolved{sym=term:foo,typ=class:Foo2[class:Str, class:Int]}:
+//│         t = Ref{sym=member:foo} of member:foo
+//│         sym = term:foo
 //│       nme = Ident of "foo"
 //│     sym = term:class:Foo2.foo
 

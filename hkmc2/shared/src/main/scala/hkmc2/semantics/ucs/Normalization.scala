@@ -262,14 +262,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                   val (cse, blk) = mkArgs(args)
                   (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
-            // Select the constructor's `.class` field.
-            lazy val ctorTerm = ctor.symbol match
-              // case S(mem: BlockMemberSymbol) =>
-              //   // If the class is declaration-only, we do not need to
-              //   // select the class.
-              //   if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then ctor
-              //   else Term.SynthSel(ctor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
-              case _ => ctor
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -280,9 +272,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 // and use it `Predef.unreachable` here.
                 k(cls, Nil)(unreachableFn)
               case cls: ClassSymbol =>
-                subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
+                subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
-                subTerm_nonTail(ctorTerm)(k(mod, Nil))
+                subTerm_nonTail(ctor)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object

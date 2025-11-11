@@ -115,6 +115,16 @@ abstract class Symbol(using State) extends Located:
     asPat orElse
     asMod
   
+  def orElseDisamb(disamb: Opt[DefinitionSymbol[?]]): Symbol = (this, disamb) match
+    case (bms: BlockMemberSymbol, S(disamb)) =>
+      disamb
+    case (bms: BlockMemberSymbol, N) =>
+      lastWords(s"Cannot disambiguate overloaded member symbol ${bms.nme}: no disambiguation provided")
+    case (sym, N) =>
+      sym
+    case (sym, S(_)) =>
+      lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
+  
   override def equals(x: Any): Bool = x match
     case that: Symbol => uid === that.uid
     case _ => false
@@ -201,6 +211,9 @@ class BuiltinSymbol
 class BlockMemberSymbol(val nme: Str, val trees: Ls[TypeOrTermDef], val nameIsMeaningful: Bool = true)(using State)
     extends MemberSymbol[Definition]:
   
+  def defn: Option[Definition] = ???
+  def defn_=(d: Option[Definition]): Unit = ???
+  
   // * This is a hack for that `TermDef` currently doesn't have a symbol. 
   var tsym: Opt[TermSymbol] = N
   
@@ -239,7 +252,10 @@ end BlockMemberSymbol
 
 sealed abstract class MemberSymbol[Defn <: Definition](using State) extends Symbol:
   def nme: Str
-  var defn: Opt[Defn] = N
+  
+  def defn: Opt[Defn]
+  def defn_=(d: Opt[Defn]): Unit
+  
   def subst(using SymbolSubst): MemberSymbol[Defn]
 
 
@@ -250,6 +266,9 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
     with NamedSymbol:
   def nme: Str = id.name
   def name: Str = nme
+  
+  var defn: Opt[TermDefinition] = N
+  
   def toLoc: Option[Loc] = id.toLoc
   override def toString: Str = s"term:${owner.map(o => s"${o}.").getOrElse("")}${id.name}${State.dbgUid(uid)}"
   
@@ -287,6 +306,7 @@ type FieldSymbol = MemberSymbol[?]
   * same error from throwing multiple times.
   */
 case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymbol[Nothing]:
+  var defn: Opt[Nothing] = N
 
   override def toLoc: Option[Loc] = tree.toLoc
 
@@ -341,6 +361,9 @@ class ClassSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using State)
     with DefinitionSymbol[ClassDef]
     with InnerSymbol
     with NamedSymbol:
+
+  var defn: Opt[ClassDef] = N
+
   def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of classe here
@@ -357,6 +380,7 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
     with DefinitionSymbol[ModuleOrObjectDef]
     with InnerSymbol
     with NamedSymbol:
+  var defn: Opt[ModuleOrObjectDef] = N
   def name: Str = nme
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of module here
@@ -369,6 +393,7 @@ class ModuleOrObjectSymbol(val tree: Tree.TypeDef, val id: Tree.Ident)(using Sta
 class TypeAliasSymbol(val id: Tree.Ident)(using State)
     extends MemberSymbol[TypeDef]
     with DefinitionSymbol[TypeDef]:
+  var defn: Opt[TypeDef] = N
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of type alias here
   override def toString: Str = s"type:${id.name}${State.dbgUid(uid)}"
@@ -380,6 +405,7 @@ class PatternSymbol(val id: Tree.Ident, val params: Opt[Tree.Tup], val body: Tre
     with CtorSymbol
     with DefinitionSymbol[PatternDef]
     with InnerSymbol:
+  var defn: Opt[PatternDef] = N
   def nme = id.name
   def toLoc: Option[Loc] = id.toLoc // TODO track source tree of pattern here
   override def toString: Str = s"pattern:${id.name}"
@@ -390,6 +416,7 @@ class TopLevelSymbol(blockNme: Str)(using State)
     extends MemberSymbol[ModuleOrObjectDef]
     with DefinitionSymbol[ModuleOrObjectDef]
     with InnerSymbol:
+  var defn: Opt[ModuleOrObjectDef] = N
   def nme = blockNme
   def toLoc: Option[Loc] = N
   override def toString: Str = s"globalThis:$blockNme${State.dbgUid(uid)}"

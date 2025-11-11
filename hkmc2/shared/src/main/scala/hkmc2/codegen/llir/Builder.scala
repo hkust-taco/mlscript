@@ -222,8 +222,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         given Ctx = ctx.setClass(isym)
         val funcs = methods.map(bMethodDef)
         def parentFromPath(p: Path): Ls[Local] = p match
-          case Value.Ref(l, _) => fromMemToClass(l) :: Nil
-          case Select(Value.Ref(l, _), Tree.Ident("class")) => fromMemToClass(l) :: Nil
+          case Value.Ref(l, disamb) => fromMemToClass(l.orElseDisamb(disamb)) :: Nil
           case _ => bErrStop(msg"Unsupported parent path ${p.toString()}")
         ClassInfo(
           uid.make,
@@ -279,9 +278,9 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       v match
       case Value.Ref(l: TermSymbol, _) if l.owner.nonEmpty =>
         k(l |> sr)
-      case Value.Ref(sym, _) if sym.nme.isCapitalized =>
+      case Value.Ref(sym, disamb) if sym.nme.isCapitalized =>
         val v: Local = newTemp
-        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), Ls()), k(v |> sr))
+        Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym.orElseDisamb(disamb)), Ls()), k(v |> sr))
       case Value.Ref(l, _) => 
         ctx.fn_ctx.get(l) match
           case Some(f) =>
@@ -311,8 +310,11 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
   private def fromMemToClass(m: Symbol)(using ctx: Ctx)(using Raise, Scope): DefinitionSymbol[? <: ClassLikeDef] =
     trace[DefinitionSymbol[? <: ClassLikeDef]](s"bFromMemToClass $m", x => s"bFromMemToClass end: $x"):
       m match
-      case ms: MemberSymbol[?] =>
+      case ms: DefinitionSymbol[?] =>
         ms.defn match
+        case Some(d: TermDefinition) =>
+          val companion = d.companionClass.getOrElse(bErrStop(msg"Term definition without companion ${d.toString}"))
+          fromMemToClass(companion)
         case Some(d: ClassLikeDef) => d.sym.asClsLike.getOrElse(bErrStop(msg"Class definition without symbol"))
         case Some(value) => bErrStop(msg"Member symbol without class definition ${value.toString}")
         case None => bErrStop(msg"Member symbol without definition ${ms.toString}") 
@@ -371,11 +373,20 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
             Node.LetExpr(v, Expr.BasicOp(sym, args), k(v |> sr))
-      case Call(Value.Ref(sym: MemberSymbol[?], _), args) if sym.defn.exists(defn => defn match
+      case Call(Value.Ref(sym, S(disamb)), args) if disamb.defn.exists(defn => defn match
         case cls: ClassLikeDef => true
+        case trm: TermDefinition => trm.companionClass.isDefined
         case _ => false
       ) =>
-        log(s"xxx $sym is ${sym.getClass()}")
+        bArgs(args):
+          case args: Ls[TrivialExpr] =>
+            val v: Local = newTemp
+            Node.LetExpr(v, Expr.CtorApp(fromMemToClass(disamb), args), k(v |> sr))
+      case Call(Value.Ref(sym: DefinitionSymbol[?], _), args) if sym.defn.exists(defn => defn match
+        case cls: ClassLikeDef => true
+        case trm: TermDefinition => trm.companionClass.isDefined
+        case _ => false
+      ) =>
         bArgs(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
@@ -419,11 +430,11 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Call(_, _) => bErrStop(msg"Unsupported kind of Call ${r.toString()}")
       case Instantiate(
         false,
-        Value.Ref(sym, S(_: (ClassSymbol | ModuleOrObjectSymbol))), args) =>
+        Value.Ref(sym, S(disamb: (ClassSymbol | ModuleOrObjectSymbol))), args) =>
         bArgs(args):
           case args: Ls[TrivialExpr] =>
             val v: Local = newTemp
-            Node.LetExpr(v, Expr.CtorApp(fromMemToClass(sym), args), k(v |> sr))
+            Node.LetExpr(v, Expr.CtorApp(fromMemToClass(disamb), args), k(v |> sr))
       case Instantiate(_, cls, args) =>
         bErrStop(msg"Unsupported kind of Instantiate")
       case lam @ Lambda(params, body) => bLam(lam, N, N)(k)

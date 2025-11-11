@@ -1126,7 +1126,6 @@ extends Importer with ucs.SplitElaborator:
               val tdf = TermDefinition(k, sym, tsym, pss, tps, s, body, r, 
                 TermDefFlags.empty.copy(isMethod = isMethod), mfn, annotations, N).withLocOf(td)
               tsym.defn = S(tdf)
-              sym.defn = S(tdf)
               sym.tsym = S(tsym)
               
               tdf
@@ -1213,7 +1212,6 @@ extends Importer with ucs.SplitElaborator:
                 ).withLocOf(p)
                 assert(p.fldSym.isEmpty)
                 p.fldSym = S(fsym)
-                fsym.defn = S(fdef)
                 fsym.tsym = S(tsym)
                 tsym.defn = S(fdef)
                 fdef :: Nil
@@ -1364,7 +1362,6 @@ extends Importer with ucs.SplitElaborator:
                 ctsym.defn = S(ctdef)
                 sym.tsym = S(ctsym)
               cd
-        sym.defn = S(defn)
         go(sts, Nil, defn :: acc)
       case Annotated(annotation, target) :: sts =>
         go(target :: sts, annotations ++ annot(annotation), acc)
@@ -1600,7 +1597,9 @@ extends Importer with ucs.SplitElaborator:
         case p @ Pun(false, _) :: Nil => record(p)
         case p @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) :: Nil => record(p)
         case lhs :: Nil => arrow(lhs, rhs)
-        case _ :: _ | Nil => ??? // TODO: When is this case reached?
+        // TODO: When is this case reached?
+        // * Answer: pattern p = () => Unit
+        case _ :: _ | Nil => ??? 
       case p as q => q match
         // `p as id` is elaborated into alias if `id` is not a constructor.
         case id: Ident => ident(id) match

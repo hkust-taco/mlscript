@@ -383,7 +383,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         assert(paramLists.length === 1)
         return k(Lambda(paramLists.head, bodyBlock).withLocOf(ref))
     case bs: BlockMemberSymbol =>
-      disamb.flatMap(_.defn) orElse bs.defn match
+      disamb.flatMap(_.defn) match
       case S(_) if bs.asCls.exists(_ is ctx.builtins.Int31) =>
         return term(Sel(State.runtimeSymbol.ref().resolve, ref.tree)(S(bs), N).withLocOf(ref).resolve)(k)
       case S(d) if d.hasDeclareModifier.isDefined =>

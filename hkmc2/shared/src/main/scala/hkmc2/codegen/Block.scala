@@ -532,8 +532,13 @@ sealed abstract class Result extends AutoLocated:
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
     case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol), disamb) => Set.empty
-    case Value.Ref(l: MemberSymbol[?], disamb) => l.defn match
+    case Value.Ref(l: BlockMemberSymbol, S(disamb)) => disamb.defn match
       case Some(d: ClassLikeDef) => Set.empty
+      case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
+      case _ => Set(l)
+    case Value.Ref(l: DefinitionSymbol[?], N) => l.defn match
+      case Some(d: ClassLikeDef) => Set.empty
+      case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
       case _ => Set(l)
     case Value.Ref(l, disamb) => Set(l)
     case Value.This(sym) => Set.empty

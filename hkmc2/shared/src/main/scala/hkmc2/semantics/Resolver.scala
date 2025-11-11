@@ -139,6 +139,8 @@ object Resolver:
       case Expect.Module(msg) => msg.toList.map(_ -> N)
       case Expect.NonModule(msg) => msg.toList.map(_ -> N)
       case Expect.Class(msg) => msg.toList.map(_ -> N)
+      case Expect.Selectable(msg) => msg.toList.map(_ -> N)
+      case Expect.PatternConstructor(msg) => msg.toList.map(_ -> N)
       case Expect.Any => Nil
     
     def `module` = isInstanceOf[Module]
@@ -146,10 +148,12 @@ object Resolver:
     def nonModule = isInstanceOf[NonModule]
     
     override def toString: Str = this match
-      case _: Module => "Module"
-      case _: NonModule => "NonModule"
-      case _: Class => "Class"
-      case _: Any => "Any"
+      case _: Expect.Module => "Module"
+      case _: Expect.NonModule => "NonModule"
+      case _: Expect.Class => "Class"
+      case _: Expect.Selectable => "Selectable"
+      case _: Expect.PatternConstructor => "PatternConstructor"
+      case Expect.Any => "Any"
   
   object Expect:
     def fromModulefulness(mf: Modulefulness): Expect =
@@ -784,7 +788,7 @@ class Resolver(tl: TraceLogger)
       // If it is expecting a class or module specifically, cast the symbol.
       case _: Module => bms.asMod
       case _: Class => bms.asCls
-      case _: Selectable => bms.asModOrObj
+      case _: Selectable => bms.asModOrObj orElse bms.asTrm
       // If it is expecting a generic symbol, use asPrinciple for the "default interpretation".
       case _: (Any.type | NonModule) if sign =>
         bms.asTpe
@@ -841,7 +845,7 @@ class Resolver(tl: TraceLogger)
       case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
       
       case t @ Term.Ref(bsym: BlockMemberSymbol) =>
-        log(s"Resolving symbol for reference ${t} (bsym = ${bsym}, defn = ${bsym.defn})")
+        log(s"Resolving symbol for reference ${t} (bsym = ${bsym})")
         val sym = disambSym(prefer, sign = sign)(bsym)
         sym.foreach: sym =>
           t.expand(S((t.duplicate.resolved(sym))))
@@ -930,7 +934,7 @@ class Resolver(tl: TraceLogger)
       def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
         case _: Module => bms.asMod
         case _: Class => bms.asCls
-        case _: Selectable => bms.asModOrObj
+        case _: Selectable => bms.asModOrObj orElse bms.asTrm
         case _: (Any.type | NonModule) => bms.asPrincipal
       
       t match
@@ -946,7 +950,7 @@ class Resolver(tl: TraceLogger)
         val decl = base.resolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
-            log(s"Disambiguate ${bms} into ${disambBms} (defn = ${disambBms.map(_.defn)})")
+            log(s"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
             disambBms match
             case S(disambBms) => disambBms.defn
             case N => bms.asPrincipal.flatMap(_.defn)
@@ -1096,7 +1100,7 @@ class Resolver(tl: TraceLogger)
   def resolveSign(t: Term, expect: Expect): Type =
     def raiseError(sym: Opt[Symbol] = N) =
       val defnMsg = sym match
-        case S(sym: FieldSymbol) => sym.defn match
+        case S(sym: DefinitionSymbol[?]) => sym.defn match
           case S(defn: TermDefinition) => s" denoting ${defn.k.desc} '${defn.sym.nme}'"
           case S(defn: ClassLikeDef) => s" denoting ${defn.kind.desc} '${defn.sym.nme}'"
           case _ => ""
