@@ -17,6 +17,7 @@ import Producer as P
 import Consumer as C
 import hkmc2.semantics.BuiltinSymbol
 import P.Unknown
+import hkmc2.semantics.BlockMemberSymbol
 
 
 
@@ -39,6 +40,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   import tl.*
   
   val MAX_FUEL = 1000
+  
+  val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
+  
+  val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
+
+  val objectCache: mutable.Buffer[ObjBody] = mutable.Buffer.empty
   
   def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
@@ -82,9 +89,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case t: Term => typeProd(t)
           
         case cd: ClassDef =>
-          
           typeBody(cd.body)
-          
           val prod = cd.paramsOpt match
             case S(ps) =>
               ps.restParam match
@@ -92,22 +97,21 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case N =>
                 P.Fun(
                   C.Tup(ps.params.map(typeParam), N),
-                  P.Ctor(cd.sym, Nil // FIXME: Nil
+                  P.Ctor(cd.sym, ps.params.flatMap(_.subTerms).map(typeProd) // Good?
                     )(
-                      Term.Missing // FIXME
+                      cd.body.blk // Good?
                     ),
                   Nil,
                 )
             case N => P.Unknown(cd)
-          
           log(s"Class member type: ${prod.showDbg}")
-          
           constrain(prod, C.Flow(cd.bsym.flow))
           
         case md: ModuleOrObjectDef =>
           // TODO
           log(s"Module: ${md.path}")
           typeBody(md.body)
+          objectCache += md.body
           
         case _: Import =>
           // TODO?
@@ -197,10 +201,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case f: Fld => typeCons(f.term)
         , N)
     case _ => TODO(t)
-  
-  val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
-  
-  val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
   
   def expandTerms() =
     import SelectionTarget.*
@@ -297,9 +297,17 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
                   if targs.nonEmpty then TODO(targs)
                   toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
-                case P.Unknown(Missing) => ???
+                case P.Unknown(Missing) => objectCache.foreach(bd => bd.members.get(sel.nme.name) match
+                    case N => ()
+                    case S(memb: BlockMemberSymbol) =>
+                      sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
+                      log(s"Found companion member ${memb}")
+                      val lhs = P.Flow(memb.flow)
+                      toSolve.push(Constraint(lhs, sel.res))
+                    case S(memb) => TODO(memb)
+                  )
                 case P.Ctor(sym: ClassSymbol, args) =>
-                  log(s"Selection result ${sel.res}")
+                  log(s"Selection result: ${sel.res}")
                   val d = sym.defn.getOrElse(die)
                   d.body.members.get(sel.nme.name) match
                   case S(memb: BlockMemberSymbol) =>

@@ -1,23 +1,88 @@
 :flow
 :df
+:sf
+:rt
+:r
 
+//│ Resolved: { import /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs from /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs; }
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     Import:
+//│       sym = member:Predef
+//│       str = "/home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs"
+//│       file = /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs
+//│   res = Lit of UnitLit of false
 //│ Typing producer: { import /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs from /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs; }
 //│ | Typing producer: undefined
 //│ | : ()
 //│ : ()
-4 + 4
-//│ Typing producer: { builtin:+(4, 4) }
-//│ | Typing producer: builtin:+(4, 4)
-//│ | | Typing producer: [4, 4]
-//│ | | | Typing producer: 4
-//│ | | | : 4
-//│ | | | Typing producer: 4
-//│ | | | : 4
-//│ | | : [4, 4]
-//│ | | Typing producer: builtin:+
-//│ | | : +‹41›
-//│ | : app‹589›
-//│ : app‹589›
-//│ Handling constraint: +‹41› <: ((4, 4) -> app‹589›) (from builtin:+(4, 4))
-//│ | Solving: +‹41› <: ((4, 4) -> app‹589›)   (Flow, Fun)   []
-//│ | New flow: builtin:+ ~> Fun(Tup(List((None,Ctor(lit:IntLit(4),List())), (None,Ctor(lit:IntLit(4),List())))),Flow(app))
+//│ Flowed:
+//│   import ".../Predef.mjs" as Predef⁰
+//│ where
+//│     
+object C with
+  val x = 4
+C.x
+//│ Resolved: { Obj C { val member:x = 4; }; member:C.x‹member:x› }
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     ModuleOrObjectDef:
+//│       owner = N
+//│       sym = object:C
+//│       bsym = member:C
+//│       tparams = Nil
+//│       paramsOpt = N
+//│       auxParams = Nil
+//│       ext = N
+//│       kind = Obj
+//│       body = ObjBody of Blk:
+//│         stats = Ls of 
+//│           TermDefinition:
+//│             k = ImmutVal
+//│             sym = member:x
+//│             tsym = object:C.x
+//│             params = Nil
+//│             tparams = N
+//│             sign = N
+//│             body = S of Lit of IntLit of 4
+//│             flags = ()
+//│             modulefulness = Modulefulness of N
+//│             annotations = Nil
+//│             companion = N
+//│         res = Lit of UnitLit of false
+//│       companion = N
+//│       annotations = Nil
+//│   res = Sel{sym=member:x}:
+//│     prefix = Ref{sym=member:C,typ=object:C} of member:C
+//│     nme = Ident of "x"
+//│ Typing producer: { Obj C { val member:x = 4; }; member:C.x‹member:x› }
+//│ | Module: top-level/import:Prelude/block:1/block:2
+//│ | Typing producer: { val member:x = 4; }
+//│ | | Typing producer: 4
+//│ | | : 4
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: member:C.x‹member:x›
+//│ | | Typing producer: member:C
+//│ | | : flow:C‹599›
+//│ | : flow:x‹598›
+//│ : flow:x‹598›
+//│ Handling constraint: 4 <: flow:x‹598› (from { val member:x = 4; })
+//│ | Solving: 4 <: flow:x‹598›   (Ctor, Flow)   []
+//│ | New flow: Ctor(lit:IntLit(4),List()) ~> flow:x
+//│ Resolved targets for member:C.x‹member:x›: 
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:222)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.26: 	C.x
+//│ ╙──      	^^^
+//│ Flowed:
+//│   object C {
+//│     val x⁰ ‹flow:x⁰› = 4
+//│   },
+//│   C⁰.x⁰
+//│ where
+//│     flow:x⁰  <~  4
