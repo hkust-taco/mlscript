@@ -10,7 +10,7 @@ module Runtime with ...
 object Unit with
   fun toString() = "()"
 
-
+object LoopEnd
 val short_and = RuntimeJS.short_and
 val short_or = RuntimeJS.short_or
 

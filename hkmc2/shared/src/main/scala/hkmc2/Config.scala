@@ -22,6 +22,7 @@ case class Config(
   liftDefns: Opt[LiftDefns],
   stageCode: Bool,
   target: CompilationTarget,
+  rewriteWhileLoops: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -36,8 +37,9 @@ object Config:
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,
     liftDefns = N,
+    target = CompilationTarget.JS,
+    rewriteWhileLoops = true,
     stageCode = false,
-    target = CompilationTarget.JS
   )
   
   case class SanityChecks(light: Bool)

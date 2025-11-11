@@ -6,18 +6,22 @@
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function () {
-//│   let scrut, tmp;
-//│   tmp1: while (true) {
+//│   let while1, tmp, tmp1, tmp2;
+//│   tmp = undefined;
+//│   while1 = (undefined, function () {
+//│     let scrut;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
-//│       continue tmp1
+//│       return while1()
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     break;
-//│   }
-//│   return tmp
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp1 = while1();
+//│   tmp2 = tmp1 !== runtime.LoopEnd;
+//│   if (tmp2 === true) { return tmp1 } else { return tmp }
 //│ });
 //│ lambda
 //│ = fun
@@ -53,17 +57,20 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let tmp4, tmp5;
-//│ tmp6: while (true) {
+//│ let while3, tmp4, tmp5;
+//│ tmp4 = undefined;
+//│ while3 = (undefined, function () {
+//│   let tmp6;
 //│   if (x2 === true) {
-//│     tmp4 = Predef.print("Hello World");
+//│     tmp6 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp5 = runtime.Unit;
-//│     continue tmp6
-//│   } else { tmp5 = 42; }
-//│   break;
-//│ }
-//│ tmp5
+//│     tmp4 = runtime.Unit;
+//│     return while3()
+//│   } else { tmp4 = 42; }
+//│   return runtime.LoopEnd
+//│ });
+//│ tmp5 = while3();
+//│ tmp4
 //│ > Hello World
 //│ = 42
 
@@ -105,19 +112,25 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let i2, scrut3, tmp19, tmp20;
-//│   tmp21: while (true) {
+//│   let while7, tmp12, tmp13, tmp14;
+//│   tmp12 = undefined;
+//│   while7 = (undefined, function () {
+//│     let i2, scrut, tmp15;
 //│     i2 = 0;
-//│     scrut3 = i2 < 10;
-//│     if (scrut3 === true) {
-//│       tmp19 = i2 + 1;
-//│       i2 = tmp19;
-//│       tmp20 = runtime.Unit;
-//│       continue tmp21
-//│     } else { tmp20 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp20
+//│     scrut = i2 < 10;
+//│     if (scrut === true) {
+//│       tmp15 = i2 + 1;
+//│       i2 = tmp15;
+//│       tmp12 = runtime.Unit;
+//│       return while7()
+//│     } else {
+//│       tmp12 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp13 = while7();
+//│   tmp14 = tmp13 !== runtime.LoopEnd;
+//│   if (tmp14 === true) { return tmp13 } else { return tmp12 }
 //│ });
 //│ lambda2
 //│ = fun
@@ -197,20 +210,26 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let tl, h, argument0$, argument1$, tmp28;
-//│   tmp29: while (true) {
+//│   let while10, tmp18, tmp19, tmp20;
+//│   tmp18 = undefined;
+//│   while10 = (undefined, function () {
+//│     let tl, h, argument0$, argument1$;
 //│     if (ls instanceof Cons1.class) {
 //│       argument0$ = ls.hd;
 //│       argument1$ = ls.tl;
 //│       tl = argument1$;
 //│       h = argument0$;
 //│       ls = tl;
-//│       tmp28 = Predef.print(h);
-//│       continue tmp29
-//│     } else { tmp28 = Predef.print("Done!"); }
-//│     break;
-//│   }
-//│   return tmp28
+//│       tmp18 = Predef.print(h);
+//│       return while10()
+//│     } else {
+//│       tmp18 = Predef.print("Done!");
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp19 = while10();
+//│   tmp20 = tmp19 !== runtime.LoopEnd;
+//│   if (tmp20 === true) { return tmp19 } else { return tmp18 }
 //│ };
 
 f(0)
@@ -248,19 +267,23 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37;
-//│ tmp38: while (true) {
+//│ let while11, tmp27, tmp28;
+//│ tmp27 = undefined;
+//│ while11 = (undefined, function () {
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x3 instanceof Object) {
 //│         break split_1$
-//│       } else { break split_1$ }
+//│       } else {
+//│         break split_1$
+//│       }
 //│     }
-//│     tmp37 = runtime.Unit;
+//│     tmp27 = runtime.Unit;
 //│   }
-//│   break;
-//│ }
-//│ tmp37
+//│   return runtime.LoopEnd
+//│ });
+//│ tmp28 = while11();
+//│ tmp27
 
 
 // ——— FIXME: ———
@@ -274,10 +297,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.274: 	  then 0(0)
+//│ ║  l.297: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.273: 	while print("Hello World"); false
+//│ ║  l.296: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -287,12 +310,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.286: 	while { print("Hello World"), false }
+//│ ║  l.309: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.287: 	  then 0(0)
+//│ ║  l.310: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.288: 	  else 1
+//│ ║  l.311: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -302,14 +325,60 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.300: 	    print("Hello World")
+//│ ║  l.323: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.301: 	    false
+//│ ║  l.324: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.302: 	  then 0(0)
+//│ ║  l.325: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.303: 	  else 1
+//│ ║  l.326: 	  else 1
 //│ ╙──       	  ^^^^
 
 
+// Mix of local mutable variable, while loop and lambdas
+:expect 2
+fun f() =
+  let
+    cnt = 2
+    savedLambda = null
+  while cnt > 0 do
+    let local = cnt
+    if cnt == 2 do
+      // This lambda should always return 2,
+      // since local is 2 and not reassigned in the while loop
+      savedLambda = () => local
+    set cnt -= 1
+  // Calls the saved lambda
+  savedLambda()
+f()
+//│ = 2
+
+class Lazy[out A](f: () -> A) with
+  mut val cached: A | () = ()
+  fun get =
+    if cached === () do
+      set cached = f()
+    cached
+
+:expect [1, 2, 3]
+let arr = [1, 2, 3]
+let output = mut []
+let i = 0
+while i < arr.length do
+  let elem = arr.[i]
+  output.push(new Lazy(() => elem))
+  set i += 1
+[output.[0].get, output.[1].get, output.[2].get]
+//│ = [1, 2, 3]
+//│ arr = [1, 2, 3]
+//│ i = 3
+//│ output = [Lazy(_), Lazy(_), Lazy(_)]
+
+// Returning inside while loop
+:expect 42
+fun f() =
+  while true do
+    return 42
+f()
+//│ = 42
