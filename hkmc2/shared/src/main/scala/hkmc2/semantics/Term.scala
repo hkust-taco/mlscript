@@ -422,6 +422,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Annotated(annotation, target) => "annotation"
       case Ret(res) => "return"
       case Try(body, finallyDo) => "try expression"
+      case Missing => "missing"
       case s => TODO(s)
     this match
       case self: Resolvable => self.resolvedTyp match
@@ -539,9 +540,11 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case tup: Tup => bracketed("[", "]", insertBreak = true):
         tup.fields.map(_.show).mkDocument(doc", # ")
       case blk: Blk => braced:
-        doc" # " :: blk.stats.map(_.show).mkDocument(doc", # ") :: blk.res.match
-          case Lit(Tree.UnitLit(false)) => doc""
-          case res => res.show
+        doc" # " :: (blk.stats :::
+            blk.res.match
+            case Lit(Tree.UnitLit(false)) => Nil
+            case res => res :: Nil
+          ).map(_.show).mkDocument(doc", # ")
       case ld: LetDecl =>
         (ld.annotations.map(_.show) ::: doc"let ${ld.sym.showName}" :: Nil).mkDocument()
       case df: DefineVar =>

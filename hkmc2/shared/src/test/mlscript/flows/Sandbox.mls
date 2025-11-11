@@ -21,6 +21,38 @@
 //│   import ".../Predef.mjs" as Predef⁰
 //│ where
 //│     
+
+
+let x = 1 as Int
+//│ Resolved: { let x; x = Lit(IntLit(1)): Ref(member:Int); }
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     LetDecl:
+//│       sym = x
+//│       annotations = Nil
+//│     DefineVar:
+//│       sym = x
+//│       rhs = Asc:
+//│         term = Lit of IntLit of 1
+//│         ty = Ref{sym=member:Int} of member:Int
+//│   res = Lit of UnitLit of false
+//│ Typing producer: { let x; x = Lit(IntLit(1)): Ref(member:Int); }
+//│ | Typing producer: Lit(IntLit(1)): Ref(member:Int)
+//│ | : TODO‹590›
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: TODO‹590› <: x‹589› (from { let x; x = Lit(IntLit(1)): Ref(member:Int); })
+//│ | Solving: TODO‹590› <: x‹589›   (Flow, Flow)   []
+//│ | New flow: TODO ~> x
+//│ Flowed:
+//│   let x⁰,
+//│   x⁰ = TODO[show:Asc](Lit(IntLit(1)): Ref(member:Int))
+//│ where
+//│     
+
+
 object C with
   val x = 4
 C.x
@@ -58,7 +90,7 @@ C.x
 //│     prefix = Ref{sym=member:C,typ=object:C} of member:C
 //│     nme = Ident of "x"
 //│ Typing producer: { Obj C { val member:x = 4; }; member:C.x‹member:x› }
-//│ | Module: top-level/import:Prelude/block:1/block:2
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3
 //│ | Typing producer: { val member:x = 4; }
 //│ | | Typing producer: 4
 //│ | | : 4
@@ -67,22 +99,22 @@ C.x
 //│ | : ()
 //│ | Typing producer: member:C.x‹member:x›
 //│ | | Typing producer: member:C
-//│ | | : flow:C‹599›
-//│ | : flow:x‹598›
-//│ : flow:x‹598›
-//│ Handling constraint: 4 <: flow:x‹598› (from { val member:x = 4; })
-//│ | Solving: 4 <: flow:x‹598›   (Ctor, Flow)   []
+//│ | | : flow:C‹601›
+//│ | : flow:x‹600›
+//│ : flow:x‹600›
+//│ Handling constraint: 4 <: flow:x‹600› (from { val member:x = 4; })
+//│ | Solving: 4 <: flow:x‹600›   (Ctor, Flow)   []
 //│ | New flow: Ctor(lit:IntLit(4),List()) ~> flow:x
 //│ Resolved targets for member:C.x‹member:x›: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:222)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:228)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.26: 	C.x
+//│ ║  l.58: 	C.x
 //│ ╙──      	^^^
 //│ Flowed:
 //│   object C {
-//│     val x⁰ ‹flow:x⁰› = 4
+//│     val x¹ ‹flow:x⁰› = 4
 //│   },
-//│   C⁰.x⁰
+//│   C⁰.x¹
 //│ where
 //│     flow:x⁰  <~  4

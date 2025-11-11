@@ -44,6 +44,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
   val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
+  val leadingDotSelsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
 
   val objectCache: mutable.Buffer[ObjBody] = mutable.Buffer.empty
   
@@ -120,6 +121,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
+    case sel @ Sel(Missing, nme) =>
+      leadingDotSelsToExpand += sel
+      ???
+    
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
       val pre_t = typeProd(pre)
@@ -131,7 +136,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           val sym = sel.resSym
           constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
           P.Flow(sym)
-
+    
     case nw @ New(cls, args, rft) => rft match
       case N => cls.resolvedSym.flatMap(_.asCls) match
         case N => P.Unknown(nw)
@@ -213,6 +218,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
         case CompanionMember(comp, sym) :: Nil =>
           val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
+          // TODO: check if sel.prefix is Missing, meaning this is a leading-dot access – then, we do not make the App
           val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
           log(s"Expansion: ${app.showDbg}")
           sel.expansion = S(S(app))
@@ -251,7 +257,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           def dig(lhs: P, rhs: C, path: Path): Unit =
             
             log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})   [${path.mkString(", ")}]")
-
+            
             (lhs, rhs) match
               case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
               case (lhs, C.Flow(sym)) if outCache.contains(lhs -> sym) => log(s"In (out) cache!")

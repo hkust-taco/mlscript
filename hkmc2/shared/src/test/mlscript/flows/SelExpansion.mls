@@ -237,7 +237,8 @@ let foo =
 //│     },
 //│     module A {
 //│       fun test²(a¹) ‹flow:test²› = 1
-//│     }new A⁰
+//│     },
+//│     new A⁰
 //│   }
 //│ where
 //│     foo¹  <~  A
@@ -248,13 +249,50 @@ let foo =
 :re
 foo.test
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.249: 	foo.test
+//│ ║  l.250: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ Flowed:
 //│   foo¹.test‹?›
 //│ where
 //│     foo¹  <~  A
 //│     foo¹  ~>  {test: ⋅test⁰}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
+
+
+let foo =
+  class A
+  module A with
+    fun test(a) = new A
+  (new A).test
+//│ Flowed:
+//│   let foo²,
+//│   foo² = {
+//│     class A {
+//│       
+//│     },
+//│     module A {
+//│       fun test³(a²) ‹flow:test³› = new A¹
+//│     },
+//│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app¹²› }
+//│   }
+//│ where
+//│     foo²  <~  ((a²) -> A)
+//│     flow:test³  <~  ((a²) -> A)
+//│     flow:test³  ->  ⋅test¹
+//│ foo = A
+
+:e
+:re
+foo.test
+//│ ╔══[ERROR] Unresolved selection:
+//│ ║  l.286: 	foo.test
+//│ ║         	^^^^^^^^
+//│ ╙── Type `((a‹804›) -> A)` does not contain member 'test'
+//│ Flowed:
+//│   foo².test‹?›
+//│ where
+//│     foo²  <~  ((a²) -> A)
+//│     foo²  ~>  {test: ⋅test²}
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
 
 
@@ -280,10 +318,10 @@ module CC with
 :fixme // TODO: handle lifted class defs
 CC(123).getX
 //│ Flowed:
-//│   CC¹(123)‹app¹²›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app¹²›)‹app¹³› }
+//│   CC¹(123)‹app¹³›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app¹³›)‹app¹⁴› }
 //│ where
-//│     app¹²  <~  CC
-//│     app¹²  ~>  {getX: ⋅getX⁰}
+//│     app¹³  <~  CC...flow:Int‹726›
+//│     app¹³  ~>  {getX: ⋅getX⁰}
 //│ ═══[RUNTIME ERROR] TypeError: CC2.getX is not a function
 
 
@@ -296,7 +334,7 @@ module CC with
 //│     
 //│   },
 //│   module CC {
-//│     fun oops⁰(x⁷: CC²) ‹flow:oops⁰› = x⁷.oops‹?›{ ~> CC².oops⁰(x⁷)‹app¹⁴› }
+//│     fun oops⁰(x⁷: CC²) ‹flow:oops⁰› = x⁷.oops‹?›{ ~> CC².oops⁰(x⁷)‹app¹⁵› }
 //│   }
 //│ where
 //│     x⁷  <~  type CC
@@ -307,7 +345,7 @@ module CC with
 :re
 new CC().oops
 //│ Flowed:
-//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹⁵› }
+//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹⁶› }
 //│ where
 //│     
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded

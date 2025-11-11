@@ -21,7 +21,7 @@ import Keyword.{`let`, `set`}
 object Elaborator:
   
   val binaryOps = Set(
-    ",",
+    ",", // * Not currently used directly; but `;` (below) maps to it
     "+", "-", "*", "/", "%",
     "==", "!=", "<", "<=", ">", ">=",
     "===", "!==",
@@ -564,6 +564,8 @@ extends Importer:
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.SynthSel(preTrm, nme)(sym, N)
+    case Sel(Empty(), nme) =>
+      Term.Sel(Term.Missing, nme)(N, N, S(ctx))
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
