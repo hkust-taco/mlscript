@@ -29,11 +29,8 @@ declare val WeakSet
 declare class WeakMap
 declare val WeakMap
 declare class Error(info)
-declare val Error
 declare class TypeError(info)
-declare val TypeError
 declare class RangeError(info)
-declare val RangeError
 declare class Date
 declare val Date
 

@@ -114,10 +114,10 @@ globalThis.Object.freeze(class Predef {
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
-    throw runtime.safeCall(globalThis.Error(tmp))
+    throw globalThis.Error(tmp)
   } 
   static get notImplementedError() {
-    throw runtime.safeCall(globalThis.Error("Not implemented"));
+    throw globalThis.Error("Not implemented");
   } 
   static tuple(...xs) {
     return xs
