@@ -296,8 +296,6 @@ type TypeSymbol = BaseTypeSymbol | TypeAliasSymbol
   * same error from throwing multiple times.
   */
 case class ErrorSymbol(val nme: Str, tree: Tree)(using State) extends MemberSymbol:
-  var defn: Opt[Nothing] = N
-
   override def toLoc: Option[Loc] = tree.toLoc
 
   override def subst(using sub: SymbolSubst): ErrorSymbol = sub.mapErrorSym(this)
