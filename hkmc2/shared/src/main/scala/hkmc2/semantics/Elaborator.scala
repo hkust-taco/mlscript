@@ -1597,9 +1597,7 @@ extends Importer with ucs.SplitElaborator:
         case p @ Pun(false, _) :: Nil => record(p)
         case p @ InfixApp(_: Ident, Keywrd(Keyword.`:`), _) :: Nil => record(p)
         case lhs :: Nil => arrow(lhs, rhs)
-        // TODO: When is this case reached?
-        // * Answer: pattern p = () => Unit
-        case _ :: _ | Nil => ??? 
+        case _ :: _ | Nil => ??? // TODO: this case reached by, eg, `pattern p = () => Unit`
       case p as q => q match
         // `p as id` is elaborated into alias if `id` is not a constructor.
         case id: Ident => ident(id) match
