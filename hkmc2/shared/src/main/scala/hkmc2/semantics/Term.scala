@@ -66,7 +66,7 @@ sealed trait ResolvableImpl:
     .withLocOf(this)
     .asInstanceOf
   
-  def withSym(sym: FieldSymbol): this.type = 
+  def withSym(sym: MemberSymbol): this.type = 
     this.match
       case t: Term.Sel => t.copy()(S(sym), t.typ)
       case t: Term.SynthSel => t.copy()(S(sym), t.typ)
@@ -138,7 +138,7 @@ sealed trait ResolvableImpl:
   
   def defn: Opt[Definition] = resolvedSym match
     case S(sym: BlockMemberSymbol) => N
-    case S(sym: MemberSymbol[?]) => sym.defn
+    case S(sym: DefinitionSymbol[?]) => sym.defn
     case _ => N
   
   def typDefn = resolvedTyp match
@@ -215,11 +215,11 @@ enum Term extends Statement:
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val sym: Opt[MemberSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val sym: Opt[MemberSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val sym: Opt[MemberSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
@@ -300,7 +300,7 @@ enum Term extends Statement:
     case nu: New => nu.typ
     case _ => N
   
-  def sel(id: Tree.Ident, sym: Opt[FieldSymbol]): Sel =
+  def sel(id: Tree.Ident, sym: Opt[MemberSymbol]): Sel =
     Sel(this, id)(sym, N)
   def selNoSym(nme: Str, synth: Bool = false): Sel | SynthSel =
     val id = new Tree.Ident(nme)
@@ -980,7 +980,7 @@ object Param:
 
 final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulefulness: Modulefulness) 
 extends Declaration, AutoLocated:
-  var fldSym: Opt[FieldSymbol] = N
+  var fldSym: Opt[MemberSymbol] = N
   def subTerms: Ls[Term] = sign.toList
   override protected def children: List[Located] = sym :: sign.toList
   def showDbg: Str = flags.show + sym + sign.fold("")(": " + _.showDbg)

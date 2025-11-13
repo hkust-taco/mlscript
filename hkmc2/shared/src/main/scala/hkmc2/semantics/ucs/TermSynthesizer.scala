@@ -12,10 +12,10 @@ import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
     (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve
-  protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
+  protected final def sel(p: Term, k: Ident, s: MemberSymbol): Term.SynthSel =
     (Term.SynthSel(p, k)(S(s), N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
-  protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
+  protected final def sel(p: Term, k: Str, s: MemberSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
   protected final def str(s: Str) = Term.Lit(StrLit(s))
   protected final def `null` = Term.Lit(UnitLit(true))

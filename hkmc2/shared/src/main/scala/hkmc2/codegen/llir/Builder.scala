@@ -300,7 +300,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
     trace[Local](s"bClassOfField { $p } begin", x => s"bClassOfField end: $x"):
       p match
       case ts: TermSymbol => ts.owner.get
-      case ms: MemberSymbol[?] => 
+      case ms: MemberSymbol => 
         ms.defn match
         case Some(d: ClassLikeDef) => d.owner.get
         case Some(d: TermDefinition) => d.owner.get

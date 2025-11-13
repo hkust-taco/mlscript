@@ -280,7 +280,7 @@ case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block wit
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
 // case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
 
-case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[FieldSymbol]) extends Block with ProductWithTail
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol]) extends Block with ProductWithTail
 
 case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block) extends Block with ProductWithTail
 
@@ -300,7 +300,7 @@ case class HandleBlock(
 
 
 sealed abstract class Defn:
-  val innerSym: Opt[MemberSymbol[?]]
+  val innerSym: Opt[MemberSymbol]
   val sym: BlockMemberSymbol
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]

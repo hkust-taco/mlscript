@@ -931,7 +931,7 @@ class Resolver(tl: TraceLogger)
       s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
       _ => s"-> typ = ${t.resolvedTyp}"
     ):
-      def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
+      def disambSym(bms: BlockMemberSymbol): Opt[DefinitionSymbol[?]] = prefer match
         case _: Module => bms.asMod
         case _: Class => bms.asCls
         case _: Selectable => bms.asModOrObj orElse bms.asTrm
@@ -955,7 +955,7 @@ class Resolver(tl: TraceLogger)
             case S(disambBms) => disambBms.defn
             case N => bms.asPrincipal.flatMap(_.defn)
           case S(bls: BlockLocalSymbol) => bls.decl
-          case S(fs: FieldSymbol) => fs.defn
+          case S(ds: DefinitionSymbol[?]) => ds.defn
           case _ => N
         log(s"Declaration: ${decl}")
         decl match
@@ -1206,7 +1206,7 @@ object ModuleChecker:
     def checkSym(sym: Symbol): Bool = sym match
       case sym: BuiltinSymbol => false
       case sym: BlockLocalSymbol => sym.decl.exists(checkDecl)
-      case sym: FieldSymbol => prefer match
+      case sym: MemberSymbol => prefer match
         case Expect.Module(_) => sym.existsModuleful
         case _ => !sym.existsNonModuleful
       
