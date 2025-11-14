@@ -512,6 +512,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               bBlock(rest)(k)(ct)
       case Define(_: ClsLikeDefn, rest) => bBlock(rest)(k)(ct)
       case End(msg) => k(Expr.Literal(Tree.UnitLit(false)))
+      case Scoped(_, body) => bBlock(body)(k)(ct)
       case _: Block =>
         val docBlock = blk.showAsTree
         bErrStop(msg"Unsupported block: $docBlock")

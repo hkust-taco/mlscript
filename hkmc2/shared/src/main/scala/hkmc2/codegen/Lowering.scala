@@ -959,7 +959,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
-    (paramLists, returnedTerm(bodyTerm))
+    (paramLists, Scoped(bodyTerm.definedSyms, returnedTerm(bodyTerm)))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:

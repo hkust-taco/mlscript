@@ -564,6 +564,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       `return`(S(resWat))
 
+    case Scoped(_, body) => returningTerm(body)
     case End(_) => nop
 
     case t =>

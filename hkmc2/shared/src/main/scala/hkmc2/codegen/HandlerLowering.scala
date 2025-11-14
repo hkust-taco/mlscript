@@ -417,6 +417,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
       case Throw(_) => PartRet(blk, Nil)
+      case Scoped(_, body) => go(body)
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val PartRet(head, states) = go(blk)(using labelIds, N)

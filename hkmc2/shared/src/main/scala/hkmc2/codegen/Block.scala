@@ -49,7 +49,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => syms.toSet ++ body.definedVars
+    case Scoped(syms, body) => body.definedVars -- syms
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -103,7 +103,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
-    case Scoped(syms, body) => body.freeVars -- syms.toSet
+    case Scoped(syms, body) => body.freeVars -- syms
     case End(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -124,7 +124,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
-    case Scoped(syms, body) => body.freeVars -- syms.toSet
+    case Scoped(syms, body) => body.freeVarsLLIR -- syms
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -283,7 +283,7 @@ case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Blo
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
 
-case class Scoped(syms: Ls[Local], body: Block) extends BlockTail
+case class Scoped(syms: Set[Local], body: Block) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail

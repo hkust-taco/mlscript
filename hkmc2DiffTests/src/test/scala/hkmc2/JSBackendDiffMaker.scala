@@ -114,6 +114,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case Scoped(_, body) => ??? // TODO
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
