@@ -1,26 +1,17 @@
 :js
+:r
 
-// class C
-object C with
-  val mkC = 7
+//│ Resolved: { import /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs from /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs; }
+fun f(x : String) = x + "haha"
+f(4)
+//│ Resolved: { fun member:f(x: member:String) = builtin:+(x, "haha"); member:f(4) }
+//│ = "4haha"
 
-:flow
-:df
-// fun f(x : C) = x
-C.mkC
-//│ Typing producer: { member:C.mkC‹member:mkC› }
-//│ | Typing producer: member:C.mkC‹member:mkC›
-//│ | | Typing producer: member:C
-//│ | | : flow:C‹602›
-//│ | : flow:mkC‹603›
-//│ : flow:mkC‹603›
-//│ Resolved targets for member:C.mkC‹member:mkC›: 
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:243)
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.10: 	C.mkC
-//│ ╙──      	^^^^^
-//│ = 7
+
+
+
+
+
 
 // Sel(Missing, a) @ sel
 // ~>
