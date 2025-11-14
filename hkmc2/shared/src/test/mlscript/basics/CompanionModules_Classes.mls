@@ -26,6 +26,8 @@ new C
 //│       nme = Ident of "class"
 //│     args = Nil
 //│     rft = N
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze(new C1.class())
 //│ = C()
 
 new C()

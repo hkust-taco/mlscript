@@ -11,6 +11,7 @@ import hkmc2.utils.*
 import Elaborator.State
 import Tree.Ident
 import hkmc2.utils.SymbolSubst
+import hkmc2.typing.Type
 
 
 abstract class Symbol(using State) extends Located:
@@ -195,12 +196,15 @@ class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) wi
   // override def toString: Str = s"$name@$uid"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
-class BuiltinSymbol(override val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
-    extends BlockLocalSymbol(nme) with LocalSymbol:
-  override def toLoc: Option[Loc] = N
+class BuiltinSymbol
+    (val nme: Str, val binary: Bool, val unary: Bool, val nullary: Bool, val functionLike: Bool)(using State)
+    extends Symbol:
+  def toLoc: Option[Loc] = N
   override def toString: Str = s"builtin:$nme${State.dbgUid(uid)}"
 
-  override def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
+  def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
+
+  def flow = semantics.flow.Producer.Typ(Type.Top)
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded

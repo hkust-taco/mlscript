@@ -696,7 +696,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           if usesResTmp then k(Value.Ref(l))
           else k(unit) // * it seems this currently never happens
         )
-      
+     
+    case sel @ Sel(LeadingDotTarget, nme) => k(Select(unit, nme)(N)) // #NotSureHere
+
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
         

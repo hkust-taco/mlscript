@@ -18,6 +18,7 @@ import Consumer as C
 import hkmc2.semantics.BuiltinSymbol
 import P.Unknown
 import hkmc2.semantics.BlockMemberSymbol
+import P.LeadingDotSel
 
 
 
@@ -44,9 +45,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
   val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
-  val leadingDotSelsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
-
-  val objectCache: mutable.Buffer[ObjBody] = mutable.Buffer.empty
+  // val leadingDotSelsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
   
   def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
@@ -65,7 +64,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case bs: BuiltinSymbol => P.Flow(bs)
+      case bs: BuiltinSymbol => bs.flow 
       case bms: BlockMemberSymbol => P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
@@ -90,7 +89,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case t: Term => typeProd(t)
           
         case cd: ClassDef =>
+
           typeBody(cd.body)
+
           val prod = cd.paramsOpt match
             case S(ps) =>
               ps.restParam match
@@ -105,42 +106,52 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   Nil,
                 )
             case N => P.Unknown(cd)
+
           log(s"Class member type: ${prod.showDbg}")
+
           constrain(prod, C.Flow(cd.bsym.flow))
           
         case md: ModuleOrObjectDef =>
           // TODO
           log(s"Module: ${md.path}")
           typeBody(md.body)
-          objectCache += md.body
           
         case _: Import =>
           // TODO?
+        
+        case stt =>
+          log(s"/!\\ Unhandled statement: ${stt} /!\\")
+          P.Unknown(t)
           
       typeProd(res)
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
-    case sel @ Sel(Missing, nme) =>
-      leadingDotSelsToExpand += sel
-      ???
+    case sel @ Sel(LeadingDotTarget, nme) =>
+      selsToExpand += sel
+      val sel_t = P.LeadingDotSel(nme)(sel)
+      constrain(sel_t, C.Typ(Type.Top))
+      sel_t
     
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
       val pre_t = typeProd(pre)
       // log(s"Selection ${sel.showDbg} ${sel.typ}")
       sel.resolvedSym match
-        case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
-        case S(_) => P.Unknown(sel)
-        case N =>
-          val sym = sel.resSym
-          constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
-          P.Flow(sym)
+      case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
+      case S(_) => P.Unknown(sel)
+      case N =>
+        val sym = sel.resSym
+        constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
+        P.Flow(sym)
     
-    case nw @ New(cls, args, rft) => rft match
-      case N => cls.resolvedSym.flatMap(_.asCls) match
+    case nw @ New(cls, args, rft) =>
+      rft match
+      case N =>
+        cls.resolvedSym.flatMap(_.asCls) match
         case N => P.Unknown(nw)
-        case S(sym) => sym match
+        case S(sym) =>
+          sym match
           case sym: ClassSymbol =>
             val args_t = args.map(typeProd)
             P.Ctor(sym, args_t)(t)
@@ -162,8 +173,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Tup(fields) =>
       P.Tup(fields.map:
-        case f: Fld => N -> typeProd(f.term)
-      )
+        case f: Fld => N -> typeProd(f.term))
     
     case Error => P.Ctor(Extr(false), Nil)(t)
 
@@ -213,27 +223,32 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
       assert(sel.expansion.isEmpty)
       sel.resolvedTargets match
-        case ObjectMember(sym) :: Nil =>
-          assert(sel.sym.isEmpty)
-          sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
-        case CompanionMember(comp, sym) :: Nil =>
-          val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
-          // TODO: check if sel.prefix is Missing, meaning this is a leading-dot access – then, we do not make the App
+      case ObjectMember(sym) :: Nil =>
+        assert(sel.sym.isEmpty)
+        sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
+      case CompanionMember(comp, sym) :: Nil =>
+        val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
+        // TODO: check if sel.prefix is LeadingDotTarget, meaning this is a leading-dot access – then, we do not make the App
+        sel.prefix match
+        case LeadingDotTarget =>
+          log(s"Leading Dot Expansion: ${base.showDbg}")
+          sel.expansion = S(S(base))
+        case _ => 
           val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
           log(s"Expansion: ${app.showDbg}")
           sel.expansion = S(S(app))
-        case Nil =>
-          // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
-          if !sel.isErroneous then raise:
-            ErrorReport:
-              msg"Cannot resolve selection" -> sel.toLoc :: Nil
-          // * An error should alsoready be reported in this case
-        case targets => raise:
+      case Nil =>
+        // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
+        if !sel.isErroneous then raise:
           ErrorReport:
-            msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
-            :: targets.map:
-              case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
-              case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+            msg"Cannot resolve selection" -> sel.toLoc :: Nil
+        // * An error should alsoready be reported in this case
+      case targets => raise:
+        ErrorReport:
+          msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
+          :: targets.map:
+            case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
+            case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
   def solveConstraints(): Unit =
     
@@ -259,108 +274,138 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})   [${path.mkString(", ")}]")
             
             (lhs, rhs) match
-              case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
-              case (lhs, C.Flow(sym)) if outCache.contains(lhs -> sym) => log(s"In (out) cache!")
-              case (P.Flow(lsym), C.Flow(rsym)) =>
-                log(s"New flow: $lsym ~> $rsym")
-                lsym.outFlows += rsym
-                lsym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
-              case (lhs: ProdCtor, C.Flow(sym)) =>
-                log(s"New flow: $lhs ~> $sym")
-                sym.producers += ConcreteProd(path, lhs)
-                sym.consumers.foreach(c => dig(lhs, c, path))
-              case (P.Flow(sym), rhs) =>
-                log(s"New flow: $sym ~> $rhs")
-                sym.consumers += rhs
-                sym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
-                sym.outFlows.foreach(fs => dig(P.Flow(fs), rhs, sym +: path)) // TODO sym or fs?
-              case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
-                dig(cl, pl, path) // FIXME path
-                dig(pr, cr, path) // FIXME path
-              case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
-              if (sym1 is sym2) && args1.size === args2.size // TODO generalize
-                =>
-                args1.zip(args2).foreach: (a1, a2) =>
-                  dig(a1, a2, path) // FIXME path
-              case (P.Tup(args), C.Tup(ini, rst)) =>
-                def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit =
-                  (args, cons) match
-                    case (Nil, Nil) => ()
-                    case ((N, a1) :: args, c1 :: cons) =>
-                      dig(a1, c1, path) // FIXME path
-                      zip(args, cons, rst, path)
-                    case ((S(spd), a1) :: args, Nil) =>
-                      ???
-                    case ((spdo, a1) :: args, Nil) =>
-                      // extra producers can be matched by spread in consumer
-                      rst match
-                      case S((spd, a2, post)) => ???
-                      case N =>
-                        raise(ErrorReport(
-                          msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
-                zip(args, ini, rst, path)
-              case (lhs, sel: C.Sel) => lhs match
-                case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
-                  if targs.nonEmpty then TODO(targs)
-                  toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
-                case P.Unknown(Missing) => objectCache.foreach(bd => bd.members.get(sel.nme.name) match
-                    case N => ()
-                    case S(memb: BlockMemberSymbol) =>
-                      sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
-                      log(s"Found companion member ${memb}")
-                      val lhs = P.Flow(memb.flow)
-                      toSolve.push(Constraint(lhs, sel.res))
-                    case S(memb) => TODO(memb)
-                  )
-                case P.Ctor(sym: ClassSymbol, args) =>
-                  log(s"Selection result: ${sel.res}")
-                  val d = sym.defn.getOrElse(die)
-                  d.body.members.get(sel.nme.name) match
-                  case S(memb: BlockMemberSymbol) =>
-                    sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
-                    log(s"Found immediate member ${memb}")
-                    val lhs = P.Flow(memb.flow)
-                    toSolve.push(Constraint(lhs, sel.res))
-                  case S(memb) => TODO(memb)
+            case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
+            case (lhs, C.Flow(sym)) if outCache.contains(lhs -> sym) => log(s"In (out) cache!")
+            case (P.Flow(lsym), C.Flow(rsym)) =>
+              log(s"New flow: ${lsym.showDbg} ~> ${rsym.showDbg}")
+              lsym.outFlows += rsym
+              lsym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
+            case (lhs: ProdCtor, C.Flow(sym)) =>
+              log(s"New flow: ${lhs.showDbg} ~> ${sym.showDbg}")
+              sym.producers += ConcreteProd(path, lhs)
+              sym.consumers.foreach(c => dig(lhs, c, path))
+            case (P.Flow(sym), rhs) =>
+              log(s"New flow: ${sym.showDbg} ~> ${rhs.showDbg}")
+              sym.consumers += rhs
+              sym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
+              sym.outFlows.foreach(fs => dig(P.Flow(fs), rhs, sym +: path)) // TODO sym or fs?
+            case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
+              dig(cl, pl, path) // FIXME path
+              dig(pr, cr, path) // FIXME path
+            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
+            if (sym1 is sym2) && args1.size === args2.size // TODO generalize
+              =>
+              args1.zip(args2).foreach: (a1, a2) =>
+                dig(a1, a2, path) // FIXME path
+            case (P.Tup(args), C.Tup(ini, rst)) =>
+              def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit =
+                (args, cons) match
+                case (Nil, Nil) => ()
+                case ((N, a1) :: args, c1 :: cons) =>
+                  dig(a1, c1, path) // FIXME path
+                  zip(args, cons, rst, path)
+                case ((S(spd), a1) :: args, Nil) =>
+                  ???
+                case ((spdo, a1) :: args, Nil) =>
+                  // extra producers can be matched by spread in consumer
+                  rst match
+                  case S((spd, a2, post)) => ???
                   case N =>
-                    d.moduleCompanion match
-                    case S(comp) =>
-                      val cd = comp.defn.getOrElse(die)
-                      cd.body.members.get(sel.nme.name) match
-                      case S(memb) =>
-                        log(s"Found companion member ${memb}")
-                        sel.trm.originalCtx match
-                        case S(oc) =>
-                          val patho = findAccessPath(oc, cd.path, comp)
-                          log(s"Access path: ${patho}")
-                          patho match
-                          case S(path) =>
-                            sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                            val lhs = memb match
-                              case memb: BlockMemberSymbol => P.Flow(memb.flow)
-                              case _ => TODO(memb)
-                            toSolve.push(Constraint(lhs, sel.res))
-                          case N => raise:
-                            sel.trm.isErroneous = true
-                            ErrorReport:
-                              msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
-                              :: Nil
-                        case N => ???
+                    raise(ErrorReport(
+                      msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
+              zip(args, ini, rst, path)
+            case (sel @ LeadingDotSel(nme), rhs) =>
+              import Type.*
+              rhs match
+              case C.Flow(sym) => ()
+              case C.Typ(Ref(sym, args)) =>
+                sym match
+                case ms : ModuleOrObjectSymbol =>
+                  ms.defn.getOrElse(die).body.members.get(nme.name) match
+                  case S(memb: BlockMemberSymbol) => 
+                    // sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(memb)
+                    log(s"Found companion member ${memb}")
+                  case _ => ()
+                case cs : ClassSymbol =>
+                  cs.defn.getOrElse(die).moduleCompanion match
+                  case S(comp) =>
+                    val cd = comp.defn.getOrElse(die)
+                    cd.body.members.get(nme.name) match
+                    case S(memb: BlockMemberSymbol) => 
+                      log(s"Found companion member ${memb}")
+                      sel.trm.originalCtx match
+                      case S(oc) =>
+                        val patho = findAccessPath(oc, cd.path, comp)
+                        log(s"Access path: ${patho}")
+                        patho match
+                        case S(path) =>
+                          sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                          // val lhs = memb match
+                          //   case memb: BlockMemberSymbol => P.Flow(memb.flow)
+                          //   case _ => TODO(memb)
+                          // toSolve.push(Constraint(sel))
+                        case _ => ()
+                        // case N => raise:
+                        //   sel.trm.isErroneous = true
+                        //   ErrorReport:
+                        //     msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
+                        //     :: Nil
+                case _ => ()
+              case _ => ()
+            case (lhs, sel: C.Sel) =>
+              lhs match
+              case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
+                if targs.nonEmpty then TODO(targs)
+                toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
+              case P.Ctor(sym: ClassSymbol, args) =>
+                log(s"Selection result: ${sel.res}")
+                val d = sym.defn.getOrElse(die)
+                d.body.members.get(sel.nme.name) match
+                case S(memb: BlockMemberSymbol) =>
+                  sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
+                  log(s"Found immediate member ${memb}")
+                  val lhs = P.Flow(memb.flow)
+                  toSolve.push(Constraint(lhs, sel.res))
+                case S(memb) => TODO(memb)
+                case N =>
+                  d.moduleCompanion match
+                  case S(comp) =>
+                    val cd = comp.defn.getOrElse(die)
+                    cd.body.members.get(sel.nme.name) match
+                    case S(memb) =>
+                      log(s"Found companion member ${memb}")
+                      sel.trm.originalCtx match
+                      case S(oc) =>
+                        val patho = findAccessPath(oc, cd.path, comp)
+                        log(s"Access path: ${patho}")
+                        patho match
+                        case S(path) =>
+                          sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                          val lhs = memb match
+                            case memb: BlockMemberSymbol => P.Flow(memb.flow)
+                            case _ => TODO(memb)
+                          toSolve.push(Constraint(lhs, sel.res))
+                        case N => raise:
+                          sel.trm.isErroneous = true
+                          ErrorReport:
+                            msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
+                            :: Nil
                       case N => ???
-                    case N => raise:
-                      sel.trm.isErroneous = true
-                      ErrorReport(
-                        // TODO construct proper error message
-                        msg"Field ${sel.nme.name} is not a member of ${d.kind.desc} ${d.sym.name}" -> trm.toLoc :: Nil)
-                case _ => raise:
-                  sel.trm.isErroneous = true
-                  ErrorReport(
-                    // TODO construct proper error message
-                    msg"Unresolved selection:" -> sel.trm.toLoc
-                    :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
-                    :: Nil)
-              case _ =>
-                log(s"/!\\ Unhandled constraint /!\\")
+                    case N => ???
+                  case N => raise:
+                    sel.trm.isErroneous = true
+                    ErrorReport(
+                      // TODO construct proper error message
+                      msg"Field ${sel.nme.name} is not a member of ${d.kind.desc} ${d.sym.name}" -> trm.toLoc :: Nil)
+              case _ => raise:
+                sel.trm.isErroneous = true
+                ErrorReport(
+                  // TODO construct proper error message
+                  msg"Unresolved selection:" -> sel.trm.toLoc
+                  :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
+                  :: Nil)
+            case _ =>
+              log(s"/!\\ Unhandled constraint /!\\")
           end dig
           
           dig(c.lhs, c.rhs, Vector.empty)

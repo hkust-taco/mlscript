@@ -63,6 +63,7 @@ enum Producer:
     case Ctor(sym, Nil) => sym.nme
     case Tup(args) => s"[${args.map((spd, a) => spd.fold("")(_.str) + a.showDbg).mkString(", ")}]"
     case Ctor(sym, args) => s"${sym.nme}${args.map(_.showDbgAsParams).mkString}"
+    case sel @ LeadingDotSel(nme) => s"_?_.${nme}"
     case Typ(typ) => s"type ${typ.showDbg}"
     case Unknown(t) => s"¿${t.showDbg}?"
   

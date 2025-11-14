@@ -248,6 +248,7 @@ enum Term extends Statement:
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
+  case LeadingDotTarget
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -423,6 +424,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Ret(res) => "return"
       case Try(body, finallyDo) => "try expression"
       case Missing => "missing"
+      case LeadingDotTarget => "leading dot placeholder"
       case s => TODO(s)
     this match
       case self: Resolvable => self.resolvedTyp match
@@ -492,6 +494,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
+    case LeadingDotTarget => Nil
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Ls[Located] = t match
@@ -671,6 +674,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case TypeDef(sym, _, tparams, rhs, _, _) =>
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
+    case LeadingDotTarget => "_?_"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 
