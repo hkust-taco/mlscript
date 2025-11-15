@@ -76,8 +76,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case stmt: DefineVar =>
           val rhs = typeProd(stmt.rhs)
           stmt.sym match
-            case sym: FlowSymbol => constrain(rhs, C.Flow(sym))
-            case _ => ()
+          case sym: FlowSymbol => constrain(rhs, C.Flow(sym))
+          case _ => ()
         case t: TermDefinition =>
           val sign_ty = t.sign.map(typeProd) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
