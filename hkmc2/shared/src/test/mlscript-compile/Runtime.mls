@@ -124,7 +124,11 @@ module TraceLogger with
 object FatalEffect
 object PrintStackEffect
 
-data abstract class FunctionContFrame(next) with
+data class FunctionContFrame(fn, resumeIdx, paramListCnt, next) with
+  fun resume(value) =
+    0 // TODO
+
+data abstract class FunctionContFrameOld(next) with
   fun resume(value)
   fun doUnwind(res1, newPc) =
     set

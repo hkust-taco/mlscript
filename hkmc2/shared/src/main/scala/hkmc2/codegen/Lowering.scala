@@ -960,8 +960,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val flattened = stackSafe.flattened
     
-    val lifted = 
-      if lift then Lifter(S(handlerPaths)).transform(flattened)
+    // the lifter will already be called in the handler lowering
+    val lifted =
+      if config.effectHandlers.isEmpty && lift then Lifter(S(handlerPaths)).transform(flattened)
       else flattened
     
     val bufferable = BufferableTransform().transform(lifted)
