@@ -121,6 +121,9 @@ module TraceLogger with
 
 // Private definitions for algebraic effects
 
+// layout:
+// | pc | isCtor | this | paramCnt | params... | localCnt | locals... |
+
 object FatalEffect
 object PrintStackEffect
 

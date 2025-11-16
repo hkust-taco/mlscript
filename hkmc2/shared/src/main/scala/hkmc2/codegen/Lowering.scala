@@ -950,20 +950,22 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val desug = LambdaRewriter.desugar(blk)
     
     val handlerPaths = new HandlerPaths
+
+    val withHandlers1 = config.effectHandlers.fold(desug): opt =>
+      HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
-    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+    val lifted =
+      if config.effectHandlers.isEmpty && lift then Lifter(S(handlerPaths)).transform(withHandlers1)
+      else withHandlers1
+    
+    val (withHandlers2, doUnwindPaths) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
       
     val stackSafe = config.stackSafety match
-      case N => withHandlers
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers)
+      case N => withHandlers2
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers2)
     
-    val flattened = stackSafe.flattened
-    
-    // the lifter will already be called in the handler lowering
-    val lifted =
-      if config.effectHandlers.isEmpty && lift then Lifter(S(handlerPaths)).transform(flattened)
-      else flattened
+    // val flattened = lifted.flattened
     
     val bufferable = BufferableTransform().transform(lifted)
     
