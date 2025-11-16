@@ -128,7 +128,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val le = lowered0.copy(main = assignResSym(lowered0.main, true))
       if showLoweredTree.isSet then
         output(s"Lowered:")
-        output(le.showAsTree)
+        output(lowered0.showAsTree)
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
       // val nestedScp = baseScp.nest
@@ -143,6 +143,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       // NOTE: `blockPreamble` should still take care of those vars that are generated during or after the lowering stage, 
       // while `Scoped` more reflects the declared vars in the source (or elaborated?) level?
+      // Or, during the lowering, we should also find the correct tmp vars and add them to the set in `Scoped`
       val varsFromScopedStr =
         val vars = toplvlDefinedVars.toArray.sortBy(_.uid).map(l => l -> baseScp.allocateName(l))
         (if vars.isEmpty then doc"" else
