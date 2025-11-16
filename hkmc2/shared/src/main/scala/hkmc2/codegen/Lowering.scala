@@ -123,7 +123,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def block(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
-    blockImpl(imps ::: funs ::: rest, res)(k)
+    val definedVars = imps.flatMap(_.definedSyms) ::: funs.flatMap(_.definedSyms) ::: rest.flatMap(_.definedSyms)
+    Scoped(definedVars.toSet, blockImpl(imps ::: funs ::: rest, res)(k))
   
   def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
     stats match
@@ -959,7 +960,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
-    (paramLists, Scoped(bodyTerm.definedSyms, returnedTerm(bodyTerm)))
+    (paramLists, returnedTerm(bodyTerm))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:

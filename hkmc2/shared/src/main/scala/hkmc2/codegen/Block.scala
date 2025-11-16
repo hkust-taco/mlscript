@@ -63,7 +63,7 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
-    case Scoped(_, body) => 1 + body.size
+    case Scoped(_, body) => body.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
