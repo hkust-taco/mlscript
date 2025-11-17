@@ -6,6 +6,9 @@ declare type Nothing
 
 declare type untyped
 
+declare type tailrec
+declare type tailcall
+
 declare class Object
 declare val Object
 declare class JSON

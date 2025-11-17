@@ -25,7 +25,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true, false)
+    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true, false, false)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
@@ -40,8 +40,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
-    val bodFun = FunDefn(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)
-    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true), rest))
+    val bodFun = FunDefn(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(false)
+    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true, false), rest))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resSym = sym getOrElse TempSymbol(None, "res")
@@ -150,12 +150,12 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       val rewritten = blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
-        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
         .ifthen(
           resSym.asPath,
           Case.Cls(paths.effectSigSym, paths.effectSigPath),
           Return(
-            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
+            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false, false),
             false
           )
         )
@@ -173,6 +173,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
      
   def rewriteFn(defn: FunDefn) = 
     if doUnwindFns.contains(defn.sym) then defn
-    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
+    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.isTailRec)
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

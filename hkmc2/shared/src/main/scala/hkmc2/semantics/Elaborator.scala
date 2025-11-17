@@ -155,6 +155,8 @@ object Elaborator:
       val Array = assumeBuiltinCls("Array")
       val TypedArray = assumeBuiltinCls("TypedArray")
       val untyped = assumeBuiltinTpe("untyped")
+      val tailrec = assumeBuiltinTpe("tailrec")
+      val tailcall = assumeBuiltinTpe("tailcall")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleOrObjectSymbol):
         val bms = getBuiltin(module.nme) match
@@ -333,6 +335,10 @@ extends Importer with ucs.SplitElaborator:
           sym.asTpe match
           case S(ctx.builtins.untyped) =>
             return S(Annot.Untyped)
+          case S(ctx.builtins.tailcall) =>
+            return S(Annot.TailCall)
+          case S(ctx.builtins.tailrec) =>
+            return S(Annot.TailRec)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))

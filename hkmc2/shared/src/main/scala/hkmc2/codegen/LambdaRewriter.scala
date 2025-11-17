@@ -17,7 +17,7 @@ object LambdaRewriter:
           nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
         )
         val blk = blockBuilder
-          .define(FunDefn(N, newSym, params :: Nil, body))
+          .define(FunDefn(N, newSym, params :: Nil, body)(false))
           .assign(lhs, newSym.asPath)
           .rest(rest)
         (blk, Nil)
@@ -38,7 +38,7 @@ object LambdaRewriter:
         val (newBlk, lambdasList) = rewriteOneBlk(b)
         val lambdaDefns = lambdasList.map:
           case (sym, Lambda(params, body)) =>
-            FunDefn(N, sym, params :: Nil, body)
+            FunDefn(N, sym, params :: Nil, body)(false)
         val ret = lambdaDefns.foldLeft(newBlk):
           case (acc, defn) => Define(defn, acc)
         super.applyBlock(ret)

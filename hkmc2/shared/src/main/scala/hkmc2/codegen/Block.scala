@@ -219,7 +219,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)
+          else d.copy(body = newBody)(d.isTailRec)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -227,7 +227,7 @@ sealed abstract class Block extends Product:
           val newMethods = c.methods.mapConserve:
             case f@FunDefn(owner, sym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)
+              if newBody is body then f else f.copy(body = newBody)(f.isTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
           else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
@@ -339,6 +339,8 @@ final case class FunDefn(
     sym: BlockMemberSymbol,
     params: Ls[ParamList],
     body: Block,
+  )(
+    val isTailRec: Bool,
 ) extends Defn:
   val innerSym = N
 
@@ -552,7 +554,7 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val isTailCall: Bool) extends Result
 
 case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 

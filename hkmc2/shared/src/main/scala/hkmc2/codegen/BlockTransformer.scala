@@ -118,7 +118,7 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       applyPath(fun): fun2 =>
         applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects))
+          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.isTailCall))
     case Instantiate(mut, cls, args) =>
       applyPath(cls): cls2 =>
         applyArgs(args): args2 =>
@@ -160,7 +160,7 @@ class BlockTransformer(subst: SymbolSubst):
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applySubBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, params2, body2)
+      then fun else FunDefn(own2, sym2, params2, body2)(fun.isTailRec)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn

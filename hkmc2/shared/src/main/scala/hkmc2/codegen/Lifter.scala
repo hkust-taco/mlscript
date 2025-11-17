@@ -639,14 +639,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
                 case _ => getCallArgs(l, ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false, c.isTailCall))
             case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l), args) =>
             ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false, false))
             case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
           // variable here. But, since this closure may be re-used later, this doesn't work
@@ -845,7 +845,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val callSym = info.fakeCtorBms match
       case Some(v) => v
       case None => sym
-    Call(callSym.asPath, getCallArgs(sym, ctx))(false, false)
+    Call(callSym.asPath, getCallArgs(sym, ctx))(false, false, false)
 
   /* 
    * Explanation of liftOutDefnCont, liftDefnsInCls, liftDefnsInFn:
@@ -937,17 +937,17 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
           val newDef = FunDefn(
             base.owner, f.sym, PlainParamList(extraParams) :: f.params, f.body
-          )
+          )(f.isTailRec)
           val Lifted(lifted, extras) = liftDefnsInFn(newDef, newCtx)
 
           val args1 = extraParamsCpy.map(p => p.sym.asPath.asArg)
           val args2 = headPlistCopy.params.map(p => p.sym.asPath.asArg)
 
           val bdy = blockBuilder
-            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false)) // TODO: restParams not considered
+            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false, false)) // TODO: restParams not considered
 
-          val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)
-          val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)
+          val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)(false)
+          val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)(f.isTailRec)
           
           if ctx.firstClsFns.contains(f.sym) then
             Lifted(mainDefn, auxDefn :: extras)
@@ -1035,7 +1035,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             )
             
             for ps <- newAuxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false, false)
               curSym = TempSymbol(None, "tmp")
               val thisSym = curSym
               acc = acc.assign(thisSym, call)
@@ -1078,7 +1078,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
               
               case Some(value) => (ParamList(value.flags, extraPlist.params ++ value.params, value.restParam), auxPlist)
             
-            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: newAuxPlist, bod)
+            val auxCtorDefn_ = FunDefn(None, singleCallBms, headParams :: newAuxPlist, bod)(false)
             val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
             // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
@@ -1180,7 +1180,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case value => S(value.copy(methods = cMethods, ctor = newCCtor.get))
 
     val extras = (ctorDefnsLifted ++ fExtra ++ cfExtra ++ ctorIgnoredExtra).map:
-      case f: FunDefn => f.copy(owner = N)
+      case f: FunDefn => f.copy(owner = N)(f.isTailRec)
       case c: ClsLikeDefn => c.copy(owner = N)
       case d => d
 
@@ -1245,7 +1245,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val transformed = BlockRewriter(ctx.inScopeISyms, captureCtx.addreplacedDefns(ignoredRewrite)).applyBlock(blk)
 
     if thisVars.reqCapture.size == 0 then
-      Lifted(FunDefn(f.owner, f.sym, f.params, transformed), newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.params, transformed)(f.isTailRec), newDefns)
     else
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
@@ -1256,7 +1256,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
         .rest(transformed)
-      Lifted(FunDefn(f.owner, f.sym, f.params, bod), captureCls :: newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.params, bod)(f.isTailRec), captureCls :: newDefns)
 
   end liftDefnsInFn
 

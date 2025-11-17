@@ -18,6 +18,8 @@ enum Annot extends AutoLocated:
   case Untyped
   case Modifier(mod: Keyword)
   case Trm(trm: Term)
+  case TailRec
+  case TailCall
   
   def symbol: Opt[Symbol] = this match
     case Trm(trm) => trm.symbol
@@ -25,16 +27,18 @@ enum Annot extends AutoLocated:
   
   def subTerms: Ls[Term] = this match
     case Trm(trm) => trm :: Nil
-    case _: Modifier | Untyped => Nil
+    case _: Modifier | Untyped | TailRec | TailCall => Nil
   
   def children: Ls[Located] = this match
     case Trm(trm) => trm :: Nil
-    case _: Modifier | Untyped => Nil
+    case _: Modifier | Untyped | TailRec | TailCall => Nil
   
   def mkClone(using State): Annot = this match
     case Untyped => Untyped
     case Modifier(mod) => Modifier(mod)
     case Trm(trm) => Trm(trm.mkClone)
+    case TailRec => TailRec
+    case TailCall => TailCall
 
 type Resolvable = Term & ResolvableImpl
 
