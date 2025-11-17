@@ -187,6 +187,7 @@ f().foo()
 //│ f5 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;
 //│   capture = new f$capture3(null);
+//│   let w;
 //│   x = 1;
 //│   y = 10;
 //│   z = 10;

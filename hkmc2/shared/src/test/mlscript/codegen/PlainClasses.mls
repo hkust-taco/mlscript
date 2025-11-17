@@ -74,7 +74,8 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test() {
-//│   let Foo5, tmp;
+//│   let Foo5;
+//│   let tmp;
 //│   globalThis.Object.freeze(class Foo4 {
 //│     static {
 //│       Foo5 = this
@@ -98,8 +99,8 @@ let t = test()
 :e
 new t
 //│ ╔══[ERROR] Expected a statically known class; found reference.
-//│ ║  l.99: 	new t
-//│ ║        	    ^
+//│ ║  l.100: 	new t
+//│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
@@ -115,7 +116,7 @@ new! t
 :e
 new t()
 //│ ╔══[ERROR] Expected a statically known class; found reference.
-//│ ║  l.116: 	new t()
+//│ ║  l.117: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
@@ -237,10 +238,10 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.236: 	  val x = 1
+//│ ║  l.237: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.237: 	  val x = 2
+//│ ║  l.238: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
@@ -261,10 +262,10 @@ class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.262: 	  let x = 2
+//│ ║  l.263: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.261: 	  val x = 1
+//│ ║  l.262: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
@@ -291,7 +292,7 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.292: 	class Foo with val x = 1
+//│ ║  l.293: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;

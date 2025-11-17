@@ -108,24 +108,35 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)
-      
-      // TODO: remove mutation
-      var toplvlDefinedVars = Set.empty[Symbol]
-      def assignResSym(b: Block, toplvl: Boolean): Block =
-        b.mapTail:
-          case e: End =>
+       val le = lowered0.copy(main = lowered0.main.mapTail:
+        case e: End =>
           Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
-          case Return(res, implct) =>
-            assert(implct)
-            Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-          case s@Scoped(xs, body) =>
-            if toplvl then
-              toplvlDefinedVars = xs
-              assignResSym(body, false)
-            else
-              Scoped(xs, assignResSym(body, false))
-          case tl: (Throw | Break | Continue) => tl
-      val le = lowered0.copy(main = assignResSym(lowered0.main, true))
+        case Return(res, implct) =>
+          assert(implct)
+          Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case Scoped(_, body) => ??? // TODO
+        case tl: (Throw | Break | Continue) => tl
+      )
+
+      // TODO: re-implement
+      // TODO: remove mutation
+      // var toplvlDefinedVars = Set.empty[Symbol]
+      // def assignResSym(b: Block, toplvl: Boolean): Block =
+      //   b.mapTail:
+      //     case e: End =>
+      //     Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+      //     case Return(res, implct) =>
+      //       assert(implct)
+      //       Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+      //     case s@Scoped(xs, body) =>
+      //       if toplvl then
+      //         toplvlDefinedVars = xs
+      //         assignResSym(body, false)
+      //       else
+      //         Scoped(xs, assignResSym(body, false))
+      //     case tl: (Throw | Break | Continue) => tl
+      // val le = lowered0.copy(main = assignResSym(lowered0.main, true))
+      
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(lowered0.showAsTree)
@@ -144,16 +155,16 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       // NOTE: `blockPreamble` should still take care of those vars that are generated during or after the lowering stage, 
       // while `Scoped` more reflects the declared vars in the source (or elaborated?) level?
       // Or, during the lowering, we should also find the correct tmp vars and add them to the set in `Scoped`
-      val varsFromScopedStr =
-        val vars = toplvlDefinedVars.toArray.sortBy(_.uid).map(l => l -> baseScp.allocateName(l))
-        (if vars.isEmpty then doc"" else
-        doc" # let " :: vars.map: (_, nme) =>
-          nme
-        .toList.mkDocument(", ")
-        :: doc";").stripBreaks.mkString(100)
+      // val varsFromScopedStr =
+      //   val vars = toplvlDefinedVars.toArray.sortBy(_.uid).map(l => l -> baseScp.allocateName(l))
+      //   (if vars.isEmpty then doc"" else
+      //   doc" # let " :: vars.map: (_, nme) =>
+      //     nme
+      //   .toList.mkDocument(", ")
+      //   :: doc";").stripBreaks.mkString(100)
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(le)
-      val preStr = pre.stripBreaks.mkString(100) + varsFromScopedStr
+      val preStr = pre.stripBreaks.mkString(100) //+ varsFromScopedStr
       val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then
         output(s"JS:")

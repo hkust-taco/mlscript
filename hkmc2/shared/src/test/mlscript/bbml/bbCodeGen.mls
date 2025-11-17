@@ -151,7 +151,8 @@ fun pow(x) = case
 //│ pow = function pow(x1) {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp, tmp1, tmp2;
+//│     let n;
+//│     let tmp, tmp1, tmp2;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     } else {
@@ -207,7 +208,8 @@ fun fact = case
 //│ fact = function fact() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp1, tmp2, tmp3;
+//│     let n;
+//│     let tmp1, tmp2, tmp3;
 //│     if (caseScrut === 0) {
 //│       return 1
 //│     } else {

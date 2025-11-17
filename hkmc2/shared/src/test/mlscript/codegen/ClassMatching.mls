@@ -55,7 +55,8 @@ x => if x is Some(x) then x
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (x3) {
-//│   let x4, argument0$4;
+//│   let x4;
+//│   let argument0$4;
 //│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     x4 = argument0$4;
@@ -120,7 +121,8 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x3) {
-//│   let x4, scrut1, argument0$4, tmp5;
+//│   let x4;
+//│   let scrut1, argument0$4, tmp5;
 //│   split_root$1: {
 //│     split_1$: {
 //│       if (x3 instanceof Some1.class) {
@@ -166,7 +168,8 @@ fun f(x) = if x is
 //│ JS (unsanitized):
 //│ let f5;
 //│ f5 = function f(x3) {
-//│   let u, a, b, argument0$4, argument1$;
+//│   let u, a, b;
+//│   let argument0$4, argument1$;
 //│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     u = argument0$4;

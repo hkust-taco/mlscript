@@ -49,7 +49,27 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars -- syms
+    // cannot use `body.definedVars - syms`. lifter computes captures based on it?
+    case Scoped(syms, body) => body.definedVars
+
+  // TODO: remove it
+  lazy val tempVars: Set[Local] = this match
+    case _: Return | _: Throw => Set.empty
+    case Begin(sub, rst) => sub.tempVars ++ rst.tempVars
+    case Assign(l: TempSymbol, r, rst) => rst.tempVars + l
+    case Assign(l, r, rst) => rst.tempVars
+    case AssignField(l, n, r, rst) => rst.tempVars
+    case AssignDynField(l, n, ai, r, rst) => rst.tempVars
+    case Match(scrut, arms, dflt, rst) =>
+      arms.flatMap(_._2.tempVars).toSet ++ dflt.toList.flatMap(_.tempVars) ++ rst.tempVars
+    case End(_) => Set.empty
+    case Break(_) => Set.empty
+    case Continue(_) => Set.empty
+    case Define(defn, rst) => rst.tempVars
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.tempVars
+    case TryBlock(sub, fin, rst) => sub.tempVars ++ fin.tempVars ++ rst.tempVars
+    case Label(lbl, _, bod, rst) => bod.tempVars ++ rst.tempVars
+    case Scoped(syms, body) => body.tempVars
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -67,6 +87,7 @@ sealed abstract class Block extends Product:
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
+    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
     case b: BlockTail => f(b)
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
@@ -103,7 +124,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
-    case Scoped(syms, body) => body.freeVars -- syms
+    case Scoped(syms, body) => body.freeVars
     case End(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -124,7 +145,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
-    case Scoped(syms, body) => body.freeVarsLLIR -- syms
+    case Scoped(syms, body) => body.freeVarsLLIR
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match

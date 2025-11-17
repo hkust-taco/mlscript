@@ -53,7 +53,8 @@ fun foo() =
 //│   }
 //│ });
 //│ foo2 = function foo() {
-//│   let x, scrut, tmp2, tmp3, lambda$here;
+//│   let lambda$here;
+//│   let x, scrut, tmp2, tmp3;
 //│   x = 1;
 //│   tmp4: while (true) {
 //│     scrut = true;

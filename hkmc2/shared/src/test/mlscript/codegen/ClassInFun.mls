@@ -39,7 +39,8 @@ fun test(x) =
 //│ JS (unsanitized):
 //│ let test2;
 //│ test2 = function test(x) {
-//│   let Foo2, tmp;
+//│   let Foo2;
+//│   let tmp;
 //│   Foo2 = function Foo(a, b) {
 //│     return globalThis.Object.freeze(new Foo.class(a, b));
 //│   };
@@ -68,7 +69,7 @@ test(123)
 :re
 test()
 //│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.69: 	test()
+//│ ║  l.70: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0
 

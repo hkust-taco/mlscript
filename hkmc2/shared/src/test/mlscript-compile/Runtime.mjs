@@ -197,7 +197,8 @@ globalThis.Object.freeze(class Runtime {
         this.indentLvl = 0;
       }
       static indent() {
-        let scrut, prev, tmp;
+        let prev;
+        let scrut, tmp;
         scrut = TraceLogger.enabled;
         if (scrut === true) {
           prev = TraceLogger.indentLvl;
@@ -415,7 +416,8 @@ globalThis.Object.freeze(class Runtime {
     throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+    let name, lambda;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
     tmp = got < expected;
     lambda = (undefined, function () {
       let lambda1;
@@ -526,7 +528,8 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static showStackTrace(header, tr, debug, showLocals) {
-    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, localsMsg, scrut2, scrut3, tmp, tmp1, lambda, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+    let cur, locals, curLocals, loc, loc1, localsMsg, lambda;
+    let msg, curHandler, atTail, scrut, scrut1, scrut2, scrut3, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
     msg = header;
     curHandler = tr.contTrace;
     atTail = true;
@@ -622,7 +625,8 @@ globalThis.Object.freeze(class Runtime {
     return msg
   } 
   static showFunctionContChain(cont, hl, vis, reps) {
-    let result, scrut, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    let result, lambda;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
       result = tmp + cont.pc;
@@ -668,7 +672,8 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static showHandlerContChain(cont, hl, vis, reps) {
-    let result, scrut, scrut1, scrut2, lambda, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+    let result, lambda;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
     if (cont instanceof Runtime.HandlerContFrame.class) {
       result = cont.handler.constructor.name;
       lambda = (undefined, function (m, marker) {
@@ -727,7 +732,8 @@ globalThis.Object.freeze(class Runtime {
     return runtime.safeCall(globalThis.console.log(tmp2))
   } 
   static debugContTrace(contTrace) {
-    let scrut, scrut1, vis, hl, cur, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
+    let vis, hl, cur;
+    let scrut, scrut1, scrut2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14;
     if (contTrace instanceof Runtime.ContTrace.class) {
       tmp = globalThis.console.log("resumed: ", contTrace.resumed);
       scrut = contTrace.last === contTrace;
@@ -814,7 +820,8 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static handleEffects(cur) {
-    let nxt, scrut, tmp, tmp1;
+    let nxt;
+    let scrut, tmp, tmp1;
     tmp2: while (true) {
       if (cur instanceof Runtime.EffectSig.class) {
         nxt = Runtime.handleEffect(cur);
@@ -958,7 +965,8 @@ globalThis.Object.freeze(class Runtime {
     return tmp4
   } 
   static checkDepth() {
-    let scrut, tmp, lambda;
+    let lambda;
+    let scrut, tmp;
     tmp = Runtime.stackDepth >= Runtime.stackLimit;
     lambda = (undefined, function () {
       return Runtime.stackHandler !== null
@@ -971,7 +979,8 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static runStackSafe(limit, f) {
-    let result, scrut, saved, tmp, tmp1;
+    let saved;
+    let result, scrut, tmp, tmp1;
     Runtime.stackLimit = limit;
     Runtime.stackDepth = 1;
     Runtime.stackHandler = Runtime.StackDelayHandler;

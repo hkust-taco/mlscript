@@ -71,18 +71,19 @@ example()
 //│ JS (unsanitized):
 //│ let example2;
 //│ example2 = function example() {
-//│   let x2, get_x, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, get_x1;
+//│   let get_x;
+//│   let x2, get_x1, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│   x2 = 0;
-//│   get_x1 = function get_x() {
+//│   get_x = function get_x() {
 //│     return x2
 //│   };
-//│   get_x = get_x1;
+//│   get_x1 = get_x;
 //│   old1 = x2;
 //│   try {
 //│     tmp5 = x2 + 1;
 //│     x2 = tmp5;
 //│     tmp6 = Predef.print(x2);
-//│     tmp7 = runtime.safeCall(get_x());
+//│     tmp7 = runtime.safeCall(get_x1());
 //│     tmp8 = Predef.print(tmp7);
 //│     tmp9 = (tmp6 , tmp8);
 //│     tmp4 = tmp9;
@@ -90,7 +91,7 @@ example()
 //│     x2 = old1;
 //│   }
 //│   tmp10 = Predef.print(x2);
-//│   tmp11 = runtime.safeCall(get_x());
+//│   tmp11 = runtime.safeCall(get_x1());
 //│   return Predef.print(tmp11)
 //│ };
 //│ example2()
@@ -112,12 +113,13 @@ example()
 //│ JS (unsanitized):
 //│ let example3;
 //│ example3 = function example() {
-//│   let x2, get_x, y, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, get_x1;
+//│   let get_x;
+//│   let x2, get_x1, y, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10;
 //│   x2 = 0;
-//│   get_x1 = function get_x() {
+//│   get_x = function get_x() {
 //│     return x2
 //│   };
-//│   get_x = get_x1;
+//│   get_x1 = get_x;
 //│   old1 = x2;
 //│   try {
 //│     tmp5 = x2 + 1;
@@ -130,7 +132,7 @@ example()
 //│   }
 //│   y = tmp4;
 //│   tmp8 = Predef.print(x2);
-//│   tmp9 = runtime.safeCall(get_x());
+//│   tmp9 = runtime.safeCall(get_x1());
 //│   tmp10 = Predef.print(tmp9);
 //│   return y
 //│ };
