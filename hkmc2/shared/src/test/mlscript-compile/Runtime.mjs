@@ -14,10 +14,25 @@ globalThis.Object.freeze(class Runtime {
   constructor() {
     runtime.Unit;
   }
+  static #isResuming;
+  static #resumeValue;
+  static #resumeArr;
+  static #resumeIdx;
+  static #resumePc;
   static #stackLimit;
   static #stackDepth;
   static #stackHandler;
   static #stackResume;
+  static get isResuming() { return Runtime.#isResuming; }
+  static set isResuming(value) { Runtime.#isResuming = value; }
+  static get resumeValue() { return Runtime.#resumeValue; }
+  static set resumeValue(value) { Runtime.#resumeValue = value; }
+  static get resumeArr() { return Runtime.#resumeArr; }
+  static set resumeArr(value) { Runtime.#resumeArr = value; }
+  static get resumeIdx() { return Runtime.#resumeIdx; }
+  static set resumeIdx(value) { Runtime.#resumeIdx = value; }
+  static get resumePc() { return Runtime.#resumePc; }
+  static set resumePc(value) { Runtime.#resumePc = value; }
   static get stackLimit() { return Runtime.#stackLimit; }
   static set stackLimit(value) { Runtime.#stackLimit = value; }
   static get stackDepth() { return Runtime.#stackDepth; }
@@ -247,6 +262,11 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "TraceLogger"]; 
     });
+    this.isResuming = false;
+    this.resumeValue = null;
+    this.resumeArr = null;
+    this.resumeIdx = null;
+    this.resumePc = null;
     globalThis.Object.freeze(class FatalEffect {
       static {
         Runtime.FatalEffect = globalThis.Object.freeze(new this)
@@ -271,12 +291,57 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
     });
-    this.FunctionContFrame = function FunctionContFrame(next) {
-      return globalThis.Object.freeze(new FunctionContFrame.class(next));
+    this.FunctionContFrame = function FunctionContFrame(next, saved) {
+      return globalThis.Object.freeze(new FunctionContFrame.class(next, saved));
     };
     globalThis.Object.freeze(class FunctionContFrame {
       static {
         Runtime.FunctionContFrame.class = this
+      }
+      constructor(next, saved) {
+        this.next = next;
+        this.saved = saved;
+      }
+      resume(value) {
+        let scrut, f, scrut1, tmp, tmp1, tmp2, tmp3, tmp4;
+        scrut = this.saved.at(0) == 0;
+        if (scrut === true) {
+          tmp = runtime.safeCall(globalThis.console.log("cannot resume getters"));
+        } else {
+          tmp = runtime.Unit;
+        }
+        f = this.saved.at(1);
+        tmp5: while (true) {
+          scrut1 = this.saved.at(0) > 1;
+          if (scrut1 === true) {
+            tmp1 = runtime.safeCall(f());
+            f = tmp1;
+            tmp2 = this.saved.at(0) - 1;
+            this.saved[0] = tmp2;
+            tmp3 = runtime.Unit;
+            continue tmp5
+          } else {
+            tmp3 = runtime.Unit;
+          }
+          break;
+        }
+        Runtime.isResuming = true;
+        Runtime.resumeValue = value;
+        Runtime.resumeArr = this.saved;
+        Runtime.resumeIdx = 5;
+        Runtime.resumePc = this.saved.at(2);
+        tmp4 = globalThis.Object.freeze([]);
+        return f.apply(this.saved.at(3), tmp4)
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
+    });
+    this.FunctionContFrameOld = function FunctionContFrameOld(next) {
+      return globalThis.Object.freeze(new FunctionContFrameOld.class(next));
+    };
+    globalThis.Object.freeze(class FunctionContFrameOld {
+      static {
+        Runtime.FunctionContFrameOld.class = this
       }
       constructor(next) {
         this.next = next;
@@ -288,7 +353,7 @@ globalThis.Object.freeze(class Runtime {
         return res1
       }
       toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "FunctionContFrame", ["next"]]; 
+      static [definitionMetadata] = ["class", "FunctionContFrameOld", ["next"]]; 
     });
     this.HandlerContFrame = function HandlerContFrame(next, nextHandler, handler) {
       return globalThis.Object.freeze(new HandlerContFrame.class(next, nextHandler, handler));
@@ -799,6 +864,13 @@ globalThis.Object.freeze(class Runtime {
       tmp3 = runtime.safeCall(globalThis.console.log("Not an effect:"));
       return runtime.safeCall(globalThis.console.log(eff))
     }
+  } 
+  static unwind(cur, ...saved) {
+    let tmp;
+    tmp = new Runtime.FunctionContFrame.class(null, saved);
+    cur.contTrace.last.next = tmp;
+    cur.contTrace.last = cur.contTrace.last.next;
+    return cur
   } 
   static mkEffect(handler, handlerFun) {
     let res, tmp;

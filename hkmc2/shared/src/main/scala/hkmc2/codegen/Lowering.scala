@@ -955,7 +955,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
     val lifted =
-      if config.effectHandlers.isEmpty && lift then Lifter(S(handlerPaths)).transform(withHandlers1)
+      if config.effectHandlers.nonEmpty || lift then Lifter(S(handlerPaths)).transform(withHandlers1)
       else withHandlers1
     
     val (withHandlers2, doUnwindPaths) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
@@ -965,9 +965,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case N => withHandlers2
       case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers2)
     
-    // val flattened = lifted.flattened
+    val flattened = stackSafe.flattened
     
-    val bufferable = BufferableTransform().transform(lifted)
+    val bufferable = BufferableTransform().transform(flattened)
     
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 

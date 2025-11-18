@@ -122,14 +122,33 @@ module TraceLogger with
 // Private definitions for algebraic effects
 
 // layout:
-// | pc | isCtor | this | paramCnt | params... | localCnt | locals... |
+// | callCnt | f | pc | this | localCnt | locals... |
+
+mut val isResuming = false
+mut val resumeValue = null
+mut val resumeArr = null
+mut val resumeIdx = null
+mut val resumePc = null
 
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(fn, resumeIdx, paramListCnt, next) with
+data class FunctionContFrame(next, saved) with
   fun resume(value) =
-    0 // TODO
+    if saved.[0] == 0 do
+      console.log("cannot resume getters")
+    let f = saved.[1]
+    while saved.[0] > 1 do
+      set
+        f = f()
+        saved.[0] -= 1
+    set
+      isResuming = true
+      resumeValue = value
+      resumeArr = saved
+      resumeIdx = 5
+      resumePc = saved.[2]
+    f.apply(saved.[3], [])
 
 data abstract class FunctionContFrameOld(next) with
   fun resume(value)
@@ -263,6 +282,12 @@ fun debugEff(eff) =
     console.log(eff)
 
 // runtime implementations
+fun unwind(cur, ...saved) =
+  set
+    cur.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    cur.contTrace.last = cur.contTrace.last.next
+  cur
+
 fun mkEffect(handler, handlerFun) =
   let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
