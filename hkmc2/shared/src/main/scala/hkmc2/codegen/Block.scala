@@ -334,7 +334,7 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
 
-// NOTE: Setting isTailRec to false does not affect whether function is optimized.
+// NOTE: Setting isTailRec to false does not affect whether the function is optimized.
 // It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],

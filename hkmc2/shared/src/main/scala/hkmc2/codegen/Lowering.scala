@@ -415,14 +415,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
     
     @tailrec
-    def getAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
-      case st.Annotated(annot, trm) => getAnnots(trm, annot :: acc)
+    def extractAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
+      case st.Annotated(annot, trm) => extractAnnots(trm.instantiated, annot :: acc)
       case _ => (acc, t)
-    val (annots, trm) = getAnnots(t, Nil)
     
-    val insted = trm.instantiated
-    reportAnnotations(insted, annots)
-    insted match
+    val insted = t.instantiated
+    val (annots, trm) = extractAnnots(insted, Nil)
+    reportAnnotations(trm, annots)
+    
+    trm match
     case st.UnitVal() => k(unit)
     case st.Lit(lit) =>
       warnStmt
