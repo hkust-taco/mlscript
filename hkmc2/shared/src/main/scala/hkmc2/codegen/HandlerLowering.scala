@@ -599,7 +599,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       callSelf,
       L(f.sym),
       functionHandlerCtx(s"Cont$$func$$${symToStr(f.sym)}$$", f.sym.nme))
-    )(f.isTailRec)
+    )(isTailRec = f.isTailRec)
   
   private def translateBody(cls: ClsLikeBody, sym: BlockMemberSymbol)(using HandlerCtx): ClsLikeBody =
     val curCtorCtx =

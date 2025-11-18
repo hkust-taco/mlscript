@@ -947,7 +947,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false, false)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)(false)
-          val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)(f.isTailRec)
+          val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)(isTailRec = f.isTailRec)
           
           if ctx.firstClsFns.contains(f.sym) then
             Lifted(mainDefn, auxDefn :: extras)
@@ -1180,7 +1180,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case value => S(value.copy(methods = cMethods, ctor = newCCtor.get))
 
     val extras = (ctorDefnsLifted ++ fExtra ++ cfExtra ++ ctorIgnoredExtra).map:
-      case f: FunDefn => f.copy(owner = N)(f.isTailRec)
+      case f: FunDefn => f.copy(owner = N)(isTailRec = f.isTailRec)
       case c: ClsLikeDefn => c.copy(owner = N)
       case d => d
 
@@ -1245,7 +1245,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val transformed = BlockRewriter(ctx.inScopeISyms, captureCtx.addreplacedDefns(ignoredRewrite)).applyBlock(blk)
 
     if thisVars.reqCapture.size == 0 then
-      Lifted(FunDefn(f.owner, f.sym, f.params, transformed)(f.isTailRec), newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.params, transformed)(isTailRec = f.isTailRec), newDefns)
     else
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
@@ -1256,7 +1256,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
         .rest(transformed)
-      Lifted(FunDefn(f.owner, f.sym, f.params, bod)(f.isTailRec), captureCls :: newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.params, bod)(isTailRec = f.isTailRec), captureCls :: newDefns)
 
   end liftDefnsInFn
 

@@ -227,7 +227,7 @@ sealed abstract class Block extends Product:
           val newMethods = c.methods.mapConserve:
             case f@FunDefn(owner, sym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(f.isTailRec)
+              if newBody is body then f else f.copy(body = newBody)(isTailRec = f.isTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
           else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
