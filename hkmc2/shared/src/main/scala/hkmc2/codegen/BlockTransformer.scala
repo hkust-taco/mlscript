@@ -118,7 +118,7 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       applyPath(fun): fun2 =>
         applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.isTailCall))
+          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall))
     case Instantiate(mut, cls, args) =>
       applyPath(cls): cls2 =>
         applyArgs(args): args2 =>

@@ -104,8 +104,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     )(c => Return(c, implct = true))
   
   // * Used to work around Scala's @tailrec annotation for those few calls that are not in tail position.
-  final def term_nonTail(t: st, annots: List[Annot] = Nil, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
-    term(t: st, annots, inStmtPos: Bool)(k)
+  final def term_nonTail(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
+    term(t: st, inStmtPos: Bool)(k)
   
 
   @tailrec
@@ -405,7 +405,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     k(subst(Value.Ref(sym, disamb).withLocOf(ref)))
   
   @tailrec
-  final def term(t: st, annots: List[Annot] = Nil, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
+  final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
     tl.log(s"Lowering.term ${t.showDbg.truncate(100, "[...]")}${
       if inStmtPos then " (in stmt)" else ""}${
       t.resolvedSym.fold("")(" – symbol " + _)}")
@@ -414,7 +414,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       raise:
         WarningReport(msg"Pure expression in statement position" -> t.toLoc :: Nil, S(t))
     
-    val insted = t.instantiated
+    @tailrec
+    def getAnnots(t: st, acc: List[Annot]): (List[Annot], st) = t match
+      case st.Annotated(annot, trm) => getAnnots(trm, annot :: acc)
+      case _ => (acc, t)
+    val (annots, trm) = getAnnots(t, Nil)
+    
+    val insted = trm.instantiated
     reportAnnotations(insted, annots)
     insted match
     case st.UnitVal() => k(unit)
@@ -694,13 +700,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case Rcd(mut, stats) =>
       block(stats, L(mut -> Nil))(k)
     
-    case Annotated(Annot.Untyped, receiver) =>
-      term(receiver)(k)
-    case Annotated(ann, t: Annotated) =>
-      term(t, ann :: annots)(k)
-    case Annotated(ann, receiver) =>
-      val annotsNew = ann :: annots
-      term(receiver, annotsNew)(k)
     case Missing => fail:
       ErrorReport(
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
@@ -1009,7 +1008,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Annot.Untyped => ()
       case a @ Annot.TailRec =>
         target match
-          case TermDefinition(body = S(bod), k = syntax.Fun) => ()
+          case TermDefinition(body = S(bod), k = syntax.Fun) => warn(a, S(msg"Tail call optimization is not yet implemented."))
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as @tailrec."))
           case _ => warn(a)
         
@@ -1019,9 +1018,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def reportAnnotations(receiver: Term, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) =
       val message = msg match
-        case None => msg"Such annotations are not supported on ${receiver.describe} terms."
+        case None => msg"This annotation is not supported on ${receiver.describe} terms."
         case Some(value) => value
-      
       raise:
         WarningReport(
           msg"This annotation has no effect." -> annot.toLoc ::
@@ -1031,9 +1029,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Annot.Untyped => ()
       case a @ Annot.TailCall => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
-        case st.App(_, _) => ()
+        case st.App(_, _) => warn(a, S(msg"Tail call optimization is not yet implemented."))
         case st.Resolved(_, defnSym) => defnSym.defn match
-          case S(td: TermDefinition) if (td.k is syntax.Fun) && td.params.isEmpty => ()
+          case S(td: TermDefinition) if (td.k is syntax.Fun) && td.params.isEmpty => warn(a, S(msg"Tail call optimization is not yet implemented."))
           case _ => warn(a)
         case _ => warn(a)
       case annot => warn(annot)

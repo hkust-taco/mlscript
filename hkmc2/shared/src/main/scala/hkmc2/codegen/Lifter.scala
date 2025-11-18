@@ -639,7 +639,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
                 case _ => getCallArgs(l, ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false, c.isTailCall))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false, c.explicitTailCall))
             case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l), args) =>
             ctx.bmsReqdInfo.get(l) match

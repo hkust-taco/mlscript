@@ -219,7 +219,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(d.isTailRec)
+          else d.copy(body = newBody)(isTailRec = d.isTailRec)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -334,6 +334,8 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
 
+// NOTE: Setting isTailRec to false does not affect whether function is optimized.
+// It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
@@ -554,7 +556,7 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val isTailCall: Bool) extends Result
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
 
 case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 

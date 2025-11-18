@@ -493,13 +493,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case Return(c @ Call(fun, args), false) if !handlerCtx.isHandlerBody =>
           applyPath(fun): fun2 =>
             applyArgs(args): args2 =>
-              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.isTailCall)
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
               if c2 is c then b else Return(c2, false)
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, c @ Call(fun, args), rest) if c.mayRaiseEffects =>
           applyPath(fun): fun2 =>
             applyArgs(args): args2 =>
-              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.isTailCall)
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
               ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
         case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
           applyPath(cls): cls2 =>
@@ -512,7 +512,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           val res = freshTmp("res")
           applyPath(fun): fun2 =>
             applyArgs(args): args2 =>
-              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.isTailCall)
+              val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
               ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
         case c @ Instantiate(mut, cls, args) =>
           val res = freshTmp("res")

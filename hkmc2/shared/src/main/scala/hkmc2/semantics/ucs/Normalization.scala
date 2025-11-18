@@ -396,8 +396,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           val isReturned = TempSymbol(N)
           val loopEnd: Path =
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
-          // NOTE: Setting isTailRec to false does not affect whether function is optimized.
-          // It only affects whether a warning is thrown if the function is not actually tailrec.
           val blk = blockBuilder
             .assign(l, Value.Lit(Tree.UnitLit(false)))
             .define(FunDefn(N, f, PlainParamList(Nil) :: Nil,

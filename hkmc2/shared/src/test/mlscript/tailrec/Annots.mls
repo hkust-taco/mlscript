@@ -13,35 +13,44 @@ class A
 :w
 @tailrec 2 + 2
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ╟── Such annotations are not supported on application terms.
+//│ ╟── This annotation is not supported on application terms.
 //│ ║  l.14: 	@tailrec 2 + 2
 //│ ╙──      	         ^^^^^
 //│ = 4
 
+:todo
 @tailrec
 fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 @tailcall
 fun g = 2
 //│ ═══[WARNING] This annotation has no effect.
 
+:todo
 fun test =
   @tailcall f
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── Tail call optimization is not yet implemented.
+//│ ║  l.33: 	  @tailcall f
+//│ ╙──      	            ^
 
 :w
 let f = 0
 fun test =
   @tailcall f
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ╟── Such annotations are not supported on reference terms.
-//│ ║  l.35: 	  @tailcall f
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.42: 	  @tailcall f
 //│ ╙──      	            ^
 //│ f = 0
 
+:todo
 class A with
   @tailrec
   fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 class A with
@@ -49,10 +58,12 @@ class A with
   fun f = 2
 //│ ═══[WARNING] This annotation has no effect.
 
+:todo
 class A
 module A with
   @tailrec
   fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 class A
@@ -73,5 +84,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.73: 	  @tailcall 1 + 2
+//│ ║  l.84: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^
