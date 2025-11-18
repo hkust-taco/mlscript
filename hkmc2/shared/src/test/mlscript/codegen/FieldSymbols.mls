@@ -88,6 +88,7 @@ case
 //│     defn = FunDefn:
 //│       owner = N
 //│       sym = member:lambda
+//│       dSym = term:lambda
 //│       params = Ls of 
 //│         ParamList:
 //│           flags = ()

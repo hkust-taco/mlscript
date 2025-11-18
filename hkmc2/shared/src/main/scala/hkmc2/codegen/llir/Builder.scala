@@ -169,7 +169,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
           case rs: Ls[TrivialExpr] => k(r :: rs)
   
   private def bNestedFunDef(e: FunDefn)(k: TrivialExpr => Ctx ?=> Node)(using ctx: Ctx)(using Raise, Scope): Node =
-    val FunDefn(_own, sym, params, body) = e
+    val FunDefn(_own, sym, dSym, params, body) = e
     // generate it as a single named lambda expression that may be self-recursing
     if params.length === 0 then
       bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
@@ -180,7 +180,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
 
   private def bFunDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
-      val FunDefn(_own, sym, params, body) = e
+      val FunDefn(_own, sym, dSym, params, body) = e
       assert(ctx.isTopLevel)
       if params.length === 0 then
         bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
@@ -196,7 +196,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
 
   private def bMethodDef(e: FunDefn)(using ctx: Ctx)(using Raise, Scope): Func =
     trace[Func](s"bFunDef begin: ${e.sym}", x => s"bFunDef end: ${x.show}"):
-      val FunDefn(_own, sym, params, body) = e
+      val FunDefn(_own, sym, dSym, params, body) = e
       if !ctx.isTopLevel then
         bErrStop(msg"Non top-level definition ${sym.nme} not supported")
       else if params.length === 0 then
@@ -512,7 +512,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Assign(lhs, rhs, rest) =>
         bBind(S(lhs), rhs, rest)(k)(ct)
       case AssignField(lhs, nme, rhs, rest) => TODO("AssignField not supported")
-      case Define(fd @ FunDefn(_own, sym, params, body), rest) =>
+      case Define(fd @ FunDefn(_own, sym, dSym, params, body), rest) =>
         if ctx.isTopLevel then
           val f = bFunDef(fd)
           ctx.def_acc += f
@@ -574,7 +574,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
         case _ => ()
   
       override def applyFunDefn(fun: FunDefn): Unit =
-        val FunDefn(_own, sym, params, body) = fun
+        val FunDefn(_own, sym, dSym, params, body) = fun
         if params.length === 0 then
           bErrStop(msg"Function without arguments not supported: ${params.length.toString}")
         ctx2 = ctx2.addFuncName(sym, params.head.params.length)

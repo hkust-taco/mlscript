@@ -6,6 +6,7 @@ import utils.*
 import hkmc2.codegen.*
 import hkmc2.semantics.*
 import semantics.Elaborator.State
+import hkmc2.syntax.Tree
 
 object LambdaRewriter:
   
@@ -17,7 +18,7 @@ object LambdaRewriter:
           nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
         )
         val blk = blockBuilder
-          .define(FunDefn(N, newSym, params :: Nil, body)(false))
+          .define(FunDefn(N, newSym, TermSymbol(syntax.Fun, N, Tree.Ident(lhs.nme)), params :: Nil, body)(false))
           .assign(lhs, newSym.asPath)
           .rest(rest)
         (blk, Nil)
@@ -38,7 +39,7 @@ object LambdaRewriter:
         val (newBlk, lambdasList) = rewriteOneBlk(b)
         val lambdaDefns = lambdasList.map:
           case (sym, Lambda(params, body)) =>
-            FunDefn(N, sym, params :: Nil, body)(false)
+            FunDefn(N, sym, TermSymbol(syntax.Fun, N, Tree.Ident(sym.nme)), params :: Nil, body)(false)
         val ret = lambdaDefns.foldLeft(newBlk):
           case (acc, defn) => Define(defn, acc)
         super.applyBlock(ret)

@@ -225,7 +225,7 @@ sealed abstract class Block extends Product:
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
           val newMethods = c.methods.mapConserve:
-            case f@FunDefn(owner, sym, params, body) =>
+            case f@FunDefn(owner, dSym, sym, params, body) =>
               val newBody = body.flattened
               if newBody is body then f else f.copy(body = newBody)(isTailRec = f.isTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
@@ -316,7 +316,7 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -325,7 +325,7 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
   lazy val freeVarsLLIR: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -339,6 +339,7 @@ sealed abstract class Defn:
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
+    dSym: TermSymbol,
     params: Ls[ParamList],
     body: Block,
   )(

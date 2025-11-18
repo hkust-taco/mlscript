@@ -360,9 +360,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           ):
             boundary:
               defn match
-                case FunDefn(own, sym, Nil, body) =>
+                case FunDefn(own, sym, dSym, Nil, body) =>
                   lastWords("cannot generate function with no parameter list")
-                case FunDefn(own, sym, ps :: pss, bod) =>
+                case FunDefn(own, sym, dSym, ps :: pss, bod) =>
                   if own.nonEmpty then
                     break(errExpr(
                       Ls(

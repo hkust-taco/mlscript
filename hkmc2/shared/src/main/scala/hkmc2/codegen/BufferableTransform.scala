@@ -66,10 +66,16 @@ class BufferableTransform()(using Ctx, State, Raise):
               val buf = VarSymbol(new Tree.Ident("buf"))
               val idx = VarSymbol(new Tree.Ident("idx"))
               val blk = mkFieldReplacer(buf, idx).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, PlainParamList(
+              FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
                 if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(isTailRec = f.isTailRec)
-            val fakeCtor = transformFunDefn(FunDefn(S(companionSym), BlockMemberSymbol("ctor", Nil, false), cls.paramsOpt.toList, Begin(cls.preCtor, cls.ctor))(false), true)
+            val fakeCtor = transformFunDefn(FunDefn(
+                S(companionSym), 
+                BlockMemberSymbol("ctor", Nil, false), 
+                TermSymbol(syntax.Fun, S(companionSym), Tree.Ident("ctor")),
+                cls.paramsOpt.toList,
+                Begin(cls.preCtor, cls.ctor),
+              )(false), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),

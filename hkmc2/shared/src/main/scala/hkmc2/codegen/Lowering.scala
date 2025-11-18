@@ -182,7 +182,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
                 blockImpl(stats, res)(k)))(using LoweringCtx.nestFunc)
           case syntax.Fun =>
             val (paramLists, bodyBlock) = setupFunctionOrByNameDef(td.params, bod, S(td.sym.nme))
-            Define(FunDefn(td.owner, td.sym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec)),
+            Define(FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec)),
               blockImpl(stats, res)(k))
           case syntax.Ins =>
             // Implicit instances are not parameterized for now.
@@ -254,7 +254,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               case (sym, params, split) =>
                 val paramLists = params :: Nil
                 val bodyBlock = ucs.Normalization(this)(split)(Ret)
-                FunDefn(N, sym, paramLists, bodyBlock)(false)
+                FunDefn(N, sym, TermSymbol(syntax.Fun, N, Tree.Ident(sym.nme)), paramLists, bodyBlock)(false)
             // The return type is intended to be consistent with `gatherMembers`
             (mtds, Nil, Nil, End())
           case _ => gatherMembers(defn.body)
@@ -468,7 +468,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            val lamDef = FunDefn(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(false)
+            val lamDef = FunDefn(
+              N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
+              PlainParamList(Nil) :: Nil, returnedTerm(arg2))(false)
             Define(
               lamDef,
               k(Call(
@@ -599,7 +601,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(N, lamSym, paramLists, bodyBlock)(false)
+        val lamDef = FunDefn(
+          N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
+          paramLists, bodyBlock)(false)
         Define(
           lamDef,
           k(Value.Ref(lamSym, N)))
@@ -862,7 +866,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         td.body.map: bod =>
           val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))
           reportAnnotations(td, td.extraAnnotations)
-          FunDefn(td.owner, td.sym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec))
+          FunDefn(td.owner, td.sym, td.tsym, paramLists, bodyBlock)(td.extraAnnotations.contains(Annot.TailRec))
     val publicFlds = clsBody.publicFlds.map(f => f.sym -> f.tsym)
     val privateFlds = clsBody.nonMethods.collect:
       case decl @ LetDecl(sym: TermSymbol, annotations) =>
@@ -939,7 +943,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(N, lamSym, params :: Nil, body)(false)
+        val lamDef = FunDefn(
+          N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
+          params :: Nil, body)(false)
         Define(lamDef, k(Value.Ref(lamSym, N)))
       case r =>
         val l = new TempSymbol(N)
