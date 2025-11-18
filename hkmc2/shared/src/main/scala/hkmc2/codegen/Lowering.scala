@@ -21,8 +21,6 @@ import semantics.Elaborator.{State, Ctx, ctx}
 
 import syntax.{Literal, Tree}
 import hkmc2.syntax.Fun
-import sem.ClassDef.Parameterized
-import sem.ClassDef.Plain
 
 
 abstract class TailOp extends (Result => Block)
