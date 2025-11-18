@@ -69,10 +69,9 @@ class BufferableTransform()(using Ctx, State, Raise):
               FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
                 if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(isTailRec = f.isTailRec)
-            val fakeCtor = transformFunDefn(FunDefn(
+            val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
-                TermSymbol(syntax.Fun, S(companionSym), Tree.Ident("ctor")),
                 cls.paramsOpt.toList,
                 Begin(cls.preCtor, cls.ctor),
               )(false), true)

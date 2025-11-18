@@ -254,7 +254,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               case (sym, params, split) =>
                 val paramLists = params :: Nil
                 val bodyBlock = ucs.Normalization(this)(split)(Ret)
-                FunDefn(N, sym, TermSymbol(syntax.Fun, N, Tree.Ident(sym.nme)), paramLists, bodyBlock)(false)
+                FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(isTailRec = false)
             // The return type is intended to be consistent with `gatherMembers`
             (mtds, Nil, Nil, End())
           case _ => gatherMembers(defn.body)
@@ -468,9 +468,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            val lamDef = FunDefn(
-              N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
-              PlainParamList(Nil) :: Nil, returnedTerm(arg2))(false)
+            val lamDef = FunDefn.withFreshSymbol(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(isTailRec = false)
             Define(
               lamDef,
               k(Call(
@@ -601,9 +599,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(
-          N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
-          paramLists, bodyBlock)(false)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(isTailRec = false)
         Define(
           lamDef,
           k(Value.Ref(lamSym, N)))
@@ -943,9 +939,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn(
-          N, lamSym, TermSymbol(syntax.Fun, N, Tree.Ident(lamSym.nme)),
-          params :: Nil, body)(false)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(isTailRec = false)
         Define(lamDef, k(Value.Ref(lamSym, N)))
       case r =>
         val l = new TempSymbol(N)

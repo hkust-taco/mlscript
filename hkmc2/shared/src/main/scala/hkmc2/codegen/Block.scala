@@ -225,7 +225,7 @@ sealed abstract class Block extends Product:
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
           val newMethods = c.methods.mapConserve:
-            case f@FunDefn(owner, dSym, sym, params, body) =>
+            case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
               if newBody is body then f else f.copy(body = newBody)(isTailRec = f.isTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
@@ -346,7 +346,9 @@ final case class FunDefn(
     val isTailRec: Bool,
 ) extends Defn:
   val innerSym = N
-
+object FunDefn:
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(isTailRec: Bool)(using State) =
+    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(isTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,

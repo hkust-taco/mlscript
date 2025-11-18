@@ -117,9 +117,6 @@ object Lifter:
   def modOrObj(d: Defn) = d match
     case c: ClsLikeDefn => (c.companion.isDefined) || (c.k is syntax.Obj) // TODO: refine handling of companions
     case _ => false
-  
-  def mkTermSym(bms: BlockMemberSymbol, owner: Opt[InnerSymbol] = N)(using State) =
-    TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
 
 
 /**
@@ -503,7 +500,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           mod.foreach(applyClsLikeBody)
       
       def isFun(d: Defn) = d match
-        case FunDefn(owner, sym, dSym, params, body) => true
+        case _: FunDefn => true
         case _ => false
       
       override def applyValue(v: Value): Unit = v match
@@ -950,7 +947,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false, false)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, f.dSym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)(false)
-          val auxDefn = FunDefn(N, singleCallBms, mkTermSym(singleCallBms), flatPlist, lifted.body)(isTailRec = f.isTailRec)
+          val auxDefn = FunDefn.withFreshSymbol(N, singleCallBms, flatPlist, lifted.body)(isTailRec = f.isTailRec)
           
           if ctx.firstClsFns.contains(f.sym) then
             Lifted(mainDefn, auxDefn :: extras)
@@ -1081,7 +1078,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
               
               case Some(value) => (ParamList(value.flags, extraPlist.params ++ value.params, value.restParam), auxPlist)
             
-            val auxCtorDefn_ = FunDefn(None, singleCallBms, mkTermSym(singleCallBms), headParams :: newAuxPlist, bod)(false)
+            val auxCtorDefn_ = FunDefn.withFreshSymbol(None, singleCallBms, headParams :: newAuxPlist, bod)(false)
             val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
             // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
