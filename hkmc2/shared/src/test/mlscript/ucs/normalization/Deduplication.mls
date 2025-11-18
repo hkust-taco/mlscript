@@ -336,8 +336,7 @@ fun foo(x, y, z) = if x is
 //│ JS (unsanitized):
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
-//│   let value;
-//│   let tmp6;
+//│   let value, tmp6;
 //│   split_root$4: {
 //│     split_1$4: {
 //│       if (x1 === 0) {

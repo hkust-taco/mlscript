@@ -124,8 +124,7 @@ globalThis.Object.freeze(class Predef {
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let i, init;
-      let len, scrut, scrut1, tmp, tmp1, tmp2, tmp3;
+      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
       len = rest.length;
       scrut = len == 0;
       if (scrut === true) {
@@ -153,8 +152,7 @@ globalThis.Object.freeze(class Predef {
     }
   } 
   static mkStr(...xs) {
-    let lambda;
-    let tmp;
+    let lambda, tmp;
     lambda = (undefined, function (acc, x) {
       let tmp1, tmp2, tmp3;
       if (typeof x === 'string') {

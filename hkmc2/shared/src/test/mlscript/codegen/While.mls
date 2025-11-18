@@ -105,8 +105,7 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let i2;
-//│   let scrut3, tmp19, tmp20;
+//│   let i2, scrut3, tmp19, tmp20;
 //│   tmp21: while (true) {
 //│     i2 = 0;
 //│     scrut3 = i2 < 10;
@@ -198,8 +197,7 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let tl, h;
-//│   let argument0$, argument1$, tmp28;
+//│   let tl, h, argument0$, argument1$, tmp28;
 //│   tmp29: while (true) {
 //│     if (ls instanceof Cons1.class) {
 //│       argument0$ = ls.hd;
@@ -276,10 +274,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.276: 	  then 0(0)
+//│ ║  l.274: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.275: 	while print("Hello World"); false
+//│ ║  l.273: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -289,12 +287,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.288: 	while { print("Hello World"), false }
+//│ ║  l.286: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.289: 	  then 0(0)
+//│ ║  l.287: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.290: 	  else 1
+//│ ║  l.288: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -304,14 +302,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.302: 	    print("Hello World")
+//│ ║  l.300: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.303: 	    false
+//│ ║  l.301: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.304: 	  then 0(0)
+//│ ║  l.302: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.305: 	  else 1
+//│ ║  l.303: 	  else 1
 //│ ╙──       	  ^^^^
 
 

@@ -1,33 +1,6 @@
 :js
 
 
-:sjs
-fun foo() =
-  let x = 1
-  fun bar() =
-    let y = 2
-    x + y
-  bar()
-//│ JS (unsanitized):
-//│ let foo;
-//│ foo = function foo() {
-//│   let bar;
-//│   let x;
-//│   bar = function bar() { let y; y = 2; return x + y };
-//│   x = 1;
-//│   return bar()
-//│ };
-
-
-let x = 1
-//│ x = 1
-
-:sjs
-fun foo() =
-  set x = 2
-//│ JS (unsanitized):
-//│ let foo1; foo1 = function foo() { x = 2; return runtime.Unit };
-
 // only the `let x` should be declared in the top level of repl?
 // now `y` is declared in the "correct" place, but not `tmp` because `tmp` is
 // handled by `blockPreamble`
@@ -37,23 +10,23 @@ let x =
   let y = 1 + 3 * 4
   y + 4
 //│ JS (unsanitized):
-//│ let x1, y, tmp; tmp = 3 * 4; y = 1 + tmp; x1 = y + 4;
-//│ REPL> Sending: block$res4 = undefined
+//│ let tmp; let x; let y; tmp = 3 * 4; y = 1 + tmp; x = y + 4;
+//│ REPL> Sending: block$res1 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x1, y, tmp;try { tmp = 3 * 4; y = 1 + tmp; x1 = y + 4; block$res4 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: let tmp;let x;try { let y; tmp = 3 * 4; y = 1 + tmp; x = y + 4; block$res1 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ REPL> Parsed:
 //│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res4)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  undefined
 //│ >  Unit {}
 //│ REPL> Parsed:
 //│ >  undefined
 //│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(x1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
 //│ REPL> Collected:
 //│ >  17
 //│ >  Unit {}
@@ -77,10 +50,9 @@ fun f() =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f() {
-//│   let a, b;
 //│   let scrut;
 //│   scrut = true;
-//│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
 //│ };
 
 
@@ -101,18 +73,18 @@ fun g(x, y, z) =
       (_ + a)
 //│ JS (unsanitized):
 //│ let g;
-//│ g = function g(x2, y1, z) {
-//│   let a, lambda;
-//│   let tmp1, tmp2;
+//│ g = function g(x1, y1, z) {
+//│   let tmp1, tmp2, lambda;
 //│   split_root$: {
 //│     split_1$: {
-//│       if (x2 === true) {
+//│       if (x1 === true) {
 //│         break split_1$
 //│       } else {
 //│         if (y1 === true) {
 //│           break split_1$
 //│         } else {
 //│           if (z === true) {
+//│             let a;
 //│             a = 1;
 //│             lambda = (undefined, function (_0) {
 //│               return _0 + a
@@ -132,6 +104,22 @@ fun g(x, y, z) =
 //│ };
 
 
-
+// TODO:
+:e
 module M
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (module:M,Scope:
+//│   parent = N
+//│   curThis = S of S of globalThis:globalThis
+//│   bindings = HashMap($block$res -> block$res4, class:M -> M1, $block$res -> block$res2, $runtime -> runtime, member:g -> g, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res, x -> x, y -> y, member:Predef -> Predef, $block$res -> block$res3, $block$res -> block$res1, $tmp -> tmp, member:f -> f, module:M -> M))
+//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
+//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
+//│ 	at: hkmc2.codegen.js.JSBuilder.go$1$$anonfun$2(JSBuilder.scala:556)
+//│ 	at: hkmc2.codegen.js.JSBuilder.go$1$$anonfun$adapted$1(JSBuilder.scala:560)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.codegen.js.JSBuilder.go$1(JSBuilder.scala:560)
+//│ 	at: hkmc2.codegen.js.JSBuilder.reserveNames(JSBuilder.scala:561)
+//│ 	at: hkmc2.codegen.js.JSBuilder.worksheet(JSBuilder.scala:589)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:155)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
 

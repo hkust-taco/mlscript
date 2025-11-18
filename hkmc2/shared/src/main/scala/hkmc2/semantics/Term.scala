@@ -368,7 +368,24 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty
     case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms) 
     case LetDecl(sym, annotations) => Set(sym)
-    case _ => Set.empty // TODO
+    // TODO: make sure
+    case tdef: TermDefinition => Set(tdef.sym)
+    case ModuleOrObjectDef(owner, sym, bsym, tparams, paramsOpt, auxParams, ext, kind, body, companion, annotations) => Set(sym)
+    case PatternDef(owner, sym, bsym, tparams, parameters, patternParams, extractionParams, pattern, annotations) => Set(bsym)
+    case ClassDef.Parameterized(owner, kind, sym, bsym, tparams, params, auxParams, ext, body, companion, annotations) => Set(bsym)
+    case ClassDef.Plain(owner, kind, sym, bsym, tparams, ext, body, companion, annotations) => Set(bsym)
+    case TypeDef(sym, bsym, tparams, rhs, companion, annotations) => Set(bsym)
+    case Import(sym, str, file) => Set(sym)
+
+    // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
+    // And including the sym here may cause error for delayed init in a function:
+    // ```
+    // let x
+    // fun f() =
+    //   x = 2
+    // ```
+    // case DefineVar(sym, rhs) => Set(sym)
+    case _ => Set.empty // TODO: add other cases
   
   def describe: Str =
     val desc = this match

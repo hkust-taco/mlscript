@@ -24,8 +24,11 @@
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Return:
-//│     res = Lit of IntLit of 2
+//│   main = Assign:
+//│     lhs = $block$res
+//│     rhs = Lit of IntLit of 2
+//│     rest = Return: \
+//│     res = Lit of UnitLit of false
 //│     implct = true
 //│ = 2
 
@@ -53,8 +56,11 @@ print("Hi")
 //│         Arg:
 //│           spread = N
 //│           value = Lit of StrLit of "Hi"
+//│     rest = Assign: \
+//│     lhs = $block$res
+//│     rhs = Lit of IntLit of 2
 //│     rest = Return: \
-//│     res = Lit of IntLit of 2
+//│     res = Lit of UnitLit of false
 //│     implct = true
 //│ > Hi
 //│ = 2

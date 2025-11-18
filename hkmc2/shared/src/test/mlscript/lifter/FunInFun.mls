@@ -59,8 +59,7 @@ f(1, 2)
 //│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
-//│   let g$here;
-//│   let used2, unused2, foo, tmp;
+//│   let used2, unused2, foo, tmp, g$here;
 //│   used2 = unused1;
 //│   unused2 = 2;
 //│   g$here = runtime.safeCall(g1(used1, used2));
@@ -282,7 +281,6 @@ g()(1)
 //│ g6 = function g() {
 //│   let capture, f$here;
 //│   capture = new g$capture1(null);
-//│   let y1;
 //│   capture.y$capture$0 = 0;
 //│   f$here = runtime.safeCall(f14(capture));
 //│   return f$here
@@ -382,8 +380,7 @@ fun f(x) =
 //│   }
 //│ };
 //│ f23 = function f(x1) {
-//│   let g$here;
-//│   let y1, scrut;
+//│   let y1, scrut, g$here;
 //│   y1 = undefined;
 //│   scrut = x1 < 0;
 //│   if (scrut === true) {

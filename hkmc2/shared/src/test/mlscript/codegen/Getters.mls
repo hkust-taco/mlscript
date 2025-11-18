@@ -39,8 +39,7 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test() {
-//│   let whoops;
-//│   let tmp1, tmp2;
+//│   let whoops, tmp1, tmp2;
 //│   whoops = function whoops() {
 //│     let tmp3;
 //│     tmp3 = Predef.print("ok");
@@ -138,8 +137,7 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test1;
 //│ test1 = function test() {
-//│   let whoops;
-//│   let tmp1;
+//│   let whoops, tmp1;
 //│   whoops = function whoops() { return 42 };
 //│   tmp1 = whoops();
 //│   return tmp1
@@ -214,8 +212,7 @@ fun a() =
 //│     return 1
 //│   };
 //│   c = function c() {
-//│     let d;
-//│     let tmp2, tmp3;
+//│     let d, tmp2, tmp3;
 //│     d = function d() { return 2 };
 //│     tmp2 = b();
 //│     tmp3 = d();
@@ -244,8 +241,7 @@ fun b() =
 //│     return 1
 //│   };
 //│   d = function d() {
-//│     let c1;
-//│     let tmp3;
+//│     let c1, tmp3;
 //│     c1 = function c() { return 2 };
 //│     tmp3 = c1();
 //│     return tmp3
@@ -268,14 +264,12 @@ fun c() =
 //│ JS (unsanitized):
 //│ let c;
 //│ c = function c() {
-//│   let d, f;
-//│   let tmp4;
+//│   let d, f, tmp4;
 //│   f = function f() {
 //│     return 1
 //│   };
 //│   d = function d() {
-//│     let e;
-//│     let tmp5, tmp6;
+//│     let e, tmp5, tmp6;
 //│     e = function e() {
 //│       return 1
 //│     };

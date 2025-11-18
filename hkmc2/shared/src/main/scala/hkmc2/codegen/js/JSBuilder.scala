@@ -503,8 +503,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         returningTerm(rst, endSemi).stripBreaks}"
 
     case Scoped(syms, body) =>
-      // TODO: we should remove `syms.filter` after temp vars can be correctly handled.
-      val vars = syms.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l => l -> scope.allocateName(l))
+      val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
+        if scope.lookup(l).isDefined then
+          raise:
+            WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+          None
+        else
+          Some(l -> scope.allocateName(l))
       (if vars.isEmpty then doc"" else
         doc" # let " :: vars.map: (_, nme) =>
           nme
@@ -580,17 +585,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         case N => doc""
       )
   
-  // TODO: get rid of it?
-  private def getDefinedVars(blk: Block): Set[Local] = blk match
-    case Scoped(syms, body) => body.definedVars -- syms
-    case _ => blk.definedVars
-  
-
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
-    blockPreamble(p.imports.map(_._1).toSeq ++ getDefinedVars(p.main).toSeq) ->
+    blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVars.toSeq) ->
       (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
@@ -605,7 +604,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     // println(s"$t :::::::: ${t.definedVars}")
-    blockPreamble(getDefinedVars(t)) :: returningTerm(t, endSemi)
+    blockPreamble(t.definedVars) :: returningTerm(t, endSemi)
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
     block(t, endSemi)
