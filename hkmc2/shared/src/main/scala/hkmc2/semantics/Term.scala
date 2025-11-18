@@ -363,12 +363,6 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case RcdField(field, rhs) => RcdField(field.mkClone, rhs.mkClone)
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
-
-  lazy val definedSyms: Set[Symbol] = this match
-    case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty
-    case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms) 
-    case LetDecl(sym, annotations) => Set(sym)
-    case _ => Set.empty // TODO
   
   def describe: Str =
     val desc = this match

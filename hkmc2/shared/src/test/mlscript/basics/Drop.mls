@@ -4,13 +4,14 @@
 :sjs
 drop id(2 + 2)
 //│ JS (unsanitized):
-//│ let tmp, tmp1; tmp = 2 + 2; tmp1 = Predef.id(tmp); runtime.Unit
+//│ let tmp; let tmp1; tmp1 = 2 + 2; tmp = Predef.id(tmp1); runtime.Unit
 
 
 :sjs
 drop { a: 0, b: 1 }
 //│ JS (unsanitized):
-//│ let a, b, tmp2, tmp3;
+//│ let b, tmp2, tmp3;
+//│ let a;
 //│ a = 0;
 //│ tmp2 = globalThis.Object.freeze({
 //│   a: a

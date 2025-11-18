@@ -19,7 +19,8 @@ fun f() =
 //│ JS (unsanitized):
 //│ let f, getLocals2;
 //│ getLocals2 = function getLocals() {
-//│   let prev, thisInfo, arr, tmp;
+//│   let thisInfo, arr, tmp;
+//│   let prev;
 //│   prev = [];
 //│   arr = globalThis.Object.freeze([]);
 //│   thisInfo = new runtime.FnLocalsInfo.class("\u2039top level\u203A", arr);
@@ -29,7 +30,8 @@ fun f() =
 //│ f = function f() {
 //│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1, doUnwind;
 //│   getLocals3 = function getLocals() {
-//│     let i1, j1, k1, prev, thisInfo, arr, tmp2;
+//│     let i1, j1, k1, thisInfo, arr, tmp2;
+//│     let prev;
 //│     prev = getLocals2();
 //│     i1 = new runtime.LocalVarInfo.class("i", i);
 //│     j1 = new runtime.LocalVarInfo.class("j", j);
@@ -126,8 +128,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:126:3)
-//│ 	at lambda_test (Debugging.mls:123:3)
+//│ 	at lambda (Debugging.mls:128:3)
+//│ 	at lambda_test (Debugging.mls:125:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -206,9 +208,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:199:3) with locals: j=200
+//│ > 	at f (Debugging.mls:201:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:201:3)
+//│ > 	at f (Debugging.mls:203:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:202:3) with locals: j=300
+//│ > 	at f (Debugging.mls:204:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

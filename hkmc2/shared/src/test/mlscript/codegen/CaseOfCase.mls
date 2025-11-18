@@ -17,8 +17,7 @@ fun test(x) =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test(x) {
-//│   let v, v1;
-//│   let scrut, argument0$, argument0$1, tmp, tmp1;
+//│   let v, scrut, v1, argument0$, argument0$1, tmp, tmp1;
 //│   if (x instanceof Some1.class) {
 //│     argument0$1 = x.value;
 //│     v = argument0$1;

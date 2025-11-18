@@ -935,9 +935,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 
-    val res = 
-      if config.stageCode then Instrumentation(using summon).applyBlock(merged)
+    val scoped =
+      if !config.llir then setupScoped(merged)(using imps.map(_.sym).toSet)
       else merged
+
+    val res = 
+      if config.stageCode then Instrumentation(using summon).applyBlock(scoped)
+      else scoped
     
     Program(
       imps.map(imp => imp.sym -> imp.str),
@@ -949,6 +953,41 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     subTerm(prefix): p =>
       val selRes = TempSymbol(N, "selRes")
       k(Select(p, nme)(sym))
+
+  def setupScoped(blk: Block)(using syms: Set[Local]): Block = blk match
+    case tail: BlockTail => tail
+    case Match(scrut, arms, dflt, rest) =>
+      Match(scrut, arms.map {
+        case (c, b) => c -> setupScoped(b)
+      }, dflt.map(setupScoped), setupScoped(rest))
+    case Label(s, loop, body, rest) =>
+      Label(s, loop, setupScoped(body), setupScoped(rest))
+    case Begin(sub, rest) =>
+      Begin(setupScoped(sub), setupScoped(rest))
+    case TryBlock(sub, fd, rest) =>
+      TryBlock(setupScoped(sub), setupScoped(fd), setupScoped(rest))
+    case Assign(lhs, rhs, rest) if syms(lhs) => Assign(lhs, rhs, setupScoped(rest))
+    case Assign(lhs, rhs, rest) =>
+      val newSyms = syms + lhs
+      Scoped(Set(lhs), Assign(lhs, rhs, setupScoped(rest)(using newSyms))).flattened
+    case assign @ AssignField(lhs, nme, rhs, rest) => AssignField(lhs, nme, rhs, setupScoped(rest))(assign.symbol)
+    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => AssignDynField(lhs, fld, arrayIdx, rhs, setupScoped(rest))
+    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
+      HandleBlock(lhs, res, par, args, cls, handlers, setupScoped(body), setupScoped(rest))
+    case Define(defn, rest) =>
+      val newDefn = defn match {
+        case d: ValDefn => d
+        case FunDefn(owner, sym, params, body) =>
+          val newSyms = syms ++ params.flatMap(_.params.map(_.sym))
+          FunDefn(owner, sym, params, setupScoped(body)(using newSyms))
+        case ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+          privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
+            ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+              privateFields, publicFields, preCtor, ctor, companion, bufferable)
+      }
+      val newSyms = syms + newDefn.sym
+      Define(newDefn, setupScoped(rest)(using newSyms))
+
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
@@ -959,8 +998,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
-    val body = returnedTerm(bodyTerm)
-    (paramLists, Scoped(bodyTerm.definedSyms ++ body.tempVars, body)) // TODO: move it to block function
+    (paramLists, returnedTerm(bodyTerm))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:

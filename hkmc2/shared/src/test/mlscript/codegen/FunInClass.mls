@@ -81,8 +81,7 @@ fun test(a) =
 //│ JS (unsanitized):
 //│ let test2;
 //│ test2 = function test(a) {
-//│   let C11, C21;
-//│   let tmp, tmp1;
+//│   let C11, C21, tmp, tmp1;
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
@@ -155,8 +154,7 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz;
-//│     let tmp;
+//│     let bar, baz, tmp;
 //│     const this$Foo = this;
 //│     bar = function bar() {
 //│       return this$Foo.a

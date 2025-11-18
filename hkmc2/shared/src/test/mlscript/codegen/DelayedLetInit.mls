@@ -80,7 +80,8 @@ else foo = 1
 //│ ║  l.77: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let foo1, scrut;
+//│ let scrut;
+//│ let foo1;
 //│ foo1 = undefined;
 //│ scrut = true;
 //│ if (scrut === true) {
@@ -95,7 +96,8 @@ then
 else
   foo = 1
 //│ JS (unsanitized):
-//│ let foo2, scrut1;
+//│ let scrut1;
+//│ let foo2;
 //│ foo2 = undefined;
 //│ scrut1 = true;
 //│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
@@ -120,7 +122,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.121: 	fun f() = foo = 0
+//│ ║  l.123: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
 //│ let f4; f4 = function f() { return foo2 };

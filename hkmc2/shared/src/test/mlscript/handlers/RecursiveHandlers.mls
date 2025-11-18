@@ -155,7 +155,8 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp9, tmp10, handleBlock$7;
+//│ let scrut, tmp9, tmp10, handleBlock$7;
+//│ let str;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {

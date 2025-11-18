@@ -21,6 +21,7 @@ case class Config(
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
   stageCode: Bool,
+  llir: Bool,
   target: CompilationTarget,
 ):
   
@@ -37,6 +38,7 @@ object Config:
     effectHandlers = N,
     liftDefns = N,
     stageCode = false,
+    llir = false,
     target = CompilationTarget.JS
   )
   

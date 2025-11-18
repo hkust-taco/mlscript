@@ -503,7 +503,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         returningTerm(rst, endSemi).stripBreaks}"
 
     case Scoped(syms, body) =>
-      // TODO: we should remove `syms.filter` after temp vars can be correctly handled.
+      // still need to keep the filter for diff test
       val vars = syms.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l => l -> scope.allocateName(l))
       (if vars.isEmpty then doc"" else
         doc" # let " :: vars.map: (_, nme) =>
