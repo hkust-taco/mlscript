@@ -254,7 +254,7 @@ let f = if _ then 1 else 0
 //│ ║  l.249: 	let f = if _ then 1 else 0
 //│ ╙──       	                    ^^^^^^
 //│ JS (unsanitized):
-//│ let f15; let tmp21; tmp21 = 1; f15 = tmp21;
+//│ let f15, tmp21; tmp21 = 1; f15 = tmp21;
 //│ f = 1
 
 :sjs

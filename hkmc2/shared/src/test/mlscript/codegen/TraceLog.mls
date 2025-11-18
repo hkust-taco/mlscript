@@ -9,8 +9,7 @@ fun fib(a) = if
 //│ JS (unsanitized):
 //│ let fib;
 //│ fib = function fib(a) {
-//│   let tmp, tmp1, tmp2, tmp3;
-//│   let scrut;
+//│   let scrut, tmp, tmp1, tmp2, tmp3;
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
 //│     return a

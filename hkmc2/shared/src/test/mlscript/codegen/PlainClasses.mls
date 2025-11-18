@@ -74,7 +74,8 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test() {
-//│   let Foo5, tmp;
+//│   let Foo5;
+//│   let tmp;
 //│   globalThis.Object.freeze(class Foo4 {
 //│     static {
 //│       Foo5 = this
@@ -98,8 +99,8 @@ let t = test()
 :e
 new t
 //│ ╔══[ERROR] Expected a statically known class; found reference.
-//│ ║  l.99: 	new t
-//│ ║        	    ^
+//│ ║  l.100: 	new t
+//│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
@@ -115,7 +116,7 @@ new! t
 :e
 new t()
 //│ ╔══[ERROR] Expected a statically known class; found reference.
-//│ ║  l.116: 	new t()
+//│ ║  l.117: 	new t()
 //│ ║         	    ^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
@@ -217,8 +218,7 @@ print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3;
-//│ let a;
+//│ let a, tmp, tmp1, tmp2, tmp3;
 //│ a = globalThis.Object.freeze(new Foo10());
 //│ tmp = Predef.print(a.x);
 //│ tmp1 = runtime.safeCall(a.foo(1));

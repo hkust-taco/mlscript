@@ -20,8 +20,7 @@ fun f(x) =
 //│ JS (unsanitized):
 //│ let f1;
 //│ f1 = function f(x) {
-//│   let tmp, tmp1;
-//│   let scrut;
+//│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
 //│   if (scrut === true) {
 //│     tmp = Predef.print("whoops");

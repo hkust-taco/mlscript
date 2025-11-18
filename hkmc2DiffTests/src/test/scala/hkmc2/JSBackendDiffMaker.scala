@@ -108,22 +108,34 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)
+       val le = lowered0.copy(main = lowered0.main.mapTail:
+        case e: End =>
+          Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+        case Return(res, implct) =>
+          assert(implct)
+          Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case Scoped(_, body) => ??? // TODO
+        case tl: (Throw | Break | Continue) => tl
+      )
 
-      def assignResSym(b: Block, toplvl: Boolean): Block =
-        b.mapTail:
-          case e: End =>
-            Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
-          case Return(res, implct) =>
-            assert(implct)
-            Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-          case s@Scoped(xs, body) =>
-            if toplvl then
-              // toplvlDefinedVars = xs
-              assignResSym(body, false)
-            else
-              Scoped(xs, assignResSym(body, false))
-          case tl: (Throw | Break | Continue) => tl
-      val le = lowered0.copy(main = assignResSym(lowered0.main, true))
+      // TODO: re-implement
+      // TODO: remove mutation
+      // var toplvlDefinedVars = Set.empty[Symbol]
+      // def assignResSym(b: Block, toplvl: Boolean): Block =
+      //   b.mapTail:
+      //     case e: End =>
+      //     Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+      //     case Return(res, implct) =>
+      //       assert(implct)
+      //       Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+      //     case s@Scoped(xs, body) =>
+      //       if toplvl then
+      //         toplvlDefinedVars = xs
+      //         assignResSym(body, false)
+      //       else
+      //         Scoped(xs, assignResSym(body, false))
+      //     case tl: (Throw | Break | Continue) => tl
+      // val le = lowered0.copy(main = assignResSym(lowered0.main, true))
       
       if showLoweredTree.isSet then
         output(s"Lowered:")

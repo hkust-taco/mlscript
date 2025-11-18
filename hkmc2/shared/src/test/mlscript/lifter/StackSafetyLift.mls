@@ -148,8 +148,7 @@ sum(10000)
 //│   return res2
 //│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, stackDelayRes;
-//│   let curDepth;
+//│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();

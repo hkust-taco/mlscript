@@ -16,18 +16,13 @@ if x === 0 then 1 else 2
 :sjs
 let a = if x === 0 then 1 else 2
 //│ JS (unsanitized):
-//│ let a, tmp;
-//│ let scrut1;
-//│ scrut1 = x === 0;
-//│ if (scrut1 === true) { tmp = 1; } else { tmp = 2; }
-//│ a = tmp;
+//│ let a, scrut1, tmp; scrut1 = x === 0; if (scrut1 === true) { tmp = 1; } else { tmp = 2; } a = tmp;
 //│ a = 1
 
 :sjs
 print of if x === 0 then 1 else 2
 //│ JS (unsanitized):
-//│ let tmp1;
-//│ let scrut2;
+//│ let scrut2, tmp1;
 //│ scrut2 = x === 0;
 //│ if (scrut2 === true) { tmp1 = 1; } else { tmp1 = 2; }
 //│ Predef.print(tmp1)
@@ -341,7 +336,8 @@ fun foo(x, y, z) = if x is
 //│ JS (unsanitized):
 //│ let foo2;
 //│ foo2 = function foo(x1, y1, z1) {
-//│   let value, tmp6;
+//│   let value;
+//│   let tmp6;
 //│   split_root$4: {
 //│     split_1$4: {
 //│       if (x1 === 0) {
@@ -469,8 +465,7 @@ foo(A, B, B)
 :sjs
 let y = if true then 1 else 2
 //│ JS (unsanitized):
-//│ let y1, tmp6;
-//│ let scrut3;
+//│ let y1, scrut3, tmp6;
 //│ scrut3 = true;
 //│ if (scrut3 === true) { tmp6 = 1; } else { tmp6 = 2; }
 //│ y1 = tmp6;

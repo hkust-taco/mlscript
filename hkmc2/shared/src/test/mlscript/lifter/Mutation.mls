@@ -32,9 +32,9 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo = function foo() {
-//│   let tmp, bar$here;
-//│   let capture;
+//│   let tmp, capture, bar$here;
 //│   capture = new foo$capture1(null);
+//│   let x;
 //│   capture.x$capture$0 = 1;
 //│   bar$here = runtime.safeCall(bar(capture));
 //│   tmp = runtime.safeCall(xs.push(bar$here));

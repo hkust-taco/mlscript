@@ -5,13 +5,12 @@
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   let tmp, tmp1, tmp2;
-//│   let tmp3;
-//│   tmp3 = x + 1;
-//│   tmp = tmp3 + 1;
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = x + 1;
 //│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
-//│   return tmp2 + 1
+//│   tmp3 = tmp2 + 1;
+//│   return tmp3 + 1
 //│ });
 //│ lambda(1)
 //│ = 6
@@ -21,14 +20,13 @@
 //│ JS (unsanitized):
 //│ let lambda1;
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp, tmp1, tmp2, tmp3;
-//│   let tmp4;
-//│   tmp4 = x + 1;
-//│   tmp = tmp4 + 1;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   tmp = x + 1;
 //│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
 //│   tmp3 = tmp2 + 1;
-//│   return tmp3 + 1
+//│   tmp4 = tmp3 + 1;
+//│   return tmp4 + 1
 //│ });
 //│ lambda1(1)
 //│ = 7

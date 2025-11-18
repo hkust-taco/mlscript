@@ -8,7 +8,8 @@ fun nonsense(xs) = if xs is
 //│ JS (unsanitized):
 //│ let nonsense;
 //│ nonsense = function nonsense(xs) {
-//│   let ys, middleElements;
+//│   let ys;
+//│   let middleElements;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
 //│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
 //│     ys = middleElements;
@@ -29,7 +30,8 @@ fun lead_and_last(xs) = if xs is
 //│ JS (unsanitized):
 //│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
-//│   let x, ys, y, lastElement0$, middleElements, element0$;
+//│   let x, ys, y;
+//│   let lastElement0$, middleElements, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
 //│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
@@ -63,7 +65,8 @@ fun nested_tuple_patterns(xs) = if xs is
 //│ JS (unsanitized):
 //│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8;
+//│   let x, y, w, z;
+//│   let lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {

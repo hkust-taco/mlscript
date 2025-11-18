@@ -89,7 +89,8 @@ fun test2() =
 //│ JS (unsanitized):
 //│ let test22;
 //│ test22 = function test2() {
-//│   let funny, tmp1;
+//│   let funny;
+//│   let tmp1;
 //│   funny = function funny() {
 //│     let lambda, lambda1;
 //│     lambda = (undefined, function (caseScrut) {
@@ -100,8 +101,8 @@ fun test2() =
 //│       }
 //│     });
 //│     lambda1 = (undefined, function (caseScrut) {
-//│       let tmp2, tmp3, tmp4;
 //│       let n;
+//│       let tmp2, tmp3, tmp4;
 //│       n = caseScrut;
 //│       tmp2 = funny();
 //│       tmp3 = n - 1;
@@ -131,7 +132,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.132: 	  print("Hi")
+//│ ║  l.133: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

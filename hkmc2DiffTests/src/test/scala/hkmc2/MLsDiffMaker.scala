@@ -53,8 +53,6 @@ abstract class MLsDiffMaker extends DiffMaker:
   val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
-
-  val llir = NullaryCommand("llir")
   
   val typeCheck = FlagCommand(false, "typeCheck")
   
@@ -99,7 +97,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       )),
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
       stageCode = stageCode.isSet,
-      llir = llir.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
     )
   

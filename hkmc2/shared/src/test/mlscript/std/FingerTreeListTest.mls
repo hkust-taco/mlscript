@@ -135,8 +135,7 @@ fun popByIndex(start, end, acc, lft) =
 //│ JS (unsanitized):
 //│ let popByIndex;
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
-//│   let tmp34, tmp35, tmp36;
-//│   let scrut;
+//│   let scrut, tmp34, tmp35, tmp36;
 //│   scrut = start >= end;
 //│   if (scrut === true) {
 //│     return acc

@@ -59,8 +59,8 @@ f(1, 2)
 //│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
-//│   let unused2, foo, tmp, g$here;
-//│   let used2;
+//│   let g$here;
+//│   let used2, unused2, foo, tmp;
 //│   used2 = unused1;
 //│   unused2 = 2;
 //│   g$here = runtime.safeCall(g1(used1, used2));
@@ -80,13 +80,12 @@ f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let f4, g$4;
 //│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
-//│   let tmp, tmp1, tmp2;
-//│   let tmp3;
-//│   tmp3 = a1 + a2;
-//│   tmp = tmp3 + a3;
-//│   tmp1 = tmp + a4;
-//│   tmp2 = tmp1 + a5;
-//│   return tmp2 + a6
+//│   let tmp, tmp1, tmp2, tmp3;
+//│   tmp = a1 + a2;
+//│   tmp1 = tmp + a3;
+//│   tmp2 = tmp1 + a4;
+//│   tmp3 = tmp2 + a5;
+//│   return tmp3 + a6
 //│ };
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
@@ -183,8 +182,7 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let a1, tmp7, tmp8;
-//│   let capture;
+//│   let a1, tmp7, tmp8, capture;
 //│   capture = new f$capture5(mutated);
 //│   a1 = g$6(immutable, capture);
 //│   tmp7 = h$2(capture);
@@ -282,9 +280,9 @@ g()(1)
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
 //│ g6 = function g() {
-//│   let f$here;
-//│   let capture;
+//│   let capture, f$here;
 //│   capture = new g$capture1(null);
+//│   let y1;
 //│   capture.y$capture$0 = 0;
 //│   f$here = runtime.safeCall(f14(capture));
 //│   return f$here
@@ -384,8 +382,8 @@ fun f(x) =
 //│   }
 //│ };
 //│ f23 = function f(x1) {
-//│   let scrut, g$here;
-//│   let y1;
+//│   let g$here;
+//│   let y1, scrut;
 //│   y1 = undefined;
 //│   scrut = x1 < 0;
 //│   if (scrut === true) {
@@ -429,8 +427,7 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f24 = function f(x1) {
-//│   let a1, tmp10, g$here;
-//│   let capture;
+//│   let a1, tmp10, capture, g$here;
 //│   capture = new f$capture17(x1);
 //│   g$here = runtime.safeCall(g13(capture));
 //│   a1 = g$here;

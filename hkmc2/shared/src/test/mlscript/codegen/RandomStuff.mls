@@ -63,7 +63,7 @@ do
   fun f = f
   ()
 //│ JS (unsanitized):
-//│ let f; let f1; f1 = 1; f = function f() { let tmp; tmp = f(); return tmp }; runtime.Unit
+//│ let f, f1; f1 = 1; f = function f() { let tmp; tmp = f(); return tmp }; runtime.Unit
 //│ f = 1
 
 :sjs

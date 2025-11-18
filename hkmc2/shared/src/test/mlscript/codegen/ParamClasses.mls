@@ -134,7 +134,7 @@ f.b
 
 Foo(print(1), print(2))
 //│ JS (unsanitized):
-//│ let tmp1; let tmp2; tmp2 = Predef.print(1); tmp1 = Predef.print(2); Foo5(tmp2, tmp1)
+//│ let tmp1, tmp2; tmp1 = Predef.print(1); tmp2 = Predef.print(2); Foo5(tmp1, tmp2)
 //│ > 1
 //│ > 2
 //│ = Foo((), ())
