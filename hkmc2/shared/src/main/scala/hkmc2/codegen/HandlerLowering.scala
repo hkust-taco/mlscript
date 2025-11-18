@@ -435,7 +435,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyFunDefn(fun: FunDefn): FunDefn =
         if !h.isTopLevel then
           raise(WarningReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil, source = Diagnostic.Source.Compilation))
-        val bod2 = translateBlock(fun.body, functionHandlerCtx(Value.Ref(fun.sym, N), fun.sym.nme, fun.params.length, fun.body.definedVars))
+        val bod2 = translateBlock(fun.body, functionHandlerCtx(Value.Ref(fun.sym, N), fun.sym.nme, fun.params.length,
+          fun.body.definedVars ++ fun.params.flatMap(_.paramSyms)))
         if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.params, bod2)
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
@@ -444,13 +445,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             raise(WarningReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil, source = Diagnostic.Source.Compilation))
           val newMtds = methods.map: f =>
             val bod2 = translateBlock(f.body,
-              funcLikeHandlerCtx(Value.Ref(isym).sel(new Tree.Ident(f.sym.nme), f.sym.asTrm.get), S(Value.Ref(isym)), s"${sym.nme}.${f.sym.nme}", f.params.length, f.body.definedVars))
+              funcLikeHandlerCtx(Value.Ref(isym).sel(new Tree.Ident(f.sym.nme), f.sym.asTrm.get), S(Value.Ref(isym)), s"${sym.nme}.${f.sym.nme}", f.params.length,
+                f.body.definedVars ++ f.params.flatMap(_.paramSyms)))
             if f.body is bod2 then f else
             FunDefn(f.owner, f.sym, f.params, bod2)
           val blk = Begin(preCtor, ctor)
           // FIXME: ctor cannot yield effect with call cnt 0
           // Possible solution: use a dummy ctor instead, which is a call to another normal static function. The function should also handle the super call.
-          val newCtor = translateBlock(blk, ctorCtx(sym, isym.asInstanceOf[ClassSymbol], s"‹constructor of ${sym.nme}›", 0, blk.definedVars))
+          // val newCtor = translateBlock(blk, ctorCtx(sym, isym.asInstanceOf[ClassSymbol], s"‹constructor of ${sym.nme}›", 0, blk.definedVars))
+          val newCtor = blk
           k(ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields, End(), newCtor, companion, bufferable))
         case _ => super.applyDefn(defn)(k)
     val b = subblockTransform.applyBlock(blk)
