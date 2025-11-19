@@ -226,7 +226,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             defn.innerSym.collectFirst{ case s: InnerSymbol => s }):
           defn match
             
-          case FunDefn(params = Nil, body = body) =>
+          case FunDefn(params = Nil) =>
             lastWords("cannot generate function with no parameter list")
           case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
