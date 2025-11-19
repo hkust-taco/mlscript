@@ -512,7 +512,7 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
       case Assign(lhs, rhs, rest) =>
         bBind(S(lhs), rhs, rest)(k)(ct)
       case AssignField(lhs, nme, rhs, rest) => TODO("AssignField not supported")
-      case Define(fd @ FunDefn(_own, sym, dSym, params, body), rest) =>
+      case Define(fd: FunDefn, rest) =>
         if ctx.isTopLevel then
           val f = bFunDef(fd)
           ctx.def_acc += f

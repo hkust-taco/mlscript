@@ -226,7 +226,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             defn.innerSym.collectFirst{ case s: InnerSymbol => s }):
           defn match
             
-          case FunDefn(own, sym, dSym, Nil, body) =>
+          case FunDefn(params = Nil, body = body) =>
             lastWords("cannot generate function with no parameter list")
           case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
@@ -251,14 +251,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =
               mtds.map:
-                case td @ FunDefn(_, _, _, ps :: pss, bod) =>
+                case td @ FunDefn(params = ps :: pss, body = bod) =>
                   val result = pss.foldRight(bod):
                     case (ps, block) =>
                       Return(Lambda(ps, block), false)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result)
                   doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
-                case td @ FunDefn(_, _, _, Nil, bod) =>
+                case td @ FunDefn(params = Nil, body = bod) =>
                   doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
               .mkDocument(" ")
             
@@ -357,7 +357,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   if checkSelections
                   then mtds
                     .flatMap:
-                      case td @ FunDefn(_, _, _, ps :: pss, bod) => S:
+                      case td @ FunDefn(params = ps :: pss, body = bod) => S:
                         doc" # get ${td.sym.nme}$$__checkNotMethod() { ${
                           runtimeVar
                         }.deboundMethod(${makeStringLiteral(td.sym.nme)}, ${
