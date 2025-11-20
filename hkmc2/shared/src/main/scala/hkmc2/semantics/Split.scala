@@ -24,6 +24,12 @@ enum Split extends AutoLocated with ProductWithTail:
   case Else(default: Term)
   case End
   
+  def defineSyms: Set[Symbol] = this match
+    case Let(sym, term, tail) => Set(sym) ++ term.definedSyms ++ tail.defineSyms
+    case _ => Set.empty
+  
+  
+  
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
   def mkClone(using State): Split = this match

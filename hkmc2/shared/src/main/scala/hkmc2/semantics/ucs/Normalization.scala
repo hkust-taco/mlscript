@@ -247,7 +247,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             End()
           )
         pat match
-          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
+          case FlatPattern.Lit(lit) => mkMatch(
+            Case.Lit(lit),
+            lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))
+          )
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
@@ -257,10 +260,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
               def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                 case Nil =>
-                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, topLevel = false)
+                  Case.Cls(ctorSym, st) -> locally:
+                    // println(s":::::: ${tail.showAsTree} ${tail.defineSyms}")
+                    lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+                  cse -> locally:
+                    blk match
+                      case Scoped(syms, blk) => Scoped(syms ++ Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+                      case _ => Scoped(Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             // Select the constructor's `.class` field.
             lazy val ctorTerm = ctor.symbol match
@@ -283,21 +291,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctorTerm)(k(mod, Nil))
-          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
+          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false)))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-              entries.foldRight(lowerSplit(tail, cont, topLevel = false)):
+              entries.foldRight(lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
                     Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                    blk match
+                      case Scoped(syms, blk) =>
+                        Scoped(syms ++ Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
+                      case _ =>
+                        Scoped(Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
                   )
             )
     case Split.Else(els) => labels.get(els) match
       case S(label) => Break(label)
-      case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
+      case N => lowering.inScopedBlock(els.definedSyms)(term_nonTail(els)(cont.fold(identity, _(topLevel))))
     case Split.End => labels.default.fold(throwMatchErrorBlock)(Break(_))
   
   /**
@@ -393,6 +405,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       Label(rootBreakLabel, false, mainBlock, End())
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
+    if usesResTmp then
+      Subst.subst.definedSyms.add(l)
     val block =
       if kw === `while` then
         Begin(Label(loopLabel, true, body, End()), rest)

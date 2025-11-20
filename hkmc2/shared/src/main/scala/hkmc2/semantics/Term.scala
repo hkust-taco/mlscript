@@ -364,19 +364,18 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case RcdSpread(rcd) => RcdSpread(rcd.mkClone)
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
 
+  // NOTE: for `codegen.Block.Scoped`
+  // that is why this lazy val "flattens" things like
+  // the `rhs` in `DefinedVars` and `Assgn` already
   lazy val definedSyms: Set[Symbol] = this match
     case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty
-    case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms) 
+    case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms)
     case LetDecl(sym, annotations) => Set(sym)
-    // TODO: make sure
-    case tdef: TermDefinition => Set(tdef.sym)
-    case ModuleOrObjectDef(owner, sym, bsym, tparams, paramsOpt, auxParams, ext, kind, body, companion, annotations) => Set(sym)
-    case PatternDef(owner, sym, bsym, tparams, parameters, patternParams, extractionParams, pattern, annotations) => Set(bsym)
-    case ClassDef.Parameterized(owner, kind, sym, bsym, tparams, params, auxParams, ext, body, companion, annotations) => Set(bsym)
-    case ClassDef.Plain(owner, kind, sym, bsym, tparams, ext, body, companion, annotations) => Set(bsym)
-    case TypeDef(sym, bsym, tparams, rhs, companion, annotations) => Set(bsym)
-    case Import(sym, str, file) => Set(sym)
-
+    case termdef: TermDefinition => Set(termdef.sym)
+    case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
+    case imp: Import => Set(imp.sym)
+    case IfLike(_, split) => split.definedSyms
+    case SynthIf(split) => split.defineSyms
     // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
     // And including the sym here may cause error for delayed init in a function:
     // ```
@@ -384,7 +383,13 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     // fun f() =
     //   x = 2
     // ```
-    // case DefineVar(sym, rhs) => Set(sym)
+    // the definedSyms of the rhs of these two cases should be included
+    // because those needs to be included in the
+    // same current `Scoped` anyway
+    case DefineVar(_, rhs) => rhs.definedSyms
+    case Assgn(_, rhs) => rhs.definedSyms
+    
+    
     case _ => Set.empty // TODO: add other cases
   
   def describe: Str =
