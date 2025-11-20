@@ -7,12 +7,13 @@ object O
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(member:C__593, member:M__594, member:O__595):
-//│     Define:
+//│   main = Scoped:
+//│     syms = HashSet(member:C, member:M, member:O)
+//│     body = Define:
 //│       defn = ClsLikeDefn:
 //│         owner = N
-//│         isym = class:M__604
-//│         sym = member:M__594
+//│         isym = class:M
+//│         sym = member:M
 //│         k = Cls
 //│         paramsOpt = N
 //│         auxParams = Nil
@@ -23,11 +24,11 @@ object O
 //│         preCtor = End of ""
 //│         ctor = Return:
 //│           res = Select{object:Unit}:
-//│             qual = Ref of $runtime__5
+//│             qual = Ref of $runtime
 //│             name = Ident of "Unit"
 //│           implct = true
 //│         companion = S of ClsLikeBody:
-//│           isym = module:M__596
+//│           isym = module:M
 //│           methods = Nil
 //│           privateFields = Nil
 //│           publicFields = Nil
@@ -36,8 +37,8 @@ object O
 //│       rest = Define: \
 //│       defn = ClsLikeDefn:
 //│         owner = N
-//│         isym = class:C__598
-//│         sym = member:C__593
+//│         isym = class:C
+//│         sym = member:C
 //│         k = Cls
 //│         paramsOpt = N
 //│         auxParams = Nil
@@ -52,8 +53,8 @@ object O
 //│       rest = Define: \
 //│       defn = ClsLikeDefn:
 //│         owner = N
-//│         isym = object:O__600
-//│         sym = member:O__595
+//│         isym = object:O
+//│         sym = member:O
 //│         k = Obj
 //│         paramsOpt = N
 //│         auxParams = Nil
@@ -75,12 +76,13 @@ class MM
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(member:MM__606):
-//│     Define:
+//│   main = Scoped:
+//│     syms = HashSet(member:MM)
+//│     body = Define:
 //│       defn = ClsLikeDefn:
 //│         owner = N
-//│         isym = class:MM__609
-//│         sym = member:MM__606
+//│         isym = class:MM
+//│         sym = member:MM
 //│         k = Cls
 //│         paramsOpt = N
 //│         auxParams = Nil
@@ -91,7 +93,7 @@ class MM
 //│         preCtor = End of ""
 //│         ctor = End of ""
 //│         companion = S of ClsLikeBody:
-//│           isym = module:MM__607
+//│           isym = module:MM
 //│           methods = Nil
 //│           privateFields = Nil
 //│           publicFields = Nil
@@ -107,12 +109,13 @@ let y
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped(k__615, member:f__613, member:x__614, y__620):
-//│     Assign:
-//│       lhs = k__615
+//│   main = Scoped:
+//│     syms = HashSet(y, member:f, member:x, k)
+//│     body = Assign:
+//│       lhs = k
 //│       rhs = Lit of UnitLit of false
 //│       rest = Assign: \
-//│       lhs = y__620
+//│       lhs = y
 //│       rhs = Lit of UnitLit of false
 //│       rest = End of ""
 //│ k = undefined
@@ -130,11 +133,12 @@ let x =
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped($tmp__630, x__623, y__624):
-//│     Assign:
-//│       lhs = $tmp__630
+//│   main = Scoped:
+//│     syms = HashSet(y, $tmp, x)
+//│     body = Assign:
+//│       lhs = $tmp
 //│       rhs = Call:
-//│         fun = Ref of builtin:*__36
+//│         fun = Ref of builtin:*
 //│         args = Ls of 
 //│           Arg:
 //│             spread = N
@@ -143,24 +147,24 @@ let x =
 //│             spread = N
 //│             value = Lit of IntLit of 4
 //│       rest = Assign: \
-//│       lhs = y__624
+//│       lhs = y
 //│       rhs = Call:
-//│         fun = Ref of builtin:+__42
+//│         fun = Ref of builtin:+
 //│         args = Ls of 
 //│           Arg:
 //│             spread = N
 //│             value = Lit of IntLit of 1
 //│           Arg:
 //│             spread = N
-//│             value = Ref of $tmp__630
+//│             value = Ref of $tmp
 //│       rest = Assign: \
-//│       lhs = x__623
+//│       lhs = x
 //│       rhs = Call:
-//│         fun = Ref of builtin:+__42
+//│         fun = Ref of builtin:+
 //│         args = Ls of 
 //│           Arg:
 //│             spread = N
-//│             value = Ref of y__624
+//│             value = Ref of y
 //│           Arg:
 //│             spread = N
 //│             value = Lit of IntLit of 4
@@ -304,3 +308,76 @@ fun g() = if x is
 //│ };
 
 
+
+
+
+// FIXME: `argument<n>$` is shared across different branches...
+:fixme
+:sjs
+fun f() = if x is
+  A(a, b) then true
+  B(c, d) then false
+//│ ═══[WARNING] var $argument0$ in scoped is already allocated
+//│ ═══[WARNING] var $argument1$ in scoped is already allocated
+//│ JS (unsanitized):
+//│ let f3;
+//│ f3 = function f() {
+//│   if (x1 instanceof A.class) {
+//│     let a, b, argument0$, argument1$;
+//│     argument0$ = x1.x;
+//│     argument1$ = x1.y;
+//│     b = argument1$;
+//│     a = argument0$;
+//│     return true
+//│   } else if (x1 instanceof B.class) {
+//│     let c, d;
+//│     argument0$ = x1.y;
+//│     argument1$ = x1.z;
+//│     d = argument1$;
+//│     c = argument0$;
+//│     return false
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };
+//│ ═══[WARNING] var $argument0$ in scoped is already allocated
+//│ ═══[WARNING] var $argument1$ in scoped is already allocated
+
+
+// FIXME: runtime error: `t` in `lscomp(t)` is not defined in runtime
+// reason: the `let t` should be in an outer level
+:sjs
+fun lscomp(ls) = if ls is
+  A(_, t) and
+    false and true then x
+    else lscomp(t)
+//│ JS (unsanitized):
+//│ let lscomp;
+//│ lscomp = function lscomp(ls) {
+//│   let tmp1;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (ls instanceof A.class) {
+//│         let t, scrut, argument0$, argument1$;
+//│         argument0$ = ls.x;
+//│         argument1$ = ls.y;
+//│         t = argument1$;
+//│         scrut = false;
+//│         if (scrut === true) {
+//│           let scrut1;
+//│           scrut1 = true;
+//│           if (scrut1 === true) {
+//│             tmp1 = x1;
+//│             break split_root$
+//│           } else {
+//│             break split_1$
+//│           }
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       }
+//│     }
+//│     tmp1 = lscomp(t);
+//│   }
+//│   return tmp1
+//│ };
