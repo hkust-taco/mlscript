@@ -973,9 +973,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 
-    val res = 
+    val staged = 
       if config.stageCode then Instrumentation(using summon).applyBlock(merged)
       else merged
+    
+    val res =
+      if config.tailRecOpt then TailRecOpt().transform(staged)
+      else staged
     
     Program(
       imps.map(imp => imp.sym -> imp.str),
@@ -1007,7 +1011,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Annot.Untyped => ()
       case a @ Annot.TailRec =>
         target match
-          case TermDefinition(body = S(bod), k = syntax.Fun) => warn(a, S(msg"Tail call optimization is not yet implemented."))
+          case TermDefinition(body = S(bod), k = syntax.Fun) => ()
           case TermDefinition(k = syntax.Fun) => warn(a, S(msg"Only functions with a body may be marked as @tailrec."))
           case _ => warn(a)
         
@@ -1028,9 +1032,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Annot.Untyped => ()
       case a @ Annot.TailCall => receiver match
         case st.App(Ref(_: BuiltinSymbol), _) => warn(a, S(msg"The @tailcall annotation has no effect on calls to built-in symbols."))
-        case st.App(_, _) => warn(a, S(msg"Tail call optimization is not yet implemented."))
+        case st.App(_, _) => ()
         case st.Resolved(_, defnSym) => defnSym.defn match
-          case S(td: TermDefinition) if (td.k is syntax.Fun) && td.params.isEmpty => warn(a, S(msg"Tail call optimization is not yet implemented."))
+          case S(td: TermDefinition) if (td.k is syntax.Fun) && td.params.isEmpty => ()
           case _ => warn(a)
         case _ => warn(a)
       case annot => warn(annot)
