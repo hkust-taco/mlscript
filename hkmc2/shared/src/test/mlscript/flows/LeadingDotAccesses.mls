@@ -1,16 +1,64 @@
 :js
-:r
+:flow
+:sf
 
-//│ Resolved: { import /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs from /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs; }
-fun f(x : String) = x + "haha"
-f(5)
-//│ Resolved: { fun member:f(x: member:String) = builtin:+(x, "haha"); member:f(5) }
-//│ = "5haha"
+//│ Flowed:
+//│   import ".../Predef.mjs" as Predef⁰
+//│ where
+//│     
+
+class A
+module A with
+  fun meth = new A
+fun f(x : A) = x
+f(.meth)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: LeadingDotSel(Ident(meth)) (of class hkmc2.semantics.flow.Producer$LeadingDotSel)
+//│ 	at: hkmc2.semantics.flow.Producer.show(Constraint.scala:46)
+//│ 	at: hkmc2.semantics.flow.Producer.showTupElems$$anonfun$1(Constraint.scala:54)
+//│ 	at: scala.collection.immutable.List.map(List.scala:247)
+//│ 	at: hkmc2.semantics.flow.Producer.showTupElems(Constraint.scala:54)
+//│ 	at: hkmc2.semantics.flow.Producer.showAsParams(Constraint.scala:49)
+//│ 	at: hkmc2.semantics.flow.Consumer.show(Constraint.scala:93)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis$$anon$1.$anonfun$15(FlowAnalysis.scala:475)
+//│ 	at: scala.collection.immutable.List.map(List.scala:247)
+//│ 	at: scala.collection.immutable.List.map(List.scala:79)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis$$anon$1.applyOrElse(FlowAnalysis.scala:475)
 
 
+class B
+module B with
+  fun b = (x : B) => 5
+.b(new B)
+//│ Flowed:
+//│   class B {
+//│     
+//│   },
+//│   module B {
+//│     fun b⁰ ‹flow:b⁰› = (x¹: B⁰) => 5
+//│   },
+//│   TODO[show:](_?_).b‹?›{ ~> B⁰.b⁰ }(new B⁰)‹app¹›
+//│ where
+//│     x¹  <~  type B
+//│     flow:b⁰  <~  ((type B) -> 5)
+//│ = 5
 
 
-
+class C
+fun f (x : C) = 3
+f(new C)
+//│ Flowed:
+//│   class C {
+//│     
+//│   },
+//│   fun f¹(x²: C⁰) ‹flow:f¹› = 3,
+//│   f¹(new C⁰)‹app²›
+//│ where
+//│     x²  <~  type C
+//│     app²  <~  3
+//│     flow:f¹  <~  ((type C) -> 3)
+//│     flow:f¹  ~>  ((C) -> app²)
+//│ = 3
 
 
 // Sel(Missing, a) @ sel

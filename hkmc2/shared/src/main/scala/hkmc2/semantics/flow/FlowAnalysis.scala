@@ -129,14 +129,16 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
 
     case sel @ Sel(LeadingDotTarget, nme) =>
       selsToExpand += sel
-      val sel_t = P.LeadingDotSel(nme)(sel)
-      constrain(sel_t, C.Typ(Type.Top))
-      sel_t
+      log(s"Leading dot selection ${sel.showDbg} ${sel.typ}")
+      P.LeadingDotSel(nme)(sel)
+      // val sel_t = P.LeadingDotSel(nme)(sel)
+      // constrain(sel_t, C.Typ(Type.Top))
+      // sel_t
     
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
+      log(s"Selection ${sel.showDbg} ${sel.typ}")
       val pre_t = typeProd(pre)
-      // log(s"Selection ${sel.showDbg} ${sel.typ}")
       sel.resolvedSym match
       case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
       case S(_) => P.Unknown(sel)
@@ -228,7 +230,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
       case CompanionMember(comp, sym) :: Nil =>
         val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
-        // TODO: check if sel.prefix is LeadingDotTarget, meaning this is a leading-dot access – then, we do not make the App
         sel.prefix match
         case LeadingDotTarget =>
           log(s"Leading Dot Expansion: ${base.showDbg}")
@@ -250,6 +251,63 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
+  def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
+    cons match
+    case C.Typ(typ) => findTypeSymbols(typ) ::: Nil
+    case C.Fun(lhs, rhs) => findProducerSymbols(lhs) ::: findConsumerSymbols(rhs)
+    case C.Tup(init, N) => init.flatMap(findConsumerSymbols)
+    case C.Tup(init, S((_, fst, rest))) =>init.flatMap(findConsumerSymbols) ::: findConsumerSymbols(fst) ::: rest.flatMap(findConsumerSymbols)
+    case C.Ctor(sym, args) => sym :: args.flatMap(findConsumerSymbols)
+    case _ => Nil
+
+  def findProducerSymbols(prod: Producer): Ls[Symbol] =
+    prod match
+    case P.Typ(typ) => findTypeSymbols(typ) ::: Nil
+    case P.Fun(lhs, rhs, _) => findConsumerSymbols(lhs) ::: findProducerSymbols(rhs)
+    case P.Tup(elems) => elems.map(_._2).flatMap(findProducerSymbols)
+    case P.Ctor(sym, args) => sym :: args.flatMap(findProducerSymbols)
+    case _ => Nil
+
+  def findTypeSymbols(typ: Type): Ls[Symbol] =
+    import Type.*
+    typ match
+    case Error | Top | Bot => Nil
+    case Union(t1, t2) => findTypeSymbols(t1) ::: findTypeSymbols(t2)
+    case Inter(t1, t2) => findTypeSymbols(t1) ::: findTypeSymbols(t2)
+    case Neg(t) => findTypeSymbols(t)
+    case Fun(args, ret, eff) => args.flatMap(findTypeSymbols) ::: findTypeSymbols(ret)
+    case Ref(sym, _) => sym :: Nil
+    case _ => Nil
+
+  def getCompanionMember(sel: Sel, sym: Symbol, nme: String): Opt[(Term, BlockMemberSymbol)] = sym match
+    case ms : ModuleOrObjectSymbol =>
+      ms.defn match
+      case S(d) => 
+        d.body.members.get(nme) match
+        case S(memb: BlockMemberSymbol) =>
+          sel.originalCtx
+            .flatMap(ctx => findAccessPath(ctx, d.path, ms))
+            .map(x => (x, memb))
+        case _ => N
+      case _ => N
+    case cs : ClassSymbol =>
+      cs.defn match
+      case S(d) => 
+        d.moduleCompanion match
+        case S(comp) =>
+          comp.defn match
+          case S(d) => 
+            d.body.members.get(nme) match
+            case S(memb: BlockMemberSymbol) =>
+              sel.originalCtx
+                .flatMap(ctx => findAccessPath(ctx, d.path, comp))
+                .map(x => (x, memb))
+            case _ => N
+          case _ => N
+        case _ => N
+      case _ => N
+    case _ => N
+
   def solveConstraints(): Unit =
     
     var fuel = MAX_FUEL
@@ -315,43 +373,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                       msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
               zip(args, ini, rst, path)
             case (sel @ LeadingDotSel(nme), rhs) =>
-              import Type.*
-              rhs match
-              case C.Flow(sym) => ()
-              case C.Typ(Ref(sym, args)) =>
-                sym match
-                case ms : ModuleOrObjectSymbol =>
-                  ms.defn.getOrElse(die).body.members.get(nme.name) match
-                  case S(memb: BlockMemberSymbol) => 
-                    // sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(memb)
-                    log(s"Found companion member ${memb}")
-                  case _ => ()
-                case cs : ClassSymbol =>
-                  cs.defn.getOrElse(die).moduleCompanion match
-                  case S(comp) =>
-                    val cd = comp.defn.getOrElse(die)
-                    cd.body.members.get(nme.name) match
-                    case S(memb: BlockMemberSymbol) => 
-                      log(s"Found companion member ${memb}")
-                      sel.trm.originalCtx match
-                      case S(oc) =>
-                        val patho = findAccessPath(oc, cd.path, comp)
-                        log(s"Access path: ${patho}")
-                        patho match
-                        case S(path) =>
-                          sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                          // val lhs = memb match
-                          //   case memb: BlockMemberSymbol => P.Flow(memb.flow)
-                          //   case _ => TODO(memb)
-                          // toSolve.push(Constraint(sel))
-                        case _ => ()
-                        // case N => raise:
-                        //   sel.trm.isErroneous = true
-                        //   ErrorReport:
-                        //     msg"Cannot access companion ${comp.name} from the context of this selection" -> sel.trm.toLoc
-                        //     :: Nil
+              findConsumerSymbols(rhs).foreach: sym => 
+                log(s"Examining ${sym} for leading dot selection resolution")
+                getCompanionMember(sel.trm, sym, nme.name) match
+                case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
                 case _ => ()
-              case _ => ()
             case (lhs, sel: C.Sel) =>
               lhs match
               case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>

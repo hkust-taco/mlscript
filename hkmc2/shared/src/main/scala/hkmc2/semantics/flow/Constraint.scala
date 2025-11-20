@@ -23,7 +23,7 @@ case class Constraint(lhs: Producer, rhs: Consumer):
 enum Producer:
   case Flow(sym: FlowSymbol)
   case Fun(lhs: Consumer, rhs: Producer, captures: Ls[(Producer, Consumer)])
-  case Tup(elems: Ls[Opt[SpreadKind] -> Producer])
+  case Tup(elems: Ls[(Opt[SpreadKind], Producer)])
   case Ctor(sym: CtorSymbol, args: List[Producer])(val trm: Term) extends Producer, CtorImpl
   case LeadingDotSel(nme: Ident)(val trm: Term.Sel) // Note: trm.prefix is Missing
   case Typ(typ: Type)

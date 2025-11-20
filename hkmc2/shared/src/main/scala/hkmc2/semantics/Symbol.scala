@@ -204,7 +204,15 @@ class BuiltinSymbol
 
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
 
-  def flow = semantics.flow.Producer.Typ(Type.Top)
+  def flow : semantics.flow.Producer =
+    import Type.*
+    val typ = (binary, unary, nullary) match
+      case (true, true, _) => Union(Fun(args = Ls(Top, Top), ret = Top, eff = N), Fun(args = Ls(Top), ret = Top, eff = N))
+      case (true, _, _) => Fun(args = Ls(Top, Top), ret = Top, eff = N)
+      case (_, true, _) => Fun(args = Ls(Top), ret = Top, eff = N)
+      case (_, _, true) => Top
+      case _ => Bot
+    semantics.flow.Producer.Typ(typ)
 
 
 /** This is the outside-facing symbol associated to a possibly-overloaded
