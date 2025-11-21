@@ -388,7 +388,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case S((spd, a2, post)) => ???
                   case N =>
                     raise(ErrorReport(
-                      (msg"Tuple arity mismatch: too many elements on the consumer side", trm.toLoc)
+                      msg"Tuple arity mismatch: too many elements on the consumer side"->trm.toLoc
                       :: Nil
                     ))
               zip(args, ini, rst, path)
@@ -457,7 +457,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
         if fuel === 0 then
           raise(ErrorReport(
-            (msg"Could not solve all constraints within $MAX_FUEL iterations.", N) :: Nil
+            msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil
           ))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
