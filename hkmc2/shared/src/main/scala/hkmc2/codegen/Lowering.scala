@@ -696,7 +696,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           if usesResTmp then k(Value.Ref(l))
           else k(unit) // * it seems this currently never happens
         )
-
+      
     case sel @ Sel(prefix, nme) =>
       setupSelection(prefix, nme, sel.sym)(k)
         
@@ -791,7 +791,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"Cannot compile ${t.describe} term that was not elaborated (maybe elaboration was one in 'lightweight' mode?)" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | LeadingDotTarget
+    case _: CompType | _: Neg | _: Term.FunTy | _: Term.Forall | _: Term.WildcardTy | _: Term.Unquoted | _: LeadingDotSel
     => fail:
       ErrorReport(
         msg"Unexpected term form in expression position (${t.describe})" ->

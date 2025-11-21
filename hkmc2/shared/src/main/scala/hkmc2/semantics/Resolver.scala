@@ -543,6 +543,8 @@ class Resolver(tl: TraceLogger)
         traverse(pre, expect = Any)
         (t.callableDefn, ictx)
       
+      case Term.LeadingDotSel(nme) => (N, ictx)
+
       case Term.Ref(_: BlockMemberSymbol) =>
         resolveSymbol(t, prefer = prefer)
         resolveType(t, prefer = prefer)

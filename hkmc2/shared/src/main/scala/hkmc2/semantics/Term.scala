@@ -53,6 +53,12 @@ sealed trait SelImpl(using val state: State) extends ResolvableImpl:
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
   var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
 
+sealed trait LeadingDotSelImpl(using val state: State):
+  self: Term.LeadingDotSel =>
+  // val resSym: FlowSymbol = FlowSymbol.sel(self.nme.name)
+  var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
+  var expansion: Opt[Opt[Term]] = N
+
 sealed trait ResolvableImpl:
   this: Term =>
   
@@ -248,7 +254,7 @@ enum Term extends Statement:
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
-  case LeadingDotTarget
+  case LeadingDotSel(nme: Tree.Ident)(using State) extends Term with LeadingDotSelImpl
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -354,6 +360,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
+    case LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))  
   
   
 end Term
@@ -424,7 +431,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case Ret(res) => "return"
       case Try(body, finallyDo) => "try expression"
       case Missing => "missing"
-      case LeadingDotTarget => "leading dot placeholder"
+      case LeadingDotSel(name) => "leading dot selection"
       case s => TODO(s)
     this match
       case self: Resolvable => self.resolvedTyp match
@@ -494,7 +501,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
-    case LeadingDotTarget => Nil
+    case LeadingDotSel(nme) => Nil
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Ls[Located] = t match
@@ -571,7 +578,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
           :: doc" ${cld.body.blk.show}"
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.lastOpt.getOrElse("")}${"\""} as ${imp.sym.showName}"
-      case LeadingDotTarget => doc"${this.showDbg}"
+      case LeadingDotSel(name) => doc"${this.showDbg}"
       case _ =>
         doc"TODO[show:${getClass.getSimpleName}]($showDbg)"
     this match
@@ -675,7 +682,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case TypeDef(sym, _, tparams, rhs, _, _) =>
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
-    case LeadingDotTarget => "_?_"
+    case LeadingDotSel(name) => s"_?_.${name}"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 
@@ -1014,8 +1021,10 @@ extends Declaration, AutoLocated:
   // * it is not meant to be maintained afterwards (so it does not need to be copied around).
   var fldSym: Opt[FieldSymbol] = N
   
-  // * This field is filled in during flow analysis;
-  // * it is not meant to be maintained afterwards (so it does not need to be copied around).
+
+  // * These fields are filled in during flow analysis;
+  // * they are not meant to be maintained afterwards (so they do not need to be copied around).
+  var flow: Opt[FlowSymbol] = N
   var signType: Opt[Type] = N
   
   def withSignTypeOf(p: Param): this.type =

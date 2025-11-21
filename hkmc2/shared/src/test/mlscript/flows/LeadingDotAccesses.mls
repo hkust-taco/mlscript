@@ -40,31 +40,48 @@ fun f(x : A) = 4
 f(.a)
 //│ Flowed:
 //│   fun f⁰(x⁰: A⁰) ‹flow:f⁰› = 4,
-//│   f⁰(_?_.a‹?›{ ~> A⁰.a⁰ })‹app⁰›
+//│   f⁰(_?_.Ident(a))‹app⁰›
 //│ where
 //│     app⁰  <~  4
 //│     flow:f⁰  <~  ((type A) -> 4)
 //│     flow:f⁰  ~>  ((_?_.Ident(a)) -> app⁰)
-//│ = 4
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: term (Lowering.scala:796)
+//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:456:24)
+//│     at f (REPL16:1:49)
+//│     at REPL16:1:151
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:592:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:925:10)
+//│     at REPLServer.emit (node:events:519:28)
+//│     at REPLServer.emit (node:domain:489:12)
 
 :flow
 :df
 .b(new B)
-//│ Typing producer: { _?_.b(new member:B) }
-//│ | Typing producer: _?_.b(new member:B)
+//│ Typing producer: { _?_.Ident(b)(new member:B) }
+//│ | Typing producer: _?_.Ident(b)(new member:B)
 //│ | | Typing producer: [new member:B]
 //│ | | | Typing producer: new member:B
 //│ | | | : B
 //│ | | : [B]
-//│ | | Typing producer: _?_.b
-//│ | | | Leading dot selection _?_.b None
+//│ | | Typing producer: _?_.Ident(b)
+//│ | | | Leading dot selection _?_.Ident(b)
 //│ | | : _?_.Ident(b)
-//│ | : app‹631›
-//│ : app‹631›
-//│ Handling constraint: _?_.Ident(b) <: ((B) -> app‹631›) (from _?_.b(new member:B))
-//│ | Solving: _?_.Ident(b) <: ((B) -> app‹631›)   (LeadingDotSel, Fun)   []
-//│ | Examining class:B for leading dot selection resolution
-//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3,List())
-//│ Resolved targets for _?_.b: CompanionMember(Ref(member:B),member:b)
-//│ Leading Dot Expansion: member:B.b‹member:b›
-//│ = 3
+//│ | : app‹629›
+//│ : app‹629›
+//│ Handling constraint: _?_.Ident(b) <: ((B) -> app‹629›) (from _?_.Ident(b)(new member:B))
+//│ | Solving: _?_.Ident(b) <: ((B) -> app‹629›)   (LeadingDotSel, Fun)   []
+//│ Resolved targets for _?_.Ident(b): 
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandLeadingDotSels (FlowAnalysis.scala:260)
+//│ ═══[ERROR] Cannot resolve selection
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: term (Lowering.scala:796)
+//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)

@@ -13,18 +13,21 @@ class Foo with
   val a = 123
 module Foo with
   fun foo(x: Foo) = x.a
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.15: 	  fun foo(x: Foo) = x.a
+//│ ╙──      	                    ^^^
 //│ Flowed:
 //│   class Foo {
 //│     val a⁰ ‹flow:a⁰› = 123
 //│   },
 //│   module Foo {
-//│     fun foo⁰(x⁰: Foo⁰) ‹flow:foo⁰› = x⁰.a⁰
+//│     fun foo⁰(x⁰: Foo⁰) ‹flow:foo⁰› = x⁰.a‹?›
 //│   }
 //│ where
-//│     x⁰  <~  type Foo
 //│     x⁰  ~>  {a: ⋅a⁰}
 //│     flow:a⁰  <~  123
-//│     flow:a⁰  ->  ⋅a⁰
 //│     flow:foo⁰  <~  ((type Foo) -> ⋅a⁰)
 
 let f = new Foo()
@@ -46,7 +49,7 @@ f.a
 :re
 f.a.b
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.47: 	f.a.b
+//│ ║  l.50: 	f.a.b
 //│ ║        	^^^^^
 //│ ╟── Type `123` does not contain member 'b'
 //│ ║  l.13: 	  val a = 123
@@ -73,111 +76,167 @@ fun id(x) = x
 //│ Flowed:
 //│   fun id⁰(x¹) ‹flow:id⁰› = x¹
 //│ where
-//│     flow:id⁰  <~  ((x¹) -> x¹)
+//│     flow:id⁰  <~  ((x²) -> x¹)
 
 id(f).foo
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.81: 	id(f).foo
+//│ ╙──      	^^^^^^^^^
 //│ Flowed:
-//│   id⁰(f⁰)‹app¹›.foo‹?›{ ~> Foo⁰.foo⁰(id⁰(f⁰)‹app¹›)‹app²› }
+//│   id⁰(f⁰)‹app¹›.foo‹?›
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x¹
-//│     app¹  <~  Foo()
+//│     f⁰  ->  x²
 //│     app¹  ~>  {foo: ⋅foo¹}
-//│ = 123
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+//│     at REPL29:1:188
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:592:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:925:10)
+//│     at REPLServer.emit (node:events:519:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:423:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:617:22)
 
 
 let id(x) = x
 //│ Flowed:
 //│   let id¹,
-//│   id¹ = (x²) => x²
+//│   id¹ = (x³) => x³
 //│ where
-//│     id¹  <~  ((x²) -> x²)
+//│     id¹  <~  ((x⁴) -> x³)
 //│ id = fun id
 
 id(f).foo
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.117: 	id(f).foo
+//│ ╙──       	^^^^^^^^^
 //│ Flowed:
-//│   id¹(f⁰)‹app³›.foo‹?›{ ~> Foo⁰.foo⁰(id¹(f⁰)‹app³›)‹app⁴› }
+//│   id¹(f⁰)‹app²›.foo‹?›
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x¹  x²
-//│     id¹  <~  ((x²) -> x²)
-//│     id¹  ~>  ((f⁰) -> app³)
-//│     app³  <~  Foo()
-//│     app³  ~>  {foo: ⋅foo²}
-//│ = 123
+//│     f⁰  ->  x²  x⁴
+//│     id¹  <~  ((x⁴) -> x³)
+//│     id¹  ~>  ((f⁰) -> app²)
+//│     app²  ~>  {foo: ⋅foo²}
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+//│     at REPL36:1:192
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:592:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:925:10)
+//│     at REPLServer.emit (node:events:519:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:423:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:617:22)
 
 
 fun id(x) = x
 //│ Flowed:
-//│   fun id²(x³) ‹flow:id¹› = x³
+//│   fun id²(x⁵) ‹flow:id¹› = x⁵
 //│ where
-//│     flow:id¹  <~  ((x³) -> x³)
+//│     flow:id¹  <~  ((x⁶) -> x⁵)
 
 id(0)
 //│ Flowed:
-//│   id²(0)‹app⁵›
+//│   id²(0)‹app³›
 //│ where
-//│     app⁵  <~  0
+//│     
 //│ = 0
 
 // * Note the flow confusion due to lack of polymorphism:
 :e
 id(f).foo
-//│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.127: 	id(f).foo
-//│ ║         	^^^^^^^^^
-//│ ╟── Type `0` does not contain member 'foo'
-//│ ║  l.118: 	id(0)
-//│ ╙──       	   ^
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.162: 	id(f).foo
+//│ ╙──       	^^^^^^^^^
 //│ Flowed:
-//│   id²(f⁰)‹app⁶›.foo‹?›{ ~> Foo⁰.foo⁰(id²(f⁰)‹app⁶›)‹app⁷› }
+//│   id²(f⁰)‹app⁴›.foo‹?›
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x¹  x²  x³
-//│     app⁶  <~  0  Foo()
-//│     app⁶  ~>  {foo: ⋅foo³}
-//│ = 123
+//│     f⁰  ->  x²  x⁴  x⁶
+//│     app⁴  ~>  {foo: ⋅foo³}
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+//│     at REPL45:1:193
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:592:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:925:10)
+//│     at REPLServer.emit (node:events:519:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:423:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:617:22)
 
 
 :e
 fun test(g) = g.foo
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.146: 	fun test(g) = g.foo
+//│ ║  l.189: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 //│ Flowed:
 //│   fun test⁰(g⁰) ‹flow:test⁰› = g⁰.foo‹?›
 //│ where
 //│     g⁰  ~>  {foo: ⋅foo⁴}
-//│     flow:test⁰  <~  ((g⁰) -> ⋅foo⁴)
+//│     flow:test⁰  <~  ((g¹) -> ⋅foo⁴)
 
 :re
 test(f)
 //│ Flowed:
-//│   test⁰(f⁰)‹app⁸›
+//│   test⁰(f⁰)‹app⁵›
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x¹  x²  x³  g⁰
+//│     f⁰  ->  x²  x⁴  x⁶  g¹
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 
 fun test(g) = g.foo
 test(f)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.210: 	fun test(g) = g.foo
+//│ ╙──       	              ^^^^^
 //│ Flowed:
-//│   fun test¹(g¹) ‹flow:test¹› = g¹.foo‹?›{ ~> Foo⁰.foo⁰(g¹)‹app⁹› },
-//│   test¹(f⁰)‹app¹⁰›
+//│   fun test¹(g²) ‹flow:test¹› = g².foo‹?›,
+//│   test¹(f⁰)‹app⁶›
 //│ where
 //│     f⁰  <~  Foo()
 //│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x¹  x²  x³  g⁰  g¹
-//│     g¹  <~  Foo()
-//│     g¹  ~>  {foo: ⋅foo⁵}
-//│     flow:test¹  <~  ((g¹) -> ⋅foo⁵)
-//│     flow:test¹  ~>  ((f⁰) -> app¹⁰)
-//│ = 123
+//│     f⁰  ->  x²  x⁴  x⁶  g¹  g³
+//│     g²  ~>  {foo: ⋅foo⁵}
+//│     flow:test¹  <~  ((g³) -> ⋅foo⁵)
+//│     flow:test¹  ~>  ((f⁰) -> app⁶)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
+//│     at test (REPL54:1:271)
+//│     at REPL54:1:403
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:592:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:925:10)
+//│     at REPLServer.emit (node:events:519:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:423:12)
 
 module AA with
   module BB with
@@ -185,28 +244,31 @@ module AA with
       val x: Int = 1
     module CC with
       fun getX(self: CC) = self.x
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.246: 	      fun getX(self: CC) = self.x
+//│ ╙──       	                           ^^^^^^
 //│ Flowed:
 //│   module AA {
 //│     module BB {
 //│       class CC {
-//│         val x⁴: Int⁰ ‹flow:x⁰› = 1
+//│         val x⁷: Int⁰ ‹flow:x⁰› = 1
 //│       },
 //│       module CC {
-//│         fun getX⁰(self⁰: ⟨BB⁰.⟩CC⁰) ‹flow:getX⁰› = self⁰.x⁴
+//│         fun getX⁰(self⁰: ⟨BB⁰.⟩CC⁰) ‹flow:getX⁰› = self⁰.x‹?›
 //│       }
 //│     }
 //│   }
 //│ where
-//│     self⁰  <~  type CC
 //│     self⁰  ~>  {x: ⋅x⁰}
 //│     flow:x⁰  <~  1
-//│     flow:x⁰  ->  ⋅x⁰
 //│     flow:getX⁰  <~  ((type CC) -> ⋅x⁰)
 
 :sjs
 new AA.BB.CC().x
 //│ Flowed:
-//│   new AA⁰.BB¹.CC⁰().x⁴
+//│   new AA⁰.BB¹.CC⁰().x⁷
 //│ where
 //│     
 //│ JS (unsanitized):
@@ -216,7 +278,7 @@ new AA.BB.CC().x
 :sjs
 new AA.BB.CC().getX
 //│ Flowed:
-//│   new AA⁰.BB¹.CC⁰().getX‹?›{ ~> AA⁰.BB¹.CC⁰.getX⁰(new AA⁰.BB¹.CC⁰())‹app¹¹› }
+//│   new AA⁰.BB¹.CC⁰().getX‹?›{ ~> AA⁰.BB¹.CC⁰.getX⁰(new AA⁰.BB¹.CC⁰())‹app⁷› }
 //│ where
 //│     
 //│ JS (unsanitized):
@@ -242,14 +304,14 @@ let foo =
 //│   }
 //│ where
 //│     foo¹  <~  A
-//│     flow:test²  <~  ((a¹) -> 1)
+//│     flow:test²  <~  ((a²) -> 1)
 //│ foo = A
 
 :e
 :re
 foo.test
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.250: 	foo.test
+//│ ║  l.312: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ Flowed:
 //│   foo¹.test‹?›
@@ -271,13 +333,13 @@ let foo =
 //│       
 //│     },
 //│     module A {
-//│       fun test³(a²) ‹flow:test³› = new A¹
+//│       fun test³(a³) ‹flow:test³› = new A¹
 //│     },
-//│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app¹²› }
+//│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app⁸› }
 //│   }
 //│ where
-//│     foo²  <~  ((a²) -> A)
-//│     flow:test³  <~  ((a²) -> A)
+//│     foo²  <~  ((a⁴) -> A)
+//│     flow:test³  <~  ((a⁴) -> A)
 //│     flow:test³  ->  ⋅test¹
 //│ foo = A
 
@@ -285,13 +347,13 @@ let foo =
 :re
 foo.test
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.286: 	foo.test
+//│ ║  l.348: 	foo.test
 //│ ║         	^^^^^^^^
-//│ ╙── Type `((a‹804›) -> A)` does not contain member 'test'
+//│ ╙── Type `((a‹818›) -> A)` does not contain member 'test'
 //│ Flowed:
 //│   foo².test‹?›
 //│ where
-//│     foo²  <~  ((a²) -> A)
+//│     foo²  <~  ((a⁴) -> A)
 //│     foo²  ~>  {test: ⋅test²}
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
 
@@ -299,29 +361,30 @@ foo.test
 class CC(val x: Int)
 module CC with
   fun getX(self: CC) = self.x
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.363: 	  fun getX(self: CC) = self.x
+//│ ╙──       	                       ^^^^^^
 //│ Flowed:
-//│   class CC(valx⁵: Int⁰) {
-//│     val x⁶ ‹flow:x¹› = x⁵
+//│   class CC(valx⁸: Int⁰) {
+//│     val x⁹ ‹flow:x¹› = x⁸
 //│   },
 //│   module CC {
-//│     fun getX¹(self¹: CC¹) ‹flow:getX¹› = self¹.x⁶
+//│     fun getX¹(self¹: CC¹) ‹flow:getX¹› = self¹.x‹?›
 //│   }
 //│ where
-//│     x⁵  <~  type Int
-//│     x⁵  ->  flow:x¹
-//│     self¹  <~  type CC
+//│     x⁸  ->  flow:x¹
 //│     self¹  ~>  {x: ⋅x¹}
-//│     flow:x¹  <~  type Int
-//│     flow:x¹  ->  ⋅x¹
 //│     flow:getX¹  <~  ((type CC) -> ⋅x¹)
 
 :fixme // TODO: handle lifted class defs
 CC(123).getX
 //│ Flowed:
-//│   CC¹(123)‹app¹³›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app¹³›)‹app¹⁴› }
+//│   CC¹(123)‹app⁹›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app⁹›)‹app¹⁰› }
 //│ where
-//│     app¹³  <~  CC...flow:Int‹726›
-//│     app¹³  ~>  {getX: ⋅getX⁰}
+//│     app⁹  <~  CC...flow:Int‹732›
+//│     app⁹  ~>  {getX: ⋅getX⁰}
 //│ ═══[RUNTIME ERROR] TypeError: CC2.getX is not a function
 
 
@@ -329,44 +392,50 @@ CC(123).getX
 class CC
 module CC with
   fun oops(x: CC) = x.oops
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.394: 	  fun oops(x: CC) = x.oops
+//│ ╙──       	                    ^^^^^^
 //│ Flowed:
 //│   class CC {
 //│     
 //│   },
 //│   module CC {
-//│     fun oops⁰(x⁷: CC²) ‹flow:oops⁰› = x⁷.oops‹?›{ ~> CC².oops⁰(x⁷)‹app¹⁵› }
+//│     fun oops⁰(x¹⁰: CC²) ‹flow:oops⁰› = x¹⁰.oops‹?›
 //│   }
 //│ where
-//│     x⁷  <~  type CC
-//│     x⁷  ~>  {oops: ⋅oops⁰}
+//│     x¹⁰  ~>  {oops: ⋅oops⁰}
 //│     flow:oops⁰  <~  ((type CC) -> ⋅oops⁰)
-//│     flow:oops⁰  ->  ⋅oops⁰
 
 :re
 new CC().oops
 //│ Flowed:
-//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹⁶› }
+//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹¹› }
 //│ where
 //│     
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
 class CC with
   val okay = 123
 module CC with
   fun okay(x: CC) = x.okay
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.423: 	  fun okay(x: CC) = x.okay
+//│ ╙──       	                    ^^^^^^
 //│ Flowed:
 //│   class CC {
 //│     val okay⁰ ‹flow:okay⁰› = 123
 //│   },
 //│   module CC {
-//│     fun okay¹(x⁸: CC³) ‹flow:okay¹› = x⁸.okay⁰
+//│     fun okay¹(x¹¹: CC³) ‹flow:okay¹› = x¹¹.okay‹?›
 //│   }
 //│ where
-//│     x⁸  <~  type CC
-//│     x⁸  ~>  {okay: ⋅okay⁰}
+//│     x¹¹  ~>  {okay: ⋅okay⁰}
 //│     flow:okay⁰  <~  123
-//│     flow:okay⁰  ->  ⋅okay⁰
 //│     flow:okay¹  <~  ((type CC) -> ⋅okay⁰)
 
 new CC().okay

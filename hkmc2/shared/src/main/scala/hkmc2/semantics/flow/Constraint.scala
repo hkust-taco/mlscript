@@ -25,7 +25,7 @@ enum Producer:
   case Fun(lhs: Consumer, rhs: Producer, captures: Ls[(Producer, Consumer)])
   case Tup(elems: Ls[(Opt[SpreadKind], Producer)])
   case Ctor(sym: CtorSymbol, args: List[Producer])(val trm: Term) extends Producer, CtorImpl
-  case LeadingDotSel(nme: Ident)(val trm: Term.Sel) // Note: trm.prefix is Missing
+  case LeadingDotSel(nme: Ident)(val trm: Term.LeadingDotSel) // Note: trm.prefix is Missing
   case Typ(typ: Type)
   case Unknown(s: Statement) // `s` is just for error reporting/debugging purposes
   

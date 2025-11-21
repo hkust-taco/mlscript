@@ -18,7 +18,6 @@ import Consumer as C
 import hkmc2.semantics.BuiltinSymbol
 import P.Unknown
 import hkmc2.semantics.BlockMemberSymbol
-import P.LeadingDotSel
 
 
 
@@ -48,7 +47,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
   val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
-  // val leadingDotSelsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
+  val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
   
   def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
@@ -130,9 +129,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
-    case sel @ Sel(LeadingDotTarget, nme) =>
-      selsToExpand += sel
-      log(s"Leading dot selection ${sel.showDbg} ${sel.typ}")
+    case sel @ LeadingDotSel(nme) =>
+      leadingDotSelsToExpand += sel
+      log(s"Leading dot selection ${sel.showDbg}")
       P.LeadingDotSel(nme)(sel)
     
     case sel @ Sel(pre, nme) =>
@@ -178,8 +177,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case f: Fld => N -> typeProd(f.term))
     
     case Error => P.Ctor(Extr(false), Nil)(t)
-
-    case Missing => P.Unknown(Missing)
     
     case _ => P.Flow(FlowSymbol("TODO"))
   
@@ -193,6 +190,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   
   def typeParam(p: Param): C =
     val fs = FlowSymbol(p.sym.name)
+    p.flow = S(fs)
     p.signType match
     case S(typ) =>
       fs.producers += ConcreteProd(Vector.empty, P.Typ(typ))
@@ -230,14 +228,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
       case CompanionMember(comp, sym) :: Nil =>
         val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
-        sel.prefix match
-        case LeadingDotTarget =>
-          log(s"Leading Dot Expansion: ${base.showDbg}")
-          sel.expansion = S(S(base))
-        case _ => 
-          val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
-          log(s"Expansion: ${app.showDbg}")
-          sel.expansion = S(S(app))
+        val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
+        log(s"Expansion: ${app.showDbg}")
+        sel.expansion = S(S(app))
       case Nil =>
         // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
         if !sel.isErroneous then raise:
@@ -251,6 +244,27 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
+  def expandLeadingDotSels() =
+    import SelectionTarget.*
+    leadingDotSelsToExpand.foreach: sel =>
+      log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
+      assert(sel.expansion.isEmpty)
+      sel.resolvedTargets match
+      case CompanionMember(comp, sym) :: Nil =>
+        val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
+        log(s"Leading dot expansion: ${base.showDbg}")
+        sel.expansion = S(S(base))
+      case Nil =>
+        // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
+        raise:
+          ErrorReport:
+            msg"Cannot resolve selection" -> sel.toLoc :: Nil
+      case targets => raise:
+        ErrorReport:
+          msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
+          :: targets.map:
+            case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+
   def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
     cons match
     case C.Typ(typ) => findTypeSymbols(typ) ::: Nil
@@ -281,15 +295,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case Fun(args, ret, eff) => args.flatMap(findTypeSymbols) ::: findTypeSymbols(ret)
     case _ => Nil
 
-  def getCompanionMember(sel: Sel, sym: Symbol, nme: String): Opt[(Term, BlockMemberSymbol)] = sym match
+  def getCompanionMember(sel: Term.LeadingDotSel, sym: Symbol, nme: String): Opt[(Term, BlockMemberSymbol)] = sym match
     case ms : ModuleOrObjectSymbol =>
       ms.defn match
       case S(d) => 
         d.body.members.get(nme) match
-        case S(memb: BlockMemberSymbol) =>
-          sel.originalCtx
-            .flatMap(ctx => findAccessPath(ctx, d.path, ms))
-            .map(x => (x, memb))
+        case S(memb: BlockMemberSymbol) => S((d.body.blk, memb))
+          // sel.originalCtx
+          //   .flatMap(ctx => findAccessPath(ctx, d.path, ms))
+          //   .map(x => (x, memb))
         case _ => N
       case _ => N
     case cs : ClassSymbol =>
@@ -300,10 +314,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           comp.defn match
           case S(d) => 
             d.body.members.get(nme) match
-            case S(memb: BlockMemberSymbol) =>
-              sel.originalCtx
-                .flatMap(ctx => findAccessPath(ctx, d.path, comp))
-                .map(x => (x, memb))
+            case S(memb: BlockMemberSymbol) => S((d.body.blk, memb))
+              // sel.originalCtx
+              //   .flatMap(ctx => findAccessPath(ctx, d.path, comp))
+              //   .map(x => (x, memb))
             case _ => N
           case _ => N
         case _ => N
@@ -372,9 +386,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case S((spd, a2, post)) => ???
                   case N =>
                     raise(ErrorReport(
-                      msg"Tuple arity mismatch: too many elements on the consumer side" -> trm.toLoc :: Nil))
+                      (msg"Tuple arity mismatch: too many elements on the consumer side", trm.toLoc)
+                      :: Nil
+                    ))
               zip(args, ini, rst, path)
-            case (sel @ LeadingDotSel(nme), rhs) =>
+            case (sel @ P.LeadingDotSel(nme), rhs) =>
               findConsumerSymbols(rhs).foreach: sym => 
                 log(s"Examining ${sym} for leading dot selection resolution")
                 getCompanionMember(sel.trm, sym, nme.name) match
@@ -438,7 +454,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           dig(c.lhs, c.rhs, Vector.empty)
           
         if fuel === 0 then
-          raise(ErrorReport(msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
+          raise(ErrorReport(
+            (msg"Could not solve all constraints within $MAX_FUEL iterations.", N) :: Nil
+          ))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
     log(s"outermostAcessibleBase ${dst.outermostAcessibleBase}")

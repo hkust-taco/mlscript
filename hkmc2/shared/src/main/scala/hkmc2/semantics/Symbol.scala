@@ -204,7 +204,7 @@ class BuiltinSymbol
 
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
 
-  def signature : semantics.flow.Producer =
+  lazy val signature : semantics.flow.Producer =
     import Type.*
     val binaryType : Type = Fun(args = Ls(Top, Top), ret = Top, eff = N)
     val unaryType : Type = Fun(args = Ls(Top), ret = Top, eff = N)
