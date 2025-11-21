@@ -1,8 +1,32 @@
 :js
 
+:flow
+:df
 class A
 module A with
   fun a = new A
+//│ Typing producer: { Cls A { }; Mod A { fun member:a = new member:A; }; }
+//│ | Typing producer: { }
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Class member type: ¿Cls A { }?
+//│ | Module: top-level/import:Prelude/block:1/block:2
+//│ | Typing producer: { fun member:a = new member:A; }
+//│ | | Typing producer: new member:A
+//│ | | : A
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ¿Cls A { }? <: flow:A‹600› (from { Cls A { }; Mod A { fun member:a = new member:A; }; })
+//│ | Solving: ¿Cls A { }? <: flow:A‹600›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: A <: flow:a‹601› (from { fun member:a = new member:A; })
+//│ | Solving: A <: flow:a‹601›   (Ctor, Flow)   []
+//│ | New flow: A ~> flow:a‹601›
 
 :flow
 :df
@@ -20,31 +44,53 @@ module B with
 //│ | | Typing producer: λ(x). 3
 //│ | | | Typing producer: 3
 //│ | | | : 3
-//│ | | : ((x‹613›) -> 3)
+//│ | | : ((x‹615›) -> 3)
 //│ | | Typing producer: undefined
 //│ | | : ()
 //│ | : ()
 //│ | Typing producer: undefined
 //│ | : ()
 //│ : ()
-//│ Handling constraint: ¿Cls B { }? <: flow:B‹612› (from { Cls B { }; Mod B { fun member:b = λ(x). 3; }; })
-//│ | Solving: ¿Cls B { }? <: flow:B‹612›   (Unknown, Flow)   []
+//│ Handling constraint: ¿Cls B { }? <: flow:B‹614› (from { Cls B { }; Mod B { fun member:b = λ(x). 3; }; })
+//│ | Solving: ¿Cls B { }? <: flow:B‹614›   (Unknown, Flow)   []
 //│ | /!\ Unhandled constraint /!\
-//│ Handling constraint: ((x‹613›) -> 3) <: flow:b‹614› (from { fun member:b = λ(x). 3; })
-//│ | Solving: ((x‹613›) -> 3) <: flow:b‹614›   (Fun, Flow)   []
-//│ | New flow: ((x‹613›) -> 3) ~> flow:b‹614›
+//│ Handling constraint: ((x‹615›) -> 3) <: flow:b‹616› (from { fun member:b = λ(x). 3; })
+//│ | Solving: ((x‹615›) -> 3) <: flow:b‹616›   (Fun, Flow)   []
+//│ | New flow: ((x‹615›) -> 3) ~> flow:b‹616›
 
 :flow
-:sf
+:df
 fun f(x : A) = 4
 f(.a)
-//│ Flowed:
-//│   fun f⁰(x⁰: A⁰) ‹flow:f⁰› = 4,
-//│   f⁰(_?_.Ident(a))‹app⁰›
-//│ where
-//│     app⁰  <~  4
-//│     flow:f⁰  <~  ((type A) -> 4)
-//│     flow:f⁰  ~>  ((_?_.Ident(a)) -> app⁰)
+//│ Typing producer: { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a)) }
+//│ | Typing producer: 4
+//│ | : 4
+//│ | Typing producer: member:f(_?_.Ident(a))
+//│ | | Typing producer: [_?_.Ident(a)]
+//│ | | | Typing producer: _?_.Ident(a)
+//│ | | | | Leading dot selection _?_.Ident(a)
+//│ | | | : _?_.Ident(a)
+//│ | | : [_?_.Ident(a)]
+//│ | | Typing producer: member:f
+//│ | | : flow:f‹627›
+//│ | : app‹625›
+//│ : app‹625›
+//│ Handling constraint: ((type class:A) -> 4) <: flow:f‹627› (from { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a)) })
+//│ | Solving: ((type class:A) -> 4) <: flow:f‹627›   (Fun, Flow)   []
+//│ | New flow: ((type class:A) -> 4) ~> flow:f‹627›
+//│ Handling constraint: flow:f‹627› <: ((_?_.Ident(a)) -> app‹625›) (from member:f(_?_.Ident(a)))
+//│ | Solving: flow:f‹627› <: ((_?_.Ident(a)) -> app‹625›)   (Flow, Fun)   []
+//│ | New flow: flow:f‹627› ~> ((_?_.Ident(a)) -> app‹625›)
+//│ | Solving: ((type class:A) -> 4) <: ((_?_.Ident(a)) -> app‹625›)   (Fun, Fun)   []
+//│ | Solving: [_?_.Ident(a)] <: [type class:A]   (Tup, Tup)   []
+//│ | Solving: _?_.Ident(a) <: type class:A   (LeadingDotSel, Typ)   []
+//│ | Examining class:A for leading dot selection resolution
+//│ | Solving: 4 <: app‹625›   (Ctor, Flow)   []
+//│ | New flow: 4 ~> app‹625›
+//│ Resolved targets for _?_.Ident(a): 
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: expandLeadingDotSels (FlowAnalysis.scala:260)
+//│ ═══[ERROR] Cannot resolve selection
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: term (Lowering.scala:796)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
@@ -74,10 +120,11 @@ f(.a)
 //│ | | Typing producer: _?_.Ident(b)
 //│ | | | Leading dot selection _?_.Ident(b)
 //│ | | : _?_.Ident(b)
-//│ | : app‹629›
-//│ : app‹629›
-//│ Handling constraint: _?_.Ident(b) <: ((B) -> app‹629›) (from _?_.Ident(b)(new member:B))
-//│ | Solving: _?_.Ident(b) <: ((B) -> app‹629›)   (LeadingDotSel, Fun)   []
+//│ | : app‹630›
+//│ : app‹630›
+//│ Handling constraint: _?_.Ident(b) <: ((B) -> app‹630›) (from _?_.Ident(b)(new member:B))
+//│ | Solving: _?_.Ident(b) <: ((B) -> app‹630›)   (LeadingDotSel, Fun)   []
+//│ | Examining class:B for leading dot selection resolution
 //│ Resolved targets for _?_.Ident(b): 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandLeadingDotSels (FlowAnalysis.scala:260)

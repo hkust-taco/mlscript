@@ -41,8 +41,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   
   val MAX_FUEL = 1000
 
-  val deconstructConsumer = false
-  val deconstructType = false
+  val deconstructConsumer = true
+  val deconstructType = true
   
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
@@ -300,10 +300,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       ms.defn match
       case S(d) => 
         d.body.members.get(nme) match
-        case S(memb: BlockMemberSymbol) => S((d.body.blk, memb))
-          // sel.originalCtx
-          //   .flatMap(ctx => findAccessPath(ctx, d.path, ms))
-          //   .map(x => (x, memb))
+        case S(memb: BlockMemberSymbol) =>
+          // S((d.body.blk, memb))
+          sel.originalCtx
+            .flatMap(ctx => findAccessPath(ctx, d.path, ms))
+            .map(x => (x, memb))
         case _ => N
       case _ => N
     case cs : ClassSymbol =>
@@ -314,10 +315,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           comp.defn match
           case S(d) => 
             d.body.members.get(nme) match
-            case S(memb: BlockMemberSymbol) => S((d.body.blk, memb))
-              // sel.originalCtx
-              //   .flatMap(ctx => findAccessPath(ctx, d.path, comp))
-              //   .map(x => (x, memb))
+            case S(memb: BlockMemberSymbol) =>
+              // S((d.body.blk, memb))
+              sel.originalCtx
+                .flatMap(ctx => findAccessPath(ctx, d.path, comp))
+                .map(x => (x, memb))
             case _ => N
           case _ => N
         case _ => N

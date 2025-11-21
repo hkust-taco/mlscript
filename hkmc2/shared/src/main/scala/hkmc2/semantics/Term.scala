@@ -53,11 +53,11 @@ sealed trait SelImpl(using val state: State) extends ResolvableImpl:
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
   var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
 
-sealed trait LeadingDotSelImpl(using val state: State):
+sealed trait LeadingDotSelImpl(using val state: State) extends ResolvableImpl:
   self: Term.LeadingDotSel =>
   // val resSym: FlowSymbol = FlowSymbol.sel(self.nme.name)
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
-  var expansion: Opt[Opt[Term]] = N
+  // var expansion: Opt[Opt[Term]] = N
 
 sealed trait ResolvableImpl:
   this: Term =>
@@ -254,7 +254,7 @@ enum Term extends Statement:
   case Annotated(annot: Annot, target: Term)
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
-  case LeadingDotSel(nme: Tree.Ident)(using State) extends Term with LeadingDotSelImpl
+  case LeadingDotSel(nme: Tree.Ident)(val originalCtx: Opt[Elaborator.Ctx])(using State) extends Term with LeadingDotSelImpl
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -360,7 +360,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    case LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))  
+    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
   
   
 end Term
