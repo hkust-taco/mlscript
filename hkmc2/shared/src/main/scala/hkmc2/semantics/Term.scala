@@ -571,6 +571,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
           :: doc" ${cld.body.blk.show}"
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.lastOpt.getOrElse("")}${"\""} as ${imp.sym.showName}"
+      case LeadingDotTarget => doc"${this.showDbg}"
       case _ =>
         doc"TODO[show:${getClass.getSimpleName}]($showDbg)"
     this match

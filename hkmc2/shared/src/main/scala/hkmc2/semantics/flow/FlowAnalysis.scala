@@ -41,6 +41,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   import tl.*
   
   val MAX_FUEL = 1000
+
+  val deconstructConsumer = false
+  val deconstructType = false
   
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
@@ -64,7 +67,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case bs: BuiltinSymbol => bs.flow 
+      case bs: BuiltinSymbol => bs.signature 
       case bms: BlockMemberSymbol => P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
@@ -131,9 +134,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       selsToExpand += sel
       log(s"Leading dot selection ${sel.showDbg} ${sel.typ}")
       P.LeadingDotSel(nme)(sel)
-      // val sel_t = P.LeadingDotSel(nme)(sel)
-      // constrain(sel_t, C.Typ(Type.Top))
-      // sel_t
     
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
@@ -192,13 +192,13 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       Type.Error
   
   def typeParam(p: Param): C =
+    val fs = FlowSymbol(p.sym.name)
     p.signType match
     case S(typ) =>
-      val fs = p.sym.asInstanceOf[FlowSymbol]/*FIXME*/
       fs.producers += ConcreteProd(Vector.empty, P.Typ(typ))
       C.Typ(typ)
     case N =>
-      C.Flow(p.sym.asInstanceOf[FlowSymbol]/*FIXME*/)
+      C.Flow(fs)
   
   def typeParamList(ps: ParamList): Ls[C] =
     if ps.restParam.nonEmpty then
@@ -254,6 +254,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
     cons match
     case C.Typ(typ) => findTypeSymbols(typ) ::: Nil
+    case _ if !deconstructConsumer => Nil
     case C.Fun(lhs, rhs) => findProducerSymbols(lhs) ::: findConsumerSymbols(rhs)
     case C.Tup(init, N) => init.flatMap(findConsumerSymbols)
     case C.Tup(init, S((_, fst, rest))) =>init.flatMap(findConsumerSymbols) ::: findConsumerSymbols(fst) ::: rest.flatMap(findConsumerSymbols)
@@ -271,12 +272,13 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   def findTypeSymbols(typ: Type): Ls[Symbol] =
     import Type.*
     typ match
+    case Ref(sym, _) => sym :: Nil
+    case _ if !deconstructType => Nil
     case Error | Top | Bot => Nil
     case Union(t1, t2) => findTypeSymbols(t1) ::: findTypeSymbols(t2)
     case Inter(t1, t2) => findTypeSymbols(t1) ::: findTypeSymbols(t2)
     case Neg(t) => findTypeSymbols(t)
     case Fun(args, ret, eff) => args.flatMap(findTypeSymbols) ::: findTypeSymbols(ret)
-    case Ref(sym, _) => sym :: Nil
     case _ => Nil
 
   def getCompanionMember(sel: Sel, sym: Symbol, nme: String): Opt[(Term, BlockMemberSymbol)] = sym match
@@ -378,8 +380,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 getCompanionMember(sel.trm, sym, nme.name) match
                 case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
                 case _ => ()
-            case (lhs, sel: C.Sel) =>
-              lhs match
+            case (lhs, sel: C.Sel) => lhs match
               case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
                 if targs.nonEmpty then TODO(targs)
                 toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))

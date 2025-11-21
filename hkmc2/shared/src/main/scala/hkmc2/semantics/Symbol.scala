@@ -204,14 +204,25 @@ class BuiltinSymbol
 
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
 
-  def flow : semantics.flow.Producer =
+  def signature : semantics.flow.Producer =
     import Type.*
-    val typ = (binary, unary, nullary) match
-      case (true, true, _) => Union(Fun(args = Ls(Top, Top), ret = Top, eff = N), Fun(args = Ls(Top), ret = Top, eff = N))
-      case (true, _, _) => Fun(args = Ls(Top, Top), ret = Top, eff = N)
-      case (_, true, _) => Fun(args = Ls(Top), ret = Top, eff = N)
-      case (_, _, true) => Top
-      case _ => Bot
+    val binaryType : Type = Fun(args = Ls(Top, Top), ret = Top, eff = N)
+    val unaryType : Type = Fun(args = Ls(Top), ret = Top, eff = N)
+    val nullaryType : Type = Top
+    val typ =
+      Union(
+      Union(
+      if (binary) then binaryType else Bot,
+      if (unary) then unaryType else Bot,
+      ),
+      if (nullary) then nullaryType else Bot,
+      )
+      // (binary, unary, nullary) match
+      // case (true, true, true) => Union()
+      // case (true, _, _) => Fun(args = Ls(Top, Top), ret = Top, eff = N)
+      // case (_, true, _) => Fun(args = Ls(Top), ret = Top, eff = N)
+      // case (_, _, true) => Top
+      // case _ => Bot
     semantics.flow.Producer.Typ(typ)
 
 

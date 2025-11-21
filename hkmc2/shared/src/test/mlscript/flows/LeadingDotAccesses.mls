@@ -1,66 +1,70 @@
 :js
-:flow
-:sf
-
-//│ Flowed:
-//│   import ".../Predef.mjs" as Predef⁰
-//│ where
-//│     
 
 class A
 module A with
-  fun meth = new A
-fun f(x : A) = x
-f(.meth)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: LeadingDotSel(Ident(meth)) (of class hkmc2.semantics.flow.Producer$LeadingDotSel)
-//│ 	at: hkmc2.semantics.flow.Producer.show(Constraint.scala:46)
-//│ 	at: hkmc2.semantics.flow.Producer.showTupElems$$anonfun$1(Constraint.scala:54)
-//│ 	at: scala.collection.immutable.List.map(List.scala:247)
-//│ 	at: hkmc2.semantics.flow.Producer.showTupElems(Constraint.scala:54)
-//│ 	at: hkmc2.semantics.flow.Producer.showAsParams(Constraint.scala:49)
-//│ 	at: hkmc2.semantics.flow.Consumer.show(Constraint.scala:93)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis$$anon$1.$anonfun$15(FlowAnalysis.scala:475)
-//│ 	at: scala.collection.immutable.List.map(List.scala:247)
-//│ 	at: scala.collection.immutable.List.map(List.scala:79)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis$$anon$1.applyOrElse(FlowAnalysis.scala:475)
+  fun a = new A
 
-
+:flow
+:df
 class B
 module B with
-  fun b = (x : B) => 5
+  fun b = (x) => 3
+//│ Typing producer: { Cls B { }; Mod B { fun member:b = λ(x). 3; }; }
+//│ | Typing producer: { }
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Class member type: ¿Cls B { }?
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3
+//│ | Typing producer: { fun member:b = λ(x). 3; }
+//│ | | Typing producer: λ(x). 3
+//│ | | | Typing producer: 3
+//│ | | | : 3
+//│ | | : ((x‹613›) -> 3)
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ¿Cls B { }? <: flow:B‹612› (from { Cls B { }; Mod B { fun member:b = λ(x). 3; }; })
+//│ | Solving: ¿Cls B { }? <: flow:B‹612›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: ((x‹613›) -> 3) <: flow:b‹614› (from { fun member:b = λ(x). 3; })
+//│ | Solving: ((x‹613›) -> 3) <: flow:b‹614›   (Fun, Flow)   []
+//│ | New flow: ((x‹613›) -> 3) ~> flow:b‹614›
+
+:flow
+:sf
+fun f(x : A) = 4
+f(.a)
+//│ Flowed:
+//│   fun f⁰(x⁰: A⁰) ‹flow:f⁰› = 4,
+//│   f⁰(_?_.a‹?›{ ~> A⁰.a⁰ })‹app⁰›
+//│ where
+//│     app⁰  <~  4
+//│     flow:f⁰  <~  ((type A) -> 4)
+//│     flow:f⁰  ~>  ((_?_.Ident(a)) -> app⁰)
+//│ = 4
+
+:flow
+:df
 .b(new B)
-//│ Flowed:
-//│   class B {
-//│     
-//│   },
-//│   module B {
-//│     fun b⁰ ‹flow:b⁰› = (x¹: B⁰) => 5
-//│   },
-//│   TODO[show:](_?_).b‹?›{ ~> B⁰.b⁰ }(new B⁰)‹app¹›
-//│ where
-//│     x¹  <~  type B
-//│     flow:b⁰  <~  ((type B) -> 5)
-//│ = 5
-
-
-class C
-fun f (x : C) = 3
-f(new C)
-//│ Flowed:
-//│   class C {
-//│     
-//│   },
-//│   fun f¹(x²: C⁰) ‹flow:f¹› = 3,
-//│   f¹(new C⁰)‹app²›
-//│ where
-//│     x²  <~  type C
-//│     app²  <~  3
-//│     flow:f¹  <~  ((type C) -> 3)
-//│     flow:f¹  ~>  ((C) -> app²)
+//│ Typing producer: { _?_.b(new member:B) }
+//│ | Typing producer: _?_.b(new member:B)
+//│ | | Typing producer: [new member:B]
+//│ | | | Typing producer: new member:B
+//│ | | | : B
+//│ | | : [B]
+//│ | | Typing producer: _?_.b
+//│ | | | Leading dot selection _?_.b None
+//│ | | : _?_.Ident(b)
+//│ | : app‹631›
+//│ : app‹631›
+//│ Handling constraint: _?_.Ident(b) <: ((B) -> app‹631›) (from _?_.b(new member:B))
+//│ | Solving: _?_.Ident(b) <: ((B) -> app‹631›)   (LeadingDotSel, Fun)   []
+//│ | Examining class:B for leading dot selection resolution
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3,List())
+//│ Resolved targets for _?_.b: CompanionMember(Ref(member:B),member:b)
+//│ Leading Dot Expansion: member:B.b‹member:b›
 //│ = 3
-
-
-// Sel(Missing, a) @ sel
-// ~>
-// P.LeadingDotSel <: ?res

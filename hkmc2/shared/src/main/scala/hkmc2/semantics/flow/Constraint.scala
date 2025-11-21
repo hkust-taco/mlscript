@@ -42,6 +42,7 @@ enum Producer:
     case tup: Tup => Document.bracketed("[", "]")(showTupElems(tup))
     case Ctor(LitSymbol(UnitLit(false)), Nil) => "()"
     case Ctor(sym, args) => doc"${sym.nme}${args.map(_.showAsParams).mkDocument()}"
+    case LeadingDotSel(nme) => doc"_?_.${nme.showDbg}"
     case Typ(typ) => doc"type ${typ.show}"
     case Unknown(t) => doc"¿${t.showDbg}?"
   
