@@ -374,8 +374,10 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case termdef: TermDefinition => Set(termdef.sym)
     case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
     case imp: Import => Set(imp.sym)
-    case IfLike(_, split) => split.definedSyms
+    case IfLike(Keyword.`while`, split) => split.definedSymsDeep
+    case IfLike(Keyword.`if`, split) => split.definedSymsDeep
     case SynthIf(split) => split.defineSyms
+    // case SynthIf(split) => ???
     // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
     // And including the sym here may cause error for delayed init in a function:
     // ```

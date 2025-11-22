@@ -62,7 +62,10 @@ extension (t: Product)
         val (sl, _, sc) = origin.fph.getLineColAt(start)
         val (el, _, ec) = origin.fph.getLineColAt(end)
         s"Loc at :$sl:$sc-$el:$ec"
-      
+      // case codegen.Scoped(syms, body) =>
+      //   s"Scoped(${syms.map(aux(_)).toArray.sortInPlace.mkString(", ")}):\n" +
+      //   aux(body).indent("  ")
+      // case s: semantics.Symbol => s"${s.toString()}__${s.uid}"
       case t: Product => t.showAsTree(inTailPos, pre)
       case v => v.toString
     

@@ -508,13 +508,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           raise:
             WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
           None
+          // Some(l -> scope.lookup_!(l, N))
         else
           Some(l -> scope.allocateName(l))
       (if vars.isEmpty then doc"" else
         doc" # let " :: vars.map: (_, nme) =>
           nme
         .toList.mkDocument(", ")
-        :: doc";") :: returningTerm(body, endSemi)
+        :: doc"; /* scoped */") :: returningTerm(body, endSemi)
     
     // case _ => ???
   

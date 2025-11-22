@@ -25,6 +25,11 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     case Cons(branch, tail) => branch.definedSyms
     case _ => Set.empty
   
+  def definedSymsDeep: Set[Symbol] = this match
+    case Cons(branch, tail) => branch.definedSymsDeep ++ tail.definedSymsDeep
+    case Else(d) => d.definedSyms
+    case End => Set.empty
+  
   
   inline def ~:(head: SimpleSplit.Head): Cons = Cons(head, this)
   
@@ -92,6 +97,10 @@ object SimpleSplit:
     def definedSyms: Set[Symbol] = this match
       case Let(binding, term) => Set(binding) ++ term.definedSyms
       case _ => Set.empty
+    
+    def definedSymsDeep: Set[Symbol] = this match
+      case Let(binding, term) => Set(binding) ++ term.definedSyms
+      case Match(scrutinee, pattern, consequent) => consequent.definedSymsDeep
     
     
     def subTerms: Ls[Term] = this match
