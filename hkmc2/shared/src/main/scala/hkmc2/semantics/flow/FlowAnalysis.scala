@@ -386,13 +386,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                       :: Nil
                     ))
               zip(args, ini, rst, path)
-            case (sel @ P.LeadingDotSel(nme), rhs) =>
-              findConsumerSymbols(rhs).foreach: sym => 
-                log(s"Examining ${sym} for leading dot selection resolution")
-                getCompanionMember(sel.trm, sym, nme.name) match
-                case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                case _ => ()
-            case (lhs, sel: C.Sel) => lhs match
+            case (lhs, sel: C.Sel) =>
+              lhs match
               case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
                 if targs.nonEmpty then TODO(targs)
                 toSolve.push(Constraint(P.Ctor(sym, Nil)(Term.Missing), sel))
@@ -443,6 +438,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   msg"Unresolved selection:" -> sel.trm.toLoc
                   :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
                   :: Nil)
+            case (sel @ P.LeadingDotSel(nme), rhs) =>
+              findConsumerSymbols(rhs).foreach: sym => 
+                log(s"Examining ${sym} for leading dot selection resolution")
+                getCompanionMember(sel.trm, sym, nme.name) match
+                case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                case _ => ()
             case _ =>
               log(s"/!\\ Unhandled constraint /!\\")
           end dig

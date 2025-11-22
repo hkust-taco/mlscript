@@ -43,6 +43,8 @@ module Foo with
 //│ Handling constraint: x‹601› <: {a: ⋅a‹603›} (from x.a)
 //│ | Solving: x‹601› <: {a: ⋅a‹603›}   (Flow, Sel)   []
 //│ | New flow: x‹601› ~> {a: ⋅a‹603›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((type class:Foo) -> ⋅a‹603›) <: flow:foo‹609› (from { fun member:foo(x: member:Foo) = x.a; })
 //│ | Solving: ((type class:Foo) -> ⋅a‹603›) <: flow:foo‹609›   (Fun, Flow)   []
 //│ | New flow: ((type class:Foo) -> ⋅a‹603›) ~> flow:foo‹609›
@@ -78,6 +80,8 @@ f.a
 //│ Handling constraint: f‹614› <: {a: ⋅a‹617›} (from f.a)
 //│ | Solving: f‹614› <: {a: ⋅a‹617›}   (Flow, Sel)   []
 //│ | New flow: f‹614› ~> {a: ⋅a‹617›}
+//│ | 1
+//│ | 0
 //│ | Solving: Foo() <: {a: ⋅a‹617›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅a)
 //│ | Found immediate member member:a
@@ -104,6 +108,8 @@ f.a.b
 //│ Handling constraint: f‹614› <: {a: ⋅a‹622›} (from f.a)
 //│ | Solving: f‹614› <: {a: ⋅a‹622›}   (Flow, Sel)   []
 //│ | New flow: f‹614› ~> {a: ⋅a‹622›}
+//│ | 1
+//│ | 0
 //│ | Solving: Foo() <: {a: ⋅a‹622›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅a)
 //│ | Found immediate member member:a
@@ -114,9 +120,11 @@ f.a.b
 //│ Handling constraint: ⋅a‹622› <: {b: ⋅b‹623›} (from f.a.b)
 //│ | Solving: ⋅a‹622› <: {b: ⋅b‹623›}   (Flow, Sel)   []
 //│ | New flow: ⋅a‹622› ~> {b: ⋅b‹623›}
+//│ | 1
+//│ | 0
 //│ | Solving: 123 <: {b: ⋅b‹623›}   (Ctor, Sel)   []
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.93: 	f.a.b
+//│ ║  l.97: 	f.a.b
 //│ ║        	^^^^^
 //│ ╟── Type `123` does not contain member 'b'
 //│ ║  l.13: 	  val a = 123
@@ -137,6 +145,8 @@ f.foo
 //│ Handling constraint: f‹614› <: {foo: ⋅foo‹630›} (from f.foo)
 //│ | Solving: f‹614› <: {foo: ⋅foo‹630›}   (Flow, Sel)   []
 //│ | New flow: f‹614› ~> {foo: ⋅foo‹630›}
+//│ | 1
+//│ | 0
 //│ | Solving: Foo() <: {foo: ⋅foo‹630›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅foo)
 //│ | Found companion member member:foo
@@ -181,6 +191,8 @@ id(f).foo
 //│ Handling constraint: flow:id‹641› <: ((f‹614›) -> app‹644›) (from member:id(f))
 //│ | Solving: flow:id‹641› <: ((f‹614›) -> app‹644›)   (Flow, Fun)   []
 //│ | New flow: flow:id‹641› ~> ((f‹614›) -> app‹644›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((x‹640›) -> x‹636›) <: ((f‹614›) -> app‹644›)   (Fun, Fun)   []
 //│ | Solving: [f‹614›] <: [x‹640›]   (Tup, Tup)   []
 //│ | Solving: f‹614› <: x‹640›   (Flow, Flow)   []
@@ -192,11 +204,13 @@ id(f).foo
 //│ Handling constraint: app‹644› <: {foo: ⋅foo‹645›} (from member:id(f).foo)
 //│ | Solving: app‹644› <: {foo: ⋅foo‹645›}   (Flow, Sel)   []
 //│ | New flow: app‹644› ~> {foo: ⋅foo‹645›}
+//│ | 0
+//│ | 0
 //│ Resolved targets for member:id(f).foo: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.167: 	id(f).foo
+//│ ║  l.177: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
@@ -244,6 +258,8 @@ id(f).foo
 //│ Handling constraint: id‹651› <: ((f‹614›) -> app‹657›) (from id(f))
 //│ | Solving: id‹651› <: ((f‹614›) -> app‹657›)   (Flow, Fun)   []
 //│ | New flow: id‹651› ~> ((f‹614›) -> app‹657›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((x‹653›) -> x‹652›) <: ((f‹614›) -> app‹657›)   (Fun, Fun)   []
 //│ | Solving: [f‹614›] <: [x‹653›]   (Tup, Tup)   []
 //│ | Solving: f‹614› <: x‹653›   (Flow, Flow)   []
@@ -255,11 +271,13 @@ id(f).foo
 //│ Handling constraint: app‹657› <: {foo: ⋅foo‹658›} (from id(f).foo)
 //│ | Solving: app‹657› <: {foo: ⋅foo‹658›}   (Flow, Sel)   []
 //│ | New flow: app‹657› ~> {foo: ⋅foo‹658›}
+//│ | 0
+//│ | 0
 //│ Resolved targets for id(f).foo: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.230: 	id(f).foo
+//│ ║  l.244: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
@@ -301,6 +319,8 @@ id(0)
 //│ Handling constraint: flow:id‹670› <: ((0) -> app‹673›) (from member:id(0))
 //│ | Solving: flow:id‹670› <: ((0) -> app‹673›)   (Flow, Fun)   []
 //│ | New flow: flow:id‹670› ~> ((0) -> app‹673›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((x‹669›) -> x‹665›) <: ((0) -> app‹673›)   (Fun, Fun)   []
 //│ | Solving: [0] <: [x‹669›]   (Tup, Tup)   []
 //│ | Solving: 0 <: x‹669›   (Ctor, Flow)   []
@@ -328,6 +348,8 @@ id(f).foo
 //│ Handling constraint: flow:id‹670› <: ((f‹614›) -> app‹676›) (from member:id(f))
 //│ | Solving: flow:id‹670› <: ((f‹614›) -> app‹676›)   (Flow, Fun)   []
 //│ | New flow: flow:id‹670› ~> ((f‹614›) -> app‹676›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((x‹669›) -> x‹665›) <: ((f‹614›) -> app‹676›)   (Fun, Fun)   []
 //│ | Solving: [f‹614›] <: [x‹669›]   (Tup, Tup)   []
 //│ | Solving: f‹614› <: x‹669›   (Flow, Flow)   []
@@ -339,9 +361,11 @@ id(f).foo
 //│ Handling constraint: app‹676› <: {foo: ⋅foo‹677›} (from member:id(f).foo)
 //│ | Solving: app‹676› <: {foo: ⋅foo‹677›}   (Flow, Sel)   []
 //│ | New flow: app‹676› ~> {foo: ⋅foo‹677›}
+//│ | 0
+//│ | 0
 //│ Resolved targets for member:id(f).foo: 
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.314: 	id(f).foo
+//│ ║  l.334: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
@@ -372,12 +396,14 @@ fun test(g) = g.foo
 //│ Handling constraint: g‹684› <: {foo: ⋅foo‹686›} (from g.foo)
 //│ | Solving: g‹684› <: {foo: ⋅foo‹686›}   (Flow, Sel)   []
 //│ | New flow: g‹684› ~> {foo: ⋅foo‹686›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((g‹689›) -> ⋅foo‹686›) <: flow:test‹690› (from { fun member:test(g) = g.foo; })
 //│ | Solving: ((g‹689›) -> ⋅foo‹686›) <: flow:test‹690›   (Fun, Flow)   []
 //│ | New flow: ((g‹689›) -> ⋅foo‹686›) ~> flow:test‹690›
 //│ Resolved targets for g.foo: 
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.362: 	fun test(g) = g.foo
+//│ ║  l.386: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 
 :re
@@ -395,6 +421,8 @@ test(f)
 //│ Handling constraint: flow:test‹690› <: ((f‹614›) -> app‹695›) (from member:test(f))
 //│ | Solving: flow:test‹690› <: ((f‹614›) -> app‹695›)   (Flow, Fun)   []
 //│ | New flow: flow:test‹690› ~> ((f‹614›) -> app‹695›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((g‹689›) -> ⋅foo‹686›) <: ((f‹614›) -> app‹695›)   (Fun, Fun)   []
 //│ | Solving: [f‹614›] <: [g‹689›]   (Tup, Tup)   []
 //│ | Solving: f‹614› <: g‹689›   (Flow, Flow)   []
@@ -426,12 +454,16 @@ test(f)
 //│ Handling constraint: g‹699› <: {foo: ⋅foo‹701›} (from g.foo)
 //│ | Solving: g‹699› <: {foo: ⋅foo‹701›}   (Flow, Sel)   []
 //│ | New flow: g‹699› ~> {foo: ⋅foo‹701›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((g‹705›) -> ⋅foo‹701›) <: flow:test‹706› (from { fun member:test(g) = g.foo; member:test(f) })
 //│ | Solving: ((g‹705›) -> ⋅foo‹701›) <: flow:test‹706›   (Fun, Flow)   []
 //│ | New flow: ((g‹705›) -> ⋅foo‹701›) ~> flow:test‹706›
 //│ Handling constraint: flow:test‹706› <: ((f‹614›) -> app‹704›) (from member:test(f))
 //│ | Solving: flow:test‹706› <: ((f‹614›) -> app‹704›)   (Flow, Fun)   []
 //│ | New flow: flow:test‹706› ~> ((f‹614›) -> app‹704›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((g‹705›) -> ⋅foo‹701›) <: ((f‹614›) -> app‹704›)   (Fun, Fun)   []
 //│ | Solving: [f‹614›] <: [g‹705›]   (Tup, Tup)   []
 //│ | Solving: f‹614› <: g‹705›   (Flow, Flow)   []
@@ -444,7 +476,7 @@ test(f)
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.409: 	fun test(g) = g.foo
+//│ ║  l.437: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
@@ -508,6 +540,8 @@ module AA with
 //│ Handling constraint: self‹727› <: {x: ⋅x‹729›} (from self.x)
 //│ | Solving: self‹727› <: {x: ⋅x‹729›}   (Flow, Sel)   []
 //│ | New flow: self‹727› ~> {x: ⋅x‹729›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((type class:CC) -> ⋅x‹729›) <: flow:getX‹736› (from { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; })
 //│ | Solving: ((type class:CC) -> ⋅x‹729›) <: flow:getX‹736›   (Fun, Flow)   []
 //│ | New flow: ((type class:CC) -> ⋅x‹729›) ~> flow:getX‹736›
@@ -515,7 +549,7 @@ module AA with
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.468: 	      fun getX(self: CC) = self.x
+//│ ║  l.500: 	      fun getX(self: CC) = self.x
 //│ ╙──       	                           ^^^^^^
 
 :sjs
@@ -619,13 +653,15 @@ foo.test
 //│ Handling constraint: foo‹786› <: {test: ⋅test‹800›} (from foo.test)
 //│ | Solving: foo‹786› <: {test: ⋅test‹800›}   (Flow, Sel)   []
 //│ | New flow: foo‹786› ~> {test: ⋅test‹800›}
+//│ | 1
+//│ | 0
 //│ | Solving: A <: {test: ⋅test‹800›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅test)
 //│ | Found companion member member:test
 //│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/‹block›,List())
 //│ | Access path: None
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.611: 	foo.test
+//│ ║  l.645: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ Resolved targets for foo.test: 
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
@@ -697,9 +733,11 @@ foo.test
 //│ Handling constraint: foo‹807› <: {test: ⋅test‹825›} (from foo.test)
 //│ | Solving: foo‹807› <: {test: ⋅test‹825›}   (Flow, Sel)   []
 //│ | New flow: foo‹807› ~> {test: ⋅test‹825›}
+//│ | 1
+//│ | 0
 //│ | Solving: ((a‹818›) -> A) <: {test: ⋅test‹825›}   (Fun, Sel)   []
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.689: 	foo.test
+//│ ║  l.725: 	foo.test
 //│ ║         	^^^^^^^^
 //│ ╙── Type `((a‹818›) -> A)` does not contain member 'test'
 //│ Resolved targets for foo.test: 
@@ -739,6 +777,8 @@ module CC with
 //│ Handling constraint: self‹839› <: {x: ⋅x‹841›} (from self.x)
 //│ | Solving: self‹839› <: {x: ⋅x‹841›}   (Flow, Sel)   []
 //│ | New flow: self‹839› ~> {x: ⋅x‹841›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((type class:CC) -> ⋅x‹841›) <: flow:getX‹848› (from { fun member:getX(self: member:CC) = self.x; })
 //│ | Solving: ((type class:CC) -> ⋅x‹841›) <: flow:getX‹848›   (Fun, Flow)   []
 //│ | New flow: ((type class:CC) -> ⋅x‹841›) ~> flow:getX‹848›
@@ -746,7 +786,7 @@ module CC with
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.711: 	  fun getX(self: CC) = self.x
+//│ ║  l.749: 	  fun getX(self: CC) = self.x
 //│ ╙──       	                       ^^^^^^
 
 :fixme // TODO: handle lifted class defs
@@ -767,6 +807,8 @@ CC(123).getX
 //│ Handling constraint: flow:CC‹846› <: ((123) -> app‹853›) (from member:CC(123))
 //│ | Solving: flow:CC‹846› <: ((123) -> app‹853›)   (Flow, Fun)   []
 //│ | New flow: flow:CC‹846› ~> ((123) -> app‹853›)
+//│ | 1
+//│ | 0
 //│ | Solving: ((type class:Int) -> CC) <: ((123) -> app‹853›)   (Fun, Fun)   []
 //│ | Solving: [123] <: [type class:Int]   (Tup, Tup)   []
 //│ | Solving: 123 <: type class:Int   (Ctor, Typ)   []
@@ -776,6 +818,8 @@ CC(123).getX
 //│ Handling constraint: app‹853› <: {getX: ⋅getX‹854›} (from member:CC(123).getX)
 //│ | Solving: app‹853› <: {getX: ⋅getX‹854›}   (Flow, Sel)   []
 //│ | New flow: app‹853› ~> {getX: ⋅getX‹854›}
+//│ | 1
+//│ | 0
 //│ | Solving: CC <: {getX: ⋅getX‹854›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅getX)
 //│ | Found companion member member:getX
@@ -819,6 +863,8 @@ module CC with
 //│ Handling constraint: x‹866› <: {oops: ⋅oops‹868›} (from x.oops)
 //│ | Solving: x‹866› <: {oops: ⋅oops‹868›}   (Flow, Sel)   []
 //│ | New flow: x‹866› ~> {oops: ⋅oops‹868›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((type class:CC) -> ⋅oops‹868›) <: flow:oops‹873› (from { fun member:oops(x: member:CC) = x.oops; })
 //│ | Solving: ((type class:CC) -> ⋅oops‹868›) <: flow:oops‹873›   (Fun, Flow)   []
 //│ | New flow: ((type class:CC) -> ⋅oops‹868›) ~> flow:oops‹873›
@@ -826,7 +872,7 @@ module CC with
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.796: 	  fun oops(x: CC) = x.oops
+//│ ║  l.840: 	  fun oops(x: CC) = x.oops
 //│ ╙──       	                    ^^^^^^
 
 :re
@@ -889,6 +935,8 @@ module CC with
 //│ Handling constraint: x‹894› <: {okay: ⋅okay‹896›} (from x.okay)
 //│ | Solving: x‹894› <: {okay: ⋅okay‹896›}   (Flow, Sel)   []
 //│ | New flow: x‹894› ~> {okay: ⋅okay‹896›}
+//│ | 0
+//│ | 0
 //│ Handling constraint: ((type class:CC) -> ⋅okay‹896›) <: flow:okay‹902› (from { fun member:okay(x: member:CC) = x.okay; })
 //│ | Solving: ((type class:CC) -> ⋅okay‹896›) <: flow:okay‹902›   (Fun, Flow)   []
 //│ | New flow: ((type class:CC) -> ⋅okay‹896›) ~> flow:okay‹902›
@@ -896,7 +944,7 @@ module CC with
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.861: 	  fun okay(x: CC) = x.okay
+//│ ║  l.907: 	  fun okay(x: CC) = x.okay
 //│ ╙──       	                    ^^^^^^
 
 new CC().okay
