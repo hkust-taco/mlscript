@@ -15,10 +15,6 @@ import syntax.Tree
 import Elaborator.{State, Ctx, ctx}
 import Producer as P
 import Consumer as C
-import hkmc2.semantics.BuiltinSymbol
-import P.Unknown
-import hkmc2.semantics.BlockMemberSymbol
-
 
 
 type FlowPoint = FlowSymbol | VarSymbol
@@ -101,9 +97,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case N =>
                 P.Fun(
                   C.Tup(ps.params.map(typeParam), N),
-                  P.Ctor(cd.sym, ps.params.flatMap(_.subTerms).map(typeProd) // Good?
+                  P.Ctor(cd.sym, Nil // FIXME: Nil
                     )(
-                      cd.body.blk // Good?
+                      Term.Missing // FIXME
                     ),
                   Nil,
                 )
@@ -123,7 +119,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         
         case stt =>
           log(s"/!\\ Unhandled statement: ${stt} /!\\")
-          P.Unknown(t)
+          P.Unknown(stt)
           
       typeProd(res)
     
@@ -223,26 +219,26 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
       assert(sel.expansion.isEmpty)
       sel.resolvedTargets match
-      case ObjectMember(sym) :: Nil =>
-        assert(sel.sym.isEmpty)
-        sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
-      case CompanionMember(comp, sym) :: Nil =>
-        val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
-        val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
-        log(s"Expansion: ${app.showDbg}")
-        sel.expansion = S(S(app))
-      case Nil =>
-        // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
-        if !sel.isErroneous then raise:
+        case ObjectMember(sym) :: Nil =>
+          assert(sel.sym.isEmpty)
+          sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
+        case CompanionMember(comp, sym) :: Nil =>
+          val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
+          val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
+          log(s"Expansion: ${app.showDbg}")
+          sel.expansion = S(S(app))
+        case Nil =>
+          // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
+          if !sel.isErroneous then raise:
+            ErrorReport:
+              msg"Cannot resolve selection" -> sel.toLoc :: Nil
+          // * An error should alsoready be reported in this case
+        case targets => raise:
           ErrorReport:
-            msg"Cannot resolve selection" -> sel.toLoc :: Nil
-        // * An error should alsoready be reported in this case
-      case targets => raise:
-        ErrorReport:
-          msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
-          :: targets.map:
-            case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
-            case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+            msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
+            :: targets.map:
+              case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
+              case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
   def expandLeadingDotSels() =
     import SelectionTarget.*

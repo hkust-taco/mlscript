@@ -48,7 +48,7 @@ module Foo with
 //│ | New flow: ((type class:Foo) -> ⋅a‹603›) ~> flow:foo‹609›
 //│ Resolved targets for x.a: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.15: 	  fun foo(x: Foo) = x.a
 //│ ╙──      	                    ^^^
@@ -194,7 +194,7 @@ id(f).foo
 //│ | New flow: app‹644› ~> {foo: ⋅foo‹645›}
 //│ Resolved targets for member:id(f).foo: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.167: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
@@ -257,7 +257,7 @@ id(f).foo
 //│ | New flow: app‹657› ~> {foo: ⋅foo‹658›}
 //│ Resolved targets for id(f).foo: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.230: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
@@ -442,7 +442,7 @@ test(f)
 //│ | New flow: ⋅foo‹701› ~> app‹704›
 //│ Resolved targets for g.foo: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.409: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
@@ -513,7 +513,7 @@ module AA with
 //│ | New flow: ((type class:CC) -> ⋅x‹729›) ~> flow:getX‹736›
 //│ Resolved targets for self.x: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.468: 	      fun getX(self: CC) = self.x
 //│ ╙──       	                           ^^^^^^
@@ -716,9 +716,7 @@ module CC with
 //│ | | Typing producer: undefined
 //│ | | : ()
 //│ | : ()
-//│ | Typing producer: member:Int
-//│ | : flow:Int‹732›
-//│ | Class member type: ((type class:Int) -> CC(...flow:Int‹732›))
+//│ | Class member type: ((type class:Int) -> CC)
 //│ | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24
 //│ | Typing producer: { fun member:getX(self: member:CC) = self.x; }
 //│ | | Typing producer: self.x
@@ -735,9 +733,9 @@ module CC with
 //│ Handling constraint: x‹834› <: flow:x‹844› (from { val member:x = x; })
 //│ | Solving: x‹834› <: flow:x‹844›   (Flow, Flow)   []
 //│ | New flow: x‹834› ~> flow:x‹844›
-//│ Handling constraint: ((type class:Int) -> CC(...flow:Int‹732›)) <: flow:CC‹846› (from { Cls CCParamList(‹›,List(Param(‹val›,x,Some(Ref(member:Int)),Modulefulness(None))),None) { val member:x = x; }; Mod CC { fun member:getX(self: member:CC) = self.x; }; })
-//│ | Solving: ((type class:Int) -> CC(...flow:Int‹732›)) <: flow:CC‹846›   (Fun, Flow)   []
-//│ | New flow: ((type class:Int) -> CC(...flow:Int‹732›)) ~> flow:CC‹846›
+//│ Handling constraint: ((type class:Int) -> CC) <: flow:CC‹846› (from { Cls CCParamList(‹›,List(Param(‹val›,x,Some(Ref(member:Int)),Modulefulness(None))),None) { val member:x = x; }; Mod CC { fun member:getX(self: member:CC) = self.x; }; })
+//│ | Solving: ((type class:Int) -> CC) <: flow:CC‹846›   (Fun, Flow)   []
+//│ | New flow: ((type class:Int) -> CC) ~> flow:CC‹846›
 //│ Handling constraint: self‹839› <: {x: ⋅x‹841›} (from self.x)
 //│ | Solving: self‹839› <: {x: ⋅x‹841›}   (Flow, Sel)   []
 //│ | New flow: self‹839› ~> {x: ⋅x‹841›}
@@ -746,7 +744,7 @@ module CC with
 //│ | New flow: ((type class:CC) -> ⋅x‹841›) ~> flow:getX‹848›
 //│ Resolved targets for self.x: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.711: 	  fun getX(self: CC) = self.x
 //│ ╙──       	                       ^^^^^^
@@ -769,16 +767,16 @@ CC(123).getX
 //│ Handling constraint: flow:CC‹846› <: ((123) -> app‹853›) (from member:CC(123))
 //│ | Solving: flow:CC‹846› <: ((123) -> app‹853›)   (Flow, Fun)   []
 //│ | New flow: flow:CC‹846› ~> ((123) -> app‹853›)
-//│ | Solving: ((type class:Int) -> CC(...flow:Int‹732›)) <: ((123) -> app‹853›)   (Fun, Fun)   []
+//│ | Solving: ((type class:Int) -> CC) <: ((123) -> app‹853›)   (Fun, Fun)   []
 //│ | Solving: [123] <: [type class:Int]   (Tup, Tup)   []
 //│ | Solving: 123 <: type class:Int   (Ctor, Typ)   []
 //│ | /!\ Unhandled constraint /!\
-//│ | Solving: CC(...flow:Int‹732›) <: app‹853›   (Ctor, Flow)   []
-//│ | New flow: CC(...flow:Int‹732›) ~> app‹853›
+//│ | Solving: CC <: app‹853›   (Ctor, Flow)   []
+//│ | New flow: CC ~> app‹853›
 //│ Handling constraint: app‹853› <: {getX: ⋅getX‹854›} (from member:CC(123).getX)
 //│ | Solving: app‹853› <: {getX: ⋅getX‹854›}   (Flow, Sel)   []
 //│ | New flow: app‹853› ~> {getX: ⋅getX‹854›}
-//│ | Solving: CC(...flow:Int‹732›) <: {getX: ⋅getX‹854›}   (Ctor, Sel)   []
+//│ | Solving: CC <: {getX: ⋅getX‹854›}   (Ctor, Sel)   []
 //│ | Selection result: Flow(⋅getX)
 //│ | Found companion member member:getX
 //│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24,List())
@@ -826,9 +824,9 @@ module CC with
 //│ | New flow: ((type class:CC) -> ⋅oops‹868›) ~> flow:oops‹873›
 //│ Resolved targets for x.oops: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.798: 	  fun oops(x: CC) = x.oops
+//│ ║  l.796: 	  fun oops(x: CC) = x.oops
 //│ ╙──       	                    ^^^^^^
 
 :re
@@ -896,9 +894,9 @@ module CC with
 //│ | New flow: ((type class:CC) -> ⋅okay‹896›) ~> flow:okay‹902›
 //│ Resolved targets for x.okay: 
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:233)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.863: 	  fun okay(x: CC) = x.okay
+//│ ║  l.861: 	  fun okay(x: CC) = x.okay
 //│ ╙──       	                    ^^^^^^
 
 new CC().okay
