@@ -565,7 +565,7 @@ extends Importer:
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.SynthSel(preTrm, nme)(sym, N)
     case Sel(Empty(), nme) =>
-      Term.LeadingDotSel(nme)(S(summon))
+      Term.LeadingDotSel(nme)(S(summon), Nil)
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)

@@ -1,96 +1,203 @@
 :js
 :flow
-:sf
-// :df
+// :sf
+:df
 
-//│ Flowed:
-//│   import ".../Predef.mjs" as Predef⁰
-//│ where
-//│     
+//│ Typing producer: { import /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs from /home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs; }
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
 
 
 class Foo with
   val a = 123
 module Foo with
   fun foo(x: Foo) = x.a
+//│ Typing producer: { Cls Foo { method val member:a = 123; }; Mod Foo { fun member:foo(x: member:Foo) = x.a; }; }
+//│ | Typing producer: { method val member:a = 123; }
+//│ | | Typing producer: 123
+//│ | | : 123
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Class member type: ¿Cls Foo { method val member:a = 123; }?
+//│ | Module: top-level/import:Prelude/block:1/block:2
+//│ | Typing producer: { fun member:foo(x: member:Foo) = x.a; }
+//│ | | Typing producer: x.a
+//│ | | | Selection x.a None
+//│ | | | Typing producer: x
+//│ | | | : x‹601›
+//│ | | : ⋅a‹603›
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: 123 <: flow:a‹606› (from { method val member:a = 123; })
+//│ | Solving: 123 <: flow:a‹606›   (Ctor, Flow)   []
+//│ | New flow: 123 ~> flow:a‹606›
+//│ Handling constraint: ¿Cls Foo { method val member:a = 123; }? <: flow:Foo‹607› (from { Cls Foo { method val member:a = 123; }; Mod Foo { fun member:foo(x: member:Foo) = x.a; }; })
+//│ | Solving: ¿Cls Foo { method val member:a = 123; }? <: flow:Foo‹607›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: x‹601› <: {a: ⋅a‹603›} (from x.a)
+//│ | Solving: x‹601› <: {a: ⋅a‹603›}   (Flow, Sel)   []
+//│ | New flow: x‹601› ~> {a: ⋅a‹603›}
+//│ Handling constraint: ((type class:Foo) -> ⋅a‹603›) <: flow:foo‹609› (from { fun member:foo(x: member:Foo) = x.a; })
+//│ | Solving: ((type class:Foo) -> ⋅a‹603›) <: flow:foo‹609›   (Fun, Flow)   []
+//│ | New flow: ((type class:Foo) -> ⋅a‹603›) ~> flow:foo‹609›
+//│ Resolved targets for x.a: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.15: 	  fun foo(x: Foo) = x.a
 //│ ╙──      	                    ^^^
-//│ Flowed:
-//│   class Foo {
-//│     val a⁰ ‹flow:a⁰› = 123
-//│   },
-//│   module Foo {
-//│     fun foo⁰(x⁰: Foo⁰) ‹flow:foo⁰› = x⁰.a‹?›
-//│   }
-//│ where
-//│     x⁰  ~>  {a: ⋅a⁰}
-//│     flow:a⁰  <~  123
-//│     flow:foo⁰  <~  ((type Foo) -> ⋅a⁰)
 
 let f = new Foo()
-//│ Flowed:
-//│   let f⁰,
-//│   f⁰ = new Foo⁰()
-//│ where
-//│     f⁰  <~  Foo()
+//│ Typing producer: { let f; f = new member:Foo(); }
+//│ | Typing producer: new member:Foo()
+//│ | | Typing producer: []
+//│ | | : []
+//│ | : Foo()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: Foo() <: f‹614› (from { let f; f = new member:Foo(); })
+//│ | Solving: Foo() <: f‹614›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> f‹614›
 //│ f = Foo { a: 123 }
 
 f.a
-//│ Flowed:
-//│   f⁰.a⁰
-//│ where
-//│     
+//│ Typing producer: { f.a }
+//│ | Typing producer: f.a
+//│ | | Selection f.a None
+//│ | | Typing producer: f
+//│ | | : f‹614›
+//│ | : ⋅a‹617›
+//│ : ⋅a‹617›
+//│ Handling constraint: f‹614› <: {a: ⋅a‹617›} (from f.a)
+//│ | Solving: f‹614› <: {a: ⋅a‹617›}   (Flow, Sel)   []
+//│ | New flow: f‹614› ~> {a: ⋅a‹617›}
+//│ | Solving: Foo() <: {a: ⋅a‹617›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅a)
+//│ | Found immediate member member:a
+//│ | Solving: flow:a‹606› <: ⋅a‹617›   (Flow, Flow)   []
+//│ | New flow: flow:a‹606› ~> ⋅a‹617›
+//│ | Solving: 123 <: ⋅a‹617›   (Ctor, Flow)   []
+//│ | New flow: 123 ~> ⋅a‹617›
+//│ Resolved targets for f.a: ObjectMember(member:a)
 //│ = 123
 
 :e
 :re
 f.a.b
+//│ Typing producer: { f.a.b }
+//│ | Typing producer: f.a.b
+//│ | | Selection f.a.b None
+//│ | | Typing producer: f.a
+//│ | | | Selection f.a None
+//│ | | | Typing producer: f
+//│ | | | : f‹614›
+//│ | | : ⋅a‹622›
+//│ | : ⋅b‹623›
+//│ : ⋅b‹623›
+//│ Handling constraint: f‹614› <: {a: ⋅a‹622›} (from f.a)
+//│ | Solving: f‹614› <: {a: ⋅a‹622›}   (Flow, Sel)   []
+//│ | New flow: f‹614› ~> {a: ⋅a‹622›}
+//│ | Solving: Foo() <: {a: ⋅a‹622›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅a)
+//│ | Found immediate member member:a
+//│ | Solving: flow:a‹606› <: ⋅a‹622›   (Flow, Flow)   []
+//│ | New flow: flow:a‹606› ~> ⋅a‹622›
+//│ | Solving: 123 <: ⋅a‹622›   (Ctor, Flow)   []
+//│ | New flow: 123 ~> ⋅a‹622›
+//│ Handling constraint: ⋅a‹622› <: {b: ⋅b‹623›} (from f.a.b)
+//│ | Solving: ⋅a‹622› <: {b: ⋅b‹623›}   (Flow, Sel)   []
+//│ | New flow: ⋅a‹622› ~> {b: ⋅b‹623›}
+//│ | Solving: 123 <: {b: ⋅b‹623›}   (Ctor, Sel)   []
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.50: 	f.a.b
+//│ ║  l.93: 	f.a.b
 //│ ║        	^^^^^
 //│ ╟── Type `123` does not contain member 'b'
 //│ ║  l.13: 	  val a = 123
 //│ ╙──      	          ^^^
-//│ Flowed:
-//│   f⁰.a⁰.b‹?›
-//│ where
-//│     
+//│ Resolved targets for f.a.b: 
+//│ Resolved targets for f.a: ObjectMember(member:a)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'b' yielded 'undefined'
 
 :sjs
 f.foo
-//│ Flowed:
-//│   f⁰.foo‹?›{ ~> Foo⁰.foo⁰(f⁰)‹app⁰› }
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
+//│ Typing producer: { f.foo }
+//│ | Typing producer: f.foo
+//│ | | Selection f.foo None
+//│ | | Typing producer: f
+//│ | | : f‹614›
+//│ | : ⋅foo‹630›
+//│ : ⋅foo‹630›
+//│ Handling constraint: f‹614› <: {foo: ⋅foo‹630›} (from f.foo)
+//│ | Solving: f‹614› <: {foo: ⋅foo‹630›}   (Flow, Sel)   []
+//│ | New flow: f‹614› ~> {foo: ⋅foo‹630›}
+//│ | Solving: Foo() <: {foo: ⋅foo‹630›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅foo)
+//│ | Found companion member member:foo
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
+//│ | Access path: Some(Ref(member:Foo))
+//│ | Solving: flow:foo‹609› <: ⋅foo‹630›   (Flow, Flow)   []
+//│ | New flow: flow:foo‹609› ~> ⋅foo‹630›
+//│ | Solving: ((type class:Foo) -> ⋅a‹603›) <: ⋅foo‹630›   (Fun, Flow)   []
+//│ | New flow: ((type class:Foo) -> ⋅a‹603›) ~> ⋅foo‹630›
+//│ Resolved targets for f.foo: CompanionMember(Ref(member:Foo),member:foo)
+//│ Expansion: member:Foo.foo‹member:foo›(f)
 //│ JS (unsanitized):
 //│ Foo1.foo(f)
 //│ = 123
 
 
 fun id(x) = x
-//│ Flowed:
-//│   fun id⁰(x¹) ‹flow:id⁰› = x¹
-//│ where
-//│     flow:id⁰  <~  ((x²) -> x¹)
+//│ Typing producer: { fun member:id(x) = x; }
+//│ | Typing producer: x
+//│ | : x‹636›
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ((x‹640›) -> x‹636›) <: flow:id‹641› (from { fun member:id(x) = x; })
+//│ | Solving: ((x‹640›) -> x‹636›) <: flow:id‹641›   (Fun, Flow)   []
+//│ | New flow: ((x‹640›) -> x‹636›) ~> flow:id‹641›
 
 id(f).foo
+//│ Typing producer: { member:id(f).foo }
+//│ | Typing producer: member:id(f).foo
+//│ | | Selection member:id(f).foo None
+//│ | | Typing producer: member:id(f)
+//│ | | | Typing producer: [f]
+//│ | | | | Typing producer: f
+//│ | | | | : f‹614›
+//│ | | | : [f‹614›]
+//│ | | | Typing producer: member:id
+//│ | | | : flow:id‹641›
+//│ | | : app‹644›
+//│ | : ⋅foo‹645›
+//│ : ⋅foo‹645›
+//│ Handling constraint: flow:id‹641› <: ((f‹614›) -> app‹644›) (from member:id(f))
+//│ | Solving: flow:id‹641› <: ((f‹614›) -> app‹644›)   (Flow, Fun)   []
+//│ | New flow: flow:id‹641› ~> ((f‹614›) -> app‹644›)
+//│ | Solving: ((x‹640›) -> x‹636›) <: ((f‹614›) -> app‹644›)   (Fun, Fun)   []
+//│ | Solving: [f‹614›] <: [x‹640›]   (Tup, Tup)   []
+//│ | Solving: f‹614› <: x‹640›   (Flow, Flow)   []
+//│ | New flow: f‹614› ~> x‹640›
+//│ | Solving: Foo() <: x‹640›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> x‹640›
+//│ | Solving: x‹636› <: app‹644›   (Flow, Flow)   []
+//│ | New flow: x‹636› ~> app‹644›
+//│ Handling constraint: app‹644› <: {foo: ⋅foo‹645›} (from member:id(f).foo)
+//│ | Solving: app‹644› <: {foo: ⋅foo‹645›}   (Flow, Sel)   []
+//│ | New flow: app‹644› ~> {foo: ⋅foo‹645›}
+//│ Resolved targets for member:id(f).foo: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.81: 	id(f).foo
-//│ ╙──      	^^^^^^^^^
-//│ Flowed:
-//│   id⁰(f⁰)‹app¹›.foo‹?›
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x²
-//│     app¹  ~>  {foo: ⋅foo¹}
+//│ ║  l.167: 	id(f).foo
+//│ ╙──       	^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
@@ -107,28 +214,53 @@ id(f).foo
 
 
 let id(x) = x
-//│ Flowed:
-//│   let id¹,
-//│   id¹ = (x³) => x³
-//│ where
-//│     id¹  <~  ((x⁴) -> x³)
+//│ Typing producer: { let id; id = λ(x). x; }
+//│ | Typing producer: λ(x). x
+//│ | | Typing producer: x
+//│ | | : x‹652›
+//│ | : ((x‹653›) -> x‹652›)
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ((x‹653›) -> x‹652›) <: id‹651› (from { let id; id = λ(x). x; })
+//│ | Solving: ((x‹653›) -> x‹652›) <: id‹651›   (Fun, Flow)   []
+//│ | New flow: ((x‹653›) -> x‹652›) ~> id‹651›
 //│ id = fun id
 
 id(f).foo
+//│ Typing producer: { id(f).foo }
+//│ | Typing producer: id(f).foo
+//│ | | Selection id(f).foo None
+//│ | | Typing producer: id(f)
+//│ | | | Typing producer: [f]
+//│ | | | | Typing producer: f
+//│ | | | | : f‹614›
+//│ | | | : [f‹614›]
+//│ | | | Typing producer: id
+//│ | | | : id‹651›
+//│ | | : app‹657›
+//│ | : ⋅foo‹658›
+//│ : ⋅foo‹658›
+//│ Handling constraint: id‹651› <: ((f‹614›) -> app‹657›) (from id(f))
+//│ | Solving: id‹651› <: ((f‹614›) -> app‹657›)   (Flow, Fun)   []
+//│ | New flow: id‹651› ~> ((f‹614›) -> app‹657›)
+//│ | Solving: ((x‹653›) -> x‹652›) <: ((f‹614›) -> app‹657›)   (Fun, Fun)   []
+//│ | Solving: [f‹614›] <: [x‹653›]   (Tup, Tup)   []
+//│ | Solving: f‹614› <: x‹653›   (Flow, Flow)   []
+//│ | New flow: f‹614› ~> x‹653›
+//│ | Solving: Foo() <: x‹653›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> x‹653›
+//│ | Solving: x‹652› <: app‹657›   (Flow, Flow)   []
+//│ | New flow: x‹652› ~> app‹657›
+//│ Handling constraint: app‹657› <: {foo: ⋅foo‹658›} (from id(f).foo)
+//│ | Solving: app‹657› <: {foo: ⋅foo‹658›}   (Flow, Sel)   []
+//│ | New flow: app‹657› ~> {foo: ⋅foo‹658›}
+//│ Resolved targets for id(f).foo: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.117: 	id(f).foo
+//│ ║  l.230: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
-//│ Flowed:
-//│   id¹(f⁰)‹app²›.foo‹?›
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x²  x⁴
-//│     id¹  <~  ((x⁴) -> x³)
-//│     id¹  ~>  ((f⁰) -> app²)
-//│     app²  ~>  {foo: ⋅foo²}
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
@@ -145,31 +277,72 @@ id(f).foo
 
 
 fun id(x) = x
-//│ Flowed:
-//│   fun id²(x⁵) ‹flow:id¹› = x⁵
-//│ where
-//│     flow:id¹  <~  ((x⁶) -> x⁵)
+//│ Typing producer: { fun member:id(x) = x; }
+//│ | Typing producer: x
+//│ | : x‹665›
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ((x‹669›) -> x‹665›) <: flow:id‹670› (from { fun member:id(x) = x; })
+//│ | Solving: ((x‹669›) -> x‹665›) <: flow:id‹670›   (Fun, Flow)   []
+//│ | New flow: ((x‹669›) -> x‹665›) ~> flow:id‹670›
 
 id(0)
-//│ Flowed:
-//│   id²(0)‹app³›
-//│ where
-//│     
+//│ Typing producer: { member:id(0) }
+//│ | Typing producer: member:id(0)
+//│ | | Typing producer: [0]
+//│ | | | Typing producer: 0
+//│ | | | : 0
+//│ | | : [0]
+//│ | | Typing producer: member:id
+//│ | | : flow:id‹670›
+//│ | : app‹673›
+//│ : app‹673›
+//│ Handling constraint: flow:id‹670› <: ((0) -> app‹673›) (from member:id(0))
+//│ | Solving: flow:id‹670› <: ((0) -> app‹673›)   (Flow, Fun)   []
+//│ | New flow: flow:id‹670› ~> ((0) -> app‹673›)
+//│ | Solving: ((x‹669›) -> x‹665›) <: ((0) -> app‹673›)   (Fun, Fun)   []
+//│ | Solving: [0] <: [x‹669›]   (Tup, Tup)   []
+//│ | Solving: 0 <: x‹669›   (Ctor, Flow)   []
+//│ | New flow: 0 ~> x‹669›
+//│ | Solving: x‹665› <: app‹673›   (Flow, Flow)   []
+//│ | New flow: x‹665› ~> app‹673›
 //│ = 0
 
 // * Note the flow confusion due to lack of polymorphism:
 :e
 id(f).foo
+//│ Typing producer: { member:id(f).foo }
+//│ | Typing producer: member:id(f).foo
+//│ | | Selection member:id(f).foo None
+//│ | | Typing producer: member:id(f)
+//│ | | | Typing producer: [f]
+//│ | | | | Typing producer: f
+//│ | | | | : f‹614›
+//│ | | | : [f‹614›]
+//│ | | | Typing producer: member:id
+//│ | | | : flow:id‹670›
+//│ | | : app‹676›
+//│ | : ⋅foo‹677›
+//│ : ⋅foo‹677›
+//│ Handling constraint: flow:id‹670› <: ((f‹614›) -> app‹676›) (from member:id(f))
+//│ | Solving: flow:id‹670› <: ((f‹614›) -> app‹676›)   (Flow, Fun)   []
+//│ | New flow: flow:id‹670› ~> ((f‹614›) -> app‹676›)
+//│ | Solving: ((x‹669›) -> x‹665›) <: ((f‹614›) -> app‹676›)   (Fun, Fun)   []
+//│ | Solving: [f‹614›] <: [x‹669›]   (Tup, Tup)   []
+//│ | Solving: f‹614› <: x‹669›   (Flow, Flow)   []
+//│ | New flow: f‹614› ~> x‹669›
+//│ | Solving: Foo() <: x‹669›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> x‹669›
+//│ | Solving: x‹665› <: app‹676›   (Flow, Flow)   []
+//│ | New flow: x‹665› ~> app‹676›
+//│ Handling constraint: app‹676› <: {foo: ⋅foo‹677›} (from member:id(f).foo)
+//│ | Solving: app‹676› <: {foo: ⋅foo‹677›}   (Flow, Sel)   []
+//│ | New flow: app‹676› ~> {foo: ⋅foo‹677›}
+//│ Resolved targets for member:id(f).foo: 
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.162: 	id(f).foo
+//│ ║  l.314: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
-//│ Flowed:
-//│   id²(f⁰)‹app⁴›.foo‹?›
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x²  x⁴  x⁶
-//│     app⁴  ~>  {foo: ⋅foo³}
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
@@ -187,43 +360,92 @@ id(f).foo
 
 :e
 fun test(g) = g.foo
+//│ Typing producer: { fun member:test(g) = g.foo; }
+//│ | Typing producer: g.foo
+//│ | | Selection g.foo None
+//│ | | Typing producer: g
+//│ | | : g‹684›
+//│ | : ⋅foo‹686›
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: g‹684› <: {foo: ⋅foo‹686›} (from g.foo)
+//│ | Solving: g‹684› <: {foo: ⋅foo‹686›}   (Flow, Sel)   []
+//│ | New flow: g‹684› ~> {foo: ⋅foo‹686›}
+//│ Handling constraint: ((g‹689›) -> ⋅foo‹686›) <: flow:test‹690› (from { fun member:test(g) = g.foo; })
+//│ | Solving: ((g‹689›) -> ⋅foo‹686›) <: flow:test‹690›   (Fun, Flow)   []
+//│ | New flow: ((g‹689›) -> ⋅foo‹686›) ~> flow:test‹690›
+//│ Resolved targets for g.foo: 
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.189: 	fun test(g) = g.foo
+//│ ║  l.362: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
-//│ Flowed:
-//│   fun test⁰(g⁰) ‹flow:test⁰› = g⁰.foo‹?›
-//│ where
-//│     g⁰  ~>  {foo: ⋅foo⁴}
-//│     flow:test⁰  <~  ((g¹) -> ⋅foo⁴)
 
 :re
 test(f)
-//│ Flowed:
-//│   test⁰(f⁰)‹app⁵›
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x²  x⁴  x⁶  g¹
+//│ Typing producer: { member:test(f) }
+//│ | Typing producer: member:test(f)
+//│ | | Typing producer: [f]
+//│ | | | Typing producer: f
+//│ | | | : f‹614›
+//│ | | : [f‹614›]
+//│ | | Typing producer: member:test
+//│ | | : flow:test‹690›
+//│ | : app‹695›
+//│ : app‹695›
+//│ Handling constraint: flow:test‹690› <: ((f‹614›) -> app‹695›) (from member:test(f))
+//│ | Solving: flow:test‹690› <: ((f‹614›) -> app‹695›)   (Flow, Fun)   []
+//│ | New flow: flow:test‹690› ~> ((f‹614›) -> app‹695›)
+//│ | Solving: ((g‹689›) -> ⋅foo‹686›) <: ((f‹614›) -> app‹695›)   (Fun, Fun)   []
+//│ | Solving: [f‹614›] <: [g‹689›]   (Tup, Tup)   []
+//│ | Solving: f‹614› <: g‹689›   (Flow, Flow)   []
+//│ | New flow: f‹614› ~> g‹689›
+//│ | Solving: Foo() <: g‹689›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> g‹689›
+//│ | Solving: ⋅foo‹686› <: app‹695›   (Flow, Flow)   []
+//│ | New flow: ⋅foo‹686› ~> app‹695›
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 
 fun test(g) = g.foo
 test(f)
+//│ Typing producer: { fun member:test(g) = g.foo; member:test(f) }
+//│ | Typing producer: g.foo
+//│ | | Selection g.foo None
+//│ | | Typing producer: g
+//│ | | : g‹699›
+//│ | : ⋅foo‹701›
+//│ | Typing producer: member:test(f)
+//│ | | Typing producer: [f]
+//│ | | | Typing producer: f
+//│ | | | : f‹614›
+//│ | | : [f‹614›]
+//│ | | Typing producer: member:test
+//│ | | : flow:test‹706›
+//│ | : app‹704›
+//│ : app‹704›
+//│ Handling constraint: g‹699› <: {foo: ⋅foo‹701›} (from g.foo)
+//│ | Solving: g‹699› <: {foo: ⋅foo‹701›}   (Flow, Sel)   []
+//│ | New flow: g‹699› ~> {foo: ⋅foo‹701›}
+//│ Handling constraint: ((g‹705›) -> ⋅foo‹701›) <: flow:test‹706› (from { fun member:test(g) = g.foo; member:test(f) })
+//│ | Solving: ((g‹705›) -> ⋅foo‹701›) <: flow:test‹706›   (Fun, Flow)   []
+//│ | New flow: ((g‹705›) -> ⋅foo‹701›) ~> flow:test‹706›
+//│ Handling constraint: flow:test‹706› <: ((f‹614›) -> app‹704›) (from member:test(f))
+//│ | Solving: flow:test‹706› <: ((f‹614›) -> app‹704›)   (Flow, Fun)   []
+//│ | New flow: flow:test‹706› ~> ((f‹614›) -> app‹704›)
+//│ | Solving: ((g‹705›) -> ⋅foo‹701›) <: ((f‹614›) -> app‹704›)   (Fun, Fun)   []
+//│ | Solving: [f‹614›] <: [g‹705›]   (Tup, Tup)   []
+//│ | Solving: f‹614› <: g‹705›   (Flow, Flow)   []
+//│ | New flow: f‹614› ~> g‹705›
+//│ | Solving: Foo() <: g‹705›   (Ctor, Flow)   []
+//│ | New flow: Foo() ~> g‹705›
+//│ | Solving: ⋅foo‹701› <: app‹704›   (Flow, Flow)   []
+//│ | New flow: ⋅foo‹701› ~> app‹704›
+//│ Resolved targets for g.foo: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.210: 	fun test(g) = g.foo
+//│ ║  l.409: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
-//│ Flowed:
-//│   fun test¹(g²) ‹flow:test¹› = g².foo‹?›,
-//│   test¹(f⁰)‹app⁶›
-//│ where
-//│     f⁰  <~  Foo()
-//│     f⁰  ~>  {a: ⋅a¹}  {a: ⋅a²}  {foo: ⋅foo⁰}
-//│     f⁰  ->  x²  x⁴  x⁶  g¹  g³
-//│     g²  ~>  {foo: ⋅foo⁵}
-//│     flow:test¹  <~  ((g³) -> ⋅foo⁵)
-//│     flow:test¹  ~>  ((f⁰) -> app⁶)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
@@ -244,43 +466,105 @@ module AA with
       val x: Int = 1
     module CC with
       fun getX(self: CC) = self.x
+//│ Typing producer: { Mod AA { Mod BB { Cls CC { method val member:x: member:Int = 1; }; Mod CC { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; }; }; }; }
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17
+//│ | Typing producer: { Mod BB { Cls CC { method val member:x: member:Int = 1; }; Mod CC { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; }; }; }
+//│ | | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/module:AA
+//│ | | Typing producer: { Cls CC { method val member:x: member:Int = 1; }; Mod CC { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; }; }
+//│ | | | Typing producer: { method val member:x: member:Int = 1; }
+//│ | | | | Typing producer: member:Int
+//│ | | | | : flow:Int‹732›
+//│ | | | | Typing producer: 1
+//│ | | | | : 1
+//│ | | | | Typing producer: undefined
+//│ | | | | : ()
+//│ | | | : ()
+//│ | | | Class member type: ¿Cls CC { method val member:x: member:Int = 1; }?
+//│ | | | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/module:AA/module:BB
+//│ | | | Typing producer: { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; }
+//│ | | | | Typing producer: self.x
+//│ | | | | | Selection self.x None
+//│ | | | | | Typing producer: self
+//│ | | | | | : self‹727›
+//│ | | | | : ⋅x‹729›
+//│ | | | | Typing producer: undefined
+//│ | | | | : ()
+//│ | | | : ()
+//│ | | | Typing producer: undefined
+//│ | | | : ()
+//│ | | : ()
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: 1 <: flow:x‹733› (from { method val member:x: member:Int = 1; })
+//│ | Solving: 1 <: flow:x‹733›   (Ctor, Flow)   []
+//│ | New flow: 1 ~> flow:x‹733›
+//│ Handling constraint: ¿Cls CC { method val member:x: member:Int = 1; }? <: flow:CC‹734› (from { Cls CC { method val member:x: member:Int = 1; }; Mod CC { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; }; })
+//│ | Solving: ¿Cls CC { method val member:x: member:Int = 1; }? <: flow:CC‹734›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: self‹727› <: {x: ⋅x‹729›} (from self.x)
+//│ | Solving: self‹727› <: {x: ⋅x‹729›}   (Flow, Sel)   []
+//│ | New flow: self‹727› ~> {x: ⋅x‹729›}
+//│ Handling constraint: ((type class:CC) -> ⋅x‹729›) <: flow:getX‹736› (from { fun member:getX(self: (module:BB.)CC‹member:CC›) = self.x; })
+//│ | Solving: ((type class:CC) -> ⋅x‹729›) <: flow:getX‹736›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅x‹729›) ~> flow:getX‹736›
+//│ Resolved targets for self.x: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.246: 	      fun getX(self: CC) = self.x
+//│ ║  l.468: 	      fun getX(self: CC) = self.x
 //│ ╙──       	                           ^^^^^^
-//│ Flowed:
-//│   module AA {
-//│     module BB {
-//│       class CC {
-//│         val x⁷: Int⁰ ‹flow:x⁰› = 1
-//│       },
-//│       module CC {
-//│         fun getX⁰(self⁰: ⟨BB⁰.⟩CC⁰) ‹flow:getX⁰› = self⁰.x‹?›
-//│       }
-//│     }
-//│   }
-//│ where
-//│     self⁰  ~>  {x: ⋅x⁰}
-//│     flow:x⁰  <~  1
-//│     flow:getX⁰  <~  ((type CC) -> ⋅x⁰)
 
 :sjs
 new AA.BB.CC().x
-//│ Flowed:
-//│   new AA⁰.BB¹.CC⁰().x⁷
-//│ where
-//│     
+//│ Typing producer: { new member:AA.BB‹member:BB›.CC‹member:CC›().x }
+//│ | Typing producer: new member:AA.BB‹member:BB›.CC‹member:CC›().x
+//│ | | Selection new member:AA.BB‹member:BB›.CC‹member:CC›().x None
+//│ | | Typing producer: new member:AA.BB‹member:BB›.CC‹member:CC›()
+//│ | | | Typing producer: []
+//│ | | | : []
+//│ | | : CC()
+//│ | : ⋅x‹747›
+//│ : ⋅x‹747›
+//│ Handling constraint: CC() <: {x: ⋅x‹747›} (from new member:AA.BB‹member:BB›.CC‹member:CC›().x)
+//│ | Solving: CC() <: {x: ⋅x‹747›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅x)
+//│ | Found immediate member member:x
+//│ | Solving: flow:x‹733› <: ⋅x‹747›   (Flow, Flow)   []
+//│ | New flow: flow:x‹733› ~> ⋅x‹747›
+//│ | Solving: 1 <: ⋅x‹747›   (Ctor, Flow)   []
+//│ | New flow: 1 ~> ⋅x‹747›
+//│ Resolved targets for new member:AA.BB‹member:BB›.CC‹member:CC›().x: ObjectMember(member:x)
 //│ JS (unsanitized):
 //│ let tmp3; tmp3 = globalThis.Object.freeze(new AA1.BB.CC()); tmp3.x
 //│ = 1
 
 :sjs
 new AA.BB.CC().getX
-//│ Flowed:
-//│   new AA⁰.BB¹.CC⁰().getX‹?›{ ~> AA⁰.BB¹.CC⁰.getX⁰(new AA⁰.BB¹.CC⁰())‹app⁷› }
-//│ where
-//│     
+//│ Typing producer: { new member:AA.BB‹member:BB›.CC‹member:CC›().getX }
+//│ | Typing producer: new member:AA.BB‹member:BB›.CC‹member:CC›().getX
+//│ | | Selection new member:AA.BB‹member:BB›.CC‹member:CC›().getX None
+//│ | | Typing producer: new member:AA.BB‹member:BB›.CC‹member:CC›()
+//│ | | | Typing producer: []
+//│ | | | : []
+//│ | | : CC()
+//│ | : ⋅getX‹764›
+//│ : ⋅getX‹764›
+//│ Handling constraint: CC() <: {getX: ⋅getX‹764›} (from new member:AA.BB‹member:BB›.CC‹member:CC›().getX)
+//│ | Solving: CC() <: {getX: ⋅getX‹764›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅getX)
+//│ | Found companion member member:getX
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17,List(module:BB, module:AA))
+//│ | Access path: Some(Sel(Sel(Ref(member:AA),Ident(BB)),Ident(CC)))
+//│ | Solving: flow:getX‹736› <: ⋅getX‹764›   (Flow, Flow)   []
+//│ | New flow: flow:getX‹736› ~> ⋅getX‹764›
+//│ | Solving: ((type class:CC) -> ⋅x‹729›) <: ⋅getX‹764›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅x‹729›) ~> ⋅getX‹764›
+//│ Resolved targets for new member:AA.BB‹member:BB›.CC‹member:CC›().getX: CompanionMember(Sel(Sel(Ref(member:AA),Ident(BB)),Ident(CC)),member:getX)
+//│ Expansion: member:AA.BB‹member:BB›.CC‹member:CC›.getX‹member:getX›(new member:AA.BB‹member:BB›.CC‹member:CC›())
 //│ JS (unsanitized):
 //│ let tmp4; tmp4 = globalThis.Object.freeze(new AA1.BB.CC()); AA1.BB.CC.getX(tmp4)
 //│ = 1
@@ -291,33 +575,59 @@ let foo =
   module A with
     fun test(a) = 1
   new A
-//│ Flowed:
-//│   let foo¹,
-//│   foo¹ = {
-//│     class A {
-//│       
-//│     },
-//│     module A {
-//│       fun test²(a¹) ‹flow:test²› = 1
-//│     },
-//│     new A⁰
-//│   }
-//│ where
-//│     foo¹  <~  A
-//│     flow:test²  <~  ((a²) -> 1)
+//│ Typing producer: { let foo; foo = { Cls A { }; Mod A { fun member:test(a) = 1; }; new member:A }; }
+//│ | Typing producer: { Cls A { }; Mod A { fun member:test(a) = 1; }; new member:A }
+//│ | | Typing producer: { }
+//│ | | | Typing producer: undefined
+//│ | | | : ()
+//│ | | : ()
+//│ | | Class member type: ¿Cls A { }?
+//│ | | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/‹block›
+//│ | | Typing producer: { fun member:test(a) = 1; }
+//│ | | | Typing producer: 1
+//│ | | | : 1
+//│ | | | Typing producer: undefined
+//│ | | | : ()
+//│ | | : ()
+//│ | | Typing producer: new member:A
+//│ | | : A
+//│ | : A
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ¿Cls A { }? <: flow:A‹795› (from { Cls A { }; Mod A { fun member:test(a) = 1; }; new member:A })
+//│ | Solving: ¿Cls A { }? <: flow:A‹795›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: ((a‹796›) -> 1) <: flow:test‹797› (from { fun member:test(a) = 1; })
+//│ | Solving: ((a‹796›) -> 1) <: flow:test‹797›   (Fun, Flow)   []
+//│ | New flow: ((a‹796›) -> 1) ~> flow:test‹797›
+//│ Handling constraint: A <: foo‹786› (from { let foo; foo = { Cls A { }; Mod A { fun member:test(a) = 1; }; new member:A }; })
+//│ | Solving: A <: foo‹786›   (Ctor, Flow)   []
+//│ | New flow: A ~> foo‹786›
 //│ foo = A
 
 :e
 :re
 foo.test
+//│ Typing producer: { foo.test }
+//│ | Typing producer: foo.test
+//│ | | Selection foo.test None
+//│ | | Typing producer: foo
+//│ | | : foo‹786›
+//│ | : ⋅test‹800›
+//│ : ⋅test‹800›
+//│ Handling constraint: foo‹786› <: {test: ⋅test‹800›} (from foo.test)
+//│ | Solving: foo‹786› <: {test: ⋅test‹800›}   (Flow, Sel)   []
+//│ | New flow: foo‹786› ~> {test: ⋅test‹800›}
+//│ | Solving: A <: {test: ⋅test‹800›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅test)
+//│ | Found companion member member:test
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/‹block›,List())
+//│ | Access path: None
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.312: 	foo.test
+//│ ║  l.611: 	foo.test
 //│ ╙──       	^^^^^^^^
-//│ Flowed:
-//│   foo¹.test‹?›
-//│ where
-//│     foo¹  <~  A
-//│     foo¹  ~>  {test: ⋅test⁰}
+//│ Resolved targets for foo.test: 
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
 
 
@@ -326,65 +636,159 @@ let foo =
   module A with
     fun test(a) = new A
   (new A).test
-//│ Flowed:
-//│   let foo²,
-//│   foo² = {
-//│     class A {
-//│       
-//│     },
-//│     module A {
-//│       fun test³(a³) ‹flow:test³› = new A¹
-//│     },
-//│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app⁸› }
-//│   }
-//│ where
-//│     foo²  <~  ((a⁴) -> A)
-//│     flow:test³  <~  ((a⁴) -> A)
-//│     flow:test³  ->  ⋅test¹
+//│ Typing producer: { let foo; foo = { Cls A { }; Mod A { fun member:test(a) = new member:A; }; new member:A.test }; }
+//│ | Typing producer: { Cls A { }; Mod A { fun member:test(a) = new member:A; }; new member:A.test }
+//│ | | Typing producer: { }
+//│ | | | Typing producer: undefined
+//│ | | | : ()
+//│ | | : ()
+//│ | | Class member type: ¿Cls A { }?
+//│ | | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/‹block›
+//│ | | Typing producer: { fun member:test(a) = new member:A; }
+//│ | | | Typing producer: new member:A
+//│ | | | : A
+//│ | | | Typing producer: undefined
+//│ | | | : ()
+//│ | | : ()
+//│ | | Typing producer: new member:A.test
+//│ | | | Selection new member:A.test None
+//│ | | | Typing producer: new member:A
+//│ | | | : A
+//│ | | : ⋅test‹816›
+//│ | : ⋅test‹816›
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ¿Cls A { }? <: flow:A‹817› (from { Cls A { }; Mod A { fun member:test(a) = new member:A; }; new member:A.test })
+//│ | Solving: ¿Cls A { }? <: flow:A‹817›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: ((a‹818›) -> A) <: flow:test‹819› (from { fun member:test(a) = new member:A; })
+//│ | Solving: ((a‹818›) -> A) <: flow:test‹819›   (Fun, Flow)   []
+//│ | New flow: ((a‹818›) -> A) ~> flow:test‹819›
+//│ Handling constraint: A <: {test: ⋅test‹816›} (from new member:A.test)
+//│ | Solving: A <: {test: ⋅test‹816›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅test)
+//│ | Found companion member member:test
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/‹block›,List())
+//│ | Access path: Some(Ref(member:A))
+//│ | Solving: flow:test‹819› <: ⋅test‹816›   (Flow, Flow)   []
+//│ | New flow: flow:test‹819› ~> ⋅test‹816›
+//│ | Solving: ((a‹818›) -> A) <: ⋅test‹816›   (Fun, Flow)   []
+//│ | New flow: ((a‹818›) -> A) ~> ⋅test‹816›
+//│ Handling constraint: ⋅test‹816› <: foo‹807› (from { let foo; foo = { Cls A { }; Mod A { fun member:test(a) = new member:A; }; new member:A.test }; })
+//│ | Solving: ⋅test‹816› <: foo‹807›   (Flow, Flow)   []
+//│ | New flow: ⋅test‹816› ~> foo‹807›
+//│ | Solving: ((a‹818›) -> A) <: foo‹807›   (Fun, Flow)   []
+//│ | New flow: ((a‹818›) -> A) ~> foo‹807›
+//│ Resolved targets for new member:A.test: CompanionMember(Ref(member:A),member:test)
+//│ Expansion: member:A.test‹member:test›(new member:A)
 //│ foo = A
 
 :e
 :re
 foo.test
+//│ Typing producer: { foo.test }
+//│ | Typing producer: foo.test
+//│ | | Selection foo.test None
+//│ | | Typing producer: foo
+//│ | | : foo‹807›
+//│ | : ⋅test‹825›
+//│ : ⋅test‹825›
+//│ Handling constraint: foo‹807› <: {test: ⋅test‹825›} (from foo.test)
+//│ | Solving: foo‹807› <: {test: ⋅test‹825›}   (Flow, Sel)   []
+//│ | New flow: foo‹807› ~> {test: ⋅test‹825›}
+//│ | Solving: ((a‹818›) -> A) <: {test: ⋅test‹825›}   (Fun, Sel)   []
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.348: 	foo.test
+//│ ║  l.689: 	foo.test
 //│ ║         	^^^^^^^^
 //│ ╙── Type `((a‹818›) -> A)` does not contain member 'test'
-//│ Flowed:
-//│   foo².test‹?›
-//│ where
-//│     foo²  <~  ((a⁴) -> A)
-//│     foo²  ~>  {test: ⋅test²}
+//│ Resolved targets for foo.test: 
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
 
 
 class CC(val x: Int)
 module CC with
   fun getX(self: CC) = self.x
+//│ Typing producer: { Cls CCParamList(‹›,List(Param(‹val›,x,Some(Ref(member:Int)),Modulefulness(None))),None) { val member:x = x; }; Mod CC { fun member:getX(self: member:CC) = self.x; }; }
+//│ | Typing producer: { val member:x = x; }
+//│ | | Typing producer: x
+//│ | | : x‹834›
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: member:Int
+//│ | : flow:Int‹732›
+//│ | Class member type: ((type class:Int) -> CC(...flow:Int‹732›))
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24
+//│ | Typing producer: { fun member:getX(self: member:CC) = self.x; }
+//│ | | Typing producer: self.x
+//│ | | | Selection self.x None
+//│ | | | Typing producer: self
+//│ | | | : self‹839›
+//│ | | : ⋅x‹841›
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: x‹834› <: flow:x‹844› (from { val member:x = x; })
+//│ | Solving: x‹834› <: flow:x‹844›   (Flow, Flow)   []
+//│ | New flow: x‹834› ~> flow:x‹844›
+//│ Handling constraint: ((type class:Int) -> CC(...flow:Int‹732›)) <: flow:CC‹846› (from { Cls CCParamList(‹›,List(Param(‹val›,x,Some(Ref(member:Int)),Modulefulness(None))),None) { val member:x = x; }; Mod CC { fun member:getX(self: member:CC) = self.x; }; })
+//│ | Solving: ((type class:Int) -> CC(...flow:Int‹732›)) <: flow:CC‹846›   (Fun, Flow)   []
+//│ | New flow: ((type class:Int) -> CC(...flow:Int‹732›)) ~> flow:CC‹846›
+//│ Handling constraint: self‹839› <: {x: ⋅x‹841›} (from self.x)
+//│ | Solving: self‹839› <: {x: ⋅x‹841›}   (Flow, Sel)   []
+//│ | New flow: self‹839› ~> {x: ⋅x‹841›}
+//│ Handling constraint: ((type class:CC) -> ⋅x‹841›) <: flow:getX‹848› (from { fun member:getX(self: member:CC) = self.x; })
+//│ | Solving: ((type class:CC) -> ⋅x‹841›) <: flow:getX‹848›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅x‹841›) ~> flow:getX‹848›
+//│ Resolved targets for self.x: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.363: 	  fun getX(self: CC) = self.x
+//│ ║  l.711: 	  fun getX(self: CC) = self.x
 //│ ╙──       	                       ^^^^^^
-//│ Flowed:
-//│   class CC(valx⁸: Int⁰) {
-//│     val x⁹ ‹flow:x¹› = x⁸
-//│   },
-//│   module CC {
-//│     fun getX¹(self¹: CC¹) ‹flow:getX¹› = self¹.x‹?›
-//│   }
-//│ where
-//│     x⁸  ->  flow:x¹
-//│     self¹  ~>  {x: ⋅x¹}
-//│     flow:getX¹  <~  ((type CC) -> ⋅x¹)
 
 :fixme // TODO: handle lifted class defs
 CC(123).getX
-//│ Flowed:
-//│   CC¹(123)‹app⁹›.getX‹?›{ ~> CC¹.getX¹(CC¹(123)‹app⁹›)‹app¹⁰› }
-//│ where
-//│     app⁹  <~  CC...flow:Int‹732›
-//│     app⁹  ~>  {getX: ⋅getX⁰}
+//│ Typing producer: { member:CC(123).getX }
+//│ | Typing producer: member:CC(123).getX
+//│ | | Selection member:CC(123).getX None
+//│ | | Typing producer: member:CC(123)
+//│ | | | Typing producer: [123]
+//│ | | | | Typing producer: 123
+//│ | | | | : 123
+//│ | | | : [123]
+//│ | | | Typing producer: member:CC
+//│ | | | : flow:CC‹846›
+//│ | | : app‹853›
+//│ | : ⋅getX‹854›
+//│ : ⋅getX‹854›
+//│ Handling constraint: flow:CC‹846› <: ((123) -> app‹853›) (from member:CC(123))
+//│ | Solving: flow:CC‹846› <: ((123) -> app‹853›)   (Flow, Fun)   []
+//│ | New flow: flow:CC‹846› ~> ((123) -> app‹853›)
+//│ | Solving: ((type class:Int) -> CC(...flow:Int‹732›)) <: ((123) -> app‹853›)   (Fun, Fun)   []
+//│ | Solving: [123] <: [type class:Int]   (Tup, Tup)   []
+//│ | Solving: 123 <: type class:Int   (Ctor, Typ)   []
+//│ | /!\ Unhandled constraint /!\
+//│ | Solving: CC(...flow:Int‹732›) <: app‹853›   (Ctor, Flow)   []
+//│ | New flow: CC(...flow:Int‹732›) ~> app‹853›
+//│ Handling constraint: app‹853› <: {getX: ⋅getX‹854›} (from member:CC(123).getX)
+//│ | Solving: app‹853› <: {getX: ⋅getX‹854›}   (Flow, Sel)   []
+//│ | New flow: app‹853› ~> {getX: ⋅getX‹854›}
+//│ | Solving: CC(...flow:Int‹732›) <: {getX: ⋅getX‹854›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅getX)
+//│ | Found companion member member:getX
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24,List())
+//│ | Access path: Some(Ref(member:CC))
+//│ | Solving: flow:getX‹848› <: ⋅getX‹854›   (Flow, Flow)   []
+//│ | New flow: flow:getX‹848› ~> ⋅getX‹854›
+//│ | Solving: ((type class:CC) -> ⋅x‹841›) <: ⋅getX‹854›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅x‹841›) ~> ⋅getX‹854›
+//│ Resolved targets for member:CC(123).getX: CompanionMember(Ref(member:CC),member:getX)
+//│ Expansion: member:CC.getX‹member:getX›(member:CC(123))
 //│ ═══[RUNTIME ERROR] TypeError: CC2.getX is not a function
 
 
@@ -392,28 +796,64 @@ CC(123).getX
 class CC
 module CC with
   fun oops(x: CC) = x.oops
+//│ Typing producer: { Cls CC { }; Mod CC { fun member:oops(x: member:CC) = x.oops; }; }
+//│ | Typing producer: { }
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Class member type: ¿Cls CC { }?
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24/block:25/block:26
+//│ | Typing producer: { fun member:oops(x: member:CC) = x.oops; }
+//│ | | Typing producer: x.oops
+//│ | | | Selection x.oops None
+//│ | | | Typing producer: x
+//│ | | | : x‹866›
+//│ | | : ⋅oops‹868›
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: ¿Cls CC { }? <: flow:CC‹871› (from { Cls CC { }; Mod CC { fun member:oops(x: member:CC) = x.oops; }; })
+//│ | Solving: ¿Cls CC { }? <: flow:CC‹871›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: x‹866› <: {oops: ⋅oops‹868›} (from x.oops)
+//│ | Solving: x‹866› <: {oops: ⋅oops‹868›}   (Flow, Sel)   []
+//│ | New flow: x‹866› ~> {oops: ⋅oops‹868›}
+//│ Handling constraint: ((type class:CC) -> ⋅oops‹868›) <: flow:oops‹873› (from { fun member:oops(x: member:CC) = x.oops; })
+//│ | Solving: ((type class:CC) -> ⋅oops‹868›) <: flow:oops‹873›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅oops‹868›) ~> flow:oops‹873›
+//│ Resolved targets for x.oops: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.394: 	  fun oops(x: CC) = x.oops
+//│ ║  l.798: 	  fun oops(x: CC) = x.oops
 //│ ╙──       	                    ^^^^^^
-//│ Flowed:
-//│   class CC {
-//│     
-//│   },
-//│   module CC {
-//│     fun oops⁰(x¹⁰: CC²) ‹flow:oops⁰› = x¹⁰.oops‹?›
-//│   }
-//│ where
-//│     x¹⁰  ~>  {oops: ⋅oops⁰}
-//│     flow:oops⁰  <~  ((type CC) -> ⋅oops⁰)
 
 :re
 new CC().oops
-//│ Flowed:
-//│   new CC²().oops‹?›{ ~> CC².oops⁰(new CC²())‹app¹¹› }
-//│ where
-//│     
+//│ Typing producer: { new member:CC().oops }
+//│ | Typing producer: new member:CC().oops
+//│ | | Selection new member:CC().oops None
+//│ | | Typing producer: new member:CC()
+//│ | | | Typing producer: []
+//│ | | | : []
+//│ | | : CC()
+//│ | : ⋅oops‹878›
+//│ : ⋅oops‹878›
+//│ Handling constraint: CC() <: {oops: ⋅oops‹878›} (from new member:CC().oops)
+//│ | Solving: CC() <: {oops: ⋅oops‹878›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅oops)
+//│ | Found companion member member:oops
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24/block:25/block:26,List())
+//│ | Access path: Some(Ref(member:CC))
+//│ | Solving: flow:oops‹873› <: ⋅oops‹878›   (Flow, Flow)   []
+//│ | New flow: flow:oops‹873› ~> ⋅oops‹878›
+//│ | Solving: ((type class:CC) -> ⋅oops‹868›) <: ⋅oops‹878›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅oops‹868›) ~> ⋅oops‹878›
+//│ Resolved targets for new member:CC().oops: CompanionMember(Ref(member:CC),member:oops)
+//│ Expansion: member:CC.oops‹member:oops›(new member:CC())
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
 
@@ -421,28 +861,65 @@ class CC with
   val okay = 123
 module CC with
   fun okay(x: CC) = x.okay
+//│ Typing producer: { Cls CC { method val member:okay = 123; }; Mod CC { fun member:okay(x: member:CC) = x.okay; }; }
+//│ | Typing producer: { method val member:okay = 123; }
+//│ | | Typing producer: 123
+//│ | | : 123
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Class member type: ¿Cls CC { method val member:okay = 123; }?
+//│ | Module: top-level/import:Prelude/block:1/block:2/block:3/block:4/block:5/block:6/block:7/block:8/block:9/block:10/block:11/block:12/block:13/block:14/block:15/block:16/block:17/block:18/block:19/block:20/block:21/block:22/block:23/block:24/block:25/block:26/block:27/block:28
+//│ | Typing producer: { fun member:okay(x: member:CC) = x.okay; }
+//│ | | Typing producer: x.okay
+//│ | | | Selection x.okay None
+//│ | | | Typing producer: x
+//│ | | | : x‹894›
+//│ | | : ⋅okay‹896›
+//│ | | Typing producer: undefined
+//│ | | : ()
+//│ | : ()
+//│ | Typing producer: undefined
+//│ | : ()
+//│ : ()
+//│ Handling constraint: 123 <: flow:okay‹899› (from { method val member:okay = 123; })
+//│ | Solving: 123 <: flow:okay‹899›   (Ctor, Flow)   []
+//│ | New flow: 123 ~> flow:okay‹899›
+//│ Handling constraint: ¿Cls CC { method val member:okay = 123; }? <: flow:CC‹900› (from { Cls CC { method val member:okay = 123; }; Mod CC { fun member:okay(x: member:CC) = x.okay; }; })
+//│ | Solving: ¿Cls CC { method val member:okay = 123; }? <: flow:CC‹900›   (Unknown, Flow)   []
+//│ | /!\ Unhandled constraint /!\
+//│ Handling constraint: x‹894› <: {okay: ⋅okay‹896›} (from x.okay)
+//│ | Solving: x‹894› <: {okay: ⋅okay‹896›}   (Flow, Sel)   []
+//│ | New flow: x‹894› ~> {okay: ⋅okay‹896›}
+//│ Handling constraint: ((type class:CC) -> ⋅okay‹896›) <: flow:okay‹902› (from { fun member:okay(x: member:CC) = x.okay; })
+//│ | Solving: ((type class:CC) -> ⋅okay‹896›) <: flow:okay‹902›   (Fun, Flow)   []
+//│ | New flow: ((type class:CC) -> ⋅okay‹896›) ~> flow:okay‹902›
+//│ Resolved targets for x.okay: 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.423: 	  fun okay(x: CC) = x.okay
+//│ ║  l.863: 	  fun okay(x: CC) = x.okay
 //│ ╙──       	                    ^^^^^^
-//│ Flowed:
-//│   class CC {
-//│     val okay⁰ ‹flow:okay⁰› = 123
-//│   },
-//│   module CC {
-//│     fun okay¹(x¹¹: CC³) ‹flow:okay¹› = x¹¹.okay‹?›
-//│   }
-//│ where
-//│     x¹¹  ~>  {okay: ⋅okay⁰}
-//│     flow:okay⁰  <~  123
-//│     flow:okay¹  <~  ((type CC) -> ⋅okay⁰)
 
 new CC().okay
-//│ Flowed:
-//│   new CC³().okay⁰
-//│ where
-//│     
+//│ Typing producer: { new member:CC().okay }
+//│ | Typing producer: new member:CC().okay
+//│ | | Selection new member:CC().okay None
+//│ | | Typing producer: new member:CC()
+//│ | | | Typing producer: []
+//│ | | | : []
+//│ | | : CC()
+//│ | : ⋅okay‹907›
+//│ : ⋅okay‹907›
+//│ Handling constraint: CC() <: {okay: ⋅okay‹907›} (from new member:CC().okay)
+//│ | Solving: CC() <: {okay: ⋅okay‹907›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅okay)
+//│ | Found immediate member member:okay
+//│ | Solving: flow:okay‹899› <: ⋅okay‹907›   (Flow, Flow)   []
+//│ | New flow: flow:okay‹899› ~> ⋅okay‹907›
+//│ | Solving: 123 <: ⋅okay‹907›   (Ctor, Flow)   []
+//│ | New flow: 123 ~> ⋅okay‹907›
+//│ Resolved targets for new member:CC().okay: ObjectMember(member:okay)
 //│ = 123
 
 

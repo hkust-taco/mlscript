@@ -11,7 +11,6 @@ import hkmc2.utils.*
 import Elaborator.State
 import Tree.Ident
 import hkmc2.utils.SymbolSubst
-import hkmc2.typing.Type
 
 
 abstract class Symbol(using State) extends Located:
@@ -205,7 +204,8 @@ class BuiltinSymbol
   def subst(using sub: SymbolSubst): BuiltinSymbol = sub.mapBuiltInSym(this)
 
   lazy val signature : semantics.flow.Producer =
-    import Type.*
+    import typing.Type
+    import typing.Type.*
     val binaryType : Type = Fun(args = Ls(Top, Top), ret = Top, eff = N)
     val unaryType : Type = Fun(args = Ls(Top), ret = Top, eff = N)
     val nullaryType : Type = Top
