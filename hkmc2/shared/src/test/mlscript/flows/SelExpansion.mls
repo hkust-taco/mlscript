@@ -14,7 +14,7 @@ class Foo with
 module Foo with
   fun foo(x: Foo) = x.a
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.15: 	  fun foo(x: Foo) = x.a
 //│ ╙──      	                    ^^^
@@ -80,7 +80,7 @@ fun id(x) = x
 
 id(f).foo
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.81: 	id(f).foo
 //│ ╙──      	^^^^^^^^^
@@ -116,7 +116,7 @@ let id(x) = x
 
 id(f).foo
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.117: 	id(f).foo
 //│ ╙──       	^^^^^^^^^
@@ -210,7 +210,7 @@ test(f)
 fun test(g) = g.foo
 test(f)
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.210: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
@@ -245,7 +245,7 @@ module AA with
     module CC with
       fun getX(self: CC) = self.x
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.246: 	      fun getX(self: CC) = self.x
 //│ ╙──       	                           ^^^^^^
@@ -362,7 +362,7 @@ class CC(val x: Int)
 module CC with
   fun getX(self: CC) = self.x
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.363: 	  fun getX(self: CC) = self.x
 //│ ╙──       	                       ^^^^^^
@@ -393,7 +393,7 @@ class CC
 module CC with
   fun oops(x: CC) = x.oops
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.394: 	  fun oops(x: CC) = x.oops
 //│ ╙──       	                    ^^^^^^
@@ -422,7 +422,7 @@ class CC with
 module CC with
   fun okay(x: CC) = x.okay
 //│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:244)
+//│ FAILURE LOCATION: expandTerms (FlowAnalysis.scala:237)
 //│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.423: 	  fun okay(x: CC) = x.okay
 //│ ╙──       	                    ^^^^^^

@@ -209,20 +209,15 @@ class BuiltinSymbol
     val binaryType : Type = Fun(args = Ls(Top, Top), ret = Top, eff = N)
     val unaryType : Type = Fun(args = Ls(Top), ret = Top, eff = N)
     val nullaryType : Type = Top
-    val typ =
-      Union(
-      Union(
-      if (binary) then binaryType else Bot,
-      if (unary) then unaryType else Bot,
-      ),
-      if (nullary) then nullaryType else Bot,
-      )
-      // (binary, unary, nullary) match
-      // case (true, true, true) => Union()
-      // case (true, _, _) => Fun(args = Ls(Top, Top), ret = Top, eff = N)
-      // case (_, true, _) => Fun(args = Ls(Top), ret = Top, eff = N)
-      // case (_, _, true) => Top
-      // case _ => Bot
+    val typ = (binary, unary, nullary) match
+      case (true, true, true) => Union(binaryType, Union(unaryType, nullaryType))
+      case (true, true, _) => Union(binaryType, unaryType)
+      case (true, _, true) => Union(binaryType, nullaryType)
+      case (_, true, true) => Union(unaryType, nullaryType)
+      case (true, _, _) => binaryType
+      case (_, true, _) => unaryType
+      case (_, _, true) => nullaryType
+      case _ => Bot
     semantics.flow.Producer.Typ(typ)
 
 

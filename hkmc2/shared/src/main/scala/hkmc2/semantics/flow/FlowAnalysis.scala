@@ -301,7 +301,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case S(d) => 
         d.body.members.get(nme) match
         case S(memb: BlockMemberSymbol) =>
-          // S((d.body.blk, memb))
           sel.originalCtx
             .flatMap(ctx => findAccessPath(ctx, d.path, ms))
             .map(x => (x, memb))
@@ -316,7 +315,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case S(d) => 
             d.body.members.get(nme) match
             case S(memb: BlockMemberSymbol) =>
-              // S((d.body.blk, memb))
               sel.originalCtx
                 .flatMap(ctx => findAccessPath(ctx, d.path, comp))
                 .map(x => (x, memb))
