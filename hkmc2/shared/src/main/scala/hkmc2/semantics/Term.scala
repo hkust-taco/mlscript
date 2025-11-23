@@ -406,7 +406,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case LetDecl(sym, annotations) => Set(sym)
     case termdef: TermDefinition => Set(termdef.sym)
     case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
-    case imp: Import => Set(imp.sym)
+    // case imp: Import => Set(imp.sym)
     // IfLikes get their own scope
     case _: (IfLike | SynthIf) => Set.empty
     // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
