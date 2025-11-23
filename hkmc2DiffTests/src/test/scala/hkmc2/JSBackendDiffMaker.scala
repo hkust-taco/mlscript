@@ -110,7 +110,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val lowered0 = low.program(blk)
       
       // TODO: remove mutation
-      var toplvlDefinedVars = Set.empty[Symbol]
+      var toplvlDefinedVars = collection.Set.empty[Symbol]
       def assignResSym(b: Block, toplvl: Boolean): Block =
         b.mapTail:
           case e: End =>
