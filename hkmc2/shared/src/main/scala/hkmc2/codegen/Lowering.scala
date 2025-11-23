@@ -970,7 +970,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
-    val blk = block(funs ::: rest, R(main.res))(ImplctRet)(using LoweringCtx.empty)
+    val blk =
+      inScopedBlock(main.stats.flatMap(_.definedSyms).toSet)(using LoweringCtx.empty):
+        block(funs ::: rest, R(main.res))(ImplctRet)
     
     val desug = LambdaRewriter.desugar(blk)
     

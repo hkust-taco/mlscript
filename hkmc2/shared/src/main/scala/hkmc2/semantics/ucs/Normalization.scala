@@ -329,7 +329,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       res
     // The symbol for the loop label if the term is a `while`.
     lazy val loopLabel = new TempSymbol(t)
-    lazy val f = new BlockMemberSymbol("while", Nil, false)
+    lazy val f =
+      val res = new BlockMemberSymbol("while", Nil, false)
+      outerCtx.collectScopedSym(res)
+      res
     val normalized = tl.scoped("ucs:normalize"):
       normalize(inputSplit)(using VarSet())
     tl.scoped("ucs:normalized"):
@@ -400,6 +403,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         if config.rewriteWhileLoops then
           val loopResult = TempSymbol(N)
           val isReturned = TempSymbol(N)
+          outerCtx.collectScopedSym(loopResult, isReturned)
           val loopEnd: Path =
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
           val blk = blockBuilder

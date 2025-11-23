@@ -1,44 +1,15 @@
 :js
 
 
-// only the `let x` should be declared in the top level of repl?
-// now `y` is declared in the "correct" place, but not `tmp` because `tmp` is
-// handled by `blockPreamble`
-:showRepl
 :sjs
 let x =
   let y = 1 + 3 * 4
   y + 4
 //│ JS (unsanitized):
-//│ let tmp; let x; let y; tmp = 3 * 4; y = 1 + tmp; x = y + 4;
-//│ REPL> Sending: block$res1 = undefined
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Sending: let tmp;let x;try { let y; tmp = 3 * 4; y = 1 + tmp; x = y + 4; block$res1 = undefined; } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ REPL> Parsed:
-//│ >  undefined
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(block$res1)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  undefined
-//│ >  Unit {}
-//│ REPL> Sending: try { runtime.checkCall(runtime.printRaw(x)) } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
-//│ REPL> Collected:
-//│ >  17
-//│ >  Unit {}
-//│ REPL> Parsed:
-//│ >  17
-//│ >  Unit {}
+//│ let x, y, tmp; /** scoped **/ tmp = 3 * 4; y = 1 + tmp; x = y + 4;
 //│ x = 17
 
 
-
-
-// `a` and `b` is declared in the correct places
 :sjs
 fun f() =
   if true then
@@ -48,21 +19,19 @@ fun f() =
     let b = 5
     b + 9
 //│ JS (unsanitized):
-//│ let f;
+//│ let f; /** scoped **/
 //│ f = function f() {
-//│   let scrut;
+//│   let while1; /** scoped **/
+//│   let scrut, a, b; /** scoped **/
 //│   scrut = true;
-//│   if (scrut === true) { let a; a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
+//│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
 
 
 
-
-
-
-// `let a` is declared in the correct place, but not `lambda`
+// `let a` is declared in the correct place,
+// but not `lambda` (because this is created in `LambdaRewriter`, a later pass)
 // NOTE: `tmp1` and `tmp2` should indeed be declared in the top level of the function body
-// but not `lambda`
 :sjs
 fun g(x, y, z) =
   3 + 4 * if
@@ -72,10 +41,12 @@ fun g(x, y, z) =
       let a = 1
       (_ + a)
 //│ JS (unsanitized):
-//│ let g;
+//│ let g; /** scoped **/
 //│ g = function g(x1, y1, z) {
-//│   let tmp1, tmp2, lambda;
+//│   let lambda;
+//│   let while1, tmp1, tmp2; /** scoped **/
 //│   split_root$: {
+//│     let a; /** scoped **/
 //│     split_1$: {
 //│       if (x1 === true) {
 //│         break split_1$
@@ -84,7 +55,6 @@ fun g(x, y, z) =
 //│           break split_1$
 //│         } else {
 //│           if (z === true) {
-//│             let a;
 //│             a = 1;
 //│             lambda = (undefined, function (_0) {
 //│               return _0 + a
@@ -104,22 +74,173 @@ fun g(x, y, z) =
 //│ };
 
 
-// TODO:
-:e
 module M
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: (module:M,Scope:
-//│   parent = N
-//│   curThis = S of S of globalThis:globalThis
-//│   bindings = HashMap($block$res -> block$res4, class:M -> M1, $block$res -> block$res2, $runtime -> runtime, member:g -> g, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res, x -> x, y -> y, member:Predef -> Predef, $block$res -> block$res3, $block$res -> block$res1, $tmp -> tmp, member:f -> f, module:M -> M))
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.codegen.js.JSBuilder.go$1$$anonfun$2(JSBuilder.scala:556)
-//│ 	at: hkmc2.codegen.js.JSBuilder.go$1$$anonfun$adapted$1(JSBuilder.scala:560)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.codegen.js.JSBuilder.go$1(JSBuilder.scala:560)
-//│ 	at: hkmc2.codegen.js.JSBuilder.reserveNames(JSBuilder.scala:561)
-//│ 	at: hkmc2.codegen.js.JSBuilder.worksheet(JSBuilder.scala:589)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:155)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+data class A(a, b)
+data class B(a, b)
+data object Nil
 
+
+
+:sjs
+fun f() = if x is
+  A(a, b) and a > b then true
+  B(c, d) then false
+//│ JS (unsanitized):
+//│ let f1; /** scoped **/
+//│ f1 = function f() {
+//│   let while1, tmp1; /** scoped **/
+//│   split_root$: {
+//│     let a, b, scrut, c, d, argument0$, argument1$; /** scoped **/
+//│     split_default$: {
+//│       if (x instanceof A.class) {
+//│         argument0$ = x.a;
+//│         argument1$ = x.b;
+//│         b = argument1$;
+//│         a = argument0$;
+//│         scrut = a > b;
+//│         if (scrut === true) {
+//│           tmp1 = true;
+//│           break split_root$
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else if (x instanceof B.class) {
+//│         argument0$ = x.a;
+//│         argument1$ = x.b;
+//│         d = argument1$;
+//│         c = argument0$;
+//│         tmp1 = false;
+//│         break split_root$
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp1
+//│ };
+
+
+:sjs
+fun f() = if A(1, Nil) is
+  A(1, Nil) then 3
+//│ JS (unsanitized):
+//│ let f2; /** scoped **/
+//│ f2 = function f() {
+//│   let while1, tmp1; /** scoped **/
+//│   split_root$: {
+//│     let scrut, argument0$, argument1$; /** scoped **/
+//│     split_default$: {
+//│       scrut = A(1, Nil);
+//│       if (scrut instanceof A.class) {
+//│         argument0$ = scrut.a;
+//│         argument1$ = scrut.b;
+//│         if (argument0$ === 1) {
+//│           if (argument1$ instanceof Nil.class) {
+//│             tmp1 = 3;
+//│             break split_root$
+//│           } else {
+//│             break split_default$
+//│           }
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp1
+//│ };
+
+
+
+:sjs
+fun f(x) =
+  x = while x is
+    A(a, _) then a()
+    B(a, _) then a()
+  else
+    x()
+  x
+//│ JS (unsanitized):
+//│ let f3; /** scoped **/
+//│ f3 = function f(x1) {
+//│   let while1, tmp1, tmp2, tmp3; /** scoped **/
+//│   while1 = (undefined, function () {
+//│     let a, a1, argument0$, argument1$; /** scoped **/
+//│     if (x1 instanceof A.class) {
+//│       argument0$ = x1.a;
+//│       argument1$ = x1.b;
+//│       a = argument0$;
+//│       tmp1 = runtime.safeCall(a());
+//│       return while1()
+//│     } else if (x1 instanceof B.class) {
+//│       argument0$ = x1.a;
+//│       argument1$ = x1.b;
+//│       a1 = argument0$;
+//│       tmp1 = runtime.safeCall(a1());
+//│       return while1()
+//│     } else {
+//│       tmp1 = runtime.safeCall(x1());
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 } else { x1 = tmp1; return x1 }
+//│ };
+
+
+
+:sjs
+fun f() =
+  let y = x + 1
+  while y is
+    A(z, a) and
+      false and true do
+        set y = z + 1
+      else
+        y = a
+//│ JS (unsanitized):
+//│ let f4; /** scoped **/
+//│ f4 = function f() {
+//│   let y1, while1, tmp1, tmp2, tmp3; /** scoped **/
+//│   y1 = x + 1;
+//│   while1 = (undefined, function () {
+//│     split_root$: {
+//│       let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
+//│       split_1$: {
+//│         if (y1 instanceof A.class) {
+//│           argument0$ = y1.a;
+//│           argument1$ = y1.b;
+//│           a = argument1$;
+//│           z = argument0$;
+//│           scrut = false;
+//│           if (scrut === true) {
+//│             scrut1 = true;
+//│             if (scrut1 === true) {
+//│               tmp4 = z + 1;
+//│               y1 = tmp4;
+//│               tmp1 = runtime.Unit;
+//│               return while1()
+//│             } else {
+//│               break split_1$
+//│             }
+//│           } else {
+//│             break split_1$
+//│           }
+//│         } else {
+//│           tmp1 = runtime.Unit;
+//│         }
+//│       }
+//│       y1 = a;
+//│       tmp1 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
+//│ };
