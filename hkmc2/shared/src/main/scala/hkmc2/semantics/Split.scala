@@ -32,7 +32,7 @@ enum Split extends AutoLocated with ProductWithTail:
         locally:
           pattern match
             case c: FlatPattern.ClassLike => c.arguments.fold(Set.empty)(_.unzip._1)
-            case FlatPattern.Tuple(size, inf) => Set.empty // TODO:
+            case FlatPattern.Tuple(size, inf) => Set.empty // TODO: seems to be ok to leave this as empty?
             case FlatPattern.Record(entries) => entries.unzip._2
             case FlatPattern.Lit(_) => Set.empty
     case Let(sym, term, tail) => term.definedSyms ++ tail.definedSyms + sym

@@ -243,3 +243,35 @@ fun f() =
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
 //│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
 //│ };
+
+
+:sjs
+fun f(x, y) =
+  while x && y do
+    f(0, 0) + 4
+//│ JS (unsanitized):
+//│ let f5; /** scoped **/
+//│ f5 = function f(x1, y1) {
+//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   while1 = (undefined, function () {
+//│     let scrut, lambda, tmp4; /** scoped **/
+//│     lambda = (undefined, function () {
+//│       return y1
+//│     });
+//│     scrut = runtime.short_and(x1, lambda);
+//│     if (scrut === true) {
+//│       tmp4 = f5(0, 0);
+//│       tmp1 = tmp4 + 4;
+//│       return while1()
+//│     } else {
+//│       tmp1 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp2 = while1();
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
+//│ };
+
+
+

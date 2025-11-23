@@ -401,14 +401,48 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case DefineVar(sym, rhs) => DefineVar(sym, rhs.mkClone)
 
   lazy val definedSyms: Set[Symbol] = this match
-    case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty
-    case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms)
-    case LetDecl(sym, annotations) => Set(sym)
-    case termdef: TermDefinition => Set(termdef.sym)
-    case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
-    // case imp: Import => Set(imp.sym)
+    // case Error => 
+    // case UnitVal() =>
+    // case Missing =>
+    // case Lit(lit) =>
+    // case Ref(tree, refNum, typ) =>
+    // case Import(sym, str, file) =>
+    case Resolved(typ, _) => typ.definedSyms
+    case App(l, r) => l.definedSyms ++ r.definedSyms
+    case TyApp(l, targs) => targs.foldLeft(l.definedSyms)(_ ++ _.definedSyms)
+    case Sel(s, _) => s.definedSyms
+    case SynthSel(s, _) => s.definedSyms
+    case SelProj(s, c, _) => s.definedSyms ++ c.definedSyms
+    case DynSel(prefix, fld, _) => prefix.definedSyms ++ fld.definedSyms
+    case Tup(tree) => tree
+      .flatMap:
+        case Fld(flags, term, asc) => term.definedSyms ++ asc.fold(Set.empty)(_.definedSyms)
+        case Spd(eager, term) => term.definedSyms
+      .toSet
+    case Mut(underlying) => underlying.definedSyms
+    case CtxTup(tree) => tree
+      .flatMap:
+        case Fld(flags, term, asc) => term.definedSyms ++ asc.fold(Set.empty)(_.definedSyms)
+        case Spd(eager, term) => term.definedSyms
+      .toSet
     // IfLikes get their own scope
-    case _: (IfLike | SynthIf) => Set.empty
+    case IfLike(kw, split) => Set.empty
+    case SynthIf(split) => Set.empty
+    case Lam(params, body) => Set.empty
+    case FunTy(lhs, rhs, eff) => lhs.definedSyms ++ rhs.definedSyms ++ eff.fold(Set.empty)(_.definedSyms)
+    case Forall(tvs, outer, body) => body.definedSyms
+    case WildcardTy(in, out) => in.fold(Set.empty)(_.definedSyms ++ out.fold(Set.empty)(_.definedSyms))
+    case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms)
+    case Rcd(mut, stats) => stats.foldLeft(Set.empty)(_ ++ _.definedSyms)
+    case Quoted(body) => body.definedSyms
+    case Unquoted(body) => body.definedSyms
+    case New(typ, args, _) => args.foldLeft(typ.definedSyms)(_ ++ _.definedSyms)
+    case DynNew(cls, args) => args.foldLeft(cls.definedSyms)(_ ++ _.definedSyms)
+    case Asc(term, ty) => term.definedSyms ++ ty.definedSyms
+    case CompType(lhs, rhs, pol) => lhs.definedSyms ++ rhs.definedSyms
+    case Neg(rhs) => rhs.definedSyms
+    case Region(name, body) => body.definedSyms
+    case RegRef(reg, value) => reg.definedSyms ++ value.definedSyms
     // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
     // And including the sym here may cause error for delayed init in a function:
     // ```
@@ -419,9 +453,45 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     // the definedSyms of the rhs of these two cases should be included
     // because those needs to be included in the
     // same current `Scoped` anyway
-    case DefineVar(_, rhs) => rhs.definedSyms
     case Assgn(_, rhs) => rhs.definedSyms
-    case _ => Set.empty // TODO: add other cases
+    case DefineVar(_, rhs) => rhs.definedSyms
+    case Drop(trm) => trm.definedSyms
+    case Deref(ref) => ref.definedSyms
+    case SetRef(ref, value) => ref.definedSyms ++ value.definedSyms
+    case Ret(result) => result.definedSyms
+    case Throw(result) => result.definedSyms
+    case Try(body, finallyDo) => body.definedSyms ++ finallyDo.definedSyms
+    case Annotated(annot, target) => target.definedSyms
+    case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
+      Set.empty // TODO:
+    case LetDecl(sym, annotations) => Set(sym)
+    case RcdField(field, rhs) => field.definedSyms ++ rhs.definedSyms
+    case RcdSpread(rcd) => rcd.definedSyms
+    case termdef: TermDefinition => Set(termdef.sym)
+    case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
+    case _ => Set.empty
+    // this match
+    // case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty
+    // case Blk(stats, res) => stats.foldLeft(res.definedSyms)((r, s) => r ++ s.definedSyms)
+    // case LetDecl(sym, annotations) => Set(sym)
+    // case termdef: TermDefinition => Set(termdef.sym)
+    // case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
+    // // case imp: Import => Set(imp.sym)
+    // // IfLikes get their own scope
+    // case _: (IfLike | SynthIf) => Set.empty
+    // // `DefinedVar` is the actual definition of a symbol (not re-assignment), not decl.
+    // // And including the sym here may cause error for delayed init in a function:
+    // // ```
+    // // let x
+    // // fun f() =
+    // //   x = 2
+    // // ```
+    // // the definedSyms of the rhs of these two cases should be included
+    // // because those needs to be included in the
+    // // same current `Scoped` anyway
+    // case DefineVar(_, rhs) => rhs.definedSyms
+    // case Assgn(_, rhs) => rhs.definedSyms
+    // case _ => Set.empty
   
   def describe: Str =
     val desc = this match
