@@ -161,6 +161,14 @@ let x
     .a
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
+:parseOnly
+2
+  |> (a: _)
+.a
+//│ Parsed:
+//│ 	OpApp(IntLit(2),Ident(|>),List(Bra(Round,InfixApp(Ident(a),keyword ':',Under()))))
+//│ 	Sel(Empty(),Ident(a))
+
 
 // :dp
 2
@@ -303,10 +311,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.304: 	2, * 3
+//│ ║  l.312: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.304: 	2, * 3
+//│ ║  l.312: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -359,9 +367,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.359: 	,+
+//│ ║  l.367: 	,+
 //│ ║         	  ^
-//│ ║  l.360: 	ys |> Arr.len
+//│ ║  l.368: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -373,9 +381,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.373: 	+,
+//│ ║  l.381: 	+,
 //│ ║         	  ^
-//│ ║  l.374: 	ys |> Arr.len
+//│ ║  l.382: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -405,20 +413,20 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.406: 	new Foo(1) ,is Foo
+//│ ║  l.414: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.406: 	new Foo(1) ,is Foo
+//│ ║  l.414: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.416: 	is Foo
+//│ ║  l.424: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.416: 	is Foo
+//│ ║  l.424: 	is Foo
 //│ ╙──       	   ^^^
 
 
