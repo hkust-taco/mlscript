@@ -38,13 +38,14 @@ if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :fixme
+:re
 // Order actually matters. But it seems that I didn't implement the error
 // reporting correctly.
 if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
-//│ ║  l.43: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
+//│ ║  l.44: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
 //│ ╙──      	                                            ^
-//│ = "values: 0, 0"
+//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 pattern S(a, pattern Q, b) = [Q as a, Q as b]
 
@@ -57,11 +58,12 @@ f([0, 0])
 // Order actually matters.
 fun f(x) = if x is S(Bit, a, b) then [a, b]
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
-//│ ║  l.58: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
+//│ ║  l.59: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
 //│ ╙──      	                                      ^
 
+:re
 f([0, 0])
-//│ = [0, 0]
+//│ ═══[RUNTIME ERROR] ReferenceError: a is not defined
 
 // The last thing to note is that if there is only one pattern parameter, it
 // will not be put into a tuple.
@@ -84,6 +86,6 @@ if 0 is Q'(Bit) as y then y
 // Similarly, it cannot be written like this:
 if 0 is Q'(Bit, y) then y
 //│ ╔══[ERROR] Expected zero extraction arguments, but found one argument.
-//│ ║  l.85: 	if 0 is Q'(Bit, y) then y
+//│ ║  l.87: 	if 0 is Q'(Bit, y) then y
 //│ ╙──      	           ^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
