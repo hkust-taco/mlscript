@@ -342,7 +342,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
     lazy val assignResult = (r: Result) => Assign(l, r, End())
-    val loopCont = if config.rewriteWhileLoops
+    lazy val loopCont = if config.rewriteWhileLoops
       then Return(Call(Value.Ref(f, N), Nil)(true, true, false), false)
       else Continue(loopLabel)
     val cont =
