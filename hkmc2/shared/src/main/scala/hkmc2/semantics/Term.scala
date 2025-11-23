@@ -1018,10 +1018,10 @@ extends Declaration, AutoLocated:
   // * it is not meant to be maintained afterwards (so it does not need to be copied around).
   var fldSym: Opt[FieldSymbol] = N
   
+  var flow: FlowSymbol = sym
 
-  // * These fields are filled in during flow analysis;
-  // * they are not meant to be maintained afterwards (so they do not need to be copied around).
-  var flow: Opt[FlowSymbol] = N
+  // * This field is filled in during flow analysis;
+  // * it is not meant to be maintained afterwards (so it does not need to be copied around).
   var signType: Opt[Type] = N
   
   def withSignTypeOf(p: Param): this.type =

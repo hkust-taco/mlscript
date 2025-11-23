@@ -161,17 +161,6 @@ let x
     .a
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'a' yielded 'undefined'
 
-:pe
-2
-  |> (a: _)
-.a
-//│ ╔══[PARSE ERROR] Expected an expression; found static selector instead
-//│ ║  l.167: 	.a
-//│ ╙──       	^^
-//│ ╔══[PARSE ERROR] Expected end of input; found static selector instead
-//│ ║  l.167: 	.a
-//│ ╙──       	^^
-
 
 // :dp
 2
@@ -314,10 +303,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.315: 	2, * 3
+//│ ║  l.326: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.315: 	2, * 3
+//│ ║  l.326: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -370,9 +359,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.370: 	,+
+//│ ║  l.381: 	,+
 //│ ║         	  ^
-//│ ║  l.371: 	ys |> Arr.len
+//│ ║  l.382: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -384,9 +373,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.384: 	+,
+//│ ║  l.395: 	+,
 //│ ║         	  ^
-//│ ║  l.385: 	ys |> Arr.len
+//│ ║  l.396: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -416,20 +405,20 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.417: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.417: 	new Foo(1) ,is Foo
+//│ ║  l.428: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.427: 	is Foo
+//│ ║  l.438: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.427: 	is Foo
+//│ ║  l.438: 	is Foo
 //│ ╙──       	   ^^^
 
 

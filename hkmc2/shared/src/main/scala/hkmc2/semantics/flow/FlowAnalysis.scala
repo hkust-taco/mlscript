@@ -185,13 +185,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       Type.Error
   
   def typeParam(p: Param): C =
+  trace[C](s"Typing param: ${p.showDbg}", post = res => s": ${res.showDbg}"):
     p.signType match
     case S(typ) =>
-      val fs = p.sym.asInstanceOf[FlowSymbol]/*FIXME*/
-      fs.producers += ConcreteProd(Vector.empty, P.Typ(typ))
+      log(p.flow.showDbg)
+      p.flow.producers += ConcreteProd(Vector.empty, P.Typ(typ))
       C.Typ(typ)
     case N =>
-      C.Flow(p.sym.asInstanceOf[FlowSymbol]/*FIXME*/)
+      log("nothing")
+      C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
     if ps.restParam.nonEmpty then
