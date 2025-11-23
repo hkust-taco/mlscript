@@ -315,7 +315,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(split, `if`, N, k)
   
-  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using Config, LoweringCtx) =
+  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) = LoweringCtx.nestScoped.givenIn:
     var usesResTmp = false
     // The symbol of the temporary variable for the result of the `if`-like term.
     // It will be created in one of the following situations.
@@ -324,7 +324,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // 3. The term is a `while` and the result is used.
     lazy val l =
       usesResTmp = true
-      new TempSymbol(t)
+      val res = new TempSymbol(t)
+      outerCtx.collectScopedSym(res)
+      res
     // The symbol for the loop label if the term is a `while`.
     lazy val loopLabel = new TempSymbol(t)
     lazy val f = new BlockMemberSymbol("while", Nil, false)
@@ -385,8 +387,12 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         case N => innerBlock
     // If there are shared consequents, we need a wrap the entire block in a
     // `Label` so that `Break`s in the shared consequents can jump to the end.
-    val body = if labels.isEmpty then mainBlock else
-      Label(rootBreakLabel, false, mainBlock, End())
+    val body =
+      val beforeScoped = if labels.isEmpty then mainBlock else
+        Label(rootBreakLabel, false, mainBlock, End())
+      Scoped(
+        LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
+        beforeScoped)
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
     val block =
@@ -397,7 +403,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           val loopEnd: Path =
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
           val blk = blockBuilder
-            .assign(l, Value.Lit(Tree.UnitLit(false)))
+            // .assign(l, Value.Lit(Tree.UnitLit(false)))
             .define(FunDefn.withFreshSymbol(N, f, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(isTailRec = false))
             .assign(loopResult, Call(Value.Ref(f, N), Nil)(true, true, false))
           if summon[LoweringCtx].mayRet then

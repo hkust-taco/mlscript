@@ -521,7 +521,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         doc" # let " :: vars.map: (_, nme) =>
           nme
         .toList.mkDocument(", ")
-        :: doc";") :: returningTerm(body, endSemi)
+        :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
     
     // case _ => ???
   

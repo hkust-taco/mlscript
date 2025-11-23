@@ -36,8 +36,15 @@ object Thrw extends TailOp:
 
 
 // * No longer in meaningful use and could be removed if we don't find a use for it:
-class LoweringCtx(initMap: Map[Local, Value], val mayRet: Bool):
+class LoweringCtx(
+  initMap: Map[Local, Value],
+  val mayRet: Bool,
+  private val definedSymsDuringLowering: collection.mutable.Set[Symbol]
+):  
   val map = initMap
+  
+  def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
+  def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
     kv match
@@ -50,9 +57,10 @@ class LoweringCtx(initMap: Map[Local, Value], val mayRet: Bool):
     case Value.Ref(l, _) => map.getOrElse(l, v)
     case _ => v
 object LoweringCtx:
-  val empty = LoweringCtx(Map.empty, false)
+  val empty = LoweringCtx(Map.empty, false, collection.mutable.Set.empty)
   def subst(using sub: LoweringCtx): LoweringCtx = sub
-  def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true)
+  def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true, sub.definedSymsDuringLowering)
+  def nestScoped(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty)
 end LoweringCtx
 
 import LoweringCtx.subst
@@ -124,8 +132,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def block(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using LoweringCtx): Block =
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
-    val definedVars = imps.flatMap(_.definedSyms) ::: funs.flatMap(_.definedSyms) ::: rest.flatMap(_.definedSyms)
-    Scoped(definedVars.toSet, blockImpl(imps ::: funs ::: rest, res)(k))
+    // val definedVars = imps.flatMap(_.definedSyms) ::: funs.flatMap(_.definedSyms) ::: rest.flatMap(_.definedSyms)
+    blockImpl(imps ::: funs ::: rest, res)(k)
   
   def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using LoweringCtx): Block =
     stats match
@@ -995,9 +1003,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case ps => ps
     setupFunctionDef(physicalParams, bodyTerm, name)
   
+  def inScopedBlock(definedSymsInElaborated: Set[Symbol])(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+    LoweringCtx.nestScoped.givenIn:
+      val body = mkBlock
+      val scopedSyms = subst.getCollectedSym ++ definedSymsInElaborated
+      if scopedSyms.isEmpty then body else Scoped(scopedSyms, body)
+  
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using LoweringCtx): (List[ParamList], Block) =
-    (paramLists, returnedTerm(bodyTerm))
+    val scopedBody = inScopedBlock(bodyTerm.definedSyms)(returnedTerm(bodyTerm))
+    (paramLists, scopedBody)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     def warn(annot: Annot, msg: Opt[Message] = N) = raise:
