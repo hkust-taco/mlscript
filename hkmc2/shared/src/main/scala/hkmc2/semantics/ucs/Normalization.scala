@@ -231,89 +231,6 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     val default = if throwCount > 1 then S(TempSymbol(N, s"split_default$$")) else N
     Labels(consequents, default)
   
-  // TODO: maybe cannot even use nested scopes
-  // miscompiles more complex pattern matchings that create `Label`s
-  // private def lowerSplitForWhile(
-  //     split: Split,
-  //     cont: (Result => Block) \/ (Bool => Result => Block),
-  //     topLevel: Bool
-  // )(using labels: Labels)(using Subst): Block = split match
-  //   case Split.Let(sym, trm, tl) =>
-  //     term_nonTail(trm): r =>
-  //       Assign(sym, r, lowerSplitForWhile(tl, cont, topLevel))
-  //   case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
-  //     subTerm_nonTail(scrut): sr =>
-  //       tl.log(s"Binding scrut $scrut to $sr (${summon[Subst].map})") 
-  //       def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
-  //           S(lowerSplitForWhile(restSplit, cont, topLevel = true)),
-  //           End()
-  //         )
-  //       pat match
-  //         case FlatPattern.Lit(lit) => mkMatch(
-  //           Case.Lit(lit),
-  //           lowering.inScopedBlock(tail.defineSyms)(lowerSplitForWhile(tail, cont, topLevel = false))
-  //         )
-  //         case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
-  //           /** Make a continuation that creates the match. */
-  //           def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
-  //             val args = argsOpt.map(_.map(_._1)).getOrElse(Nil)
-  //             // Normalization should reject cases where the user provides
-  //             // more sub-patterns than there are actual class parameters.
-  //             assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-  //             def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
-  //               case Nil =>
-  //                 Case.Cls(ctorSym, st) -> locally:
-  //                   // println(s":::::: ${tail.showAsTree}\n >>>>>> ${tail.defineSyms}")
-  //                   lowering.inScopedBlock(tail.defineSyms)(lowerSplitForWhile(tail, cont, topLevel = false))
-  //               case (param, arg) :: args =>
-  //                 val (cse, blk) = mkArgs(args)
-  //                 cse -> locally:
-  //                   blk match
-  //                     case Scoped(syms, blk) => Scoped(syms ++ Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
-  //                     case _ => Scoped(Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
-  //             mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
-  //           // Select the constructor's `.class` field.
-  //           lazy val ctorTerm = ctor.symbol match
-  //             case S(mem: BlockMemberSymbol) =>
-  //               // If the class is declaration-only, we do not need to
-  //               // select the class.
-  //               if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then ctor
-  //               else Term.SynthSel(ctor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
-  //             case _ => ctor
-  //           symbol match
-  //             case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
-  //               // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
-  //               // not exist at runtime. If we do lowering on `trm`, backends
-  //               // (e.g., `JSBuilder`) will not be able to handle the corresponding selections.
-  //               // In this case the second parameter of `Case.Cls` will not be used.
-  //               // So we do not elaborate `ctor` when the `cls` is virtual
-  //               // and use it `Predef.unreachable` here.
-  //               k(cls, Nil)(unreachableFn)
-  //             case cls: ClassSymbol =>
-  //               subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
-  //             case mod: ModuleOrObjectSymbol =>
-  //               subTerm_nonTail(ctorTerm)(k(mod, Nil))
-  //         case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowering.inScopedBlock(tail.defineSyms)(lowerSplitForWhile(tail, cont, topLevel = false)))
-  //         case FlatPattern.Record(entries) =>
-  //           val objectSym = ctx.builtins.Object
-  //           mkMatch( // checking that we have an object
-  //             Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-  //             entries.foldRight(lowering.inScopedBlock(tail.defineSyms)(lowerSplitForWhile(tail, cont, topLevel = false))):
-  //               case ((fieldName, fieldSymbol), blk) =>
-  //                 mkMatch(
-  //                   Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-  //                   blk match
-  //                     case Scoped(syms, blk) =>
-  //                       Scoped(syms ++ Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
-  //                     case _ =>
-  //                       Scoped(Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
-  //                 )
-  //           )
-  //   case Split.Else(els) => labels.get(els) match
-  //     case S(label) => Break(label)
-  //     case N => lowering.inScopedBlock(els.definedSyms)(term_nonTail(els)(cont.fold(identity, _(topLevel))))
-  //   case Split.End => labels.default.fold(throwMatchErrorBlock)(Break(_))
-  
   private def lowerSplit(
       split: Split,
       cont: (Result => Block) \/ (Bool => Result => Block),
@@ -330,7 +247,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             End()
           )
         pat match
-          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
+          case FlatPattern.Lit(lit) => mkMatch(
+            Case.Lit(lit),
+            lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))
+          )
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
@@ -340,10 +260,15 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
               def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
                 case Nil =>
-                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, topLevel = false)
+                  Case.Cls(ctorSym, st) -> locally:
+                    // println(s":::::: ${tail.showAsTree} ${tail.defineSyms}")
+                    lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
-                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+                  cse -> locally:
+                    blk match
+                      case Scoped(syms, blk) => Scoped(syms ++ Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+                      case _ => Scoped(Set(arg), Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             // Select the constructor's `.class` field.
             lazy val ctorTerm = ctor.symbol match
@@ -366,21 +291,25 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctorTerm)(k(mod, Nil))
-          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
+          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false)))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-              entries.foldRight(lowerSplit(tail, cont, topLevel = false)):
+              entries.foldRight(lowering.inScopedBlock(tail.defineSyms)(lowerSplit(tail, cont, topLevel = false))):
                 case ((fieldName, fieldSymbol), blk) =>
                   mkMatch(
                     Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                    Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                    blk match
+                      case Scoped(syms, blk) =>
+                        Scoped(syms ++ Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
+                      case _ =>
+                        Scoped(Set(fieldSymbol), Assign(fieldSymbol, Select(sr, fieldName)(N), blk))
                   )
             )
     case Split.Else(els) => labels.get(els) match
       case S(label) => Break(label)
-      case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
+      case N => lowering.inScopedBlock(els.definedSyms)(term_nonTail(els)(cont.fold(identity, _(topLevel))))
     case Split.End => labels.default.fold(throwMatchErrorBlock)(Break(_))
   
   /**

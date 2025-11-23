@@ -26,7 +26,6 @@ enum Split extends AutoLocated with ProductWithTail:
   
   def defineSyms: Set[Symbol] = this match
     case Let(sym, term, tail) => Set(sym) ++ term.definedSyms ++ tail.defineSyms
-    case Else(d) => d.definedSyms
     case _ => Set.empty
   
   
