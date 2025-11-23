@@ -10,7 +10,7 @@ class Keyword(
     val leftPrec: Opt[Int],
     val rightPrec: Opt[Int],
     
-    /** If the operator can be used infix, can it be done on a newline (witth no indent)?
+    /** If the operator can be used infix, can it be done on a newline (with no indent)?
         For instance, if `via` has `canStartInfixOnNewLine`, then one can write:
           foo
           via f
