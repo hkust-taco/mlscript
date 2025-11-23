@@ -12,50 +12,35 @@ module B with
 :df
 fun f(x : A) = 4
 f(.a)
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: simpleExprImpl (Parser.scala:697)
-//│ ╔══[PARSE ERROR] Expected an expression; found static selector instead
-//│ ║  l.14: 	f(.a)
-//│ ╙──      	  ^^
-//│ FAILURE: Unexpected parse error
-//│ FAILURE LOCATION: concludeWithImpl (Parser.scala:261)
-//│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.14: 	f(.a)
-//│ ╙──      	  ^^
-//│ Typing producer: { fun member:f(x: member:A) = 4; member:f(<error>) }
+//│ Typing producer: { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a)) }
+//│ | Typing param: x: member:A
+//│ | | x‹616›
+//│ | : type class:A
 //│ | Typing producer: 4
 //│ | : 4
-//│ | Typing producer: member:f(<error>)
-//│ | | Typing producer: [<error>]
-//│ | | | Typing producer: <error>
-//│ | | | : Bot
-//│ | | : [Bot]
+//│ | Typing producer: member:f(_?_.Ident(a))
+//│ | | Typing producer: [_?_.Ident(a)]
+//│ | | | Typing producer: _?_.Ident(a)
+//│ | | | | Leading dot selection _?_.Ident(a)
+//│ | | | : _?_.Ident(a)
+//│ | | : [_?_.Ident(a)]
 //│ | | Typing producer: member:f
-//│ | | : flow:f‹621›
+//│ | | : flow:f‹622›
 //│ | : app‹620›
 //│ : app‹620›
-//│ Handling constraint: ((type class:A) -> 4) <: flow:f‹621› (from { fun member:f(x: member:A) = 4; member:f(<error>) })
-//│ | Solving: ((type class:A) -> 4) <: flow:f‹621›   (Fun, Flow)
-//│ | New flow Fun(Tup(List(Typ(Ref(class:A,List()))),None),Ctor(lit:IntLit(4),List()),List()) ~> flow:f
-//│ Handling constraint: flow:f‹621› <: ((Bot) -> app‹620›) (from member:f(<error>))
-//│ | Solving: flow:f‹621› <: ((Bot) -> app‹620›)   (Flow, Fun)
-//│ | New flow flow:f ~> Fun(Tup(List((None,Ctor(Bot,List())))),Flow(app))
-//│ | Solving: ((type class:A) -> 4) <: ((Bot) -> app‹620›)   (Fun, Fun)
-//│ | Solving: [Bot] <: [type class:A]   (Tup, Tup)
-//│ | Solving: Bot <: type class:A   (Ctor, Typ)
-//│ | /!\ Unhandled constraint /!\
-//│ | Solving: 4 <: app‹620›   (Ctor, Flow)
-//│ | New flow Ctor(lit:IntLit(4),List()) ~> app
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:154)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
-//│     at Runtime.checkArgs (file:///home/ramak/projects/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:456:24)
-//│     at f (REPL16:1:49)
-//│     at REPL16:1:151
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:592:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:925:10)
-//│     at REPLServer.emit (node:events:519:28)
-//│     at REPLServer.emit (node:domain:489:12)
+//│ Handling constraint: ((type class:A) -> 4) <: flow:f‹622› (from { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a)) })
+//│ | Solving: ((type class:A) -> 4) <: flow:f‹622›   (Fun, Flow)   []
+//│ | New flow: ((type class:A) -> 4) ~> flow:f‹622›
+//│ Handling constraint: flow:f‹622› <: ((_?_.Ident(a)) -> app‹620›) (from member:f(_?_.Ident(a)))
+//│ | Solving: flow:f‹622› <: ((_?_.Ident(a)) -> app‹620›)   (Flow, Fun)   []
+//│ | New flow: flow:f‹622› ~> ((_?_.Ident(a)) -> app‹620›)
+//│ | Solving: ((type class:A) -> 4) <: ((_?_.Ident(a)) -> app‹620›)   (Fun, Fun)   []
+//│ | Solving: [_?_.Ident(a)] <: [type class:A]   (Tup, Tup)   []
+//│ | Solving: _?_.Ident(a) <: type class:A   (LeadingDotSel, Typ)   []
+//│ | Examining class:A for leading dot selection resolution
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
+//│ | Solving: 4 <: app‹620›   (Ctor, Flow)   []
+//│ | New flow: 4 ~> app‹620›
+//│ Resolved targets for _?_.Ident(a): CompanionMember(Ref(member:A),member:a)
+//│ Leading dot expansion: member:A.a‹member:a›
+//│ = 4
