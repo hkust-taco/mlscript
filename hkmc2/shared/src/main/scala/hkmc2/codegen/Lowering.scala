@@ -38,7 +38,6 @@ object Thrw extends TailOp:
 // * No longer in meaningful use and could be removed if we don't find a use for it:
 class Subst(initMap: Map[Local, Value]):
   val map = initMap
-  val definedSyms = collection.mutable.Set.empty[Symbol]
   /*
   def +(kv: (Local, Value)): Subst =
     kv match
@@ -52,7 +51,6 @@ class Subst(initMap: Map[Local, Value]):
     case _ => v
 object Subst:
   val empty = Subst(Map.empty)
-  def newScope(using Subst) = new Subst(subst.map)
   def subst(using sub: Subst): Subst = sub
 end Subst
 
@@ -125,7 +123,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def block(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
     // TODO we should also isolate and reorder classes by inheritance topological sort
     val (imps, funs, rest) = splitBlock(stats, Nil, Nil, Nil)
-    blockImpl(imps ::: funs ::: rest, res)(k)
+    val definedVars = imps.flatMap(_.definedSyms) ::: funs.flatMap(_.definedSyms) ::: rest.flatMap(_.definedSyms)
+    Scoped(definedVars.toSet, blockImpl(imps ::: funs ::: rest, res)(k))
   
   def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using Subst): Block =
     stats match
@@ -417,7 +416,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           // * (non-local functions are compiled into getter methods selected on some prefix)
           if td.params.isEmpty then
             val l = new TempSymbol(S(t))
-            subst.definedSyms.add(l)
             return Assign(l, Call(Value.Ref(bs).withLocOf(ref), Nil)(true, true), k(Value.Ref(l)))
         case S(_) => ()
         case N => () // TODO panic here; can only lower refs to elab'd symbols
@@ -449,7 +447,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            subst.definedSyms.add(lamSym)
             val lamDef = FunDefn(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))
             Define(
               lamDef,
@@ -569,7 +566,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        subst.definedSyms.add(lamSym)
         val lamDef = FunDefn(N, lamSym, paramLists, bodyBlock)
         Define(
           lamDef,
@@ -614,14 +610,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               inner =>
                 lowerArg(arg): asr2 =>
                   val ts = TempSymbol(N)
-                  subst.definedSyms.add(ts)
                   Assign(ts, Call(inner, asr2)(true, true), acc(Value.Ref(ts)))
             val ts = TempSymbol(N)
-            subst.definedSyms.add(ts)
             Assign(ts, Instantiate(mut, sr, asr), z(Value.Ref(ts)))
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
-          subst.definedSyms.add(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
@@ -707,7 +700,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           p.toLoc :: Nil,
           source = Diagnostic.Source.Compilation
         )
-  // NOTE: nothing in `quote...` is handled yet
+  
   def quoteSplit(split: Split)(k: Result => Block)(using Subst): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
       val l1, l2, l3, l4, l5 = new TempSymbol(N)
@@ -880,7 +873,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       Begin(b, k(asr.reverse))
     else
       val rcdSym = new TempSymbol(N, "rcd")
-      subst.definedSyms.add(rcdSym)
       Begin(
         b,
         Assign(
@@ -910,29 +902,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        subst.definedSyms.add(lamSym)
         val lamDef = FunDefn(N, lamSym, params :: Nil, body)
         Define(lamDef, k(lamSym |> Value.Ref.apply))
       case r =>
         val l = new TempSymbol(N)
-        subst.definedSyms.add(l)
         Assign(l, r, k(l |> Value.Ref.apply))
   
-  def inScopedBlock(definedSymsInElaborated: Set[Symbol])(using Subst)(mkBlock: Subst ?=> Block): Block =
-    Subst.newScope.givenIn:
-      val body = mkBlock
-      val scopedSyms = subst.definedSyms ++ definedSymsInElaborated
-      // println(subst.definedSyms)
-      // println(definedSymsInElaborated)
-      if scopedSyms.isEmpty then body else Scoped(scopedSyms, body)
   
   def program(main: st.Blk): Program =
     
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
-    val blk =
-      inScopedBlock(main.stats.flatMap(_.definedSyms).toSet)(using Subst.empty):
-        block(funs ::: rest, R(main.res))(ImplctRet)
+    val blk = block(funs ::: rest, R(main.res))(ImplctRet)(using Subst.empty)
     
     val desug = LambdaRewriter.desugar(blk)
     
@@ -967,6 +948,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def setupSelection(prefix: Term, nme: Tree.Ident, sym: Opt[FieldSymbol])(k: Result => Block)(using Subst): Block =
     subTerm(prefix): p =>
+      val selRes = TempSymbol(N, "selRes")
       k(Select(p, nme)(sym))
   
   final def setupFunctionOrByNameDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
@@ -978,8 +960,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using Subst): (List[ParamList], Block) =
-    val scopedBody = inScopedBlock(bodyTerm.definedSyms)(returnedTerm(bodyTerm))
-    (paramLists, scopedBody)
+    (paramLists, returnedTerm(bodyTerm))
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
     annotations.foreach:

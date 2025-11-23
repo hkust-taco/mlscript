@@ -283,7 +283,7 @@ case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Blo
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
+case class Scoped(syms: Set[Local], body: Block) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail

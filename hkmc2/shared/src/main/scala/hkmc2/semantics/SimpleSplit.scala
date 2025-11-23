@@ -21,11 +21,6 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
   case Else(default: Term)(val kw: Opt[Keywrd[`else`.type | `then`.type | `do`.type]])
   case End
   
-  def definedSyms: Set[Symbol] = this match
-    case Cons(branch, tail) => branch.definedSyms
-    case _ => Set.empty
-  
-  
   inline def ~:(head: SimpleSplit.Head): Cons = Cons(head, this)
   
   def ~~:(front: SimpleSplit): SimpleSplit =
@@ -88,11 +83,6 @@ object SimpleSplit:
   enum Head extends AutoLocated:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: BlockLocalSymbol, term: Term)
-    
-    def definedSyms: Set[Symbol] = this match
-      case Let(binding, term) => Set(binding) ++ term.definedSyms
-      case _ => Set.empty
-    
     
     def subTerms: Ls[Term] = this match
       case Match(scrutinee, pattern, consequent) =>
