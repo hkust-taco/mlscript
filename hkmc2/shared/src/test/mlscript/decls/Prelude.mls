@@ -6,36 +6,65 @@ declare type Nothing
 
 declare type untyped
 
+declare type tailrec
+declare type tailcall
+
 declare class Object
+declare val Object
 declare class JSON
+declare val JSON
 declare class Number
+declare val Number
 declare class BigInt
+declare val BigInt
 declare class Function
+declare val Function
 declare class String
+declare val String
 declare class RegExp
+declare val RegExp
 declare class Set
+declare val Set
 declare class Map
+declare val Map
 declare class WeakSet
+declare val WeakSet
 declare class WeakMap
-declare class Error
-declare class TypeError
-declare class RangeError
+declare val WeakMap
+declare class Error(info)
+declare class TypeError(info)
+declare class RangeError(info)
 declare class Date
+declare val Date
 
 declare class ArrayBuffer
+declare val ArrayBuffer
 declare class TypedArray
+declare val TypedArray
 declare class Int8Array
+declare val Int8Array
 declare class Uint8Array
+declare val Uint8Array
 declare class Uint8ClampedArray
+declare val Uint8ClampedArray
 declare class Int16Array
+declare val Int16Array
 declare class Uint16Array
+declare val Uint16Array
 declare class Int32Array
+declare val Int32Array
 declare class Uint32Array
+declare val Uint32Array
 declare class Float16Array
+declare val Float16Array
 declare class Float32Array
+declare val Float32Array
 declare class Float64Array
+declare val Float64Array
 declare class BigInt64Array
+declare val BigInt64Array
 declare class BigUint64Array
+declare val BigUint64Array
 
 // MLscript-specific types
 declare class Bool
@@ -120,8 +149,8 @@ declare val fs
 declare val Infinity
 
 // Wasm support
-declare class Promise with
-  fun resolve
+declare class Promise
+declare val Promise
 declare object WebAssembly with
   declare class Memory
   declare object Module with

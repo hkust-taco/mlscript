@@ -12,6 +12,8 @@ import Elaborator.State
 import Resolvable.*
 import typing.Type
 
+import semantics.ucs.FlatPattern
+
 import Message.MessageContext
 import scala.annotation.tailrec
 
@@ -129,12 +131,16 @@ object Resolver:
     case Module(reason: Opt[Message])
     case NonModule(reason: Opt[Message])
     case Class(reason: Opt[Message])
+    case Selectable(reason: Opt[Message])
+    case PatternConstructor(reason: Opt[Message])
     case Any
     
     def message: Ls[Message -> Opt[Loc]] = this match
       case Expect.Module(msg) => msg.toList.map(_ -> N)
       case Expect.NonModule(msg) => msg.toList.map(_ -> N)
       case Expect.Class(msg) => msg.toList.map(_ -> N)
+      case Expect.Selectable(msg) => msg.toList.map(_ -> N)
+      case Expect.PatternConstructor(msg) => msg.toList.map(_ -> N)
       case Expect.Any => Nil
     
     def `module` = isInstanceOf[Module]
@@ -142,10 +148,12 @@ object Resolver:
     def nonModule = isInstanceOf[NonModule]
     
     override def toString: Str = this match
-      case _: Module => "Module"
-      case _: NonModule => "NonModule"
-      case _: Class => "Class"
-      case _: Any => "Any"
+      case _: Expect.Module => "Module"
+      case _: Expect.NonModule => "NonModule"
+      case _: Expect.Class => "Class"
+      case _: Expect.Selectable => "Selectable"
+      case _: Expect.PatternConstructor => "PatternConstructor"
+      case Expect.Any => "Any"
   
   object Expect:
     def fromModulefulness(mf: Modulefulness): Expect =
@@ -266,7 +274,7 @@ class Resolver(tl: TraceLogger)
           traverseDefn(tdf)
         
         case t: Term =>
-          traverse(t, expect = NonModule(N))
+          traverse(t, expect = Any)
           ictx
         
         // Default Case. e.g., import statements, let bindings.
@@ -275,25 +283,13 @@ class Resolver(tl: TraceLogger)
           ictx
       
       traverseStmts(rest)(using newICtx)
-    
-  
-  def expand2DotClass(t: Resolvable, expect: Expect.Module | Expect.Class) = t.resolvedSym match
-    case S(bsym: BlockMemberSymbol) if bsym.hasLiftedClass => 
-      val sym = expect match
-        case _: Expect.Module => bsym.asMod
-        case _: Expect.Class => bsym.asCls
-      sym.foreach: sym =>
-        if sym isnt ctx.builtins.Array then
-          t.expand(S(Term.SynthSel(t.duplicate, new Tree.Ident("class"))(S(sym), S(Type.Ref(sym, Nil)))))
-    case _ =>
-      ()
   
   /**
     * Traverse a term: traverse the sub-terms, resolve the term, and
     * check the modulefulness of the term.
     */
   def traverse(t: Term, expect: Expect)(using ictx: ICtx): Unit =
-  trace(s"Traversing term: $t"):
+  trace(s"Traversing term: $t (expect = ${expect})"):
     
     t match
       case blk: Term.Blk =>
@@ -305,7 +301,7 @@ class Resolver(tl: TraceLogger)
         def simpleSplit(s: SimpleSplit): Unit = s match
           case SimpleSplit.Cons(head: SimpleSplit.Head.Match, tail) =>
             traverse(head.scrutinee, expect = NonModule(N))
-            head.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
+            traversePattern(head.pattern)
             simpleSplit(head.consequent)
             simpleSplit(tail)
           case SimpleSplit.Cons(SimpleSplit.Head.Let(sym, term), tail) =>
@@ -321,19 +317,9 @@ class Resolver(tl: TraceLogger)
         args.foreach(traverse(_, expect = NonModule(N)))
         defs.foreach(d => traverseDefn(d.td))
         traverse(body, expect = NonModule(N))
-        
-      case Term.New(cls, args, rft) =>
-        traverse(cls, expect = Class(S("The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.")))
-        args.foreach(traverse(_, expect = NonModule(N)))
-        rft.foreach((sym, bdy) => traverseBlock(bdy.blk))
       
       case t: Resolvable =>
         resolve(t, prefer = expect, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
-        t.expanded match
-        case t: Resolvable => expect match
-          case expect: Expect.Class => expand2DotClass(t, expect = expect)
-          case _ =>
-        case _ =>
       
       case _ =>
         t.subTerms.foreach(traverse(_, expect = NonModule(N)))
@@ -456,10 +442,10 @@ class Resolver(tl: TraceLogger)
     case defn: ClassLikeDef =>
       log(s"Resolving ${defn.kind.desc} definition $defn")
       
-      // For pattern definitions, we need to traverse through the pattern body.
       defn match
         case defn: PatternDef =>
-          defn.pattern.subTerms.foreach(traverse(_, expect = NonModule(N)))
+          // For pattern definitions, we need to traverse through the pattern body.
+          traversePattern(defn.pattern)
         case _: ClassLikeDef => ()
       
       traverseClassLikeDef(defn)
@@ -469,6 +455,41 @@ class Resolver(tl: TraceLogger)
     case t =>
       t.subTerms.foreach(traverse(_, expect = NonModule(N)))
       ictx
+  
+  def traversePattern(p: Pattern)(using ICtx): Unit = p match
+    case _: (Pattern.Wildcard | Pattern.Literal | Pattern.Range) => ()
+    case Pattern.Constructor(target, patternArguments) =>
+      traverse(target, expect = PatternConstructor(N))
+      patternArguments.foreach(_.foreach(traversePattern(_)))
+    case Pattern.Composition(_, left, right) =>
+      traversePattern(left)
+      traversePattern(right)
+    case Pattern.Negation(pattern) =>
+      traversePattern(pattern)
+    case Pattern.Concatenation(left, right) =>
+      traversePattern(left)
+      traversePattern(right)
+    case Pattern.Tuple(leading, spread) =>
+      leading.foreach(traversePattern(_))
+      spread.foreach: (_, spd, trailing) =>
+        traversePattern(spd)
+        trailing.foreach(traversePattern(_))
+    case Pattern.Record(fields) =>
+      fields.map((id, p) => traversePattern(p))
+    case Pattern.Chain(first, second) =>
+      traversePattern(first)
+      traversePattern(second)
+    case Pattern.Alias(pattern, _) =>
+      traversePattern(pattern)
+    case Pattern.Transform(pattern, _, transform) =>
+      traversePattern(pattern)
+      traverse(transform, expect = NonModule(N))
+    case Pattern.Annotated(pattern, annotations) =>
+      traversePattern(pattern)
+      annotations.map(_.toOption).flatten.foreach(traverse(_, expect = NonModule(N)))
+    case Pattern.Guarded(pattern, guard) =>
+      traversePattern(pattern)
+      traverse(guard, expect = NonModule(N))
   
   /**
     * Resolve a resolvable term. This involves:
@@ -499,21 +520,23 @@ class Resolver(tl: TraceLogger)
     */
   def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](
-    s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", 
+    s"Resolving resolvable term: ${t}, (prefer = ${prefer}, inAppPrefix = ${inAppPrefix}, inCtxPrefix = ${inCtxPrefix}, inTyPrefix = ${inTyPrefix})", 
     _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
   ):
     // Resolve the sub-resolvable-terms of the term. 
     val (defn, newICtx1) = 
       t match
+      case _: Term.Resolved => lastWords(s"Term ${t} is already resolved.")
+      
       // Note: the arguments of the App are traversed later because the
       // definition is required.
       case Term.App(lhs: Resolvable, args) =>
         val result = args match
           case t @ Term.CtxTup(_) => 
-            resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = true, inTyPrefix = inTyPrefix)
+            resolve(lhs, prefer = Any, inAppPrefix = true, inCtxPrefix = true, inTyPrefix = inTyPrefix)
           case _ => 
-            resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
-        resolveSymbol(t, prefer = prefer)
+            resolve(lhs, prefer = Any, inAppPrefix = true, inCtxPrefix = inCtxPrefix, inTyPrefix = inTyPrefix)
+        resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
         result
       case Term.App(lhs, _) =>
@@ -522,8 +545,8 @@ class Resolver(tl: TraceLogger)
       
       case Term.TyApp(lhs: Resolvable, targs) =>
         resolve(lhs, prefer = prefer, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
-        targs.foreach(traverse(_, expect = Any))
-        resolveSymbol(t, prefer = prefer)
+        targs.foreach(traverseSign(_, expect = Any))
+        resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.TyApp(lhs, targs) =>
@@ -531,26 +554,37 @@ class Resolver(tl: TraceLogger)
         targs.foreach(traverse(_, expect = Any))
         (t.callableDefn, ictx)
       
-      case AnySel(pre: Resolvable, id) =>
-        resolve(pre, prefer = prefer, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
-        resolveSymbol(t, prefer = prefer)
+      case AnySel(pre: Resolvable, id, cls) =>
+        resolve(pre, prefer = Selectable(N), inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+        cls.foreach:
+          case cls: Resolvable => resolve(cls, prefer = Class(N), inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
+          case cls => traverse(cls, expect = Class(N))
+        resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
-      case AnySel(pre, id) =>
-        traverse(pre, expect = Any)
+      case AnySel(pre, id, cls) =>
+        traverse(pre, expect = Selectable(N))
+        cls.foreach(traverse(_, expect = Class(N)))
+        (t.callableDefn, ictx)
+      
+      case Term.New(cls, args, rft) =>
+        // Term.New has only a type, but does not have a symbol.
+        traverse(cls, expect = Class(S("The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.")))
+        args.foreach(traverse(_, expect = NonModule(N)))
+        resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       
       case Term.Ref(_: BlockMemberSymbol) =>
-        resolveSymbol(t, prefer = prefer)
+        resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
         (t.callableDefn, ictx)
       case Term.Ref(_) =>
-        resolveSymbol(t, prefer = prefer)
+        resolveSymbol(t, prefer = prefer, sign = false)
         resolveType(t, prefer = prefer)
         (N, ictx)
     
     t.expandedResolvableIn: t =>
-      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}: ${defn}")
+      log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}")
       
       // Fill the context with possibly the type arguments information.
       val newICtx2 = newICtx1.givenIn:
@@ -737,7 +771,7 @@ class Resolver(tl: TraceLogger)
             t.expand(S(expansion))
             expansion match // * expansion may change the semantics, thus symbol is also changed
             case r: Resolvable => 
-              resolveSymbol(r, prefer = prefer)
+              resolveSymbol(r, prefer = prefer, sign = false)
               resolveType(r, prefer = prefer)
             case _ => ()
           
@@ -748,6 +782,27 @@ class Resolver(tl: TraceLogger)
         case _ =>
           t.dontResolve
           (N, ictx)
+  
+  def disambSym(expect: Expect, sign: Bool)(bms: BlockMemberSymbol): Opt[DefinitionSymbol[?]] =
+    expect match
+      // If it is expecting a class or module specifically, cast the symbol.
+      case _: Module => bms.asMod
+      case _: Class => bms.asCls
+      case _: Selectable => bms.asModOrObj orElse bms.asTrm
+      // If it is expecting a generic symbol, use asPrinciple for the "default interpretation".
+      case _: (Any.type | NonModule) if sign =>
+        bms.asTpe
+      case _: (Any.type | NonModule) =>
+        bms.asPrincipal
+      case _: PatternConstructor =>
+        bms.asCls orElse
+        bms.asObj orElse
+        bms.asAls orElse
+        bms.asPat orElse
+        bms.asMod orElse
+        bms.asTrm
+        
+        
   
   /**
    * Resolve the symbol for a resolvable term, which was not resolved by
@@ -767,7 +822,7 @@ class Resolver(tl: TraceLogger)
    * This also expands the LHS `Foo` of a selection to `Foo.class` if
    * the selection is selecting a static member from a lifted module.
    */
-  def resolveSymbol(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit =
+  def resolveSymbol(t: Resolvable, prefer: Expect, sign: Bool)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
     _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
@@ -789,25 +844,78 @@ class Resolver(tl: TraceLogger)
       // not try to resolve it again in the resolver.
       case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
       
-      case t @ AnySel(lhs: Resolvable, id) => lhs.expandedResolvableIn: lhs =>
-        log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-        lhs.singletonDefn.foreach: mdef =>
-          val fsym = mdef.body.members.get(id.name)
+      case t @ Term.Ref(bsym: BlockMemberSymbol) =>
+        log(s"Resolving symbol for reference ${t} (bsym = ${bsym})")
+        val sym = disambSym(prefer, sign = sign)(bsym)
+        sym.foreach: sym =>
+          t.expand(S((t.duplicate.resolved(sym))))
+        resolveType(t, prefer = prefer)
+        log(s"Resolved symbol for ${t}: ${sym}")
+      
+      case t @ AnySel(lhs: Resolvable, id, cls) => lhs.expandedResolvableIn: lhs =>
+        log(s"Resolving symbol for selection ${t}, defn = ${lhs.defn}")
+        
+        val clsDefn = cls.flatMap: sym =>
+          sym.resolvedSym.flatMap(_.asCls).map: clsSym =>
+            clsSym.defn.getOrElse(die)
+        
+        // Singleton Definitions
+        lhs.singletonDefn.foreach: defn =>
+          val fsym = defn.body.members.get(id.name)
           fsym match
-          case S(fldSym) => 
-            val bsym = fldSym.asBlkMember.getOrElse:
-              lastWords(s"${mdef}: field symbol found ${fldSym} but no block member symbol")
-            log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
-            t.expand(S(t.withSym(bsym)))
-            expand2DotClass(lhs, expect = Expect.Module(N))
-            log(s"Resolved symbol for ${t}: ${bsym}")
-          case N => 
-            t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
-            raise: 
-              ErrorReport(
-                msg"${mdef.kind.desc.capitalize} '${mdef.sym.nme}' " +
-                msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
-                extraInfo = S(mdef))
+            case S(bms: BlockMemberSymbol) =>
+              log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
+              disambSym(prefer, sign)(bms) match
+                case S(ds) =>
+                  t.expand(S(t.withSym(bms).resolved(ds)))
+                case N =>
+                  log(s"Unable to disambiguate ${bms}")
+                  t.expand(S(t.withSym(bms)))
+              log(s"Resolved symbol for ${t}: ${bms}")
+            case N => 
+              t.expand(S(t.withSym(ErrorSymbol(id.name, Tree.Dummy))))
+              raise: 
+                ErrorReport(
+                  msg"${defn.kind.desc.capitalize} '${defn.sym.nme}' " +
+                  msg"does not contain member '${id.name}'" -> t.toLoc :: Nil,
+                  extraInfo = S(defn))
+        
+        // Class-Like Definitions
+        (clsDefn orElse lhs.typDefn).foreach: 
+          case defn: ClassLikeDef =>
+            // A reference to a member within the class is elaborated into a SynthSel, e.g.,
+            // class C with
+            //   fun f = 42
+            //   f
+            // The `f` in the body is elaborated into SynthSel(class:Foo, 'f').
+            val fsym = defn.body.members.get(id.name)
+            fsym match
+              case S(bms: BlockMemberSymbol) =>
+                log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
+                disambSym(prefer, sign)(bms) match
+                  case S(ds) =>
+                    t.expand(S(t.withSym(bms).resolved(ds)))
+                  case N =>
+                    log(s"Unable to disambiguate ${bms}")
+                    t.expand(S(t.withSym(bms)))
+                log(s"Resolved symbol for ${t}: ${bms}")
+              case N =>
+                // TODO @Harry: Appropriately resolve all selections on classes.
+                // - MLscript programs selecting JS members without properly defining them.
+                // - Inherited members.
+          case defn =>
+            log(s"Unsupported selection from definition: ${defn}")
+      
+      case t @ Term.New(cls, _, N) =>
+        // cls is already resolved, so the symbol should be present;
+        // otherwise, there is already an error raised.
+        cls.resolvedSym match
+          case S(clsSym: ClassSymbol) =>
+            t.expand(S(t.duplicate.resolved(clsSym)))
+          case S(sym) =>
+            lastWords(s"Expected a class symbol; found ${sym} for term ${t}.")
+          case N =>
+      
       case _ =>
   
   /**
@@ -821,33 +929,33 @@ class Resolver(tl: TraceLogger)
   def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
     trace[Unit](
       s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
-      _ => s"-> (typ = ${t.resolvedTyp})"
+      _ => s"-> typ = ${t.resolvedTyp}"
     ):
-      def disambSym(bms: BlockMemberSymbol): Opt[FieldSymbol] = prefer match
+      def disambSym(bms: BlockMemberSymbol): Opt[DefinitionSymbol[?]] = prefer match
         case _: Module => bms.asMod
         case _: Class => bms.asCls
-        case _: NonModule => 
-          val trmSym = bms.defn match
-          case S(defn: TermDefinition) => S(defn.tsym)
-          case _ => N
-          trmSym orElse bms.asPrincipal
-        case _: Any => bms.defn match
-          case S(defn: TermDefinition) => S(defn.tsym)
-          case S(defn: ClassDef) => S(defn.sym)
-          case S(defn: ModuleOrObjectDef) => S(defn.sym)
-          case _ => N
+        case _: Selectable => bms.asModOrObj orElse bms.asTrm
+        case _: (Any.type | NonModule) => bms.asPrincipal
       
       t match
+      case Term.New(cls, _, N) => cls.resolvedSym match
+        case S(clsSym: ClassSymbol) =>
+          val ty = Type.Ref(clsSym, Nil)
+          t.expand(S(t.withTyp(ty)))
+        case _ =>
+          // cls is already resolved, so the symbol should be present;
+          // otherwise, there is already an error raised.
+          ()
       case t @ Apps(base: Resolvable, ass) => 
         val decl = base.resolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
-            log(s"Disambiguate ${bms} into ${disambBms} (defn = ${disambBms.map(_.defn)})")
+            log(s"Disambiguate ${bms} (${bms.asTrm}) into ${disambBms} (defn = ${disambBms.map(_.defn)}), preferring ${prefer}")
             disambBms match
             case S(disambBms) => disambBms.defn
-            case N => bms.defn
+            case N => bms.asPrincipal.flatMap(_.defn)
           case S(bls: BlockLocalSymbol) => bls.decl
-          case S(fs: FieldSymbol) => fs.defn
+          case S(ds: DefinitionSymbol[?]) => ds.defn
           case _ => N
         log(s"Declaration: ${decl}")
         decl match
@@ -860,6 +968,11 @@ class Resolver(tl: TraceLogger)
         case S(defn: ModuleOrObjectDef) if ass.isEmpty =>
           val ty = Type.Ref(defn.sym, Nil)
           t.expand(S(t.withTyp(ty)))
+        case S(defn: ClassDef) => base match
+          case Term.Ref(inner: InnerSymbol) =>
+            val ty = Type.Ref(defn.sym, Nil)
+            t.expand(S(t.withTyp(ty)))
+          case _ =>
         case _ =>
       case _ =>
   end resolveType
@@ -928,8 +1041,8 @@ class Resolver(tl: TraceLogger)
     case Term.App(Term.Ref(_: BuiltinSymbol), Term.Tup(Fld(term = Term.Lit(_)) :: Nil)) =>
     
     // Selection. The prefix should be a term, rather than a type, that
-    // can be selected from.
-    case AnySel(base, _) =>
+    // can be selected from. This should not be a selection projection.
+    case AnySel(base, _, N) =>
       base.subTerms.foreach(traverse(_, expect = Any))
     
     // Type Application. Traverse the type constructor and arguments,
@@ -948,14 +1061,18 @@ class Resolver(tl: TraceLogger)
       raise(ErrorReport(msg"Expected a type, got ${t.describe}" -> t.toLoc :: Nil))
       return
     
-    val typ = resolveSign(t, expect = expect)
+    
     
     // * Resolve the symbol and type of the term.
-    t match
+    val typ = t match
       case t: Resolvable =>
-        resolveSymbol(t, prefer = expect)
+        resolveSymbol(t, prefer = expect, sign = true)
+        val typ = resolveSign(t, expect = expect)
         t.expandedResolvableIn(_.withTyp(typ))
-      case _ => ()
+        typ
+      case _ =>
+        val typ = resolveSign(t, expect = expect)
+        typ
     
     // * Check if the term satisfies the expectation.
     // * Check the arity of type params/args.
@@ -980,10 +1097,10 @@ class Resolver(tl: TraceLogger)
    * Given a symbol-resolved term that represents a type, resolve the
    * type that it represents.
    */
-  def resolveSign(t: Term, expect: Expect): Type = 
+  def resolveSign(t: Term, expect: Expect): Type =
     def raiseError(sym: Opt[Symbol] = N) =
       val defnMsg = sym match
-        case S(sym: FieldSymbol) => sym.defn match
+        case S(sym: DefinitionSymbol[?]) => sym.defn match
           case S(defn: TermDefinition) => s" denoting ${defn.k.desc} '${defn.sym.nme}'"
           case S(defn: ClassLikeDef) => s" denoting ${defn.kind.desc} '${defn.sym.nme}'"
           case _ => ""
@@ -1049,9 +1166,10 @@ class Resolver(tl: TraceLogger)
 end Resolver
 
 object AnySel:
-  def unapply(t: (Term.Sel | Term.SynthSel)): S[(Term, Tree.Ident)] = t match
-    case Term.Sel(lhs, id) => S((lhs, id))
-    case Term.SynthSel(lhs, id) => S((lhs, id))
+  def unapply(t: (Term.Sel | Term.SynthSel | Term.SelProj)): S[(Term, Tree.Ident, Opt[Term])] = t match
+    case Term.Sel(lhs, id) => S((lhs, id, N))
+    case Term.SynthSel(lhs, id) => S((lhs, id, N))
+    case Term.SelProj(lhs, cls, proj) => S((lhs, proj, S(cls)))
 
 object ModuleChecker:
   
@@ -1088,7 +1206,7 @@ object ModuleChecker:
     def checkSym(sym: Symbol): Bool = sym match
       case sym: BuiltinSymbol => false
       case sym: BlockLocalSymbol => sym.decl.exists(checkDecl)
-      case sym: FieldSymbol => prefer match
+      case sym: MemberSymbol => prefer match
         case Expect.Module(_) => sym.existsModuleful
         case _ => !sym.existsNonModuleful
       

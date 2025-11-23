@@ -56,7 +56,7 @@ data class A(x) with
 //│   getA() {
 //│     let tmp;
 //│     tmp = B$(false, this, 2);
-//│     return runtime.safeCall(tmp.getB())
+//│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]]; 

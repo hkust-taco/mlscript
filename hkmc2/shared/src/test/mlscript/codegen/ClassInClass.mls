@@ -64,7 +64,7 @@ data class Outer(a, b) with
 //│   o2(c, d) {
 //│     let tmp;
 //│     tmp = this.Inner(c);
-//│     return runtime.safeCall(tmp.i1(d))
+//│     return tmp.i1(d)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 

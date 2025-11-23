@@ -74,7 +74,7 @@ test(1, 2)
 //│ ║  l.55: 	fun (++) test: (Int, Int) -> Int
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = test(); runtime.safeCall(tmp2(1, 1))
+//│ let tmp2; tmp2 = test(); tmp2(1, 1)
 //│ ═══[RUNTIME ERROR] ReferenceError: test is not defined
 
 

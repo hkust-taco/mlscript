@@ -12,10 +12,10 @@ import syntax.Tree, Tree.*, Elaborator.{Ctx, State, ctx}
 trait TermSynthesizer(using State):
   protected final def sel(p: Term, k: Ident): Term.SynthSel =
     (Term.SynthSel(p, k)(N, N): Term.SynthSel).resolve
-  protected final def sel(p: Term, k: Ident, s: FieldSymbol): Term.SynthSel =
+  protected final def sel(p: Term, k: Ident, s: MemberSymbol): Term.SynthSel =
     (Term.SynthSel(p, k)(S(s), N): Term.SynthSel).resolve
   protected final def sel(p: Term, k: Str): Term.SynthSel = sel(p, Ident(k): Ident)
-  protected final def sel(p: Term, k: Str, s: FieldSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
+  protected final def sel(p: Term, k: Str, s: MemberSymbol): Term.SynthSel = sel(p, Ident(k): Ident, s)
   protected final def int(i: Int) = Term.Lit(IntLit(BigInt(i)))
   protected final def str(s: Str) = Term.Lit(StrLit(s))
   protected final def `null` = Term.Lit(UnitLit(true))
@@ -26,6 +26,8 @@ trait TermSynthesizer(using State):
   protected final def app(l: Term, r: Term, label: Str): Term.App = app(l, r, FlowSymbol(label))
   protected final def app(l: Term, r: Term, s: FlowSymbol): Term.App =
     (Term.App(l, r)(App(Dummy, Dummy), N, s): Term.App).resolve
+  protected final def `new`(cls: Term, args: Ls[Term], label: Str): Term.New = 
+    Term.New(cls, args, N)(N)
   protected final def rcd(fields: RcdField*): Term.Rcd = Term.Rcd(false, fields.toList)
   
   protected final def splitLet(sym: BlockLocalSymbol, term: Term)(inner: Split): Split =
@@ -38,23 +40,21 @@ trait TermSynthesizer(using State):
 
   /** Make a term that looks like `runtime.MatchSuccess` with its symbol. */
   protected lazy val matchSuccessClass =
-    sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol)
+    sel(runtimeRef, "MatchSuccess", State.matchSuccessClsSymbol).resolved(State.matchSuccessClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchSuccess.class`. */
   protected def matchSuccessPattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    val constructor = sel(matchSuccessClass, "class", State.matchSuccessClsSymbol)
     val parameters = parametersOpt.map(_.map(_ -> N))
-    FlatPattern.ClassLike(constructor, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
+    FlatPattern.ClassLike(matchSuccessClass, State.matchSuccessClsSymbol, parameters, false)(Tree.Dummy)
 
   /** Make a term that looks like `runtime.MatchFailure` with its symbol. */
   protected lazy val matchFailureClass =
-    sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol)
+    sel(runtimeRef, "MatchFailure", State.matchFailureClsSymbol).resolved(State.matchFailureClsSymbol)
 
   /** Make a pattern that looks like `runtime.MatchFailure.class`. */
   protected def matchFailurePattern(parametersOpt: Opt[Ls[BlockLocalSymbol]]): FlatPattern.ClassLike =
-    val constructor = sel(matchFailureClass, "class", State.matchFailureClsSymbol)
     val parameters = parametersOpt.map(_.map(_ -> N))
-    FlatPattern.ClassLike(constructor, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
+    FlatPattern.ClassLike(matchFailureClass, State.matchFailureClsSymbol, parameters, false)(Tree.Dummy)
 
   protected lazy val tupleSlice = sel(sel(runtimeRef, "Tuple"), "slice")
   protected lazy val tupleLazySlice = sel(sel(runtimeRef, "Tuple"), "lazySlice")
@@ -101,16 +101,16 @@ trait TermSynthesizer(using State):
     Split.Let(s, cond, Branch(s.safeRef, inner) ~: Split.End)
   
   protected final def makeMatchSuccess(output: Term) =
-    app(matchSuccessClass, tup(fld(output), fld(rcd())), "result of `MatchSuccess`")
+    `new`(matchSuccessClass, tup(fld(output), fld(rcd())) :: Nil, "result of `MatchSuccess`")
   
   protected final def makeMatchSuccess(output: Term, bindings: Term) =
-    app(matchSuccessClass, tup(fld(output), fld(bindings)), "result of `MatchSuccess`")
+    `new`(matchSuccessClass, tup(fld(output), fld(bindings)) :: Nil, "result of `MatchSuccess`")
   
   protected final def makeMatchSuccess(output: Term, fields: Ls[RcdField | RcdSpread]) =
-    app(matchSuccessClass, tup(fld(output), fld(Term.Rcd(false, fields))), "result of `MatchSuccess`")
+    `new`(matchSuccessClass, tup(fld(output), fld(Term.Rcd(false, fields))) :: Nil, "result of `MatchSuccess`")
     
   protected final def makeMatchFailure(errors: Term = Term.Lit(UnitLit(true))) =
-    app(matchFailureClass, tup(fld(errors)), "result of `MatchFailure`")
+    `new`(matchFailureClass, tup(fld(errors)) :: Nil, "result of `MatchFailure`")
 
   /** Make a `Branch` that calls `Pattern` symbols' `unapply` functions. */
   def makeLocalPatternBranch(

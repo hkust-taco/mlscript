@@ -40,9 +40,13 @@ f(2)
 data class A(x) with
   data class B(y) with
     fun getB() = x + y
-  fun getA() = this.B(2).getB()
+  fun getA() = 
+    // NOTE: The Term.Resolved PR made it so `this.B` gets resolved correctly.
+    // Explicitly binding `t = this` reproduces the previous error
+    let t = this
+    t.B(2).getB()
 A(1).getA()
-//│ ═══[RUNTIME ERROR] TypeError: this.B is not a function
+//│ ═══[RUNTIME ERROR] TypeError: t.B is not a function
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
 // This is due to the order of classes after lifting
@@ -195,7 +199,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.194: 	  class Bar extends Foo
+//│ ║  l.198: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'

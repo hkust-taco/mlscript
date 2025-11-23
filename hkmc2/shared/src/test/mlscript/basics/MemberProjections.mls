@@ -81,13 +81,14 @@ foo.Foo#m()
 //│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
 //│ ║  l.77: 	foo.Foo#m()
 //│ ╙──      	   ^^^^
+//│ ═══[ERROR] Expected a statically known class; found ‹error›.
 //│ = 124
 
 :e
 :re
 foo.M.Foo::m()
 //│ ╔══[ERROR] Selection is not a known class.
-//│ ║  l.88: 	foo.M.Foo::m()
+//│ ║  l.89: 	foo.M.Foo::m()
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
@@ -97,36 +98,39 @@ foo.M.Foo::m()
 :re
 foo.M.Foo#m()
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.98: 	foo.M.Foo#m()
+//│ ║  l.99: 	foo.M.Foo#m()
 //│ ╙──      	     ^^^^
 //│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
-//│ ║  l.98: 	foo.M.Foo#m()
+//│ ║  l.99: 	foo.M.Foo#m()
 //│ ╙──      	     ^^^^
+//│ ═══[ERROR] Expected a statically known class; found ‹error›.
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'M' yielded 'undefined'
 
 :e
 Foo::m
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.108: 	Foo::m
+//│ ║  l.110: 	Foo::m
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.108: 	Foo::m
+//│ ║  l.110: 	Foo::m
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ═══[ERROR] Expected a statically known class; found ‹error›.
 //│ = fun
 
 :e
 :sjs
 Foo::n(foo, 2)
 //│ ╔══[ERROR] Name not found: Foo
-//│ ║  l.121: 	Foo::n(foo, 2)
+//│ ║  l.124: 	Foo::n(foo, 2)
 //│ ╙──       	^^^
 //│ ╔══[ERROR] Identifier is not a known class.
-//│ ║  l.121: 	Foo::n(foo, 2)
+//│ ║  l.124: 	Foo::n(foo, 2)
 //│ ║         	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ═══[ERROR] Expected a statically known class; found ‹error›.
 //│ JS (unsanitized):
 //│ let lambda9;
 //│ lambda9 = (undefined, function (self, ...args) {

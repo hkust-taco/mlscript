@@ -88,6 +88,7 @@ case
 //│     defn = FunDefn:
 //│       owner = N
 //│       sym = member:lambda
+//│       dSym = term:lambda
 //│       params = Ls of 
 //│         ParamList:
 //│           flags = ()
@@ -99,29 +100,39 @@ case
 //│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       body = Match:
-//│         scrut = Ref of caseScrut
+//│         scrut = Ref:
+//│           l = caseScrut
+//│           disamb = N
 //│         arms = Ls of 
 //│           Tuple2:
 //│             _1 = Cls:
 //│               cls = class:Foo
-//│               path = Select{class:Foo}:
-//│                 qual = Ref of member:Foo
-//│                 name = Ident of "class"
+//│               path = Ref{disamb=class:Foo}:
+//│                 l = member:Foo
+//│                 disamb = S of class:Foo
 //│             _2 = Assign:
 //│               lhs = $argument0$
-//│               rhs = Select{class:Foo.x}:
-//│                 qual = Ref of caseScrut
+//│               rhs = Select{sym=term:class:Foo.x}:
+//│                 qual = Ref:
+//│                   l = caseScrut
+//│                   disamb = N
 //│                 name = Ident of "x"
 //│               rest = Assign: \
 //│               lhs = a
-//│               rhs = Ref of $argument0$
+//│               rhs = Ref:
+//│                 l = $argument0$
+//│                 disamb = N
 //│               rest = Return: \
-//│               res = Ref of a
+//│               res = Ref:
+//│                 l = a
+//│                 disamb = N
 //│               implct = false
 //│         dflt = S of Throw of Instantiate:
 //│           mut = false
 //│           cls = Select:
-//│             qual = Ref of globalThis:globalThis
+//│             qual = Ref{disamb=globalThis:globalThis}:
+//│               l = globalThis:globalThis
+//│               disamb = S of globalThis:globalThis
 //│             name = Ident of "Error"
 //│           args = Ls of 
 //│             Arg:
@@ -130,7 +141,9 @@ case
 //│         rest = End of ""
 //│     rest = Assign: \
 //│     lhs = $block$res
-//│     rhs = Ref of member:lambda
+//│     rhs = Ref:
+//│       l = member:lambda
+//│       disamb = N
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true

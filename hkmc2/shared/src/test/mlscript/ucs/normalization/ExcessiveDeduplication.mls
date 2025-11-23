@@ -1,0 +1,130 @@
+:js
+
+
+let
+  x = true
+  y = 2
+  z = true
+//│ x = true
+//│ y = 2
+//│ z = true
+
+
+// TODO: This should *not* be automatically deduplicated.
+// * In fact, we should probably never try to deduplicate things that are already duplicated in the source.
+:sjs
+if
+  x then 0
+  y then 0
+//│ JS (unsanitized):
+//│ let tmp;
+//│ split_root$: {
+//│   split_1$: {
+//│     if (x === true) {
+//│       break split_1$
+//│     } else {
+//│       if (y === true) {
+//│         break split_1$
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       }
+//│     }
+//│   }
+//│   tmp = 0;
+//│ }
+//│ tmp
+//│ = 0
+
+// * Compare with:
+:sjs
+if
+  x then 0
+  y then 1
+//│ JS (unsanitized):
+//│ if (x === true) {
+//│   0
+//│ } else {
+//│   if (y === true) {
+//│     1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ }
+//│ = 0
+
+
+// * Currently, dedup' is implemented by hash-consing after the fact, which doesn't work when bindings are involved;
+// * it fails here:
+:ssjs
+:ucs normalized
+if
+  x and z then 1
+  y is [b] then let x = 1 in x + b
+//│ Normalized:
+//│ >  if
+//│ >    x is true and
+//│ >      z is true then 1
+//│ >      y is []=1 and
+//│ >        let $element0$ = (($runtime.)Tuple.)get(y, 0)
+//│ >        let b = $element0$
+//│ >        else
+//│ >          let x
+//│ >          x = 1
+//│ >          builtin:+(x, b)
+//│ >    y is []=1 and
+//│ >      let $element0$ = (($runtime.)Tuple.)get(y, 0)
+//│ >      let b = $element0$
+//│ >      else
+//│ >        let x
+//│ >        x = 1
+//│ >        builtin:+(x, b)
+//│ JS:
+//│ split_root$1: {
+//│   split_default$: {
+//│     split_1$1: {
+//│       if (x === true) {
+//│         if (z === true) {
+//│           tmp1 = 1;
+//│           break split_root$1
+//│         } else {
+//│           if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│             element0$ = runtime.Tuple.get(y, 0);
+//│             b = element0$;
+//│             break split_1$1
+//│           } else {
+//│             break split_default$
+//│           }
+//│         }
+//│       } else {
+//│         if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│           element0$ = runtime.Tuple.get(y, 0);
+//│           b = element0$;
+//│           break split_1$1
+//│         } else {
+//│           break split_default$
+//│         }
+//│       }
+//│     }
+//│     x1 = 1;
+//│     tmp1 = x1 + b;
+//│     break split_root$1;
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│ }
+//│ block$res4 = tmp1;
+//│ undefined
+//│ = 1
+
+// * What we want is a way of let-binding split tails (ie, join points), as in:
+// >  if
+// >    let-split $j =
+// >      y is Some(argument0$) and
+// >        let b = $argument0$
+// >        else
+// >          let x
+// >          x = 1
+// >          builtin:+(x, b)
+// >    x is true and
+// >      z is true then 1
+// >      $j
+// >    $j
+
+

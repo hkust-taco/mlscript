@@ -30,7 +30,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Ref{sym=member:f,typ=class:ClsMod} of member:f
+//│   res = Resolved{sym=term:f,typ=class:ClsMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = 42
 
 fun f: module ClsMod = ClsMod
@@ -40,7 +42,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Ref{sym=member:f,typ=module:ClsMod} of member:f
+//│   res = Resolved{sym=term:f,typ=module:ClsMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = class ClsMod { whoami: "module" }
 
 fun f: TypMod = 42
@@ -50,7 +54,9 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Ref{sym=member:f,typ=type:TypMod} of member:f
+//│   res = Resolved{sym=term:f,typ=type:TypMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = 42
 
 fun f: module TypMod = TypMod
@@ -60,38 +66,33 @@ f
 //│ Resolved tree:
 //│ Blk:
 //│   stats = Nil
-//│   res = Ref{sym=member:f,typ=module:TypMod} of member:f
+//│   res = Resolved{sym=term:f,typ=module:TypMod}:
+//│     t = Ref{sym=member:f} of member:f
+//│     sym = term:f
 //│ = class TypMod { whoami: "module" }
 
 :e
 fun f: TrmMod = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'TrmMod'.
-//│ ║  l.67: 	fun f: TrmMod = 42
+//│ ╔══[ERROR] Expected a non-module type; found reference of type TrmMod denoting module 'TrmMod'.
+//│ ║  l.75: 	fun f: TrmMod = 42
 //│ ║        	       ^^^^^^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
 
-// * FIXME: Should compile to term (function) `TrmMod` rather than module `TrmMod`
-// * FIXME: Should module-check as the term module (or probably we will remove module-checks before that)
 :sjs
-:fixme
 fun f = TrmMod
-//│ ╔══[ERROR] Unexpected moduleful reference of type TrmMod.
-//│ ║  l.77: 	fun f = TrmMod
-//│ ║        	        ^^^^^^
-//│ ╙── Function must be marked as returning a 'module' in order to return a module.
 //│ JS (unsanitized):
-//│ let f5; f5 = function f() { return TrmMod1 };
+//│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod1(); return tmp4 };
 
 :fixme
 :expect 42
 f
-//│ ═══[RUNTIME ERROR] Expected: '42', got: 'class TrmMod { whoami: "module" }'
-//│ = class TrmMod { whoami: "module" }
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 :sjs
 fun f: module TrmMod = TrmMod
 //│ JS (unsanitized):
-//│ let f6; f6 = function f() { return TrmMod1 };
+//│ let f6; f6 = function f() { return TrmMod1.class };
 
 fun assertModule(module m: ClsMod): module ClsMod = m
 
@@ -101,8 +102,9 @@ assertModule(ClsMod).whoami
 assertModule(TypMod).whoami
 //│ = "module"
 
+:fixme
 assertModule(TrmMod).whoami
-//│ = "module"
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
 
 
 fun assertNonModule(m) = m
@@ -122,11 +124,7 @@ assertNonModule(TypMod).whoami
 :breakme
 :fixme
 assertNonModule(TrmMod).whoami
-//│ ╔══[ERROR] Unexpected moduleful reference of type TrmMod.
-//│ ║  l.124: 	assertNonModule(TrmMod).whoami
-//│ ║         	                ^^^^^^
-//│ ╙── Module argument passed to a non-module parameter.
-//│ = "module"
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
 
 
 type Foo[A] = Int
@@ -135,10 +133,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.136: 	fun f(x: Foo): Foo = x
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -148,10 +146,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.149: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

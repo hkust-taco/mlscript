@@ -28,11 +28,11 @@ val someInt = 42
 
 :e
 using someInt = 42
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting value 'someInt'.
+//│ ╔══[ERROR] Expected a non-module type; found reference.
 //│ ║  l.30: 	using someInt = 42
 //│ ║        	      ^^^^^^^
 //│ ╙── Implicit instance must be marked as returning a 'module' in order to have a module return type.
-//│ ╔══[ERROR] Expected a type, got reference denoting value 'someInt'
+//│ ╔══[ERROR] Expected a type, got reference
 //│ ║  l.30: 	using someInt = 42
 //│ ╙──      	      ^^^^^^^
 

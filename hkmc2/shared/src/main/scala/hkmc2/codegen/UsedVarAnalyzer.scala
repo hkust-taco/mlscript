@@ -144,10 +144,10 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
           case _ => super.applyBlock(b)
         
         override def applyValue(v: Value): Unit = v match
-          case Value.Ref(_: BuiltinSymbol) => super.applyValue(v)
-          case RefOfBms(l) =>
+          case Value.Ref(_: BuiltinSymbol, _) => super.applyValue(v)
+          case RefOfBms(l, _) =>
             accessed = accessed.addRefdDefn(l)
-          case Value.Ref(l) =>
+          case Value.Ref(l, _) =>
             accessed = accessed.addAccess(l)
           case _ => super.applyValue(v)
 
@@ -363,7 +363,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
               hasMutator += l
 
         override def applyResult(r: Result): Unit = r match
-          case Call(RefOfBms(l), args) =>
+          case Call(RefOfBms(l, _), args) =>
             args.map(super.applyArg(_))
             handleCalledBms(l)
           case Instantiate(mut, InstSel(l), args) =>
@@ -372,7 +372,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(l) =>
+          case RefOfBms(l, _) =>
             defnSyms.get(l) match
             case None => super.applyPath(p)
             case Some(defn) =>
@@ -402,7 +402,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
                   reqCapture += l
                   hasMutator += l
           
-          case Value.Ref(l) =>
+          case Value.Ref(l, _) =>
             if hasMutator.contains(l) then reqCapture += (l)
           case _ => super.applyPath(p)
         

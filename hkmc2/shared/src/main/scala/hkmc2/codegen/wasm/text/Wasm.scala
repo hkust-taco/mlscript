@@ -5,7 +5,7 @@ package text
 import mlscript.utils.*, shorthands.*
 
 import document.*
-import semantics.FieldSymbol
+import semantics.DefinitionSymbol
 
 import scala.collection.Map
 
@@ -124,7 +124,7 @@ case class Field(
       })"
 
 /** A type representing a structure type. */
-case class StructType(fields: Map[FieldSymbol, NumIdx -> Field]) extends ToWat:
+case class StructType(fields: Map[DefinitionSymbol[?], NumIdx -> Field]) extends ToWat:
 
   def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
 

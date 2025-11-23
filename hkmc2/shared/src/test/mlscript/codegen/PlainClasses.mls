@@ -46,7 +46,7 @@ Foo
 :re
 Foo()
 //│ JS (unsanitized):
-//│ Foo1()
+//│ runtime.safeCall(Foo1())
 //│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 
