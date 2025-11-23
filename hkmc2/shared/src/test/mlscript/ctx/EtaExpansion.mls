@@ -105,3 +105,37 @@ bar(0.42)
 //│ JS (unsanitized):
 //│ let tmp2; tmp2 = bar(0.42); runtime.safeCall(tmp2(instance$Ident$_Int$_))
 //│ = [0.42, 42]
+
+
+:sjs
+module Test with
+  fun test(j)(using Int) = 0
+  fun main(using Int) = test
+//│ JS (unsanitized):
+//│ let Test1;
+//│ globalThis.Object.freeze(class Test {
+//│   static {
+//│     Test1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static test(j) {
+//│     return (tmp3) => {
+//│       return 0
+//│     }
+//│   } 
+//│   static main(tmp3) {
+//│     let lambda1;
+//│     lambda1 = (undefined, function (j) {
+//│       let tmp4;
+//│       tmp4 = Test.test(j);
+//│       return runtime.safeCall(tmp4(tmp3))
+//│     });
+//│     return lambda1
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Test"]; 
+//│ });
+
+

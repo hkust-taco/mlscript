@@ -66,9 +66,14 @@ module T with
   val d = this.p
 //│ JS (unsanitized):
 //│ let T1;
-//│ (class T {
+//│ globalThis.Object.freeze(class T {
 //│   static {
-//│     T1 = T;
+//│     T1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.a = T.t;
 //│     this.b = T.t;
 //│     this.c = T.p;
@@ -80,8 +85,8 @@ module T with
 //│   static get p() {
 //│     return 2;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "T"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "T"]; 
 //│ });
 
 
@@ -103,15 +108,18 @@ module M with
   fun t = 0
 //│ JS (unsanitized):
 //│ let M1;
-//│ (class M {
+//│ globalThis.Object.freeze(class M {
 //│   static {
-//│     M1 = M;
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
 //│   }
 //│   static get t() {
 //│     return 0;
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "M"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
 
@@ -286,18 +294,18 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
-//│   enumerable: true,
-//│   value: class Foo {
-//│     constructor(x) {
-//│       this.x = x;
-//│     }
-//│     get oops() {
-//│       return this.x;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
 //│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   get oops() {
+//│     return this.x;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│ });
 
 

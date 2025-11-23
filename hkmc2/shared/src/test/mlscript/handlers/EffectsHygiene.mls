@@ -16,19 +16,25 @@ fun foo(h): module M =
 //│ let foo;
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut;
-//│   (class A {
+//│   globalThis.Object.freeze(class A {
 //│     static {
-//│       A2 = A;
+//│       A2 = this
 //│     }
-//│     static toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["module", "A"]; 
+//│     constructor() {
+//│       runtime.Unit;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
 //│   });
-//│   (class A1 {
+//│   globalThis.Object.freeze(class A1 {
 //│     static {
-//│       A3 = A1;
+//│       A3 = this
 //│     }
-//│     static toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["module", "A"]; 
+//│     constructor() {
+//│       runtime.Unit;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
 //│   });
 //│   scrut = false;
 //│   if (scrut === true) { return A2 } else { return A3 }

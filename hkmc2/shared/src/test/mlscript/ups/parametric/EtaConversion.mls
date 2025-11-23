@@ -7,25 +7,25 @@ pattern Nullable(pattern T) = T | null
 pattern Zero = 0
 
 :ucs normalized
-0 is Nullable(pattern Zero)
+0 is Nullable(Zero)
 //│ Normalized:
 //│ >  if
 //│ >    let $scrut = 0
-//│ >    let $param0 = member:Zero#666
-//│ >    let $matchResult = (member:Nullable#666.)unapply($param0#0, $scrut#0)
-//│ >    $matchResult is $runtime.MatchResult.class then true
+//│ >    let $patternArgument0$ = member:Zero
+//│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, $scrut)
+//│ >    $unapplyResult is $runtime.MatchSuccess.class(output, bindings) then true
 //│ >    else false
 //│ = true
 
 import "../../../mlscript-compile/Char.mls"
 
 :ucs normalized
-fun foo(x) = x is Nullable(pattern Char.Letter)
+fun foo(x) = x is Nullable(Char.Letter)
 //│ Normalized:
 //│ >  if
-//│ >    let $param0 = (member:Char#0.)Letter‹member:Letter›
-//│ >    let $matchResult = (member:Nullable#666.)unapply($param0#0, x#0)
-//│ >    $matchResult is $runtime.MatchResult.class then true
+//│ >    let $patternArgument0$ = (member:Char.)Letter‹member:Letter›
+//│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, x)
+//│ >    $unapplyResult is $runtime.MatchSuccess.class(output, bindings) then true
 //│ >    else false
 
 foo of null

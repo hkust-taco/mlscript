@@ -34,14 +34,7 @@ x
 :todo
 using Int -> Int = id
 use[Int -> Int](123)
-//│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.36: 	use[Int -> Int](123)
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.92: 	fun use[T](using instance: T) = instance
-//│ ║        	                 ^^^^^^^^^^^
-//│ ╙── Missing instance: Expected: ‹unspecified› (type parameter T); Available: Int, Str
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Cannot add instance with a not-yet implemented type.
 
 
 :expect -42
@@ -59,7 +52,7 @@ f
 :e
 fun f(using Int) = use[Num]
 //│ ╔══[ERROR] Cannot query instance of type Num (type parameter T) for call: 
-//│ ║  l.60: 	fun f(using Int) = use[Num]
+//│ ║  l.53: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
@@ -80,10 +73,10 @@ f
 :re
 use{[Some[Int]].value}
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
-//│ ║  l.81: 	use{[Some[Int]].value}
+//│ ║  l.74: 	use{[Some[Int]].value}
 //│ ╙──      	    ^^^^^^^^^^^
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.81: 	use{[Some[Int]].value}
+//│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
@@ -95,7 +88,7 @@ use{[Some[Int]].value}
 :re
 use([Some[Int]].value)
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.96: 	use([Some[Int]].value)
+//│ ║  l.89: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
 //│ ║  l.92: 	fun use[T](using instance: T) = instance
@@ -114,10 +107,10 @@ f[Int]
 :re
 f
 //│ ╔══[ERROR] Cannot query instance of type ‹unspecified› (type parameter T) for call: 
-//│ ║  l.115: 	f
+//│ ║  l.108: 	f
 //│ ║         	^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.108: 	fun f[T](using T) = use[T]
+//│ ║  l.101: 	fun f[T](using T) = use[T]
 //│ ║         	               ^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0

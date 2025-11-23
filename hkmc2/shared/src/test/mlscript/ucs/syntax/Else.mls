@@ -23,7 +23,7 @@ fun f(x, y, z) = if x then y else z
 //│     split = Block of Ls of 
 //│       InfixApp:
 //│         lhs = Ident of "x"
-//│         kw = keyword 'then'
+//│         kw = Keywrd of keyword 'then'
 //│         rhs = Ident of "y"
 //│       PrefixApp:
 //│         kw = Keywrd of keyword 'else'
@@ -119,3 +119,22 @@ else
 //│ ║  l.116: 	    5 else 1
 //│ ╙──       	      ^^^^
 //│ = 8
+
+data class Box[A](value: A)
+
+:w
+fun foo(x) = if x is
+  Box(0) then "The box contains zero."
+  Box(1) then "The box contains one."
+  else "I can't tell you what's inside the box."
+  else "I don't want to tell you what's inside the box."
+  else "I shouldn't tell you what's inside the box."
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.129: 	  else "I can't tell you what's inside the box."
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.130: 	  else "I don't want to tell you what's inside the box."
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── This branch is unreachable.
+//│ ║  l.131: 	  else "I shouldn't tell you what's inside the box."
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

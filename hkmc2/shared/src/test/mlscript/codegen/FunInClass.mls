@@ -25,37 +25,37 @@ fun test(a) =
 //│   Inner1 = function Inner(b) {
 //│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
-//│   Object.defineProperty(Inner1, "class", {
-//│     enumerable: true,
-//│     value: class Inner {
-//│       constructor(b) {
-//│         let tmp;
-//│         this.b = b;
-//│         tmp = Predef.print(a);
-//│       }
-//│       f(c) {
+//│   globalThis.Object.freeze(class Inner {
+//│     static {
+//│       Inner1.class = this
+//│     }
+//│     constructor(b) {
+//│       let tmp;
+//│       this.b = b;
+//│       tmp = Predef.print(a);
+//│     }
+//│     f(c) {
+//│       return globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         c
+//│       ])
+//│     } 
+//│     g(d) {
+//│       let h;
+//│       const this$Inner = this;
+//│       h = function h(e) {
 //│         return globalThis.Object.freeze([
 //│           a,
-//│           this.b,
-//│           c
+//│           this$Inner.b,
+//│           d,
+//│           e
 //│         ])
-//│       } 
-//│       g(d) {
-//│         let h;
-//│         const this$Inner = this;
-//│         h = function h(e) {
-//│           return globalThis.Object.freeze([
-//│             a,
-//│             this$Inner.b,
-//│             d,
-//│             e
-//│           ])
-//│         };
-//│         return h(d)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Inner", ["b"]]; 
+//│       };
+//│       return h(d)
 //│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
 //│   });
 //│   return Inner1(42)
 //│ };
@@ -81,44 +81,48 @@ fun test(a) =
 //│ JS (unsanitized):
 //│ let test2;
 //│ test2 = function test(a) {
-//│   let C11, C21, tmp1, tmp2;
+//│   let C11, C21, tmp, tmp1;
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
-//│   Object.defineProperty(C11, "class", {
-//│     enumerable: true,
-//│     value: class C1 {
-//│       constructor(b) {
-//│         this.b = b;
-//│         Predef.print(globalThis.Object.freeze([
-//│           a,
-//│           this.b
-//│         ]));
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C1", ["b"]]; 
+//│   globalThis.Object.freeze(class C1 {
+//│     static {
+//│       C11.class = this
 //│     }
+//│     constructor(b) {
+//│       let tmp2;
+//│       this.b = b;
+//│       tmp2 = globalThis.Object.freeze([
+//│         a,
+//│         this.b
+//│       ]);
+//│       Predef.print(tmp2);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
 //│   });
 //│   C21 = function C2(b) {
 //│     return globalThis.Object.freeze(new C2.class(b));
 //│   };
-//│   Object.defineProperty(C21, "class", {
-//│     enumerable: true,
-//│     value: class C2 {
-//│       constructor(b) {
-//│         this.b = b;
-//│         Predef.print(globalThis.Object.freeze([
-//│           a,
-//│           this.b
-//│         ]));
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C2", ["b"]]; 
+//│   globalThis.Object.freeze(class C2 {
+//│     static {
+//│       C21.class = this
 //│     }
+//│     constructor(b) {
+//│       let tmp2;
+//│       this.b = b;
+//│       tmp2 = globalThis.Object.freeze([
+//│         a,
+//│         this.b
+//│       ]);
+//│       Predef.print(tmp2);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "C2", ["b"]]; 
 //│   });
-//│   tmp1 = C11(1);
-//│   tmp2 = C21(2);
-//│   return globalThis.Object.freeze([ tmp1, tmp2 ])
+//│   tmp = C11(1);
+//│   tmp1 = C21(2);
+//│   return globalThis.Object.freeze([ tmp, tmp1 ])
 //│ };
 
 test(123)
@@ -141,28 +145,28 @@ Foo(123)
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
-//│   enumerable: true,
-//│   value: class Foo {
-//│     constructor(a) {
-//│       this.a = a;
-//│       this.foo();
-//│     }
-//│     foo() {
-//│       let bar, baz, tmp1;
-//│       const this$Foo = this;
-//│       bar = function bar() {
-//│         return this$Foo.a
-//│       };
-//│       baz = function baz() {
-//│         return this$Foo.a
-//│       };
-//│       tmp1 = bar();
-//│       return baz()
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["a"]]; 
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
 //│   }
+//│   constructor(a) {
+//│     this.a = a;
+//│     this.foo();
+//│   }
+//│   foo() {
+//│     let bar, baz, tmp;
+//│     const this$Foo = this;
+//│     bar = function bar() {
+//│       return this$Foo.a
+//│     };
+//│     baz = function baz() {
+//│       return this$Foo.a
+//│     };
+//│     tmp = bar();
+//│     return baz()
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
 //│ });
 //│ Foo1(123)
 //│ = Foo(123)
@@ -180,28 +184,28 @@ Bar(1)
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
-//│ Object.defineProperty(Bar1, "class", {
-//│   enumerable: true,
-//│   value: class Bar {
-//│     constructor(x) {
-//│       let tmp1;
-//│       this.x = x;
-//│       tmp1 = this.foo();
-//│       runtime.safeCall(tmp1());
-//│     }
-//│     foo() {
-//│       return () => {
-//│         let bar;
-//│         const this$Bar = this;
-//│         bar = function bar() {
-//│           return this$Bar.x
-//│         };
-//│         return bar()
-//│       }
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Bar", ["x"]]; 
+//│ globalThis.Object.freeze(class Bar {
+//│   static {
+//│     Bar1.class = this
 //│   }
+//│   constructor(x) {
+//│     let tmp;
+//│     this.x = x;
+//│     tmp = this.foo();
+//│     runtime.safeCall(tmp());
+//│   }
+//│   foo() {
+//│     return () => {
+//│       let bar;
+//│       const this$Bar = this;
+//│       bar = function bar() {
+//│         return this$Bar.x
+//│       };
+//│       return bar()
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar", ["x"]]; 
 //│ });
 //│ Bar1(1)
 //│ = Bar(1)

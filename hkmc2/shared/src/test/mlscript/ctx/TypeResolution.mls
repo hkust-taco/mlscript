@@ -1,0 +1,205 @@
+
+class Foo with
+  val foo: Foo = new Foo
+
+// * TODO: new-expression should also be resolvable for its type
+:rt
+new Foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = New:
+//│     cls = Ref{sym=member:Foo} of member:Foo
+//│     args = Nil
+//│     rft = N
+
+// * TODO: dynamic new-expression should also be resolvable for its type
+:rt
+new! Foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = DynNew:
+//│     cls = Ref{sym=member:Foo} of member:Foo
+//│     args = Nil
+
+val foo: Foo = new Foo
+
+:rt
+foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:foo,typ=class:Foo} of member:foo
+
+:rt
+foo.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref{sym=member:foo,typ=class:Foo} of member:foo
+//│     nme = Ident of "foo"
+
+class Foo2[A, B] with
+  val foo: Foo2[Int, Str] = new Foo2
+
+// * TODO: new-expression should also be resolvable for its type
+:rt
+new Foo2
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = New:
+//│     cls = Ref{sym=member:Foo2} of member:Foo2
+//│     args = Nil
+//│     rft = N
+
+// * TODO: dynamic new-expression should also be resolvable for its type
+:rt
+new! Foo2
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = DynNew:
+//│     cls = Ref{sym=member:Foo2} of member:Foo2
+//│     args = Nil
+
+val foo: Foo2[Str, Int] = new Foo2
+
+:rt
+foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:foo,typ=class:Foo2[class:Str, class:Int]} of member:foo
+
+:rt
+foo.foo
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Sel:
+//│     prefix = Ref{sym=member:foo,typ=class:Foo2[class:Str, class:Int]} of member:foo
+//│     nme = Ident of "foo"
+
+:rt
+fun f(x: Foo) = x
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = member:f
+//│       tsym = .f
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ()
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = x
+//│               sign = S of Ref{sym=member:Foo} of member:Foo
+//│               modulefulness = Modulefulness of N
+//│           restParam = N
+//│       tparams = N
+//│       sign = N
+//│       body = S of Ref{sym=x,typ=class:Foo} of x
+//│       resSym = ‹result of member:f›
+//│       flags = ()
+//│       modulefulness = Modulefulness of N
+//│       annotations = Nil
+//│       companion = N
+//│   res = Lit of UnitLit of false
+
+module M
+object O
+
+:rt
+M
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:M,typ=module:M} of member:M
+
+:rt
+O
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:O,typ=object:O} of member:O
+
+val m: module M = M
+val o: O = O
+
+:rt
+m
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:m,typ=module:M} of member:m
+
+:rt
+o
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Ref{sym=member:o,typ=object:O} of member:o
+
+:rt
+fun f(module m: M): module M = m
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = member:f
+//│       tsym = .f
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ()
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = m
+//│               sign = S of Ref{sym=member:M} of member:M
+//│               modulefulness = Modulefulness of S of module:M
+//│           restParam = N
+//│       tparams = N
+//│       sign = S of Ref{sym=member:M} of member:M
+//│       body = S of Ref{sym=m,typ=module:M} of m
+//│       resSym = ‹result of member:f›
+//│       flags = ()
+//│       modulefulness = Modulefulness of S of module:M
+//│       annotations = Nil
+//│       companion = N
+//│   res = Lit of UnitLit of false
+
+:rt
+fun f(o: O) = o
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Ls of 
+//│     TermDefinition:
+//│       k = Fun
+//│       sym = member:f
+//│       tsym = .f
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ()
+//│           params = Ls of 
+//│             Param:
+//│               flags = ()
+//│               sym = o
+//│               sign = S of Ref{sym=member:O} of member:O
+//│               modulefulness = Modulefulness of N
+//│           restParam = N
+//│       tparams = N
+//│       sign = N
+//│       body = S of Ref{sym=o,typ=object:O} of o
+//│       resSym = ‹result of member:f›
+//│       flags = ()
+//│       modulefulness = Modulefulness of N
+//│       annotations = Nil
+//│       companion = N
+//│   res = Lit of UnitLit of false

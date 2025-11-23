@@ -3,18 +3,12 @@ import "./Predef.mls"
 open Predef
 
 
-// TODO
-// type Stack[A] = Stack.Cons[A] | Stack.Nil
+type Stack[A] = Stack.{ Cons[A] | Nil }
+
+module Stack with ...
 
 
-module Stack[T] with ...
-
-
-// See https://github.com/hkust-taco/mlscript/pull/295#discussion_r2029692230
-// TODO support type/module overloading
-type T[A]
-
-data class (::) Cons[A](head: A, tail: T[A])
+data class (::) Cons[A](head: A, tail: Stack[A])
 object Nil
 
 fun isEmpty(xs) = xs is Nil

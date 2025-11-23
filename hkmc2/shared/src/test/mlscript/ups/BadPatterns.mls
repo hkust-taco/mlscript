@@ -1,0 +1,35 @@
+:js
+
+
+:e
+pattern P
+//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ║  l.5: 	pattern P
+//│ ╙──     	^^^^^^^^^
+
+:e
+pattern Foo1[A]: ...
+//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ║  l.11: 	pattern Foo1[A]: ...
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+
+:fixme
+pattern Foo2[pattern A]: ...
+//│ /!!!\ Uncaught error: scala.MatchError: TypeDef(Pat,Ident(A),None) (of class hkmc2.syntax.Tree$TypeDef)
+
+:e
+pattern Foo(pattern T)
+//│ ╔══[ERROR] Pattern definitions must have a body.
+//│ ║  l.21: 	pattern Foo(pattern T)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+
+
+pattern P = P
+
+:breakme // should be rejected
+:e
+:re
+1 is P
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+

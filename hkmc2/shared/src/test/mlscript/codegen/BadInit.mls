@@ -10,17 +10,25 @@ object Bar with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ const Bar$class = class Bar {
+//│ globalThis.Object.freeze(class Bar {
+//│   static {
+//│     Bar1 = globalThis.Object.freeze(new this)
+//│   }
 //│   constructor() {
 //│     this.x = 1;
 //│     const this$Bar = this;
-//│     (class Baz {
+//│     globalThis.Object.freeze(class Baz {
 //│       static {
-//│         this$Bar.Baz = Baz;
+//│         this$Bar.Baz = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static {
 //│         this.a = Bar1.x;
 //│       }
-//│       static toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["module", "Baz"]; 
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Baz"]; 
 //│     });
 //│     Object.defineProperty(this, "class", {
 //│       value: Bar
@@ -28,7 +36,7 @@ object Bar with
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Bar"]; 
-//│ }; Bar1 = globalThis.Object.freeze(new Bar$class);
+//│ });
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 
@@ -42,21 +50,31 @@ module Bar with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar3;
-//│ (class Bar2 {
+//│ globalThis.Object.freeze(class Bar2 {
 //│   static {
-//│     Bar3 = Bar2;
+//│     Bar3 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.x = 1;
-//│     (class Baz1 {
+//│     globalThis.Object.freeze(class Baz1 {
 //│       static {
-//│         Bar2.Baz = Baz1;
+//│         Bar2.Baz = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static {
 //│         this.a = Bar3.x;
 //│       }
-//│       static toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["module", "Baz"]; 
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Baz"]; 
 //│     });
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "Bar"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar"]; 
 //│ });
 
 

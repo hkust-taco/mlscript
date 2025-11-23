@@ -37,7 +37,7 @@ case class DocBuilder(NEST_COUNT: Int = DEFAULT_NEST_COUNT) {
   def nest(f: => Unit) = thisret {
     nestedDocs push empty
     f
-    this += Document.nest(NEST_COUNT, nestedDocs.pop)
+    this += Document.nest(nestedDocs.pop, NEST_COUNT)
   }
 
   /**

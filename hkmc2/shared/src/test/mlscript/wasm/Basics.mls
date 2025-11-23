@@ -1,0 +1,150 @@
+
+:global
+:wasm
+
+
+false
+//│ Wasm result:
+//│ = 0
+
+
+true
+//│ Wasm result:
+//│ = 1
+
+
+2
+//│ Wasm result:
+//│ = 2
+
+
+1 + 1
+//│ Wasm result:
+//│ = 2
+
+
+let x = 0
+x
+//│ Wasm result:
+//│ = 0
+
+
+:ge
+fun foo() = 42
+foo
+//│ ╔══[COMPILATION ERROR] Returning function instances is not supported
+//│ ║  l.34: 	foo
+//│ ╙──      	^^^
+
+
+fun foo() = 42
+foo()
+//│ Wasm result:
+//│ = 42
+
+
+:wat
+fun foo() = 42
+foo() + foo()
+//│ Wat:
+//│ (module
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func $foo (type 0) (result (ref null any))
+//│     (return
+//│       (ref.i31
+//│         (i32.const 42))))
+//│   (export "foo" (func $foo))
+//│   (elem declare func $foo)
+//│   (func $entry (type 1) (result (ref null any))
+//│     (local $foo (ref null any))
+//│     (local $tmp (ref null any))
+//│     (local $tmp1 (ref null any))
+//│     (block (result (ref null i31))
+//│       (nop)
+//│       (block (result (ref null i31))
+//│         (local.set $tmp
+//│           (call_ref 0
+//│             (ref.func $foo)))
+//│         (block (result (ref null i31))
+//│           (local.set $tmp1
+//│             (call_ref 0
+//│               (ref.func $foo)))
+//│           (ref.i31
+//│             (i32.add
+//│               (if (result i32)
+//│                 (ref.test (ref null i31)
+//│                   (local.get $tmp))
+//│                 (then
+//│                   (i31.get_s
+//│                     (ref.cast (ref null i31)
+//│                       (local.get $tmp))))
+//│                 (else
+//│                   (unreachable)))
+//│               (if (result i32)
+//│                 (ref.test (ref null i31)
+//│                   (local.get $tmp1))
+//│                 (then
+//│                   (i31.get_s
+//│                     (ref.cast (ref null i31)
+//│                       (local.get $tmp1))))
+//│                 (else
+//│                   (unreachable)))))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 84
+
+
+fun foo(x) = x + 1
+foo(41)
+//│ Wasm result:
+//│ = 42
+
+
+class Foo(val x)
+new Foo(0)
+//│ Wasm result:
+//│ = {}
+
+
+:wat
+class Foo(val a)
+(new Foo(42)).Foo#a
+//│ Wat:
+//│ (module
+//│   (type $Foo (struct (field $a (mut (ref null any)))))
+//│   (type (func (param $a (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (func $Foo (type 1) (param $a (ref null any)) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (block
+//│         (struct.set $Foo 0
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (local.get $a))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo" (func $Foo))
+//│   (elem declare func $Foo)
+//│   (func $entry (type 2) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $tmp (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (local.set $tmp
+//│           (call $Foo
+//│             (ref.i31
+//│               (i32.const 42))))
+//│         (struct.get $Foo 0
+//│           (ref.cast (ref $Foo)
+//│             (local.get $tmp))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42

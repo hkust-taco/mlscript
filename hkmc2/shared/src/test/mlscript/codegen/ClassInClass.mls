@@ -18,56 +18,56 @@ data class Outer(a, b) with
 //│ Outer1 = function Outer(a, b) {
 //│   return globalThis.Object.freeze(new Outer.class(a, b));
 //│ };
-//│ Object.defineProperty(Outer1, "class", {
-//│   enumerable: true,
-//│   value: class Outer {
-//│     constructor(a, b) {
-//│       let tmp, tmp1, tmp2;
-//│       this.a = a;
-//│       this.b = b;
-//│       const this$Outer = this;
-//│       this.Inner = function Inner(c) {
-//│         return globalThis.Object.freeze(new Inner.class(c));
-//│       };
-//│       Object.defineProperty(this.Inner, "class", {
-//│         enumerable: true,
-//│         value: class Inner {
-//│           constructor(c) {
-//│             let tmp3, tmp4, tmp5;
-//│             this.c = c;
-//│             tmp3 = Predef.print(this$Outer.a);
-//│             tmp4 = Predef.print(this.c);
-//│             tmp5 = this.i1(this$Outer.a);
-//│             Predef.print(tmp5);
-//│           }
-//│           i1(d) {
-//│             return globalThis.Object.freeze([
-//│               this$Outer.b,
-//│               this.c,
-//│               d
-//│             ])
-//│           }
-//│           toString() { return runtime.render(this); }
-//│           static [definitionMetadata] = ["class", "Inner", ["c"]]; 
-//│         }
-//│       });
-//│       tmp = this.Inner(this.a);
-//│       this.i = tmp;
-//│       tmp1 = Predef.print(this.i.c);
-//│       tmp2 = runtime.safeCall(this.i.i1(1));
-//│       Predef.print(tmp2);
-//│     }
-//│     o1(c) {
-//│       return this.Inner(c)
-//│     } 
-//│     o2(c, d) {
-//│       let tmp;
-//│       tmp = this.Inner(c);
-//│       return runtime.safeCall(tmp.i1(d))
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
+//│ globalThis.Object.freeze(class Outer {
+//│   static {
+//│     Outer1.class = this
 //│   }
+//│   constructor(a, b) {
+//│     let tmp, tmp1, tmp2;
+//│     this.a = a;
+//│     this.b = b;
+//│     const this$Outer = this;
+//│     this.Inner = function Inner(c) {
+//│       return globalThis.Object.freeze(new Inner.class(c));
+//│     };
+//│     globalThis.Object.freeze(class Inner {
+//│       static {
+//│         this$Outer.Inner.class = this
+//│       }
+//│       constructor(c) {
+//│         let tmp3, tmp4, tmp5;
+//│         this.c = c;
+//│         tmp3 = Predef.print(this$Outer.a);
+//│         tmp4 = Predef.print(this.c);
+//│         tmp5 = this.i1(this$Outer.a);
+//│         Predef.print(tmp5);
+//│       }
+//│       i1(d) {
+//│         return globalThis.Object.freeze([
+//│           this$Outer.b,
+//│           this.c,
+//│           d
+//│         ])
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Inner", ["c"]]; 
+//│     });
+//│     tmp = this.Inner(this.a);
+//│     this.i = tmp;
+//│     tmp1 = Predef.print(this.i.c);
+//│     tmp2 = runtime.safeCall(this.i.i1(1));
+//│     Predef.print(tmp2);
+//│   }
+//│   o1(c) {
+//│     return this.Inner(c)
+//│   } 
+//│   o2(c, d) {
+//│     let tmp;
+//│     tmp = this.Inner(c);
+//│     return runtime.safeCall(tmp.i1(d))
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 
 //│ });
 
 

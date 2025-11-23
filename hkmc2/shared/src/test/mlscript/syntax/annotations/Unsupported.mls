@@ -3,17 +3,17 @@
 
 object debug
 
-import "../../../mlscript-compile/Str.mls"
+import "../../../mlscript-compile/StrOps.mls"
 
 :w
 @debug
-open Str
+open StrOps
 //│ ╔══[WARNING] This annotation has no effect
 //│ ║  l.9: 	@debug
 //│ ║       	 ^^^^^
 //│ ╟── Annotations are not supported on open terms.
-//│ ║  l.10: 	open Str
-//│ ╙──      	^^^^^^^^
+//│ ║  l.10: 	open StrOps
+//│ ╙──      	^^^^^^^^^^^
 
 :w
 @debug 0

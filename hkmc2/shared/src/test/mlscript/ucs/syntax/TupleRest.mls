@@ -1,5 +1,4 @@
-// :parseOnly
-// :pt
+:js
 
 import "../../../mlscript-compile/Stack.mls"
 

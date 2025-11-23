@@ -15,6 +15,9 @@ print(print("hello!"))
 
 import "../../mlscript-compile/Runtime.mls"
 
+Runtime.printRaw(1)
+//│ > 1
+
 print(Runtime.Unit)
 //│ > ()
 
@@ -83,3 +86,17 @@ print of Str.startsWith("hello, world", "")
 
 print of Str.startsWith("hello, world", "farewell")
 //│ > false
+
+
+stackLimit
+//│ = 0
+
+:ssjs
+set stackLimit = 1
+//│ JS:
+//│ Runtime.stackLimit = 1; block$res29 = runtime.Unit; undefined
+
+stackLimit
+//│ = 1
+
+

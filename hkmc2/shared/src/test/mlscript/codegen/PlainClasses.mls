@@ -7,22 +7,25 @@
 class Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ Foo1 = class Foo {
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1 = this
+//│   }
 //│   constructor() {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 Foo is Foo
 //│ JS (unsanitized):
-//│ let scrut; scrut = Foo1; if (scrut instanceof Foo1) { true } else { false }
+//│ if (Foo1 instanceof Foo1) { true } else { false }
 //│ = false
 
 (new Foo) is Foo
 //│ JS (unsanitized):
-//│ let scrut1;
-//│ scrut1 = globalThis.Object.freeze(new Foo1());
-//│ if (scrut1 instanceof Foo1) { true } else { false }
+//│ let scrut;
+//│ scrut = globalThis.Object.freeze(new Foo1());
+//│ if (scrut instanceof Foo1) { true } else { false }
 //│ = true
 
 new Foo
@@ -51,13 +54,16 @@ data class Foo with { print("hi") }
 print("ok")
 //│ JS (unsanitized):
 //│ let Foo3;
-//│ Foo3 = class Foo2 {
+//│ globalThis.Object.freeze(class Foo2 {
+//│   static {
+//│     Foo3 = this
+//│   }
 //│   constructor() {
 //│     Predef.print("hi");
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 //│ Predef.print("ok")
 //│ > ok
 
@@ -69,30 +75,55 @@ fun test() =
 //│ let test;
 //│ test = function test() {
 //│   let Foo5, tmp;
-//│   Foo5 = class Foo4 {
+//│   globalThis.Object.freeze(class Foo4 {
+//│     static {
+//│       Foo5 = this
+//│     }
 //│     constructor() {
 //│       Predef.print("hi");
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo"]; 
-//│   };
+//│   });
 //│   tmp = Predef.print("ok");
 //│   return Foo5
 //│ };
 
 let t = test()
 //│ JS (unsanitized):
-//│ let t, tmp; tmp = test(); t = tmp;
+//│ let t; t = test();
 //│ > ok
 //│ t = class Foo
 
+:e
 new t
+//│ ╔══[ERROR] Expected a statically known class; found reference.
+//│ ║  l.99: 	new t
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
 //│ > hi
 //│ = Foo
 
+new! t
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze(new t())
+//│ > hi
+//│ = Foo
+
+:e
 new t()
+//│ ╔══[ERROR] Expected a statically known class; found reference.
+//│ ║  l.116: 	new t()
+//│ ║         	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ JS (unsanitized):
+//│ globalThis.Object.freeze(new t())
+//│ > hi
+//│ = Foo
+
+new! t()
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
 //│ > hi
@@ -105,20 +136,21 @@ class Foo with
   fun z() = y + x
 //│ JS (unsanitized):
 //│ let Foo6;
-//│ Foo6 = class Foo5 {
-//│   #y;
-//│   constructor() {
-//│     let tmp1;
-//│     this.x = 1;
-//│     tmp1 = this.x + 1;
-//│     this.#y = tmp1;
+//│ globalThis.Object.freeze(class Foo5 {
+//│   static {
+//│     Foo6 = this
 //│   }
+//│   constructor() {
+//│     this.x = 1;
+//│     this.#y = this.x + 1;
+//│   }
+//│   #y;
 //│   z() {
 //│     return this.#y + this.x
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 
 class Foo with
@@ -131,9 +163,10 @@ class Foo with
   print("hello")
 //│ JS (unsanitized):
 //│ let Foo8;
-//│ Foo8 = class Foo7 {
-//│   #y1;
-//│   #y2;
+//│ globalThis.Object.freeze(class Foo7 {
+//│   static {
+//│     Foo8 = this
+//│   }
 //│   constructor() {
 //│     this.x1 = 1;
 //│     this.x2 = 2;
@@ -141,6 +174,8 @@ class Foo with
 //│     this.#y2 = 4;
 //│     Predef.print("hello");
 //│   }
+//│   #y1;
+//│   #y2;
 //│   z1() {
 //│     return 5
 //│   } 
@@ -149,7 +184,7 @@ class Foo with
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 
 class Foo with
@@ -158,7 +193,10 @@ class Foo with
   fun bar(z) = foo(z) + 1
 //│ JS (unsanitized):
 //│ let Foo10;
-//│ Foo10 = class Foo9 {
+//│ globalThis.Object.freeze(class Foo9 {
+//│   static {
+//│     Foo10 = this
+//│   }
 //│   constructor() {
 //│     this.x = 1;
 //│   }
@@ -166,27 +204,26 @@ class Foo with
 //│     return this.x + y
 //│   } 
 //│   bar(z) {
-//│     let tmp1;
-//│     tmp1 = this.foo(z);
-//│     return tmp1 + 1
+//│     let tmp;
+//│     tmp = this.foo(z);
+//│     return tmp + 1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 let a = new Foo
 print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
-//│ let a, tmp1, tmp2, tmp3, tmp4, tmp5;
-//│ tmp1 = globalThis.Object.freeze(new Foo10());
-//│ a = tmp1;
-//│ tmp2 = Predef.print(a.x);
-//│ tmp3 = runtime.safeCall(a.foo(1));
-//│ tmp4 = Predef.print(tmp3);
-//│ tmp5 = runtime.safeCall(a.bar(1));
-//│ Predef.print(tmp5)
+//│ let a, tmp, tmp1, tmp2, tmp3;
+//│ a = globalThis.Object.freeze(new Foo10());
+//│ tmp = Predef.print(a.x);
+//│ tmp1 = runtime.safeCall(a.foo(1));
+//│ tmp2 = Predef.print(tmp1);
+//│ tmp3 = runtime.safeCall(a.bar(1));
+//│ Predef.print(tmp3)
 //│ > 1
 //│ > 2
 //│ > 3
@@ -200,43 +237,49 @@ class Foo with
   val x = 2
 //│ ╔══[ERROR] Multiple definitions of symbol 'x'
 //│ ╟── defined here
-//│ ║  l.199: 	  val x = 1
+//│ ║  l.236: 	  val x = 1
 //│ ║         	  ^^^^^^^^^
 //│ ╟── defined here
-//│ ║  l.200: 	  val x = 2
+//│ ║  l.237: 	  val x = 2
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
-//│ Foo12 = class Foo11 {
+//│ globalThis.Object.freeze(class Foo11 {
+//│   static {
+//│     Foo12 = this
+//│   }
 //│   constructor() {
 //│     this.x = 1;
 //│     this.x = 2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 :e
 class Foo with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.222: 	  let x = 2
+//│ ║  l.262: 	  let x = 2
 //│ ║         	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.221: 	  val x = 1
+//│ ║  l.261: 	  val x = 1
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
-//│ Foo14 = class Foo13 {
-//│   #x;
+//│ globalThis.Object.freeze(class Foo13 {
+//│   static {
+//│     Foo14 = this
+//│   }
 //│   constructor() {
 //│     this.x = 1;
 //│     this.#x = 2;
 //│   }
+//│   #x;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 
 
@@ -248,14 +291,17 @@ class Foo with
 :e
 class Foo with val x = 1
 //│ ╔══[ERROR] Illegal body of class definition (should be a block; found term definition).
-//│ ║  l.249: 	class Foo with val x = 1
+//│ ║  l.292: 	class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;
-//│ Foo16 = class Foo15 {
+//│ globalThis.Object.freeze(class Foo15 {
+//│   static {
+//│     Foo16 = this
+//│   }
 //│   constructor() {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
-//│ };
+//│ });
 
 

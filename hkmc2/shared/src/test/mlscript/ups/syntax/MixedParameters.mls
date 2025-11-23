@@ -1,0 +1,89 @@
+:js
+
+// The semantics of mixed pattern parameters and extraction parameters.
+
+pattern Bit = 0 | 1
+
+pattern P(pattern Q, a, b) = [Q as a, Q as b]
+
+if [0, 0] is P(Bit, a, b) then "values: " + a + ", " + b
+//│ = "values: 0, 0"
+
+// We can omit all extraction parameters completely. All extraction parameters
+// will be placed in a tuple and returned.
+if [0, 0] is P(Bit) as ab then ab
+//│ = [0, 0]
+
+// Because the above pattern definition can be seen as:
+pattern P'(pattern Q) = [Q as a, Q as b] => [a, b]
+
+:e
+:re
+// However, we cannot provide only part of the extraction parameters. The rule
+// is that we either provide all of them or none at all.
+if [0, 0] is P(Bit, a) then a
+//│ ╔══[ERROR] Expected two extraction arguments, but found only one argument.
+//│ ║  l.24: 	if [0, 0] is P(Bit, a) then a
+//│ ╙──      	               ^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:e
+:re
+// But `P` is not equivalent to `P'`! If no extraction parameters are declared,
+// then none can be provided.
+if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
+//│ ╔══[ERROR] Expected zero extraction arguments, but found two arguments.
+//│ ║  l.34: 	if [0, 0] is P'(Bit, a, b) then "values: " + a + ", " + b
+//│ ╙──      	                ^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:fixme
+// Order actually matters. But it seems that I didn't implement the error
+// reporting correctly.
+if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
+//│ ║  l.43: 	if [0, 0] is P(a, Bit, b) then "values: " + a + ", " + b
+//│ ╙──      	                                            ^
+//│ = "values: 0, 0"
+
+pattern S(a, pattern Q, b) = [Q as a, Q as b]
+
+fun f(x) = if x is S(a, 0, b) then [a, b]
+
+f([0, 0])
+//│ = [0, 0]
+
+:fixme
+// Order actually matters.
+fun f(x) = if x is S(Bit, a, b) then [a, b]
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'a'
+//│ ║  l.58: 	fun f(x) = if x is S(Bit, a, b) then [a, b]
+//│ ╙──      	                                      ^
+
+f([0, 0])
+//│ = [0, 0]
+
+// The last thing to note is that if there is only one pattern parameter, it
+// will not be put into a tuple.
+pattern Q(pattern A, result) = A as result
+
+if 0 is Q(Bit) as y then y
+//│ = 0
+
+// The value of y is the same in the example above and in the one below.
+if 0 is Q(Bit, y) then y
+//│ = 0
+
+pattern Q'(pattern A) = A
+
+if 0 is Q'(Bit) as y then y
+//│ = 0
+
+:e
+:re
+// Similarly, it cannot be written like this:
+if 0 is Q'(Bit, y) then y
+//│ ╔══[ERROR] Expected zero extraction arguments, but found one argument.
+//│ ║  l.85: 	if 0 is Q'(Bit, y) then y
+//│ ╙──      	           ^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error

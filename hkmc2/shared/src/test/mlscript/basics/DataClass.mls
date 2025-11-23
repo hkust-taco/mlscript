@@ -14,6 +14,9 @@ data Foo(x: Int)
 //│ ╟── Such annotations are not supported on application terms.
 //│ ║  l.12: 	data Foo(x: Int)
 //│ ╙──      	     ^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'Int' yielded 'undefined'
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.12: 	data Foo(x: Int)
+//│ ╙──      	            ^^^
+//│ = Foo(undefined)
 
 

@@ -1,0 +1,12 @@
+:lift
+:js
+
+
+// TODO: Improve warning messages
+:w
+fun foo() =
+  pattern P = Int
+  x => x is P
+//│ ═══[WARNING] Cannot yet lift class `P` as it is used as a first-class class.
+
+

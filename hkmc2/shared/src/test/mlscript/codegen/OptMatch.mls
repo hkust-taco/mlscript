@@ -31,11 +31,11 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let isDefined1, tmp1, lambda;
+//│ let isDefined1, lambda;
 //│ lambda = (undefined, function (caseScrut) {
-//│   let param0;
+//│   let argument0$;
 //│   if (caseScrut instanceof Some1.class) {
-//│     param0 = caseScrut.value;
+//│     argument0$ = caseScrut.value;
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
 //│     return false
@@ -43,8 +43,7 @@ val isDefined = case
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ tmp1 = lambda;
-//│ isDefined1 = tmp1;
+//│ isDefined1 = lambda;
 //│ isDefined = fun
 
 isDefined(Some(1))

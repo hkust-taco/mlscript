@@ -1,8 +1,8 @@
 
 import "fs"
 
-import "../Str.mls"
-open Str
+import "../StrOps.mls"
+open StrOps
 
 import "../Predef.mls"
 open Predef

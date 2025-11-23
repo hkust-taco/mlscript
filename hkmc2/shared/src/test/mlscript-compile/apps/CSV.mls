@@ -2,8 +2,8 @@
 // Adapted from https://www.bennadel.com/blog/1504-ask-ben-parsing-csv-strings-with-javascript-exec-regular-expression-command.htm
 // (JS code commented at bottom)
 
-import "../Str.mls"
-open Str
+import "../StrOps.mls"
+open StrOps
 
 import "../Predef.mls"
 open Predef

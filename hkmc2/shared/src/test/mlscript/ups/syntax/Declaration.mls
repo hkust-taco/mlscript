@@ -14,13 +14,6 @@ pattern Foo(val T) = null | T
 
 pattern Foo(pattern T) = null | T
 
-:fixme
-pattern Foo(pattern T)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-
-:fixme
-pattern Foo
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-
-:todo
+:breakme
 data pattern Foo = _
+

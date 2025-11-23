@@ -55,21 +55,21 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
 //│ };
-//│ Object.defineProperty(Baz1, "class", {
-//│   enumerable: true,
-//│   value: class Baz extends Bar3.class {
-//│     constructor(z) {
-//│       let tmp2;
-//│       tmp2 = z * 1;
-//│       super(tmp2);
-//│       this.z = z;
-//│     }
-//│     get baz() {
-//│       return this.bar * 2;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Baz", ["z"]]; 
+//│ globalThis.Object.freeze(class Baz extends Bar3.class {
+//│   static {
+//│     Baz1.class = this
 //│   }
+//│   constructor(z) {
+//│     let tmp;
+//│     tmp = z * 1;
+//│     super(tmp);
+//│     this.z = z;
+//│   }
+//│   get baz() {
+//│     return this.bar * 2;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
 //│ });
 
 let b = Baz(42)

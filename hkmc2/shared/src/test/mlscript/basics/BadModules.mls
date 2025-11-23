@@ -3,11 +3,10 @@
 
 class Foo
 
-// TODO Report elab' error
 :ge
 module M extends Foo
-//│ > let M1;try { (class M extends Foo1 {   static {     M1 = M;     super();   }   static toString() { return runtime.render(this); }   static [definitionMetadata] = ["module", "M"];  }); block$res2 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                 ^^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] 'super' keyword unexpected here
+//│ ╔══[COMPILATION ERROR] Modules cannot have an extension clause.
+//│ ║  l.7: 	module M extends Foo
+//│ ╙──     	                 ^^^
 
 

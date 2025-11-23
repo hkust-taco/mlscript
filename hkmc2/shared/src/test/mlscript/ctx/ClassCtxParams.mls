@@ -105,17 +105,17 @@ class Foo(using T) with
 //│ Foo9 = function Foo(tmp5) {
 //│   return globalThis.Object.freeze(new Foo.class(tmp5));
 //│ };
-//│ Object.defineProperty(Foo9, "class", {
-//│   enumerable: true,
-//│   value: class Foo8 {
-//│     #tmp;
-//│     constructor(tmp5) {
-//│       this.#tmp = tmp5;
-//│       Predef.print(T1);
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", [null]]; 
+//│ globalThis.Object.freeze(class Foo8 {
+//│   static {
+//│     Foo9.class = this
 //│   }
+//│   constructor(tmp5) {
+//│     this.#tmp = tmp5;
+//│     Predef.print(T1);
+//│   }
+//│   #tmp;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", [null]]; 
 //│ });
 
 :todo
@@ -124,13 +124,6 @@ x => x.Foo#S
 //│ ╔══[ERROR] Class 'Foo' does not contain member 'S'.
 //│ ║  l.123: 	x => x.Foo#S
 //│ ╙──       	           ^
-//│ ╔══[ERROR] Cannot query instance of type T for call: 
-//│ ║  l.123: 	x => x.Foo#S
-//│ ║         	      ^^^^
-//│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.101: 	class Foo(using T) with
-//│ ║         	                ^
-//│ ╙── Missing instance: Expected: T; Available: Int
 //│ ╔══[ERROR] Cannot query instance of type T for call: 
 //│ ║  l.123: 	x => x.Foo#S
 //│ ║         	      ^^^^

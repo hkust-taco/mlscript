@@ -31,8 +31,8 @@ x => if x is
   refined(None) then x
   refined(Some) then x
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.32: 	  refined(Some) then x
+//│ ║  l.31: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 //│ ╔══[ERROR] Name not found: refined
-//│ ║  l.31: 	  refined(None) then x
+//│ ║  l.32: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^

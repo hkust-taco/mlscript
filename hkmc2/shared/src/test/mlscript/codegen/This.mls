@@ -43,9 +43,14 @@ module Test with
     [this.a, x]
 //│ JS (unsanitized):
 //│ let Test1;
-//│ (class Test {
+//│ globalThis.Object.freeze(class Test {
 //│   static {
-//│     Test1 = Test;
+//│     Test1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
 //│     this.a = 3;
 //│   }
 //│   static test1(x) {
@@ -57,8 +62,8 @@ module Test with
 //│       x
 //│     ])
 //│   }
-//│   static toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["module", "Test"]; 
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Test"]; 
 //│ });
 
 
@@ -67,5 +72,16 @@ Test.test1(123)
 
 Test.test2(123)
 //│ = [3, 123]
+
+
+// * Note: a module that induces a `this`-proxy
+// :sjs
+class A(x) with
+  module M with
+    print(x)
+
+A(42)
+//│ > 42
+//│ = A(_)
 
 

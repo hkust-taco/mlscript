@@ -8,7 +8,7 @@ import "../../js/MyClass.mjs"
 MyClass
 //│ = class MyClass
 
-new MyClass("Bob")
+new! MyClass("Bob")
 //│ = MyClass { name: "Bob" }
 
 let C = MyClass
@@ -17,8 +17,7 @@ let C = MyClass
 let c = C
 //│ c = class MyClass
 
-:todo
-new c("Bob")
+new! c("Bob")
 //│ = MyClass { name: "Bob" }
 
 :re
@@ -31,7 +30,7 @@ fun foo() =
   import "../../js/MyClass.mjs"
   ()
 //│ ╔══[COMPILATION ERROR] Imports must be at the top level
-//│ ║  l.31: 	  import "../../js/MyClass.mjs"
+//│ ║  l.30: 	  import "../../js/MyClass.mjs"
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

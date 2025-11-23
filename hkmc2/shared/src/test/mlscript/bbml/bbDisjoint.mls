@@ -162,17 +162,19 @@ fun badanno: outer
 //│ ╔══[ERROR] Illegal outer reference.
 //│ ║  l.161: 	fun badanno: outer
 //│ ╙──       	             ^^^^^
+//│ ═══[ERROR] Expected a type, got ‹error›
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
 
 :e
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[ERROR] Only one outer variable can be bound.
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.170: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal forall annotation.
-//│ ║  l.169: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
+//│ ║  l.170: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^
+//│ ═══[ERROR] Expected a type, got ‹error›
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
 
@@ -215,13 +217,13 @@ fun foo(r1) =
     fork((_ => r1.ref 1), (_ => r2.ref 2))
     foo(r2)
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.213: 	fun foo(r1) =
+//│ ║  l.215: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.214: 	  region r2 in
+//│ ║  l.216: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.215: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.217: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.216: 	    foo(r2)
+//│ ║  l.218: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
@@ -237,13 +239,13 @@ fun foo(r1) =
 //│ ╟── because: cannot constrain  'r22  <:  outer
 //│ ╙── because: cannot constrain  ¬outer  <:  outer
 //│ ╔══[ERROR] Type error in function literal
-//│ ║  l.213: 	fun foo(r1) =
+//│ ║  l.215: 	fun foo(r1) =
 //│ ║         	        ^^^^^
-//│ ║  l.214: 	  region r2 in
+//│ ║  l.216: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.215: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
+//│ ║  l.217: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.216: 	    foo(r2)
+//│ ║  l.218: 	    foo(r2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo
 //│ ╟── because: cannot constrain  ('r1) ->{'eff} ('app)  <:  'foo

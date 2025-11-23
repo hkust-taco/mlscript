@@ -1,0 +1,22 @@
+:js
+
+
+:fixme // TODO: support
+// :sjs
+fun Foo(x) = new Foo(x, 0)
+data class Foo(x, y)
+//│ ╔══[ERROR] Not yet supported: overloading of function 'Foo'
+//│ ║  l.6: 	fun Foo(x) = new Foo(x, 0)
+//│ ║       	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── with class of the same name
+//│ ║  l.7: 	data class Foo(x, y)
+//│ ╙──     	     ^^^^^^^^^^^^^^^
+
+:fixme
+Foo(123)
+//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ║  l.16: 	Foo(123)
+//│ ╙──      	   ^^^^^
+//│ = Foo(123, undefined)
+
+

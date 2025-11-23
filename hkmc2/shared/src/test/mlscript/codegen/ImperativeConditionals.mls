@@ -14,7 +14,7 @@ fun f(x) =
 //│ ╔══[PARSE ERROR] Unexpected 'return' keyword here
 //│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	           ^^^^^^
-//│ ╔══[ERROR] Unrecognized term split (integer literal).
+//│ ╔══[ERROR] Unrecognized term split (integer literal)
 //│ ║  l.12: 	  if x < 0 return 0
 //│ ╙──      	         ^
 
@@ -31,6 +31,12 @@ fun hasZeroElement(xs) =
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	         ^
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ╙──      	            ^^
+//│ ╔══[WARNING] This catch-all clause makes the following branches unreachable.
+//│ ║  l.24: 	    Cons(0, tl) return true
+//│ ║        	         ^
+//│ ╟── This branch is unreachable.
 //│ ║  l.24: 	    Cons(0, tl) return true
 //│ ╙──      	            ^^
 

@@ -6,7 +6,7 @@ package ups
 import mlscript.utils.*, shorthands.*
 
 import syntax.{Keyword, LetBind, Tree}, Tree.{DecLit, Ident, IntLit, StrLit, UnitLit}
-import Term.{Blk, IfLike, Rcd, Ref, SynthSel}
+import Term.{Blk, Rcd, Ref, SynthIf, SynthSel}
 import Pattern.{Instantiation, Head}
 import Elaborator.{Ctx, State, ctx}, utils.TL
 import ucs.{TermSynthesizer, FlatPattern, safeRef}
@@ -36,15 +36,16 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       case index: Int => s"p_$index"
     /** Convert the field name to an `Ident`. */
     def asIdent: Ident = field match
-      case id: Ident => id
+      case id: Ident => new Ident(id.name)
       case index: Int => Ident(index.toString)
   
   extension (head: Head)
     /** Create a flat pattern that can be used in the UCS expressions. */
     def toFlatPattern: FlatPattern = head match
-      case lit: syntax.Literal => FlatPattern.Lit(lit)(Nil)
-      case sym: (ClassSymbol | ModuleSymbol) =>
-        FlatPattern.ClassLike(reference(sym).getOrElse(Term.Error), N, Nil)
+      case lit: syntax.Literal => FlatPattern.Lit(lit)
+      case sym: (ClassSymbol | ModuleOrObjectSymbol) =>
+        val constructor = reference(sym, head.toLoc).getOrElse(Term.Error)
+        FlatPattern.ClassLike(constructor, sym, N, false)(Tree.Dummy)
     def showDbg: Str = head match
       case lit: syntax.Literal => lit.idStr
       case sym: ClassLikeSymbol => sym.nme
@@ -119,7 +120,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       Split.Else(multiMatcherBranch(specialized, scrutinee))
     // Make a split that tries all branches in order.
     val topmostSplit = branches.foldRight(default)(_ ~: _)
-    val bodyTerm = IfLike(Keyword.`if`, topmostSplit)
+    val bodyTerm = SynthIf(topmostSplit)
     log(s"Multi-matcher body:\n${topmostSplit.prettyPrint}")
     (paramList(param(scrutinee)), bodyTerm)
   
@@ -153,11 +154,11 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         // Check the presence of the field, and call the matcher if it exists.
         val fieldIdent: Ident = field.asIdent
         val fieldSymbol = TempSymbol(N, fieldIdent.name)
-        val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)(Nil)
+        val fieldTest = FlatPattern.Record((fieldIdent -> fieldSymbol) :: Nil)
         val consequent = Split.Else:
           app(subMatcherSymbol.safeRef, tup(fld(fieldSymbol.safeRef)), "result")
         val branch = Branch(scrutinee.safeRef, fieldTest, consequent)
-        IfLike(Keyword.`if`, branch ~: Split.Else(emptyRecordSymbol.safeRef))
+        SynthIf(branch ~: Split.Else(emptyRecordSymbol.safeRef))
       LetDecl(subScrutineeVar, Nil) :: DefineVar(subScrutineeVar, conditional) :: Nil
     .toList
     // If there are no bindings, we do not need to create the empty record.
@@ -173,13 +174,13 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
         val split = makeSplit(
           // There's no transform in the topmost pattern. So, we just make and
-          // return a `MatchResult` instance.
+          // return a `MatchSuccess` instance.
           makeConsequent = (outputSymbol, bindings) => Split.Else:
-            makeMatchResult(outputSymbol.use, bindings.use),
+            makeMatchSuccess(outputSymbol.use, bindings.use),
           // Here the string "topmost" is just to indicate the failure is
           // passed from the topmost split for the purpose of debugging.
           alternative = Split.Else(makeMatchFailure(str("topmost"))))
-        val test = IfLike(Keyword.`if`, split)
+        val test = SynthIf(split)
         // The corresponding record field should just take the result of the split.
         val field = RcdField(str(label.asFieldName), symbol.safeRef)
         (DefineVar(symbol, test) :: LetDecl(symbol, Nil) :: stmts, field :: fields)
@@ -210,20 +211,20 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
    *  @param output The default output of the pattern. It will not be evaluated
    *                if there is a transform term.
    */
-  private def completeMatchResult(
+  private def completeMatchSuccess(
     transformOpt: Opt[TempSymbol],
     output: => Term,
     bindings: => Term
   ): Split = transformOpt match
     // If no transform is provided, we just return the current scrutinee and
-    // the bindings through `MatchResult`.
+    // the bindings through `MatchSuccess`.
     case N => Split.Else:
-      makeMatchResult(output, bindings)
+      makeMatchSuccess(output, bindings)
     case S(transform) =>
       val resultSymbol = TempSymbol(N, "transformResult")
       val transformTerm = app(transform.safeRef, tup(fld(bindings)), "the transform's result")
       Split.Let(resultSymbol, transformTerm, Split.Else(
-        makeMatchResult(resultSymbol.safeRef)))
+        makeMatchSuccess(resultSymbol.safeRef)))
   
   def completePattern(
       pattern: SpPat,
@@ -265,7 +266,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
         case ((field, pattern), makeInnerSplit) =>
           val label = pattern.label
           val target = sel(subScrutinees(field).safeRef, label.asFieldName)
-          // This is the symbol for `MatchResult`.
+          // This is the symbol for `MatchSuccess`.
           val resultSymbol = TempSymbol(N, s"result$label$$")
           // This is the symbol for the output of the pattern.
           val outputSymbol = TempSymbol(N, s"output$label$$")
@@ -280,7 +281,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
               val bindingsSymbol = TempSymbol(N, "bindings")
               Split.Let(resultSymbol, target, Branch(
                 scrutinee = resultSymbol.safeRef,
-                pattern = matchResultPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
+                pattern = matchSuccessPattern(S(outputSymbol :: bindingsSymbol :: Nil)),
                 continuation = Split.Let(
                   fieldBindingsSymbol,
                   fieldBindingsTerm,
@@ -291,7 +292,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
                 )
               ) ~: alternative)): MakeSplit
       makeMakeSplit(Nil, Nil)
-    case Tuple(leading, spread, trailing) => (_, _) => 
+    case Tuple(leading, spread) => (_, _) => 
       // TODO: Think about how to handle the spread pattern.
       error(msg"Tuple patterns are not supported yet." -> pattern.toLoc)
       Split.Else(makeMatchFailure(str("unsupported tuple pattern")))
@@ -311,7 +312,7 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
       (makeConsequent, alternative) => functions.foldRight(alternative):
         case (makeSplit, innerSplit) => makeSplit(makeConsequent, innerSplit)
     // The conjunction case should check all results from patterns and only
-    // return `MatchResult` if all patterns succeed.
+    // return `MatchSuccess` if all patterns succeed.
     case And(patterns) =>
       val functions = patterns.map:
         completePattern(_, scrutinee, subScrutinees, aliases)
@@ -347,21 +348,24 @@ class Compiler(using Context)(using tl: TL)(using Ctx, State, Raise) extends Ter
     case Rename(pattern, name) =>
       // We should add those fields to a context.
       completePattern(pattern, scrutinee, subScrutinees, name :: aliases)
-    case Extract(pattern, term) =>
+    case Extract(pattern, correspondence, term) =>
       // The symbol representing the transform function, which should be
       // declared at the outermost level.
       val transformSymbol = TempSymbol(N, "transform")
       // The transform function takes a single record as the argument.
       val bindingsSymbol = VarSymbol(Ident("args"))
       val params = paramList(param(bindingsSymbol))
-      // We then bind the variables to fields of the record.
+      // Because we pass the extracted values using recoreds. We need to bind
+      // each property to its corresponding variable which is accessible from
+      // then `term`.
       val letBindings = pattern.symbols.flatMap: symbol =>
-        LetDecl(symbol, Nil) ::
-        DefineVar(symbol, sel(bindingsSymbol.safeRef, symbol.name)) :: Nil
+        val termSymbol = correspondence(symbol)
+        LetDecl(termSymbol, Nil) ::
+        DefineVar(termSymbol, sel(bindingsSymbol.safeRef, termSymbol.name)) :: Nil
       val makeSplit = completePattern(pattern, scrutinee, subScrutinees, Nil)
       (makeConsequent, alternative) => Split.Let(
         sym = transformSymbol,
-        term = Term.Lam(params, Blk(letBindings, term)),
+        term = Term.Lam(params, Blk(letBindings, term.mkClone)),
         tail = makeSplit(
           // The `outputSymbol` is the output of `pattern`.
           //                vvvvvvvvvvvv
@@ -397,7 +401,7 @@ object Compiler:
   
   /** Perform a reverse lookup for a term that references a symbol in the
    *  current context. */
-  def reference(symbol: ClassSymbol | ModuleSymbol | PatternSymbol)(using tl: TL)(using Ctx, State): Opt[Term] =
+  def reference(symbol: ClassSymbol | ModuleOrObjectSymbol | PatternSymbol, loc: Opt[Loc])(using tl: TL)(using Ctx, State): Opt[Term] =
     /** To make `Lowering` happy about the terms. */
     def fillImplicitArgs(term: Term): Term = term match
       case ref: Ref => ref.resolve
@@ -408,18 +412,14 @@ object Compiler:
     def findSymbol(elem: Ctx.Elem): Opt[Term] =
       elem.symbol.flatMap(_.asClsLike).collectFirst:
         // Check the element's symbol.
-        case `symbol` =>
-          val id = symbol match
-            case symbol: PatternSymbol => symbol.id
-            case symbol: (ClassSymbol | ModuleSymbol) => symbol.id
-          S(elem.ref(id))
+        case `symbol` => S(elem.ref(new Ident(symbol.nme)).withLoc(loc))
         // Look up the symbol in module members.
-        case module: ModuleSymbol =>
+        case module: ModuleOrObjectSymbol =>
           val moduleRef = module.defn.get.bsym.ref()
           module.tree.definedSymbols.iterator.map(_.mapSecond(_.asClsLike)).collectFirst:
             case (key, S(`symbol`)) =>
               val memberSymbol = symbol.defn.get.bsym
-              SynthSel(moduleRef, Ident(key))(S(memberSymbol))
+              SynthSel(moduleRef, Ident(key))(S(memberSymbol), N)
       .flatten
     @tailrec def go(ctx: Ctx): Opt[Term] =
       ctx.env.values.iterator.map(findSymbol).firstSome match
@@ -431,8 +431,8 @@ object Compiler:
       // If the `symbol` is a virtual class, then do not select `class`.
       symbol match
         case s: ClassSymbol if !(ctx.builtins.virtualClasses contains s) =>
-          SynthSel(term, Ident("class"))(S(s)).resolve
-        case _: (ClassSymbol | ModuleSymbol | PatternSymbol) => term
+          SynthSel(term, Ident("class"))(S(s), N).resolve
+        case _: (ClassSymbol | ModuleOrObjectSymbol | PatternSymbol) => term
   
   import Pattern.*
   

@@ -1,0 +1,113 @@
+:js
+
+import "../../mlscript-compile/ObjectBuffer.mls"
+open ObjectBuffer
+open annotations
+
+
+:sjs
+@bufferable
+class A(x) with
+  mut val z = x
+  fun f(y) =
+    set x += 1
+    set z += 2
+    x
+//│ JS (unsanitized):
+//│ let A1;
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
+//│ };
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.#x = x;
+//│     this.z = this.#x;
+//│   }
+//│   static {
+//│     this.size = 2;
+//│   }
+//│   static ctor(buf, idx) {
+//│     return (x) => {
+//│       let idx1, idx2, idx3;
+//│       idx3 = idx + 0;
+//│       buf.buf[idx3] = x;
+//│       idx1 = idx + 0;
+//│       idx2 = idx + 1;
+//│       buf.buf[idx2] = buf.buf.at(idx1);
+//│       return idx
+//│     }
+//│   } 
+//│   static f(buf, idx) {
+//│     return (y) => {
+//│       let tmp, tmp1, idx1, idx2, idx3, idx4, idx5;
+//│       idx1 = idx + 0;
+//│       tmp = buf.buf.at(idx1) + 1;
+//│       idx5 = idx + 0;
+//│       buf.buf[idx5] = tmp;
+//│       idx2 = idx + 1;
+//│       tmp1 = buf.buf.at(idx2) + 2;
+//│       idx4 = idx + 1;
+//│       buf.buf[idx4] = tmp1;
+//│       idx3 = idx + 0;
+//│       return buf.buf.at(idx3)
+//│     }
+//│   }
+//│   #x;
+//│   #z;
+//│   get z() { return this.#z; }
+//│   set z(value) { this.#z = value; }
+//│   f(y) {
+//│     let tmp, tmp1;
+//│     tmp = this.#x + 1;
+//│     this.#x = tmp;
+//│     tmp1 = this.z + 2;
+//│     this.z = tmp1;
+//│     return this.#x
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null]]; 
+//│ });
+
+
+let buf = new DefaultObjectBuffer(10)
+//│ buf = DefaultObjectBuffer(_)
+
+let obj1 = buf.mkNew(A.class)(3)
+//│ obj1 = 0
+
+let obj2 = buf.mkNew(A.class)(5)
+//│ obj2 = 2
+
+A.class.f(buf, obj1)(1)
+//│ = 4
+
+A.class.f(buf, obj1)(1)
+//│ = 5
+
+A.class.f(buf, obj2)(1)
+//│ = 6
+
+buf.del(A.class, obj1)
+
+let obj3 = buf.mkNew(A.class)(10)
+//│ obj3 = 0
+
+// UAF
+A.class.f(buf, obj1)(1)
+//│ = 11
+
+A.class.f(buf, obj3)(1)
+//│ = 12
+
+
+@bufferable
+class A(x) with
+  mut val z = x
+  fun f(y) =
+    set z += 1
+    z
+
+

@@ -74,15 +74,29 @@ new Foo(123) with { fun foo = 27 }
 //│ > Foo 123 27
 //│ = $anon
 
-// TODO change semantics? Looks error-prone
+:e
 :re
 new (Foo(123)) with { fun foo = 27 }
+//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ║  l.79: 	new (Foo(123)) with { fun foo = 27 }
+//│ ║        	     ^^^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ > Foo 123 124
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
-// TODO change semantics? Looks error-prone
+:e
+new! (Foo(123)) with { fun foo = 27 }
+//│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
+//│ ║  l.88: 	new! (Foo(123)) with { fun foo = 27 }
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:e
 :re
 new {Foo(123)} with { fun foo = 27 }
+//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ║  l.95: 	new {Foo(123)} with { fun foo = 27 }
+//│ ║        	     ^^^^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ > Foo 123 124
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
@@ -97,7 +111,7 @@ new Foo(123) with
 :e
 new Foo(123) with 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'with' here
-//│ ║  l.98: 	new Foo(123) with 1
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.112: 	new Foo(123) with 1
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
 
 

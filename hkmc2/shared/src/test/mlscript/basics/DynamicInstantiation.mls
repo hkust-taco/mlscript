@@ -15,6 +15,12 @@ let c = C
 new! c
 //│ = C
 
+let f = new! _
+//│ f = fun f
+
+f(c)
+//│ = C
+
 // * Same in JS:
 // *    > new id(C)
 // *    Uncaught TypeError: id is not a constructor
@@ -39,11 +45,23 @@ new! id(C)
 new! (id(C))
 //│ = C
 
-// * Note that this is currently miscompiled by the Elaborator's ad-hoc logic;
-// * instead, we should reject static new on an unknown class.
+// * We should reject static new on an unknown class.
+:e
 :re
 new id(C)
-//│ ═══[RUNTIME ERROR] TypeError: Predef.id.class is not a constructor
+//│ ╔══[ERROR] Expected a statically known class; found selection.
+//│ ║  l.51: 	new id(C)
+//│ ║        	    ^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
+
+:e
+new (id(C))
+//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ║  l.59: 	new (id(C))
+//│ ║        	     ^^^^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ = C
 
 
 data class C(x, y)
@@ -53,5 +71,20 @@ new! C
 
 new! C(1, 2)
 //│ = C(1, 2)
+
+
+let o = new! mut Object
+//│ o = {}
+
+set o.x = 1
+
+o.x
+//│ = 1
+
+set o.x += 1 in o.x
+//│ = 2
+
+o.x
+//│ = 1
 
 

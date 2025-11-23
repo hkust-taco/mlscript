@@ -16,6 +16,7 @@ class Eager[+A](val value: A) extends Box[A] {
 
 class Lazy[A](thunk: => A) extends Box[A] {
   def isComputing = _isComputing
+  def isEmpty: Bool = _value.isEmpty
   private var _isComputing = false
   private var _value: Opt[A] = N
   def get = if (_isComputing) N else S(get_!)

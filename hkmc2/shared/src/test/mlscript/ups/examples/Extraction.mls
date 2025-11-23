@@ -55,20 +55,22 @@ biasedOr1 of Some(Some(Some(Some(Some(Some(Some(Some(42))))))))
 
 // Make it a bit more complicated: biased disjunction with transformations.
 
-pattern BiasedOr2 = Some(Some(x) => x + 1) | Some(x => x + 2)
+pattern BiasedOr2 =
+  (Some((Some(x) => x + 1) as res) => res) |
+  (Some((x => x + 2) as res) => res)
 
 fun biasedOr2__compiled(x) = if x is (@compile BiasedOr2) as output then output
 
 fun biasedOr2__naive(x) = if x is BiasedOr2(output) then output
 
 biasedOr2__compiled of Some(1)
-//│ = {value: 3}
+//│ = 3
 
 biasedOr2__naive of Some(1)
 //│ = 3
 
 biasedOr2__compiled of Some(Some(1))
-//│ = {value: 2}
+//│ = 2
 
 biasedOr2__naive of Some(Some(1))
 //│ = 2
@@ -105,6 +107,10 @@ fun exactlyOneNone(x) =
 fun exactlyOneNone__naive(x) =
   if x is ExactlyOneNone(output) then output else "failed"
 
+// What should the output of class pattern be? In the pattern compilation, we
+// return plain objects without the class tag, as we can't synthesize plain
+// objects with arbitrary class tags.
+
 exactlyOneNone of Triplet(None, Some(1), Some(2))
 //│ = {first: None, second: {value: 1}, third: {value: 2}}
 
@@ -114,16 +120,16 @@ exactlyOneNone of Triplet(Some(1), None, Some(2))
 exactlyOneNone of Triplet(Some(1), Some(2), None)
 //│ = {first: {value: 1}, second: {value: 2}, third: None}
 
-// It seems that the return value of the translation is not correct.
+// But in the naive compilation of patterns, we return the scrutinee directly.
 
 exactlyOneNone__naive of Triplet(None, Some(1), Some(100))
-//│ = 100
+//│ = Triplet(None, Some(1), Some(100))
 
 exactlyOneNone__naive of Triplet(Some(1), None, Some(400))
-//│ = 400
+//│ = Triplet(Some(1), None, Some(400))
 
 exactlyOneNone__naive of Triplet(Some(1), Some(2), None)
-//│ = None
+//│ = Triplet(Some(1), Some(2), None)
 
 :expect "failed"
 exactlyOneNone of Triplet(None, Some(1), None)

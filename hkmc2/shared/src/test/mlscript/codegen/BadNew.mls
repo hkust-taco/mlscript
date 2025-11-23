@@ -7,31 +7,63 @@ new
 //│ ║  l.5: 	new
 //│ ╙──     	   ^
 
+:e
 :re
 new 2
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.12: 	new 2
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
+
+:e
+:re
+new 2 + 2
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.21: 	new 2 + 2
+//│ ║        	    ^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
 :sjs
 :re
-new 2 + 2
+new! 2 + 2
 //│ JS (unsanitized):
-//│ let tmp; tmp = globalThis.Object.freeze(new 2()); tmp + 2
+//│ let tmp1; tmp1 = globalThis.Object.freeze(new 2()); tmp1 + 2
 //│ ═══[RUNTIME ERROR] TypeError: 2 is not a constructor
 
+:e
 :re
 new()
+//│ ╔══[ERROR] Expected a statically known class; found unit value.
+//│ ║  l.37: 	new()
+//│ ║        	   ^^
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
 
 :re
-new {}
+new!()
 //│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+
+:e
+:re
+new {}
+//│ ╔══[ERROR] Expected a statically known class; found unit value.
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ═══[RUNTIME ERROR] TypeError: runtime.Unit is not a constructor
+
+:pe
+new! {}
+//│ ╔══[PARSE ERROR] Expected expression after prefix keyword 'new!'; found end of block instead
+//│ ║  l.56: 	new! {}
+//│ ╙──      	     ^^
 
 
 // * Note that thanks to the parser "feature" for keyword-block stutter
 // * this used to parse as `((new x) = 1)`;
 // * it no longer does, since I make `new` accept `exprOrBlk`
+:e
 :pt
-:todo
 new { x = 1 }
 //│ Parsed tree:
 //│ LexicalNew:
@@ -41,7 +73,15 @@ new { x = 1 }
 //│       rhs = IntLit of 1
 //│   rft = N
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.35: 	new { x = 1 }
+//│ ║  l.67: 	new { x = 1 }
 //│ ╙──      	      ^
+//│ ╔══[ERROR] Expected a statically known class; found block.
+//│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+
+:e
+new! { x = 1 }
+//│ ╔══[ERROR] Unrecognized definitional assignment left-hand side: prefix operator 'new!'
+//│ ║  l.82: 	new! { x = 1 }
+//│ ╙──      	^^^^^^^^
 
 

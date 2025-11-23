@@ -27,7 +27,7 @@
               gmp
               mimalloc
               sbt
-              nodejs_22
+              nodejs_24
             ];
           };
       });

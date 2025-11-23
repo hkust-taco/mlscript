@@ -1,0 +1,94 @@
+
+fun max(a, b) = if a < b then b else a
+
+module ObjectBuffer with
+  abstract class ObjectBuffer with
+    val buf
+    fun mkNew(cls)
+    fun del(cls, inst)
+    fun read(idx)
+    fun write(idx, v)
+
+  class DefaultObjectBuffer(initLength) extends ObjectBuffer with
+    val buf = new mut Array(max(16, initLength))
+    // val buf = Array.from({length: max(16, initLength)}, _ => null)
+    let freeListHead = 0
+    set
+      buf.[0] = buf.length
+      buf.[1] = -1
+
+    fun mkNew(cls) =
+      if cls.size === 0 do return 0
+      val idx = _alloc(getBlockSize(cls.size))
+      cls.ctor(this, idx)
+
+    fun del(cls, inst) =
+      if cls.size !== 0 do
+        _free(inst, getBlockSize(cls.size))
+
+    fun read(idx) = buf.[idx]
+
+    fun write(idx, v) = set buf.[idx] = v
+
+    fun getBlockSize(sz) = Math.ceil(sz / 2) * 2
+
+    fun grow(needed) =
+      let oldLen = buf.length
+      let newLen =
+        if buf.length >= needed then
+          // double the length
+          buf.length * 2
+        else
+          // compute closest power of 2 enough for 2 * needed
+          Math.pow(2, Math.ceil(Math.log2(needed)) + 1)
+      set
+        buf.length = newLen
+      // Add the new block to head of free list
+      _free(oldLen, newLen - oldLen)
+
+    fun _tryAlloc(sz) =
+      let prev = -1
+      let cur = freeListHead
+      // first-fit
+      while cur !== -1 do
+        if buf.[cur] === sz do
+          if prev === -1 then
+            set freeListHead = buf.[cur + 1]
+          else
+            set buf.[prev] = buf.[cur + 1]
+          return cur
+        if buf.[cur] > sz do
+          // Slice remainder, always possible due to block size
+          set
+            buf.[cur + sz] = buf.[cur] - sz
+            buf.[cur + sz + 1] = buf.[cur + 1]
+          if prev === -1 then
+            set freeListHead = cur + sz
+          else
+            set buf.[prev] = cur + sz
+          return cur
+        set
+          prev = cur
+          cur = buf.[cur + 1]
+      -1
+
+    fun alloc(sz) =
+      if sz === 0 do return 0
+      _alloc(getBlockSize(sz))
+
+    fun _alloc(bsz) =
+      let res = _tryAlloc(bsz)
+      if res !== -1 do return res
+      grow(bsz)
+      _tryAlloc(bsz)
+
+    fun free(ptr, sz) =
+      if sz !== 0 do _free(ptr, getBlockSize(sz))
+
+    fun _free(ptr, bsz) =
+      set
+        buf.[ptr] = bsz
+        buf.[ptr + 1] = freeListHead
+        freeListHead = ptr
+
+

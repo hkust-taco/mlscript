@@ -6,10 +6,18 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
 let Predef1;
-(class Predef {
+globalThis.Object.freeze(class Predef {
   static {
-    Predef1 = Predef;
-    const Symbols$class = class Symbols {
+    Predef1 = this
+  }
+  constructor() {
+    runtime.Unit;
+  }
+  static {
+    globalThis.Object.freeze(class Symbols {
+      static {
+        Predef.Symbols = globalThis.Object.freeze(new this)
+      }
       constructor() {
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
         Object.defineProperty(this, "class", {
@@ -18,8 +26,7 @@ let Predef1;
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Symbols"]; 
-    };
-    this.Symbols = globalThis.Object.freeze(new Symbols$class);
+    });
     this.pass1 = Rendering.pass1;
     this.pass2 = Rendering.pass2;
     this.pass3 = Rendering.pass3;
@@ -117,28 +124,26 @@ let Predef1;
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, i, init, scrut, scrut1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
       len = rest.length;
-      scrut1 = len == 0;
-      if (scrut1 === true) {
+      scrut = len == 0;
+      if (scrut === true) {
         return first
       } else {
-        tmp = len - 1;
-        i = tmp;
-        tmp1 = runtime.safeCall(rest.at(i));
-        init = tmp1;
-        tmp6: while (true) {
-          scrut = i > 0;
-          if (scrut === true) {
-            tmp2 = i - 1;
-            i = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f(tmp3, init));
-            init = tmp4;
-            tmp5 = runtime.Unit;
-            continue tmp6
+        i = len - 1;
+        init = runtime.safeCall(rest.at(i));
+        tmp4: while (true) {
+          scrut1 = i > 0;
+          if (scrut1 === true) {
+            tmp = i - 1;
+            i = tmp;
+            tmp1 = runtime.safeCall(rest.at(i));
+            tmp2 = runtime.safeCall(f(tmp1, init));
+            init = tmp2;
+            tmp3 = runtime.Unit;
+            continue tmp4
           } else {
-            tmp5 = runtime.Unit;
+            tmp3 = runtime.Unit;
           }
           break;
         }
@@ -147,21 +152,20 @@ let Predef1;
     }
   } 
   static mkStr(...xs) {
-    let tmp, tmp1, lambda;
+    let lambda, tmp;
     lambda = (undefined, function (acc, x) {
-      let tmp2, tmp3, tmp4;
+      let tmp1, tmp2, tmp3;
       if (typeof x === 'string') {
-        tmp2 = true;
+        tmp1 = true;
       } else {
-        tmp2 = false;
+        tmp1 = false;
       }
-      tmp3 = runtime.safeCall(Predef.assert(tmp2));
-      tmp4 = acc + x;
-      return (tmp3 , tmp4)
+      tmp2 = runtime.safeCall(Predef.assert(tmp1));
+      tmp3 = acc + x;
+      return (tmp2 , tmp3)
     });
-    tmp = lambda;
-    tmp1 = runtime.safeCall(Predef.fold(tmp));
-    return runtime.safeCall(tmp1(...xs))
+    tmp = runtime.safeCall(Predef.fold(lambda));
+    return runtime.safeCall(tmp(...xs))
   } 
   static use(instance) {
     return instance
@@ -172,7 +176,7 @@ let Predef1;
   static raiseUnhandledEffect() {
     return Runtime.mkEffect(Runtime.FatalEffect, null)
   }
-  static toString() { return runtime.render(this); }
-  static [definitionMetadata] = ["module", "Predef"]; 
+  toString() { return runtime.render(this); }
+  static [definitionMetadata] = ["class", "Predef"]; 
 });
 let Predef = Predef1; export default Predef;

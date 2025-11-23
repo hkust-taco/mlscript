@@ -44,12 +44,31 @@ fun process(e) =
 //│ ╔══[ERROR] Name not found: n
 //│ ║  l.41: 	    Pair(Vec(xs), Vec(ys)) then n
 //│ ╙──      	                                ^
+//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
+//│ ║        	                       ^
+//│ ╟── The previous definition is as follows.
+//│ ║  l.42: 	    Pair(Vec(n),  Numb(n)) then n
+//│ ╙──      	             ^
+//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ║  l.43: 	    Pair(Numb(n), Vec(n))  then n
+//│ ║        	                      ^
+//│ ╟── The previous definition is as follows.
+//│ ║  l.43: 	    Pair(Numb(n), Vec(n))  then n
+//│ ╙──      	              ^
 
 
-// * FIXME should warn, be rejected, or compare both values for equality
+// * TODO: we might want to accept this and compare the two values for equality
+:e
 fun process(e) =
   if e is
     Pair(Numb(n), Numb(n)) then n
+//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
+//│ ║        	                       ^
+//│ ╟── The previous definition is as follows.
+//│ ║  l.65: 	    Pair(Numb(n), Numb(n)) then n
+//│ ╙──      	              ^
 
 process(Pair(Numb(1), Numb(2)))
 //│ = 2

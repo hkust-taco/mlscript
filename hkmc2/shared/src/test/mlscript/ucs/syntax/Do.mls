@@ -72,10 +72,10 @@ fun g(y) =
 //│ ║        	  ^^
 //│ ╟── Keyword `then` is used here.
 //│ ║  l.68: 	    Some(v) and v % 2 == 0 then set x = Some(v / 2)
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║        	                           ^^^^
 //│ ╟── Keyword `do` is used here.
 //│ ║  l.67: 	    Some(0) do set x = None
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙──      	            ^^
 
 g(0)
 //│ = None

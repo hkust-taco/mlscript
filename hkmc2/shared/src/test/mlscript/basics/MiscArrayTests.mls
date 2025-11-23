@@ -54,10 +54,10 @@ xs \
 //│ ║  l.52: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let tmp5, lambda5;
+//│ let lambda5, tmp4;
 //│ lambda5 = (undefined, function (x) { return x * 2 });
-//│ tmp5 = map(lambda5);
-//│ Predef.passTo(xs1, tmp5)
+//│ tmp4 = map(lambda5);
+//│ Predef.passTo(xs1, tmp4)
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1
 
 :e

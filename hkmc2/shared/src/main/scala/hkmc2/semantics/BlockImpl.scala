@@ -24,7 +24,7 @@ trait BlockImpl(using Elaborator.State):
               td.name match
               case L(_) => head
               case R(name) =>
-                InfixApp(head, syntax.Keyword.`extends`, name)
+                InfixApp(head, Keywrd(syntax.Keyword.`extends`), name)
               , N
             )))
         ) ::: desug(stmts)

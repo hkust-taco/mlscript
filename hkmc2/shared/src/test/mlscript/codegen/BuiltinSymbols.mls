@@ -1,0 +1,27 @@
+:js
+
+
+// * Prevent explicit accesses to Unit, Int etc. from Prelude or elaborate them
+
+:ge
+Int
+//│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.7: 	Int
+//│ ╙──     	^^^
+
+:ge
+Str
+//│ ╔══[COMPILATION ERROR] Symbol 'Str' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.13: 	Str
+//│ ╙──      	^^^
+
+:ge
+Bool
+//│ ╔══[COMPILATION ERROR] Symbol 'Bool' is virtual (i.e., "compiler fiction"); cannot be used as a term
+//│ ║  l.19: 	Bool
+//│ ╙──      	^^^^
+
+(case Bool then 1)(true)
+//│ = 1
+
+

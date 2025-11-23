@@ -30,10 +30,10 @@ fun reset() =
   set renderedKinds = new Set of defaultKinds
 
 // * `rr` is the railroad library.
-fun render(rr, title: Str, rule: ParseRule.ParseRule) =
+fun render[T](rr, title: Str, rule: ParseRule.ParseRule[T]) =
   let helperRules = mut []
   let referencedKinds = new Set()
-  let renderCache = new globalThis.Map()
+  let renderCache = new Map()
   fun sequence(lhs, rhsOpt) =
     if rhsOpt is
       Some(rhs) then rr.Sequence(lhs, rhs)
@@ -61,7 +61,7 @@ fun render(rr, title: Str, rule: ParseRule.ParseRule) =
         referencedKinds.add of kind
       Some of rr.NonTerminal(kind, href: "#" + kind)
         sequence(renderRule(rest))
-  fun renderRule(rule: ParseRule.ParseRule) = tracer.trace of
+  fun renderRule(rule: ParseRule.ParseRule[T]) = tracer.trace of
     "renderRule <<< " + rule.name
     result => "renderRule >>> "
     () => ...

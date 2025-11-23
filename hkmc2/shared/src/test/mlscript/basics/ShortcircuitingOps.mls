@@ -32,7 +32,7 @@ fun test(x) =
 :sjs
 fold(||)(0, false, 42, 123)
 //│ JS (unsanitized):
-//│ let tmp, lambda5;
+//│ let lambda5, tmp;
 //│ lambda5 = (undefined, function (arg1, arg2) {
 //│   let lambda6;
 //│   lambda6 = (undefined, function () {

@@ -18,6 +18,7 @@ orderedPair(Pair(1, 1))
 orderedPair(Pair(2, 1))
 //│ = false
 
+
 fun foo(p) = p is
   Pair(a, b) where
     let c = a
@@ -36,6 +37,7 @@ foo(Pair(4, 0))
 //│ = false
 
 
+// Should we report `a` and `b` as inconsistent variables?
 fun bar(p) = p is
   (Pair(a, b) where a > b) | Int
 
@@ -48,13 +50,137 @@ bar(Pair(4, 5))
 bar(Pair(4, 3))
 //│ = true
 
+
 :e
 fun baz(p) = p is
   (Pair(a, b) | Int) where a > b
 //│ ╔══[ERROR] Name not found: a
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                           ^
 //│ ╔══[ERROR] Name not found: b
-//│ ║  l.53: 	  (Pair(a, b) | Int) where a > b
+//│ ║  l.56: 	  (Pair(a, b) | Int) where a > b
 //│ ╙──      	                               ^
+
+
+pattern Positive = ((Int as x) where x > 0) => x
+
+0 is Positive
+//│ = false
+
+1 is Positive
+//│ = true
+
+
+pattern OrderedPair = (Pair(a, b) where a < b) => b - a
+
+:expect true
+Pair(1, 2) is OrderedPair as 1
+//│ = true
+
+:expect false
+Pair(3, 2) is OrderedPair
+//│ = false
+
+:expect true
+Pair(42, 96) is OrderedPair as 54
+//│ = true
+
+
+pattern OrderedPairLike = (Pair(a, b) | [a, b] where a < b) => b - a
+
+:expect [true, false, true]
+tuple of
+  Pair(1, 2) is OrderedPairLike as 1
+  Pair(3, 2) is OrderedPairLike
+  Pair(42, 96) is OrderedPairLike as 54
+//│ = [true, false, true]
+
+:expect [true, false, true]
+tuple of
+  [1, 2] is OrderedPairLike as 1
+  [3, 2] is OrderedPairLike
+  [42, 96] is OrderedPairLike as 54
+//│ = [true, false, true]
+
+
+:fixme // TODO
+fun get(p, m) = if p is
+  Pair(k, v) where m.get(k) is w then v === w
+  else false
+//│ ╔══[ERROR] Name not found: w
+//│ ║  l.108: 	  Pair(k, v) where m.get(k) is w then v === w
+//│ ╙──       	                                            ^
+
+:fixme // TODO?
+fun get(p, m) =
+  p is Pair(k, v) where m.get(k) is w and v === w
+//│ ╔══[ERROR] Unexpected infix use of keyword 'where' here
+//│ ║  l.116: 	  p is Pair(k, v) where m.get(k) is w and v === w
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:fixme // TODO?
+fun get(p, m) =
+  p is Pair(k, v) where m.get(k) is w where v === w
+//│ ╔══[ERROR] Unexpected infix use of keyword 'where' here
+//│ ║  l.123: 	  p is Pair(k, v) where m.get(k) is w where v === w
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+let m0 = {get: _ + 1}
+//│ m0 = {get: fun get}
+
+
+:fixme // TODO
+class C1(m) with
+  pattern P = Pair(k, v) where m.get(k) is w and v === w
+//│ ╔══[WARNING] Useless pattern binding: v.
+//│ ║  l.135: 	  pattern P = Pair(k, v) where m.get(k) is w and v === w
+//│ ╙──       	                      ^
+//│ ╔══[WARNING] Useless pattern binding: k.
+//│ ║  l.135: 	  pattern P = Pair(k, v) where m.get(k) is w and v === w
+//│ ╙──       	                   ^
+
+C1(m0).P.unapply(Pair(3, 4))
+//│ = MatchSuccess(Pair(3, 4), {})
+
+C1(m0).P.unapply(Pair(3, 5))
+//│ = MatchFailure(null)
+
+
+:fixme // incorrect warning
+class C2(m) with
+  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ╔══[ERROR] Name not found: w
+//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ╙──       	                                                         ^
+//│ ╔══[WARNING] Useless pattern binding: v.
+//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ╙──       	                      ^
+//│ ╔══[WARNING] Useless pattern binding: k.
+//│ ║  l.152: 	  pattern P = Pair(k, v) where m.get(k) is w where v === w
+//│ ╙──       	                   ^
+
+C2(m0).P.unapply(Pair(3, 4))
+//│ = MatchFailure(null)
+
+C2(m0).P.unapply(Pair(3, 5))
+//│ = MatchFailure(null)
+
+
+:fixme // incorrect warning
+class C3(m) with
+  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+//│ ╔══[WARNING] Useless pattern binding: v.
+//│ ║  l.172: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+//│ ╙──       	                      ^
+//│ ╔══[WARNING] Useless pattern binding: k.
+//│ ║  l.172: 	  pattern P = Pair(k, v) where m.get(k) is (w where v === w)
+//│ ╙──       	                   ^
+
+C3(m0).P.unapply(Pair(3, 4))
+//│ = MatchSuccess(Pair(3, 4), {})
+
+C3(m0).P.unapply(Pair(3, 5))
+//│ = MatchFailure(null)
+
 

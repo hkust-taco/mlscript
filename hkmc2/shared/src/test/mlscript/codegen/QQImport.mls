@@ -1,7 +1,7 @@
 :js
 :qq
 
-//│ Term = module Term {
+//│ Term = class Term {
 //│   Symbol: fun Symbol { class: class Symbol },
 //│   Pattern: class Pattern,
 //│   LitPattern: fun LitPattern { class: class LitPattern },
@@ -15,7 +15,7 @@
 //│   Let: fun Let { class: class Let },
 //│   Else: fun Else { class: class Else },
 //│   End: class End,
-//│   Keyword: module Keyword { If: If, While: While },
+//│   Keyword: class Keyword { If: If, While: While },
 //│   Statement: class Statement,
 //│   LetDecl: fun LetDecl { class: class LetDecl },
 //│   DefineVar: fun DefineVar { class: class DefineVar },

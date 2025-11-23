@@ -1,0 +1,112 @@
+:js
+
+
+// * Note: no join point needed
+:sjs
+x => if x is 0 then 1
+//│ JS (unsanitized):
+//│ let lambda;
+//│ lambda = (undefined, function (x) {
+//│   if (x === 0) {
+//│     return 1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ });
+//│ lambda
+//│ = fun
+
+// * Note: join point needed
+:sjs
+x => if x is [[0]] then 1
+//│ JS (unsanitized):
+//│ let lambda1;
+//│ lambda1 = (undefined, function (x) {
+//│   let element0$, element0$1, tmp;
+//│   split_root$: {
+//│     split_default$: {
+//│       if (runtime.Tuple.isArrayLike(x) && x.length === 1) {
+//│         element0$ = runtime.Tuple.get(x, 0);
+//│         if (runtime.Tuple.isArrayLike(element0$) && element0$.length === 1) {
+//│           element0$1 = runtime.Tuple.get(element0$, 0);
+//│           if (element0$1 === 0) {
+//│             tmp = 1;
+//│             break split_root$
+//│           } else {
+//│             break split_default$
+//│           }
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp
+//│ });
+//│ lambda1
+//│ = fun
+
+
+data class S(value)
+
+// * Note: the computation in the default branch should not be duplicated.
+:sjs
+fun crazy(v) =
+  if v is
+    S(S(S(S(S(S(0)))))) then "bruh!"
+    _ then S(S(S(S(S(S(0))))))
+//│ JS (unsanitized):
+//│ let crazy;
+//│ crazy = function crazy(v) {
+//│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (v instanceof S1.class) {
+//│         argument0$ = v.value;
+//│         if (argument0$ instanceof S1.class) {
+//│           argument0$1 = argument0$.value;
+//│           if (argument0$1 instanceof S1.class) {
+//│             argument0$2 = argument0$1.value;
+//│             if (argument0$2 instanceof S1.class) {
+//│               argument0$3 = argument0$2.value;
+//│               if (argument0$3 instanceof S1.class) {
+//│                 argument0$4 = argument0$3.value;
+//│                 if (argument0$4 instanceof S1.class) {
+//│                   argument0$5 = argument0$4.value;
+//│                   if (argument0$5 === 0) {
+//│                     tmp = "bruh!";
+//│                     break split_root$
+//│                   } else {
+//│                     break split_1$
+//│                   }
+//│                 } else {
+//│                   break split_1$
+//│                 }
+//│               } else {
+//│                 break split_1$
+//│               }
+//│             } else {
+//│               break split_1$
+//│             }
+//│           } else {
+//│             break split_1$
+//│           }
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else {
+//│         break split_1$
+//│       }
+//│     }
+//│     tmp1 = S1(0);
+//│     tmp2 = S1(tmp1);
+//│     tmp3 = S1(tmp2);
+//│     tmp4 = S1(tmp3);
+//│     tmp5 = S1(tmp4);
+//│     tmp = S1(tmp5);
+//│   }
+//│   return tmp
+//│ };
+
+

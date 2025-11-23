@@ -31,7 +31,7 @@ class BlockTraverser:
         applyCase(arm._1); applySubBlock(arm._2)
       dflt.foreach(applySubBlock)
       applySubBlock(rst)
-    case Label(lbl, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
+    case Label(lbl, loop, bod, rst) => applyLocal(lbl); applySubBlock(bod); applySubBlock(rst)
     case Begin(sub, rst) => applySubBlock(sub); applySubBlock(rst)
     case TryBlock(sub, fin, rst) => applySubBlock(sub); applySubBlock(fin); applySubBlock(rst)
     case Assign(l, r, rst) => applyLocal(l); applyResult(r); applySubBlock(rst)
@@ -55,6 +55,10 @@ class BlockTraverser:
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
     case Instantiate(mut, cls, args) =>; applyPath(cls); args.foreach(applyArg)
+    case l @ Lambda(params, body) => applyLam(l)
+    case Tuple(mut, elems) => elems.foreach(applyArg)
+    case Record(mut, fields) => fields.foreach:
+      case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
     case p: Path => applyPath(p)
   
   def applyPath(p: Path): Unit = p match
@@ -68,10 +72,6 @@ class BlockTraverser:
     case Value.Ref(l) => l.traverse
     case Value.This(sym) => sym.traverse
     case Value.Lit(lit) => ()
-    case v @ Value.Lam(params, body) => applyLam(v)
-    case Value.Arr(mut, elems) => elems.foreach(applyArg)
-    case Value.Rcd(mut, fields) => fields.foreach:
-      case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
   
   def applyLocal(sym: Local): Unit = sym.traverse
   
@@ -88,8 +88,9 @@ class BlockTraverser:
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods, 
-      privateFields, publicFields, preCtor, ctor) =>
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+        privateFields, publicFields, preCtor, ctor, mod, bufferable)
+    =>
       own.foreach(_.traverse)
       isym.traverse
       sym.traverse
@@ -102,7 +103,16 @@ class BlockTraverser:
         f._1.traverse; f._2.traverse
       applySubBlock(preCtor)
       applySubBlock(ctor)
+      mod.foreach(applyClsLikeBody)
   
+  def applyClsLikeBody(b: ClsLikeBody): Unit =
+    b.isym.traverse
+    b.methods.foreach(applyFunDefn)
+    b.privateFields.foreach(_.traverse)
+    b.publicFields.foreach: f =>
+      f._1.traverse; f._2.traverse
+    applySubBlock(b.ctor)
+
   def applyArg(arg: Arg): Unit =
     applyPath(arg.value)
   
@@ -123,12 +133,12 @@ class BlockTraverser:
     hdr.params.foreach(applyParamList)
     applySubBlock(hdr.body)
   
-  def applyLam(lam: Value.Lam): Unit =
+  def applyLam(lam: Lambda): Unit =
     applyParamList(lam.params)
     applySubBlock(lam.body)
   
 class BlockTraverserShallow extends BlockTraverser:
-  override def applyLam(lam: Value.Lam) = ()
+  override def applyLam(lam: Lambda) = ()
   override def applyFunDefn(fun: FunDefn): Unit = ()
   override def applyDefn(defn: Defn): Unit = defn match
     case _: FunDefn | _: ClsLikeDefn => ()

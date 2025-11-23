@@ -20,6 +20,8 @@ abstract class MLsDiffMaker extends DiffMaker:
   val predefFile: os.Path // * Contains MLscript standard library definitions
   val runtimeFile: os.Path = predefFile/os.up/"Runtime.mjs" // * Contains MLscript runtime definitions
   val termFile: os.Path = predefFile/os.up/"Term.mjs" // * Contains MLscript runtime term definitions
+  val blockFile: os.Path = predefFile/os.up/"Block.mjs" // * Contains MLscript runtime block definitions
+  val shapeFile: os.Path = predefFile/os.up/"Shape.mjs" // * Contains MLscript runtime shape definitions
   
   val wd = file / os.up
   
@@ -54,6 +56,11 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   val typeCheck = FlagCommand(false, "typeCheck")
   
+  /**
+   * Enables Wasm support. All options in [[WasmDiffMaker]] are no-op if this option is not set.
+   */
+  val wasm = NullaryCommand("wasm")
+  
   
   // * Compiler configuration
   
@@ -63,6 +70,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val stackSafe = Command("stackSafe")(_.trim)
   val liftDefns = NullaryCommand("lift")
   val importQQ = NullaryCommand("qq")
+  val stageCode = NullaryCommand("staging")
   
   def mkConfig: Config =
     import Config.*
@@ -87,7 +95,9 @@ abstract class MLsDiffMaker extends DiffMaker:
                 S(StackSafety(stackLimit = value))
         ,
       )),
-      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns())
+      liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
+      stageCode = stageCode.isSet,
+      target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
     )
   
   
@@ -130,7 +140,6 @@ abstract class MLsDiffMaker extends DiffMaker:
       given Config = mkConfig
       importFile(preludeFile, verbose = false)
       prelude = curCtx
-    curCtx = curCtx.nestLocal
     super.run()
   
   
@@ -151,6 +160,12 @@ abstract class MLsDiffMaker extends DiffMaker:
       given Config = mkConfig
       processTrees(
         PrefixApp(Keywrd(`import`), StrLit(termFile.toString)) :: Nil)
+    if stageCode.isSet then
+      given Config = mkConfig
+      processTrees(
+        PrefixApp(Keywrd(`import`), StrLit(blockFile.toString))
+        :: PrefixApp(Keywrd(`import`), StrLit(shapeFile.toString))
+        :: Nil)
     super.init()
   
   
@@ -177,7 +192,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     val res = p.parseAll(p.block(allowNewlines = true))
     val imprtSymbol =
       semantics.TopLevelSymbol("import#"+file.baseName)
-    given Elaborator.Ctx = curCtx.nestLocal
+    given Elaborator.Ctx = curCtx.nestLocal("import:"+file.baseName)
     val elab = Elaborator(etl, wd, Ctx.empty)
     try
       val resBlk = new syntax.Tree.Block(res)
@@ -241,7 +256,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1
     // given Elaborator.Ctx = curCtx.nest(S(blockSymbol))
-    given Elaborator.Ctx = curCtx.nestLocal
+    given Elaborator.Ctx = curCtx.nestLocal(s"block:${blockNum}")
     val blk = new syntax.Tree.Block(trees)
     val (e, newCtx) = elab.topLevel(blk)
     curCtx = newCtx
@@ -257,6 +272,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   
   
   def processTerm(trm: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
+    given Ctx = curCtx
     val resolver = Resolver(rtl)
     curICtx = resolver.traverseBlock(trm)(using curICtx)
     
@@ -265,8 +281,9 @@ abstract class MLsDiffMaker extends DiffMaker:
     showResolvedTree.get.foreach: post =>
       case class Unexpanded(origin: Resolvable)
       val pre: PartialFunction[Product, Product] = 
-        case t: Resolvable if t.hasExpansion => t.instantiate
-        case t: Resolvable => Unexpanded(t.duplicate.resolve)
+        case t: Resolvable if t.hasExpansion => t.expanded
+        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t => t
       output(s"Resolved tree:")
       output(trm.showAsTree(inTailPos = false, pre = pre)(using post))
     

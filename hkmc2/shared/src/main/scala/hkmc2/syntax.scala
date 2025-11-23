@@ -46,7 +46,7 @@ trait AutoLocated extends Located:
       val spanEnd =
         subLocs.map(_.spanEnd).maxOption.getOrElse(boundary.break(N))
       val origins = subLocs.map(_.origin).toList.distinct
-      assert(origins.size === 1, origins)
+      assert(origins.size === 1, (origins, this))
       val res = S(Loc(spanStart, spanEnd, origins.head))
       val _ = withLoc(res)
       res

@@ -1,64 +1,131 @@
+:js
 
-
-fun f: Any -> Bool
-fun g: Any -> Bool
-fun h: Any -> Bool
+fun f(x) = x
+fun g(x) = x
+fun h(x) = x
 
 data class Pair[A, B](fst: A, snd: B)
 
+// Simple conditionals in the form of `x is P`.
+// ============================================
 
+:expect true
 Pair(0, 1) is Pair
+//│ = true
 
+:expect true
 Pair(0, 1) is Pair(a, b)
+//│ = true
 
+:expect true
 Pair(0, 1) is Pair(0, _)
+//│ = true
 
+:expect true
 if Pair(0, 1) is Pair(a, b) then true else false
+//│ = true
 
+// Based on the above, add an `and` at the end, in the form of `x is P and t`.
+// ===========================================================================
 
-fun foo(x) = x is Pair(a, b)
-
-
+:expect false
 Pair(0, 1) is Pair(a, b) and a > b
+//│ = false
 
-if Pair(0, 1) is Pair(a, b) then a > b else false
-
-
-fun foo(x) = x is Pair(a, b) and a > b
-
-fun foo(x) = if x is Pair(a, b) then a > b else false
+:expect true
+Pair(1, 0) is Pair(a, b) and a > b
+//│ = true
 
 fun foo(x) = f(x) and g(x) and h(x)
 
-:e
+:expect [true, false]
+[foo(true), foo(false)]
+//│ = [true, false]
+
+// Test matching multiple patterns at once.
+// ========================================
+
 fun foo(x) = x is
   Pair
   Int
-//│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.35: 	  Pair
-//│ ║        	  ^^^^
-//│ ║  l.36: 	  Int
-//│ ╙──      	^^^^^
+
+:expect [true, false, true]
+[foo(2), foo(3.14159), foo(Pair(0, 1))]
+//│ = [true, false, true]
+
+fun foo(x) = x is Pair | Int
+
+:expect [true, false, true]
+[foo(2), foo(3.14159), foo(Pair(0, 1))]
+//│ = [true, false, true]
+
+fun foo(x) = x is
+  Pair | Int
+
+:expect [true, false, true]
+[foo(2), foo(3.14159), foo(Pair(0, 1))]
+//│ = [true, false, true]
+
+fun foo(x) = x is { Pair, Int }
+
+:expect [true, false, true]
+[foo(2), foo(3.14159), foo(Pair(0, 1))]
+//│ = [true, false, true]
 
 :e
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] only one pattern is supported in shorthands
-//│ ║  l.45: 	  Pair(a, b) and a > b
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	  Int
-//│ ╙──      	^^^^^
+//│ ╔══[ERROR] Unrecognized pattern (infix operator 'and').
+//│ ║  l.77: 	  Pair(a, b) and a > b
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^
 
 
+:e
 fun foo(x) = x is Pair(a, b) | Int
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║        	                       ^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                               ^^^
+//│ ╔══[ERROR] Found an inconsistent variable in disjunction patterns.
+//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ║        	                          ^
+//│ ╟── The variable is missing from this sub-pattern.
+//│ ║  l.85: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                               ^^^
 
-fun foo(x) = x is (Pair(a, b) where a > b) | Int
+// Test how shorthand conditionals work together with lambda functions.
+// ====================================================================
 
 data class A[T](arg: T)
 
+let foo = x => x is A(_)
+//│ foo = fun foo
 
-x => (x is A(_))
+:expect [false, true]
+[foo(0), foo(A(0))]
+//│ = [false, true]
 
+let foo = _ is A
+//│ foo = fun foo
 
+:expect [false, true]
+[foo(0), foo(A(0))]
+//│ = [false, true]
+
+let foo = _ is A(_)
+//│ foo = fun foo
+
+:expect [false, true]
+[foo(0), foo(A(0))]
+//│ = [false, true]
+
+let foo = _ is A(x) and x > 0
+//│ foo = fun
+
+:expect [false, false, true]
+[foo(0), foo(A(0)), foo(A(1))]
+//│ = [false, false, true]
 

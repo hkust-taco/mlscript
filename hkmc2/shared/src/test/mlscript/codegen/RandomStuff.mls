@@ -26,23 +26,26 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ Object.defineProperty(Foo1, "class", {
-//│   enumerable: true,
-//│   value: class Foo {
-//│     constructor(x) {
-//│       this.x = x;
-//│       const this$Foo = this;
-//│       this.Bar = class Bar {
-//│         constructor() {
-//│           this.y = this$Foo.x;
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "Bar"]; 
-//│       };
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Foo", ["x"]]; 
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
 //│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│     const this$Foo = this;
+//│     globalThis.Object.freeze(class Bar {
+//│       static {
+//│         this$Foo.Bar = this
+//│       }
+//│       constructor() {
+//│         this.y = this$Foo.x;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Bar"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", ["x"]]; 
 //│ });
 
 
@@ -68,10 +71,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.68: 	let foo = 1
+//│ ║  l.71: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.69: 	fun foo(x) = foo
+//│ ║  l.72: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;

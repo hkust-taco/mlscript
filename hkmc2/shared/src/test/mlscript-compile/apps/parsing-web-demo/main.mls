@@ -13,7 +13,7 @@
 
 import "../parsing/Parser.mls"
 import "../parsing/Lexer.mls"
-import "../../Str.mls"
+import "../../StrOps.mls"
 import "../../Iter.mls"
 import "../../XML.mls"
 import "../../Option.mls"
@@ -187,7 +187,7 @@ fun displayRules() =
   open ParseRuleVisualizer
   open Rules
   reset()
-  set query("#syntax-diagrams>main").innerHTML = Str.concat of
+  set query("#syntax-diagrams>main").innerHTML = StrOps.concat of
     elem("h3") of "Term"
     makeFigures of render(railroad, "term", termRule)
     elem("h3") of "Type"

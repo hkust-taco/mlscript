@@ -8,7 +8,37 @@ open annotations
 
 data class Pair[A, B](first: A, second: B)
 
+:sjs
 pattern SumPair = Pair(a, b) => a + b
+//│ JS (unsanitized):
+//│ let SumPair1;
+//│ globalThis.Object.freeze(class SumPair {
+//│   static {
+//│     SumPair1 = globalThis.Object.freeze(new this)
+//│   }
+//│   constructor() {}
+//│   unapply(input) {
+//│     let transform, argument0$, argument1$, transformResult, tmp, lambda;
+//│     lambda = (undefined, function (a, b) {
+//│       return a + b
+//│     });
+//│     transform = lambda;
+//│     if (input instanceof Pair1.class) {
+//│       argument0$ = input.first;
+//│       argument1$ = input.second;
+//│       transformResult = runtime.safeCall(transform(argument0$, argument1$));
+//│       tmp = globalThis.Object.freeze({});
+//│       return runtime.MatchSuccess(transformResult, tmp)
+//│     } else {
+//│       return runtime.MatchFailure(null)
+//│     }
+//│   } 
+//│   unapplyStringPrefix(input) {
+//│     return runtime.MatchFailure(null)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["pattern", "SumPair"]; 
+//│ });
 
 fun foo(value) = if value is
   SumPair as sum then print("sum: " + sum)
@@ -225,13 +255,13 @@ print of 8080 is Positive
 
 // Hmm, but how to make the pattern return the input value?
 Positive.unapply(100)
-//│ = MatchResult(true, {})
+//│ = MatchSuccess(true, {})
 
 // Just use conjunction patterns.
 pattern Positive = (x & (((Int as x) => x > 0) as true)) => x
 
 Positive.unapply(100)
-//│ = MatchResult(100, {})
+//│ = MatchSuccess(100, {})
 
 //  ____  _        _
 // / ___|| |_ _ __(_)_ __   __ _

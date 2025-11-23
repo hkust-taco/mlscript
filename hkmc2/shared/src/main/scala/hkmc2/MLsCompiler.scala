@@ -74,18 +74,20 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
     
     val elab = Elaborator(etl, wd, Ctx.empty)
     
-    val initState = State.init.nestLocal
+    val initState = State.init.nestLocal("prelude")
     
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
-    newCtx.nestLocal.givenIn:
+    newCtx.nestLocal("file:"+file.baseName).givenIn:
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
       val blk = new semantics.Term.Blk(
-        semantics.Import(State.runtimeSymbol, runtimeFile.toString) :: semantics.Import(State.termSymbol, termFile.toString) :: blk0.stats,
+        semantics.Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile)
+        :: semantics.Import(State.termSymbol, termFile.toString, termFile)
+        :: blk0.stats,
         blk0.res
       )
       val low = ltl.givenIn:

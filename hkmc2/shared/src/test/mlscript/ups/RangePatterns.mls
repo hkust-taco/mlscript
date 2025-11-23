@@ -55,11 +55,12 @@ pattern UnsignedByte = 0..< 256
 //│ ╔══[ERROR] Name not found: .<
 //│ ║  l.51: 	pattern UnsignedByte = 0..< 256
 //│ ╙──      	                         ^^
+//│ ═══[ERROR] Cannot use this ‹error› as a pattern.
 
 :e
 pattern BadRange = "s"..=0
 //│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.60: 	pattern BadRange = "s"..=0
+//│ ║  l.61: 	pattern BadRange = "s"..=0
 //│ ╙──      	                   ^^^^^^^
 
 // It becomes an absurd pattern.
@@ -69,14 +70,14 @@ pattern BadRange = "s"..=0
 :e
 pattern BadRange = 0 ..= "s"
 //│ ╔══[ERROR] The upper and lower bounds of range patterns should be literals of the same type.
-//│ ║  l.70: 	pattern BadRange = 0 ..= "s"
+//│ ║  l.71: 	pattern BadRange = 0 ..= "s"
 //│ ╙──      	                   ^^^^^^^^^
 
 :e
 pattern BadRange = "yolo" ..= "swag"
 //│ ╔══[ERROR] The lower bound of character ranges must be a single character.
-//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ║        	                   ^^^^^^
 //│ ╟── The upper bound of character ranges must be a single character.
-//│ ║  l.76: 	pattern BadRange = "yolo" ..= "swag"
+//│ ║  l.77: 	pattern BadRange = "yolo" ..= "swag"
 //│ ╙──      	                              ^^^^^^
