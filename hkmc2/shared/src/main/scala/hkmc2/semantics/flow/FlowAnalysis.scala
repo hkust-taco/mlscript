@@ -262,23 +262,23 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           :: targets.map:
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
 
-  def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
-    cons match
-    case C.Typ(typ) => findTypeSymbols(typ) ::: Nil
-    case _ if !deconstructConsumer => Nil
-    case C.Fun(lhs, rhs) => findProducerSymbols(lhs) ::: findConsumerSymbols(rhs)
-    case C.Tup(init, N) => init.flatMap(findConsumerSymbols)
-    case C.Tup(init, S((_, fst, rest))) =>init.flatMap(findConsumerSymbols) ::: findConsumerSymbols(fst) ::: rest.flatMap(findConsumerSymbols)
-    case C.Ctor(sym, args) => sym :: args.flatMap(findConsumerSymbols)
-    case _ => Nil
-
-  def findProducerSymbols(prod: Producer): Ls[Symbol] =
-    prod match
-    case P.Typ(typ) => findTypeSymbols(typ) ::: Nil
-    case P.Fun(lhs, rhs, _) => findConsumerSymbols(lhs) ::: findProducerSymbols(rhs)
-    case P.Tup(elems) => elems.map(_._2).flatMap(findProducerSymbols)
-    case P.Ctor(sym, args) => sym :: args.flatMap(findProducerSymbols)
-    case _ => Nil
+  // def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
+  //   cons match
+  //   case C.Typ(typ) => findTypeSymbols(typ) ::: Nil
+  //   case _ if !deconstructConsumer => Nil
+  //   case C.Fun(lhs, rhs) => findProducerSymbols(lhs) ::: findConsumerSymbols(rhs)
+  //   case C.Tup(init, N) => init.flatMap(findConsumerSymbols)
+  //   case C.Tup(init, S((_, fst, rest))) =>init.flatMap(findConsumerSymbols) ::: findConsumerSymbols(fst) ::: rest.flatMap(findConsumerSymbols)
+  //   case C.Ctor(sym, args) => sym :: args.flatMap(findConsumerSymbols)
+  //   case _ => Nil
+  //
+  // def findProducerSymbols(prod: Producer): Ls[Symbol] =
+  //   prod match
+  //   case P.Typ(typ) => findTypeSymbols(typ) ::: Nil
+  //   case P.Fun(lhs, rhs, _) => findConsumerSymbols(lhs) ::: findProducerSymbols(rhs)
+  //   case P.Tup(elems) => elems.map(_._2).flatMap(findProducerSymbols)
+  //   case P.Ctor(sym, args) => sym :: args.flatMap(findProducerSymbols)
+  //   case _ => Nil
 
   def findTypeSymbols(typ: Type): Ls[Symbol] =
     import Type.*
@@ -387,6 +387,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                       :: Nil
                     ))
               zip(args, ini, rst, path)
+            case (sel @ P.LeadingDotSel(nme), rhs) => rhs match
+              case C.Typ(Type.Ref(sym, _)) => 
+                log(s"Examining ${sym} for leading dot selection resolution")
+                getCompanionMember(sel.trm, sym, nme.name) match
+                case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                case _ => ()
+              case C.Sel(nme, res) =>
+                log("Proparating")
+                toSolve.push(Constraint(sel, res))
             case (lhs, sel: C.Sel) =>
               lhs match
               case P.Typ(Type.Ref(sym: ClassSymbol, targs)) =>
@@ -439,12 +448,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   msg"Unresolved selection:" -> sel.trm.toLoc
                   :: msg"Type `${lhs.showDbg}` does not contain member '${sel.nme.name}'" -> lhs.toLoc
                   :: Nil)
-            case (sel @ P.LeadingDotSel(nme), rhs) =>
-              findConsumerSymbols(rhs).foreach: sym => 
-                log(s"Examining ${sym} for leading dot selection resolution")
-                getCompanionMember(sel.trm, sym, nme.name) match
-                case S((path, memb)) => sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                case _ => ()
             case _ =>
               log(s"/!\\ Unhandled constraint /!\\")
           end dig
