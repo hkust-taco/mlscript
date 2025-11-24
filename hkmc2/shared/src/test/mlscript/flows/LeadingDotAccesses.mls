@@ -2,57 +2,135 @@
 
 class A with
   fun b = new A
+  fun c = (x, y) => new A
 module A with
   fun a = new A
 
 class B
 module B with
-  fun b = (x) => 3
+  fun b = (x,y) => 3
 
 :flow
 :df
-fun f(x : A) = 4
-f(.a.b)
-//│ Typing producer: { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a).b) }
+fun f(x : A) = x
+f(.a)
+//│ Typing producer: { fun member:f(x: member:A) = x; member:f(_?_.Ident(a)) }
 //│ | Typing param: x: member:A
-//│ | | x‹620›
+//│ | | x‹628›
 //│ | : type class:A
-//│ | Typing producer: 4
-//│ | : 4
-//│ | Typing producer: member:f(_?_.Ident(a).b)
-//│ | | Typing producer: [_?_.Ident(a).b]
-//│ | | | Typing producer: _?_.Ident(a).b
-//│ | | | | Selection _?_.Ident(a).b None
-//│ | | | | Typing producer: _?_.Ident(a)
-//│ | | | | | Leading dot selection _?_.Ident(a)
-//│ | | | | : _?_.Ident(a)
-//│ | | | : ⋅b‹625›
-//│ | | : [⋅b‹625›]
+//│ | Typing producer: x
+//│ | : x‹628›
+//│ | Typing producer: member:f(_?_.Ident(a))
+//│ | | Typing producer: [_?_.Ident(a)]
+//│ | | | Typing producer: _?_.Ident(a)
+//│ | | | | Leading dot selection _?_.Ident(a)
+//│ | | | : _?_.Ident(a)
+//│ | | : [_?_.Ident(a)]
 //│ | | Typing producer: member:f
-//│ | | : flow:f‹626›
-//│ | : app‹624›
-//│ : app‹624›
-//│ Handling constraint: ((type class:A) -> 4) <: flow:f‹626› (from { fun member:f(x: member:A) = 4; member:f(_?_.Ident(a).b) })
-//│ | Solving: ((type class:A) -> 4) <: flow:f‹626›   (Fun, Flow)   []
-//│ | New flow: ((type class:A) -> 4) ~> flow:f‹626›
-//│ Handling constraint: _?_.Ident(a) <: {b: ⋅b‹625›} (from _?_.Ident(a).b)
-//│ | Solving: _?_.Ident(a) <: {b: ⋅b‹625›}   (LeadingDotSel, Sel)   []
-//│ | Proparating
-//│ | Solving: _?_.Ident(a) <: ⋅b‹625›   (LeadingDotSel, Flow)   []
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.MatchError: Flow(⋅b) (of class hkmc2.semantics.flow.Consumer$Flow)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.dig$1(FlowAnalysis.scala:398)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.solveConstraints$$anonfun$2(FlowAnalysis.scala:455)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.solveConstraints$$anonfun$adapted$1(FlowAnalysis.scala:460)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.solveConstraints(FlowAnalysis.scala:460)
-//│ 	at: hkmc2.MLsDiffMaker.processTerm(MLsDiffMaker.scala:295)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:67)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ | | : flow:f‹633›
+//│ | : app‹632›
+//│ : app‹632›
+//│ Handling constraint: ((type class:A) -> x‹628›) <: flow:f‹633› (from { fun member:f(x: member:A) = x; member:f(_?_.Ident(a)) })
+//│ | Solving: ((type class:A) -> x‹628›) <: flow:f‹633›   (Fun, Flow)   []
+//│ | New flow: ((type class:A) -> x‹628›) ~> flow:f‹633›
+//│ Handling constraint: flow:f‹633› <: ((_?_.Ident(a)) -> app‹632›) (from member:f(_?_.Ident(a)))
+//│ | Solving: flow:f‹633› <: ((_?_.Ident(a)) -> app‹632›)   (Flow, Fun)   []
+//│ | New flow: flow:f‹633› ~> ((_?_.Ident(a)) -> app‹632›)
+//│ | Solving: ((type class:A) -> x‹628›) <: ((_?_.Ident(a)) -> app‹632›)   (Fun, Fun)   []
+//│ | Solving: [_?_.Ident(a)] <: [type class:A]   (Tup, Tup)   []
+//│ | Solving: _?_.Ident(a) <: type class:A   (LeadingDotSel, Typ)   []
+//│ | Examining class:A for leading dot selection resolution
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
+//│ | Found leading dot expansion: member:A.a‹member:a›
+//│ | Solving: x‹628› <: app‹632›   (Flow, Flow)   []
+//│ | New flow: x‹628› ~> app‹632›
+//│ | Solving: type class:A <: app‹632›   (Typ, Flow)   []
+//│ | New flow: type class:A ~> app‹632›
+//│ = A
 
+:flow
+:df
+f(.a.c(2,6).b)
+//│ Typing producer: { member:f(_?_.Ident(a).c(2, 6).b) }
+//│ | Typing producer: member:f(_?_.Ident(a).c(2, 6).b)
+//│ | | Typing producer: [_?_.Ident(a).c(2, 6).b]
+//│ | | | Typing producer: _?_.Ident(a).c(2, 6).b
+//│ | | | | Selection _?_.Ident(a).c(2, 6).b None
+//│ | | | | Typing producer: _?_.Ident(a).c(2, 6)
+//│ | | | | | Typing producer: [2, 6]
+//│ | | | | | | Typing producer: 2
+//│ | | | | | | : 2
+//│ | | | | | | Typing producer: 6
+//│ | | | | | | : 6
+//│ | | | | | : [2, 6]
+//│ | | | | | Typing producer: _?_.Ident(a).c
+//│ | | | | | | Selection _?_.Ident(a).c None
+//│ | | | | | | Typing producer: _?_.Ident(a)
+//│ | | | | | | | Leading dot selection _?_.Ident(a)
+//│ | | | | | | : _?_.Ident(a)
+//│ | | | | | : ⋅c‹640›
+//│ | | | | : app‹639›
+//│ | | | : ⋅b‹641›
+//│ | | : [⋅b‹641›]
+//│ | | Typing producer: member:f
+//│ | | : flow:f‹633›
+//│ | : app‹638›
+//│ : app‹638›
+//│ Handling constraint: _?_.Ident(a) <: {c: ⋅c‹640›} (from _?_.Ident(a).c)
+//│ | Solving: _?_.Ident(a) <: {c: ⋅c‹640›}   (LeadingDotSel, Sel)   []
+//│ | Selection _?_.Ident(a) flowing into ⋅c‹640›
+//│ Handling constraint: ⋅c‹640› <: ((2, 6) -> app‹639›) (from _?_.Ident(a).c(2, 6))
+//│ | Solving: ⋅c‹640› <: ((2, 6) -> app‹639›)   (Flow, Fun)   []
+//│ | New flow: ⋅c‹640› ~> ((2, 6) -> app‹639›)
+//│ | Solving: _?_.Ident(a) <: ((2, 6) -> app‹639›)   (LeadingDotSel, Fun)   []
+//│ | Solving: _?_.Ident(a) <: app‹639›   (LeadingDotSel, Flow)   []
+//│ | New flow: _?_.Ident(a) ~> app‹639›
+//│ Handling constraint: app‹639› <: {b: ⋅b‹641›} (from _?_.Ident(a).c(2, 6).b)
+//│ | Solving: app‹639› <: {b: ⋅b‹641›}   (Flow, Sel)   []
+//│ | New flow: app‹639› ~> {b: ⋅b‹641›}
+//│ | Solving: _?_.Ident(a) <: {b: ⋅b‹641›}   (LeadingDotSel, Sel)   []
+//│ | Selection _?_.Ident(a) flowing into ⋅b‹641›
+//│ Handling constraint: flow:f‹633› <: ((⋅b‹641›) -> app‹638›) (from member:f(_?_.Ident(a).c(2, 6).b))
+//│ | Solving: flow:f‹633› <: ((⋅b‹641›) -> app‹638›)   (Flow, Fun)   []
+//│ | New flow: flow:f‹633› ~> ((⋅b‹641›) -> app‹638›)
+//│ | Solving: ((type class:A) -> x‹628›) <: ((⋅b‹641›) -> app‹638›)   (Fun, Fun)   []
+//│ | Solving: [⋅b‹641›] <: [type class:A]   (Tup, Tup)   []
+//│ | Solving: ⋅b‹641› <: type class:A   (Flow, Typ)   []
+//│ | New flow: ⋅b‹641› ~> type class:A
+//│ | Solving: _?_.Ident(a) <: type class:A   (LeadingDotSel, Typ)   []
+//│ | Examining class:A for leading dot selection resolution
+//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
+//│ | Found leading dot expansion: member:A.a‹member:a›
+//│ | Solving: x‹628› <: app‹638›   (Flow, Flow)   []
+//│ | New flow: x‹628› ~> app‹638›
+//│ | Solving: type class:A <: app‹638›   (Typ, Flow)   []
+//│ | New flow: type class:A ~> app‹638›
+//│ Handling constraint: _?_.Ident(a) <: {c: ⋅c‹640›} (from _?_.Ident(a))
+//│ | Solving: _?_.Ident(a) <: {c: ⋅c‹640›}   (LeadingDotSel, Sel)   []
+//│ | Found an expansion
+//│ | Solving: A <: {c: ⋅c‹640›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅c)
+//│ | Found immediate member member:c
+//│ | Solving: flow:c‹644› <: ⋅c‹640›   (Flow, Flow)   []
+//│ | New flow: flow:c‹644› ~> ⋅c‹640›
+//│ Handling constraint: _?_.Ident(a) <: {b: ⋅b‹641›} (from _?_.Ident(a))
+//│ | Solving: _?_.Ident(a) <: {b: ⋅b‹641›}   (LeadingDotSel, Sel)   []
+//│ | Found an expansion
+//│ | Solving: A <: {b: ⋅b‹641›}   (Ctor, Sel)   []
+//│ | Selection result: Flow(⋅b)
+//│ | Found immediate member member:b
+//│ | Solving: flow:b‹645› <: ⋅b‹641›   (Flow, Flow)   []
+//│ | New flow: flow:b‹645› ~> ⋅b‹641›
+//│ Resolved targets for _?_.Ident(a).c(2, 6).b: ObjectMember(member:b)
+//│ Resolved targets for _?_.Ident(a).c: ObjectMember(member:c)
+//│ = A
+
+:flow
+:sf
+:ge
 .b(new B)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: term (Lowering.scala:796)
+//│ Flowed:
+//│   _?_.Ident(b)(new B⁰)‹app⁰›
+//│ where
+//│     app⁰  <~  _?_.Ident(b)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)

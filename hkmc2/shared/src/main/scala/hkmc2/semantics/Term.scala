@@ -250,8 +250,9 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx],
-      var resolvedTargets: Ls[flow.SelectionTarget])(using State
-    ) extends Term with ResolvableImpl
+      var resolvedTargets: Ls[flow.SelectionTarget],
+      var targetSymbol: Opt[ClassSymbol]
+    ) (using State) extends Term with ResolvableImpl
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -357,7 +358,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.resolvedTargets)
+    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.resolvedTargets, term.targetSymbol)
   
   
 end Term
