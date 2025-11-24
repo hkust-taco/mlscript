@@ -611,7 +611,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     // println(s"$t :::::::: ${t.definedVars}")
-    val pre = blockPreamble(t.definedVars)
+    val pre = blockPreamble(t.definedVarsNoScoped)
     val rest = returningTerm(t, endSemi)
     pre :: rest
   

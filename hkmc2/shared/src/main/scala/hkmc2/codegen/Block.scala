@@ -29,6 +29,27 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
+  // FIXME: clean up this along with `definedVars` below...
+  lazy val definedVarsNoScoped: Set[Local] = this match
+    case _: Return | _: Throw => Set.empty
+    case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Assign(l: TermSymbol, r, rst) => rst.definedVarsNoScoped
+    case Assign(l, r, rst) => rst.definedVarsNoScoped + l
+    case AssignField(l, n, r, rst) => rst.definedVarsNoScoped
+    case AssignDynField(l, n, ai, r, rst) => rst.definedVarsNoScoped
+    case Match(scrut, arms, dflt, rst) =>
+      arms.flatMap(_._2.definedVarsNoScoped).toSet ++ dflt.toList.flatMap(_.definedVarsNoScoped) ++ rst.definedVarsNoScoped
+    case End(_) => Set.empty
+    case Break(_) => Set.empty
+    case Continue(_) => Set.empty
+    case Define(defn, rst) =>
+      val rest = rst.definedVarsNoScoped
+      if defn.isOwned then rest else rest + defn.sym
+    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVarsNoScoped + res
+    case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Scoped(syms, body) => body.definedVarsNoScoped -- syms
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
