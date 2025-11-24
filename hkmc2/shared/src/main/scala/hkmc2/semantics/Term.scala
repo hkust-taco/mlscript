@@ -468,7 +468,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case RcdField(field, rhs) => field.definedSyms ++ rhs.definedSyms
     case RcdSpread(rcd) => rcd.definedSyms
     case termdef: TermDefinition => Set(termdef.sym)
-    case tpeLikeDef: TypeLikeDef => Set(tpeLikeDef.bsym)
+    case tpeLikeDef: TypeLikeDef if tpeLikeDef.hasDeclareModifier.isEmpty => Set(tpeLikeDef.bsym)
     case _ => Set.empty
     // this match
     // case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty

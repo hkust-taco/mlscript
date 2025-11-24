@@ -67,6 +67,6 @@ open Mod { printt, |>> }
 //│ ╔══[ERROR] Module 'Mod' does not contain member '|>>'
 //│ ║  l.66: 	12 |>> printt
 //│ ╙──      	   ^^^
-//│ ═══[RUNTIME ERROR] TypeError: Mod1.|>> is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Mod.|>> is not a function
 
 

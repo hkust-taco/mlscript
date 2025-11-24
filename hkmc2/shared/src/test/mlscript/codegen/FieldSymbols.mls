@@ -99,53 +99,52 @@ case
 //│               sign = N
 //│               modulefulness = Modulefulness of N
 //│           restParam = N
-//│       body = Match:
-//│         scrut = Ref:
-//│           l = caseScrut
-//│           disamb = N
-//│         arms = Ls of 
-//│           Tuple2:
-//│             _1 = Cls:
-//│               cls = class:Foo
-//│               path = Ref{disamb=class:Foo}:
-//│                 l = member:Foo
-//│                 disamb = S of class:Foo
-//│             _2 = Assign:
-//│               lhs = $argument0$
-//│               rhs = Select{sym=term:class:Foo.x}:
-//│                 qual = Ref:
-//│                   l = caseScrut
+//│       body = Scoped:
+//│         syms = HashSet(a, $argument0$)
+//│         body = Match:
+//│           scrut = Ref:
+//│             l = caseScrut
+//│             disamb = N
+//│           arms = Ls of 
+//│             Tuple2:
+//│               _1 = Cls:
+//│                 cls = class:Foo
+//│                 path = Ref{disamb=class:Foo}:
+//│                   l = member:Foo
+//│                   disamb = S of class:Foo
+//│               _2 = Assign:
+//│                 lhs = $argument0$
+//│                 rhs = Select{sym=term:class:Foo.x}:
+//│                   qual = Ref:
+//│                     l = caseScrut
+//│                     disamb = N
+//│                   name = Ident of "x"
+//│                 rest = Assign: \
+//│                 lhs = a
+//│                 rhs = Ref:
+//│                   l = $argument0$
 //│                   disamb = N
-//│                 name = Ident of "x"
-//│               rest = Assign: \
-//│               lhs = a
-//│               rhs = Ref:
-//│                 l = $argument0$
-//│                 disamb = N
-//│               rest = Return: \
-//│               res = Ref:
-//│                 l = a
-//│                 disamb = N
-//│               implct = false
-//│         dflt = S of Throw of Instantiate:
-//│           mut = false
-//│           cls = Select:
-//│             qual = Ref{disamb=globalThis:globalThis}:
-//│               l = globalThis:globalThis
-//│               disamb = S of globalThis:globalThis
-//│             name = Ident of "Error"
-//│           args = Ls of 
-//│             Arg:
-//│               spread = N
-//│               value = Lit of StrLit of "match error"
-//│         rest = End of ""
-//│     rest = Assign: \
-//│     lhs = $block$res
-//│     rhs = Ref:
+//│                 rest = Return: \
+//│                 res = Ref:
+//│                   l = a
+//│                   disamb = N
+//│                 implct = false
+//│           dflt = S of Throw of Instantiate:
+//│             mut = false
+//│             cls = Select:
+//│               qual = Ref{disamb=globalThis:globalThis}:
+//│                 l = globalThis:globalThis
+//│                 disamb = S of globalThis:globalThis
+//│               name = Ident of "Error"
+//│             args = Ls of 
+//│               Arg:
+//│                 spread = N
+//│                 value = Lit of StrLit of "match error"
+//│           rest = End of ""
+//│     rest = Return: \
+//│     res = Ref:
 //│       l = member:lambda
 //│       disamb = N
-//│     rest = Return: \
-//│     res = Lit of UnitLit of false
 //│     implct = true
 //│ = fun
 

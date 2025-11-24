@@ -111,7 +111,7 @@ class Foo(using T) with
 //│   }
 //│   constructor(tmp5) {
 //│     this.#tmp = tmp5;
-//│     Predef.print(T1);
+//│     Predef.print(T);
 //│   }
 //│   #tmp;
 //│   toString() { return runtime.render(this); }

@@ -379,7 +379,7 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo3;
 //│ foo3 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A1.class) { return "Hello" } else { return "Goodbye" }
+//│   if (x1 instanceof A.class) { return "Hello" } else { return "Goodbye" }
 //│ };
 
 :sjs
@@ -403,9 +403,9 @@ fun foo(x, y, z) =
 //│   let tmp6;
 //│   split_root$4: {
 //│     split_1$4: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
+//│       if (x1 instanceof A.class) {
+//│         if (y1 instanceof B.class) {
+//│           if (z1 instanceof C.class) {
 //│             tmp6 = "Hello";
 //│             break split_root$4
 //│           } else {
@@ -429,9 +429,9 @@ fun foo(x, y, z) =
 //│   let tmp6;
 //│   split_root$4: {
 //│     split_default$: {
-//│       if (x1 instanceof A1.class) {
-//│         if (y1 instanceof B1.class) {
-//│           if (z1 instanceof C1.class) {
+//│       if (x1 instanceof A.class) {
+//│         if (y1 instanceof B.class) {
+//│           if (z1 instanceof C.class) {
 //│             tmp6 = "Hello";
 //│             break split_root$4
 //│           } else {

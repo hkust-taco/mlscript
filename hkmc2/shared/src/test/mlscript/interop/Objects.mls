@@ -34,14 +34,14 @@ Foo.name
 //│ = "Foo"
 
 Foo.class.name
-//│ = "Foo"
+//│ = "Foo1"
 
 foo.constructor
 //│ = class Foo
 
 // ! will be changed by minification
 foo.constructor.name
-//│ = "Foo"
+//│ = "Foo1"
 
 typeof(foo)
 //│ = "object"

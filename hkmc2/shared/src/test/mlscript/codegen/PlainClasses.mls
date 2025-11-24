@@ -18,36 +18,36 @@ class Foo
 
 Foo is Foo
 //│ JS (unsanitized):
-//│ if (Foo1 instanceof Foo1) { true } else { false }
+//│ if (Foo instanceof Foo) { true } else { false }
 //│ = false
 
 (new Foo) is Foo
 //│ JS (unsanitized):
 //│ let scrut;
-//│ scrut = globalThis.Object.freeze(new Foo1());
-//│ if (scrut instanceof Foo1) { true } else { false }
+//│ scrut = globalThis.Object.freeze(new Foo());
+//│ if (scrut instanceof Foo) { true } else { false }
 //│ = true
 
 new Foo
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new Foo1())
+//│ globalThis.Object.freeze(new Foo())
 //│ = Foo
 
 new Foo()
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new Foo1())
+//│ globalThis.Object.freeze(new Foo())
 //│ = Foo
 
 Foo
 //│ JS (unsanitized):
-//│ Foo1
+//│ Foo
 //│ = class Foo
 
 :re
 Foo()
 //│ JS (unsanitized):
-//│ runtime.safeCall(Foo1())
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ runtime.safeCall(Foo())
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo1 cannot be invoked without 'new'
 
 
 data class Foo with { print("hi") }
@@ -218,7 +218,7 @@ print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
 //│ let a, tmp, tmp1, tmp2, tmp3;
-//│ a = globalThis.Object.freeze(new Foo10());
+//│ a = globalThis.Object.freeze(new Foo9());
 //│ tmp = Predef.print(a.x);
 //│ tmp1 = runtime.safeCall(a.foo(1));
 //│ tmp2 = Predef.print(tmp1);

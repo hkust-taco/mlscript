@@ -23,7 +23,7 @@ pattern SumPair = Pair(a, b) => a + b
 //│       return a + b
 //│     });
 //│     transform = lambda;
-//│     if (input instanceof Pair1.class) {
+//│     if (input instanceof Pair.class) {
 //│       argument0$ = input.first;
 //│       argument1$ = input.second;
 //│       transformResult = runtime.safeCall(transform(argument0$, argument1$));

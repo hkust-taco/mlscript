@@ -88,6 +88,7 @@ f(1,2,3,4,5,6)
 //│ };
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
 //│   let tmp;
+//│   let g2; /** scoped **/
 //│   tmp = g$4(a1, a2, a3, a4, a5, a6);
 //│   return tmp
 //│ };
@@ -183,6 +184,7 @@ f(1, 2, 1000)
 //│ f7 = function f(unused, immutable, mutated) {
 //│   let a1, tmp7, tmp8, capture;
 //│   capture = new f$capture5(mutated);
+//│   let g3, h2; /** scoped **/
 //│   a1 = g$6(immutable, capture);
 //│   tmp7 = h$2(capture);
 //│   tmp8 = a1 + tmp7;
@@ -259,6 +261,7 @@ g()(1)
 //│ };
 //│ f$1 = function f$(g$capture2, x1) {
 //│   let k;
+//│   let h3; /** scoped **/
 //│   k = 4;
 //│   g$capture2.y$capture$0 = 2;
 //│   return x1
@@ -281,6 +284,7 @@ g()(1)
 //│ g6 = function g() {
 //│   let capture, f$here;
 //│   capture = new g$capture1(null);
+//│   let y1; /** scoped **/
 //│   capture.y$capture$0 = 0;
 //│   f$here = runtime.safeCall(f14(capture));
 //│   return f$here

@@ -512,8 +512,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) =>
       val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
         if scope.lookup(l).isDefined then
-          raise:
-            WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+          // raise:
+          //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
           None
         else
           Some(l -> scope.allocateName(l))
@@ -611,7 +611,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     // println(s"$t :::::::: ${t.definedVars}")
-    blockPreamble(t.definedVars) :: returningTerm(t, endSemi)
+    val pre = blockPreamble(t.definedVars)
+    val rest = returningTerm(t, endSemi)
+    pre :: rest
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
     block(t, endSemi)

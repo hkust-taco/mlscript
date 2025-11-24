@@ -34,6 +34,7 @@ fun foo() =
 //│ foo = function foo() {
 //│   let tmp, capture, bar$here;
 //│   capture = new foo$capture1(null);
+//│   let x; /** scoped **/
 //│   capture.x$capture$0 = 1;
 //│   bar$here = runtime.safeCall(bar(capture));
 //│   tmp = runtime.safeCall(xs.push(bar$here));

@@ -62,17 +62,17 @@ fun crazy(v) =
 //│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   split_root$: {
 //│     split_1$: {
-//│       if (v instanceof S1.class) {
+//│       if (v instanceof S.class) {
 //│         argument0$ = v.value;
-//│         if (argument0$ instanceof S1.class) {
+//│         if (argument0$ instanceof S.class) {
 //│           argument0$1 = argument0$.value;
-//│           if (argument0$1 instanceof S1.class) {
+//│           if (argument0$1 instanceof S.class) {
 //│             argument0$2 = argument0$1.value;
-//│             if (argument0$2 instanceof S1.class) {
+//│             if (argument0$2 instanceof S.class) {
 //│               argument0$3 = argument0$2.value;
-//│               if (argument0$3 instanceof S1.class) {
+//│               if (argument0$3 instanceof S.class) {
 //│                 argument0$4 = argument0$3.value;
-//│                 if (argument0$4 instanceof S1.class) {
+//│                 if (argument0$4 instanceof S.class) {
 //│                   argument0$5 = argument0$4.value;
 //│                   if (argument0$5 === 0) {
 //│                     tmp = "bruh!";
@@ -99,12 +99,12 @@ fun crazy(v) =
 //│         break split_1$
 //│       }
 //│     }
-//│     tmp1 = S1(0);
-//│     tmp2 = S1(tmp1);
-//│     tmp3 = S1(tmp2);
-//│     tmp4 = S1(tmp3);
-//│     tmp5 = S1(tmp4);
-//│     tmp = S1(tmp5);
+//│     tmp1 = S(0);
+//│     tmp2 = S(tmp1);
+//│     tmp3 = S(tmp2);
+//│     tmp4 = S(tmp3);
+//│     tmp5 = S(tmp4);
+//│     tmp = S(tmp5);
 //│   }
 //│   return tmp
 //│ };

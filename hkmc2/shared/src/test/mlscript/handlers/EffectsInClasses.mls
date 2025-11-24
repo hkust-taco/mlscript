@@ -11,6 +11,7 @@ data class Lol(h) with
   print(h.perform("k"))
 //│ JS (unsanitized):
 //│ let Lol1;
+//│ let tmp; /** scoped **/
 //│ Lol1 = function Lol(h) {
 //│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
@@ -19,7 +20,7 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
+//│     let res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
 //│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       static {

@@ -8,13 +8,13 @@ module Example with
 :ssjs
 Example.f(123)
 //│ JS:
-//│ block$res2 = runtime.checkCall(Example1.f(123)); undefined
+//│ block$res2 = runtime.checkCall(Example.f(123)); undefined
 //│ = [123, 456]
 
 :ssjs
 let s = Example.f
 //│ JS:
-//│ selRes = Example1.f;
+//│ selRes = Example.f;
 //│ if (selRes === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'f' yielded 'undefined'"))
 //│ }
@@ -42,6 +42,7 @@ module Test with
   fun bar() = foo()
 //│ JS (unsanitized):
 //│ let Test1;
+//│ let tmp1; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this
@@ -51,7 +52,6 @@ module Test with
 //│   }
 //│   static #s;
 //│   static {
-//│     let tmp1;
 //│     Test.#s = 1;
 //│     tmp1 = Predef.print(Test.#s);
 //│   }

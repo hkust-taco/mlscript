@@ -6,7 +6,7 @@ class C
 :sjs
 new! C
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new C1())
+//│ globalThis.Object.freeze(new C())
 //│ = C
 
 let c = C
@@ -38,7 +38,7 @@ new! id(C)
 //│   rhs = Tup of Ls of 
 //│     Ident of "C"
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new Predef.id(C1))
+//│ globalThis.Object.freeze(new Predef.id(C))
 //│ ═══[RUNTIME ERROR] TypeError: Predef.id is not a constructor
 
 // * Ok (as in JS)

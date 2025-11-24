@@ -81,6 +81,7 @@ fun foo() =
 //│ foo2 = function foo() {
 //│   let tmp2, tmp3, capture;
 //│   capture = new foo$capture5(null, null);
+//│   let x, tmp4, while1; /** scoped **/
 //│   capture.x$capture$0 = 1;
 //│   capture.tmp$capture$1 = undefined;
 //│   tmp2 = while$1(capture);

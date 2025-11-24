@@ -407,7 +407,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           val loopEnd: Path =
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
           val blk = blockBuilder
-            // .assign(l, Value.Lit(Tree.UnitLit(false)))
+            .assign(l, Value.Lit(Tree.UnitLit(false)))
             .define(FunDefn.withFreshSymbol(N, f, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(isTailRec = false))
             .assign(loopResult, Call(Value.Ref(f, N), Nil)(true, true, false))
           if summon[LoweringCtx].mayRet then

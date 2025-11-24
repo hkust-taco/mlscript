@@ -14,12 +14,12 @@ class Test with
   print(foo())
 //│ JS (unsanitized):
 //│ let Test1;
+//│ let tmp; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this
 //│   }
 //│   constructor() {
-//│     let tmp;
 //│     tmp = foo();
 //│     Predef.print(tmp);
 //│   }

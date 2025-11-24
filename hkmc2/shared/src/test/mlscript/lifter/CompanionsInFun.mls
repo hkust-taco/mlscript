@@ -17,6 +17,7 @@ fun f(x) =
 //│ };
 //│ f = function f(x) {
 //│   let A1;
+//│   let g; /** scoped **/
 //│   globalThis.Object.freeze(class A {
 //│     static {
 //│       A1 = this

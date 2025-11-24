@@ -75,18 +75,18 @@ fun toInt(x) = if x is
 //│ > | CALL toString()
 //│ > | | CALL toString()
 //│ > | | => 'N: 0'
-//│ > | | CALL succ(N {})
-//│ > | | => S { x: N {} }
-//│ > | | CALL toInt(S { x: N {} })
-//│ > | | | CALL toInt(N {})
+//│ > | | CALL succ(N1 {})
+//│ > | | => S1 { x: N1 {} }
+//│ > | | CALL toInt(S1 { x: N1 {} })
+//│ > | | | CALL toInt(N1 {})
 //│ > | | | => 0
 //│ > | | => 1
 //│ > | => 'S(N: 0): 1'
-//│ > | CALL succ(S { x: N {} })
-//│ > | => S { x: S { x: N {} } }
-//│ > | CALL toInt(S { x: S { x: N {} } })
-//│ > | | CALL toInt(S { x: N {} })
-//│ > | | | CALL toInt(N {})
+//│ > | CALL succ(S1 { x: N1 {} })
+//│ > | => S1 { x: S1 { x: N1 {} } }
+//│ > | CALL toInt(S1 { x: S1 { x: N1 {} } })
+//│ > | | CALL toInt(S1 { x: N1 {} })
+//│ > | | | CALL toInt(N1 {})
 //│ > | | | => 0
 //│ > | | => 1
 //│ > | => 2
@@ -105,7 +105,7 @@ id(2)
 //│ > CALL id(2)
 //│ > | CALL id(1)
 //│ > | | CALL id(0)
-//│ > | | => Cls {
+//│ > | | => Cls1 {
 //│ >       a: 'aaaa',
 //│ >       b: 'bbbb',
 //│ >       c: 'cccc',

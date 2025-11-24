@@ -49,4 +49,4 @@ parseIntegers of "123\n456\n789"
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.48: 	"123\n456\n789" through Lines(Integer) // ==> [123, 456, 789]
 //│ ╙──      	                ^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Lines1 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Lines is not a function

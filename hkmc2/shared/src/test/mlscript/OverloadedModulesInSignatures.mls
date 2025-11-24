@@ -81,18 +81,18 @@ fun f: TrmMod = 42
 :sjs
 fun f = TrmMod
 //│ JS (unsanitized):
-//│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod1(); return tmp4 };
+//│ let f5; f5 = function f() { let tmp4; tmp4 = TrmMod(); return tmp4 };
 
 :fixme
 :expect 42
 f
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod1 cannot be invoked without 'new'
 //│ ═══[RUNTIME ERROR] Expected: '42', got: 'undefined'
 
 :sjs
 fun f: module TrmMod = TrmMod
 //│ JS (unsanitized):
-//│ let f6; f6 = function f() { return TrmMod1.class };
+//│ let f6; f6 = function f() { return TrmMod.class };
 
 fun assertModule(module m: ClsMod): module ClsMod = m
 
@@ -104,7 +104,7 @@ assertModule(TypMod).whoami
 
 :fixme
 assertModule(TrmMod).whoami
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod1 cannot be invoked without 'new'
 
 
 fun assertNonModule(m) = m
@@ -124,7 +124,7 @@ assertNonModule(TypMod).whoami
 :breakme
 :fixme
 assertNonModule(TrmMod).whoami
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor TrmMod1 cannot be invoked without 'new'
 
 
 type Foo[A] = Int

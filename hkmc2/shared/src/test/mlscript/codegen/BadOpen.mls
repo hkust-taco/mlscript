@@ -32,7 +32,7 @@ open Foo { y }
 :sjs
 y
 //│ JS (unsanitized):
-//│ Foo1.y
+//│ Foo.y
 
 
 val Oops = "oops"
