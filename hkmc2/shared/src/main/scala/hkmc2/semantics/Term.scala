@@ -75,6 +75,7 @@ sealed trait ResolvableImpl:
       case t: Term.TyApp => t.copy()(t.typ)
       case t: Term.Sel => t.copy()(t.sym, t.typ, t.originalCtx)
       case t: Term.SynthSel => t.copy()(t.sym, t.typ)
+      case t: Term.LeadingDotSel => t.copy()(t.originalCtx, t.targetSymbol)
     .withLocOf(this)
     .asInstanceOf
   
@@ -93,6 +94,7 @@ sealed trait ResolvableImpl:
       case t: Term.TyApp => t.copy()(S(typ))
       case t: Term.Sel => t.copy()(t.sym, S(typ), t.originalCtx)(using t.state)
       case t: Term.SynthSel => t.copy()(t.sym, S(typ))
+      case _ => lastWords(s"Cannot attach a type to leading dot selection ${this.showDbg}")
     .withLocOf(this)
     .asInstanceOf
   
@@ -250,8 +252,8 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx],
-      var resolvedTargets: Ls[flow.SelectionTarget],
-      var targetSymbol: Opt[ClassSymbol]
+      // var resolvedTargets: Ls[flow.LeadingDotSelTarget],
+      var targetSymbol: Opt[Opt[ClassSymbol]]
     ) (using State) extends Term with ResolvableImpl
   
   def expanded: Term = this match
@@ -358,7 +360,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.resolvedTargets, term.targetSymbol)
+    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.targetSymbol)
   
   
 end Term
@@ -680,7 +682,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case TypeDef(sym, _, tparams, rhs, _, _) =>
       s"type ${sym}${tparams.mkStringOr(", ", "[", "]")} = ${rhs.fold("")(x => x.showDbg)}"
     case Missing => "missing"
-    case LeadingDotSel(name) => s"_?_.${name}"
+    case LeadingDotSel(nme) => s"_?_.${nme.name}"
 
 final case class LetDecl(sym: LocalSymbol, annotations: Ls[Annot]) extends Statement
 

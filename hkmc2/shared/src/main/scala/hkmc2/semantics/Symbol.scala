@@ -140,6 +140,7 @@ class FlowSymbol(label: Str)(using State) extends Symbol:
   val outFlows: mutable.Buffer[FlowSymbol] = mutable.Buffer.empty
   val consumers: mutable.Buffer[Consumer] = mutable.Buffer.empty
   val producers: mutable.Buffer[ConcreteProd] = mutable.Buffer.empty
+  val selections: mutable.Buffer[Producer.LeadingDotSel] = mutable.Buffer.empty
   def showDbg: Str =
     label + s"‹$uid›"
   override def toString: Str =
