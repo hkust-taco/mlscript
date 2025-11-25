@@ -7,86 +7,27 @@ module A with
   fun a = new A
 
 :flow
-:df
+:sf
 fun f(x : A) = x
 f(.a)
-//│ Typing producer: { fun member:f(x: member:A) = x; member:f(_?_.a) }
-//│ | Typing param: x: member:A
-//│ | | x‹614›
-//│ | : type class:A
-//│ | Typing producer: x
-//│ | : x‹614›
-//│ | Typing producer: member:f(_?_.a)
-//│ | | Typing producer: [_?_.a]
-//│ | | | Typing producer: _?_.a
-//│ | | | | Leading dot selection _?_.a
-//│ | | | : _?_.a
-//│ | | : [_?_.a]
-//│ | | Typing producer: member:f
-//│ | | : flow:f‹619›
-//│ | : app‹618›
-//│ : app‹618›
-//│ Handling constraint: ((type class:A) -> x‹614›) <: flow:f‹619› (from { fun member:f(x: member:A) = x; member:f(_?_.a) })
-//│ | Solving: ((type class:A) -> x‹614›) <: flow:f‹619›   (Fun, Flow)   []
-//│ | New flow: ((type class:A) -> x‹614›) ~> flow:f‹619›
-//│ Handling constraint: flow:f‹619› <: ((_?_.a) -> app‹618›) (from member:f(_?_.a))
-//│ | Solving: flow:f‹619› <: ((_?_.a) -> app‹618›)   (Flow, Fun)   []
-//│ | New flow: flow:f‹619› ~> ((_?_.a) -> app‹618›)
-//│ | Solving: ((type class:A) -> x‹614›) <: ((_?_.a) -> app‹618›)   (Fun, Fun)   []
-//│ | Solving: [_?_.a] <: [type class:A]   (Tup, Tup)   []
-//│ | Solving: _?_.a <: type class:A   (LeadingDotSel, Typ)   []
-//│ | Examining class:A for leading dot selection resolution
-//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
-//│ | Found leading dot expansion: member:A.a‹member:a›
-//│ | Solving: x‹614› <: app‹618›   (Flow, Flow)   []
-//│ | New flow: x‹614› ~> app‹618›
-//│ | Solving: type class:A <: app‹618›   (Typ, Flow)   []
-//│ | New flow: type class:A ~> app‹618›
+//│ Flowed:
+//│   fun f⁰(x⁰: A⁰) ‹flow:f⁰› = x⁰,
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁰›
+//│ where
+//│     x⁰  <~  type A
+//│     x⁰  ->  app⁰
+//│     app⁰  <~  type A
+//│     flow:f⁰  <~  ((type A) -> x⁰)
+//│     flow:f⁰  ~>  ((_?_.Ident(a)) -> app⁰)
 //│ = A
 
 :flow
-:df
+:sf
 f(.a.b)
-//│ Typing producer: { member:f(_?_.a.b) }
-//│ | Typing producer: member:f(_?_.a.b)
-//│ | | Typing producer: [_?_.a.b]
-//│ | | | Typing producer: _?_.a.b
-//│ | | | | Selection _?_.a.b None
-//│ | | | | Typing producer: _?_.a
-//│ | | | | | Leading dot selection _?_.a
-//│ | | | | : _?_.a
-//│ | | | : ⋅b‹625›
-//│ | | : [⋅b‹625›]
-//│ | | Typing producer: member:f
-//│ | | : flow:f‹619›
-//│ | : app‹624›
-//│ : app‹624›
-//│ Handling constraint: _?_.a <: {b: ⋅b‹625›} (from _?_.a.b)
-//│ | Solving: _?_.a <: {b: ⋅b‹625›}   (LeadingDotSel, Sel)   []
-//│ | Selection _?_.a flowing into ⋅b‹625›
-//│ Handling constraint: flow:f‹619› <: ((⋅b‹625›) -> app‹624›) (from member:f(_?_.a.b))
-//│ | Solving: flow:f‹619› <: ((⋅b‹625›) -> app‹624›)   (Flow, Fun)   []
-//│ | New flow: flow:f‹619› ~> ((⋅b‹625›) -> app‹624›)
-//│ | Solving: ((type class:A) -> x‹614›) <: ((⋅b‹625›) -> app‹624›)   (Fun, Fun)   []
-//│ | Solving: [⋅b‹625›] <: [type class:A]   (Tup, Tup)   []
-//│ | Solving: ⋅b‹625› <: type class:A   (Flow, Typ)   []
-//│ | New flow: ⋅b‹625› ~> type class:A
-//│ | Solving: _?_.a <: type class:A   (LeadingDotSel, Typ)   []
-//│ | Examining class:A for leading dot selection resolution
-//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
-//│ | Found leading dot expansion: member:A.a‹member:a›
-//│ | Solving: x‹614› <: app‹624›   (Flow, Flow)   []
-//│ | New flow: x‹614› ~> app‹624›
-//│ | Solving: type class:A <: app‹624›   (Typ, Flow)   []
-//│ | New flow: type class:A ~> app‹624›
-//│ Handling constraint: _?_.a <: {b: ⋅b‹625›} (from _?_.a)
-//│ | Solving: _?_.a <: {b: ⋅b‹625›}   (LeadingDotSel, Sel)   []
-//│ | Found a pre-existing expansion member:A.a‹member:a› for _?_.a
-//│ | Solving: A <: {b: ⋅b‹625›}   (Ctor, Sel)   []
-//│ | Found immediate member member:b
-//│ | Solving: flow:b‹627› <: ⋅b‹625›   (Flow, Flow)   []
-//│ | New flow: flow:b‹627› ~> ⋅b‹625›
-//│ Resolved targets for _?_.a.b: ObjectMember(member:b)
+//│ Flowed:
+//│   f⁰(A⁰.a⁰.b⁰)‹app¹›
+//│ where
+//│     app¹  <~  type A
 //│ = A
 
 class C
@@ -101,149 +42,39 @@ let d = .a
 f(d)
 g(d)
 //│ ╔══[ERROR] Ambiguous leading dot selection
-//│ ║  l.100: 	let d = .a
-//│ ║         	        ^^
+//│ ║  l.41: 	let d = .a
+//│ ║        	        ^^
 //│ ╟── Already resolved to member:A.a‹member:a›
 //│ ╟── New companion member
-//│ ║  l.94: 	  fun a = new C
+//│ ║  l.35: 	  fun a = new C
 //│ ╙──      	  ^^^^^^^^^^^^^
 //│ Flowed:
-//│   fun g⁰(x⁰: C⁰) ‹flow:g⁰› = x⁰,
+//│   fun g⁰(x¹: C⁰) ‹flow:g⁰› = x¹,
 //│   let d⁰,
 //│   d⁰ = _?_.a{ ~> A⁰.a⁰ },
-//│   f⁰(d⁰)‹app⁰›,
-//│   g⁰(d⁰)‹app¹›
+//│   f⁰(d⁰)‹app²›,
+//│   g⁰(d⁰)‹app³›
 //│ where
-//│     x⁰  <~  type C
-//│     x⁰  ->  app¹
+//│     x¹  <~  type C
+//│     x¹  ->  app³
 //│     d⁰  <~  _?_.Ident(a)
 //│     d⁰  ~>  type A  type C
-//│     app⁰  <~  type A
-//│     app¹  <~  type C
-//│     flow:g⁰  <~  ((type C) -> x⁰)
-//│     flow:g⁰  ~>  ((d⁰) -> app¹)
+//│     app²  <~  type A
+//│     app³  <~  type C
+//│     flow:g⁰  <~  ((type C) -> x¹)
+//│     flow:g⁰  ~>  ((d⁰) -> app³)
 //│ = A
 //│ d = A
 
 :flow
-:df
+:sf
 f(.a.c(1,1).b.b.c(3,3))
-//│ Typing producer: { member:f(_?_.a.c(1, 1).b.b.c(3, 3)) }
-//│ | Typing producer: member:f(_?_.a.c(1, 1).b.b.c(3, 3))
-//│ | | Typing producer: [_?_.a.c(1, 1).b.b.c(3, 3)]
-//│ | | | Typing producer: _?_.a.c(1, 1).b.b.c(3, 3)
-//│ | | | | Typing producer: [3, 3]
-//│ | | | | | Typing producer: 3
-//│ | | | | | : 3
-//│ | | | | | Typing producer: 3
-//│ | | | | | : 3
-//│ | | | | : [3, 3]
-//│ | | | | Typing producer: _?_.a.c(1, 1).b.b.c
-//│ | | | | | Selection _?_.a.c(1, 1).b.b.c None
-//│ | | | | | Typing producer: _?_.a.c(1, 1).b.b
-//│ | | | | | | Selection _?_.a.c(1, 1).b.b None
-//│ | | | | | | Typing producer: _?_.a.c(1, 1).b
-//│ | | | | | | | Selection _?_.a.c(1, 1).b None
-//│ | | | | | | | Typing producer: _?_.a.c(1, 1)
-//│ | | | | | | | | Typing producer: [1, 1]
-//│ | | | | | | | | | Typing producer: 1
-//│ | | | | | | | | | : 1
-//│ | | | | | | | | | Typing producer: 1
-//│ | | | | | | | | | : 1
-//│ | | | | | | | | : [1, 1]
-//│ | | | | | | | | Typing producer: _?_.a.c
-//│ | | | | | | | | | Selection _?_.a.c None
-//│ | | | | | | | | | Typing producer: _?_.a
-//│ | | | | | | | | | | Leading dot selection _?_.a
-//│ | | | | | | | | | : _?_.a
-//│ | | | | | | | | : ⋅c‹661›
-//│ | | | | | | | : app‹660›
-//│ | | | | | | : ⋅b‹662›
-//│ | | | | | : ⋅b‹663›
-//│ | | | | : ⋅c‹664›
-//│ | | | : app‹659›
-//│ | | : [app‹659›]
-//│ | | Typing producer: member:f
-//│ | | : flow:f‹619›
-//│ | : app‹658›
-//│ : app‹658›
-//│ Handling constraint: _?_.a <: {c: ⋅c‹661›} (from _?_.a.c)
-//│ | Solving: _?_.a <: {c: ⋅c‹661›}   (LeadingDotSel, Sel)   []
-//│ | Selection _?_.a flowing into ⋅c‹661›
-//│ Handling constraint: ⋅c‹661› <: ((1, 1) -> app‹660›) (from _?_.a.c(1, 1))
-//│ | Solving: ⋅c‹661› <: ((1, 1) -> app‹660›)   (Flow, Fun)   []
-//│ | New flow: ⋅c‹661› ~> ((1, 1) -> app‹660›)
-//│ | Solving: _?_.a <: ((1, 1) -> app‹660›)   (LeadingDotSel, Fun)   []
-//│ | Solving: _?_.a <: app‹660›   (LeadingDotSel, Flow)   []
-//│ | New flow: _?_.a ~> app‹660›
-//│ Handling constraint: app‹660› <: {b: ⋅b‹662›} (from _?_.a.c(1, 1).b)
-//│ | Solving: app‹660› <: {b: ⋅b‹662›}   (Flow, Sel)   []
-//│ | New flow: app‹660› ~> {b: ⋅b‹662›}
-//│ | Solving: _?_.a <: {b: ⋅b‹662›}   (LeadingDotSel, Sel)   []
-//│ | Selection _?_.a flowing into ⋅b‹662›
-//│ Handling constraint: ⋅b‹662› <: {b: ⋅b‹663›} (from _?_.a.c(1, 1).b.b)
-//│ | Solving: ⋅b‹662› <: {b: ⋅b‹663›}   (Flow, Sel)   []
-//│ | New flow: ⋅b‹662› ~> {b: ⋅b‹663›}
-//│ | Solving: _?_.a <: {b: ⋅b‹663›}   (LeadingDotSel, Sel)   []
-//│ | Selection _?_.a flowing into ⋅b‹663›
-//│ Handling constraint: ⋅b‹663› <: {c: ⋅c‹664›} (from _?_.a.c(1, 1).b.b.c)
-//│ | Solving: ⋅b‹663› <: {c: ⋅c‹664›}   (Flow, Sel)   []
-//│ | New flow: ⋅b‹663› ~> {c: ⋅c‹664›}
-//│ | Solving: _?_.a <: {c: ⋅c‹664›}   (LeadingDotSel, Sel)   []
-//│ | Selection _?_.a flowing into ⋅c‹664›
-//│ Handling constraint: ⋅c‹664› <: ((3, 3) -> app‹659›) (from _?_.a.c(1, 1).b.b.c(3, 3))
-//│ | Solving: ⋅c‹664› <: ((3, 3) -> app‹659›)   (Flow, Fun)   []
-//│ | New flow: ⋅c‹664› ~> ((3, 3) -> app‹659›)
-//│ | Solving: _?_.a <: ((3, 3) -> app‹659›)   (LeadingDotSel, Fun)   []
-//│ | Solving: _?_.a <: app‹659›   (LeadingDotSel, Flow)   []
-//│ | New flow: _?_.a ~> app‹659›
-//│ Handling constraint: flow:f‹619› <: ((app‹659›) -> app‹658›) (from member:f(_?_.a.c(1, 1).b.b.c(3, 3)))
-//│ | Solving: flow:f‹619› <: ((app‹659›) -> app‹658›)   (Flow, Fun)   []
-//│ | New flow: flow:f‹619› ~> ((app‹659›) -> app‹658›)
-//│ | Solving: ((type class:A) -> x‹614›) <: ((app‹659›) -> app‹658›)   (Fun, Fun)   []
-//│ | Solving: [app‹659›] <: [type class:A]   (Tup, Tup)   []
-//│ | Solving: app‹659› <: type class:A   (Flow, Typ)   []
-//│ | New flow: app‹659› ~> type class:A
-//│ | Solving: _?_.a <: type class:A   (LeadingDotSel, Typ)   []
-//│ | Examining class:A for leading dot selection resolution
-//│ | outermostAcessibleBase (top-level/import:Prelude/block:1/block:2,List())
-//│ | Found leading dot expansion: member:A.a‹member:a›
-//│ | Solving: x‹614› <: app‹658›   (Flow, Flow)   []
-//│ | New flow: x‹614› ~> app‹658›
-//│ | Solving: type class:A <: app‹658›   (Typ, Flow)   []
-//│ | New flow: type class:A ~> app‹658›
-//│ Handling constraint: _?_.a <: {c: ⋅c‹661›} (from _?_.a)
-//│ | Solving: _?_.a <: {c: ⋅c‹661›}   (LeadingDotSel, Sel)   []
-//│ | Found a pre-existing expansion member:A.a‹member:a› for _?_.a
-//│ | Solving: A <: {c: ⋅c‹661›}   (Ctor, Sel)   []
-//│ | Found immediate member member:c
-//│ | Solving: flow:c‹667› <: ⋅c‹661›   (Flow, Flow)   []
-//│ | New flow: flow:c‹667› ~> ⋅c‹661›
-//│ Handling constraint: _?_.a <: {b: ⋅b‹662›} (from _?_.a)
-//│ | Solving: _?_.a <: {b: ⋅b‹662›}   (LeadingDotSel, Sel)   []
-//│ | Found a pre-existing expansion member:A.a‹member:a› for _?_.a
-//│ | Solving: A <: {b: ⋅b‹662›}   (Ctor, Sel)   []
-//│ | Found immediate member member:b
-//│ | Solving: flow:b‹627› <: ⋅b‹662›   (Flow, Flow)   []
-//│ | New flow: flow:b‹627› ~> ⋅b‹662›
-//│ Handling constraint: _?_.a <: {b: ⋅b‹663›} (from _?_.a)
-//│ | Solving: _?_.a <: {b: ⋅b‹663›}   (LeadingDotSel, Sel)   []
-//│ | Found a pre-existing expansion member:A.a‹member:a› for _?_.a
-//│ | Solving: A <: {b: ⋅b‹663›}   (Ctor, Sel)   []
-//│ | Found immediate member member:b
-//│ | Solving: flow:b‹627› <: ⋅b‹663›   (Flow, Flow)   []
-//│ | New flow: flow:b‹627› ~> ⋅b‹663›
-//│ Handling constraint: _?_.a <: {c: ⋅c‹664›} (from _?_.a)
-//│ | Solving: _?_.a <: {c: ⋅c‹664›}   (LeadingDotSel, Sel)   []
-//│ | Found a pre-existing expansion member:A.a‹member:a› for _?_.a
-//│ | Solving: A <: {c: ⋅c‹664›}   (Ctor, Sel)   []
-//│ | Found immediate member member:c
-//│ | Solving: flow:c‹667› <: ⋅c‹664›   (Flow, Flow)   []
-//│ | New flow: flow:c‹667› ~> ⋅c‹664›
-//│ Resolved targets for _?_.a.c(1, 1).b.b.c: ObjectMember(member:c)
-//│ Resolved targets for _?_.a.c(1, 1).b.b: ObjectMember(member:b)
-//│ Resolved targets for _?_.a.c(1, 1).b: ObjectMember(member:b)
-//│ Resolved targets for _?_.a.c: ObjectMember(member:c)
+//│ Flowed:
+//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁴›.b⁰.b⁰.c⁰(3, 3)‹app⁵›)‹app⁶›
+//│ where
+//│     app⁶  <~  type A
+//│     app⁵  <~  _?_.Ident(a)
+//│     app⁵  ~>  type A
 //│ = A
 
 :flow
@@ -252,9 +83,9 @@ f(.a.c(1,1).b.b.c(3,3))
 :re
 f(.w)
 //│ Flowed:
-//│   f⁰(_?_.w)‹app²›
+//│   f⁰(_?_.w)‹app⁷›
 //│ where
-//│     app²  <~  type A
+//│     app⁷  <~  type A
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 
@@ -263,7 +94,7 @@ f(.w)
 :ge
 .b(new A)
 //│ Flowed:
-//│   _?_.b(new A⁰)‹app³›
+//│   _?_.b(new A⁰)‹app⁸›
 //│ where
-//│     app³  <~  _?_.Ident(b)
+//│     app⁸  <~  _?_.Ident(b)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)

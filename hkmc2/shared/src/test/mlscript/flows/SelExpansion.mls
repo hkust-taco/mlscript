@@ -288,7 +288,7 @@ foo.test
 //│ ╔══[ERROR] Unresolved selection:
 //│ ║  l.287: 	foo.test
 //│ ║         	^^^^^^^^
-//│ ╙── Type `((a‹807›) -> A)` does not contain member 'test'
+//│ ╙── Type `((a‹806›) -> A)` does not contain member 'test'
 //│ Flowed:
 //│   foo².test‹?›
 //│ where
