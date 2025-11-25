@@ -68,13 +68,25 @@ g(d)
 
 :flow
 :sf
+f(.a.b)
+g(.a)
+//│ Flowed:
+//│   f⁰(A⁰.a⁰.b⁰)‹app⁴›,
+//│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁵›
+//│ where
+//│     app⁴  <~  type A
+//│     app⁵  <~  type C
+//│ = C
+
+:flow
+:sf
 f(.a.c(1,1).b.b.c(3,3))
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁴›.b⁰.b⁰.c⁰(3, 3)‹app⁵›)‹app⁶›
+//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁶›.b⁰.b⁰.c⁰(3, 3)‹app⁷›)‹app⁸›
 //│ where
-//│     app⁶  <~  type A
-//│     app⁵  <~  _?_.Ident(a)
-//│     app⁵  ~>  type A
+//│     app⁸  <~  type A
+//│     app⁷  <~  _?_.Ident(a)
+//│     app⁷  ~>  type A
 //│ = A
 
 :flow
@@ -83,9 +95,9 @@ f(.a.c(1,1).b.b.c(3,3))
 :re
 f(.w)
 //│ Flowed:
-//│   f⁰(_?_.w)‹app⁷›
+//│   f⁰(_?_.w)‹app⁹›
 //│ where
-//│     app⁷  <~  type A
+//│     app⁹  <~  type A
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 
@@ -94,7 +106,7 @@ f(.w)
 :ge
 .b(new A)
 //│ Flowed:
-//│   _?_.b(new A⁰)‹app⁸›
+//│   _?_.b(new A⁰)‹app¹⁰›
 //│ where
-//│     app⁸  <~  _?_.Ident(b)
+//│     app¹⁰  <~  _?_.Ident(b)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
