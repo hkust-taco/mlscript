@@ -32,6 +32,7 @@ enum Producer:
   
   def toLoc: Opt[Loc] = this match
     case self: Ctor => self.trm.toLoc
+    case self: LeadingDotSel => self.trm.toLoc
     case Unknown(t) => t.toLoc
     case _ => None
   

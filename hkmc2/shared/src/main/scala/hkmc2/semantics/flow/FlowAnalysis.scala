@@ -407,9 +407,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case S(S(exp)) => raise:
                     ErrorReport:
                       List(
-                        msg"Ambiguous selection" -> sel.toLoc,
-                        msg"already resolved" -> exp.toLoc,
-                        msg"new companion member" -> memb.toLoc
+                        msg"Ambiguous leading dot selection" -> sel.nme.toLoc,
+                        msg"Already resolved to ${exp.showDbg}" -> N,
+                        msg"New companion member" -> memb.toLoc
                       )
                 case _ =>
                   log(s"Could not find member ${nme.name} in ${sym}")
@@ -420,7 +420,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case csel @ C.Sel(nme, res) =>
                 (sel.trm.expansion, sel.trm.targetSymbol) match
                 case (S(S(exp)), S(S(cs))) =>
-                  log(s"Found an expansion ${exp.showDbg} for ${sel.showDbg}")
+                  log(s"Found a pre-existing expansion ${exp.showDbg} for ${sel.showDbg}")
                   toSolve.push(Constraint(P.Ctor(cs, Nil)(exp), csel))
                 case (_, S(N)) =>
                   log(s"Already visited this selection")
