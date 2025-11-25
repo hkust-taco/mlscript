@@ -31,7 +31,7 @@ enum SelectionTarget:
   case CompanionMember(comp: Term, sym: FieldSymbol)
 
 
-case class LeadingDotSelTarget(cs: ClassSymbol, trm: Term, sym: FieldSymbol)
+case class LeadingDotSelTarget(cs: Opt[ClassSymbol], trm: Term, sym: FieldSymbol)
 
 
 class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
@@ -45,7 +45,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   val collectedConstraints: mutable.Queue[(src: Term, c: Constraint)] = mutable.Queue.empty
   
   val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
-  // val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
+  val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
   
   def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
@@ -128,7 +128,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
     case sel @ LeadingDotSel(nme) =>
-      // leadingDotSelsToExpand += sel
+      leadingDotSelsToExpand += sel
       log(s"Leading dot selection ${sel.showDbg}")
       P.LeadingDotSel(nme)(sel)
     
@@ -243,25 +243,25 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               case ObjectMember(sym) => msg"object member ${sym.nme}" -> sym.toLoc
               case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
   
-  // def expandLeadingDotSels() =
-  //   leadingDotSelsToExpand.foreach: sel =>
-  //     log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
-  //     assert(sel.expansion.isEmpty)
-  //     sel.resolvedTargets match
-  //     case LeadingDotSelTarget(_, comp, sym) :: Nil =>
-  //       val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
-  //       log(s"Leading dot expansion: ${base.showDbg}")
-  //       sel.expansion = S(S(base))
-  //     case Nil =>
-  //       // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
-  //       raise:
-  //         ErrorReport:
-  //           msg"Cannot resolve selection" -> sel.toLoc :: Nil
-  //     case targets => raise:
-  //       ErrorReport:
-  //         msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
-  //         :: targets.map:
-  //           case LeadingDotSelTarget(_, _, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
+  def expandLeadingDotSels() =
+    leadingDotSelsToExpand.foreach: sel =>
+      log(s"Resolved targets for ${sel.showDbg}: ${sel.resolvedTargets.mkString(", ")}")
+      assert(sel.expansion.isEmpty)
+      sel.resolvedTargets match
+      case LeadingDotSelTarget(_, comp, sym) :: Nil =>
+        val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
+        log(s"Leading dot expansion: ${base.showDbg}")
+        sel.expansion = S(S(base))
+      case Nil =>
+        // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
+        raise:
+          ErrorReport:
+            msg"Cannot resolve leading dot selection" -> sel.nme.toLoc :: Nil
+      case targets => raise:
+        ErrorReport:
+          msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
+          :: targets.map:
+            case LeadingDotSelTarget(_, _, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
 
   // def findConsumerSymbols(cons: Consumer): Ls[Symbol] =
   //   cons match
@@ -392,37 +392,39 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(nme), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) => 
+                sel.trm.reachedType = true
                 log(s"Examining ${sym} for leading dot selection resolution")
                 getCompanionMember(sel.trm, sym, nme.name) match
                 case S((cs, path, memb)) =>
-                  sel.trm.expansion match
-                  case N => 
-                    val base = Sel(path, Tree.Ident(memb.nme))(S(memb), N, N)
-                    log(s"Found leading dot expansion: ${base.showDbg}")
-                    sel.trm.expansion = S(S(base))
-                    sel.trm.targetSymbol = S(cs)
-                  case S(N) => raise:
-                    ErrorReport:
-                      msg"Leading dot selection cannot expand to itself" -> sel.toLoc :: Nil
-                  case S(S(exp)) => raise:
-                    ErrorReport:
-                      List(
-                        msg"Ambiguous leading dot selection" -> sel.nme.toLoc,
-                        msg"Already resolved to ${exp.showDbg}" -> N,
-                        msg"New companion member" -> memb.toLoc
-                      )
+                  log(s"Found leading dot expansion: ${path.showDbg} with member ${memb}")
+                  sel.trm.resolvedTargets ::= LeadingDotSelTarget(cs, path, memb)
+                  // sel.trm.expansion match
+                  // case N => 
+                  //   val base = Sel(path, Tree.Ident(memb.nme))(S(memb), N, N)
+                  //   log(s"Found leading dot expansion: ${base.showDbg}")
+                  //   sel.trm.expansion = S(S(base))
+                  //   sel.trm.targetSymbol = S(cs)
+                  // case S(N) => raise:
+                  //   ErrorReport:
+                  //     msg"Leading dot selection cannot expand to itself" -> sel.toLoc :: Nil
+                  // case S(S(exp)) => raise:
+                  //   ErrorReport:
+                  //     List(
+                  //       msg"Ambiguous leading dot selection" -> sel.nme.toLoc,
+                  //       msg"Already resolved to ${exp.showDbg}" -> N,
+                  //       msg"New companion member" -> memb.toLoc
+                  //     )
                 case _ =>
                   log(s"Could not find member ${nme.name} in ${sym}")
-                  sel.trm.targetSymbol = S(N)
                   // raise:
                   //   ErrorReport:
                   //     msg"Cannot resolve leading dot selection" -> sel.trm.toLoc :: Nil
               case csel @ C.Sel(nme, res) =>
-                (sel.trm.expansion, sel.trm.targetSymbol) match
-                case (S(S(exp)), S(S(cs))) =>
-                  log(s"Found a pre-existing expansion ${exp.showDbg} for ${sel.showDbg}")
-                  toSolve.push(Constraint(P.Ctor(cs, Nil)(exp), csel))
-                case (_, S(N)) =>
+                sel.trm.resolvedTargets match
+                case LeadingDotSelTarget(S(cs), tg, memb) :: _ =>
+                  log(s"Found a pre-existing target ${tg.showDbg} for ${sel.showDbg}")
+                  toSolve.push(Constraint(P.Ctor(cs, Nil)(Sel(tg, Tree.Ident(memb.nme))(S(memb), N, N)), csel))
+                case Nil if sel.trm.reachedType =>
                   log(s"Already visited this selection")
                 case _ =>
                   res match
@@ -433,6 +435,21 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                     log(s"Propagating leading dot selection to ${res.showDbg}")
                     dig(sel, res, path)
                   collectedConstraints.enqueue((src = sel.trm, c = Constraint(sel, csel)))
+                // (sel.trm.expansion, sel.trm.targetSymbol) match
+                // case (S(S(exp)), S(S(cs))) =>
+                //   log(s"Found a pre-existing expansion ${exp.showDbg} for ${sel.showDbg}")
+                //   toSolve.push(Constraint(P.Ctor(cs, Nil)(exp), csel))
+                // case (_, S(N)) =>
+                //   log(s"Already visited this selection")
+                // case _ =>
+                //   res match
+                //   case C.Flow(sym) => 
+                //     log(s"Selection ${sel.showDbg} flowing into ${sym.showDbg}")
+                //     sym.selections += sel
+                //   case _ => 
+                //     log(s"Propagating leading dot selection to ${res.showDbg}")
+                //     dig(sel, res, path)
+                //   collectedConstraints.enqueue((src = sel.trm, c = Constraint(sel, csel)))
               case C.Fun(arg, res) => toSolve.push(Constraint(sel, res))
               case _ => log("Unhandled RHS for leading dot selections")
             case (lhs, sel: C.Sel) =>

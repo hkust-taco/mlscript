@@ -294,6 +294,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       val flo = floan.typeProd(trm)
       floan.solveConstraints()
       floan.expandTerms()
+      floan.expandLeadingDotSels()
       if showFlows.isSet then
         import semantics.ShowCfg
         given ShowCfg = ShowCfg(

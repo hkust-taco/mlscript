@@ -23,9 +23,9 @@ f(.a)
 
 :flow
 :sf
-f(.a.b)
+f(.a.b.b.b)
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.b⁰)‹app¹›
+//│   f⁰(A⁰.a⁰.b⁰.b⁰.b⁰)‹app¹›
 //│ where
 //│     app¹  <~  type A
 //│ = A
@@ -36,22 +36,23 @@ module C with
 
 :flow
 :sf
+:ge
 :e
 fun g(x : C) = x
 let d = .a
 f(d)
 g(d)
-//│ ╔══[ERROR] Ambiguous leading dot selection
-//│ ║  l.41: 	let d = .a
-//│ ║        	        ^^
-//│ ╟── Already resolved to member:A.a‹member:a›
-//│ ╟── New companion member
+//│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
+//│ ╟── companion member a
 //│ ║  l.35: 	  fun a = new C
-//│ ╙──      	  ^^^^^^^^^^^^^
+//│ ║        	  ^^^^^^^^^^^^^
+//│ ╟── companion member a
+//│ ║  l.7: 	  fun a = new A
+//│ ╙──     	  ^^^^^^^^^^^^^
 //│ Flowed:
 //│   fun g⁰(x¹: C⁰) ‹flow:g⁰› = x¹,
 //│   let d⁰,
-//│   d⁰ = _?_.a{ ~> A⁰.a⁰ },
+//│   d⁰ = _?_.a,
 //│   f⁰(d⁰)‹app²›,
 //│   g⁰(d⁰)‹app³›
 //│ where
@@ -63,8 +64,12 @@ g(d)
 //│     app³  <~  type C
 //│     flow:g⁰  <~  ((type C) -> x¹)
 //│     flow:g⁰  ~>  ((d⁰) -> app³)
-//│ = A
-//│ d = A
+//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.42: 	let d = .a
+//│ ╙──      	    ^
+//│ ═══[RUNTIME ERROR] ReferenceError: d is not defined
 
 :flow
 :sf
@@ -93,7 +98,11 @@ f(.a.c(1,1).b.b.c(3,3))
 :sf
 :ge
 :re
+:e
 f(.w)
+//│ ╔══[ERROR] Cannot resolve leading dot selection
+//│ ║  l.102: 	f(.w)
+//│ ╙──       	  ^^
 //│ Flowed:
 //│   f⁰(_?_.w)‹app⁹›
 //│ where
@@ -104,7 +113,11 @@ f(.w)
 :flow
 :sf
 :ge
+:e
 .b(new A)
+//│ ╔══[ERROR] Cannot resolve leading dot selection
+//│ ║  l.117: 	.b(new A)
+//│ ╙──       	^^
 //│ Flowed:
 //│   _?_.b(new A⁰)‹app¹⁰›
 //│ where

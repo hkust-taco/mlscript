@@ -75,7 +75,7 @@ sealed trait ResolvableImpl:
       case t: Term.TyApp => t.copy()(t.typ)
       case t: Term.Sel => t.copy()(t.sym, t.typ, t.originalCtx)
       case t: Term.SynthSel => t.copy()(t.sym, t.typ)
-      case t: Term.LeadingDotSel => t.copy()(t.originalCtx, t.targetSymbol)
+      case t: Term.LeadingDotSel => t.copy()(t.originalCtx, t.resolvedTargets, t.reachedType)
     .withLocOf(this)
     .asInstanceOf
   
@@ -252,8 +252,8 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx],
-      // var resolvedTargets: Ls[flow.LeadingDotSelTarget],
-      var targetSymbol: Opt[Opt[ClassSymbol]]
+      var resolvedTargets: Ls[flow.LeadingDotSelTarget],
+      var reachedType: Boolean
     ) (using State) extends Term with ResolvableImpl
   
   def expanded: Term = this match
@@ -360,7 +360,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.targetSymbol)
+    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.resolvedTargets, term.reachedType)
   
   
 end Term
