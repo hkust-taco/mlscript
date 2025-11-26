@@ -247,9 +247,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             End()
           )
         pat match
-          case FlatPattern.Lit(lit) => mkMatch(
-            Case.Lit(lit) ->
-            lowering.inScopedBlock(tail.definedSyms)(lowerSplit(tail, cont, topLevel = false)))
+          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
@@ -257,17 +255,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               // Normalization should reject cases where the user provides
               // more sub-patterns than there are actual class parameters.
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-              val cse -> blk =
-                LoweringCtx.nestScoped.givenIn:
-                  def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol]): Case -> Block = args match
-                    case Nil =>
-                      Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, topLevel = false)
-                    case (param, arg) :: args =>
-                      val (cse, blk) = mkArgs(args)
-                      (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
-                  val cse -> toBeScoped = mkArgs(clsParams.iterator.zip(args).toList)
-                  cse -> lowering.possiblyScoped(tail.definedSyms ++ LoweringCtx.subst.getCollectedSym ++ args)(toBeScoped)
-              mkMatch(cse -> blk)
+              def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using LoweringCtx): Case -> Block = args match
+                case Nil =>
+                  Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, topLevel = false)
+                case (param, arg) :: args =>
+                  val (cse, blk) = mkArgs(args)
+                  (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
+              mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -281,28 +275,21 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
                 subTerm_nonTail(ctor)(k(mod, Nil))
-          case FlatPattern.Tuple(len, inf) => mkMatch(
-            Case.Tup(len, inf) ->
-            lowering.inScopedBlock(tail.definedSyms)(lowerSplit(tail, cont, topLevel = false)))
+          case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
-              LoweringCtx.nestScoped.givenIn:
-                val inner = lowerSplit(tail, cont, topLevel = false)
-                lowering.possiblyScoped(tail.definedSyms ++ LoweringCtx.subst.getCollectedSym ++ entries.unzip._2):
-                  entries.foldRight(inner):
-                    case ((fieldName, fieldSymbol), blk) =>
-                      mkMatch(
-                        Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
-                        Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
-                      )
+              entries.foldRight(lowerSplit(tail, cont, topLevel = false)):
+                case ((fieldName, fieldSymbol), blk) =>
+                  mkMatch(
+                    Case.Field(fieldName, safe = true), // we know we have an object, no need to check again
+                    Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
+                  )
             )
     case Split.Else(els) => labels.get(els) match
       case S(label) => Break(label)
-      case N =>
-        // lowering.inScopedBlock(els.definedSyms):
-        term_nonTail(els)(cont.fold(identity, _(topLevel)))
+      case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
     case Split.End => labels.default.fold(throwMatchErrorBlock)(Break(_))
   
   /**
@@ -328,8 +315,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(split, `if`, N, k)
   
-  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
-    // LoweringCtx.nestScoped.givenIn:
+  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) = LoweringCtx.nestScoped.givenIn:
     var usesResTmp = false
     // The symbol of the temporary variable for the result of the `if`-like term.
     // It will be created in one of the following situations.
@@ -406,9 +392,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // `Label` so that `Break`s in the shared consequents can jump to the end.
     val body =
       val possiblyScoped =
-        // lowering.possiblyScoped(
-          // LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
-          mainBlock
+        lowering.possiblyScoped(
+          LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
+          mainBlock)
       if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
