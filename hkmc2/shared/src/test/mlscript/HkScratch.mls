@@ -12,17 +12,28 @@
 import "../mlscript-compile/Stack.mls"
 open Stack
 
+// * Wrong parse
+:e
+:w
 pattern P = x :: xs => [x, xs]
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.15: 	pattern P = x :: xs => [x, xs]
+//│ ║  l.18: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	                        ^
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: defn (Elaborator.scala:1312)
 //│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.15: 	pattern P = x :: xs => [x, xs]
+//│ ║  l.18: 	pattern P = x :: xs => [x, xs]
 //│ ╙──      	            ^
+
+pattern P = (x :: xs) => [x, xs]
+
+1 :: Nil is P
+//│ = true
+
+let f = case
+  P as extr then extr
+//│ f = fun
+f(1 :: 2 :: 3 :: Nil)
+//│ = [1, Cons(2, Cons(3, Nil))]
+
 
 pattern P(x, xs) = x :: xs
 
@@ -41,8 +52,8 @@ f(1 :: 2 :: 3 :: Nil)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
 //│ ═══[RUNTIME ERROR] Error: match error
-//│     at lambda (REPL25:1:989)
-//│     at REPL29:1:147
+//│     at lambda1 (REPL38:1:992)
+//│     at REPL42:1:148
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:598:22)
 //│     at bound (node:domain:433:15)
