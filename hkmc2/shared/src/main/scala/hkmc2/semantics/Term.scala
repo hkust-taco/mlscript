@@ -252,7 +252,7 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx],
-      var resolvedTargets: Ls[flow.LeadingDotSelTarget],
+      var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember],
       var reachedType: Boolean
     ) (using State) extends Term with ResolvableImpl
   

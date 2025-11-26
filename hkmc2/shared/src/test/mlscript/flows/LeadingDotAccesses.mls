@@ -23,9 +23,13 @@ f(.a)
 
 :flow
 :sf
-f(.a.b.b.b)
+:e
+f(.a.b)
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.27: 	f(.a.b)
+//│ ╙──      	    ^^
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.b⁰.b⁰.b⁰)‹app¹›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.b‹?›)‹app¹›
 //│ where
 //│     app¹  <~  type A
 //│ = A
@@ -44,7 +48,7 @@ f(d)
 g(d)
 //│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
 //│ ╟── companion member a
-//│ ║  l.35: 	  fun a = new C
+//│ ║  l.39: 	  fun a = new C
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── companion member a
 //│ ║  l.7: 	  fun a = new A
@@ -67,16 +71,16 @@ g(d)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.42: 	let d = .a
+//│ ║  l.46: 	let d = .a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] ReferenceError: d is not defined
 
 :flow
 :sf
-f(.a.b)
+f(.a)
 g(.a)
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.b⁰)‹app⁴›,
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁴›,
 //│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁵›
 //│ where
 //│     app⁴  <~  type A
@@ -85,13 +89,28 @@ g(.a)
 
 :flow
 :sf
+:e
 f(.a.c(1,1).b.b.c(3,3))
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
+//│ ╙──      	      ^^^^^^^^^^^
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
+//│ ╙──      	      ^^^^^^^^^
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
+//│ ╙──      	      ^^^^^^^
+//│ ╔══[ERROR] Cannot resolve selection
+//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
+//│ ╙──      	    ^^
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁶›.b⁰.b⁰.c⁰(3, 3)‹app⁷›)‹app⁸›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.c‹?›(1, 1)‹app⁶›.b‹?›.b‹?›.c‹?›(3, 3)‹app⁷›)‹app⁸›
 //│ where
 //│     app⁸  <~  type A
 //│     app⁷  <~  _?_.Ident(a)
 //│     app⁷  ~>  type A
+//│     app⁶  <~  _?_.Ident(a)
+//│     app⁶  ~>  {b: ⋅b⁰}
 //│ = A
 
 :flow
@@ -101,7 +120,7 @@ f(.a.c(1,1).b.b.c(3,3))
 :e
 f(.w)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.102: 	f(.w)
+//│ ║  l.121: 	f(.w)
 //│ ╙──       	  ^^
 //│ Flowed:
 //│   f⁰(_?_.w)‹app⁹›
@@ -116,7 +135,7 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.117: 	.b(new A)
+//│ ║  l.136: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
 //│   _?_.b(new A⁰)‹app¹⁰›
