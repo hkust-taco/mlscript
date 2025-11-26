@@ -70,6 +70,18 @@ f(1 :: 2 :: 3 :: Nil)
 //│ = Cons(1, Cons(2, Cons(3, Nil)))
 
 
+:todo
+pattern StatementBased =
+  0 => "zero"
+  1 => "one"
+  _ => "many"
+//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ║  l.76: 	  1 => "one"
+//│ ╙──      	  ^
+
+
+
+
 
 
 
