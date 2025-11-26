@@ -1,0 +1,448 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+// import "../../../mlscript-compile/Stack.mls"
+// open Stack
+
+import "../../../mlscript-compile/Iter.mls"
+import "../../../mlscript-compile/Char.mls"
+open Iter
+
+
+
+
+[""] is [..stack, Str as id]
+//│ = true
+
+[..[], ""] is [..stack, Str as id]
+//│ = true
+
+[..[..[""]], ""] is [..stack, Str as id]
+//│ = true
+
+
+
+
+pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
+
+data class Expr with
+  constructor
+    Ident(name: Str)
+    Op(lhs: Expr, op: Str, rhs: Expr)
+
+// pattern Parse =
+//   (
+//     ((Identifier as name) :: rest) => Ident(name) :: rest
+//   ) | (
+//     ((Expr as e1) :: "+" :: (Expr as e2) :: rest) => Op(e1, "+", e2) :: rest
+//   ) | (
+//     ((Expr as e1) :: "+" :: (Parse as rest)) => e1 :: "+" :: rest
+//   ) | (
+//     ("(" :: (Expr as e) :: ")" :: rest) => e :: rest
+//   ) | (
+//     ("(" :: (Parse as rest)) => "(" :: rest
+//   )
+
+// fun parse(stack, input) = if stack is
+//   ((Expr as e2) :: "+" :: (Expr as e1) :: rest) then
+//     parse((Op(e1, "+", e2) :: rest), input)
+
+fun go(stack, input) = if stack is
+  [..stack, Expr as e1, "+", Expr as e2] then
+    go([..stack, Op(e1, "+", e2)], input)
+  // [..stack, Expr, "+"] and input is [tok, ..input] then
+  //   go([..stack, Expr, "+", tok], input)
+  [..stack, Identifier as id] then
+    go([..stack, Ident(id)], input)
+  do print("not Identifier", stack)
+  do print("not Identifier??", stack is [..stack, Identifier as id])
+  // [..stack, Str as id] then
+  //   ???
+  do print("Str?", stack.at(-1), stack.at(-1) is Str)
+  do print("Str??", stack is [..stack, Str as id])
+  [Expr as res] and input is [] then
+    Success: res
+  _ and input is
+    [tok, ..input] then
+      go([..stack, tok], input)
+    [] then
+      Error: stack
+  // ("+" :: (Expr as e2) :: stack) then
+
+let Space = new RegExp of "(\\s+)"
+//│ Space = /(\s+)/
+fun parse(input) =
+  let input = input.split(Space)
+    \filtering of (_ !== "")
+    \filtering of (_ \every of (_ !== " "))
+    \toArray()
+  go([], input)
+
+
+
+parse("")
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ = {Error: []}
+
+parse("x")
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Identifier [Ident("x")]
+//│ > not Identifier?? false
+//│ > Str? Ident("x") false
+//│ > Str?? false
+//│ = {Success: Ident("x")}
+
+parse("x y")
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Identifier [Ident("x")]
+//│ > not Identifier?? false
+//│ > Str? Ident("x") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), Ident("y")]
+//│ > not Identifier?? false
+//│ > Str? Ident("y") false
+//│ > Str?? false
+//│ = {Error: [Ident("x"), Ident("y")]}
+
+parse("x y z")
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Identifier [Ident("x")]
+//│ > not Identifier?? false
+//│ > Str? Ident("x") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), Ident("y")]
+//│ > not Identifier?? false
+//│ > Str? Ident("y") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), Ident("y"), z]
+//│ > not Identifier?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Ident("x"), Ident("y"), z]}
+
+go([], ["x", "y", "z"])
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Identifier [Ident("x")]
+//│ > not Identifier?? false
+//│ > Str? Ident("x") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), Ident("y")]
+//│ > not Identifier?? false
+//│ > Str? Ident("y") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), Ident("y"), z]
+//│ > not Identifier?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Ident("x"), Ident("y"), z]}
+
+go([Ident("x"), Ident("y"), "z"], [])
+//│ > not Identifier [Ident("x"), Ident("y"), "z"]
+//│ > not Identifier?? true
+//│ > Str? z true
+//│ > Str?? true
+//│ = {Error: [Ident("x"), Ident("y"), "z"]}
+
+parse("x + y")
+//│ > not Identifier []
+//│ > not Identifier?? false
+//│ > Str? () false
+//│ > Str?? false
+//│ > not Identifier [Ident("x")]
+//│ > not Identifier?? false
+//│ > Str? Ident("x") false
+//│ > Str?? false
+//│ > not Identifier [Ident("x"), +]
+//│ > not Identifier?? false
+//│ > Str? + true
+//│ > Str?? true
+//│ > not Identifier [Ident("x"), +, y]
+//│ > not Identifier?? true
+//│ > Str? y true
+//│ > Str?? true
+//│ = {Error: [Ident("x"), +, y]}
+
+parse(["x"])
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] TypeError: input.split is not a function
+//│     at parse (REPL35:1:234)
+//│     at REPL59:1:92
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+
+parse("x" :: "+" :: "y" :: Nil)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ╙──       	          ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ╙──       	                 ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ╙──       	                        ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: Nil
+//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ╙──       	                           ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'parse' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript-forks/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:468:24)
+//│     at parse (REPL35:1:61)
+//│     at REPL62:1:39
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+
+parse("(" :: "x" :: ")" :: Nil)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ╙──       	          ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ╙──       	                 ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ╙──       	                        ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: Nil
+//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ╙──       	                           ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'parse' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript-forks/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:468:24)
+//│     at parse (REPL35:1:61)
+//│     at REPL65:1:39
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+
+parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	          ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                 ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                        ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                               ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                                      ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                                             ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                                                    ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: Nil
+//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ╙──       	                                                       ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'parse' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript-forks/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:468:24)
+//│     at parse (REPL35:1:61)
+//│     at REPL68:1:39
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	          ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                 ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                        ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                               ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                      ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                             ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                    ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                           ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                                  ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                                         ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: ::
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                                                ^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: Nil
+//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ╙──       	                                                                                   ^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'parse' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///Users/parreaux/work/Research/code/mlscript-forks/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:468:24)
+//│     at parse (REPL35:1:61)
+//│     at REPL71:1:39
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+
+
+
+:fixme
+if true then Success: 42
+//│ ╔══[ERROR] Unexpected record key shape.
+//│ ║  l.406: 	if true then Success: 42
+//│ ╙──       	   ^^^^^^^^^^^^^^^^^
+
+// FIXME: printing of
+[..[], "a"]
+//│ = [a]
+["a"]
+//│ = ["a"]
+
+
+
+pattern Input =
+  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
+:fixme
+if "a b c" is Input as chars then chars
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:454)
+//│ ╔══[ERROR] Name not found: fixme
+//│ ║  l.421: 	:fixme
+//│ ╙──       	 ^^^^^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: newAcc (Elaborator.scala:1024)
+//│ ╔══[ERROR] Unexpected record key shape.
+//│ ║  l.419: 	pattern Input =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.420: 	  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+// Same happens with `...`
+
+fun go(stack) = if stack is
+  [..stack, "+", "+"] then 0
+  [..stack2, Str] then 1
+  else print("Str??", stack is [..stack2, Str])
+
+go([Ident("x"), Ident("y"), "z"])
+//│ > Str?? true
+
+
