@@ -1020,9 +1020,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
       val scopedSyms = subst.getCollectedSym ++ definedSymsInElaborated
-      possiblyScoped(scopedSyms, body)
+      possiblyScoped(scopedSyms)(body)
   
-  inline def possiblyScoped(syms: collection.Set[Symbol], body: Block) =
+  inline def possiblyScoped(syms: collection.Set[Symbol])(body: Block) =
     if syms.isEmpty then body else Scoped(syms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])

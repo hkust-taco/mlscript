@@ -510,18 +510,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         returningTerm(rst, endSemi).stripBreaks}"
 
     case Scoped(syms, body) =>
-      val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
-        if scope.lookup(l).isDefined then
-          // raise:
-          //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
-          None
-        else
-          Some(l -> scope.allocateName(l))
-      (if vars.isEmpty then doc"" else
-        doc" # let " :: vars.map: (_, nme) =>
-          nme
-        .toList.mkDocument(", ")
-        :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
+      scope.nest.givenIn:
+        val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
+          if scope.lookup(l).isDefined then
+            // raise:
+            //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+            None
+          else
+            Some(l -> scope.allocateName(l))
+        (if vars.isEmpty then doc"" else
+          doc" # let " :: vars.map: (_, nme) =>
+            nme
+          .toList.mkDocument(", ")
+          :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
     
     // case _ => ???
   

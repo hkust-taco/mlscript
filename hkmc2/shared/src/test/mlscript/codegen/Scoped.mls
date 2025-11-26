@@ -21,9 +21,9 @@ fun f() =
 //│ JS (unsanitized):
 //│ let f; /** scoped **/
 //│ f = function f() {
-//│   let scrut, a, b; /** scoped **/
+//│   let scrut, b;
 //│   scrut = true;
-//│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; /** scoped **/ a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
 
 
@@ -45,7 +45,6 @@ fun g(x, y, z) =
 //│   let lambda;
 //│   let tmp1, tmp2; /** scoped **/
 //│   split_root$: {
-//│     let a; /** scoped **/
 //│     split_1$: {
 //│       if (x1 === true) {
 //│         break split_1$
@@ -54,6 +53,7 @@ fun g(x, y, z) =
 //│           break split_1$
 //│         } else {
 //│           if (z === true) {
+//│             let a; /** scoped **/
 //│             a = 1;
 //│             lambda = (undefined, function (_0) {
 //│               return _0 + a
@@ -89,9 +89,9 @@ fun f() = if x is
 //│ f1 = function f() {
 //│   let tmp1; /** scoped **/
 //│   split_root$: {
-//│     let a, b, scrut, c, d, argument0$, argument1$; /** scoped **/
 //│     split_default$: {
 //│       if (x instanceof A.class) {
+//│         let a, b, scrut, argument0$, argument1$; /** scoped **/
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
 //│         b = argument1$;
@@ -104,6 +104,7 @@ fun f() = if x is
 //│           break split_default$
 //│         }
 //│       } else if (x instanceof B.class) {
+//│         let c, d; /** scoped **/
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
 //│         d = argument1$;
@@ -126,12 +127,13 @@ fun f() = if A(1, Nil) is
 //│ JS (unsanitized):
 //│ let f2; /** scoped **/
 //│ f2 = function f() {
+//│   let scrut;
 //│   let tmp1; /** scoped **/
 //│   split_root$: {
-//│     let scrut, argument0$, argument1$; /** scoped **/
 //│     split_default$: {
 //│       scrut = A(1, Nil);
 //│       if (scrut instanceof A.class) {
+//│         let argument0$, argument1$; /** scoped **/
 //│         argument0$ = scrut.a;
 //│         argument1$ = scrut.b;
 //│         if (argument0$ === 1) {
@@ -169,14 +171,15 @@ fun f(x) =
 //│   let tmp1, while1, tmp2, tmp3; /** scoped **/
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
-//│     let a, a1, argument0$, argument1$; /** scoped **/
 //│     if (x1 instanceof A.class) {
+//│       let a, argument0$, argument1$; /** scoped **/
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a = argument0$;
 //│       tmp1 = runtime.safeCall(a());
 //│       return while1()
 //│     } else if (x1 instanceof B.class) {
+//│       let a1; /** scoped **/
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a1 = argument0$;
@@ -211,17 +214,19 @@ fun f() =
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
 //│     split_root$: {
-//│       let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
 //│       split_1$: {
 //│         if (y1 instanceof A.class) {
+//│           let a, z, scrut, argument0$, argument1$; /** scoped **/
 //│           argument0$ = y1.a;
 //│           argument1$ = y1.b;
 //│           a = argument1$;
 //│           z = argument0$;
 //│           scrut = false;
 //│           if (scrut === true) {
+//│             let scrut1; /** scoped **/
 //│             scrut1 = true;
 //│             if (scrut1 === true) {
+//│               let tmp4; /** scoped **/
 //│               tmp4 = z + 1;
 //│               y1 = tmp4;
 //│               tmp1 = runtime.Unit;
@@ -254,15 +259,16 @@ fun f(x, y) =
 //│ JS (unsanitized):
 //│ let f5; /** scoped **/
 //│ f5 = function f(x1, y1) {
-//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   let lambda, tmp1, while1, tmp2, tmp3; /** scoped **/
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
-//│     let scrut, lambda, tmp4; /** scoped **/
+//│     let scrut;
 //│     lambda = (undefined, function () {
 //│       return y1
 //│     });
 //│     scrut = runtime.short_and(x1, lambda);
 //│     if (scrut === true) {
+//│       let tmp4; /** scoped **/
 //│       tmp4 = f5(0, 0);
 //│       tmp1 = tmp4 + 4;
 //│       return while1()
@@ -275,6 +281,75 @@ fun f(x, y) =
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
 //│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
 //│ };
+
+data class X(x)
+data class XX(x)
+
+:sjs
+fun f(x) = if x is
+  X(t) and
+    false and true then 1
+    else t
+  XX(t) then t
+//│ JS (unsanitized):
+//│ let f6; /** scoped **/
+//│ f6 = function f(x1) {
+//│   let tmp1; /** scoped **/
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x1 instanceof X.class) {
+//│         let t, scrut, argument0$; /** scoped **/
+//│         argument0$ = x1.x;
+//│         t = argument0$;
+//│         scrut = false;
+//│         if (scrut === true) {
+//│           let scrut1; /** scoped **/
+//│           scrut1 = true;
+//│           if (scrut1 === true) {
+//│             tmp1 = 1;
+//│             break split_root$
+//│           } else {
+//│             break split_1$
+//│           }
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (x1 instanceof XX.class) {
+//│         let t1; /** scoped **/
+//│         argument0$ = x1.x;
+//│         t1 = argument0$;
+//│         tmp1 = t1;
+//│         break split_root$
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│       }
+//│     }
+//│     tmp1 = t;
+//│   }
+//│   return tmp1
+//│ };
+
+// f(XX(3))
+
+
+:sjs
+module M with
+  fun f() = 4
+//│ JS (unsanitized):
+//│ let M3; /** scoped **/
+//│ globalThis.Object.freeze(class M2 {
+//│   static {
+//│     M3 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static f() {
+//│     return 4
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
 
 
 
