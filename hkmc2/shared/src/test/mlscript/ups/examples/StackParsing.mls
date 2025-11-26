@@ -59,6 +59,9 @@ parse("(" :: "x" :: ")" :: Nil)
 parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ > Success: Op(Ident("a"), "+", Op(Ident("x"), "+", Ident("y")))
 
+parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Op(Ident("a"), "+", Op(Op(Ident("b"), "+", Ident("x")), "+", Ident("y")))
+
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ > Success: Op(Ident("a"), "+", Op(Ident("b"), "+", Op(Ident("x"), "+", Ident("y"))))
 
@@ -66,7 +69,7 @@ parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" 
 
 
 
-// * Interesting quick:
+// * Interesting quirk:
 
 print of ...
 [1, 2]
@@ -83,7 +86,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.84: 	  ???
+//│ ║  l.87: 	  ???
 //│ ╙──      	     ^
 
 :fixme // weird error
@@ -93,20 +96,20 @@ pattern Parse =
     ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
   )
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.92: 	    ((Str as name) :: rest) => Ident(name) :: rest
+//│ ║  l.95: 	    ((Str as name) :: rest) => Ident(name) :: rest
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.93: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
+//│ ║  l.96: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme
 class Ident(name: Identifier)
 //│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.103: 	class Ident(name: Identifier)
+//│ ║  l.106: 	class Ident(name: Identifier)
 //│ ║         	                  ^^^^^^^^^^
 //│ ╙── Non-module parameter must have a non-module type.
 //│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.103: 	class Ident(name: Identifier)
+//│ ║  l.106: 	class Ident(name: Identifier)
 //│ ╙──       	                  ^^^^^^^^^^
 
 
