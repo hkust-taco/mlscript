@@ -58,14 +58,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     t match
     
-    case trm : LeadingDotImpl if trm.hasLDS => trm.originalSel match
+    case trm : LeadingDotRefImpl if trm.hasLDS => trm.originalSel match
       case S(sel) =>
-        log(s"Leading dot selection: ${trm.showDbg}")
-        leadingDotSelsToExpand += sel
-        P.LeadingDotSel(sel)
-      case N =>
-        log("There was a bug in the Matrix.")
-        P.Unknown(trm)
+        val sym = FlowSymbol("bind")
+        log("Constraining leading dot selection at the top level")
+        constrain(P.LeadingDotSel(sel), C.Flow(sym))
+        constrain(typeProd(trm.withLDS(N)), C.Flow(sym))
+        P.Flow(sym)
+      case N => typeProd(trm.withLDS(N))
 
     case Ref(sym) =>
       sym match
@@ -136,10 +136,13 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
-    // case sel @ LeadingDotSel(nme) =>
-    //   leadingDotSelsToExpand += sel
-    //   log(s"Leading dot selection ${sel.showDbg}")
-    //   P.LeadingDotSel(sel)
+    case sel @ LeadingDotSel(nme) =>
+      leadingDotSelsToExpand += sel
+      log(s"Leading dot selection ${sel.showDbg}")
+      // P.LeadingDotSel(sel)
+      val sym = sel.resSym
+      constrain(P.LeadingDotSel(sel), C.Flow(sym))
+      P.Flow(sym)
     
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
@@ -372,18 +375,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) => 
-                // sel.trm.reachedType = true
                 log(s"Examining ${sym} for leading dot selection resolution")
                 getCompanionMember(trm, sym) match
                 case S((path, memb)) =>
-                  log(s"Found module ${path.showDbg} with member ${memb}")
                   sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
+                  log(s"Found immediate member ${memb}")
+                  toSolve.push(Constraint(P.Flow(memb.flow), C.Flow(trm.resSym)))
                 case _ =>
                   log(s"Could not find member ${trm.nme.name} in ${sym}")
-              // case csel @ C.Sel(nme, res) =>
-              //   log(s"Propagating LDS constraint to ${res.showDbg}")
-              //   dig(sel, res, path)
-              // case C.Fun(arg, res) => dig(sel, res, path)
               case _ => log("Unhandled RHS for leading dot selections")
             case (lhs, sel: C.Sel) =>
               lhs match
@@ -396,8 +395,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 case S(memb: BlockMemberSymbol) =>
                   sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
                   log(s"Found immediate member ${memb}")
-                  val lhs = P.Flow(memb.flow)
-                  toSolve.push(Constraint(lhs, sel.res))
+                  toSolve.push(Constraint(P.Flow(memb.flow), sel.res))
                 case S(memb) => TODO(memb)
                 case N =>
                   d.moduleCompanion match
@@ -448,7 +446,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           ))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
-    log(s"outermostAcessibleBase ${dst.outermostAcessibleBase}")
     val (outermostBase, outermostPath) = dst.outermostAcessibleBase
     var cur = src
     while cur isnt outermostBase do

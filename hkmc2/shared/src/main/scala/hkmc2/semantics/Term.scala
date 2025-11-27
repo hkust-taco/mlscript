@@ -75,7 +75,7 @@ sealed trait ResolvableImpl:
       case t: Term.TyApp => t.copy()(t.typ)
       case t: Term.Sel => t.copy()(t.sym, t.typ, t.originalCtx)
       case t: Term.SynthSel => t.copy()(t.sym, t.typ)
-      case t: Term.LeadingDotSel => t.copy()(t.originalCtx, t.resolvedTargets)
+      case t: Term.LeadingDotSel => t.copy()(t.originalCtx)
     .withLocOf(this)
     .asInstanceOf
   
@@ -198,18 +198,28 @@ object Resolvable:
         defn,
       ))
 
-trait LeadingDotImpl:
+trait LeadingDotSelImpl(using State):
+  self: Term.LeadingDotSel =>
+  val resSym: FlowSymbol = FlowSymbol("lds")
+  var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
+
+trait LeadingDotRefImpl:
   self: Term =>
 
   var originalSel: Opt[Term.LeadingDotSel] = N
 
   def hasLDS: Boolean = this.originalSel.isDefined
+
   def withLDS(sel: Opt[Term.LeadingDotSel]) =
     this.originalSel = sel
     this
 
   def inheritLDS(other: Term) = other match
-    case trm: LeadingDotImpl => this.withLDS(trm.originalSel)
+    case trm: LeadingDotRefImpl =>
+      this.withLDS(trm.originalSel)
+      trm.originalSel = N
+      this
+    case sel: Term.LeadingDotSel => this.withLDS(S(sel))
     case _ => this
 
 enum Term extends Statement:
@@ -220,7 +230,7 @@ enum Term extends Statement:
   case Ref(sym: Symbol)
     (val tree: Tree.Ident, val refNum: Int, val typ: Opt[Type]) extends Term, ResolvableImpl
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, LeadingDotImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, LeadingDotRefImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
@@ -230,7 +240,7 @@ enum Term extends Statement:
       //  * instead, we should store a lightweight representation of the context
       val originalCtx: Opt[Elaborator.Ctx]
     )
-    (using State) extends Term, LeadingDotImpl, SelImpl
+    (using State) extends Term, LeadingDotRefImpl, SelImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
     (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
@@ -265,10 +275,9 @@ enum Term extends Statement:
   case Handle(lhs: LocalSymbol, rhs: Term, args: List[Term],
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
-      val originalCtx: Opt[Elaborator.Ctx],
-      var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember]
+      val originalCtx: Opt[Elaborator.Ctx]
       // var reachedType: Boolean
-    ) (using State) extends Term, ResolvableImpl, LeadingDotImpl
+    ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -374,7 +383,7 @@ enum Term extends Statement:
     case Annotated(annot, target) => Annotated(annot, target.mkClone)
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Handle(lhs, rhs.mkClone, args.map(_.mkClone), derivedClsSym, defs, body.mkClone)
-    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx, term.resolvedTargets)
+    case term @ LeadingDotSel(nme) => LeadingDotSel(Tree.Ident(nme.name))(term.originalCtx)
   
   
 end Term
