@@ -10,30 +10,31 @@ class B
 x => if x is Pair(A, B) then 1
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = (undefined, function (x) {
-//│   let argument0$, argument1$, tmp; /** scoped **/
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof Pair.class) {
-//│         argument0$ = x.a;
-//│         argument1$ = x.b;
-//│         if (argument0$ instanceof A) {
-//│           if (argument1$ instanceof B) {
-//│             tmp = 1;
-//│             break split_root$
+//│ lambda = (undefined, function (x) {{
+//│     let argument0$, argument1$, tmp; /** scoped **/
+//│     split_root$: {
+//│       split_default$: {
+//│         if (x instanceof Pair.class) {
+//│           argument0$ = x.a;
+//│           argument1$ = x.b;
+//│           if (argument0$ instanceof A) {
+//│             if (argument1$ instanceof B) {
+//│               tmp = 1;
+//│               break split_root$
+//│             } else {
+//│               break split_default$
+//│             }
 //│           } else {
 //│             break split_default$
 //│           }
 //│         } else {
 //│           break split_default$
 //│         }
-//│       } else {
-//│         break split_default$
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│     return tmp
 //│   }
-//│   return tmp
 //│ });
 //│ lambda
 //│ = fun
@@ -45,38 +46,39 @@ fun f(x) = if x is
   Pair(A, A) then 1
   Pair(B, B) then 2
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
-//│ f = function f(x) {
-//│   let argument0$, argument1$, tmp; /** scoped **/
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof Pair.class) {
-//│         argument0$ = x.a;
-//│         argument1$ = x.b;
-//│         if (argument0$ instanceof A) {
-//│           if (argument1$ instanceof A) {
-//│             tmp = 1;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else if (argument0$ instanceof B) {
-//│           if (argument1$ instanceof B) {
-//│             tmp = 2;
-//│             break split_root$
+//│ let f;
+//│ f = function f(x) {{
+//│     let argument0$, argument1$, tmp; /** scoped **/
+//│     split_root$: {
+//│       split_default$: {
+//│         if (x instanceof Pair.class) {
+//│           argument0$ = x.a;
+//│           argument1$ = x.b;
+//│           if (argument0$ instanceof A) {
+//│             if (argument1$ instanceof A) {
+//│               tmp = 1;
+//│               break split_root$
+//│             } else {
+//│               break split_default$
+//│             }
+//│           } else if (argument0$ instanceof B) {
+//│             if (argument1$ instanceof B) {
+//│               tmp = 2;
+//│               break split_root$
+//│             } else {
+//│               break split_default$
+//│             }
 //│           } else {
 //│             break split_default$
 //│           }
 //│         } else {
 //│           break split_default$
 //│         }
-//│       } else {
-//│         break split_default$
 //│       }
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│     return tmp
 //│   }
-//│   return tmp
 //│ };
 
 

@@ -31,7 +31,7 @@
 :sjs
 let x = 1 in x + 1
 //│ JS (unsanitized):
-//│ let x; /** scoped **/ x = 1; x + 1
+//│ let x; x = 1; x + 1
 //│ = 2
 //│ Type: Int
 
@@ -61,7 +61,7 @@ false
 :sjs
 data class Foo(x: Int)
 //│ JS (unsanitized):
-//│ let Foo1; /** scoped **/
+//│ let Foo1;
 //│ Foo1 = function Foo(x1) {
 //│   return globalThis.Object.freeze(new Foo.class(x1));
 //│ };
@@ -89,7 +89,7 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/ foo = globalThis.Object.freeze(new Foo.class(42)); foo.x
+//│ let foo; foo = globalThis.Object.freeze(new Foo.class(42)); foo.x
 //│ = 42
 //│ Type: Int
 
@@ -97,7 +97,7 @@ let foo = new Foo(42) in foo.Foo#x
 :sjs
 fun inc(x) = x + 1
 //│ JS (unsanitized):
-//│ let inc; /** scoped **/ inc = function inc(x1) { return x1 + 1 };
+//│ let inc; inc = function inc(x1) { return x1 + 1 };
 //│ Type: ⊤
 
 
@@ -112,7 +112,7 @@ inc(41)
 :sjs
 if 1 == 2 then 0 else 42
 //│ JS (unsanitized):
-//│ let scrut; /** scoped **/ scrut = 1 == 2; if (scrut === true) { 0 } else { 42 }
+//│ let scrut; scrut = 1 == 2; if (scrut === true) { 0 } else { 42 }
 //│ = 42
 //│ Type: Int
 
@@ -120,7 +120,7 @@ if 1 == 2 then 0 else 42
 :sjs
 if 1 is Int then 1 else 0
 //│ JS (unsanitized):
-//│ let scrut1; /** scoped **/ scrut1 = 1; if (globalThis.Number.isInteger(scrut1)) { 1 } else { 0 }
+//│ let scrut1; scrut1 = 1; if (globalThis.Number.isInteger(scrut1)) { 1 } else { 0 }
 //│ = 1
 //│ Type: Int
 
@@ -134,7 +134,7 @@ data class Foo()
 let foo = new Foo()
 if foo is Foo then 1 else 0
 //│ JS (unsanitized):
-//│ let foo1; /** scoped **/
+//│ let foo1;
 //│ foo1 = globalThis.Object.freeze(new Foo2.class());
 //│ if (foo1 instanceof Foo2.class) { 1 } else { 0 }
 //│ = 1
@@ -147,19 +147,20 @@ fun pow(x) = case
   0 then 1
   n then x * pow(x)(n-1)
 //│ JS (unsanitized):
-//│ let pow; /** scoped **/
+//│ let pow;
 //│ pow = function pow(x1) {
 //│   let lambda1;
-//│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp, tmp1, tmp2; /** scoped **/
-//│     if (caseScrut === 0) {
-//│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp = pow(x1);
-//│       tmp1 = n - 1;
-//│       tmp2 = runtime.safeCall(tmp(tmp1));
-//│       return x1 * tmp2
+//│   lambda1 = (undefined, function (caseScrut) {{
+//│       let n, tmp, tmp1, tmp2; /** scoped **/
+//│       if (caseScrut === 0) {
+//│         return 1
+//│       } else {
+//│         n = caseScrut;
+//│         tmp = pow(x1);
+//│         tmp1 = n - 1;
+//│         tmp2 = runtime.safeCall(tmp(tmp1));
+//│         return x1 * tmp2
+//│       }
 //│     }
 //│   });
 //│   return lambda1
@@ -172,7 +173,7 @@ fun nott = case
   true then false
   false then true
 //│ JS (unsanitized):
-//│ let nott; /** scoped **/
+//│ let nott;
 //│ nott = function nott() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
@@ -193,7 +194,7 @@ fun nott = case
 :sjs
 nott of false
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/ tmp = nott(); tmp(false)
+//│ let tmp; tmp = nott(); tmp(false)
 //│ = true
 //│ Type: Bool
 
@@ -203,19 +204,20 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ JS (unsanitized):
-//│ let fact; /** scoped **/
+//│ let fact;
 //│ fact = function fact() {
 //│   let lambda1;
-//│   lambda1 = (undefined, function (caseScrut) {
-//│     let n, tmp1, tmp2, tmp3; /** scoped **/
-//│     if (caseScrut === 0) {
-//│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp1 = fact();
-//│       tmp2 = n - 1;
-//│       tmp3 = tmp1(tmp2);
-//│       return n * tmp3
+//│   lambda1 = (undefined, function (caseScrut) {{
+//│       let n, tmp1, tmp2, tmp3; /** scoped **/
+//│       if (caseScrut === 0) {
+//│         return 1
+//│       } else {
+//│         n = caseScrut;
+//│         tmp1 = fact();
+//│         tmp2 = n - 1;
+//│         tmp3 = tmp1(tmp2);
+//│         return n * tmp3
+//│       }
 //│     }
 //│   });
 //│   return lambda1
@@ -258,8 +260,7 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ JS (unsanitized):
-//│ let x4;
-//│ let y; /** scoped **/
+//│ let x4, y;
 //│ x4 = globalThis.Object.freeze(new globalThis.Region());
 //│ y = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
 //│ y.value
@@ -270,8 +271,7 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ JS (unsanitized):
-//│ let x5;
-//│ let y1; /** scoped **/
+//│ let x5, y1;
 //│ x5 = globalThis.Object.freeze(new globalThis.Region());
 //│ y1 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
 //│ y1.value = 0;

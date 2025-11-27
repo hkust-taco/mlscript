@@ -81,7 +81,7 @@ fun f: TrmMod = 42
 :sjs
 fun f = TrmMod
 //│ JS (unsanitized):
-//│ let f5; /** scoped **/ f5 = function f() { let tmp4; /** scoped **/ tmp4 = TrmMod(); return tmp4 };
+//│ let f5; f5 = function f() {{ let tmp4; /** scoped **/ tmp4 = TrmMod(); return tmp4 } };
 
 :fixme
 :expect 42
@@ -92,7 +92,7 @@ f
 :sjs
 fun f: module TrmMod = TrmMod
 //│ JS (unsanitized):
-//│ let f6; /** scoped **/ f6 = function f() { return TrmMod.class };
+//│ let f6; f6 = function f() { return TrmMod.class };
 
 fun assertModule(module m: ClsMod): module ClsMod = m
 

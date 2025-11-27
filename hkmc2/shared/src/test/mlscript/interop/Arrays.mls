@@ -13,7 +13,7 @@ arr.map(_ === false)
 :sjs
 arr.map((e, ...) => e === false)
 //│ JS (unsanitized):
-//│ let lambda1; /** scoped **/
+//│ let lambda1;
 //│ lambda1 = (undefined, function (e, ..._) { return e === false });
 //│ runtime.safeCall(arr.map(lambda1))
 //│ = [false, true]
@@ -21,7 +21,7 @@ arr.map((e, ...) => e === false)
 :sjs
 arr.map((_, ...) => 1)
 //│ JS (unsanitized):
-//│ let lambda2; /** scoped **/
+//│ let lambda2;
 //│ lambda2 = (undefined, function (_, ..._1) { return 1 });
 //│ runtime.safeCall(arr.map(lambda2))
 //│ = [1, 1]

@@ -5,7 +5,7 @@ import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-let Predef1; /** scoped **/
+let Predef1;
 globalThis.Object.freeze(class Predef {
   static {
     Predef1 = this
@@ -56,31 +56,35 @@ globalThis.Object.freeze(class Predef {
   static pipeFromHi(f, x) {
     return runtime.safeCall(f(x))
   } 
-  static tap(x, f) {
-    let tmp; /** scoped **/
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
+  static tap(x, f) {{
+      let tmp; /** scoped **/
+      tmp = runtime.safeCall(f(x));
+      return (tmp , x)
+    }
   } 
-  static pat(f, x) {
-    let tmp; /** scoped **/
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
+  static pat(f, x) {{
+      let tmp; /** scoped **/
+      tmp = runtime.safeCall(f(x));
+      return (tmp , x)
+    }
   } 
   static alsoDo(x, eff) {
     return x
   } 
   static andThen(f, g) {
-    return (x) => {
-      let tmp; /** scoped **/
-      tmp = runtime.safeCall(f(x));
-      return runtime.safeCall(g(tmp))
+    return (x) => {{
+        let tmp; /** scoped **/
+        tmp = runtime.safeCall(f(x));
+        return runtime.safeCall(g(tmp))
+      }
     }
   } 
   static compose(f, g) {
-    return (x) => {
-      let tmp; /** scoped **/
-      tmp = runtime.safeCall(g(x));
-      return runtime.safeCall(f(tmp))
+    return (x) => {{
+        let tmp; /** scoped **/
+        tmp = runtime.safeCall(g(x));
+        return runtime.safeCall(f(tmp))
+      }
     }
   } 
   static passTo(receiver, f) {
@@ -98,11 +102,12 @@ globalThis.Object.freeze(class Predef {
       return f.call(receiver, ...args)
     }
   } 
-  static print(...xs) {
-    let tmp, tmp1; /** scoped **/
-    tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp1 = runtime.safeCall(tmp(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp1))
+  static print(...xs) {{
+      let tmp, tmp1; /** scoped **/
+      tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
+      tmp1 = runtime.safeCall(tmp(...xs));
+      return runtime.safeCall(globalThis.console.log(...tmp1))
+    }
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
@@ -111,10 +116,11 @@ globalThis.Object.freeze(class Predef {
       return runtime.safeCall(Predef.render(arg))
     }
   } 
-  static notImplemented(msg) {
-    let tmp; /** scoped **/
-    tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp)
+  static notImplemented(msg) {{
+      let tmp; /** scoped **/
+      tmp = "Not implemented: " + msg;
+      throw globalThis.Error(tmp)
+    }
   } 
   static get notImplementedError() {
     throw globalThis.Error("Not implemented");
@@ -123,50 +129,54 @@ globalThis.Object.freeze(class Predef {
     return xs
   } 
   static foldr(f) {
-    return (first, ...rest) => {
-      let len, scrut, i, init, tmp; /** scoped **/
-      len = rest.length;
-      scrut = len == 0;
-      if (scrut === true) {
-        return first
-      } else {
-        i = len - 1;
-        init = runtime.safeCall(rest.at(i));
-        tmp1: while (true) {
-          let scrut1, tmp2, tmp3, tmp4; /** scoped **/
-          scrut1 = i > 0;
-          if (scrut1 === true) {
-            tmp2 = i - 1;
-            i = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f(tmp3, init));
-            init = tmp4;
-            tmp = runtime.Unit;
-            continue tmp1
-          } else {
-            tmp = runtime.Unit;
+    return (first, ...rest) => {{
+        let len, scrut, i, init, tmp; /** scoped **/
+        len = rest.length;
+        scrut = len == 0;
+        if (scrut === true) {
+          return first
+        } else {
+          i = len - 1;
+          init = runtime.safeCall(rest.at(i));
+          tmp1: while (true) {{
+              let scrut1, tmp2, tmp3, tmp4; /** scoped **/
+              scrut1 = i > 0;
+              if (scrut1 === true) {
+                tmp2 = i - 1;
+                i = tmp2;
+                tmp3 = runtime.safeCall(rest.at(i));
+                tmp4 = runtime.safeCall(f(tmp3, init));
+                init = tmp4;
+                tmp = runtime.Unit;
+                continue tmp1
+              } else {
+                tmp = runtime.Unit;
+              }
+            }
+            break;
           }
-          break;
+          return runtime.safeCall(f(first, init))
         }
-        return runtime.safeCall(f(first, init))
       }
     }
   } 
-  static mkStr(...xs) {
-    let lambda, tmp; /** scoped **/
-    lambda = (undefined, function (acc, x) {
-      let tmp1, tmp2, tmp3; /** scoped **/
-      if (typeof x === 'string') {
-        tmp1 = true;
-      } else {
-        tmp1 = false;
-      }
-      tmp2 = runtime.safeCall(Predef.assert(tmp1));
-      tmp3 = acc + x;
-      return (tmp2 , tmp3)
-    });
-    tmp = runtime.safeCall(Predef.fold(lambda));
-    return runtime.safeCall(tmp(...xs))
+  static mkStr(...xs) {{
+      let lambda, tmp; /** scoped **/
+      lambda = (undefined, function (acc, x) {{
+          let tmp1, tmp2, tmp3; /** scoped **/
+          if (typeof x === 'string') {
+            tmp1 = true;
+          } else {
+            tmp1 = false;
+          }
+          tmp2 = runtime.safeCall(Predef.assert(tmp1));
+          tmp3 = acc + x;
+          return (tmp2 , tmp3)
+        }
+      });
+      tmp = runtime.safeCall(Predef.fold(lambda));
+      return runtime.safeCall(tmp(...xs))
+    }
   } 
   static use(instance) {
     return instance

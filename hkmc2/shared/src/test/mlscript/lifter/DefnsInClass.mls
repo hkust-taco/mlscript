@@ -7,8 +7,7 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
-//│ let B1, B$;
-//│ let A1; /** scoped **/
+//│ let B1, A1, B$;
 //│ B$ = function B$(isMut, A$instance, y) {
 //│   let tmp, tmp1;
 //│   if (isMut === true) {
@@ -54,10 +53,11 @@ data class A(x) with
 //│   constructor(x) {
 //│     this.x = x;
 //│   }
-//│   getA() {
-//│     let tmp; /** scoped **/
-//│     tmp = B$(false, this, 2);
-//│     return tmp.getB()
+//│   getA() {{
+//│       let tmp; /** scoped **/
+//│       tmp = B$(false, this, 2);
+//│       return tmp.getB()
+//│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]]; 
@@ -74,8 +74,7 @@ class A with
     g
 (new A).x()
 //│ JS (unsanitized):
-//│ let g, g$;
-//│ let A3, tmp1; /** scoped **/
+//│ let g, A3, tmp1, g$;
 //│ g$ = function g$(A$instance) {
 //│   return 2
 //│ };

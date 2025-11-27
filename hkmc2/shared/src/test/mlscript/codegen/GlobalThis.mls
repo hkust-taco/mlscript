@@ -21,7 +21,7 @@ globalThis
 :re
 if false then 0
 //│ JS (unsanitized):
-//│ let scrut; /** scoped **/
+//│ let scrut;
 //│ scrut = false;
 //│ if (scrut === true) {
 //│   0
@@ -37,13 +37,14 @@ fun foo() =
   if false then 0
 foo()
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/
-//│ foo = function foo() {
-//│   let scrut1; /** scoped **/
-//│   scrut1 = false;
-//│   if (scrut1 === true) {
-//│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ let foo;
+//│ foo = function foo() {{
+//│     let scrut1; /** scoped **/
+//│     scrut1 = false;
+//│     if (scrut1 === true) {
+//│       return 0
+//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   }
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

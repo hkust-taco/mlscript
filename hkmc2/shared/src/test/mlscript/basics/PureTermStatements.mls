@@ -56,7 +56,7 @@ fun foo() =
 :sjs
 1; id(2)
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/ tmp = Predef.id(2); (1 , tmp)
+//│ let tmp; tmp = Predef.id(2); (1 , tmp)
 //│ = 2
 
 

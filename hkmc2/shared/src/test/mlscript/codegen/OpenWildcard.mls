@@ -52,7 +52,7 @@ none()
 :sjs
 val Option = "Oops"
 //│ JS (unsanitized):
-//│ let Option1; /** scoped **/ Option1 = "Oops";
+//│ let Option1; Option1 = "Oops";
 //│ Option = "Oops"
 
 :sjs

@@ -4,14 +4,14 @@
 :sjs
 fun t = 42
 //│ JS (unsanitized):
-//│ let t; /** scoped **/ t = function t() { return 42 };
+//│ let t; t = function t() { return 42 };
 
 
 :expect 42
 :sjs
 t
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/ tmp = t(); tmp
+//│ let tmp; tmp = t(); tmp
 //│ = 42
 
 
@@ -37,17 +37,19 @@ fun test() =
     42
   whoops + whoops
 //│ JS (unsanitized):
-//│ let test; /** scoped **/
-//│ test = function test() {
-//│   let whoops, tmp1, tmp2; /** scoped **/
-//│   whoops = function whoops() {
-//│     let tmp3; /** scoped **/
-//│     tmp3 = Predef.print("ok");
-//│     return 42
-//│   };
-//│   tmp1 = whoops();
-//│   tmp2 = whoops();
-//│   return tmp1 + tmp2
+//│ let test;
+//│ test = function test() {{
+//│     let whoops, tmp1, tmp2; /** scoped **/
+//│     whoops = function whoops() {{
+//│         let tmp3; /** scoped **/
+//│         tmp3 = Predef.print("ok");
+//│         return 42
+//│       }
+//│     };
+//│     tmp1 = whoops();
+//│     tmp2 = whoops();
+//│     return tmp1 + tmp2
+//│   }
 //│ };
 
 test()
@@ -65,7 +67,7 @@ module T with
   val c = p
   val d = this.p
 //│ JS (unsanitized):
-//│ let T1; /** scoped **/
+//│ let T1;
 //│ globalThis.Object.freeze(class T {
 //│   static {
 //│     T1 = this
@@ -107,7 +109,7 @@ T.d
 module M with
   fun t = 0
 //│ JS (unsanitized):
-//│ let M1; /** scoped **/
+//│ let M1;
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -135,12 +137,13 @@ fun test() =
   fun whoops = 42
   whoops
 //│ JS (unsanitized):
-//│ let test1; /** scoped **/
-//│ test1 = function test() {
-//│   let whoops, tmp1; /** scoped **/
-//│   whoops = function whoops() { return 42 };
-//│   tmp1 = whoops();
-//│   return tmp1
+//│ let test1;
+//│ test1 = function test() {{
+//│     let whoops, tmp1; /** scoped **/
+//│     whoops = function whoops() { return 42 };
+//│     tmp1 = whoops();
+//│     return tmp1
+//│   }
 //│ };
 
 
@@ -163,8 +166,8 @@ fun bar() =
   fun baz() = 42
   baz
 //│ JS (unsanitized):
-//│ let bar; /** scoped **/
-//│ bar = function bar() { let baz; /** scoped **/ baz = function baz() { return 42 }; return baz };
+//│ let bar;
+//│ bar = function bar() {{ let baz; /** scoped **/ baz = function baz() { return 42 }; return baz } };
 
 
 :sjs
@@ -173,25 +176,27 @@ fun baz() =
   fun z = 2
   (x, y) => x + y + w + z
 //│ JS (unsanitized):
-//│ let baz; /** scoped **/
+//│ let baz;
 //│ baz = function baz() {
-//│   let lambda;
-//│   let w, z; /** scoped **/
-//│   w = function w() {
-//│     return 1
-//│   };
-//│   z = function z() {
-//│     return 2
-//│   };
-//│   lambda = (undefined, function (x, y) {
-//│     let tmp1, tmp2, tmp3, tmp4; /** scoped **/
-//│     tmp1 = x + y;
-//│     tmp2 = w();
-//│     tmp3 = tmp1 + tmp2;
-//│     tmp4 = z();
-//│     return tmp3 + tmp4
-//│   });
-//│   return lambda
+//│   let lambda;{
+//│     let w, z; /** scoped **/
+//│     w = function w() {
+//│       return 1
+//│     };
+//│     z = function z() {
+//│       return 2
+//│     };
+//│     lambda = (undefined, function (x, y) {{
+//│         let tmp1, tmp2, tmp3, tmp4; /** scoped **/
+//│         tmp1 = x + y;
+//│         tmp2 = w();
+//│         tmp3 = tmp1 + tmp2;
+//│         tmp4 = z();
+//│         return tmp3 + tmp4
+//│       }
+//│     });
+//│     return lambda
+//│   }
 //│ };
 
 
@@ -207,20 +212,22 @@ fun a() =
     b + d
   c
 //│ JS (unsanitized):
-//│ let a; /** scoped **/
-//│ a = function a() {
-//│   let b, c; /** scoped **/
-//│   b = function b() {
-//│     return 1
-//│   };
-//│   c = function c() {
-//│     let d, tmp2, tmp3; /** scoped **/
-//│     d = function d() { return 2 };
-//│     tmp2 = b();
-//│     tmp3 = d();
-//│     return tmp2 + tmp3
-//│   };
-//│   return c
+//│ let a;
+//│ a = function a() {{
+//│     let b, c; /** scoped **/
+//│     b = function b() {
+//│       return 1
+//│     };
+//│     c = function c() {{
+//│         let d, tmp2, tmp3; /** scoped **/
+//│         d = function d() { return 2 };
+//│         tmp2 = b();
+//│         tmp3 = d();
+//│         return tmp2 + tmp3
+//│       }
+//│     };
+//│     return c
+//│   }
 //│ };
 
 
@@ -236,19 +243,21 @@ fun b() =
     c
   d
 //│ JS (unsanitized):
-//│ let b; /** scoped **/
-//│ b = function b() {
-//│   let c, d; /** scoped **/
-//│   c = function c() {
-//│     return 1
-//│   };
-//│   d = function d() {
-//│     let c1, tmp3; /** scoped **/
-//│     c1 = function c() { return 2 };
-//│     tmp3 = c1();
-//│     return tmp3
-//│   };
-//│   return d
+//│ let b;
+//│ b = function b() {{
+//│     let c, d; /** scoped **/
+//│     c = function c() {
+//│       return 1
+//│     };
+//│     d = function d() {{
+//│         let c1, tmp3; /** scoped **/
+//│         c1 = function c() { return 2 };
+//│         tmp3 = c1();
+//│         return tmp3
+//│       }
+//│     };
+//│     return d
+//│   }
 //│ };
 
 
@@ -264,23 +273,25 @@ fun c() =
     e + f
   d
 //│ JS (unsanitized):
-//│ let c; /** scoped **/
-//│ c = function c() {
-//│   let d, f, tmp4; /** scoped **/
-//│   f = function f() {
-//│     return 1
-//│   };
-//│   d = function d() {
-//│     let e, tmp5, tmp6; /** scoped **/
-//│     e = function e() {
+//│ let c;
+//│ c = function c() {{
+//│     let d, f, tmp4; /** scoped **/
+//│     f = function f() {
 //│       return 1
 //│     };
-//│     tmp5 = e();
-//│     tmp6 = f();
-//│     return tmp5 + tmp6
-//│   };
-//│   tmp4 = d();
-//│   return tmp4
+//│     d = function d() {{
+//│         let e, tmp5, tmp6; /** scoped **/
+//│         e = function e() {
+//│           return 1
+//│         };
+//│         tmp5 = e();
+//│         tmp6 = f();
+//│         return tmp5 + tmp6
+//│       }
+//│     };
+//│     tmp4 = d();
+//│     return tmp4
+//│   }
 //│ };
 
 
@@ -292,7 +303,7 @@ c()
 data class Foo(x) with
   fun oops = x
 //│ JS (unsanitized):
-//│ let Foo1; /** scoped **/
+//│ let Foo1;
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };

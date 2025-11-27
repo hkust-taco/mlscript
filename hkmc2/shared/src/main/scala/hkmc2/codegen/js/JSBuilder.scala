@@ -510,18 +510,26 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         returningTerm(rst, endSemi).stripBreaks}"
 
     case Scoped(syms, body) =>
-      val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
-        if scope.lookup(l).isDefined then
-          // raise:
-          //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
-          None
-        else
-          Some(l -> scope.allocateName(l))
-      (if vars.isEmpty then doc"" else
-        doc" # let " :: vars.map: (_, nme) =>
-          nme
-        .toList.mkDocument(", ")
-        :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
+      scope.nest.givenIn:
+        val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
+          if scope.lookup(l).isDefined then
+            // NOTE: this warning is turned off because the lifter is not
+            // yet updated to maintian the Scoped blocks, so when
+            // something is lifted out, its symbol may be already declared in an outer level,
+            // but the inner Scoped block still contains the same symbol
+            // raise:
+            //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+            // Some(l -> s"${scope.lookup_!(l, N)}_again")
+            None
+          else
+            Some(l -> scope.allocateName(l))
+        // NOTE: currently this does not generate pretty JS codes...
+        braced:
+          (if vars.isEmpty then doc"" else
+            doc" # let " :: vars.map: (_, nme) =>
+              nme
+            .toList.mkDocument(", ")
+            :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
     
     // case _ => ???
   
@@ -586,7 +594,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
-    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+    // NOTE: this is to make sure that we are NOT generating the top level
+    // block in a nested scope, because for exported symbols they are looked up in the outer scope
+    val unscopedMain = p.main match
+      case Scoped(syms, body) /* if exprt.isDefined */ => body
+      case _ => p.main
+    imps.mkDocument(doc" # ") :/: block(unscopedMain, endSemi = false).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""

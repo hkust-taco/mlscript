@@ -39,7 +39,7 @@ print("Hi")
 print("Hi")
 2
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/ tmp = Predef.print("Hi"); 2
+//│ let tmp; tmp = Predef.print("Hi"); 2
 //│ Lowered:
 //│ Program:
 //│   imports = Nil

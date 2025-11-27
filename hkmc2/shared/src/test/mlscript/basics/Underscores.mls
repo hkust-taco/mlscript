@@ -61,10 +61,9 @@ print(_)
 :sjs
 let test = _.f(0, _, 2)
 //│ JS (unsanitized):
-//│ let test;
-//│ let test1; /** scoped **/
-//│ test = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
-//│ test1 = test;
+//│ let test, test1;
+//│ test1 = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
+//│ test = test1;
 //│ test = fun test
 
 :re
@@ -136,7 +135,7 @@ mkObj(1, 2)
 // :re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[ERROR] Illegal position for '_' placeholder.
-//│ ║  l.137: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.136: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ mkObj = fun mkObj
 //│ y = undefined

@@ -88,8 +88,7 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, Bad$, Good$, f$capture3;
-//│ let f5, tmp9; /** scoped **/
+//│ let Bad1, Good1, f5, tmp9, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp10, tmp11;
 //│   if (isMut === true) {
@@ -130,12 +129,13 @@ f().foo()
 //│   set y(value) { this.#y = value; }
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
-//│   foo() {
-//│     let tmp10, tmp11; /** scoped **/
-//│     this.z = 100;
-//│     tmp10 = this.x + this.y;
-//│     tmp11 = tmp10 + this.z;
-//│     return tmp11 + this.f$capture.w$capture$0
+//│   foo() {{
+//│       let tmp10, tmp11; /** scoped **/
+//│       this.z = 100;
+//│       tmp10 = this.x + this.y;
+//│       tmp11 = tmp10 + this.z;
+//│       return tmp11 + this.f$capture.w$capture$0
+//│     }
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Good", []]; 
@@ -186,16 +186,17 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f5 = function f() {
-//│   let capture;
-//│   let x, y, z, w, tmp10, tmp11; /** scoped **/
-//│   capture = new f$capture3(null);
-//│   x = 1;
-//│   y = 10;
-//│   z = 10;
-//│   capture.w$capture$0 = 1000;
-//│   tmp10 = Bad$(false, capture);
-//│   tmp11 = tmp10.foo();
-//│   return Good$(false, x, y, z, capture)
+//│   let capture;{
+//│     let x, y, z, w, tmp10, tmp11; /** scoped **/
+//│     capture = new f$capture3(null);
+//│     x = 1;
+//│     y = 10;
+//│     z = 10;
+//│     capture.w$capture$0 = 1000;
+//│     tmp10 = Bad$(false, capture);
+//│     tmp11 = tmp10.foo();
+//│     return Good$(false, x, y, z, capture)
+//│   }
 //│ };
 //│ tmp9 = f5();
 //│ runtime.safeCall(tmp9.foo())
