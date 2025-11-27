@@ -9,7 +9,7 @@ if true then 1 else 0
 :sjs
 let f = x => if x then print("ok") else print("ko")
 //│ JS (unsanitized):
-//│ let f, lambda;
+//│ let f, lambda; /** scoped **/
 //│ lambda = (undefined, function (x) {
 //│   if (x === true) { return Predef.print("ok") } else { return Predef.print("ko") }
 //│ });
@@ -26,9 +26,9 @@ f(false)
 :sjs
 let f = x => print((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let f1, lambda1;
+//│ let f1, lambda1; /** scoped **/
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp, tmp1;
+//│   let tmp, tmp1; /** scoped **/
 //│   if (x === true) {
 //│     tmp = "ok";
 //│   } else { tmp = "ko"; }
@@ -41,9 +41,9 @@ let f = x => print((if x then "ok" else "ko") + "!")
 :sjs
 let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
-//│ let f2, lambda2;
+//│ let f2, lambda2; /** scoped **/
 //│ lambda2 = (undefined, function (x) {
-//│   let tmp, tmp1;
+//│   let tmp, tmp1; /** scoped **/
 //│   if (x === true) {
 //│     tmp = "ok";
 //│   } else { tmp = "ko"; }

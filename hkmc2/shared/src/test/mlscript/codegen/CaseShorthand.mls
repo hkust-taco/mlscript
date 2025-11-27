@@ -7,7 +7,13 @@ case x then x
 :sjs
 case { x then x }
 //│ JS (unsanitized):
-//│ let lambda1; lambda1 = (undefined, function (caseScrut) { let x; x = caseScrut; return x }); lambda1
+//│ let lambda1;
+//│ lambda1 = (undefined, function (caseScrut) {
+//│   let x; /** scoped **/
+//│   x = caseScrut;
+//│   return x
+//│ });
+//│ lambda1
 //│ = fun
 
 :sjs
@@ -53,10 +59,10 @@ case 0 then true
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ║  l.60: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ║  l.60: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
 
 :sjs
@@ -79,7 +85,7 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, lambda12;
+//│ let isDefined, lambda12; /** scoped **/
 //│ lambda12 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some.class) {
 //│     return true

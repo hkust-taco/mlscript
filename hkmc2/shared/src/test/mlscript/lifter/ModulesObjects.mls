@@ -27,7 +27,8 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let M3, foo1, M$;
+//│ let M3, M$;
+//│ let foo1; /** scoped **/
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
 //│   if (isMut === true) {
@@ -54,7 +55,7 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
+//│ foo1 = function foo(y) { let tmp; /** scoped **/ tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
 
 
@@ -109,7 +110,8 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M5, foo4, foo3$, foo$capture3;
+//│ let M5, foo3$, foo$capture3;
+//│ let foo4; /** scoped **/
 //│ foo3$ = function foo3$(M6, x, foo$capture4) {
 //│   return M6.foo2()
 //│ };
@@ -145,9 +147,9 @@ fun foo(x, y) =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo4 = function foo(x, y) {
-//│   let tmp, M$1, capture;
+//│   let M$1, capture;
+//│   let foo31, tmp; /** scoped **/
 //│   capture = new foo$capture3(y);
-//│   let foo31; /** scoped **/
 //│   M$1 = globalThis.Object.freeze(new M5(x, capture));
 //│   tmp = foo3$(M$1, x, capture);
 //│   return tmp
@@ -212,8 +214,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp5;
-//│ let tmp6; /** scoped **/
+//│ let M17, tmp5, tmp6; /** scoped **/
 //│ globalThis.Object.freeze(class M16 {
 //│   static {
 //│     M17 = this
@@ -222,7 +223,7 @@ M.A().get
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let scrut;
+//│     let scrut; /** scoped **/
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
@@ -239,17 +240,17 @@ M.A().get
 //│     });
 //│     scrut = M16.A();
 //│     if (scrut instanceof M16.A.class) {
-//│       tmp6 = 2;
+//│       tmp5 = 2;
 //│     } else {
-//│       tmp6 = 3;
+//│       tmp5 = 3;
 //│     }
-//│     this.x = tmp6;
+//│     this.x = tmp5;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp5 = M17.A();
-//│ tmp5.get
+//│ tmp6 = M17.A();
+//│ tmp6.get
 //│ = 4
 
 module M with

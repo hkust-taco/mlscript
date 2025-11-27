@@ -19,10 +19,9 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS (unsanitized):
-//│ let test1;
+//│ let test1; /** scoped **/
 //│ test1 = function test(a) {
-//│   let Inner1;
-//│   let tmp; /** scoped **/
+//│   let Inner1, tmp; /** scoped **/
 //│   Inner1 = function Inner(b) {
 //│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
@@ -42,7 +41,7 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let h;
+//│       let h; /** scoped **/
 //│       const this$Inner = this;
 //│       h = function h(e) {
 //│         return globalThis.Object.freeze([
@@ -79,10 +78,9 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
-//│ let test2;
+//│ let test2; /** scoped **/
 //│ test2 = function test(a) {
-//│   let C11, C21, tmp, tmp1;
-//│   let tmp2, tmp3; /** scoped **/
+//│   let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
@@ -92,11 +90,11 @@ fun test(a) =
 //│     }
 //│     constructor(b) {
 //│       this.b = b;
-//│       tmp2 = globalThis.Object.freeze([
+//│       tmp = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp2);
+//│       Predef.print(tmp);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
@@ -110,18 +108,18 @@ fun test(a) =
 //│     }
 //│     constructor(b) {
 //│       this.b = b;
-//│       tmp3 = globalThis.Object.freeze([
+//│       tmp1 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp3);
+//│       Predef.print(tmp1);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C2", ["b"]]; 
 //│   });
-//│   tmp = C11(1);
-//│   tmp1 = C21(2);
-//│   return globalThis.Object.freeze([ tmp, tmp1 ])
+//│   tmp2 = C11(1);
+//│   tmp3 = C21(2);
+//│   return globalThis.Object.freeze([ tmp2, tmp3 ])
 //│ };
 
 test(123)
@@ -140,7 +138,7 @@ data class Foo(a) with
   foo()
 Foo(123)
 //│ JS (unsanitized):
-//│ let Foo1;
+//│ let Foo1; /** scoped **/
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
@@ -153,7 +151,7 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz, tmp;
+//│     let bar, baz, tmp; /** scoped **/
 //│     const this$Foo = this;
 //│     bar = function bar() {
 //│       return this$Foo.a
@@ -179,8 +177,7 @@ data class Bar(x) with
   foo()()
 Bar(1)
 //│ JS (unsanitized):
-//│ let Bar1;
-//│ let tmp; /** scoped **/
+//│ let Bar1, tmp; /** scoped **/
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
@@ -195,7 +192,7 @@ Bar(1)
 //│   }
 //│   foo() {
 //│     return () => {
-//│       let bar;
+//│       let bar; /** scoped **/
 //│       const this$Bar = this;
 //│       bar = function bar() {
 //│         return this$Bar.x

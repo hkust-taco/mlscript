@@ -95,8 +95,7 @@ set state += 1
 module Foo with
   val res = Foo().foo
 //│ JS (unsanitized):
-//│ let Foo1, tmp1;
-//│ let tmp2; /** scoped **/
+//│ let Foo1, tmp1, tmp2; /** scoped **/
 //│ tmp1 = state + 1;
 //│ state = tmp1;
 //│ Foo1 = function Foo() {

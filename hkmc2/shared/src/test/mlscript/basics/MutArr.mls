@@ -4,7 +4,7 @@
 :sjs
 let t = [0, 1, 2]
 //│ JS (unsanitized):
-//│ let t; t = globalThis.Object.freeze([ 0, 1, 2 ]);
+//│ let t; /** scoped **/ t = globalThis.Object.freeze([ 0, 1, 2 ]);
 //│ t = [0, 1, 2]
 
 :re
@@ -21,7 +21,7 @@ t
 :sjs
 let t = mut [0, 1, 2]
 //│ JS (unsanitized):
-//│ let t1; t1 = [ 0, 1, 2 ];
+//│ let t1; /** scoped **/ t1 = [ 0, 1, 2 ];
 //│ t = [0, 1, 2]
 
 t.push(4)

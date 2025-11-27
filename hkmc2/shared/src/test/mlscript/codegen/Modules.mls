@@ -4,7 +4,7 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1;
+//│ let None1; /** scoped **/
 //│ globalThis.Object.freeze(class None {
 //│   static {
 //│     None1 = this
@@ -55,8 +55,7 @@ module M with
   val x = 1
   val y = x + 1
 //│ JS (unsanitized):
-//│ let M1;
-//│ let tmp; /** scoped **/
+//│ let M1, tmp; /** scoped **/
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -111,7 +110,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.112: 	M.oops
+//│ ║  l.111: 	M.oops
 //│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 
@@ -123,7 +122,7 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3;
+//│ let M3; /** scoped **/
 //│ globalThis.Object.freeze(class M2 {
 //│   static {
 //│     M3 = this
@@ -156,7 +155,7 @@ module AA with
     val y = 2
     [x, y]
 //│ JS (unsanitized):
-//│ let AA1;
+//│ let AA1; /** scoped **/
 //│ globalThis.Object.freeze(class AA {
 //│   static {
 //│     AA1 = this

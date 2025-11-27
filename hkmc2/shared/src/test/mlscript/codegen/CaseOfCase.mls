@@ -15,9 +15,9 @@ fun test(x) =
     Some(v) then print(v)
     None then print("none")
 //│ JS (unsanitized):
-//│ let test;
+//│ let test; /** scoped **/
 //│ test = function test(x) {
-//│   let v, scrut, v1, argument0$, argument0$1, tmp, tmp1;
+//│   let v, scrut, v1, argument0$, argument0$1, tmp, tmp1; /** scoped **/
 //│   if (x instanceof Some.class) {
 //│     argument0$1 = x.value;
 //│     v = argument0$1;

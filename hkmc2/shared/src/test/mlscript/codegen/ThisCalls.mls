@@ -19,7 +19,7 @@ s(123)
 :sjs
 ex |>. s(123)
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = Predef.call(ex, s); runtime.safeCall(tmp1(123))
+//│ let tmp1; /** scoped **/ tmp1 = Predef.call(ex, s); runtime.safeCall(tmp1(123))
 //│ = [123, 456]
 
 

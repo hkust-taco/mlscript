@@ -25,7 +25,7 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ JS (unsanitized):
-//│ let scrut4, scrut5, tmp5;
+//│ let scrut4, scrut5, tmp5; /** scoped **/
 //│ split_root$2: {
 //│   split_1$2: {
 //│     scrut4 = true;

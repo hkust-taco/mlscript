@@ -6,7 +6,7 @@
 
 data class Foo(arguments)
 //│ JS (unsanitized):
-//│ let Foo1;
+//│ let Foo1; /** scoped **/
 //│ Foo1 = function Foo(arguments1) {
 //│   return globalThis.Object.freeze(new Foo.class(arguments1));
 //│ };
@@ -24,7 +24,7 @@ data class Foo(arguments)
 
 data class Foo(eval)
 //│ JS (unsanitized):
-//│ let Foo3;
+//│ let Foo3; /** scoped **/
 //│ Foo3 = function Foo(eval1) {
 //│   return globalThis.Object.freeze(new Foo.class(eval1));
 //│ };
@@ -42,7 +42,7 @@ data class Foo(eval)
 
 data class Foo(static)
 //│ JS (unsanitized):
-//│ let Foo5;
+//│ let Foo5; /** scoped **/
 //│ Foo5 = function Foo(static1) {
 //│   return globalThis.Object.freeze(new Foo.class(static1));
 //│ };
@@ -60,7 +60,7 @@ data class Foo(static)
 
 data class Foo(v')
 //│ JS (unsanitized):
-//│ let Foo7;
+//│ let Foo7; /** scoped **/
 //│ Foo7 = function Foo(v$_) {
 //│   return globalThis.Object.freeze(new Foo.class(v$_));
 //│ };

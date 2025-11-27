@@ -43,9 +43,8 @@ fun g(x, y, z) =
 //│ let g; /** scoped **/
 //│ g = function g(x1, y1, z) {
 //│   let lambda;
-//│   let tmp1, tmp2; /** scoped **/
+//│   let a, tmp1, tmp2; /** scoped **/
 //│   split_root$: {
-//│     let a; /** scoped **/
 //│     split_1$: {
 //│       if (x1 === true) {
 //│         break split_1$
@@ -87,9 +86,8 @@ fun f() = if x is
 //│ JS (unsanitized):
 //│ let f1; /** scoped **/
 //│ f1 = function f() {
-//│   let tmp1; /** scoped **/
+//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1; /** scoped **/
 //│   split_root$: {
-//│     let a, b, scrut, c, d, argument0$, argument1$; /** scoped **/
 //│     split_default$: {
 //│       if (x instanceof A.class) {
 //│         argument0$ = x.a;
@@ -126,9 +124,8 @@ fun f() = if A(1, Nil) is
 //│ JS (unsanitized):
 //│ let f2; /** scoped **/
 //│ f2 = function f() {
-//│   let tmp1; /** scoped **/
+//│   let scrut, argument0$, argument1$, tmp1; /** scoped **/
 //│   split_root$: {
-//│     let scrut, argument0$, argument1$; /** scoped **/
 //│     split_default$: {
 //│       scrut = A(1, Nil);
 //│       if (scrut instanceof A.class) {
@@ -210,8 +207,8 @@ fun f() =
 //│   y1 = x + 1;
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
+//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
 //│     split_root$: {
-//│       let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
 //│       split_1$: {
 //│         if (y1 instanceof A.class) {
 //│           argument0$ = y1.a;

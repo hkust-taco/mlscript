@@ -7,9 +7,9 @@ fun fib(a) = if
   a <= 1 then a
   else fib(a - 1) + fib(a - 2)
 //│ JS (unsanitized):
-//│ let fib;
+//│ let fib; /** scoped **/
 //│ fib = function fib(a) {
-//│   let scrut, tmp, tmp1, tmp2, tmp3;
+//│   let scrut, tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│   scrut = a <= 1;
 //│   if (scrut === true) {
 //│     return a

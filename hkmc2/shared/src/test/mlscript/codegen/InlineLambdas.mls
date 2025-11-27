@@ -3,9 +3,9 @@
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
-//│ let lambda;
+//│ let lambda; /** scoped **/
 //│ lambda = (undefined, function (x) {
-//│   let tmp, tmp1, tmp2, tmp3;
+//│   let tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│   tmp = x + 1;
 //│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
@@ -18,9 +18,9 @@
 :sjs
 (x => x + 1 + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
-//│ let lambda1;
+//│ let lambda1; /** scoped **/
 //│ lambda1 = (undefined, function (x) {
-//│   let tmp, tmp1, tmp2, tmp3, tmp4;
+//│   let tmp, tmp1, tmp2, tmp3, tmp4; /** scoped **/
 //│   tmp = x + 1;
 //│   tmp1 = tmp + 1;
 //│   tmp2 = tmp1 + 1;
@@ -34,13 +34,13 @@
 :sjs
 (x => x) + 1
 //│ JS (unsanitized):
-//│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2 + 1
+//│ let lambda2; /** scoped **/ lambda2 = (undefined, function (x) { return x }); lambda2 + 1
 //│ = "function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }1"
 
 :sjs
 1 + (x => x)
 //│ JS (unsanitized):
-//│ let lambda3; lambda3 = (undefined, function (x) { return x }); 1 + lambda3
+//│ let lambda3; /** scoped **/ lambda3 = (undefined, function (x) { return x }); 1 + lambda3
 //│ = "1function (...args) {   runtime.checkArgs(\"\", 1, true, args.length);   let x = args[0];   return x }"
 
 

@@ -58,7 +58,7 @@ if a is
   B then 2
   C then 3
 //│ JS (unsanitized):
-//│ let tmp;
+//│ let tmp; /** scoped **/
 //│ split_root$: {
 //│   split_default$: {
 //│     split_1$: {
@@ -107,7 +107,7 @@ let x = if a is
     print("done")
 print(x)
 //│ JS (unsanitized):
-//│ let x, tmp1, tmp2, tmp3, tmp4;
+//│ let x, tmp1, tmp2, tmp3; /** scoped **/
 //│ if (a instanceof A.class) {
 //│   tmp2 = 1;
 //│ } else if (a instanceof B.class) {
@@ -115,18 +115,19 @@ print(x)
 //│ } else if (a instanceof C.class) {
 //│   tmp2 = 3;
 //│ } else {
+//│   let tmp4; /** scoped **/
 //│   tmp1 = 3;
 //│   if (a instanceof D.class) {
 //│     if (a instanceof A.class) {
-//│       tmp3 = 1 + tmp1;
+//│       tmp4 = 1 + tmp1;
 //│     } else if (a instanceof B.class) {
-//│       tmp3 = 2 + tmp1;
+//│       tmp4 = 2 + tmp1;
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     tmp4 = tmp3;
+//│     tmp3 = tmp4;
 //│   } else if (a instanceof E.class) {
-//│     tmp4 = 5;
+//│     tmp3 = 5;
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
@@ -146,7 +147,7 @@ if a is
   let tmp = 2
   B then 2 + tmp
 //│ JS (unsanitized):
-//│ let tmp5;
+//│ let tmp5; /** scoped **/
 //│ tmp5 = 2;
 //│ if (a instanceof A.class) {
 //│   1
@@ -168,7 +169,7 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ JS (unsanitized):
-//│ let tmp6;
+//│ let tmp6; /** scoped **/
 //│ if (a instanceof A.class) {
 //│   1
 //│ } else {
@@ -191,7 +192,7 @@ if a is
       C then 3
     print(x)
 //│ JS (unsanitized):
-//│ let x1, tmp7;
+//│ let x1, tmp7; /** scoped **/
 //│ if (a instanceof A.class) {
 //│   1
 //│ } else if (a instanceof B.class) {
@@ -220,7 +221,7 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ JS (unsanitized):
-//│ let x2, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│ let x2, tmp8, tmp9, tmp10, tmp11, tmp12; /** scoped **/
 //│ if (a instanceof B.class) {
 //│   1
 //│ } else {
