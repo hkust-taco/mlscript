@@ -18,20 +18,16 @@ f(.a)
 //│     x⁰  ->  app⁰
 //│     app⁰  <~  type A
 //│     flow:f⁰  <~  ((type A) -> x⁰)
-//│     flow:f⁰  ~>  ((_?_.Ident(a)) -> app⁰)
+//│     flow:f⁰  ~>  ((_?_.a) -> app⁰)
 //│ = A
 
 :flow
 :sf
-:e
-f(.a.b)
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.27: 	f(.a.b)
-//│ ╙──      	    ^^
+f(.a.b.c(1,1).b)
 //│ Flowed:
-//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.b‹?›)‹app¹›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.b‹?›.c‹?›(1, 1)‹app¹›.b‹?›)‹app²›
 //│ where
-//│     app¹  <~  type A
+//│     app²  <~  type A
 //│ = A
 
 class C
@@ -48,7 +44,7 @@ f(d)
 g(d)
 //│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
 //│ ╟── companion member a
-//│ ║  l.39: 	  fun a = new C
+//│ ║  l.35: 	  fun a = new C
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── companion member a
 //│ ║  l.7: 	  fun a = new A
@@ -57,21 +53,21 @@ g(d)
 //│   fun g⁰(x¹: C⁰) ‹flow:g⁰› = x¹,
 //│   let d⁰,
 //│   d⁰ = _?_.a,
-//│   f⁰(d⁰)‹app²›,
-//│   g⁰(d⁰)‹app³›
+//│   f⁰(d⁰)‹app³›,
+//│   g⁰(d⁰)‹app⁴›
 //│ where
 //│     x¹  <~  type C
-//│     x¹  ->  app³
-//│     d⁰  <~  _?_.Ident(a)
+//│     x¹  ->  app⁴
+//│     d⁰  <~  _?_.a
 //│     d⁰  ~>  type A  type C
-//│     app²  <~  type A
-//│     app³  <~  type C
+//│     app³  <~  type A
+//│     app⁴  <~  type C
 //│     flow:g⁰  <~  ((type C) -> x¹)
-//│     flow:g⁰  ~>  ((d⁰) -> app³)
+//│     flow:g⁰  ~>  ((d⁰) -> app⁴)
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.46: 	let d = .a
+//│ ║  l.42: 	let d = .a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] ReferenceError: d is not defined
 
@@ -80,37 +76,33 @@ g(d)
 f(.a)
 g(.a)
 //│ Flowed:
-//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁴›,
-//│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁵›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁵›,
+//│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁶›
 //│ where
-//│     app⁴  <~  type A
-//│     app⁵  <~  type C
+//│     app⁵  <~  type A
+//│     app⁶  <~  type C
 //│ = C
 
 :flow
 :sf
-:e
-f(.a.c(1,1).b.b.c(3,3))
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
-//│ ╙──      	      ^^^^^^^^^^^
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
-//│ ╙──      	      ^^^^^^^^^
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
-//│ ╙──      	      ^^^^^^^
-//│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.93: 	f(.a.c(1,1).b.b.c(3,3))
-//│ ╙──      	    ^^
+:re
+f(.a.b)
+g(.a.b)
 //│ Flowed:
-//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.c‹?›(1, 1)‹app⁶›.b‹?›.b‹?›.c‹?›(3, 3)‹app⁷›)‹app⁸›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.b‹?›)‹app⁷›,
+//│   g⁰(_?_.a{ ~> C⁰.a¹ }.b‹?›)‹app⁸›
 //│ where
-//│     app⁸  <~  type A
-//│     app⁷  <~  _?_.Ident(a)
-//│     app⁷  ~>  type A
-//│     app⁶  <~  _?_.Ident(a)
-//│     app⁶  ~>  {b: ⋅b⁰}
+//│     app⁷  <~  type A
+//│     app⁸  <~  type C
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'b' yielded 'undefined'
+
+:flow
+:sf
+f(.a.c(1,1).b.b.c(3,3))
+//│ Flowed:
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ }.c‹?›(1, 1)‹app⁹›.b‹?›.b‹?›.c‹?›(3, 3)‹app¹⁰›)‹app¹¹›
+//│ where
+//│     app¹¹  <~  type A
 //│ = A
 
 :flow
@@ -120,12 +112,12 @@ f(.a.c(1,1).b.b.c(3,3))
 :e
 f(.w)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.121: 	f(.w)
+//│ ║  l.113: 	f(.w)
 //│ ╙──       	  ^^
 //│ Flowed:
-//│   f⁰(_?_.w)‹app⁹›
+//│   f⁰(_?_.w)‹app¹²›
 //│ where
-//│     app⁹  <~  type A
+//│     app¹²  <~  type A
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 
@@ -135,10 +127,10 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.136: 	.b(new A)
+//│ ║  l.128: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
-//│   _?_.b(new A⁰)‹app¹⁰›
+//│   _?_.b(new A⁰)‹app¹³›
 //│ where
-//│     app¹⁰  <~  _?_.Ident(b)
+//│     
 //│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)

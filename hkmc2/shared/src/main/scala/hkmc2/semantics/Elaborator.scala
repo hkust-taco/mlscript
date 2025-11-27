@@ -552,7 +552,7 @@ extends Importer:
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
       val rt = subterm(rhs)
-      Term.App(lt, rt)(tree, N, sym)
+      Term.App(lt, rt)(tree, N, sym).inheritLDS(lt)
     case tree @ OpApp(lhs, op, rhss) =>
       val sym = FlowSymbol.app()
       val lt = subterm(lhs, inAppPrefix = true)
@@ -565,7 +565,8 @@ extends Importer:
       val sym = resolveField(nme, preTrm.symbol, nme)
       Term.SynthSel(preTrm, nme)(sym, N)
     case Sel(Empty(), nme) =>
-      Term.LeadingDotSel(nme)(S(summon), Nil, false)
+      val res = Term.LeadingDotSel(nme)(S(summon), Nil)
+      res.withLDS(S(res))
     case Sel(pre, nme) =>
       val preTrm = subterm(pre)
       val sym = resolveField(nme, preTrm.symbol, nme)
@@ -592,7 +593,7 @@ extends Importer:
         val loc = tree.toLoc.getOrElse(???)
         Term.Lit(StrLit(loc.origin.fileName.toString))
       else
-        Term.Sel(preTrm, nme)(sym, N, S(summon))
+        Term.Sel(preTrm, nme)(sym, N, S(summon)).inheritLDS(preTrm)
     case MemberProj(ct, nme) =>
       val c = subterm(ct)
       val f = c.symbol.flatMap(_.asCls) match

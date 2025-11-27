@@ -58,6 +58,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     t match
     
+    case trm : LeadingDotImpl if trm.hasLDS => trm.originalSel match
+      case S(sel) =>
+        log(s"Leading dot selection: ${trm.showDbg}")
+        leadingDotSelsToExpand += sel
+        P.LeadingDotSel(sel)
+      case N =>
+        log("There was a bug in the Matrix.")
+        P.Unknown(trm)
+
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
@@ -127,10 +136,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
 
-    case sel @ LeadingDotSel(nme) =>
-      leadingDotSelsToExpand += sel
-      log(s"Leading dot selection ${sel.showDbg}")
-      P.LeadingDotSel(nme)(sel)
+    // case sel @ LeadingDotSel(nme) =>
+    //   leadingDotSelsToExpand += sel
+    //   log(s"Leading dot selection ${sel.showDbg}")
+    //   P.LeadingDotSel(sel)
     
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
@@ -143,6 +152,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         val sym = sel.resSym
         constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
         P.Flow(sym)
+
     
     case nw @ New(cls, args, rft) =>
       rft match
@@ -261,11 +271,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           :: targets.map:
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
 
-  def getCompanionMember(sel: Term.LeadingDotSel, sym: Symbol, nme: String): Opt[(Term, BlockMemberSymbol)] = sym match
+  def getCompanionMember(sel: Term.LeadingDotSel, sym: Symbol): Opt[(Term, BlockMemberSymbol)] = sym match
     case ms : ModuleOrObjectSymbol =>
       ms.defn match
       case S(d) => 
-        d.body.members.get(nme) match
+        d.body.members.get(sel.nme.name) match
         case S(memb: BlockMemberSymbol) =>
           sel.originalCtx
             .flatMap(ctx => findAccessPath(ctx, d.path, ms))
@@ -279,7 +289,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case S(comp) =>
           comp.defn match
           case S(d) => 
-            d.body.members.get(nme) match
+            d.body.members.get(sel.nme.name) match
             case S(memb: BlockMemberSymbol) =>
               sel.originalCtx
                 .flatMap(ctx => findAccessPath(ctx, d.path, comp))
@@ -332,11 +342,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
               dig(cl, pl, path) // FIXME path
               dig(pr, cr, path) // FIXME path
-            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
-            if (sym1 is sym2) && args1.size === args2.size // TODO generalize
-              =>
-              args1.zip(args2).foreach: (a1, a2) =>
+            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2)) =>
+              if (sym1 is sym2) && args1.size === args2.size // TODO generalize
+              then args1.zip(args2).foreach: (a1, a2) =>
                 dig(a1, a2, path) // FIXME path
+              else
+                raise(ErrorReport(
+                  msg"Constructor mismatch" -> trm.toLoc
+                  :: Nil
+                ))
             case (P.Tup(args), C.Tup(ini, rst)) =>
               def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit =
                 (args, cons) match
@@ -356,20 +370,20 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                       :: Nil
                     ))
               zip(args, ini, rst, path)
-            case (sel @ P.LeadingDotSel(nme), rhs) => rhs match
+            case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) => 
-                sel.trm.reachedType = true
+                // sel.trm.reachedType = true
                 log(s"Examining ${sym} for leading dot selection resolution")
-                getCompanionMember(sel.trm, sym, nme.name) match
+                getCompanionMember(trm, sym) match
                 case S((path, memb)) =>
                   log(s"Found module ${path.showDbg} with member ${memb}")
                   sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
                 case _ =>
-                  log(s"Could not find member ${nme.name} in ${sym}")
-              case csel @ C.Sel(nme, res) =>
-                log(s"Propagating LDS constraint to ${res.showDbg}")
-                dig(sel, res, path)
-              case C.Fun(arg, res) => dig(sel, res, path)
+                  log(s"Could not find member ${trm.nme.name} in ${sym}")
+              // case csel @ C.Sel(nme, res) =>
+              //   log(s"Propagating LDS constraint to ${res.showDbg}")
+              //   dig(sel, res, path)
+              // case C.Fun(arg, res) => dig(sel, res, path)
               case _ => log("Unhandled RHS for leading dot selections")
             case (lhs, sel: C.Sel) =>
               lhs match
