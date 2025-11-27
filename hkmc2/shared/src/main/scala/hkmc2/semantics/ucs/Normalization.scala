@@ -392,7 +392,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // `Label` so that `Break`s in the shared consequents can jump to the end.
     val body =
       val possiblyScoped =
-        lowering.possiblyScoped(
+        Lowering.possiblyScoped(
           LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
           mainBlock)
       if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
