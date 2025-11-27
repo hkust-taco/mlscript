@@ -23,15 +23,15 @@ data class Expr with
 
 pattern Parse =
   (
-    ((Identifier as name) :: rest) => Ident(name) :: rest
+    ((Identifier as name) :: rest)                => Ident(name) :: rest
   ) | (
     ((Expr as e1) :: "+" :: (Expr as e2) :: rest) => Op(e1, "+", e2) :: rest
   ) | (
-    ((Expr as e1) :: "+" :: (Parse as rest)) => e1 :: "+" :: rest
+    ((Expr as e1) :: "+" :: (Parse as rest))      => e1 :: "+" :: rest
   ) | (
-    ("(" :: (Expr as e) :: ")" :: rest) => e :: rest
+    ("(" :: (Expr as e) :: ")" :: rest)           => e :: rest
   ) | (
-    ("(" :: (Parse as rest)) => "(" :: rest
+    ("(" :: (Parse as rest))                      => "(" :: rest
   )
 
 fun parse(tokens) =
@@ -40,7 +40,6 @@ fun parse(tokens) =
       set tokens = stack
   print of ...
     if tokens is
-      // Nil then ["Success:", 1]
       (Expr as e) :: Nil then ["Success:", e]
       toks then ["Failure: can't parse:", toks]
 
