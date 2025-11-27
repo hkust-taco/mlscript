@@ -559,32 +559,18 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           doUnwindBlk
         )(false)
         val doUnwindLazy = Lazy(doUnwindSym.asPath)
-        val rst0 = genNormalBody(b, cls.sym, S(doUnwindLazy))
-        val scopedSyms -> rst = rst0 match
-          case Scoped(syms, body) => syms -> body
-          case _ => Set.empty[Symbol] -> rst0
+        val rst = genNormalBody(b, cls.sym, S(doUnwindLazy))
         
-        // println(scopedSyms)
-        // println(rst)
-        Lowering.possiblyScoped(
-          scopedSyms,
-          locally:
-            val res =
-              if doUnwindLazy.isEmpty && opt.stackSafety.isEmpty then
-                blockBuilder
-                  .define(cls)
-                  .rest(rst)
-              else
-                blockBuilder
-                .define(cls)
-                .define(doUnwindDef)
-                .rest(rst)
-            // println(res)
-            res
-        )
-    
+        if doUnwindLazy.isEmpty && opt.stackSafety.isEmpty then
+          blockBuilder
+            .define(cls)
+            .rest(rst)
+        else
+          blockBuilder
+          .define(cls)
+          .define(doUnwindDef)
+          .rest(rst)
     if opt.debug then
-      // println(getLocalsFn)
       Define(getLocalsFn, ret)
     else
       ret
@@ -594,12 +580,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // to ensure the fun and class references in the continuation class are properly scoped,
     // we move all function defns to the top level of the handler block
     val (blk, defns) = b.floatOutDefns()
-    blk match
-      case Scoped(s, blk) =>
-        val res = Scoped(s, defns.foldLeft(blk)((acc, defn) => Define(defn, acc)))
-        // println(s">>>>>>> $res")
-        res
-      case blk => defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
+    defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def locToStr(l: Loc): Str =
     Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
