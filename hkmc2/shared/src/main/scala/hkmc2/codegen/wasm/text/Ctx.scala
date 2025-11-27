@@ -115,8 +115,16 @@ class TypeInfo(
     compType
   )
 
-  def toWat: Document =
-    doc"(type ${id.fold(doc"")(id => doc"${id.toWat} ")}${compType.toWat})"
+  private def idDoc: Document = id.fold(doc"")(id => doc"${id.toWat} ")
+
+  def toWat: Document = compType match
+    case struct: StructType if struct.isSubtype =>
+      val parentsDoc = struct.parents.map(_.toWat).mkDocument(doc" ")
+      val parentsSuffix = if parentsDoc.isEmpty then doc"" else doc" " :: parentsDoc
+      val structDoc = struct.copy(isSubtype = false).toWat
+      doc"(type ${idDoc}(sub$parentsSuffix ${structDoc}))"
+    case _ =>
+      doc"(type ${idDoc}${compType.toWat})"
 end TypeInfo
 
 object Ctx:

@@ -124,7 +124,11 @@ case class Field(
       })"
 
 /** A type representing a structure type. */
-case class StructType(fields: Map[DefinitionSymbol[?], NumIdx -> Field]) extends ToWat:
+case class StructType(
+  fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+  parents: Seq[TypeIdx] = Seq.empty,
+  isSubtype: Bool = false
+) extends ToWat:
 
   def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
 
