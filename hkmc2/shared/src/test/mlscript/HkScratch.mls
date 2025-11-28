@@ -5,23 +5,8 @@
 // :elt
 
 :global
-:tailrec
 // :d
 // :todo
 
-fun f(x) =
-  g(x)
-fun g(x) =
-  if true then
-    @tailcall f(x)
-  else
-    @tailcall h(x)
-fun h(x) = 2 * x
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: cgLabelled (TailRecOpt.scala:90)
-//│ ╔══[ERROR] This call is not optimized as it does not directly recurse through its parent function.
-//│ ║  l.18: 	    @tailcall h(x)
-//│ ╙──      	              ^^^^
 
-fun f(x) =
-  @tailcall f(x)
+

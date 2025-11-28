@@ -1,0 +1,47 @@
+:js
+:tailrec
+
+:e
+fun f(x) =
+  @tailcall f(x)
+  f(x)
+//│ ╔══[ERROR] This call is not in tail position.
+//│ ║  l.6: 	  @tailcall f(x)
+//│ ╙──     	            ^^^^
+
+:e
+fun f(x) = 2
+fun g(x) = @tailcall f(x)
+//│ ╔══[ERROR] This call is not optimized as it does not directly recurse through its parent function.
+//│ ║  l.14: 	fun g(x) = @tailcall f(x)
+//│ ╙──      	                     ^^^^
+
+:e
+@tailrec fun f(x) =
+  g(x)
+fun g(x) = 
+  f(x)
+  h(x)
+fun h(x) =
+  g(x)
+//│ ╔══[ERROR] `f` is not tail recursive.
+//│ ║  l.20: 	@tailrec fun f(x) =
+//│ ║        	             ^
+//│ ╟── It could self-recurse through this call, which is not a tail call.
+//│ ║  l.23: 	  f(x)
+//│ ╙──      	  ^^^^
+
+:e
+@tailrec fun f(x) =
+  g(x)
+fun g(x) = 
+  h(x)
+  f(x)
+fun h(x) =
+  f(x)
+//│ ╔══[ERROR] `f` is not tail recursive.
+//│ ║  l.35: 	@tailrec fun f(x) =
+//│ ║        	             ^
+//│ ╟── It could self-recurse through this call, which is not a tail call.
+//│ ║  l.38: 	  h(x)
+//│ ╙──      	  ^^^^
