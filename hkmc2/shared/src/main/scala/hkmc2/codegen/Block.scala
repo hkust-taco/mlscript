@@ -49,7 +49,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVarsNoScoped + res
     case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
     case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Scoped(syms, body) => body.definedVarsNoScoped -- syms
+    case Scoped(syms, body, _) => body.definedVarsNoScoped -- syms
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
@@ -70,7 +70,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars// -- syms
+    case Scoped(syms, body, _) => body.definedVars// -- syms
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -84,7 +84,7 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
-    case Scoped(_, body) => body.size
+    case Scoped(_, body, _) => body.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
@@ -124,7 +124,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
-    case Scoped(syms, body) => body.freeVars// -- syms
+    case Scoped(syms, body, _) => body.freeVars// -- syms
     case End(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -145,7 +145,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
-    case Scoped(syms, body) => body.freeVarsLLIR// -- syms
+    case Scoped(syms, body, _) => body.freeVarsLLIR// -- syms
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -158,7 +158,7 @@ sealed abstract class Block extends Product:
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
     case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     case Label(_, _, body, rest) => body :: rest :: Nil
-    case Scoped(_, body) => body :: Nil
+    case Scoped(_, body, _) => body :: Nil
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
@@ -273,11 +273,11 @@ sealed abstract class Block extends Product:
       then this
       else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
 
-    case Scoped(syms, body) =>
+    case Scoped(syms, body, topLevel) =>
       val newBody = body.flatten(k)
       if newBody is body
       then this
-      else Scoped(syms, newBody)
+      else Scoped(syms, newBody, topLevel)
 
     case e: End => k(e)
     case t: BlockTail => this
@@ -304,7 +304,7 @@ case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Blo
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
 
-case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
+case class Scoped(syms: collection.Set[Local], body: Block, topLevel: Bool) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
@@ -322,44 +322,44 @@ case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
 object Match:
   def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
+    case Scoped(syms, body, tlvl) => Scoped(syms, Match(scrut, arms, dflt, body), tlvl)
     case _ => new Match(scrut, arms, dflt, rest)
 object Label:
   def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
-    case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
+    case Scoped(syms, rest, tlvl) => Scoped(syms, Label(label, loop, body, rest), tlvl)
     case _ => new Label(label, loop, body, rest)
 object Scoped:
-  def apply(syms: collection.Set[Local], body: Block): Block = body match
-    case Scoped(syms2, body) =>
-      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body) else Scoped(syms ++ syms2, body)
+  def apply(syms: collection.Set[Local], body: Block, tlvl: Bool): Block = body match
+    case Scoped(syms2, body, _) =>
+      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body, tlvl) else Scoped(syms ++ syms2, body, tlvl)
     case _ =>
-      if syms.isEmpty then body else new Scoped(syms, body)
+      if syms.isEmpty then body else new Scoped(syms, body, tlvl)
 object Begin:
   def apply(sub: Block, rest: Block): Block = (sub, rest) match
-    case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
-      Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
-    case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
-    case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+    case (Scoped(symsSub, bodySub, tlvl1), Scoped(symsRest, bodyRest, tlvl2)) =>
+      Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest), tlvl1 || tlvl2)
+    case (Scoped(symsSub, bodySub, tlvl), _) => Scoped(symsSub, Begin(bodySub, rest), tlvl)
+    case (_, Scoped(symsRest, bodyRest, tlvl)) => Scoped(symsRest, Begin(sub, bodyRest), tlvl)
     case _ => new Begin(sub, rest)
 object TryBlock:
   def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
+    case Scoped(syms, body, tlvl) => Scoped(syms, TryBlock(sub, finallyDo, body), tlvl)
     case _ => new TryBlock(sub, finallyDo, rest)
 object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
+    case Scoped(syms, body, tlvl) => Scoped(syms, Assign(lhs, rhs, body), tlvl)
     case _ => new Assign(lhs, rhs, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
+    case Scoped(syms, body, tlvl) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol), tlvl)
     case _ => new AssignField(lhs, nme, rhs, rest)(symbol)
 object AssignDynField:
   def apply(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body))
+    case Scoped(syms, body, tlvl) => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body), tlvl)
     case _ => new AssignDynField(lhs, fld, arrayIdx, rhs, rest)
 object Define:
   def apply(defn: Defn, rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, Define(defn, body))
+    case Scoped(syms, body, tlvl) => Scoped(syms, Define(defn, body), tlvl)
     case _ => new Define(defn, rest)
 
 case class HandleBlock(
@@ -385,7 +385,7 @@ object HandleBlock:
     body: Block,
     rest: Block
   ) = rest match
-      case Scoped(syms, rest) =>
+      case Scoped(syms, rest, tlvl) =>
         Scoped(
           syms,
           new HandleBlock(
@@ -397,7 +397,7 @@ object HandleBlock:
             handlers,
             body,
             rest
-          ))
+          ), tlvl)
       case _ => new HandleBlock(
         lhs,
         res,

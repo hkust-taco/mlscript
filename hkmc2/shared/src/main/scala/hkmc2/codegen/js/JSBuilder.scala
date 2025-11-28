@@ -479,7 +479,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       t :: e :: returningTerm(rest, endSemi)
     
     case Begin(sub, thn) =>
-      doc"${returningTerm(sub, endSemi = true)}${returningTerm(thn, endSemi)}"
+        doc"${returningTerm(sub, endSemi = true)}${returningTerm(thn, endSemi)}"
       
     case End("") => doc""
     case End(msg) =>
@@ -509,8 +509,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
 
-    case Scoped(syms, body) =>
-      scope.nest.givenIn:
+    case Scoped(syms, body, topLevel) =>
+      val nextScope = if topLevel then scope else scope.nest
+      nextScope.givenIn:
         val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
           if scope.lookup(l).isDefined then
             // NOTE: this warning is turned off because the lifter is not
@@ -525,11 +526,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             Some(l -> scope.allocateName(l))
         // NOTE: currently this does not generate pretty JS codes...
         braced:
-          (if vars.isEmpty then doc"" else
+          val res = (if vars.isEmpty then doc"" else
             doc" # let " :: vars.map: (_, nme) =>
               nme
             .toList.mkDocument(", ")
             :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
+          if !topLevel then doc""" # { ${res} # }""" else res // TODO: pp
     
     // case _ => ???
   
@@ -597,7 +599,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     // NOTE: this is to make sure that we are NOT generating the top level
     // block in a nested scope, because for exported symbols they are looked up in the outer scope
     val unscopedMain = p.main match
-      case Scoped(syms, body) /* if exprt.isDefined */ => body
+      case Scoped(syms, body, _) /* if exprt.isDefined */ => body
       case _ => p.main
     imps.mkDocument(doc" # ") :/: block(unscopedMain, endSemi = false).stripBreaks :: (
       exprt match

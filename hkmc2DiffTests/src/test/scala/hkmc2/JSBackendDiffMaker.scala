@@ -111,21 +111,20 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       // TODO: remove mutation
       var toplvlDefinedVars = collection.Set.empty[Symbol]
-      def assignResSym(b: Block, toplvl: Boolean): Block =
+      def assignResSym(b: Block): Block =
         b.mapTail:
           case e: End =>
           Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
           case Return(res, implct) =>
             assert(implct)
             Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-          case s@Scoped(xs, body) =>
-            if toplvl then
-              toplvlDefinedVars = xs
-              assignResSym(body, false)
-            else
-              Scoped(xs, assignResSym(body, false))
+          case Scoped(xs, body, true) =>
+            toplvlDefinedVars = xs
+            assignResSym(body)
+          case Scoped(xs, body, false) =>
+            Scoped(xs, assignResSym(body), false)
           case tl: (Throw | Break | Continue) => tl
-      val le = lowered0.copy(main = assignResSym(lowered0.main, true))
+      val le = lowered0.copy(main = assignResSym(lowered0.main))
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(lowered0.showAsTree)

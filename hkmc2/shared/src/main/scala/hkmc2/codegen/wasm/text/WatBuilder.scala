@@ -600,7 +600,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       `return`(S(resWat))
 
-    case Scoped(_, body) => returningTerm(body)
+    case Scoped(_, body, _) => returningTerm(body)
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
