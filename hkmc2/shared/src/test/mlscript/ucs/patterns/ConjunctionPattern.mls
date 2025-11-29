@@ -36,9 +36,9 @@ fun foo(v) =
     A & B then 1
     else 0
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo(v) {
-//│   let tmp2;
+//│   let tmp2; /** scoped **/
 //│   split_root$2: {
 //│     split_1$2: {
 //│       if (v instanceof A) { break split_1$2 } else { break split_1$2 }

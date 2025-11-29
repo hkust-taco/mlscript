@@ -21,7 +21,7 @@ globalThis
 :re
 if false then 0
 //│ JS (unsanitized):
-//│ let scrut;
+//│ let scrut; /** scoped **/
 //│ scrut = false;
 //│ if (scrut === true) {
 //│   0
@@ -37,9 +37,9 @@ fun foo() =
   if false then 0
 foo()
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo() {
-//│   let scrut1;
+//│   let scrut1; /** scoped **/
 //│   scrut1 = false;
 //│   if (scrut1 === true) {
 //│     return 0

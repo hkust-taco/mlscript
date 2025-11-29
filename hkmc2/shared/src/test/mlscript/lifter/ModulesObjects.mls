@@ -27,7 +27,7 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let foo1;
+//│ let foo1; /** scoped **/
 //│ let M3, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
@@ -55,7 +55,7 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
+//│ foo1 = function foo(y) { let tmp; /** scoped **/ tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
 
 
@@ -110,7 +110,7 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let foo4;
+//│ let foo4; /** scoped **/
 //│ let M5, foo3$, foo$capture3;
 //│ foo3$ = function foo3$(M6, x, foo$capture4) {
 //│   return M6.foo2()
@@ -147,7 +147,7 @@ fun foo(x, y) =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo4 = function foo(x, y) {
-//│   let foo31, tmp;
+//│   let foo31, tmp; /** scoped **/
 //│   let M$1, capture;
 //│   capture = new foo$capture3(y);
 //│   M$1 = globalThis.Object.freeze(new M5(x, capture));
@@ -214,7 +214,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp5, tmp6;
+//│ let M17, tmp5, tmp6; /** scoped **/
 //│ globalThis.Object.freeze(class M16 {
 //│   static {
 //│     M17 = this
@@ -223,7 +223,7 @@ M.A().get
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let scrut;
+//│     let scrut; /** scoped **/
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };

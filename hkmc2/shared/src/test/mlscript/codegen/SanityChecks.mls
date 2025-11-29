@@ -53,7 +53,7 @@ id(f)(3)(4)
 //│         runtime.checkArgs("", 2, true, args1.length);
 //│         let y = args1[0];
 //│         let z = args1[1];
-//│         let tmp4;
+//│         let tmp4; /** scoped **/
 //│         tmp4 = x + y;
 //│         return tmp4 + z
 //│       }
@@ -113,7 +113,7 @@ id(Cls(1, 2)).f(3)
 //│     this.y = y;
 //│   }
 //│   f(z, p) {
-//│     let tmp6, tmp7;
+//│     let tmp6, tmp7; /** scoped **/
 //│     tmp6 = this.x + this.y;
 //│     tmp7 = tmp6 + z;
 //│     return tmp7 + p
@@ -149,7 +149,7 @@ id(Cls(1, 2)).f(3)
 //│       runtime.checkArgs("f", 2, true, args.length);
 //│       let z = args[0];
 //│       let p = args[1];
-//│       let tmp8, tmp9;
+//│       let tmp8, tmp9; /** scoped **/
 //│       tmp8 = this.x + this.y;
 //│       tmp9 = tmp8 + z;
 //│       return tmp9 + p
@@ -191,7 +191,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│           runtime.checkArgs("", 2, true, args1.length);
 //│           let q = args1[0];
 //│           let s = args1[1];
-//│           let tmp11, tmp12, tmp13, tmp14;
+//│           let tmp11, tmp12, tmp13, tmp14; /** scoped **/
 //│           tmp11 = this.x + this.y;
 //│           tmp12 = tmp11 + z;
 //│           tmp13 = tmp12 + p;

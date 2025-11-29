@@ -6,7 +6,7 @@
 
 let x
 //│ JS (unsanitized):
-//│ let x; x = undefined;
+//│ let x; /** scoped **/ x = undefined;
 //│ x = undefined
 
 x = 1
@@ -31,7 +31,7 @@ x
 
 let y = 1
 //│ JS (unsanitized):
-//│ let y; y = 1;
+//│ let y; /** scoped **/ y = 1;
 //│ y = 1
 
 :e
@@ -45,7 +45,7 @@ z = 1
 
 fun f() = 1
 //│ JS (unsanitized):
-//│ let f; f = function f() { return 1 };
+//│ let f; /** scoped **/ f = function f() { return 1 };
 
 f
 //│ JS (unsanitized):
@@ -56,7 +56,7 @@ f
 let f
 f(x) = x + 1
 //│ JS (unsanitized):
-//│ let f1; let f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
+//│ let f1; /** scoped **/ let f2; f2 = function f(x1) { return x1 + 1 }; f1 = f2;
 //│ f = fun f
 
 f(1)
@@ -68,7 +68,7 @@ f(1)
 let foo
 foo = 0
 //│ JS (unsanitized):
-//│ let foo; foo = 0;
+//│ let foo; /** scoped **/ foo = 0;
 //│ foo = 0
 
 :fixme
@@ -80,7 +80,7 @@ else foo = 1
 //│ ║  l.77: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let foo1, scrut;
+//│ let foo1, scrut; /** scoped **/
 //│ foo1 = undefined;
 //│ scrut = true;
 //│ if (scrut === true) {
@@ -95,7 +95,7 @@ then
 else
   foo = 1
 //│ JS (unsanitized):
-//│ let foo2, scrut1;
+//│ let foo2, scrut1; /** scoped **/
 //│ foo2 = undefined;
 //│ scrut1 = true;
 //│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
@@ -105,7 +105,7 @@ else
 fun f() =
   foo = 42
 //│ JS (unsanitized):
-//│ let f3; f3 = function f() { foo2 = 42; return runtime.Unit };
+//│ let f3; /** scoped **/ f3 = function f() { foo2 = 42; return runtime.Unit };
 
 f()
 //│ JS (unsanitized):
@@ -123,6 +123,6 @@ fun f() = foo = 0
 //│ ║  l.121: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
-//│ let f4; f4 = function f() { return foo2 };
+//│ let f4; /** scoped **/ f4 = function f() { return foo2 };
 
 

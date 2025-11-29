@@ -46,7 +46,7 @@ r.foo
 :sjs
 let r = {}
 //│ JS (unsanitized):
-//│ let r3; r3 = runtime.Unit;
+//│ let r3; /** scoped **/ r3 = runtime.Unit;
 //│ r = ()
 
 :re

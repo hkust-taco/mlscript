@@ -99,7 +99,7 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ JS (unsanitized):
-//│ let element0$, ls, a, middleElements;
+//│ let element0$, ls, a, middleElements; /** scoped **/
 //│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
 //│   element0$ = runtime.Tuple.get(xs1, 0);
 //│   middleElements = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
@@ -133,9 +133,9 @@ fun popByIndex(start, end, acc, lft) =
   if start >= end then acc
   else popByIndex(start + 1, end, [...acc, lft.at(start)], lft)
 //│ JS (unsanitized):
-//│ let popByIndex;
+//│ let popByIndex; /** scoped **/
 //│ popByIndex = function popByIndex(start, end, acc, lft) {
-//│   let scrut, tmp34, tmp35, tmp36;
+//│   let scrut, tmp34, tmp35, tmp36; /** scoped **/
 //│   scrut = start >= end;
 //│   if (scrut === true) {
 //│     return acc

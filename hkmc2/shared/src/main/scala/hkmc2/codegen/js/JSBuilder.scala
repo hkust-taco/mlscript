@@ -595,7 +595,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     val (scopedSyms, unscopedMain) = p.main match
       case Scoped(syms, body) /* if exprt.isDefined */ => (syms, body)
       case _ => (Set.empty, p.main)
-    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.iterator.map(l => l -> scope.allocateName(l)), false) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
+    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.iterator.map(l => l -> scope.allocateName(l)), true) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""
@@ -626,7 +626,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) => 
       val vars = syms.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
         l -> scope.allocateName(l))
-      genLetDecls(vars, false) :: k(body)
+      genLetDecls(vars, true) :: k(body)
     case _ => k(blk)
   
   

@@ -33,7 +33,7 @@ O.gy
 :sjs
 class Foo(x, val y, mut val z)
 //│ JS (unsanitized):
-//│ let Foo1;
+//│ let Foo1; /** scoped **/
 //│ Foo1 = function Foo(x, y, z) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z));
 //│ };

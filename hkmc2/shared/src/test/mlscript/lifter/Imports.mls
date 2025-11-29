@@ -7,7 +7,7 @@ import "../../mlscript-compile/Option.mls"
 module A with
   fun f(x) = x is Option.Some
 //│ JS (unsanitized):
-//│ let A1;
+//│ let A1; /** scoped **/
 //│ globalThis.Object.freeze(class A {
 //│   static {
 //│     A1 = this

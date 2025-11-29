@@ -45,7 +45,7 @@ fun foo() =
     set x += 1
     return () => x
 //│ JS (unsanitized):
-//│ let foo2;
+//│ let foo2; /** scoped **/
 //│ let lambda2, while$1, lambda$2, foo$capture5;
 //│ lambda$2 = function lambda$(foo$capture6) {
 //│   return foo$capture6.x$capture$0
@@ -56,7 +56,7 @@ fun foo() =
 //│   }
 //│ });
 //│ while$1 = function while$(foo$capture6) {
-//│   let scrut, tmp2;
+//│   let scrut, tmp2; /** scoped **/
 //│   let lambda$here;
 //│   scrut = true;
 //│   if (scrut === true) {
@@ -81,7 +81,7 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo2 = function foo() {
-//│   let x, tmp2, tmp3, tmp4, while1;
+//│   let x, tmp2, tmp3, tmp4, while1; /** scoped **/
 //│   let capture;
 //│   capture = new foo$capture5(null, null);
 //│   capture.x$capture$0 = 1;

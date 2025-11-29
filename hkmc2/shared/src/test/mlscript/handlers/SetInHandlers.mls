@@ -8,7 +8,7 @@ let x = 1
 set x += 1 in print(x)
 x
 //│ JS (unsanitized):
-//│ let tmp, tmp1, x, old, tmp2;
+//│ let tmp, tmp1, x, old, tmp2; /** scoped **/
 //│ x = 1;
 //│ old = x;
 //│ try {

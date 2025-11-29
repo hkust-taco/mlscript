@@ -76,7 +76,7 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let tmp6;
+//│ let tmp6; /** scoped **/
 //│ let x1, tmp7, tmp8, arr2;
 //│ tmp7 = globalThis.Object.freeze(new Term.Symbol("x"));
 //│ x1 = globalThis.Object.freeze(new Term.Ref(tmp7));

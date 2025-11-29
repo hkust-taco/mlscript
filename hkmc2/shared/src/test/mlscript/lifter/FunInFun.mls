@@ -47,10 +47,10 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let f3;
+//│ let f3; /** scoped **/
 //│ let g1, g$3;
 //│ g$3 = function g$(used1, used2, g_arg) {
-//│   let used3;
+//│   let used3; /** scoped **/
 //│   used3 = 2;
 //│   return used1 + used2
 //│ };
@@ -60,7 +60,7 @@ f(1, 2)
 //│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
-//│   let used2, unused2, foo, tmp;
+//│   let used2, unused2, foo, tmp; /** scoped **/
 //│   let g$here;
 //│   used2 = unused1;
 //│   unused2 = 2;
@@ -79,10 +79,10 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f4;
+//│ let f4; /** scoped **/
 //│ let g$4;
 //│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
-//│   let tmp, tmp1, tmp2, tmp3;
+//│   let tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│   tmp = a1 + a2;
 //│   tmp1 = tmp + a3;
 //│   tmp2 = tmp1 + a4;
@@ -90,7 +90,7 @@ f(1,2,3,4,5,6)
 //│   return tmp3 + a6
 //│ };
 //│ f4 = function f(a1, a2, a3, a4, a5, a6) {
-//│   let g2, tmp;
+//│   let g2, tmp; /** scoped **/
 //│   tmp = g$4(a1, a2, a3, a4, a5, a6);
 //│   return tmp
 //│ };
@@ -165,7 +165,7 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let f7;
+//│ let f7; /** scoped **/
 //│ let h$2, g$6, f$capture5;
 //│ g$6 = function g$(immutable, f$capture6) {
 //│   f$capture6.mutated$capture$0 = 2;
@@ -185,7 +185,7 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let g3, h2, a1, tmp7, tmp8;
+//│   let g3, h2, a1, tmp7, tmp8; /** scoped **/
 //│   let capture;
 //│   capture = new f$capture5(mutated);
 //│   a1 = g$6(immutable, capture);
@@ -256,7 +256,7 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let g6, tmp7;
+//│ let g6, tmp7; /** scoped **/
 //│ let f14, f$1, h$4, g$capture1;
 //│ h$4 = function h$(x1, k, g$capture2) {
 //│   k = 5;
@@ -264,7 +264,7 @@ g()(1)
 //│   return x1 + g$capture2.y$capture$0
 //│ };
 //│ f$1 = function f$(g$capture2, x1) {
-//│   let h3, k;
+//│   let h3, k; /** scoped **/
 //│   k = 4;
 //│   g$capture2.y$capture$0 = 2;
 //│   return x1
@@ -285,7 +285,7 @@ g()(1)
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
 //│ g6 = function g() {
-//│   let y1;
+//│   let y1; /** scoped **/
 //│   let capture, f$here;
 //│   capture = new g$capture1(null);
 //│   capture.y$capture$0 = 0;
@@ -377,7 +377,7 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ JS (unsanitized):
-//│ let f23;
+//│ let f23; /** scoped **/
 //│ let g12, g$14;
 //│ g$14 = function g$(y1) {
 //│   return y1
@@ -388,7 +388,7 @@ fun f(x) =
 //│   }
 //│ };
 //│ f23 = function f(x1) {
-//│   let y1, scrut;
+//│   let y1, scrut; /** scoped **/
 //│   let g$here;
 //│   y1 = undefined;
 //│   scrut = x1 < 0;
@@ -413,7 +413,7 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ JS (unsanitized):
-//│ let f24;
+//│ let f24; /** scoped **/
 //│ let g13, g$15, f$capture17;
 //│ g$15 = function g$(f$capture18) {
 //│   return f$capture18.x$capture$0
@@ -434,7 +434,7 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f24 = function f(x1) {
-//│   let a1, tmp10;
+//│   let a1, tmp10; /** scoped **/
 //│   let capture, g$here;
 //│   capture = new f$capture17(x1);
 //│   g$here = runtime.safeCall(g13(capture));

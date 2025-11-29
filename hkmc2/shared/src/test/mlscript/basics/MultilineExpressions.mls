@@ -80,7 +80,7 @@ if 1 + 2
 //│     kw = Keywrd of keyword 'then'
 //│     rhs = IntLit of 0
 //│ JS (unsanitized):
-//│ let scrut, tmp17;
+//│ let scrut, tmp17; /** scoped **/
 //│ tmp17 = 2 * 3;
 //│ scrut = 1 + tmp17;
 //│ if (scrut === true) {
