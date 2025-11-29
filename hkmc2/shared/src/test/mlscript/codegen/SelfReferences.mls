@@ -5,7 +5,7 @@
 module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
-//│ let Foo1; /** scoped **/
+//│ let Foo1;
 //│ globalThis.Object.freeze(class Foo {
 //│   static {
 //│     Foo1 = this
@@ -61,7 +61,7 @@ module Foo with
 object Foo with
   val self = id(Foo)
 //│ JS (unsanitized):
-//│ let Foo11, tmp; /** scoped **/
+//│ let Foo11, tmp;
 //│ globalThis.Object.freeze(class Foo10 {
 //│   static {
 //│     Foo11 = globalThis.Object.freeze(new this)

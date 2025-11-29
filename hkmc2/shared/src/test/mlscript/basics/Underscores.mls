@@ -62,9 +62,9 @@ print(_)
 let test = _.f(0, _, 2)
 //│ JS (unsanitized):
 //│ let test;
-//│ let test1; /** scoped **/
-//│ test = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
-//│ test1 = test;
+//│ let test1;
+//│ test1 = function test(_0, _1) { return runtime.safeCall(_0.f(0, _1, 2)) };
+//│ test = test1;
 //│ test = fun test
 
 :re

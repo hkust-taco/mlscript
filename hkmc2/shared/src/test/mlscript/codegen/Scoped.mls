@@ -6,7 +6,7 @@ let x =
   let y = 1 + 3 * 4
   y + 4
 //│ JS (unsanitized):
-//│ let x, y, tmp; /** scoped **/ tmp = 3 * 4; y = 1 + tmp; x = y + 4;
+//│ let x, y, tmp; tmp = 3 * 4; y = 1 + tmp; x = y + 4;
 //│ x = 17
 
 
@@ -19,9 +19,9 @@ fun f() =
     let b = 5
     b + 9
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
+//│ let f;
 //│ f = function f() {
-//│   let scrut, a, b; /** scoped **/
+//│   let scrut, a, b;
 //│   scrut = true;
 //│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
@@ -40,10 +40,10 @@ fun g(x, y, z) =
       let a = 1
       (_ + a)
 //│ JS (unsanitized):
-//│ let g; /** scoped **/
+//│ let g;
 //│ g = function g(x1, y1, z) {
+//│   let a, tmp1, tmp2;
 //│   let lambda;
-//│   let a, tmp1, tmp2; /** scoped **/
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x1 === true) {
@@ -84,9 +84,9 @@ fun f() = if x is
   A(a, b) and a > b then true
   B(c, d) then false
 //│ JS (unsanitized):
-//│ let f1; /** scoped **/
+//│ let f1;
 //│ f1 = function f() {
-//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1; /** scoped **/
+//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (x instanceof A.class) {
@@ -122,9 +122,9 @@ fun f() = if x is
 fun f() = if A(1, Nil) is
   A(1, Nil) then 3
 //│ JS (unsanitized):
-//│ let f2; /** scoped **/
+//│ let f2;
 //│ f2 = function f() {
-//│   let scrut, argument0$, argument1$, tmp1; /** scoped **/
+//│   let scrut, argument0$, argument1$, tmp1;
 //│   split_root$: {
 //│     split_default$: {
 //│       scrut = A(1, Nil);
@@ -161,12 +161,12 @@ fun f(x) =
     x()
   x
 //│ JS (unsanitized):
-//│ let f3; /** scoped **/
+//│ let f3;
 //│ f3 = function f(x1) {
-//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   let tmp1, while1, tmp2, tmp3;
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
-//│     let a, a1, argument0$, argument1$; /** scoped **/
+//│     let a, a1, argument0$, argument1$;
 //│     if (x1 instanceof A.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
@@ -201,13 +201,13 @@ fun f() =
       else
         y = a
 //│ JS (unsanitized):
-//│ let f4; /** scoped **/
+//│ let f4;
 //│ f4 = function f() {
-//│   let y1, tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   let y1, tmp1, while1, tmp2, tmp3;
 //│   y1 = x + 1;
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
-//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
+//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp4;
 //│     split_root$: {
 //│       split_1$: {
 //│         if (y1 instanceof A.class) {
@@ -249,12 +249,12 @@ fun f(x, y) =
   while x && y do
     f(0, 0) + 4
 //│ JS (unsanitized):
-//│ let f5; /** scoped **/
+//│ let f5;
 //│ f5 = function f(x1, y1) {
-//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   let tmp1, while1, tmp2, tmp3;
 //│   tmp1 = undefined;
 //│   while1 = (undefined, function () {
-//│     let scrut, lambda, tmp4; /** scoped **/
+//│     let scrut, lambda, tmp4;
 //│     lambda = (undefined, function () {
 //│       return y1
 //│     });

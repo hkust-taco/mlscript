@@ -17,11 +17,11 @@ fun buildPalindrome = case
   0 then []
   n then [n, ..buildPalindrome(n - 1), n]
 //│ JS (unsanitized):
-//│ let buildPalindrome; /** scoped **/
+//│ let buildPalindrome;
 //│ buildPalindrome = function buildPalindrome() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let n, tmp3, tmp4, tmp5; /** scoped **/
+//│     let n, tmp3, tmp4, tmp5;
 //│     if (caseScrut === 0) {
 //│       return globalThis.Object.freeze([])
 //│     } else {
@@ -48,11 +48,11 @@ fun sum2 = case
   [] then 0
   [x, ..xs, y] then x + y + sum2(xs)
 //│ JS (unsanitized):
-//│ let sum2; /** scoped **/
+//│ let sum2;
 //│ sum2 = function sum2() {
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
-//│     let x, xs, y, lastElement0$3, middleElements3, element0$, tmp5, tmp6, tmp7; /** scoped **/
+//│     let x, xs, y, lastElement0$3, middleElements3, element0$, tmp5, tmp6, tmp7;
 //│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
 //│       return 0
 //│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {

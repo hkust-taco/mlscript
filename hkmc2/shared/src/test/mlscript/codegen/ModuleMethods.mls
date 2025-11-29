@@ -41,7 +41,7 @@ module Test with
   fun foo() = print(s)
   fun bar() = foo()
 //│ JS (unsanitized):
-//│ let Test1, tmp1; /** scoped **/
+//│ let tmp1, Test1;
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this

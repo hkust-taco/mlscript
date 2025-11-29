@@ -6,10 +6,10 @@
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function () {
-//│   let tmp, while1, tmp1, tmp2; /** scoped **/
+//│   let tmp, while1, tmp1, tmp2;
 //│   tmp = undefined;
 //│   while1 = (undefined, function () {
-//│     let scrut; /** scoped **/
+//│     let scrut;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
@@ -57,20 +57,20 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let tmp6, while3, tmp7, tmp8; /** scoped **/
-//│ tmp6 = undefined;
+//│ let while3, tmp6, tmp7, tmp8;
+//│ tmp8 = undefined;
 //│ while3 = (undefined, function () {
-//│   let tmp9; /** scoped **/
+//│   let tmp9;
 //│   if (x2 === true) {
 //│     tmp9 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp6 = runtime.Unit;
+//│     tmp8 = runtime.Unit;
 //│     return while3()
-//│   } else { tmp6 = 42; }
+//│   } else { tmp8 = 42; }
 //│   return runtime.LoopEnd
 //│ });
-//│ tmp7 = while3();
-//│ tmp6
+//│ tmp6 = while3();
+//│ tmp8
 //│ > Hello World
 //│ = 42
 
@@ -112,10 +112,10 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let tmp18, while7, tmp19, tmp20; /** scoped **/
+//│   let tmp18, while7, tmp19, tmp20;
 //│   tmp18 = undefined;
 //│   while7 = (undefined, function () {
-//│     let i2, scrut, tmp21; /** scoped **/
+//│     let i2, scrut, tmp21;
 //│     i2 = 0;
 //│     scrut = i2 < 10;
 //│     if (scrut === true) {
@@ -208,12 +208,12 @@ fun f(ls) =
       print(h)
   else print("Done!")
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
+//│ let f;
 //│ f = function f(ls) {
-//│   let tmp27, while10, tmp28, tmp29; /** scoped **/
+//│   let tmp27, while10, tmp28, tmp29;
 //│   tmp27 = undefined;
 //│   while10 = (undefined, function () {
-//│     let tl, h, argument0$, argument1$; /** scoped **/
+//│     let tl, h, argument0$, argument1$;
 //│     if (ls instanceof Cons.class) {
 //│       argument0$ = ls.hd;
 //│       argument1$ = ls.tl;
@@ -267,8 +267,8 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37, tmp38, tmp39, while11; /** scoped **/
-//│ tmp37 = undefined;
+//│ let tmp37, tmp38, while11, tmp39;
+//│ tmp39 = undefined;
 //│ while11 = (undefined, function () {
 //│   split_root$: {
 //│     split_1$: {
@@ -278,12 +278,12 @@ while x is {} do()
 //│         break split_1$
 //│       }
 //│     }
-//│     tmp37 = runtime.Unit;
+//│     tmp39 = runtime.Unit;
 //│   }
 //│   return runtime.LoopEnd
 //│ });
-//│ tmp38 = while11();
-//│ tmp37
+//│ tmp37 = while11();
+//│ tmp39
 
 
 // ——— FIXME: ———

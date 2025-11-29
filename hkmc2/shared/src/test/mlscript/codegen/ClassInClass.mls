@@ -14,7 +14,7 @@ data class Outer(a, b) with
   print(i.c)
   print(i.i1(1))
 //│ JS (unsanitized):
-//│ let Outer1, tmp, tmp1, tmp2, tmp3, tmp4, tmp5; /** scoped **/
+//│ let tmp, tmp1, tmp2, tmp3, tmp4, tmp5, Outer1;
 //│ Outer1 = function Outer(a, b) {
 //│   return globalThis.Object.freeze(new Outer.class(a, b));
 //│ };
@@ -60,7 +60,7 @@ data class Outer(a, b) with
 //│     return this.Inner(c)
 //│   } 
 //│   o2(c, d) {
-//│     let tmp6; /** scoped **/
+//│     let tmp6;
 //│     tmp6 = this.Inner(c);
 //│     return tmp6.i1(d)
 //│   }

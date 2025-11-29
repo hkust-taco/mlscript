@@ -8,9 +8,9 @@
 let discard = drop _
 //│ JS (unsanitized):
 //│ let discard;
-//│ let discard1; /** scoped **/
-//│ discard = function discard(_0) { return runtime.Unit };
-//│ discard1 = discard;
+//│ let discard1;
+//│ discard1 = function discard(_0) { return runtime.Unit };
+//│ discard = discard1;
 //│ discard = fun discard
 
 
@@ -18,7 +18,7 @@ let discard = drop _
 
 discard of { a: 0, b: 11111 }
 //│ JS (unsanitized):
-//│ let a, b, tmp; /** scoped **/
+//│ let a, b, tmp;
 //│ a = 0;
 //│ b = 11111;
 //│ tmp = globalThis.Object.freeze({ a: a, b: b });
@@ -26,7 +26,7 @@ discard of { a: 0, b: 11111 }
 
 discard of { a: 0, b: 11111 }
 //│ JS (unsanitized):
-//│ let a1, b1, tmp1; /** scoped **/
+//│ let a1, b1, tmp1;
 //│ a1 = 0;
 //│ b1 = 11111;
 //│ tmp1 = globalThis.Object.freeze({ a: a1, b: b1 });
@@ -35,14 +35,14 @@ discard of { a: 0, b: 11111 }
 
 discard of { aaaa: 1 }
 //│ JS (unsanitized):
-//│ let aaaa, tmp2; /** scoped **/
+//│ let aaaa, tmp2;
 //│ aaaa = 1;
 //│ tmp2 = globalThis.Object.freeze({ aaaa: aaaa });
 //│ runtime.safeCall(discard(tmp2))
 
 discard of { aaaaaaaaa: 1, bbbb: 2 }
 //│ JS (unsanitized):
-//│ let aaaaaaaaa, bbbb, tmp3; /** scoped **/
+//│ let bbbb, tmp3, aaaaaaaaa;
 //│ aaaaaaaaa = 1;
 //│ bbbb = 2;
 //│ tmp3 = globalThis.Object.freeze({
@@ -53,7 +53,7 @@ discard of { aaaaaaaaa: 1, bbbb: 2 }
 
 discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
 //│ JS (unsanitized):
-//│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd, tmp4; /** scoped **/
+//│ let ccccccccc, dddddddddd, tmp4, aaaaaaaaa1, bbbbbbbb;
 //│ aaaaaaaaa1 = 1;
 //│ bbbbbbbb = 2;
 //│ ccccccccc = 3;
@@ -69,7 +69,7 @@ discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ]
 //│ JS (unsanitized):
-//│ let tmp5; /** scoped **/
+//│ let tmp5;
 //│ tmp5 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
 //│   "bbbbbbbbbbbbbbbb"
@@ -78,7 +78,7 @@ discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb" ]
 
 discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]
 //│ JS (unsanitized):
-//│ let tmp6; /** scoped **/
+//│ let tmp6;
 //│ tmp6 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
 //│   "bbbbbbbbbbbbbbbb",
@@ -89,7 +89,7 @@ discard of [ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddd
 
 discard of [[ "aaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbb", "ccccccccccccccccc", "dddddddddddddddddd" ]]
 //│ JS (unsanitized):
-//│ let tmp7, tmp8; /** scoped **/
+//│ let tmp7, tmp8;
 //│ tmp7 = globalThis.Object.freeze([
 //│   "aaaaaaaaaaaaaaa",
 //│   "bbbbbbbbbbbbbbbb",

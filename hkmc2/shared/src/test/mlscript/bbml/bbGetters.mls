@@ -87,28 +87,28 @@ fun test2() =
 //│ ║  l.83: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let test22; /** scoped **/
+//│ let test22;
 //│ test22 = function test2() {
-//│   let funny, tmp1; /** scoped **/
+//│   let funny, tmp1;
 //│   funny = function funny() {
 //│     let lambda;
-//│     let lambda1; /** scoped **/
-//│     lambda1 = (undefined, function (caseScrut) {
+//│     let lambda1;
+//│     lambda = (undefined, function (caseScrut) {
 //│       if (caseScrut === 0) {
 //│         return 0
 //│       } else {
 //│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
 //│     });
-//│     lambda = (undefined, function (caseScrut) {
-//│       let n, tmp2, tmp3, tmp4; /** scoped **/
+//│     lambda1 = (undefined, function (caseScrut) {
+//│       let n, tmp2, tmp3, tmp4;
 //│       n = caseScrut;
 //│       tmp2 = funny();
 //│       tmp3 = n - 1;
 //│       tmp4 = tmp2(tmp3);
 //│       return tmp4 + 1
 //│     });
-//│     return lambda
+//│     return lambda1
 //│   };
 //│   tmp1 = funny();
 //│   return tmp1

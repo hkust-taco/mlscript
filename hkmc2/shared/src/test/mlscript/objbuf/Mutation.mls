@@ -14,7 +14,7 @@ class A(x) with
     set z += 2
     x
 //│ JS (unsanitized):
-//│ let A1; /** scoped **/
+//│ let A1;
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };
@@ -42,8 +42,8 @@ class A(x) with
 //│   } 
 //│   static f(buf, idx) {
 //│     return (y) => {
+//│       let tmp, tmp1;
 //│       let idx1, idx2, idx3, idx4, idx5;
-//│       let tmp, tmp1; /** scoped **/
 //│       idx1 = idx + 0;
 //│       tmp = buf.buf.at(idx1) + 1;
 //│       idx5 = idx + 0;
@@ -61,7 +61,7 @@ class A(x) with
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   f(y) {
-//│     let tmp, tmp1; /** scoped **/
+//│     let tmp, tmp1;
 //│     tmp = this.#x + 1;
 //│     this.#x = tmp;
 //│     tmp1 = this.z + 2;

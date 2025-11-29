@@ -156,11 +156,11 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
+//│ let tmp20;
 //│ let handleBlock$11;
-//│ let tmp20; /** scoped **/
 //│ handleBlock$11 = function handleBlock$() {
+//│   let f, scrut;
 //│   let h, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
-//│   let f, scrut; /** scoped **/
 //│   globalThis.Object.freeze(class Handler$h$11 extends Effect {
 //│     static {
 //│       Handler$h$12 = this

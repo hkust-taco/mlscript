@@ -444,7 +444,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     
     case Match(scrut, Nil, els, rest) =>
       val e = els match
-      case S(el) => returningTerm(el, endSemi = true)
+      case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>
@@ -469,12 +469,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
         case Case.Field(name = n, safe = true) =>
           doc""""${n.name}" in $sd"""
-      val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
+      val h = doc" # if (${ cond(hd._1) }) ${ braced(nonNestedScoped(hd._2)(res => returningTerm(res, endSemi = false))) }"
       val t = tl.foldLeft(h)((acc, arm) =>
-        acc :: doc" else if (${ cond(arm._1) }) ${ braced(returningTerm(arm._2, endSemi = false)) }")
+        acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
       case S(el) =>
-        doc" else ${ braced(returningTerm(el, endSemi = false)) }"
+        doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
       case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
@@ -498,9 +498,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
-      
+
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
-          returningTerm(bod, endSemi = true) :: (if loop then doc" # break;" else doc"")
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
@@ -509,9 +509,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
 
-    case Scoped(syms, body, topLevel) =>
-      val nextScope = if topLevel then scope else scope.nest
-      nextScope.givenIn:
+    // Only nested scopes will be handled here.
+    case Scoped(syms, body) =>
+      scope.nest.givenIn:
         val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
           if scope.lookup(l).isDefined then
             // NOTE: this warning is turned off because the lifter is not
@@ -524,12 +524,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             None
           else
             Some(l -> scope.allocateName(l))
-        // NOTE: currently this does not generate pretty JS codes...
-        (if vars.isEmpty then doc"" else
-          doc" # let " :: vars.map: (_, nme) =>
-            nme
-          .toList.mkDocument(", ")
-          :: doc"; /** scoped **/") :: returningTerm(body, endSemi)         
+        braced:
+          genLetDecls(vars, true) :: returningTerm(body, endSemi)   
     
     // case _ => ???
   
@@ -596,10 +592,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
     // NOTE: this is to make sure that we are NOT generating the top level
     // block in a nested scope, because for exported symbols they are looked up in the outer scope
-    // val unscopedMain = p.main match
-    //   case Scoped(syms, body, _) /* if exprt.isDefined */ => body
-    //   case _ => p.main
-    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+    val (scopedSyms, unscopedMain) = p.main match
+      case Scoped(syms, body) /* if exprt.isDefined */ => (syms, body)
+      case _ => (Set.empty, p.main)
+    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.iterator.map(l => l -> scope.allocateName(l)), false) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""
@@ -611,16 +607,28 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVars.toSeq) ->
       (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+
+  def genLetDecls(vars: Iterator[(Symbol, Str)], isScoped: Bool): Document =
+    if vars.isEmpty then doc"" else
+      doc" # let " :: vars.map: (_, nme) =>
+        nme
+      .toList.mkDocument(", ")
+      :: (if isScoped then doc"; /** scoped **/" else doc";")
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
     // TODO document: mutable var assnts require the lookup
     val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
       l -> scope.allocateName(l))
-    if vars.isEmpty then doc"" else
-      doc" # let " :: vars.map: (_, nme) =>
-        nme
-      .toList.mkDocument(", ")
-      :: doc";"
+    genLetDecls(vars, false)
+
+  // Only handle non-nested Scoped nodes: we output the bindings, but do not add another brace
+  def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
+    case Scoped(syms, body) => 
+      val vars = syms.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
+        l -> scope.allocateName(l))
+      genLetDecls(vars, false) :: k(body)
+    case _ => k(blk)
+  
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
     // println(s"$t :::::::: ${t.definedVars}")
@@ -629,7 +637,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     pre :: rest
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
-    block(t, endSemi)
+    nonNestedScoped(t)(bd => block(bd, endSemi)) 
   
   def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
     doc"Object.defineProperty(${target}, ${prop.escaped}, ${

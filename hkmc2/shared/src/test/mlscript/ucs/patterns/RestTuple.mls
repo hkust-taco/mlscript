@@ -6,9 +6,9 @@ fun nonsense(xs) = if xs is
   [..ys] then ys
   [] then "empty"
 //│ JS (unsanitized):
-//│ let nonsense; /** scoped **/
+//│ let nonsense;
 //│ nonsense = function nonsense(xs) {
-//│   let ys, middleElements; /** scoped **/
+//│   let ys, middleElements;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 0) {
 //│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 0, 0));
 //│     ys = middleElements;
@@ -27,9 +27,9 @@ fun lead_and_last(xs) = if xs is
   [x, ..ys, y] then x + y
   [] then 0
 //│ JS (unsanitized):
-//│ let lead_and_last; /** scoped **/
+//│ let lead_and_last;
 //│ lead_and_last = function lead_and_last(xs) {
-//│   let x, ys, y, lastElement0$, middleElements, element0$; /** scoped **/
+//│   let x, ys, y, lastElement0$, middleElements, element0$;
 //│   if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {
 //│     element0$ = runtime.Tuple.get(xs, 0);
 //│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs, 1, 1));
@@ -61,9 +61,9 @@ fun nested_tuple_patterns(xs) = if xs is
   [x, ..[y, z], w] then x + y + z + w
   [] then 0
 //│ JS (unsanitized):
-//│ let nested_tuple_patterns; /** scoped **/
+//│ let nested_tuple_patterns;
 //│ nested_tuple_patterns = function nested_tuple_patterns(xs) {
-//│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8; /** scoped **/
+//│   let x, y, w, z, lastElement0$, middleElements, element0$, element1$, element0$1, tmp6, tmp7, tmp8;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (runtime.Tuple.isArrayLike(xs) && xs.length >= 2) {

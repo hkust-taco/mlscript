@@ -5,7 +5,7 @@ import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-let Predef1; /** scoped **/
+let Predef1;
 globalThis.Object.freeze(class Predef {
   static {
     Predef1 = this
@@ -57,12 +57,12 @@ globalThis.Object.freeze(class Predef {
     return runtime.safeCall(f(x))
   } 
   static tap(x, f) {
-    let tmp; /** scoped **/
+    let tmp;
     tmp = runtime.safeCall(f(x));
     return (tmp , x)
   } 
   static pat(f, x) {
-    let tmp; /** scoped **/
+    let tmp;
     tmp = runtime.safeCall(f(x));
     return (tmp , x)
   } 
@@ -71,14 +71,14 @@ globalThis.Object.freeze(class Predef {
   } 
   static andThen(f, g) {
     return (x) => {
-      let tmp; /** scoped **/
+      let tmp;
       tmp = runtime.safeCall(f(x));
       return runtime.safeCall(g(tmp))
     }
   } 
   static compose(f, g) {
     return (x) => {
-      let tmp; /** scoped **/
+      let tmp;
       tmp = runtime.safeCall(g(x));
       return runtime.safeCall(f(tmp))
     }
@@ -99,7 +99,7 @@ globalThis.Object.freeze(class Predef {
     }
   } 
   static print(...xs) {
-    let tmp, tmp1; /** scoped **/
+    let tmp, tmp1;
     tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
     tmp1 = runtime.safeCall(tmp(...xs));
     return runtime.safeCall(globalThis.console.log(...tmp1))
@@ -112,7 +112,7 @@ globalThis.Object.freeze(class Predef {
     }
   } 
   static notImplemented(msg) {
-    let tmp; /** scoped **/
+    let tmp;
     tmp = "Not implemented: " + msg;
     throw globalThis.Error(tmp)
   } 
@@ -124,7 +124,7 @@ globalThis.Object.freeze(class Predef {
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, scrut, i, init, tmp; /** scoped **/
+      let len, scrut, i, init, tmp;
       len = rest.length;
       scrut = len == 0;
       if (scrut === true) {
@@ -133,7 +133,7 @@ globalThis.Object.freeze(class Predef {
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
         tmp1: while (true) {
-          let scrut1, tmp2, tmp3, tmp4; /** scoped **/
+          let scrut1, tmp2, tmp3, tmp4;
           scrut1 = i > 0;
           if (scrut1 === true) {
             tmp2 = i - 1;
@@ -153,9 +153,9 @@ globalThis.Object.freeze(class Predef {
     }
   } 
   static mkStr(...xs) {
-    let lambda, tmp; /** scoped **/
+    let lambda, tmp;
     lambda = (undefined, function (acc, x) {
-      let tmp1, tmp2, tmp3; /** scoped **/
+      let tmp1, tmp2, tmp3;
       if (typeof x === 'string') {
         tmp1 = true;
       } else {

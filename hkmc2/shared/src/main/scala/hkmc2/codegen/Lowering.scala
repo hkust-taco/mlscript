@@ -971,7 +971,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
     val blk =
-      inScopedBlock(main.stats.foldLeft(main.res.definedSyms)(_ ++ _.definedSyms), true)(using LoweringCtx.empty):
+      inScopedBlock(main.stats.foldLeft(main.res.definedSyms)(_ ++ _.definedSyms))(using LoweringCtx.empty):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     val desug = LambdaRewriter.desugar(blk)
@@ -1016,18 +1016,18 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case ps => ps
     setupFunctionDef(physicalParams, bodyTerm, name)
   
-  def inScopedBlock(definedSymsInElaborated: Set[Symbol], topLevel: Bool)(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+  def inScopedBlock(definedSymsInElaborated: Set[Symbol])(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
       val scopedSyms = subst.getCollectedSym ++ definedSymsInElaborated
-      possiblyScoped(scopedSyms, body, topLevel)
+      possiblyScoped(scopedSyms, body)
   
-  inline def possiblyScoped(syms: collection.Set[Symbol], body: Block, topLevel: Bool) =
-    if syms.isEmpty then body else Scoped(syms, body, topLevel)
+  inline def possiblyScoped(syms: collection.Set[Symbol], body: Block) =
+    if syms.isEmpty then body else Scoped(syms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using LoweringCtx): (List[ParamList], Block) =
-    val scopedBody = inScopedBlock(bodyTerm.definedSyms, false)(returnedTerm(bodyTerm))
+    val scopedBody = inScopedBlock(bodyTerm.definedSyms)(returnedTerm(bodyTerm))
     (paramLists, scopedBody)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
@@ -1140,7 +1140,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block =
-    inScopedBlock(bod.definedSyms, false):
+    inScopedBlock(bod.definedSyms):
       val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
       val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
       val resSym = TempSymbol(N, dbgNme = "traceLogRes")

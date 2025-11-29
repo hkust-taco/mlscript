@@ -399,8 +399,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
       Scoped(
         LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
-        if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End()),
-        false
+        if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
       )
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)

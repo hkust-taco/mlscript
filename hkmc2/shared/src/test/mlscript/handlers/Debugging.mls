@@ -17,8 +17,8 @@ fun f() =
     print of raiseUnhandledEffect()
   j / i
 //│ JS (unsanitized):
+//│ let f;
 //│ let getLocals2;
-//│ let f; /** scoped **/
 //│ getLocals2 = function getLocals() {
 //│   let prev, thisInfo, arr, tmp;
 //│   prev = [];
@@ -28,8 +28,8 @@ fun f() =
 //│   return prev
 //│ };
 //│ f = function f() {
+//│   let i, j, k, scrut, tmp, tmp1;
 //│   let getLocals3, Cont$func$f$1, doUnwind;
-//│   let i, j, k, scrut, tmp, tmp1; /** scoped **/
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, arr, tmp2;
 //│     prev = getLocals2();

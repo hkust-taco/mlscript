@@ -19,9 +19,9 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS (unsanitized):
-//│ let test1; /** scoped **/
+//│ let test1;
 //│ test1 = function test(a) {
-//│   let Inner1, tmp; /** scoped **/
+//│   let Inner1, tmp;
 //│   Inner1 = function Inner(b) {
 //│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
@@ -41,7 +41,7 @@ fun test(a) =
 //│       ])
 //│     } 
 //│     g(d) {
-//│       let h; /** scoped **/
+//│       let h;
 //│       const this$Inner = this;
 //│       h = function h(e) {
 //│         return globalThis.Object.freeze([
@@ -78,9 +78,9 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
-//│ let test2; /** scoped **/
+//│ let test2;
 //│ test2 = function test(a) {
-//│   let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
+//│   let C11, C21, tmp, tmp1, tmp2, tmp3;
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
@@ -138,7 +138,7 @@ data class Foo(a) with
   foo()
 Foo(123)
 //│ JS (unsanitized):
-//│ let Foo1; /** scoped **/
+//│ let Foo1;
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
@@ -151,7 +151,7 @@ Foo(123)
 //│     this.foo();
 //│   }
 //│   foo() {
-//│     let bar, baz, tmp; /** scoped **/
+//│     let bar, baz, tmp;
 //│     const this$Foo = this;
 //│     bar = function bar() {
 //│       return this$Foo.a
@@ -177,7 +177,7 @@ data class Bar(x) with
   foo()()
 Bar(1)
 //│ JS (unsanitized):
-//│ let Bar1, tmp; /** scoped **/
+//│ let Bar1, tmp;
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
@@ -192,7 +192,7 @@ Bar(1)
 //│   }
 //│   foo() {
 //│     return () => {
-//│       let bar; /** scoped **/
+//│       let bar;
 //│       const this$Bar = this;
 //│       bar = function bar() {
 //│         return this$Bar.x
