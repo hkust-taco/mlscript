@@ -94,7 +94,7 @@ sealed trait ResolvableImpl:
       case t: Term.TyApp => t.copy()(S(typ))
       case t: Term.Sel => t.copy()(t.sym, S(typ), t.originalCtx)(using t.state)
       case t: Term.SynthSel => t.copy()(t.sym, S(typ))
-      case _ => lastWords(s"Cannot attach a type to leading dot selection ${this.showDbg}")
+      case _: Term.LeadingDotSel => lastWords(s"Cannot attach a type to leading dot selection: ${this.showDbg}")
     .withLocOf(this)
     .asInstanceOf
   
@@ -200,7 +200,7 @@ object Resolvable:
 
 trait LeadingDotSelImpl(using State):
   self: Term.LeadingDotSel =>
-  val resSym: FlowSymbol = FlowSymbol("lds")
+  val resSym: FlowSymbol = FlowSymbol.lds(self.nme.name)
   var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
 
 trait LeadingDotRefImpl:
@@ -276,7 +276,7 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx]
-      // var reachedType: Boolean
+      // val typ: Opt[Type]
     ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
   
   def expanded: Term = this match
@@ -1044,7 +1044,7 @@ extends Declaration, AutoLocated:
   // * it is not meant to be maintained afterwards (so it does not need to be copied around).
   var fldSym: Opt[FieldSymbol] = N
   
-  var flow: FlowSymbol = sym
+  val flow: FlowSymbol = sym
 
   // * This field is filled in during flow analysis;
   // * it is not meant to be maintained afterwards (so it does not need to be copied around).

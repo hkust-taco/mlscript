@@ -12,7 +12,7 @@
 class Foo with
   val a = 123
 module Foo with
-  fun foo(x: Foo) = x.a 
+  fun foo(x: Foo) = x.a
 //│ Flowed:
 //│   class Foo {
 //│     val a⁰ ‹flow:a⁰› = 123

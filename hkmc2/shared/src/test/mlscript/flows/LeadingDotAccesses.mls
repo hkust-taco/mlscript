@@ -6,27 +6,30 @@ class A with
   fun c = (x, y) => new A
 module A with
   fun a = new A
+fun f(x : A) = x
 
 :sf
-fun f(x : A) = x
 f(.a)
 //│ Flowed:
-//│   fun f⁰(x⁰: A⁰) ‹flow:f⁰› = x⁰,
 //│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁰›
 //│ where
-//│     x⁰  <~  type A
-//│     x⁰  ->  app⁰
 //│     app⁰  <~  type A
-//│     flow:f⁰  <~  ((type A) -> x⁰)
-//│     flow:f⁰  ~>  ((lds⁰) -> app⁰)
+//│ = A
+
+:sf
+f(.a.b)
+//│ Flowed:
+//│   f⁰(A⁰.a⁰.b⁰)‹app¹›
+//│ where
+//│     app¹  <~  type A
 //│ = A
 
 :sf
 f(.a.b.c(1,1).b.b)
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.b⁰.c⁰(1, 1)‹app¹›.b⁰.b⁰)‹app²›
+//│   f⁰(A⁰.a⁰.b⁰.c⁰(1, 1)‹app²›.b⁰.b⁰)‹app³›
 //│ where
-//│     app²  <~  type A
+//│     app³  <~  type A
 //│ = A
 
 class C
@@ -40,36 +43,36 @@ fun g(x : C) = x
 let d = .a
 f(d)
 g(d)
-//│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
-//│ ║  l.40: 	let d = .a
+//│ ╔══[ERROR] Ambiguous selection with multiple apparent targets:
+//│ ║  l.43: 	let d = .a
 //│ ║        	        ^^
 //│ ╟── companion member a
-//│ ║  l.34: 	  fun a = new C
+//│ ║  l.37: 	  fun a = new C
 //│ ║        	  ^^^^^^^^^^^^^
 //│ ╟── companion member a
 //│ ║  l.8: 	  fun a = new A
 //│ ╙──     	  ^^^^^^^^^^^^^
 //│ Flowed:
-//│   fun g⁰(x¹: C⁰) ‹flow:g⁰› = x¹,
+//│   fun g⁰(x⁰: C⁰) ‹flow:g⁰› = x⁰,
 //│   let d⁰,
 //│   d⁰ = _?_.a,
-//│   f⁰(d⁰)‹app³›,
-//│   g⁰(d⁰)‹app⁴›
+//│   f⁰(d⁰)‹app⁴›,
+//│   g⁰(d⁰)‹app⁵›
 //│ where
-//│     x¹  <~  type C
-//│     x¹  ->  app⁴
+//│     x⁰  <~  type C
+//│     x⁰  ->  app⁵
 //│     d⁰  <~  _?_.a
 //│     d⁰  ~>  type A  type C
-//│     app³  <~  type A
-//│     app⁴  <~  type C
-//│     flow:g⁰  <~  ((type C) -> x¹)
-//│     flow:g⁰  ~>  ((d⁰) -> app⁴)
+//│     app⁴  <~  type A
+//│     app⁵  <~  type C
+//│     flow:g⁰  <~  ((type C) -> x⁰)
+//│     flow:g⁰  ~>  ((d⁰) -> app⁵)
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.40: 	let d = .a
+//│ ║  l.43: 	let d = .a
 //│ ╙──      	        ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.40: 	let d = .a
+//│ ║  l.43: 	let d = .a
 //│ ╙──      	    ^
 //│ ═══[RUNTIME ERROR] ReferenceError: d is not defined
 
@@ -77,21 +80,21 @@ g(d)
 f(.a)
 g(.a)
 //│ Flowed:
-//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁵›,
-//│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁶›
+//│   f⁰(_?_.a{ ~> A⁰.a⁰ })‹app⁶›,
+//│   g⁰(_?_.a{ ~> C⁰.a¹ })‹app⁷›
 //│ where
-//│     app⁵  <~  type A
-//│     app⁶  <~  type C
+//│     app⁶  <~  type A
+//│     app⁷  <~  type C
 //│ = C
 
 :sf
 f(.a.c(1,1).b.b.c(3,3))
 //│ Flowed:
-//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁷›.b⁰.b⁰.c⁰(3, 3)‹app⁸›)‹app⁹›
+//│   f⁰(A⁰.a⁰.c⁰(1, 1)‹app⁸›.b⁰.b⁰.c⁰(3, 3)‹app⁹›)‹app¹⁰›
 //│ where
-//│     app⁹  <~  type A
-//│     app⁸  <~  A
-//│     app⁸  ->  bind⁰
+//│     app¹⁰  <~  type A
+//│     app⁹  <~  A
+//│     app⁹  ->  bind⁰
 //│ = A
 
 :sf
@@ -100,14 +103,14 @@ f(.a.c(1,1).b.b.c(3,3))
 :e
 f(.w)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.101: 	f(.w)
+//│ ║  l.104: 	f(.w)
 //│ ╙──       	  ^^
 //│ Flowed:
-//│   f⁰(_?_.w)‹app¹⁰›
+//│   f⁰(_?_.w)‹app¹¹›
 //│ where
-//│     app¹⁰  <~  type A
+//│     app¹¹  <~  type A
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.101: 	f(.w)
+//│ ║  l.104: 	f(.w)
 //│ ╙──       	  ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 
@@ -116,12 +119,12 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.117: 	.b(new A)
+//│ ║  l.120: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
-//│   _?_.b(new A⁰)‹app¹¹›
+//│   _?_.b(new A⁰)‹app¹²›
 //│ where
-//│     app¹¹  ->  bind¹
+//│     app¹²  ->  bind¹
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
-//│ ║  l.117: 	.b(new A)
+//│ ║  l.120: 	.b(new A)
 //│ ╙──       	^^

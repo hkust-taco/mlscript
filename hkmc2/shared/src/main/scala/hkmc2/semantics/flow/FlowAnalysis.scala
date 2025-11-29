@@ -17,6 +17,7 @@ import Producer as P
 import Consumer as C
 
 
+
 type FlowPoint = FlowSymbol | VarSymbol
 
 type Path = Vector[FlowPoint]
@@ -31,7 +32,6 @@ enum SelectionTarget:
   case CompanionMember(comp: Term, sym: FieldSymbol)
 
 
-// case class LeadingDotSelTarget(cs: Opt[ClassSymbol], trm: Term, sym: FieldSymbol)
 
 
 class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
@@ -267,10 +267,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
         raise:
           ErrorReport:
-            msg"Cannot resolve leading dot selection" -> sel.nme.toLoc :: Nil
+            msg"Cannot resolve leading dot selection" -> sel.toLoc :: Nil
       case targets => raise:
         ErrorReport:
-          msg"Ambiguous selection with multiple apparent targets" -> sel.toLoc
+          msg"Ambiguous selection with multiple apparent targets:" -> sel.toLoc
           :: targets.map:
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
 

@@ -155,12 +155,10 @@ object FlowSymbol:
     FlowSymbol("app")
 
   def sel(nme: Str)(using State) =
-    // FlowSymbol(s"⋅$nme")
     FlowSymbol(s"⋅$nme")
 
-  def lds(using State) =
-    // FlowSymbol(s"⋅$nme")
-    FlowSymbol("lds")
+  def lds(nme: Str)(using State) =
+    FlowSymbol(s"Ɛ⋅$nme")
   
 end FlowSymbol
 
