@@ -49,8 +49,14 @@ parse(Nil)
 parse("x" :: Nil)
 //│ > Success: Ident("x")
 
-parse("x" :: "+" :: "y" :: Nil)
+let input = "x" :: "+" :: "y" :: Nil
+//│ input = Cons("x", Cons("+", Cons("y", Nil)))
+
+parse(input)
 //│ > Success: Op(Ident("x"), "+", Ident("y"))
+
+if input is Parse as rest then rest
+//│ = Cons(Ident("x"), Cons("+", Cons("y", Nil)))
 
 parse("(" :: "x" :: ")" :: Nil)
 //│ > Success: Ident("x")
@@ -85,7 +91,7 @@ fun parse(tokens) =
   ()
   ???
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.87: 	  ???
+//│ ║  l.92: 	  ???
 //│ ╙──      	     ^
 
 :fixme // weird error
@@ -95,20 +101,20 @@ pattern Parse =
     ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
   )
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.95: 	    ((Str as name) :: rest) => Ident(name) :: rest
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	    ((Str as name) :: rest) => Ident(name) :: rest
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.96: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.101: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :fixme
 class Ident(name: Identifier)
 //│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.106: 	class Ident(name: Identifier)
+//│ ║  l.111: 	class Ident(name: Identifier)
 //│ ║         	                  ^^^^^^^^^^
 //│ ╙── Non-module parameter must have a non-module type.
 //│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.106: 	class Ident(name: Identifier)
+//│ ║  l.111: 	class Ident(name: Identifier)
 //│ ╙──       	                  ^^^^^^^^^^
 
 
