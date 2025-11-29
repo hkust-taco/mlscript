@@ -9,4 +9,41 @@
 // :todo
 
 
-
+:lot
+:sjs
+let x = [() => 2]
+//│ JS (unsanitized):
+//│ let x, lambda;
+//│ lambda = (undefined, function () { return 2 });
+//│ x = globalThis.Object.freeze([ lambda ]);
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Define:
+//│     defn = FunDefn:
+//│       owner = N
+//│       sym = member:lambda
+//│       dSym = term:lambda
+//│       params = Ls of 
+//│         ParamList:
+//│           flags = ()
+//│           params = Nil
+//│           restParam = N
+//│       body = Return:
+//│         res = Lit of IntLit of 2
+//│         implct = false
+//│     rest = Assign: \
+//│     lhs = x
+//│     rhs = Tuple:
+//│       mut = false
+//│       elems = Ls of 
+//│         Arg:
+//│           spread = N
+//│           value = Ref:
+//│             l = member:lambda
+//│             disamb = N
+//│     rest = Assign: \
+//│     lhs = $block$res
+//│     rhs = Lit of UnitLit of false
+//│     rest = End of ""
+//│ x = [fun]

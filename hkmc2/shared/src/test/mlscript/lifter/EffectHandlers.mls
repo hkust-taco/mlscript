@@ -3,11 +3,94 @@
 
 fun f() = 3
 
+:sjs
 :effectHandlers
 module A with
   data class Test with
     f()
     val a = 1
+//│ JS (unsanitized):
+//│ let A1, Cont$ctor$Test$1, doUnwind$, Cont$ctor$Test$$;
+//│ Cont$ctor$Test$$ = function Cont$ctor$Test$$(isMut, Test$instance, tmp, pc) {
+//│   let tmp1, tmp2;
+//│   if (isMut === true) {
+//│     tmp1 = new Cont$ctor$Test$1(pc);
+//│   } else {
+//│     tmp1 = globalThis.Object.freeze(new Cont$ctor$Test$1(pc));
+//│   }
+//│   tmp2 = tmp1(Test$instance, tmp);
+//│   return tmp2
+//│ };
+//│ globalThis.Object.freeze(class Cont$ctor$Test$ extends runtime.FunctionContFrame.class {
+//│   static {
+//│     Cont$ctor$Test$1 = this
+//│   }
+//│   constructor(pc) {
+//│     return (Test$instance, tmp) => {
+//│       let tmp1;
+//│       tmp1 = super(null);
+//│       this.tmp = tmp;
+//│       this.Test$instance = Test$instance;
+//│       this.pc = pc;
+//│       return this;
+//│     }
+//│   }
+//│   #tmp;
+//│   #Test$instance;
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
+//│   get Test$instance() { return this.#Test$instance; }
+//│   set Test$instance(value) { this.#Test$instance = value; }
+//│   resume(value$) {
+//│     if (this.pc === 1) {
+//│       this.tmp = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 2) {
+//│         return this.Test$instance
+//│       } else if (this.pc === 1) {
+//│         this.Test$instance.a = 1;
+//│         this.pc = 2;
+//│         continue contLoop
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cont$ctor$Test$"]; 
+//│ });
+//│ doUnwind$ = function doUnwind$(Test$instance, tmp, res, pc) {
+//│   res.contTrace.last.next = new Cont$ctor$Test$1(pc);
+//│   res.contTrace.last = res.contTrace.last.next;
+//│   return res
+//│ };
+//│ globalThis.Object.freeze(class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     globalThis.Object.freeze(class Test {
+//│       static {
+//│         A.Test = this
+//│       }
+//│       constructor() {
+//│         let tmp;
+//│         tmp = f();
+//│         if (tmp instanceof runtime.EffectSig.class) {
+//│           return doUnwind$(this, tmp, tmp, 1)
+//│         }
+//│         this.a = 1;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Test"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
 
 :effectHandlers
 class Test with

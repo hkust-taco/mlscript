@@ -11,7 +11,87 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ = 2
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:doUnwind$ -> doUnwind$1, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:Cont$func$f$ -> Cont$func$f$, class:Handler$h$ -> Handler$h$, member:Cont$func$f$ -> Cont$func$f$1, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, $tmp -> tmp, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f$ -> f$, member:doUnwind$ -> doUnwind$, member:Cont$func$f$$ -> Cont$func$f$$)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, h -> h)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp1)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:doUnwind$ -> doUnwind$1, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:Cont$func$f$ -> Cont$func$f$, class:Handler$h$ -> Handler$h$, member:Cont$func$f$ -> Cont$func$f$1, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, $tmp -> tmp, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f$ -> f$, member:doUnwind$ -> doUnwind$, member:Cont$func$f$$ -> Cont$func$f$$)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args)
+//│     curThis = N
+//│     bindings = HashMap(h -> h, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:doUnwind$ -> doUnwind$1, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:Cont$func$f$ -> Cont$func$f$, class:Handler$h$ -> Handler$h$, member:Cont$func$f$ -> Cont$func$f$1, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, $tmp -> tmp, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f$ -> f$, member:doUnwind$ -> doUnwind$, member:Cont$func$f$$ -> Cont$func$f$$)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args)
+//│     curThis = N
+//│     bindings = HashMap(h -> h, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:doUnwind$ -> doUnwind$1, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:Cont$func$f$ -> Cont$func$f$, class:Handler$h$ -> Handler$h$, member:Cont$func$f$ -> Cont$func$f$1, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, $tmp -> tmp, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f$ -> f$, member:doUnwind$ -> doUnwind$, member:Cont$func$f$$ -> Cont$func$f$$)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args)
+//│     curThis = N
+//│     bindings = HashMap(h -> h, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] ReferenceError: doUnwind is not defined
+//│     at f$ (REPL10:1:5833)
+//│     at handleBlock$ (REPL10:1:6072)
+//│     at REPL10:1:6523
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:562:24)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
 
 :expect 1
 fun f(x) =
@@ -226,7 +306,53 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(100)
-//│ = 5050
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($tmp -> tmp2, member:Test$ -> Test$1, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:g$ -> g$, $runtime -> runtime, member:h$ -> h$, $definitionMetadata -> definitionMetadata, class:Test -> Test6, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:Cont$func$sum$ -> Cont$func$sum$1, $block$res -> block$res5, $res -> res, $tmp -> tmp4, member:Test$ -> Test$3, member:‹stack safe body› -> $_stack$_safe$_body$_, $block$res -> block$res, member:g$ -> g$2, member:doUnwind$ -> doUnwind$2, member:A -> A3, member:h$ -> h$2, member:f -> f6, member:Cont$func$sum$$ -> Cont$func$sum$$, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:A -> A2, class:Handler$h$ -> Handler$h$, member:Test -> Test5, member:f -> f2, a -> a, member:Test -> Test1, member:f -> f, b -> b, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, class:Test -> Test, $tmp -> tmp, member:f$ -> f$, $block$res -> block$res8, member:doUnwind$ -> doUnwind$, $tmp -> tmp6, $tmp -> tmp7, class:Test -> Test4, member:A -> A1, member:Cont$func$f$$ -> Cont$func$f$$, member:f -> f4, member:A$ -> A$1, member:doUnwind$ -> doUnwind$1, class:A -> A, class:f$capture -> f$capture4, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, $block$res -> block$res2, $tmp -> tmp1, member:f$capture -> f$capture5, member:hdlrFun$ -> hdlrFun$, member:Test$ -> Test$, $block$res -> block$res4, $tmp -> tmp3, $block$res -> block$res6, member:Test$ -> Test$2, member:g$ -> g$1, member:A$ -> A$, $block$res -> block$res7, member:handleBlock$ -> handleBlock$, member:h$ -> h$1, class:f$capture -> f$capture, $tmp -> tmp5, member:Bad$ -> Bad$, member:f$capture -> f$capture1, member:Good$ -> Good$, member:Test -> Test3, member:sum -> sum, member:f -> f1, class:f$capture -> f$capture2, class:Cont$func$f$ -> Cont$func$f$, member:f$capture -> f$capture3, $block$res -> block$res9, member:Bad -> Bad1, member:Good -> Good1, class:Test -> Test2, member:f -> f5, member:Cont$func$f$ -> Cont$func$f$1, class:Good -> Good, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Test -> Test7, member:f -> f3, class:Bad -> Bad, class:Cont$func$sum$ -> Cont$func$sum$, $block$res -> block$res3)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, n -> n)
+//│     curThis = N
+//│     bindings = HashMap($scrut -> scrut, $curDepth -> curDepth, $stackDelayRes -> stackDelayRes, $tmp -> tmp8, $tmp -> tmp9)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:112)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($tmp -> tmp2, member:Test$ -> Test$1, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:g$ -> g$, $runtime -> runtime, member:h$ -> h$, $definitionMetadata -> definitionMetadata, class:Test -> Test6, $prettyPrint -> prettyPrint, $Term -> Term, member:hdlrFun -> hdlrFun, $Block -> Block, $Shape -> Shape, member:Cont$func$sum$ -> Cont$func$sum$1, $block$res -> block$res5, $res -> res, $tmp -> tmp4, member:Test$ -> Test$3, member:‹stack safe body› -> $_stack$_safe$_body$_, $block$res -> block$res, member:g$ -> g$2, member:doUnwind$ -> doUnwind$2, member:A -> A3, member:h$ -> h$2, member:f -> f6, member:Cont$func$sum$$ -> Cont$func$sum$$, member:Effect -> Effect1, member:Predef -> Predef, class:Effect -> Effect, class:A -> A2, class:Handler$h$ -> Handler$h$, member:Test -> Test5, member:f -> f2, a -> a, member:Test -> Test1, member:f -> f, b -> b, member:Handler$h$ -> Handler$h$1, $block$res -> block$res1, class:Test -> Test, $tmp -> tmp, member:f$ -> f$, $block$res -> block$res8, member:doUnwind$ -> doUnwind$, $tmp -> tmp6, $tmp -> tmp7, class:Test -> Test4, member:A -> A1, member:Cont$func$f$$ -> Cont$func$f$$, member:f -> f4, member:A$ -> A$1, member:doUnwind$ -> doUnwind$1, class:A -> A, class:f$capture -> f$capture4, member:Cont$handleBlock$h$$ -> Cont$handleBlock$h$$, $block$res -> block$res2, $tmp -> tmp1, member:f$capture -> f$capture5, member:hdlrFun$ -> hdlrFun$, member:Test$ -> Test$, $block$res -> block$res4, $tmp -> tmp3, $block$res -> block$res6, member:Test$ -> Test$2, member:g$ -> g$1, member:A$ -> A$, $block$res -> block$res7, member:handleBlock$ -> handleBlock$, member:h$ -> h$1, class:f$capture -> f$capture, $tmp -> tmp5, member:Bad$ -> Bad$, member:f$capture -> f$capture1, member:Good$ -> Good$, member:Test -> Test3, member:sum -> sum, member:f -> f1, class:f$capture -> f$capture2, class:Cont$func$f$ -> Cont$func$f$, member:f$capture -> f$capture3, $block$res -> block$res9, member:Bad -> Bad1, member:Good -> Good1, class:Test -> Test2, member:f -> f5, member:Cont$func$f$ -> Cont$func$f$1, class:Good -> Good, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Test -> Test7, member:f -> f3, class:Bad -> Bad, class:Cont$func$sum$ -> Cont$func$sum$, $block$res -> block$res3)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, n -> n)
+//│     curThis = N
+//│     bindings = HashMap($scrut -> scrut, $curDepth -> curDepth, $stackDelayRes -> stackDelayRes, $tmp -> tmp8, $tmp -> tmp9)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] ReferenceError: doUnwind is not defined
+//│     at sum (REPL36:1:2283)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at sum (REPL36:1:2438)
+//│     at $_stack$_safe$_body$_ (REPL36:1:2750)
 
 // instance checks
 

@@ -542,23 +542,26 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val cls = if handlerCtx.isTopLevel then N else genContClass(b, callSelf)
 
     val ret = cls match
-      case None => genNormalBody(b, BlockMemberSymbol("", Nil), N)
+      case None => genNormalBody(b, BlockMemberSymbol("", Nil).asPath, N)
       case Some(cls) => 
         // create the doUnwind function
         val doUnwindSym = BlockMemberSymbol(doUnwindNme, Nil, true)
-        doUnwindMap += fnOrCls -> doUnwindSym.asPath
         val pcSym = VarSymbol(Tree.Ident("pc"))
         val resSym = VarSymbol(Tree.Ident("res"))
         val doUnwindBlk = h.linkAndHandle(
-          LinkState(resSym, cls.sym.asPath, pcSym.asPath)
+          LinkState(resSym, Value.Ref(cls.sym, S(cls.isym)), pcSym.asPath)
         )
         val doUnwindDef = FunDefn.withFreshSymbol(
           N, doUnwindSym,
           PlainParamList(Param.simple(resSym) :: Param.simple(pcSym) :: Nil) :: Nil,
           doUnwindBlk
         )(false)
-        val doUnwindLazy = Lazy(doUnwindSym.asPath)
-        val rst = genNormalBody(b, cls.sym, S(doUnwindLazy))
+        
+        val doUnwindPath: Path = Value.Ref(doUnwindSym, S(doUnwindDef.dSym))
+        doUnwindMap += fnOrCls -> doUnwindPath
+
+        val doUnwindLazy = Lazy(doUnwindPath)
+        val rst = genNormalBody(b, Value.Ref(cls.sym, S(cls.isym)), S(doUnwindLazy))
         
         if doUnwindLazy.isEmpty && opt.stackSafety.isEmpty then
           blockBuilder
@@ -928,12 +931,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N, // TODO: bufferable?
     ))
   
-  private def genNormalBody(b: Block, clsSym: BlockMemberSymbol, doUnwind: Opt[Lazy[Path]])(using HandlerCtx): Block =
+  private def genNormalBody(b: Block, clsPath: Path, doUnwind: Opt[Lazy[Path]])(using HandlerCtx): Block =
     val transform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
         case ResultPlaceholder(res, uid, c, rest) => 
           val doUnwindBlk = doUnwind match
-            case None => Assign(res, topLevelCall(LinkState(res, clsSym.asPath, Value.Lit(Tree.IntLit(uid)))), End())
+            case None => Assign(res, topLevelCall(LinkState(res, clsPath, Value.Lit(Tree.IntLit(uid)))), End())
             case Some(doUnwind) => Return(PureCall(doUnwind.get_!, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
           blockBuilder
             .assign(res, c)

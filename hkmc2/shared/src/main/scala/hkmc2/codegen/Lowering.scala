@@ -473,7 +473,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               lamDef,
               k(Call(
                 Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
-                Arg(N, ar1) :: Arg(N, Value.Ref(lamSym, N)) :: Nil
+                Arg(N, ar1) :: Arg(N, Value.Ref(lamSym, S(lamDef.dSym))) :: Nil
               )(true, false, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
@@ -602,7 +602,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(isTailRec = false)
         Define(
           lamDef,
-          k(Value.Ref(lamSym, N)))
+          k(Value.Ref(lamSym, S(lamDef.dSym))))
     
     
     case iftrm: st.IfLike => ucs.Normalization(this)(iftrm)(k)
@@ -940,7 +940,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(isTailRec = false)
-        Define(lamDef, k(Value.Ref(lamSym, N)))
+        Define(lamDef, k(Value.Ref(lamSym, S(lamDef.dSym))))
       case r =>
         val l = new TempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))

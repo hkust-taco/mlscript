@@ -236,7 +236,10 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ = 50005000
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'fun'
+//│ = fun
 
 // function call and defn inside handler
 :effectHandlers
@@ -252,7 +255,10 @@ handle h = Eff with
 in
   fun foo(h) = h.perform
   foo(h)
-//│ = 50005000
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'fun'
+//│ = fun
 
 :re
 :effectHandlers
@@ -265,7 +271,8 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│ = fun
+//│ FAILURE: Unexpected lack of runtime error
 
 :effectHandlers
 :stackSafe

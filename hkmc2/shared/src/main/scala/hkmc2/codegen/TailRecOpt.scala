@@ -194,10 +194,10 @@ class TailRecOpt(using State, TL, Raise):
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     val dSymIds = scc.funs.map(_.dSym).zipWithIndex.toMap
-    val bms = 
+    val bms =
       if scc.funs.size == 1 then scc.funs.head.sym
       else BlockMemberSymbol(scc.funs.map(_.sym.nme).mkString("_"), Nil, true)
-    val dSym = 
+    val dSym =
       if scc.funs.size == 1 then scc.funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     val loopSym = TempSymbol(N, "loopLabel")
