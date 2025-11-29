@@ -19,7 +19,7 @@ object LambdaRewriter:
         val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, body)(false)
         val blk = blockBuilder
           .define(defn)
-          .assign(lhs, Value.Ref(newSym, S(defn.dSym)))
+          .assign(lhs, defn.asPath)
           .rest(rest)
         (blk, Nil)
       case _ =>

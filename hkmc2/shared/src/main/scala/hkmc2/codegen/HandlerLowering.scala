@@ -476,7 +476,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // all the code in the first state
   private def translateBlock(b: Block, extraLocals: Set[Local], callSelf: Opt[Result], fnOrCls: FnOrCls, h: HandlerCtx): Block =
     val getLocalsFn = createGetLocalsFn(b, extraLocals)(using h)
-    given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.sym.asPath)
+    given HandlerCtx = h.nestDebugScope(b.userDefinedVars ++ extraLocals, getLocalsFn.asPath)
     val stage1 = firstPass(b)
     val stage2 = secondPass(stage1, fnOrCls, callSelf, getLocalsFn)
     if h.isTopLevel then stage2 else thirdPass(stage2)
@@ -557,7 +557,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           doUnwindBlk
         )(false)
         
-        val doUnwindPath: Path = Value.Ref(doUnwindSym, S(doUnwindDef.dSym))
+        val doUnwindPath: Path = doUnwindDef.asPath
         doUnwindMap += fnOrCls -> doUnwindPath
 
         val doUnwindLazy = Lazy(doUnwindPath)

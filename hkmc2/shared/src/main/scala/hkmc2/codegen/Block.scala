@@ -346,6 +346,7 @@ final case class FunDefn(
     val isTailRec: Bool,
 ) extends Defn:
   val innerSym = N
+  val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
   def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(isTailRec: Bool)(using State) =
     FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(isTailRec)
