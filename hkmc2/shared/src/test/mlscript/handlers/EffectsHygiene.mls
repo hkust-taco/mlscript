@@ -14,31 +14,30 @@ fun foo(h): module M =
     A
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo(h) {{
-//│     let A2, A3, scrut; /** scoped **/
-//│     globalThis.Object.freeze(class A {
-//│       static {
-//│         A2 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
-//│     });
-//│     globalThis.Object.freeze(class A1 {
-//│       static {
-//│         A3 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
-//│     });
-//│     scrut = false;
-//│     if (scrut === true) { return A2 } else { return A3 }
-//│   }
+//│ foo = function foo(h) {
+//│   let A2, A3, scrut; /** scoped **/
+//│   globalThis.Object.freeze(class A {
+//│     static {
+//│       A2 = this
+//│     }
+//│     constructor() {
+//│       runtime.Unit;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
+//│   globalThis.Object.freeze(class A1 {
+//│     static {
+//│       A3 = this
+//│     }
+//│     constructor() {
+//│       runtime.Unit;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
+//│   scrut = false;
+//│   if (scrut === true) { return A2 } else { return A3 }
 //│ };
 
 

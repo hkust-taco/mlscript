@@ -111,7 +111,7 @@ let f = add(_, 1)
 //│ JS (unsanitized):
 //│ let f;
 //│ let f1; /** scoped **/
-//│ f = function f(_0) {{ let tmp15; /** scoped **/ tmp15 = add(); return tmp15(_0, 1) } };
+//│ f = function f(_0) { let tmp15; /** scoped **/ tmp15 = add(); return tmp15(_0, 1) };
 //│ f1 = f;
 //│ f = fun f
 

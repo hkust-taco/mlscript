@@ -37,13 +37,12 @@ fun test(x) =
 fold(||)(0, false, 42, 123)
 //│ JS (unsanitized):
 //│ let lambda5, tmp; /** scoped **/
-//│ lambda5 = (undefined, function (arg1, arg2) {{
-//│     let lambda6; /** scoped **/
-//│     lambda6 = (undefined, function () {
-//│       return arg2
-//│     });
-//│     return runtime.short_or(arg1, lambda6)
-//│   }
+//│ lambda5 = (undefined, function (arg1, arg2) {
+//│   let lambda6; /** scoped **/
+//│   lambda6 = (undefined, function () {
+//│     return arg2
+//│   });
+//│   return runtime.short_or(arg1, lambda6)
 //│ });
 //│ tmp = runtime.safeCall(Predef.fold(lambda5));
 //│ runtime.safeCall(tmp(0, false, 42, 123))

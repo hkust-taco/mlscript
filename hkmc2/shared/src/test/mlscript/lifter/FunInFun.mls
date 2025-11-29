@@ -49,11 +49,10 @@ f(1, 2)
 //│ JS (unsanitized):
 //│ let g1, g$3;
 //│ let f3; /** scoped **/
-//│ g$3 = function g$(used1, used2, g_arg) {{
-//│     let used3; /** scoped **/
-//│     used3 = 2;
-//│     return used1 + used2
-//│   }
+//│ g$3 = function g$(used1, used2, g_arg) {
+//│   let used3; /** scoped **/
+//│   used3 = 2;
+//│   return used1 + used2
 //│ };
 //│ g1 = function g(used1, used2) {
 //│   return (g_arg) => {
@@ -61,15 +60,14 @@ f(1, 2)
 //│   }
 //│ };
 //│ f3 = function f(used1, unused1) {
-//│   let g$here;{
-//│     let used2, unused2, foo, tmp; /** scoped **/
-//│     used2 = unused1;
-//│     unused2 = 2;
-//│     g$here = runtime.safeCall(g1(used1, used2));
-//│     foo = g$here;
-//│     tmp = runtime.safeCall(foo(used2));
-//│     return tmp + unused2
-//│   }
+//│   let g$here;
+//│   let used2, unused2, foo, tmp; /** scoped **/
+//│   used2 = unused1;
+//│   unused2 = 2;
+//│   g$here = runtime.safeCall(g1(used1, used2));
+//│   foo = g$here;
+//│   tmp = runtime.safeCall(foo(used2));
+//│   return tmp + unused2
 //│ };
 //│ f3(1, 2)
 //│ = 5
@@ -83,20 +81,18 @@ f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let g$4;
 //│ let f4; /** scoped **/
-//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {{
-//│     let tmp, tmp1, tmp2, tmp3; /** scoped **/
-//│     tmp = a1 + a2;
-//│     tmp1 = tmp + a3;
-//│     tmp2 = tmp1 + a4;
-//│     tmp3 = tmp2 + a5;
-//│     return tmp3 + a6
-//│   }
+//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
+//│   let tmp, tmp1, tmp2, tmp3; /** scoped **/
+//│   tmp = a1 + a2;
+//│   tmp1 = tmp + a3;
+//│   tmp2 = tmp1 + a4;
+//│   tmp3 = tmp2 + a5;
+//│   return tmp3 + a6
 //│ };
-//│ f4 = function f(a1, a2, a3, a4, a5, a6) {{
-//│     let g2, tmp; /** scoped **/
-//│     tmp = g$4(a1, a2, a3, a4, a5, a6);
-//│     return tmp
-//│   }
+//│ f4 = function f(a1, a2, a3, a4, a5, a6) {
+//│   let g2, tmp; /** scoped **/
+//│   tmp = g$4(a1, a2, a3, a4, a5, a6);
+//│   return tmp
 //│ };
 //│ f4(1, 2, 3, 4, 5, 6)
 //│ = 21
@@ -189,14 +185,13 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let capture;{
-//│     let g3, h2, a1, tmp7, tmp8; /** scoped **/
-//│     capture = new f$capture5(mutated);
-//│     a1 = g$6(immutable, capture);
-//│     tmp7 = h$2(capture);
-//│     tmp8 = a1 + tmp7;
-//│     return tmp8 + unused
-//│   }
+//│   let capture;
+//│   let g3, h2, a1, tmp7, tmp8; /** scoped **/
+//│   capture = new f$capture5(mutated);
+//│   a1 = g$6(immutable, capture);
+//│   tmp7 = h$2(capture);
+//│   tmp8 = a1 + tmp7;
+//│   return tmp8 + unused
 //│ };
 //│ f7(1, 2, 1000)
 //│ = 7
@@ -268,12 +263,11 @@ g()(1)
 //│   x1 = 4;
 //│   return x1 + g$capture2.y$capture$0
 //│ };
-//│ f$1 = function f$(g$capture2, x1) {{
-//│     let h3, k; /** scoped **/
-//│     k = 4;
-//│     g$capture2.y$capture$0 = 2;
-//│     return x1
-//│   }
+//│ f$1 = function f$(g$capture2, x1) {
+//│   let h3, k; /** scoped **/
+//│   k = 4;
+//│   g$capture2.y$capture$0 = 2;
+//│   return x1
 //│ };
 //│ f14 = function f(g$capture2) {
 //│   return (x1) => {
@@ -291,13 +285,12 @@ g()(1)
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
 //│ g6 = function g() {
-//│   let capture, f$here;{
-//│     let y1; /** scoped **/
-//│     capture = new g$capture1(null);
-//│     capture.y$capture$0 = 0;
-//│     f$here = runtime.safeCall(f14(capture));
-//│     return f$here
-//│   }
+//│   let capture, f$here;
+//│   let y1; /** scoped **/
+//│   capture = new g$capture1(null);
+//│   capture.y$capture$0 = 0;
+//│   f$here = runtime.safeCall(f14(capture));
+//│   return f$here
 //│ };
 //│ tmp7 = g6();
 //│ runtime.safeCall(tmp7(1))
@@ -395,22 +388,21 @@ fun f(x) =
 //│   }
 //│ };
 //│ f23 = function f(x1) {
-//│   let g$here;{
-//│     let y1, scrut; /** scoped **/
-//│     y1 = undefined;
-//│     scrut = x1 < 0;
-//│     if (scrut === true) {
-//│       y1 = 1;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([
-//│         g$here,
-//│         g$here
-//│       ])
-//│     } else {
-//│       y1 = 2;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([ g$here, g$here ])
-//│     }
+//│   let g$here;
+//│   let y1, scrut; /** scoped **/
+//│   y1 = undefined;
+//│   scrut = x1 < 0;
+//│   if (scrut === true) {
+//│     y1 = 1;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([
+//│       g$here,
+//│       g$here
+//│     ])
+//│   } else {
+//│     y1 = 2;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([ g$here, g$here ])
 //│   }
 //│ };
 
@@ -442,16 +434,15 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f24 = function f(x1) {
-//│   let capture, g$here;{
-//│     let a1, tmp10; /** scoped **/
-//│     capture = new f$capture17(x1);
-//│     g$here = runtime.safeCall(g13(capture));
-//│     a1 = g$here;
-//│     tmp10 = capture.x$capture$0 + 1;
-//│     capture.x$capture$0 = tmp10;
-//│     g$here = runtime.safeCall(g13(capture));
-//│     return globalThis.Object.freeze([ a1, g$here ])
-//│   }
+//│   let capture, g$here;
+//│   let a1, tmp10; /** scoped **/
+//│   capture = new f$capture17(x1);
+//│   g$here = runtime.safeCall(g13(capture));
+//│   a1 = g$here;
+//│   tmp10 = capture.x$capture$0 + 1;
+//│   capture.x$capture$0 = tmp10;
+//│   g$here = runtime.safeCall(g13(capture));
+//│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated

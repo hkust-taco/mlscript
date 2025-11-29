@@ -9,15 +9,13 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ JS (unsanitized):
-//│ {
-//│   let scrut, x, argument0$; /** scoped **/
-//│   scrut = Some(0);
-//│   if (scrut instanceof Some.class) {
-//│     argument0$ = scrut.value;
-//│     x = argument0$;
-//│     x
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ }
+//│ let scrut, x, argument0$; /** scoped **/
+//│ scrut = Some(0);
+//│ if (scrut instanceof Some.class) {
+//│   argument0$ = scrut.value;
+//│   x = argument0$;
+//│   x
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 
@@ -28,14 +26,12 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS (unsanitized):
-//│ {
-//│   let x1, argument0$1; /** scoped **/
-//│   if (s instanceof Some.class) {
-//│     argument0$1 = s.value;
-//│     x1 = argument0$1;
-//│     x1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ }
+//│ let x1, argument0$1; /** scoped **/
+//│ if (s instanceof Some.class) {
+//│   argument0$1 = s.value;
+//│   x1 = argument0$1;
+//│   x1
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = 0
 
 if s is
@@ -58,14 +54,13 @@ if s is
 x => if x is Some(x) then x
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = (undefined, function (x3) {{
-//│     let x4, argument0$4; /** scoped **/
-//│     if (x3 instanceof Some.class) {
-//│       argument0$4 = x3.value;
-//│       x4 = argument0$4;
-//│       return x4
-//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│   }
+//│ lambda = (undefined, function (x3) {
+//│   let x4, argument0$4; /** scoped **/
+//│   if (x3 instanceof Some.class) {
+//│     argument0$4 = x3.value;
+//│     x4 = argument0$4;
+//│     return x4
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
 //│ = fun
@@ -124,29 +119,28 @@ fun f(x) = if x is
   else print("oops")
 //│ JS (unsanitized):
 //│ let f4; /** scoped **/
-//│ f4 = function f(x3) {{
-//│     let x4, scrut1, argument0$4, tmp6; /** scoped **/
-//│     split_root$1: {
-//│       split_1$: {
-//│         if (x3 instanceof Some.class) {
-//│           argument0$4 = x3.value;
-//│           x4 = argument0$4;
-//│           scrut1 = x4 > 0;
-//│           if (scrut1 === true) {
-//│             tmp6 = 42;
-//│             break split_root$1
-//│           } else {
-//│             break split_1$
-//│           }
-//│         } else if (x3 instanceof None.class) {
-//│           tmp6 = "ok";
+//│ f4 = function f(x3) {
+//│   let x4, scrut1, argument0$4, tmp6; /** scoped **/
+//│   split_root$1: {
+//│     split_1$: {
+//│       if (x3 instanceof Some.class) {
+//│         argument0$4 = x3.value;
+//│         x4 = argument0$4;
+//│         scrut1 = x4 > 0;
+//│         if (scrut1 === true) {
+//│           tmp6 = 42;
 //│           break split_root$1
-//│         } else { break split_1$ }
-//│       }
-//│       tmp6 = Predef.print("oops");
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (x3 instanceof None.class) {
+//│         tmp6 = "ok";
+//│         break split_root$1
+//│       } else { break split_1$ }
 //│     }
-//│     return tmp6
+//│     tmp6 = Predef.print("oops");
 //│   }
+//│   return tmp6
 //│ };
 
 f(Some(0))
@@ -171,20 +165,19 @@ fun f(x) = if x is
   Pair(a, b) then a + b
 //│ JS (unsanitized):
 //│ let f5; /** scoped **/
-//│ f5 = function f(x3) {{
-//│     let u, a, b, argument0$4, argument1$; /** scoped **/
-//│     if (x3 instanceof Some.class) {
-//│       argument0$4 = x3.value;
-//│       u = argument0$4;
-//│       return u
-//│     } else if (x3 instanceof Pair.class) {
-//│       argument0$4 = x3.fst;
-//│       argument1$ = x3.snd;
-//│       b = argument1$;
-//│       a = argument0$4;
-//│       return a + b
-//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│   }
+//│ f5 = function f(x3) {
+//│   let u, a, b, argument0$4, argument1$; /** scoped **/
+//│   if (x3 instanceof Some.class) {
+//│     argument0$4 = x3.value;
+//│     u = argument0$4;
+//│     return u
+//│   } else if (x3 instanceof Pair.class) {
+//│     argument0$4 = x3.fst;
+//│     argument1$ = x3.snd;
+//│     b = argument1$;
+//│     a = argument0$4;
+//│     return a + b
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 
 f(Some(123))
@@ -202,27 +195,26 @@ fun f(x) = print of if x is
   else "oops"
 //│ JS (unsanitized):
 //│ let f6; /** scoped **/
-//│ f6 = function f(x3) {{
-//│     let argument0$4, tmp10; /** scoped **/
-//│     split_root$1: {
-//│       split_1$: {
-//│         if (x3 instanceof Some.class) {
-//│           argument0$4 = x3.value;
-//│           if (argument0$4 === 0) {
-//│             tmp10 = "0";
-//│             break split_root$1
-//│           } else {
-//│             break split_1$
-//│           }
-//│         } else if (x3 instanceof None.class) {
-//│           tmp10 = "ok";
+//│ f6 = function f(x3) {
+//│   let argument0$4, tmp10; /** scoped **/
+//│   split_root$1: {
+//│     split_1$: {
+//│       if (x3 instanceof Some.class) {
+//│         argument0$4 = x3.value;
+//│         if (argument0$4 === 0) {
+//│           tmp10 = "0";
 //│           break split_root$1
-//│         } else { break split_1$ }
-//│       }
-//│       tmp10 = "oops";
+//│         } else {
+//│           break split_1$
+//│         }
+//│       } else if (x3 instanceof None.class) {
+//│         tmp10 = "ok";
+//│         break split_root$1
+//│       } else { break split_1$ }
 //│     }
-//│     return Predef.print(tmp10)
+//│     tmp10 = "oops";
 //│   }
+//│   return Predef.print(tmp10)
 //│ };
 
 f(Some(0))

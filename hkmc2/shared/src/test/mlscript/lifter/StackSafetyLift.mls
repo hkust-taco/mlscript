@@ -61,20 +61,19 @@ hi(0)
 //│   return res1
 //│ };
 //│ hi = function hi(n) {
-//│   let stackDelayRes;{
-//│     let scrut, tmp; /** scoped **/
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│       return doUnwind$(n, stackDelayRes, 0)
-//│     }
-//│     scrut = n == 0;
-//│     if (scrut === true) {
-//│       return 0
-//│     } else {
-//│       tmp = n - 1;
-//│       return hi(tmp)
-//│     }
+//│   let stackDelayRes;
+//│   let scrut, tmp; /** scoped **/
+//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind$(n, stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     return hi(tmp)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
@@ -152,26 +151,25 @@ sum(10000)
 //│   return res2
 //│ };
 //│ sum1 = function sum(n) {
-//│   let curDepth, stackDelayRes;{
-//│     let scrut, tmp, tmp1; /** scoped **/
-//│     curDepth = runtime.stackDepth;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│       return doUnwind$1(n, tmp1, stackDelayRes, 0)
+//│   let curDepth, stackDelayRes;
+//│   let scrut, tmp, tmp1; /** scoped **/
+//│   curDepth = runtime.stackDepth;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     tmp1 = sum1(tmp);
+//│     runtime.stackDepth = curDepth;
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind$1(n, tmp1, tmp1, 1)
 //│     }
-//│     scrut = n == 0;
-//│     if (scrut === true) {
-//│       return 0
-//│     } else {
-//│       tmp = n - 1;
-//│       tmp1 = sum1(tmp);
-//│       runtime.stackDepth = curDepth;
-//│       if (tmp1 instanceof runtime.EffectSig.class) {
-//│         return doUnwind$1(n, tmp1, tmp1, 1)
-//│       }
-//│       return n + tmp1
-//│     }
+//│     return n + tmp1
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
@@ -279,11 +277,10 @@ foo(h)
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max; /** scoped **/
-//│ max = function max(a, b) {{
-//│     let scrut; /** scoped **/
-//│     scrut = a < b;
-//│     if (scrut === true) { return b } else { return a }
-//│   }
+//│ max = function max(a, b) {
+//│   let scrut; /** scoped **/
+//│   scrut = a < b;
+//│   if (scrut === true) { return b } else { return a }
 //│ };
 
 

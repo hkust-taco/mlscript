@@ -255,7 +255,7 @@ fun bar() = baz
 //│ baz = function baz() {
 //│   return 1
 //│ };
-//│ bar = function bar() {{ let tmp4; /** scoped **/ tmp4 = baz(); return tmp4 } };
+//│ bar = function bar() { let tmp4; /** scoped **/ tmp4 = baz(); return tmp4 };
 
 // ——— ——— ———
 

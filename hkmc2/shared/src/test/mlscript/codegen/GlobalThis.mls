@@ -21,13 +21,11 @@ globalThis
 :re
 if false then 0
 //│ JS (unsanitized):
-//│ {
-//│   let scrut; /** scoped **/
-//│   scrut = false;
-//│   if (scrut === true) {
-//│     0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ }
+//│ let scrut; /** scoped **/
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   0
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
@@ -40,13 +38,12 @@ fun foo() =
 foo()
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo() {{
-//│     let scrut1; /** scoped **/
-//│     scrut1 = false;
-//│     if (scrut1 === true) {
-//│       return 0
-//│     } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│   }
+//│ foo = function foo() {
+//│   let scrut1; /** scoped **/
+//│   scrut1 = false;
+//│   if (scrut1 === true) {
+//│     return 0
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

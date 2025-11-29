@@ -20,17 +20,16 @@ fun buildPalindrome = case
 //│ let buildPalindrome; /** scoped **/
 //│ buildPalindrome = function buildPalindrome() {
 //│   let lambda;
-//│   lambda = (undefined, function (caseScrut) {{
-//│       let n, tmp3, tmp4, tmp5; /** scoped **/
-//│       if (caseScrut === 0) {
-//│         return globalThis.Object.freeze([])
-//│       } else {
-//│         n = caseScrut;
-//│         tmp3 = buildPalindrome();
-//│         tmp4 = n - 1;
-//│         tmp5 = tmp3(tmp4);
-//│         return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n))
-//│       }
+//│   lambda = (undefined, function (caseScrut) {
+//│     let n, tmp3, tmp4, tmp5; /** scoped **/
+//│     if (caseScrut === 0) {
+//│       return globalThis.Object.freeze([])
+//│     } else {
+//│       n = caseScrut;
+//│       tmp3 = buildPalindrome();
+//│       tmp4 = n - 1;
+//│       tmp5 = tmp3(tmp4);
+//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n))
 //│     }
 //│   });
 //│   return lambda
@@ -52,24 +51,23 @@ fun sum2 = case
 //│ let sum2; /** scoped **/
 //│ sum2 = function sum2() {
 //│   let lambda;
-//│   lambda = (undefined, function (caseScrut) {{
-//│       let x, xs, y, lastElement0$3, middleElements3, element0$, tmp5, tmp6, tmp7; /** scoped **/
-//│       if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
-//│         return 0
-//│       } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
-//│         element0$ = runtime.Tuple.get(caseScrut, 0);
-//│         middleElements3 = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 1));
-//│         lastElement0$3 = runtime.Tuple.get(caseScrut, -1);
-//│         y = lastElement0$3;
-//│         xs = middleElements3;
-//│         x = element0$;
-//│         tmp5 = x + y;
-//│         tmp6 = sum2();
-//│         tmp7 = tmp6(xs);
-//│         return tmp5 + tmp7
-//│       } else {
-//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│       }
+//│   lambda = (undefined, function (caseScrut) {
+//│     let x, xs, y, lastElement0$3, middleElements3, element0$, tmp5, tmp6, tmp7; /** scoped **/
+//│     if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length === 0) {
+//│       return 0
+//│     } else if (runtime.Tuple.isArrayLike(caseScrut) && caseScrut.length >= 2) {
+//│       element0$ = runtime.Tuple.get(caseScrut, 0);
+//│       middleElements3 = runtime.safeCall(runtime.Tuple.slice(caseScrut, 1, 1));
+//│       lastElement0$3 = runtime.Tuple.get(caseScrut, -1);
+//│       y = lastElement0$3;
+//│       xs = middleElements3;
+//│       x = element0$;
+//│       tmp5 = x + y;
+//│       tmp6 = sum2();
+//│       tmp7 = tmp6(xs);
+//│       return tmp5 + tmp7
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
 //│   });
 //│   return lambda
@@ -82,13 +80,13 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[ERROR] Lazy spread parameters not allowed.
-//│ ║  l.83: 	fun f(..xs) = xs
+//│ ║  l.81: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.89: 	sum2(..arr)
+//│ ║  l.87: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

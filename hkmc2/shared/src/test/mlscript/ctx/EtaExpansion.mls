@@ -33,11 +33,10 @@ let f1 = foo
 //│ JS (unsanitized):
 //│ let f1;
 //│ let f11; /** scoped **/
-//│ f1 = function f1() {{
-//│     let tmp; /** scoped **/
-//│     tmp = foo();
-//│     return runtime.safeCall(tmp(instance$Ident$_Int$_))
-//│   }
+//│ f1 = function f1() {
+//│   let tmp; /** scoped **/
+//│   tmp = foo();
+//│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│ };
 //│ f11 = f1;
 //│ f1 = fun f1
@@ -56,11 +55,10 @@ let f2 = bar
 //│ JS (unsanitized):
 //│ let f2;
 //│ let f21; /** scoped **/
-//│ f2 = function f2(x) {{
-//│     let tmp; /** scoped **/
-//│     tmp = bar(x);
-//│     return runtime.safeCall(tmp(instance$Ident$_Int$_))
-//│   }
+//│ f2 = function f2(x) {
+//│   let tmp; /** scoped **/
+//│   tmp = bar(x);
+//│   return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│ };
 //│ f21 = f2;
 //│ f2 = fun f2
@@ -81,13 +79,12 @@ let f3 = baz
 //│ let f31; /** scoped **/
 //│ f3 = function f3(x) {
 //│   let lambda1;
-//│   lambda1 = (undefined, function (y) {{
-//│       let tmp, tmp1, tmp2; /** scoped **/
-//│       tmp = baz(x);
-//│       tmp1 = runtime.safeCall(tmp(instance$Ident$_Int$_));
-//│       tmp2 = runtime.safeCall(tmp1(y));
-//│       return runtime.safeCall(tmp2(instance$Ident$_Num$_))
-//│     }
+//│   lambda1 = (undefined, function (y) {
+//│     let tmp, tmp1, tmp2; /** scoped **/
+//│     tmp = baz(x);
+//│     tmp1 = runtime.safeCall(tmp(instance$Ident$_Int$_));
+//│     tmp2 = runtime.safeCall(tmp1(y));
+//│     return runtime.safeCall(tmp2(instance$Ident$_Num$_))
 //│   });
 //│   return lambda1
 //│ };
@@ -133,11 +130,10 @@ module Test with
 //│   } 
 //│   static main(tmp3) {
 //│     let lambda1;
-//│     lambda1 = (undefined, function (j) {{
-//│         let tmp4; /** scoped **/
-//│         tmp4 = Test.test(j);
-//│         return runtime.safeCall(tmp4(tmp3))
-//│       }
+//│     lambda1 = (undefined, function (j) {
+//│       let tmp4; /** scoped **/
+//│       tmp4 = Test.test(j);
+//│       return runtime.safeCall(tmp4(tmp3))
 //│     });
 //│     return lambda1
 //│   }

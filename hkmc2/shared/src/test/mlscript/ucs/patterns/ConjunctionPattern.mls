@@ -37,18 +37,15 @@ fun foo(v) =
     else 0
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo(v) {{
-//│     let tmp2; /** scoped **/
-//│     split_root$2: {
-//│       split_1$2: {
-//│         if (v instanceof A) {
-//│           break split_1$2
-//│         } else { break split_1$2 }
-//│       }
-//│       tmp2 = 0;
+//│ foo = function foo(v) {
+//│   let tmp2; /** scoped **/
+//│   split_root$2: {
+//│     split_1$2: {
+//│       if (v instanceof A) { break split_1$2 } else { break split_1$2 }
 //│     }
-//│     return tmp2
+//│     tmp2 = 0;
 //│   }
+//│   return tmp2
 //│ };
 
 fun range(i, j) =

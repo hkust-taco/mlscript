@@ -38,18 +38,16 @@ fun test() =
   whoops + whoops
 //│ JS (unsanitized):
 //│ let test; /** scoped **/
-//│ test = function test() {{
-//│     let whoops, tmp1, tmp2; /** scoped **/
-//│     whoops = function whoops() {{
-//│         let tmp3; /** scoped **/
-//│         tmp3 = Predef.print("ok");
-//│         return 42
-//│       }
-//│     };
-//│     tmp1 = whoops();
-//│     tmp2 = whoops();
-//│     return tmp1 + tmp2
-//│   }
+//│ test = function test() {
+//│   let whoops, tmp1, tmp2; /** scoped **/
+//│   whoops = function whoops() {
+//│     let tmp3; /** scoped **/
+//│     tmp3 = Predef.print("ok");
+//│     return 42
+//│   };
+//│   tmp1 = whoops();
+//│   tmp2 = whoops();
+//│   return tmp1 + tmp2
 //│ };
 
 test()
@@ -138,12 +136,11 @@ fun test() =
   whoops
 //│ JS (unsanitized):
 //│ let test1; /** scoped **/
-//│ test1 = function test() {{
-//│     let whoops, tmp1; /** scoped **/
-//│     whoops = function whoops() { return 42 };
-//│     tmp1 = whoops();
-//│     return tmp1
-//│   }
+//│ test1 = function test() {
+//│   let whoops, tmp1; /** scoped **/
+//│   whoops = function whoops() { return 42 };
+//│   tmp1 = whoops();
+//│   return tmp1
 //│ };
 
 
@@ -167,7 +164,7 @@ fun bar() =
   baz
 //│ JS (unsanitized):
 //│ let bar; /** scoped **/
-//│ bar = function bar() {{ let baz; /** scoped **/ baz = function baz() { return 42 }; return baz } };
+//│ bar = function bar() { let baz; /** scoped **/ baz = function baz() { return 42 }; return baz };
 
 
 :sjs
@@ -178,25 +175,23 @@ fun baz() =
 //│ JS (unsanitized):
 //│ let baz; /** scoped **/
 //│ baz = function baz() {
-//│   let lambda;{
-//│     let w, z; /** scoped **/
-//│     w = function w() {
-//│       return 1
-//│     };
-//│     z = function z() {
-//│       return 2
-//│     };
-//│     lambda = (undefined, function (x, y) {{
-//│         let tmp1, tmp2, tmp3, tmp4; /** scoped **/
-//│         tmp1 = x + y;
-//│         tmp2 = w();
-//│         tmp3 = tmp1 + tmp2;
-//│         tmp4 = z();
-//│         return tmp3 + tmp4
-//│       }
-//│     });
-//│     return lambda
-//│   }
+//│   let lambda;
+//│   let w, z; /** scoped **/
+//│   w = function w() {
+//│     return 1
+//│   };
+//│   z = function z() {
+//│     return 2
+//│   };
+//│   lambda = (undefined, function (x, y) {
+//│     let tmp1, tmp2, tmp3, tmp4; /** scoped **/
+//│     tmp1 = x + y;
+//│     tmp2 = w();
+//│     tmp3 = tmp1 + tmp2;
+//│     tmp4 = z();
+//│     return tmp3 + tmp4
+//│   });
+//│   return lambda
 //│ };
 
 
@@ -213,21 +208,19 @@ fun a() =
   c
 //│ JS (unsanitized):
 //│ let a; /** scoped **/
-//│ a = function a() {{
-//│     let b, c; /** scoped **/
-//│     b = function b() {
-//│       return 1
-//│     };
-//│     c = function c() {{
-//│         let d, tmp2, tmp3; /** scoped **/
-//│         d = function d() { return 2 };
-//│         tmp2 = b();
-//│         tmp3 = d();
-//│         return tmp2 + tmp3
-//│       }
-//│     };
-//│     return c
-//│   }
+//│ a = function a() {
+//│   let b, c; /** scoped **/
+//│   b = function b() {
+//│     return 1
+//│   };
+//│   c = function c() {
+//│     let d, tmp2, tmp3; /** scoped **/
+//│     d = function d() { return 2 };
+//│     tmp2 = b();
+//│     tmp3 = d();
+//│     return tmp2 + tmp3
+//│   };
+//│   return c
 //│ };
 
 
@@ -244,20 +237,18 @@ fun b() =
   d
 //│ JS (unsanitized):
 //│ let b; /** scoped **/
-//│ b = function b() {{
-//│     let c, d; /** scoped **/
-//│     c = function c() {
-//│       return 1
-//│     };
-//│     d = function d() {{
-//│         let c1, tmp3; /** scoped **/
-//│         c1 = function c() { return 2 };
-//│         tmp3 = c1();
-//│         return tmp3
-//│       }
-//│     };
-//│     return d
-//│   }
+//│ b = function b() {
+//│   let c, d; /** scoped **/
+//│   c = function c() {
+//│     return 1
+//│   };
+//│   d = function d() {
+//│     let c1, tmp3; /** scoped **/
+//│     c1 = function c() { return 2 };
+//│     tmp3 = c1();
+//│     return tmp3
+//│   };
+//│   return d
 //│ };
 
 
@@ -274,24 +265,22 @@ fun c() =
   d
 //│ JS (unsanitized):
 //│ let c; /** scoped **/
-//│ c = function c() {{
-//│     let d, f, tmp4; /** scoped **/
-//│     f = function f() {
+//│ c = function c() {
+//│   let d, f, tmp4; /** scoped **/
+//│   f = function f() {
+//│     return 1
+//│   };
+//│   d = function d() {
+//│     let e, tmp5, tmp6; /** scoped **/
+//│     e = function e() {
 //│       return 1
 //│     };
-//│     d = function d() {{
-//│         let e, tmp5, tmp6; /** scoped **/
-//│         e = function e() {
-//│           return 1
-//│         };
-//│         tmp5 = e();
-//│         tmp6 = f();
-//│         return tmp5 + tmp6
-//│       }
-//│     };
-//│     tmp4 = d();
-//│     return tmp4
-//│   }
+//│     tmp5 = e();
+//│     tmp6 = f();
+//│     return tmp5 + tmp6
+//│   };
+//│   tmp4 = d();
+//│   return tmp4
 //│ };
 
 

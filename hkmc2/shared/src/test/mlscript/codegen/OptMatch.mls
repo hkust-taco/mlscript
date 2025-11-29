@@ -32,16 +32,15 @@ val isDefined = case
   None    then false
 //│ JS (unsanitized):
 //│ let isDefined1, lambda; /** scoped **/
-//│ lambda = (undefined, function (caseScrut) {{
-//│     let argument0$; /** scoped **/
-//│     if (caseScrut instanceof Some.class) {
-//│       argument0$ = caseScrut.value;
-//│       return true
-//│     } else if (caseScrut instanceof None.class) {
-//│       return false
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
+//│ lambda = (undefined, function (caseScrut) {
+//│   let argument0$; /** scoped **/
+//│   if (caseScrut instanceof Some.class) {
+//│     argument0$ = caseScrut.value;
+//│     return true
+//│   } else if (caseScrut instanceof None.class) {
+//│     return false
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
 //│ isDefined1 = lambda;

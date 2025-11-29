@@ -159,67 +159,66 @@ if true do
 //│ let handleBlock$11;
 //│ let tmp20; /** scoped **/
 //│ handleBlock$11 = function handleBlock$() {
-//│   let h, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;{
-//│     let f, scrut; /** scoped **/
-//│     globalThis.Object.freeze(class Handler$h$11 extends Effect {
-//│       static {
-//│         Handler$h$12 = this
-//│       }
-//│       constructor() {
-//│         let tmp21;
-//│         tmp21 = super();
-//│       }
-//│       perform(arg) {
-//│         let hdlrFun;
-//│         hdlrFun = function hdlrFun(k) {
-//│           return arg
-//│         };
-//│         return runtime.mkEffect(this, hdlrFun)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│     });
-//│     h = new Handler$h$12();
-//│     globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$handleBlock$h$11 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp21;
-//│         tmp21 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         if (this.pc === 1) {
-//│           res = value$;
-//│         }
-//│         contLoop: while (true) {
-//│           if (this.pc === 1) {
-//│             return res
-//│           }
-//│           break;
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res1, pc) {
-//│       res1.contTrace.last.next = new Cont$handleBlock$h$11(pc);
-//│       return runtime.handleBlockImpl(res1, h)
-//│     };
-//│     f = function f() {
-//│       return 3
-//│     };
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       res = f();
-//│       if (res instanceof runtime.EffectSig.class) {
-//│         return doUnwind(res, 1)
-//│       }
-//│       return res
-//│     } else {
-//│       return runtime.Unit
+//│   let h, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
+//│   let f, scrut; /** scoped **/
+//│   globalThis.Object.freeze(class Handler$h$11 extends Effect {
+//│     static {
+//│       Handler$h$12 = this
 //│     }
+//│     constructor() {
+//│       let tmp21;
+//│       tmp21 = super();
+//│     }
+//│     perform(arg) {
+//│       let hdlrFun;
+//│       hdlrFun = function hdlrFun(k) {
+//│         return arg
+//│       };
+//│       return runtime.mkEffect(this, hdlrFun)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│   });
+//│   h = new Handler$h$12();
+//│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$handleBlock$h$11 = this
+//│     }
+//│     constructor(pc) {
+//│       let tmp21;
+//│       tmp21 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     resume(value$) {
+//│       if (this.pc === 1) {
+//│         res = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 1) {
+//│           return res
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
+//│   });
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$handleBlock$h$11(pc);
+//│     return runtime.handleBlockImpl(res1, h)
+//│   };
+//│   f = function f() {
+//│     return 3
+//│   };
+//│   scrut = true;
+//│   if (scrut === true) {
+//│     res = f();
+//│     if (res instanceof runtime.EffectSig.class) {
+//│       return doUnwind(res, 1)
+//│     }
+//│     return res
+//│   } else {
+//│     return runtime.Unit
 //│   }
 //│ };
 //│ tmp20 = handleBlock$11();

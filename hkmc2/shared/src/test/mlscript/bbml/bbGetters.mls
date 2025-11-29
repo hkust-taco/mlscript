@@ -88,33 +88,30 @@ fun test2() =
 //│ ╙──      	    ^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let test22; /** scoped **/
-//│ test22 = function test2() {{
-//│     let funny, tmp1; /** scoped **/
-//│     funny = function funny() {
-//│       let lambda;{
-//│         let lambda1; /** scoped **/
-//│         lambda1 = (undefined, function (caseScrut) {
-//│           if (caseScrut === 0) {
-//│             return 0
-//│           } else {
-//│             throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│           }
-//│         });
-//│         lambda = (undefined, function (caseScrut) {{
-//│             let n, tmp2, tmp3, tmp4; /** scoped **/
-//│             n = caseScrut;
-//│             tmp2 = funny();
-//│             tmp3 = n - 1;
-//│             tmp4 = tmp2(tmp3);
-//│             return tmp4 + 1
-//│           }
-//│         });
-//│         return lambda
+//│ test22 = function test2() {
+//│   let funny, tmp1; /** scoped **/
+//│   funny = function funny() {
+//│     let lambda;
+//│     let lambda1; /** scoped **/
+//│     lambda1 = (undefined, function (caseScrut) {
+//│       if (caseScrut === 0) {
+//│         return 0
+//│       } else {
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│       }
-//│     };
-//│     tmp1 = funny();
-//│     return tmp1
-//│   }
+//│     });
+//│     lambda = (undefined, function (caseScrut) {
+//│       let n, tmp2, tmp3, tmp4; /** scoped **/
+//│       n = caseScrut;
+//│       tmp2 = funny();
+//│       tmp3 = n - 1;
+//│       tmp4 = tmp2(tmp3);
+//│       return tmp4 + 1
+//│     });
+//│     return lambda
+//│   };
+//│   tmp1 = funny();
+//│   return tmp1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.83: 	    case 0 then 0
@@ -134,7 +131,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.135: 	  print("Hi")
+//│ ║  l.132: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 

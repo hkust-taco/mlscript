@@ -71,29 +71,28 @@ example()
 //│ JS (unsanitized):
 //│ let example2; /** scoped **/
 //│ example2 = function example() {
-//│   let get_x;{
-//│     let x2, get_x1, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11; /** scoped **/
-//│     x2 = 0;
-//│     get_x = function get_x() {
-//│       return x2
-//│     };
-//│     get_x1 = get_x;
-//│     old1 = x2;
-//│     try {
-//│       tmp5 = x2 + 1;
-//│       x2 = tmp5;
-//│       tmp6 = Predef.print(x2);
-//│       tmp7 = runtime.safeCall(get_x1());
-//│       tmp8 = Predef.print(tmp7);
-//│       tmp9 = (tmp6 , tmp8);
-//│       tmp4 = tmp9;
-//│     } finally {
-//│       x2 = old1;
-//│     }
-//│     tmp10 = Predef.print(x2);
-//│     tmp11 = runtime.safeCall(get_x1());
-//│     return Predef.print(tmp11)
+//│   let get_x;
+//│   let x2, get_x1, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11; /** scoped **/
+//│   x2 = 0;
+//│   get_x = function get_x() {
+//│     return x2
+//│   };
+//│   get_x1 = get_x;
+//│   old1 = x2;
+//│   try {
+//│     tmp5 = x2 + 1;
+//│     x2 = tmp5;
+//│     tmp6 = Predef.print(x2);
+//│     tmp7 = runtime.safeCall(get_x1());
+//│     tmp8 = Predef.print(tmp7);
+//│     tmp9 = (tmp6 , tmp8);
+//│     tmp4 = tmp9;
+//│   } finally {
+//│     x2 = old1;
 //│   }
+//│   tmp10 = Predef.print(x2);
+//│   tmp11 = runtime.safeCall(get_x1());
+//│   return Predef.print(tmp11)
 //│ };
 //│ example2()
 //│ > 1
@@ -114,29 +113,28 @@ example()
 //│ JS (unsanitized):
 //│ let example3; /** scoped **/
 //│ example3 = function example() {
-//│   let get_x;{
-//│     let x2, get_x1, y, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10; /** scoped **/
-//│     x2 = 0;
-//│     get_x = function get_x() {
-//│       return x2
-//│     };
-//│     get_x1 = get_x;
-//│     old1 = x2;
-//│     try {
-//│       tmp5 = x2 + 1;
-//│       x2 = tmp5;
-//│       tmp6 = Predef.print(x2);
-//│       tmp7 = (tmp6 , x2);
-//│       tmp4 = tmp7;
-//│     } finally {
-//│       x2 = old1;
-//│     }
-//│     y = tmp4;
-//│     tmp8 = Predef.print(x2);
-//│     tmp9 = runtime.safeCall(get_x1());
-//│     tmp10 = Predef.print(tmp9);
-//│     return y
+//│   let get_x;
+//│   let x2, get_x1, y, old1, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10; /** scoped **/
+//│   x2 = 0;
+//│   get_x = function get_x() {
+//│     return x2
+//│   };
+//│   get_x1 = get_x;
+//│   old1 = x2;
+//│   try {
+//│     tmp5 = x2 + 1;
+//│     x2 = tmp5;
+//│     tmp6 = Predef.print(x2);
+//│     tmp7 = (tmp6 , x2);
+//│     tmp4 = tmp7;
+//│   } finally {
+//│     x2 = old1;
 //│   }
+//│   y = tmp4;
+//│   tmp8 = Predef.print(x2);
+//│   tmp9 = runtime.safeCall(get_x1());
+//│   tmp10 = Predef.print(tmp9);
+//│   return y
 //│ };
 //│ example3()
 //│ > 1

@@ -59,11 +59,10 @@ data class Outer(a, b) with
 //│   o1(c) {
 //│     return this.Inner(c)
 //│   } 
-//│   o2(c, d) {{
-//│       let tmp6; /** scoped **/
-//│       tmp6 = this.Inner(c);
-//│       return tmp6.i1(d)
-//│     }
+//│   o2(c, d) {
+//│     let tmp6; /** scoped **/
+//│     tmp6 = this.Inner(c);
+//│     return tmp6.i1(d)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Outer", ["a", "b"]]; 

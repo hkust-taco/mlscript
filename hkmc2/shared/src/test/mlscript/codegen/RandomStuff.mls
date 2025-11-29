@@ -5,11 +5,10 @@
 fun foo() = if false do foo()
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo() {{
-//│     let scrut; /** scoped **/
-//│     scrut = false;
-//│     if (scrut === true) { return foo() } else { return runtime.Unit }
-//│   }
+//│ foo = function foo() {
+//│   let scrut; /** scoped **/
+//│   scrut = false;
+//│   if (scrut === true) { return foo() } else { return runtime.Unit }
 //│ };
 
 :sjs
@@ -56,11 +55,10 @@ fun foo() =
   bar()
 //│ JS (unsanitized):
 //│ let foo2; /** scoped **/
-//│ foo2 = function foo() {{
-//│     let bar; /** scoped **/
-//│     bar = function bar() { return bar() };
-//│     return bar()
-//│   }
+//│ foo2 = function foo() {
+//│   let bar; /** scoped **/
+//│   bar = function bar() { return bar() };
+//│   return bar()
 //│ };
 
 
@@ -72,7 +70,7 @@ do
 //│ JS (unsanitized):
 //│ let f, f1; /** scoped **/
 //│ f1 = 1;
-//│ f = function f() {{ let tmp; /** scoped **/ tmp = f(); return tmp } };
+//│ f = function f() { let tmp; /** scoped **/ tmp = f(); return tmp };
 //│ runtime.Unit
 //│ f = 1
 
@@ -81,10 +79,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.81: 	let foo = 1
+//│ ║  l.79: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.82: 	fun foo(x) = foo
+//│ ║  l.80: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; /** scoped **/ foo3 = function foo(x) { return foo4 }; foo4 = 1;

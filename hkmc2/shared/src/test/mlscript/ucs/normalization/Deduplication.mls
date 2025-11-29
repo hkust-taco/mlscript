@@ -10,7 +10,7 @@ let z = 0
 :sjs
 if x === 0 then 1 else 2
 //│ JS (unsanitized):
-//│ { let scrut; /** scoped **/ scrut = x === 0; if (scrut === true) { 1 } else { 2 } }
+//│ let scrut; /** scoped **/ scrut = x === 0; if (scrut === true) { 1 } else { 2 }
 //│ = 1
 
 :sjs
@@ -163,36 +163,35 @@ fun foo(x, y, z) =
     else ""
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo(x1, y1, z1) {{
-//│     let tmp5; /** scoped **/
-//│     split_root$3: {
-//│       split_1$3: {
-//│         if (x1 === 0) {
-//│           if (y1 === 0) {
-//│             if (z1 === 0) {
-//│               tmp5 = "000";
-//│               break split_root$3
-//│             } else if (z1 === 1) {
-//│               tmp5 = "001";
-//│               break split_root$3
-//│             } else {
-//│               break split_1$3
-//│             }
-//│           } else if (y1 === 1) {
-//│             tmp5 = "01";
+//│ foo = function foo(x1, y1, z1) {
+//│   let tmp5; /** scoped **/
+//│   split_root$3: {
+//│     split_1$3: {
+//│       if (x1 === 0) {
+//│         if (y1 === 0) {
+//│           if (z1 === 0) {
+//│             tmp5 = "000";
+//│             break split_root$3
+//│           } else if (z1 === 1) {
+//│             tmp5 = "001";
 //│             break split_root$3
 //│           } else {
 //│             break split_1$3
 //│           }
-//│         } else if (x1 === 1) {
-//│           tmp5 = "1";
+//│         } else if (y1 === 1) {
+//│           tmp5 = "01";
 //│           break split_root$3
-//│         } else { break split_1$3 }
-//│       }
-//│       tmp5 = "";
+//│         } else {
+//│           break split_1$3
+//│         }
+//│       } else if (x1 === 1) {
+//│         tmp5 = "1";
+//│         break split_root$3
+//│       } else { break split_1$3 }
 //│     }
-//│     return tmp5
+//│     tmp5 = "";
 //│   }
+//│   return tmp5
 //│ };
 
 foo(0, 0, 0)
@@ -272,57 +271,56 @@ fun foo(x, y, z) = if
   else "___"
 //│ JS (unsanitized):
 //│ let foo1; /** scoped **/
-//│ foo1 = function foo(x1, y1, z1) {{
-//│     let tmp6; /** scoped **/
-//│     split_root$4: {
-//│       split_1$4: {
-//│         split_2$1: {
-//│           split_3$1: {
-//│             if (x1 === 0) {
-//│               if (y1 === 0) {
-//│                 if (z1 === 0) {
-//│                   tmp6 = "000";
-//│                   break split_root$4
-//│                 } else if (z1 === 1) {
-//│                   break split_1$4
-//│                 } else {
-//│                   break split_2$1
-//│                 }
-//│               } else if (y1 === 1) {
-//│                 tmp6 = "01_";
+//│ foo1 = function foo(x1, y1, z1) {
+//│   let tmp6; /** scoped **/
+//│   split_root$4: {
+//│     split_1$4: {
+//│       split_2$1: {
+//│         split_3$1: {
+//│           if (x1 === 0) {
+//│             if (y1 === 0) {
+//│               if (z1 === 0) {
+//│                 tmp6 = "000";
 //│                 break split_root$4
-//│               } else {
-//│                 if (z1 === 1) {
-//│                   break split_1$4
-//│                 } else {
-//│                   if (y1 === 2) {
-//│                     break split_3$1
-//│                   } else {
-//│                     break split_2$1
-//│                   }
-//│                 }
-//│               }
-//│             } else if (x1 === 1) {
-//│               tmp6 = "1__";
-//│               break split_root$4
-//│             } else {
-//│               if (y1 === 2) {
-//│                 break split_3$1
+//│               } else if (z1 === 1) {
+//│                 break split_1$4
 //│               } else {
 //│                 break split_2$1
 //│               }
+//│             } else if (y1 === 1) {
+//│               tmp6 = "01_";
+//│               break split_root$4
+//│             } else {
+//│               if (z1 === 1) {
+//│                 break split_1$4
+//│               } else {
+//│                 if (y1 === 2) {
+//│                   break split_3$1
+//│                 } else {
+//│                   break split_2$1
+//│                 }
+//│               }
+//│             }
+//│           } else if (x1 === 1) {
+//│             tmp6 = "1__";
+//│             break split_root$4
+//│           } else {
+//│             if (y1 === 2) {
+//│               break split_3$1
+//│             } else {
+//│               break split_2$1
 //│             }
 //│           }
-//│           tmp6 = "_2_";
-//│           break split_root$4;
 //│         }
-//│         tmp6 = "___";
+//│         tmp6 = "_2_";
 //│         break split_root$4;
 //│       }
-//│       tmp6 = "0_1";
+//│       tmp6 = "___";
+//│       break split_root$4;
 //│     }
-//│     return tmp6
+//│     tmp6 = "0_1";
 //│   }
+//│   return tmp6
 //│ };
 
 fun expensive_call(str) = Math.pow(2, str.length)
@@ -340,39 +338,36 @@ fun foo(x, y, z) = if x is
     expensive_call(value)
 //│ JS (unsanitized):
 //│ let foo2; /** scoped **/
-//│ foo2 = function foo(x1, y1, z1) {{
-//│     let value, tmp6; /** scoped **/
-//│     split_root$4: {
-//│       split_1$4: {
-//│         if (x1 === 0) {
-//│           if (y1 === 0) {
-//│             if (z1 === 0) {
-//│               tmp6 = "000";
-//│               break split_root$4
-//│             } else if (z1 === 1) {
-//│               tmp6 = "001";
-//│               break split_root$4
-//│             } else {
-//│               break split_1$4
-//│             }
-//│           } else if (y1 === 1) {
-//│             tmp6 = "01";
+//│ foo2 = function foo(x1, y1, z1) {
+//│   let value, tmp6; /** scoped **/
+//│   split_root$4: {
+//│     split_1$4: {
+//│       if (x1 === 0) {
+//│         if (y1 === 0) {
+//│           if (z1 === 0) {
+//│             tmp6 = "000";
+//│             break split_root$4
+//│           } else if (z1 === 1) {
+//│             tmp6 = "001";
 //│             break split_root$4
 //│           } else {
 //│             break split_1$4
 //│           }
-//│         } else if (x1 === 1) {
-//│           tmp6 = "1";
+//│         } else if (y1 === 1) {
+//│           tmp6 = "01";
 //│           break split_root$4
 //│         } else {
 //│           break split_1$4
 //│         }
-//│       }
-//│       value = "hello";
-//│       tmp6 = expensive_call(value);
+//│       } else if (x1 === 1) {
+//│         tmp6 = "1";
+//│         break split_root$4
+//│       } else { break split_1$4 }
 //│     }
-//│     return tmp6
+//│     value = "hello";
+//│     tmp6 = expensive_call(value);
 //│   }
+//│   return tmp6
 //│ };
 
 object A
@@ -407,27 +402,24 @@ fun foo(x, y, z) =
   else "Goodbye"
 //│ JS (unsanitized):
 //│ let foo4; /** scoped **/
-//│ foo4 = function foo(x1, y1, z1) {{
-//│     let tmp6; /** scoped **/
-//│     split_root$4: {
-//│       split_1$4: {
-//│         if (x1 instanceof A.class) {
-//│           if (y1 instanceof B.class) {
-//│             if (z1 instanceof C.class) {
-//│               tmp6 = "Hello";
-//│               break split_root$4
-//│             } else {
-//│               break split_1$4
-//│             }
+//│ foo4 = function foo(x1, y1, z1) {
+//│   let tmp6; /** scoped **/
+//│   split_root$4: {
+//│     split_1$4: {
+//│       if (x1 instanceof A.class) {
+//│         if (y1 instanceof B.class) {
+//│           if (z1 instanceof C.class) {
+//│             tmp6 = "Hello";
+//│             break split_root$4
 //│           } else {
 //│             break split_1$4
 //│           }
 //│         } else { break split_1$4 }
-//│       }
-//│       tmp6 = "Goodbye";
+//│       } else { break split_1$4 }
 //│     }
-//│     return tmp6
+//│     tmp6 = "Goodbye";
 //│   }
+//│   return tmp6
 //│ };
 
 :sjs
@@ -436,29 +428,28 @@ fun foo(x, y, z) =
   if x is A and y is B and z is C then "Hello"
 //│ JS (unsanitized):
 //│ let foo5; /** scoped **/
-//│ foo5 = function foo(x1, y1, z1) {{
-//│     let tmp6; /** scoped **/
-//│     split_root$4: {
-//│       split_default$: {
-//│         if (x1 instanceof A.class) {
-//│           if (y1 instanceof B.class) {
-//│             if (z1 instanceof C.class) {
-//│               tmp6 = "Hello";
-//│               break split_root$4
-//│             } else {
-//│               break split_default$
-//│             }
+//│ foo5 = function foo(x1, y1, z1) {
+//│   let tmp6; /** scoped **/
+//│   split_root$4: {
+//│     split_default$: {
+//│       if (x1 instanceof A.class) {
+//│         if (y1 instanceof B.class) {
+//│           if (z1 instanceof C.class) {
+//│             tmp6 = "Hello";
+//│             break split_root$4
 //│           } else {
 //│             break split_default$
 //│           }
 //│         } else {
 //│           break split_default$
 //│         }
+//│       } else {
+//│         break split_default$
 //│       }
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│     }
-//│     return tmp6
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
+//│   return tmp6
 //│ };
 
 :expect "Hello"

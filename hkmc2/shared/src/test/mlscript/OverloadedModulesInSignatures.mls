@@ -81,8 +81,7 @@ fun f: TrmMod = 42
 :sjs
 fun f = TrmMod
 //│ JS (unsanitized):
-//│ let f5; /** scoped **/
-//│ f5 = function f() {{ let tmp4; /** scoped **/ tmp4 = TrmMod(); return tmp4 } };
+//│ let f5; /** scoped **/ f5 = function f() { let tmp4; /** scoped **/ tmp4 = TrmMod(); return tmp4 };
 
 :fixme
 :expect 42
@@ -134,10 +133,10 @@ module Foo
 :e
 fun f(x: Foo): Foo = x
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.135: 	fun f(x: Foo): Foo = x
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	         ^^^
 //│ ╔══[ERROR] Expected 1 type arguments, got none
-//│ ║  l.135: 	fun f(x: Foo): Foo = x
+//│ ║  l.134: 	fun f(x: Foo): Foo = x
 //│ ╙──       	               ^^^
 
 fun f(x: Foo[Int]): Foo[Int] = x
@@ -147,10 +146,10 @@ fun f(module x: Foo): module Foo = x
 :e
 fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.148: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                ^^^^^^^^
 //│ ╔══[ERROR] Expected no type arguments, got 1
-//│ ║  l.148: 	fun f(module x: Foo[Int]): module Foo[Int] = x
+//│ ║  l.147: 	fun f(module x: Foo[Int]): module Foo[Int] = x
 //│ ╙──       	                                  ^^^^^^^^
 
 

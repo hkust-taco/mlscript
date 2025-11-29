@@ -19,15 +19,14 @@ fun f(x) =
   x + 1
 //│ JS (unsanitized):
 //│ let f1; /** scoped **/
-//│ f1 = function f(x) {{
-//│     let scrut, tmp, tmp1; /** scoped **/
-//│     scrut = x < 0;
-//│     if (scrut === true) {
-//│       tmp = Predef.print("whoops");
-//│       return 0
-//│     } else { tmp1 = runtime.Unit; }
-//│     return x + 1
-//│   }
+//│ f1 = function f(x) {
+//│   let scrut, tmp, tmp1; /** scoped **/
+//│   scrut = x < 0;
+//│   if (scrut === true) {
+//│     tmp = Predef.print("whoops");
+//│     return 0
+//│   } else { tmp1 = runtime.Unit; }
+//│   return x + 1
 //│ };
 
 f(1)

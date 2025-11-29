@@ -8,11 +8,10 @@ case x then x
 case { x then x }
 //│ JS (unsanitized):
 //│ let lambda1;
-//│ lambda1 = (undefined, function (caseScrut) {{
-//│     let x; /** scoped **/
-//│     x = caseScrut;
-//│     return x
-//│   }
+//│ lambda1 = (undefined, function (caseScrut) {
+//│   let x; /** scoped **/
+//│   x = caseScrut;
+//│   return x
 //│ });
 //│ lambda1
 //│ = fun
@@ -60,10 +59,10 @@ case 0 then true
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.61: 	case [x] then x, [] then 0
+//│ ║  l.60: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.61: 	case [x] then x, [] then 0
+//│ ║  l.60: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
 
 :sjs

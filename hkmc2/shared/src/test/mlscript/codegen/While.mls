@@ -5,25 +5,23 @@
 () => (while true then 0)
 //│ JS (unsanitized):
 //│ let lambda;
-//│ lambda = (undefined, function () {{
-//│     let tmp, while1, tmp1, tmp2; /** scoped **/
-//│     tmp = undefined;
-//│     while1 = (undefined, function () {{
-//│         let scrut; /** scoped **/
-//│         scrut = true;
-//│         if (scrut === true) {
-//│           tmp = 0;
-//│           return while1()
-//│         } else {
-//│           throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│         }
-//│         return runtime.LoopEnd
-//│       }
-//│     });
-//│     tmp1 = while1();
-//│     tmp2 = tmp1 !== runtime.LoopEnd;
-//│     if (tmp2 === true) { return tmp1 } else { return tmp }
-//│   }
+//│ lambda = (undefined, function () {
+//│   let tmp, while1, tmp1, tmp2; /** scoped **/
+//│   tmp = undefined;
+//│   while1 = (undefined, function () {
+//│     let scrut; /** scoped **/
+//│     scrut = true;
+//│     if (scrut === true) {
+//│       tmp = 0;
+//│       return while1()
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp1 = while1();
+//│   tmp2 = tmp1 !== runtime.LoopEnd;
+//│   if (tmp2 === true) { return tmp1 } else { return tmp }
 //│ });
 //│ lambda
 //│ = fun
@@ -61,16 +59,15 @@ while x
 //│ JS (unsanitized):
 //│ let tmp6, while3, tmp7, tmp8; /** scoped **/
 //│ tmp6 = undefined;
-//│ while3 = (undefined, function () {{
-//│     let tmp9; /** scoped **/
-//│     if (x2 === true) {
-//│       tmp9 = Predef.print("Hello World");
-//│       x2 = false;
-//│       tmp6 = runtime.Unit;
-//│       return while3()
-//│     } else { tmp6 = 42; }
-//│     return runtime.LoopEnd
-//│   }
+//│ while3 = (undefined, function () {
+//│   let tmp9; /** scoped **/
+//│   if (x2 === true) {
+//│     tmp9 = Predef.print("Hello World");
+//│     x2 = false;
+//│     tmp6 = runtime.Unit;
+//│     return while3()
+//│   } else { tmp6 = 42; }
+//│   return runtime.LoopEnd
 //│ });
 //│ tmp7 = while3();
 //│ tmp6
@@ -114,28 +111,26 @@ while
   i < 10 do set i += 1
 //│ JS (unsanitized):
 //│ let lambda2;
-//│ lambda2 = (undefined, function () {{
-//│     let tmp18, while7, tmp19, tmp20; /** scoped **/
-//│     tmp18 = undefined;
-//│     while7 = (undefined, function () {{
-//│         let i2, scrut, tmp21; /** scoped **/
-//│         i2 = 0;
-//│         scrut = i2 < 10;
-//│         if (scrut === true) {
-//│           tmp21 = i2 + 1;
-//│           i2 = tmp21;
-//│           tmp18 = runtime.Unit;
-//│           return while7()
-//│         } else {
-//│           tmp18 = runtime.Unit;
-//│         }
-//│         return runtime.LoopEnd
-//│       }
-//│     });
-//│     tmp19 = while7();
-//│     tmp20 = tmp19 !== runtime.LoopEnd;
-//│     if (tmp20 === true) { return tmp19 } else { return tmp18 }
-//│   }
+//│ lambda2 = (undefined, function () {
+//│   let tmp18, while7, tmp19, tmp20; /** scoped **/
+//│   tmp18 = undefined;
+//│   while7 = (undefined, function () {
+//│     let i2, scrut, tmp21; /** scoped **/
+//│     i2 = 0;
+//│     scrut = i2 < 10;
+//│     if (scrut === true) {
+//│       tmp21 = i2 + 1;
+//│       i2 = tmp21;
+//│       tmp18 = runtime.Unit;
+//│       return while7()
+//│     } else {
+//│       tmp18 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp19 = while7();
+//│   tmp20 = tmp19 !== runtime.LoopEnd;
+//│   if (tmp20 === true) { return tmp19 } else { return tmp18 }
 //│ });
 //│ lambda2
 //│ = fun
@@ -214,29 +209,27 @@ fun f(ls) =
   else print("Done!")
 //│ JS (unsanitized):
 //│ let f; /** scoped **/
-//│ f = function f(ls) {{
-//│     let tmp27, while10, tmp28, tmp29; /** scoped **/
-//│     tmp27 = undefined;
-//│     while10 = (undefined, function () {{
-//│         let tl, h, argument0$, argument1$; /** scoped **/
-//│         if (ls instanceof Cons.class) {
-//│           argument0$ = ls.hd;
-//│           argument1$ = ls.tl;
-//│           tl = argument1$;
-//│           h = argument0$;
-//│           ls = tl;
-//│           tmp27 = Predef.print(h);
-//│           return while10()
-//│         } else {
-//│           tmp27 = Predef.print("Done!");
-//│         }
-//│         return runtime.LoopEnd
-//│       }
-//│     });
-//│     tmp28 = while10();
-//│     tmp29 = tmp28 !== runtime.LoopEnd;
-//│     if (tmp29 === true) { return tmp28 } else { return tmp27 }
-//│   }
+//│ f = function f(ls) {
+//│   let tmp27, while10, tmp28, tmp29; /** scoped **/
+//│   tmp27 = undefined;
+//│   while10 = (undefined, function () {
+//│     let tl, h, argument0$, argument1$; /** scoped **/
+//│     if (ls instanceof Cons.class) {
+//│       argument0$ = ls.hd;
+//│       argument1$ = ls.tl;
+//│       tl = argument1$;
+//│       h = argument0$;
+//│       ls = tl;
+//│       tmp27 = Predef.print(h);
+//│       return while10()
+//│     } else {
+//│       tmp27 = Predef.print("Done!");
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp28 = while10();
+//│   tmp29 = tmp28 !== runtime.LoopEnd;
+//│   if (tmp29 === true) { return tmp28 } else { return tmp27 }
 //│ };
 
 f(0)
@@ -304,10 +297,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.304: 	  then 0(0)
+//│ ║  l.297: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.303: 	while print("Hello World"); false
+//│ ║  l.296: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -317,12 +310,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.316: 	while { print("Hello World"), false }
+//│ ║  l.309: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.317: 	  then 0(0)
+//│ ║  l.310: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.318: 	  else 1
+//│ ║  l.311: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -332,14 +325,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.330: 	    print("Hello World")
+//│ ║  l.323: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.331: 	    false
+//│ ║  l.324: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.332: 	  then 0(0)
+//│ ║  l.325: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.333: 	  else 1
+//│ ║  l.326: 	  else 1
 //│ ╙──       	  ^^^^
 
 

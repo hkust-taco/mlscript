@@ -33,15 +33,14 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo = function foo() {
-//│   let capture, bar$here;{
-//│     let x, tmp; /** scoped **/
-//│     capture = new foo$capture1(null);
-//│     capture.x$capture$0 = 1;
-//│     bar$here = runtime.safeCall(bar(capture));
-//│     tmp = runtime.safeCall(xs.push(bar$here));
-//│     capture.x$capture$0 = 2;
-//│     return runtime.Unit
-//│   }
+//│   let capture, bar$here;
+//│   let x, tmp; /** scoped **/
+//│   capture = new foo$capture1(null);
+//│   capture.x$capture$0 = 1;
+//│   bar$here = runtime.safeCall(bar(capture));
+//│   tmp = runtime.safeCall(xs.push(bar$here));
+//│   capture.x$capture$0 = 2;
+//│   return runtime.Unit
 //│ };
 
 :expect 2
@@ -89,11 +88,10 @@ fun foo() =
 //│ JS (unsanitized):
 //│ let bar3;
 //│ let foo3; /** scoped **/
-//│ bar3 = function bar() {{
-//│     let x; /** scoped **/
-//│     x = undefined;
-//│     return x
-//│   }
+//│ bar3 = function bar() {
+//│   let x; /** scoped **/
+//│   x = undefined;
+//│   return x
 //│ };
 //│ foo3 = function foo() { return bar3 };
 

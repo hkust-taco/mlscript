@@ -4,14 +4,13 @@
 (x => x + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
 //│ let lambda; /** scoped **/
-//│ lambda = (undefined, function (x) {{
-//│     let tmp, tmp1, tmp2, tmp3; /** scoped **/
-//│     tmp = x + 1;
-//│     tmp1 = tmp + 1;
-//│     tmp2 = tmp1 + 1;
-//│     tmp3 = tmp2 + 1;
-//│     return tmp3 + 1
-//│   }
+//│ lambda = (undefined, function (x) {
+//│   let tmp, tmp1, tmp2, tmp3; /** scoped **/
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   return tmp3 + 1
 //│ });
 //│ lambda(1)
 //│ = 6
@@ -20,15 +19,14 @@
 (x => x + 1 + 1 + 1 + 1 + 1 + 1)(1)
 //│ JS (unsanitized):
 //│ let lambda1; /** scoped **/
-//│ lambda1 = (undefined, function (x) {{
-//│     let tmp, tmp1, tmp2, tmp3, tmp4; /** scoped **/
-//│     tmp = x + 1;
-//│     tmp1 = tmp + 1;
-//│     tmp2 = tmp1 + 1;
-//│     tmp3 = tmp2 + 1;
-//│     tmp4 = tmp3 + 1;
-//│     return tmp4 + 1
-//│   }
+//│ lambda1 = (undefined, function (x) {
+//│   let tmp, tmp1, tmp2, tmp3, tmp4; /** scoped **/
+//│   tmp = x + 1;
+//│   tmp1 = tmp + 1;
+//│   tmp2 = tmp1 + 1;
+//│   tmp3 = tmp2 + 1;
+//│   tmp4 = tmp3 + 1;
+//│   return tmp4 + 1
 //│ });
 //│ lambda1(1)
 //│ = 7

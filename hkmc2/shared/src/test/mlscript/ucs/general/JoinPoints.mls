@@ -19,31 +19,30 @@ x => if x is 0 then 1
 x => if x is [[0]] then 1
 //│ JS (unsanitized):
 //│ let lambda1;
-//│ lambda1 = (undefined, function (x) {{
-//│     let element0$, element0$1, tmp; /** scoped **/
-//│     split_root$: {
-//│       split_default$: {
-//│         if (runtime.Tuple.isArrayLike(x) && x.length === 1) {
-//│           element0$ = runtime.Tuple.get(x, 0);
-//│           if (runtime.Tuple.isArrayLike(element0$) && element0$.length === 1) {
-//│             element0$1 = runtime.Tuple.get(element0$, 0);
-//│             if (element0$1 === 0) {
-//│               tmp = 1;
-//│               break split_root$
-//│             } else {
-//│               break split_default$
-//│             }
+//│ lambda1 = (undefined, function (x) {
+//│   let element0$, element0$1, tmp; /** scoped **/
+//│   split_root$: {
+//│     split_default$: {
+//│       if (runtime.Tuple.isArrayLike(x) && x.length === 1) {
+//│         element0$ = runtime.Tuple.get(x, 0);
+//│         if (runtime.Tuple.isArrayLike(element0$) && element0$.length === 1) {
+//│           element0$1 = runtime.Tuple.get(element0$, 0);
+//│           if (element0$1 === 0) {
+//│             tmp = 1;
+//│             break split_root$
 //│           } else {
 //│             break split_default$
 //│           }
 //│         } else {
 //│           break split_default$
 //│         }
+//│       } else {
+//│         break split_default$
 //│       }
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│     }
-//│     return tmp
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
+//│   return tmp
 //│ });
 //│ lambda1
 //│ = fun
@@ -59,28 +58,25 @@ fun crazy(v) =
     _ then S(S(S(S(S(S(0))))))
 //│ JS (unsanitized):
 //│ let crazy; /** scoped **/
-//│ crazy = function crazy(v) {{
-//│     let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5; /** scoped **/
-//│     split_root$: {
-//│       split_1$: {
-//│         if (v instanceof S.class) {
-//│           argument0$ = v.value;
-//│           if (argument0$ instanceof S.class) {
-//│             argument0$1 = argument0$.value;
-//│             if (argument0$1 instanceof S.class) {
-//│               argument0$2 = argument0$1.value;
-//│               if (argument0$2 instanceof S.class) {
-//│                 argument0$3 = argument0$2.value;
-//│                 if (argument0$3 instanceof S.class) {
-//│                   argument0$4 = argument0$3.value;
-//│                   if (argument0$4 instanceof S.class) {
-//│                     argument0$5 = argument0$4.value;
-//│                     if (argument0$5 === 0) {
-//│                       tmp = "bruh!";
-//│                       break split_root$
-//│                     } else {
-//│                       break split_1$
-//│                     }
+//│ crazy = function crazy(v) {
+//│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5; /** scoped **/
+//│   split_root$: {
+//│     split_1$: {
+//│       if (v instanceof S.class) {
+//│         argument0$ = v.value;
+//│         if (argument0$ instanceof S.class) {
+//│           argument0$1 = argument0$.value;
+//│           if (argument0$1 instanceof S.class) {
+//│             argument0$2 = argument0$1.value;
+//│             if (argument0$2 instanceof S.class) {
+//│               argument0$3 = argument0$2.value;
+//│               if (argument0$3 instanceof S.class) {
+//│                 argument0$4 = argument0$3.value;
+//│                 if (argument0$4 instanceof S.class) {
+//│                   argument0$5 = argument0$4.value;
+//│                   if (argument0$5 === 0) {
+//│                     tmp = "bruh!";
+//│                     break split_root$
 //│                   } else {
 //│                     break split_1$
 //│                   }
@@ -99,16 +95,18 @@ fun crazy(v) =
 //│         } else {
 //│           break split_1$
 //│         }
+//│       } else {
+//│         break split_1$
 //│       }
-//│       tmp1 = S(0);
-//│       tmp2 = S(tmp1);
-//│       tmp3 = S(tmp2);
-//│       tmp4 = S(tmp3);
-//│       tmp5 = S(tmp4);
-//│       tmp = S(tmp5);
 //│     }
-//│     return tmp
+//│     tmp1 = S(0);
+//│     tmp2 = S(tmp1);
+//│     tmp3 = S(tmp2);
+//│     tmp4 = S(tmp3);
+//│     tmp5 = S(tmp4);
+//│     tmp = S(tmp5);
 //│   }
+//│   return tmp
 //│ };
 
 

@@ -27,14 +27,13 @@ f(false)
 let f = x => print((if x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
 //│ let f1, lambda1; /** scoped **/
-//│ lambda1 = (undefined, function (x) {{
-//│     let tmp, tmp1; /** scoped **/
-//│     if (x === true) {
-//│       tmp = "ok";
-//│     } else { tmp = "ko"; }
-//│     tmp1 = tmp + "!";
-//│     return Predef.print(tmp1)
-//│   }
+//│ lambda1 = (undefined, function (x) {
+//│   let tmp, tmp1; /** scoped **/
+//│   if (x === true) {
+//│     tmp = "ok";
+//│   } else { tmp = "ko"; }
+//│   tmp1 = tmp + "!";
+//│   return Predef.print(tmp1)
 //│ });
 //│ f1 = lambda1;
 //│ f = fun
@@ -43,14 +42,13 @@ let f = x => print((if x then "ok" else "ko") + "!")
 let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ JS (unsanitized):
 //│ let f2, lambda2; /** scoped **/
-//│ lambda2 = (undefined, function (x) {{
-//│     let tmp, tmp1; /** scoped **/
-//│     if (x === true) {
-//│       tmp = "ok";
-//│     } else { tmp = "ko"; }
-//│     tmp1 = tmp + "!";
-//│     return Predef.print(tmp1)
-//│   }
+//│ lambda2 = (undefined, function (x) {
+//│   let tmp, tmp1; /** scoped **/
+//│   if (x === true) {
+//│     tmp = "ok";
+//│   } else { tmp = "ko"; }
+//│   tmp1 = tmp + "!";
+//│   return Predef.print(tmp1)
 //│ });
 //│ f2 = lambda2;
 //│ f = fun

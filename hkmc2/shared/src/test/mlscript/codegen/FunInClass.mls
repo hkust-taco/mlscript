@@ -20,45 +20,43 @@ fun test(a) =
   Inner(42)
 //│ JS (unsanitized):
 //│ let test1; /** scoped **/
-//│ test1 = function test(a) {{
-//│     let Inner1, tmp; /** scoped **/
-//│     Inner1 = function Inner(b) {
-//│       return globalThis.Object.freeze(new Inner.class(b));
-//│     };
-//│     globalThis.Object.freeze(class Inner {
-//│       static {
-//│         Inner1.class = this
-//│       }
-//│       constructor(b) {
-//│         this.b = b;
-//│         tmp = Predef.print(a);
-//│       }
-//│       f(c) {
+//│ test1 = function test(a) {
+//│   let Inner1, tmp; /** scoped **/
+//│   Inner1 = function Inner(b) {
+//│     return globalThis.Object.freeze(new Inner.class(b));
+//│   };
+//│   globalThis.Object.freeze(class Inner {
+//│     static {
+//│       Inner1.class = this
+//│     }
+//│     constructor(b) {
+//│       this.b = b;
+//│       tmp = Predef.print(a);
+//│     }
+//│     f(c) {
+//│       return globalThis.Object.freeze([
+//│         a,
+//│         this.b,
+//│         c
+//│       ])
+//│     } 
+//│     g(d) {
+//│       let h; /** scoped **/
+//│       const this$Inner = this;
+//│       h = function h(e) {
 //│         return globalThis.Object.freeze([
 //│           a,
-//│           this.b,
-//│           c
+//│           this$Inner.b,
+//│           d,
+//│           e
 //│         ])
-//│       } 
-//│       g(d) {{
-//│           let h; /** scoped **/
-//│           const this$Inner = this;
-//│           h = function h(e) {
-//│             return globalThis.Object.freeze([
-//│               a,
-//│               this$Inner.b,
-//│               d,
-//│               e
-//│             ])
-//│           };
-//│           return h(d)
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Inner", ["b"]]; 
-//│     });
-//│     return Inner1(42)
-//│   }
+//│       };
+//│       return h(d)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Inner", ["b"]]; 
+//│   });
+//│   return Inner1(42)
 //│ };
 
 let i = test(100)
@@ -81,48 +79,47 @@ fun test(a) =
   [C1(1), C2(2)]
 //│ JS (unsanitized):
 //│ let test2; /** scoped **/
-//│ test2 = function test(a) {{
-//│     let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
-//│     C11 = function C1(b) {
-//│       return globalThis.Object.freeze(new C1.class(b));
-//│     };
-//│     globalThis.Object.freeze(class C1 {
-//│       static {
-//│         C11.class = this
-//│       }
-//│       constructor(b) {
-//│         this.b = b;
-//│         tmp = globalThis.Object.freeze([
-//│           a,
-//│           this.b
-//│         ]);
-//│         Predef.print(tmp);
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C1", ["b"]]; 
-//│     });
-//│     C21 = function C2(b) {
-//│       return globalThis.Object.freeze(new C2.class(b));
-//│     };
-//│     globalThis.Object.freeze(class C2 {
-//│       static {
-//│         C21.class = this
-//│       }
-//│       constructor(b) {
-//│         this.b = b;
-//│         tmp1 = globalThis.Object.freeze([
-//│           a,
-//│           this.b
-//│         ]);
-//│         Predef.print(tmp1);
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "C2", ["b"]]; 
-//│     });
-//│     tmp2 = C11(1);
-//│     tmp3 = C21(2);
-//│     return globalThis.Object.freeze([ tmp2, tmp3 ])
-//│   }
+//│ test2 = function test(a) {
+//│   let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
+//│   C11 = function C1(b) {
+//│     return globalThis.Object.freeze(new C1.class(b));
+//│   };
+//│   globalThis.Object.freeze(class C1 {
+//│     static {
+//│       C11.class = this
+//│     }
+//│     constructor(b) {
+//│       this.b = b;
+//│       tmp = globalThis.Object.freeze([
+//│         a,
+//│         this.b
+//│       ]);
+//│       Predef.print(tmp);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
+//│   });
+//│   C21 = function C2(b) {
+//│     return globalThis.Object.freeze(new C2.class(b));
+//│   };
+//│   globalThis.Object.freeze(class C2 {
+//│     static {
+//│       C21.class = this
+//│     }
+//│     constructor(b) {
+//│       this.b = b;
+//│       tmp1 = globalThis.Object.freeze([
+//│         a,
+//│         this.b
+//│       ]);
+//│       Predef.print(tmp1);
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "C2", ["b"]]; 
+//│   });
+//│   tmp2 = C11(1);
+//│   tmp3 = C21(2);
+//│   return globalThis.Object.freeze([ tmp2, tmp3 ])
 //│ };
 
 test(123)
@@ -153,18 +150,17 @@ Foo(123)
 //│     this.a = a;
 //│     this.foo();
 //│   }
-//│   foo() {{
-//│       let bar, baz, tmp; /** scoped **/
-//│       const this$Foo = this;
-//│       bar = function bar() {
-//│         return this$Foo.a
-//│       };
-//│       baz = function baz() {
-//│         return this$Foo.a
-//│       };
-//│       tmp = bar();
-//│       return baz()
-//│     }
+//│   foo() {
+//│     let bar, baz, tmp; /** scoped **/
+//│     const this$Foo = this;
+//│     bar = function bar() {
+//│       return this$Foo.a
+//│     };
+//│     baz = function baz() {
+//│       return this$Foo.a
+//│     };
+//│     tmp = bar();
+//│     return baz()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["a"]]; 
@@ -195,14 +191,13 @@ Bar(1)
 //│     runtime.safeCall(tmp());
 //│   }
 //│   foo() {
-//│     return () => {{
-//│         let bar; /** scoped **/
-//│         const this$Bar = this;
-//│         bar = function bar() {
-//│           return this$Bar.x
-//│         };
-//│         return bar()
-//│       }
+//│     return () => {
+//│       let bar; /** scoped **/
+//│       const this$Bar = this;
+//│       bar = function bar() {
+//│         return this$Bar.x
+//│       };
+//│       return bar()
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }

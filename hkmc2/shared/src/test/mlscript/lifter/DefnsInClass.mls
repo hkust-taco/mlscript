@@ -54,11 +54,10 @@ data class A(x) with
 //│   constructor(x) {
 //│     this.x = x;
 //│   }
-//│   getA() {{
-//│       let tmp; /** scoped **/
-//│       tmp = B$(false, this, 2);
-//│       return tmp.getB()
-//│     }
+//│   getA() {
+//│     let tmp; /** scoped **/
+//│     tmp = B$(false, this, 2);
+//│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A", ["x"]]; 

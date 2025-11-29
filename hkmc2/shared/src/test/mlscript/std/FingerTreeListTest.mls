@@ -99,19 +99,17 @@ let xs = FingerTreeList.mk(1, 2, 3)
 if xs is
   [a, ...ls] then [a, ls]
 //│ JS (unsanitized):
-//│ {
-//│   let ls, a, middleElements, element0$; /** scoped **/
-//│   if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
-//│     element0$ = runtime.Tuple.get(xs1, 0);
-//│     middleElements = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
-//│     ls = middleElements;
-//│     a = element0$;
-//│     globalThis.Object.freeze([
-//│       a,
-//│       ls
-//│     ])
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ }
+//│ let ls, a, middleElements, element0$; /** scoped **/
+//│ if (runtime.Tuple.isArrayLike(xs1) && xs1.length >= 1) {
+//│   element0$ = runtime.Tuple.get(xs1, 0);
+//│   middleElements = runtime.safeCall(runtime.Tuple.slice(xs1, 1, 0));
+//│   ls = middleElements;
+//│   a = element0$;
+//│   globalThis.Object.freeze([
+//│     a,
+//│     ls
+//│   ])
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ = [1, [2, 3]]
 
 fun addUntilN(xs, n) =
@@ -136,20 +134,19 @@ fun popByIndex(start, end, acc, lft) =
   else popByIndex(start + 1, end, [...acc, lft.at(start)], lft)
 //│ JS (unsanitized):
 //│ let popByIndex; /** scoped **/
-//│ popByIndex = function popByIndex(start, end, acc, lft) {{
-//│     let scrut, tmp34, tmp35, tmp36; /** scoped **/
-//│     scrut = start >= end;
-//│     if (scrut === true) {
-//│       return acc
-//│     } else {
-//│       tmp34 = start + 1;
-//│       tmp35 = runtime.safeCall(lft.at(start));
-//│       tmp36 = globalThis.Object.freeze([
-//│         ...acc,
-//│         tmp35
-//│       ]);
-//│       return popByIndex(tmp34, end, tmp36, lft)
-//│     }
+//│ popByIndex = function popByIndex(start, end, acc, lft) {
+//│   let scrut, tmp34, tmp35, tmp36; /** scoped **/
+//│   scrut = start >= end;
+//│   if (scrut === true) {
+//│     return acc
+//│   } else {
+//│     tmp34 = start + 1;
+//│     tmp35 = runtime.safeCall(lft.at(start));
+//│     tmp36 = globalThis.Object.freeze([
+//│       ...acc,
+//│       tmp35
+//│     ]);
+//│     return popByIndex(tmp34, end, tmp36, lft)
 //│   }
 //│ };
 

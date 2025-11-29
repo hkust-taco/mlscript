@@ -23,40 +23,39 @@ hi(0)
 //│ let res, $_stack$_safe$_body$_;
 //│ let hi; /** scoped **/
 //│ hi = function hi(n) {
-//│   let Cont$func$hi$1, doUnwind, stackDelayRes;{
-//│     let scrut, tmp; /** scoped **/
-//│     globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$func$hi$1 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp1;
-//│         tmp1 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         return hi(n)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res1, pc) {
-//│       res1.contTrace.last.next = new Cont$func$hi$1(pc);
-//│       res1.contTrace.last = res1.contTrace.last.next;
-//│       return res1
-//│     };
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│       return doUnwind(stackDelayRes, 0)
+//│   let Cont$func$hi$1, doUnwind, stackDelayRes;
+//│   let scrut, tmp; /** scoped **/
+//│   globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$func$hi$1 = this
 //│     }
-//│     scrut = n == 0;
-//│     if (scrut === true) {
-//│       return 0
-//│     } else {
-//│       tmp = n - 1;
-//│       return hi(tmp)
+//│     constructor(pc) {
+//│       let tmp1;
+//│       tmp1 = super(null);
+//│       this.pc = pc;
 //│     }
+//│     resume(value$) {
+//│       return hi(n)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
+//│   });
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$func$hi$1(pc);
+//│     res1.contTrace.last = res1.contTrace.last.next;
+//│     return res1
+//│   };
+//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind(stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     return hi(tmp)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
@@ -80,59 +79,58 @@ sum(10000)
 //│ let res1, $_stack$_safe$_body$_1;
 //│ let sum1; /** scoped **/
 //│ sum1 = function sum(n) {
-//│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;{
-//│     let scrut, tmp, tmp1; /** scoped **/
-//│     globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$func$sum$1 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp2;
-//│         tmp2 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         let curDepth1;
-//│         curDepth1 = runtime.stackDepth;
-//│         if (this.pc === 1) {
-//│           tmp1 = value$;
-//│         }
-//│         contLoop: while (true) {
-//│           runtime.stackDepth = curDepth1;
-//│           if (this.pc === 0) {
-//│             return sum1(n)
-//│           } else if (this.pc === 1) {
-//│             return n + tmp1
-//│           }
-//│           break;
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res2, pc) {
-//│       res2.contTrace.last.next = new Cont$func$sum$1(pc);
-//│       res2.contTrace.last = res2.contTrace.last.next;
-//│       return res2
-//│     };
-//│     curDepth = runtime.stackDepth;
-//│     runtime.stackDepth = runtime.stackDepth + 1;
-//│     stackDelayRes = runtime.checkDepth();
-//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│       return doUnwind(stackDelayRes, 0)
+//│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
+//│   let scrut, tmp, tmp1; /** scoped **/
+//│   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$func$sum$1 = this
 //│     }
-//│     scrut = n == 0;
-//│     if (scrut === true) {
-//│       return 0
-//│     } else {
-//│       tmp = n - 1;
-//│       tmp1 = sum1(tmp);
-//│       runtime.stackDepth = curDepth;
-//│       if (tmp1 instanceof runtime.EffectSig.class) {
-//│         return doUnwind(tmp1, 1)
-//│       }
-//│       return n + tmp1
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
 //│     }
+//│     resume(value$) {
+//│       let curDepth1;
+//│       curDepth1 = runtime.stackDepth;
+//│       if (this.pc === 1) {
+//│         tmp1 = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         runtime.stackDepth = curDepth1;
+//│         if (this.pc === 0) {
+//│           return sum1(n)
+//│         } else if (this.pc === 1) {
+//│           return n + tmp1
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
+//│   });
+//│   doUnwind = function doUnwind(res2, pc) {
+//│     res2.contTrace.last.next = new Cont$func$sum$1(pc);
+//│     res2.contTrace.last = res2.contTrace.last.next;
+//│     return res2
+//│   };
+//│   curDepth = runtime.stackDepth;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   stackDelayRes = runtime.checkDepth();
+//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│     return doUnwind(stackDelayRes, 0)
+//│   }
+//│   scrut = n == 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp = n - 1;
+//│     tmp1 = sum1(tmp);
+//│     runtime.stackDepth = curDepth;
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp1, 1)
+//│     }
+//│     return n + tmp1
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
@@ -263,11 +261,10 @@ foo(h)
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max; /** scoped **/
-//│ max = function max(a, b) {{
-//│     let scrut; /** scoped **/
-//│     scrut = a < b;
-//│     if (scrut === true) { return b } else { return a }
-//│   }
+//│ max = function max(a, b) {
+//│   let scrut; /** scoped **/
+//│   scrut = a < b;
+//│   if (scrut === true) { return b } else { return a }
 //│ };
 
 

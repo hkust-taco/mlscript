@@ -12,11 +12,10 @@ fun foo() =
 foo()
 //│ JS (unsanitized):
 //│ let foo; /** scoped **/
-//│ foo = function foo() {{
-//│     let tmp; /** scoped **/
-//│     tmp = M.concat("a", "b");
-//│     return M.concat(tmp, "c")
-//│   }
+//│ foo = function foo() {
+//│   let tmp; /** scoped **/
+//│   tmp = M.concat("a", "b");
+//│   return M.concat(tmp, "c")
 //│ };
 //│ foo()
 //│ = "abc"
