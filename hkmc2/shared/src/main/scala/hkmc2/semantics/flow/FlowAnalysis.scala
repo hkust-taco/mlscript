@@ -58,7 +58,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     t match
     
-    case trm : LeadingDotRefImpl if trm.hasLDS => trm.originalSel match
+    case trm: LeadingDotRefImpl if trm.hasLDS => trm.originalSel match
       case S(sel) =>
         val sym = FlowSymbol("bind")
         log("Constraining leading dot selection at the top level")
@@ -66,7 +66,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         constrain(typeProd(trm.withLDS(N)), C.Flow(sym))
         P.Flow(sym)
       case N => typeProd(trm.withLDS(N))
-
+    
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
@@ -135,7 +135,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       typeProd(res)
     
     case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
-
+    
     case sel @ LeadingDotSel(nme) =>
       leadingDotSelsToExpand += sel
       log(s"Leading dot selection ${sel.showDbg}")
@@ -247,7 +247,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
           if !sel.isErroneous then raise:
             ErrorReport:
-              msg"Cannot resolve selection" -> sel.toLoc :: Nil
+              msg"Cannot resolve selection of member '${sel.nme.name}'" -> sel.toLoc :: Nil
           // * An error should alsoready be reported in this case
         case targets => raise:
           ErrorReport:

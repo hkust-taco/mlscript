@@ -18,6 +18,7 @@ import hkmc2.semantics.Elaborator.{Ctx, ctx}
 
 final case class QuantVar(sym: VarSymbol, ub: Opt[Term], lb: Opt[Term])
 
+
 enum Annot extends AutoLocated:
   case Untyped
   case Modifier(mod: Keyword)
@@ -45,18 +46,19 @@ enum Annot extends AutoLocated:
     case Modifier(mod) => Modifier(mod)
     case Trm(trm) => Trm(trm.mkClone)
 
-type Resolvable = Term & ResolvableImpl
 
-sealed trait SelImpl(using val state: State) extends ResolvableImpl:
+type Typeable = Term & TypeableImpl
+
+
+sealed trait SelImpl(using val state: State) extends TypeableImpl:
   self: Term.Sel =>
   val resSym: FlowSymbol = FlowSymbol.sel(self.nme.name)
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
   var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
 
-sealed trait ResolvableImpl:
+
+sealed trait Resolvable:
   this: Term =>
-  
-  import Resolvable.CallableDefinition
   
   /**
    * The expanded form of the term, if it exists. 
@@ -87,25 +89,9 @@ sealed trait ResolvableImpl:
     .withLocOf(this)
     .asInstanceOf
   
-  def withTyp(typ: Type): this.type = 
-    this.match
-      case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typ))
-      case t: Term.App => t.copy()(t.tree, S(typ), t.resSym)
-      case t: Term.TyApp => t.copy()(S(typ))
-      case t: Term.Sel => t.copy()(t.sym, S(typ), t.originalCtx)(using t.state)
-      case t: Term.SynthSel => t.copy()(t.sym, S(typ))
-      case _ => lastWords(s"Cannot attach a type to leading dot selection ${this.showDbg}")
-    .withLocOf(this)
-    .asInstanceOf
-  
   def expandedIn[T](in: Term => T): T =
     in(expanded)
   
-  def expandedResolvableIn[T](in: Resolvable => T): T =
-    expanded match
-      case r: Resolvable => in(r)
-      case t => lastWords(s"Expected a resolvable term, but got ${t.showDbg}.")
-
   /** 
    * Expanding a term to another, which can be later retrieved by the
    * `instantiate` method. 
@@ -140,6 +126,29 @@ sealed trait ResolvableImpl:
     case S(sym: MemberSymbol[?]) => sym.defn
     case _ => N
   
+end Resolvable
+
+
+sealed trait TypeableImpl extends Resolvable:
+  this: Term =>
+  
+  import Typeable.CallableDefinition
+  
+  def withTyp(typ: Type): this.type = 
+    this.match
+      case t: Term.Ref => t.copy()(t.tree, t.refNum, S(typ))
+      case t: Term.App => t.copy()(t.tree, S(typ), t.resSym)
+      case t: Term.TyApp => t.copy()(S(typ))
+      case t: Term.Sel => t.copy()(t.sym, S(typ), t.originalCtx)(using t.state)
+      case t: Term.SynthSel => t.copy()(t.sym, S(typ))
+    .withLocOf(this)
+    .asInstanceOf
+  
+  def expandedTypeableIn[T](in: Typeable => T): T =
+    expanded match
+      case r: Typeable => in(r)
+      case t => lastWords(s"Expected a resolvable term, but got ${t.showDbg}.")
+  
   def typDefn = resolvedTyp match
     case S(typ) => typ.symbol match
       case S(sym: TypeSymbol) => sym.defn
@@ -153,7 +162,10 @@ sealed trait ResolvableImpl:
     case S(td: ModuleOrObjectDef) => S(td)
     case _ => N
 
-object Resolvable:
+end TypeableImpl
+
+
+object Typeable:
   case class CallableDefinition(
     sym: BlockMemberSymbol,
     params: Ls[ParamList],
@@ -198,12 +210,14 @@ object Resolvable:
         defn,
       ))
 
-trait LeadingDotSelImpl(using State):
+
+sealed trait LeadingDotSelImpl(using State):
   self: Term.LeadingDotSel =>
   val resSym: FlowSymbol = FlowSymbol("lds")
   var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
 
-trait LeadingDotRefImpl:
+
+sealed trait LeadingDotRefImpl:
   self: Term =>
 
   var originalSel: Opt[Term.LeadingDotSel] = N
@@ -222,17 +236,18 @@ trait LeadingDotRefImpl:
     case sel: Term.LeadingDotSel => this.withLDS(S(sel))
     case _ => this
 
+
 enum Term extends Statement:
   case Error
   case UnitVal()
   case Missing // Placeholder terms that were not elaborated due to the "lightweight" elaboration mode `Mode.Light`
   case Lit(lit: Literal)
   case Ref(sym: Symbol)
-    (val tree: Tree.Ident, val refNum: Int, val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val tree: Tree.Ident, val refNum: Int, val typ: Opt[Type]) extends Term, TypeableImpl
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, LeadingDotRefImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, TypeableImpl, LeadingDotRefImpl
   case TyApp(lhs: Term, targs: Ls[Term])
-    (val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val typ: Opt[Type]) extends Term, TypeableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
     (val sym: Opt[FieldSymbol], val typ: Opt[Type],
       // TODO: improve:
@@ -242,7 +257,7 @@ enum Term extends Statement:
     )
     (using State) extends Term, LeadingDotRefImpl, SelImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
-    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
+    (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, TypeableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
@@ -277,7 +292,7 @@ enum Term extends Statement:
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx]
       // var reachedType: Boolean
-    ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
+    ) (using State) extends Term, Resolvable, LeadingDotSelImpl
   
   def expanded: Term = this match
     case t: Resolvable => t.expansion match
@@ -457,15 +472,18 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case LeadingDotSel(name) => "leading dot selection"
       case s => TODO(s)
     this match
-      case self: Resolvable => self.resolvedTyp match
+      case self: Typeable => self.resolvedTyp match
         case S(typ) => s"${desc} of type ${typ.show}"
         case N => desc
       case _ => desc
   
   def extraInfo: Str = this match
-    case r: Resolvable if r.resolvedSym.isDefined || r.resolvedTyp.isDefined => (
+    case r: Typeable if r.resolvedSym.isDefined || r.resolvedTyp.isDefined => (
         r.resolvedSym.map(s => s"sym=${s}") ::
         r.resolvedTyp.map(s => s"typ=${s.showDbg}") :: Nil
+      ).flatten.mkString(",")
+    case r: Term if r.resolvedSym.isDefined => (
+        r.resolvedSym.map(s => s"sym=${s}") :: Nil
       ).flatten.mkString(",")
     case r: SelProj => r.symbol.mkString
     case _ => ""

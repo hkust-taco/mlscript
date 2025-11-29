@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.semantics.Elaborator
 import hkmc2.semantics.Resolver
 import hkmc2.semantics.Resolvable
+import hkmc2.semantics.Term
 
 import semantics.Elaborator.Ctx
 
@@ -281,10 +282,10 @@ abstract class MLsDiffMaker extends DiffMaker:
     if showResolve.isSet then
       output(s"Resolved: ${trm.showDbg}")
     showResolvedTree.get.foreach: post =>
-      case class Unexpanded(origin: Resolvable)
+      case class Unexpanded(origin: Term & Resolvable)
       val pre: PartialFunction[Product, Product] = 
-        case t: Resolvable if t.hasExpansion => t.expanded
-        case t: Resolvable if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
+        case t: (Term & Resolvable) if t.hasExpansion => t.expanded
+        case t: (Term & Resolvable) if dbgResolving.isSet => Unexpanded(t.duplicate.resolve)
         case t => t
       output(s"Resolved tree:")
       output(trm.showAsTree(inTailPos = false, pre = pre)(using post))

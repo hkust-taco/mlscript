@@ -44,7 +44,7 @@ class Foo with
 
 :e
 fun test(x) = x.m
-//│ ╔══[ERROR] Cannot resolve selection
+//│ ╔══[ERROR] Cannot resolve selection of member 'm'
 //│ ║  l.46: 	fun test(x) = x.m
 //│ ╙──      	              ^^^
 //│ Flowed:
