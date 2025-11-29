@@ -231,7 +231,7 @@ inc()
 42 console.log
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (selection).
 //│ ║  l.231: 	42 console.log
-//│ ╙──       	   ^^^^^^^
+//│ ╙──       	   ^^^^^^^^^^^
 //│ = 42
 
 

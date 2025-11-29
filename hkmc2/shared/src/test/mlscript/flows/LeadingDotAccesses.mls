@@ -41,6 +41,8 @@ let d = .a
 f(d)
 g(d)
 //│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
+//│ ║  l.40: 	let d = .a
+//│ ║        	        ^^
 //│ ╟── companion member a
 //│ ║  l.34: 	  fun a = new C
 //│ ║        	  ^^^^^^^^^^^^^
@@ -62,7 +64,9 @@ g(d)
 //│     app⁴  <~  type C
 //│     flow:g⁰  <~  ((type C) -> x¹)
 //│     flow:g⁰  ~>  ((d⁰) -> app⁴)
-//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ║  l.40: 	let d = .a
+//│ ╙──      	        ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
 //│ ╟── which references the symbol introduced here
 //│ ║  l.40: 	let d = .a
@@ -96,13 +100,15 @@ f(.a.c(1,1).b.b.c(3,3))
 :e
 f(.w)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.97: 	f(.w)
-//│ ╙──      	  ^^
+//│ ║  l.101: 	f(.w)
+//│ ╙──       	  ^^
 //│ Flowed:
 //│   f⁰(_?_.w)‹app¹⁰›
 //│ where
 //│     app¹⁰  <~  type A
-//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ║  l.101: 	f(.w)
+//│ ╙──       	  ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
 
 :sf
@@ -110,10 +116,12 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.111: 	.b(new A)
+//│ ║  l.117: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
 //│   _?_.b(new A⁰)‹app¹¹›
 //│ where
 //│     app¹¹  ->  bind¹
-//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ║  l.117: 	.b(new A)
+//│ ╙──       	^^

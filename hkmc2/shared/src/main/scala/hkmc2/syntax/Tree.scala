@@ -149,7 +149,7 @@ enum Tree extends AutoLocated:
     case Effectful(eff, body) => eff :: body :: Nil
     case Outer(name) => name.toList
     case TyTup(tys) => tys
-    case Sel(prefix, name) => prefix :: Nil
+    case Sel(prefix, name) => prefix :: name :: Nil
     case SynthSel(prefix, name) => prefix :: Nil
     case DynAccess(prefix, fld) => prefix :: fld :: Nil
     case Open(bod) => bod :: Nil

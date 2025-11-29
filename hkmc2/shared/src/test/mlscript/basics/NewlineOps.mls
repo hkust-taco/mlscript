@@ -165,7 +165,9 @@ let x
 2
   |> (a: _)
 .a
-//│ ═══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (leading dot selection)
+//│ ║  l.167: 	.a
+//│ ╙──       	^^
 
 
 // :dp
@@ -309,10 +311,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.310: 	2, * 3
+//│ ║  l.312: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.310: 	2, * 3
+//│ ║  l.312: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -365,9 +367,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.365: 	,+
+//│ ║  l.367: 	,+
 //│ ║         	  ^
-//│ ║  l.366: 	ys |> Arr.len
+//│ ║  l.368: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -379,9 +381,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.379: 	+,
+//│ ║  l.381: 	+,
 //│ ║         	  ^
-//│ ║  l.380: 	ys |> Arr.len
+//│ ║  l.382: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -411,20 +413,20 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.412: 	new Foo(1) ,is Foo
+//│ ║  l.414: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.412: 	new Foo(1) ,is Foo
+//│ ║  l.414: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.422: 	is Foo
+//│ ║  l.424: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.422: 	is Foo
+//│ ║  l.424: 	is Foo
 //│ ╙──       	   ^^^
 
 
