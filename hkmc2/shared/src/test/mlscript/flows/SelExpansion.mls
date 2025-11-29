@@ -145,7 +145,7 @@ id(f).foo
 
 :e
 fun test(g) = g.foo
-//│ ╔══[ERROR] Cannot resolve selection of member 'foo'
+//│ ╔══[ERROR] Cannot resolve selection
 //│ ║  l.147: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 //│ Flowed:

@@ -9,7 +9,7 @@ import syntax.Tree.{DummyTup, DummyApp}
 import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
 import syntax.Keyword.{`if`}
 import Elaborator.State
-import Typeable.*
+import Resolvable.*
 import typing.Type
 
 import Message.MessageContext
@@ -277,7 +277,7 @@ class Resolver(tl: TraceLogger)
       traverseStmts(rest)(using newICtx)
     
   
-  def expand2DotClass(t: Typeable, expect: Expect.Module | Expect.Class) = t.resolvedSym match
+  def expand2DotClass(t: Resolvable, expect: Expect.Module | Expect.Class) = t.resolvedSym match
     case S(bsym: BlockMemberSymbol) if bsym.hasLiftedClass => 
       val sym = expect match
         case _: Expect.Module => bsym.asMod
@@ -331,10 +331,10 @@ class Resolver(tl: TraceLogger)
         t.params.foreach(traverseParam)
         traverse(t.body, expect = NonModule(N))
         
-      case t: Typeable =>
+      case t: Resolvable =>
         resolve(t, prefer = expect, inAppPrefix = false, inTyPrefix = false, inCtxPrefix = false)
         t.expanded match
-        case t: Typeable => expect match
+        case t: Resolvable => expect match
           case expect: Expect.Class => expand2DotClass(t, expect = expect)
           case _ =>
         case _ =>
@@ -500,7 +500,7 @@ class Resolver(tl: TraceLogger)
     * be resolved on the the TyApp `f[Int]`, but not on the base of the
     * TyApp `f`.
     */
-  def resolve(t: Typeable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
+  def resolve(t: Resolvable, prefer: Expect, inAppPrefix: Bool, inCtxPrefix: Bool, inTyPrefix: Bool)(using ICtx): (Opt[CallableDefinition], ICtx) =
   trace[(Opt[CallableDefinition], ICtx)](
     s"Resolving resolvable term: ${t}, (inPrefix = ${inTyPrefix})", 
     _ => s"~> ${t.expanded} (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
@@ -510,7 +510,7 @@ class Resolver(tl: TraceLogger)
       t match
       // Note: the arguments of the App are traversed later because the
       // definition is required.
-      case Term.App(lhs: Typeable, args) =>
+      case Term.App(lhs: Resolvable, args) =>
         val result = args match
           case t @ Term.CtxTup(_) => 
             resolve(lhs, prefer = prefer, inAppPrefix = true, inCtxPrefix = true, inTyPrefix = inTyPrefix)
@@ -523,7 +523,7 @@ class Resolver(tl: TraceLogger)
         traverse(lhs, expect = Any)
         (t.callableDefn, ictx)
       
-      case Term.TyApp(lhs: Typeable, targs) =>
+      case Term.TyApp(lhs: Resolvable, targs) =>
         resolve(lhs, prefer = prefer, inAppPrefix = inAppPrefix, inCtxPrefix = inCtxPrefix, inTyPrefix = true)
         targs.foreach(traverse(_, expect = Any))
         resolveSymbol(t, prefer = prefer)
@@ -534,7 +534,7 @@ class Resolver(tl: TraceLogger)
         targs.foreach(traverse(_, expect = Any))
         (t.callableDefn, ictx)
       
-      case AnySel(pre: Typeable, id) =>
+      case AnySel(pre: Resolvable, id) =>
         resolve(pre, prefer = prefer, inAppPrefix = false, inCtxPrefix = false, inTyPrefix = false)
         resolveSymbol(t, prefer = prefer)
         resolveType(t, prefer = prefer)
@@ -554,7 +554,7 @@ class Resolver(tl: TraceLogger)
         resolveType(t, prefer = prefer)
         (N, ictx)
     
-    t.expandedTypeableIn: t =>
+    t.expandedResolvableIn: t =>
       log(s"Resolving resolvable term ${t} with sym = ${t.resolvedSym}, typ = ${t.resolvedTyp}: ${defn}")
       
       // Fill the context with possibly the type arguments information.
@@ -741,7 +741,7 @@ class Resolver(tl: TraceLogger)
             val expansion = expansionFn(t.duplicate)
             t.expand(S(expansion))
             expansion match // * expansion may change the semantics, thus symbol is also changed
-            case r: Typeable => 
+            case r: Resolvable => 
               resolveSymbol(r, prefer = prefer)
               resolveType(r, prefer = prefer)
             case _ => ()
@@ -772,7 +772,7 @@ class Resolver(tl: TraceLogger)
    * This also expands the LHS `Foo` of a selection to `Foo.class` if
    * the selection is selecting a static member from a lifted module.
    */
-  def resolveSymbol(t: Typeable, prefer: Expect)(using ictx: ICtx): Unit =
+  def resolveSymbol(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit =
   trace[Unit](
     s"Resolving symbol for term: ${t} (prefer = ${prefer})", 
     _ => s"-> (sym = ${t.resolvedSym}, typ = ${t.resolvedTyp})"
@@ -787,14 +787,14 @@ class Resolver(tl: TraceLogger)
     */
     // * We can't perform the check because of UCS and handler reusing terms.
     
-    t.expandedTypeableIn: t =>
+    t.expandedResolvableIn: t =>
       t match
       
       // The symbol resolution already failed in the elaborator. We will
       // not try to resolve it again in the resolver.
       case _ if t.symbol.exists(_.isInstanceOf[ErrorSymbol]) => ()
       
-      case t @ AnySel(lhs: Typeable, id) => lhs.expandedTypeableIn: lhs =>
+      case t @ AnySel(lhs: Resolvable, id) => lhs.expandedResolvableIn: lhs =>
         log(s"Resolving symbol for ${t}, defn = ${lhs.defn}")
         lhs.singletonDefn.foreach: mdef =>
           val fsym = mdef.body.members.get(id.name)
@@ -823,7 +823,7 @@ class Resolver(tl: TraceLogger)
    * expanded into a copy of the term with the `typ` field set to the
    * resolved type.
    */
-  def resolveType(t: Typeable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedTypeableIn: t =>
+  def resolveType(t: Resolvable, prefer: Expect)(using ictx: ICtx): Unit = t.expandedResolvableIn: t =>
     trace[Unit](
       s"Resolving the type for term: ${t} (prefer = ${prefer}, sym = ${t.resolvedSym})", 
       _ => s"-> (typ = ${t.resolvedTyp})"
@@ -843,7 +843,7 @@ class Resolver(tl: TraceLogger)
           case _ => N
       
       t match
-      case t @ Apps(base: Typeable, ass) => 
+      case t @ Apps(base: Resolvable, ass) => 
         val decl = base.resolvedSym match
           case S(bms: BlockMemberSymbol) => 
             val disambBms = disambSym(bms)
@@ -960,9 +960,9 @@ class Resolver(tl: TraceLogger)
     
     // * Resolve the symbol and type of the term.
     t match
-      case t: Typeable =>
+      case t: Resolvable =>
         resolveSymbol(t, prefer = expect)
-        t.expandedTypeableIn(_.withTyp(typ))
+        t.expandedResolvableIn(_.withTyp(typ))
       case _ => ()
     
     // * Check if the term satisfies the expectation.
@@ -1105,7 +1105,7 @@ object ModuleChecker:
     t match
       case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
       case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t: Typeable => t.resolvedTyp match
+      case t: Resolvable => t.resolvedTyp match
         case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
         case N => false
       case _ => false

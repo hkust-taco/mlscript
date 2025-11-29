@@ -25,6 +25,7 @@ import hkmc2.semantics.FldFlags
 import hkmc2.semantics.ParamListFlags
 import scala.collection.mutable.Buffer
 import mlscript.utils.StringOps
+import hkmc2.semantics.Resolvable
 
 trait ProductWithTail extends Product
 
