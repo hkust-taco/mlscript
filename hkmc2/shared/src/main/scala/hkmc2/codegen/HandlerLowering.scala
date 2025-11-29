@@ -595,7 +595,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case pList :: Nil => 
         val params = pList.params.map(p => p.sym.asPath.asArg)
         f.owner match
-        case None => S(Call(f.sym.asPath, params)(true, true, false))
+        case None => S(Call(f.asPath, params)(true, true, false))
         case Some(owner) => 
           S(Call(Select(owner.asPath, Tree.Ident(f.sym.nme))(N), params)(true, true, false))
       case _ => None // TODO: more than one plist
@@ -634,11 +634,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   // Handle block becomes a FunDefn and CallPlaceholder
   private def translateHandleBlock(h: HandleBlock)(using HandlerCtx): Block =
     val sym = BlockMemberSymbol(s"handleBlock$$", Nil)
+    val tSym = TermSymbol.fromFunBms(sym, N)
     val lbl = freshTmp("handlerBody")
     val lblLoop = freshTmp("handlerLoop")
     
     val handlerBody = translateBlock(
-      h.body, Set.empty, S(Call(sym.asPath, Nil)(true, false, false)), L(sym),
+      h.body, Set.empty, S(Call(Value.Ref(sym, S(tSym)), Nil)(true, false, false)), L(sym),
       HandlerCtx(
         false, true,
         s"Cont$$handleBlock$$${symToStr(h.lhs)}$$", N, 
@@ -665,7 +666,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         handler.params,
         Define(
           fDef,
-          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, N) :: Nil), false)))(false)
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: fDef.asPath :: Nil), false)))(false)
     
     // Some limited handling of effects extending classes and having access to their fields.
     // Currently does not support super() raising effects.
@@ -698,14 +699,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(h.cls)), Nil))
       .rest(handlerBody)
     
-    val defn = FunDefn.withFreshSymbol(
+    val defn = FunDefn(
       N, // no owner
-      sym, PlainParamList(Nil) :: Nil, body)(false)
+      sym, tSym, PlainParamList(Nil) :: Nil, body)(false)
     
     val result = blockBuilder
       .define(defn)
       .rest(
-        ResultPlaceholder(h.res, freshId(), Call(sym.asPath, Nil)(true, true, false), h.rest)
+        ResultPlaceholder(h.res, freshId(), Call(defn.asPath, Nil)(true, true, false), h.rest)
       )
     result
   

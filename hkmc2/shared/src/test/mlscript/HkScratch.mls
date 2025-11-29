@@ -8,42 +8,262 @@
 // :d
 // :todo
 
+class Eff
 
-:lot
+:effectHandlers
 :sjs
-let x = [() => 2]
+:lift
+fun foo(h) = h.perform
+handle h = Eff with
+  fun perform(resume) =
+    let fuck = ()
+    set fuck = n =>
+      if n <= 0 then 0
+      else n + fuck(n-1)
+    resume(fuck(10000))
+foo(h)
 //│ JS (unsanitized):
-//│ let x, lambda;
-//│ lambda = (undefined, function () { return 2 });
-//│ x = globalThis.Object.freeze([ lambda ]);
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Define:
-//│     defn = FunDefn:
-//│       owner = N
-//│       sym = member:lambda
-//│       dSym = term:lambda
-//│       params = Ls of 
-//│         ParamList:
-//│           flags = ()
-//│           params = Nil
-//│           restParam = N
-//│       body = Return:
-//│         res = Lit of IntLit of 2
-//│         implct = false
-//│     rest = Assign: \
-//│     lhs = x
-//│     rhs = Tuple:
-//│       mut = false
-//│       elems = Ls of 
-//│         Arg:
-//│           spread = N
-//│           value = Ref:
-//│             l = member:lambda
-//│             disamb = N
-//│     rest = Assign: \
-//│     lhs = $block$res
-//│     rhs = Lit of UnitLit of false
-//│     rest = End of ""
-//│ x = [fun]
+//│ let foo, lambda, tmp, handleBlock$, Cont$handleBlock$h$1, hdlrFun, Cont$func$lambda$1, Cont$handler$h$perform$1, Handler$h$1, doUnwind$, Cont$handleBlock$h$$, hdlrFun$, lambda$, doUnwind$1, Cont$func$lambda$$, doUnwind$2, Cont$handler$h$perform$$, hdlrFun$capture1;
+//│ foo = function foo(h) {
+//│   return h.perform
+//│ };
+//│ Cont$handler$h$perform$$ = function Cont$handler$h$perform$$(isMut, Handler$h$$instance, resume, tmp1, pc) {
+//│   let tmp2, tmp3;
+//│   if (isMut === true) {
+//│     tmp2 = new Cont$handler$h$perform$1(pc);
+//│   } else {
+//│     tmp2 = globalThis.Object.freeze(new Cont$handler$h$perform$1(pc));
+//│   }
+//│   tmp3 = tmp2(Handler$h$$instance, resume, tmp1);
+//│   return tmp3
+//│ };
+//│ globalThis.Object.freeze(class Cont$handler$h$perform$ extends runtime.FunctionContFrame.class {
+//│   static {
+//│     Cont$handler$h$perform$1 = this
+//│   }
+//│   constructor(pc) {
+//│     return (Handler$h$$instance, resume, tmp1) => {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.resume = resume;
+//│       this.tmp = tmp1;
+//│       this.Handler$h$$instance = Handler$h$$instance;
+//│       this.pc = pc;
+//│       return this;
+//│     }
+//│   }
+//│   #resume;
+//│   #tmp;
+//│   #Handler$h$$instance;
+//│   get resume() { return this.#resume; }
+//│   set resume(value) { this.#resume = value; }
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
+//│   get Handler$h$$instance() { return this.#Handler$h$$instance; }
+//│   set Handler$h$$instance(value) { this.#Handler$h$$instance = value; }
+//│   resume(value$) {
+//│     if (this.pc === 5) {
+//│       this.tmp = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 6) {
+//│         return runtime.safeCall(this.resume(this.tmp))
+//│       } else if (this.pc === 5) {
+//│         this.pc = 6;
+//│         continue contLoop
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cont$handler$h$perform$"]; 
+//│ });
+//│ doUnwind$2 = function doUnwind$(Handler$h$$instance, resume, tmp1, res, pc) {
+//│   res.contTrace.last.next = Cont$handler$h$perform$$(true, Handler$h$$instance, resume, tmp1, pc);
+//│   res.contTrace.last = res.contTrace.last.next;
+//│   return res
+//│ };
+//│ Cont$func$lambda$$ = function Cont$func$lambda$$(isMut, Handler$h$$instance, n, tmp1, pc) {
+//│   let tmp2, tmp3;
+//│   if (isMut === true) {
+//│     tmp2 = new Cont$func$lambda$1(pc);
+//│   } else {
+//│     tmp2 = globalThis.Object.freeze(new Cont$func$lambda$1(pc));
+//│   }
+//│   tmp3 = tmp2(Handler$h$$instance, n, tmp1);
+//│   return tmp3
+//│ };
+//│ globalThis.Object.freeze(class Cont$func$lambda$ extends runtime.FunctionContFrame.class {
+//│   static {
+//│     Cont$func$lambda$1 = this
+//│   }
+//│   constructor(pc) {
+//│     return (Handler$h$$instance, n, tmp1) => {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.n = n;
+//│       this.tmp = tmp1;
+//│       this.Handler$h$$instance = Handler$h$$instance;
+//│       this.pc = pc;
+//│       return this;
+//│     }
+//│   }
+//│   #n;
+//│   #tmp;
+//│   #Handler$h$$instance;
+//│   get n() { return this.#n; }
+//│   set n(value) { this.#n = value; }
+//│   get tmp() { return this.#tmp; }
+//│   set tmp(value) { this.#tmp = value; }
+//│   get Handler$h$$instance() { return this.#Handler$h$$instance; }
+//│   set Handler$h$$instance(value) { this.#Handler$h$$instance = value; }
+//│   resume(value$) {
+//│     if (this.pc === 2) {
+//│       this.tmp = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 2) {
+//│         return this.n + this.tmp
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cont$func$lambda$"]; 
+//│ });
+//│ doUnwind$1 = function doUnwind$(Handler$h$$instance, n, tmp1, res, pc) {
+//│   res.contTrace.last.next = Cont$func$lambda$$(true, Handler$h$$instance, n, tmp1, pc);
+//│   res.contTrace.last = res.contTrace.last.next;
+//│   return res
+//│ };
+//│ lambda$ = function lambda$(Handler$h$$instance, hdlrFun$capture2, n) {
+//│   let scrut, tmp1, tmp2;
+//│   scrut = n <= 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp1 = n - 1;
+//│     tmp2 = runtime.safeCall(hdlrFun$capture2.fuck$capture$0(tmp1));
+//│     if (tmp2 instanceof runtime.EffectSig.class) {
+//│       return doUnwind$1(Handler$h$$instance, n, tmp2, tmp2, 2)
+//│     }
+//│     return n + tmp2
+//│   }
+//│ };
+//│ lambda = (undefined, function (Handler$h$$instance, hdlrFun$capture2) {
+//│   return (n) => {
+//│     return lambda$(Handler$h$$instance, hdlrFun$capture2, n)
+//│   }
+//│ });
+//│ globalThis.Object.freeze(class hdlrFun$capture {
+//│   static {
+//│     hdlrFun$capture1 = this
+//│   }
+//│   constructor(fuck$capture$0) {
+//│     this.fuck$capture$0 = fuck$capture$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "hdlrFun$capture"]; 
+//│ });
+//│ hdlrFun$ = function hdlrFun$(Handler$h$$instance, resume) {
+//│   let tmp1, capture, lambda$here;
+//│   capture = new hdlrFun$capture1(null);
+//│   capture.fuck$capture$0 = runtime.Unit;
+//│   lambda$here = runtime.safeCall(lambda(Handler$h$$instance, capture));
+//│   capture.fuck$capture$0 = lambda$here;
+//│   tmp1 = runtime.safeCall(capture.fuck$capture$0(10000));
+//│   if (tmp1 instanceof runtime.EffectSig.class) {
+//│     return doUnwind$2(Handler$h$$instance, resume, tmp1, tmp1, 5)
+//│   }
+//│   return runtime.safeCall(resume(tmp1))
+//│ };
+//│ hdlrFun = function hdlrFun(Handler$h$$instance) {
+//│   return (resume) => {
+//│     return hdlrFun$(Handler$h$$instance, resume)
+//│   }
+//│ };
+//│ globalThis.Object.freeze(class Handler$h$ extends Eff1 {
+//│   static {
+//│     Handler$h$1 = this
+//│   }
+//│   constructor() {
+//│     let tmp1;
+//│     tmp1 = super();
+//│   }
+//│   get perform() {
+//│     let hdlrFun$here;
+//│     hdlrFun$here = runtime.safeCall(hdlrFun(this));
+//│     return runtime.mkEffect(this, hdlrFun$here);
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
+//│ Cont$handleBlock$h$$ = function Cont$handleBlock$h$$(isMut, res, pc) {
+//│   let tmp1, tmp2;
+//│   if (isMut === true) {
+//│     tmp1 = new Cont$handleBlock$h$1(pc);
+//│   } else {
+//│     tmp1 = globalThis.Object.freeze(new Cont$handleBlock$h$1(pc));
+//│   }
+//│   tmp2 = tmp1(res);
+//│   return tmp2
+//│ };
+//│ globalThis.Object.freeze(class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
+//│   static {
+//│     Cont$handleBlock$h$1 = this
+//│   }
+//│   constructor(pc) {
+//│     return (res) => {
+//│       let tmp1;
+//│       tmp1 = super(null);
+//│       this.res = res;
+//│       this.pc = pc;
+//│       return this;
+//│     }
+//│   }
+//│   #res;
+//│   get res() { return this.#res; }
+//│   set res(value) { this.#res = value; }
+//│   resume(value$) {
+//│     if (this.pc === 1) {
+//│       this.res = value$;
+//│     }
+//│     contLoop: while (true) {
+//│       if (this.pc === 1) {
+//│         return this.res
+//│       }
+//│       break;
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
+//│ });
+//│ doUnwind$ = function doUnwind$(h, res, res1, pc) {
+//│   res1.contTrace.last.next = Cont$handleBlock$h$$(true, res, pc);
+//│   return runtime.handleBlockImpl(res1, h)
+//│ };
+//│ handleBlock$ = function handleBlock$() {
+//│   let h, res;
+//│   h = new Handler$h$1();
+//│   res = foo(h);
+//│   if (res instanceof runtime.EffectSig.class) {
+//│     return doUnwind$(h, res, res, 1)
+//│   }
+//│   return res
+//│ };
+//│ tmp = handleBlock$();
+//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
+//│ tmp
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+//│     at Runtime.checkArgs (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:429:19)
+//│     at lambda$ (REPL13:1:6736)
+//│     at hdlrFun$capture.fuck$capture$0 (REPL13:1:7499)
+//│     at lambda$ (REPL13:1:7024)
+//│     at hdlrFun$capture.fuck$capture$0 (REPL13:1:7499)
+//│     at lambda$ (REPL13:1:7024)
+//│     at hdlrFun$capture.fuck$capture$0 (REPL13:1:7499)
+//│     at lambda$ (REPL13:1:7024)
+//│     at hdlrFun$capture.fuck$capture$0 (REPL13:1:7499)
+//│     at lambda$ (REPL13:1:7024)
