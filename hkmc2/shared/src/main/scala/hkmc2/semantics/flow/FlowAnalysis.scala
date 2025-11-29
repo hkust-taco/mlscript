@@ -411,10 +411,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                         patho match
                         case S(path) =>
                           sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                          val lhs = memb match
+                          val newlhs = memb match
                             case memb: BlockMemberSymbol => P.Flow(memb.flow)
                             case _ => TODO(memb)
-                          toSolve.push(Constraint(lhs, sel.res))
+                          toSolve.push(Constraint(newlhs, C.Fun(P.Tup((N, lhs) :: Nil), sel.res)))
                         case N => raise:
                           sel.trm.isErroneous = true
                           ErrorReport:

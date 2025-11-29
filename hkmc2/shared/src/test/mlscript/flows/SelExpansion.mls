@@ -277,22 +277,22 @@ let foo =
 //│     new A¹.test‹?›{ ~> A¹.test³(new A¹)‹app¹²› }
 //│   }
 //│ where
-//│     foo²  <~  ((a²) -> A)
+//│     foo²  <~  A
+//│     a²  <~  A
 //│     flow:test³  <~  ((a²) -> A)
-//│     flow:test³  ->  ⋅test¹
+//│     flow:test³  ~>  ((A) -> ⋅test¹)
 //│ foo = A
 
 :e
 :re
 foo.test
-//│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.287: 	foo.test
-//│ ║         	^^^^^^^^
-//│ ╙── Type `((a‹806›) -> A)` does not contain member 'test'
+//│ ╔══[ERROR] Cannot access companion A from the context of this selection
+//│ ║  l.288: 	foo.test
+//│ ╙──       	^^^^^^^^
 //│ Flowed:
 //│   foo².test‹?›
 //│ where
-//│     foo²  <~  ((a²) -> A)
+//│     foo²  <~  A
 //│     foo²  ~>  {test: ⋅test²}
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'test' yielded 'undefined'
 
@@ -341,7 +341,7 @@ module CC with
 //│     x⁷  <~  type CC
 //│     x⁷  ~>  {oops: ⋅oops⁰}
 //│     flow:oops⁰  <~  ((type CC) -> ⋅oops⁰)
-//│     flow:oops⁰  ->  ⋅oops⁰
+//│     flow:oops⁰  ~>  ((CC) -> ⋅oops⁰)
 
 :re
 new CC().oops
