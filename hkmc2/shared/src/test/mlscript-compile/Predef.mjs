@@ -5,7 +5,7 @@ import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
-let Predef1;
+let Predef1; /** scoped **/
 globalThis.Object.freeze(class Predef {
   static {
     Predef1 = this

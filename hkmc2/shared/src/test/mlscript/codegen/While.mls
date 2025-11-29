@@ -59,12 +59,12 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let tmp6, while3, tmp7;
+//│ let tmp6, while3, tmp7, tmp8; /** scoped **/
 //│ tmp6 = undefined;
 //│ while3 = (undefined, function () {{
-//│     let tmp8; /** scoped **/
+//│     let tmp9; /** scoped **/
 //│     if (x2 === true) {
-//│       tmp8 = Predef.print("Hello World");
+//│       tmp9 = Predef.print("Hello World");
 //│       x2 = false;
 //│       tmp6 = runtime.Unit;
 //│       return while3()
@@ -213,7 +213,7 @@ fun f(ls) =
       print(h)
   else print("Done!")
 //│ JS (unsanitized):
-//│ let f;
+//│ let f; /** scoped **/
 //│ f = function f(ls) {{
 //│     let tmp27, while10, tmp28, tmp29; /** scoped **/
 //│     tmp27 = undefined;
@@ -274,7 +274,7 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37, tmp38, while11;
+//│ let tmp37, tmp38, tmp39, while11; /** scoped **/
 //│ tmp37 = undefined;
 //│ while11 = (undefined, function () {
 //│   split_root$: {

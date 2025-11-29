@@ -36,7 +36,7 @@ fun foo(v) =
     A & B then 1
     else 0
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo(v) {{
 //│     let tmp2; /** scoped **/
 //│     split_root$2: {

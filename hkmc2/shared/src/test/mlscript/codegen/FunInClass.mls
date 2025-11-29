@@ -19,7 +19,7 @@ fun test(a) =
       h(d)
   Inner(42)
 //│ JS (unsanitized):
-//│ let test1;
+//│ let test1; /** scoped **/
 //│ test1 = function test(a) {{
 //│     let Inner1, tmp; /** scoped **/
 //│     Inner1 = function Inner(b) {
@@ -80,7 +80,7 @@ fun test(a) =
     print of [a, b]
   [C1(1), C2(2)]
 //│ JS (unsanitized):
-//│ let test2;
+//│ let test2; /** scoped **/
 //│ test2 = function test(a) {{
 //│     let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│     C11 = function C1(b) {
@@ -141,7 +141,7 @@ data class Foo(a) with
   foo()
 Foo(123)
 //│ JS (unsanitized):
-//│ let Foo1;
+//│ let Foo1; /** scoped **/
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
@@ -181,7 +181,7 @@ data class Bar(x) with
   foo()()
 Bar(1)
 //│ JS (unsanitized):
-//│ let Bar1;
+//│ let Bar1, tmp; /** scoped **/
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
@@ -190,7 +190,6 @@ Bar(1)
 //│     Bar1.class = this
 //│   }
 //│   constructor(x) {
-//│     let tmp;
 //│     this.x = x;
 //│     tmp = this.foo();
 //│     runtime.safeCall(tmp());

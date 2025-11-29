@@ -41,7 +41,7 @@ module Test with
   fun foo() = print(s)
   fun bar() = foo()
 //│ JS (unsanitized):
-//│ let Test1;
+//│ let Test1, tmp1; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this
@@ -51,7 +51,6 @@ module Test with
 //│   }
 //│   static #s;
 //│   static {
-//│     let tmp1;
 //│     Test.#s = 1;
 //│     tmp1 = Predef.print(Test.#s);
 //│   }

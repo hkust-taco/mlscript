@@ -6,7 +6,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
-let Runtime1;
+let Runtime1; /** scoped **/
 globalThis.Object.freeze(class Runtime {
   static {
     Runtime1 = this

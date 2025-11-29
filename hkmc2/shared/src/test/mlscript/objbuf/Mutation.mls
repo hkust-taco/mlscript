@@ -14,7 +14,7 @@ class A(x) with
     set z += 2
     x
 //│ JS (unsanitized):
-//│ let A1;
+//│ let A1; /** scoped **/
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };

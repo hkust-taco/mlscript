@@ -141,6 +141,7 @@ case
 //│                 spread = N
 //│                 value = Lit of StrLit of "match error"
 //│           rest = End of ""
+//│         topLevel = false
 //│     rest = Return: \
 //│     res = Ref:
 //│       l = member:lambda

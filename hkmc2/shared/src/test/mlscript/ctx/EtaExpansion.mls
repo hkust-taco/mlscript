@@ -31,14 +31,15 @@ using Num = 0.42
 :sjs
 let f1 = foo
 //│ JS (unsanitized):
-//│ let f1, f11;
-//│ f11 = function f1() {{
+//│ let f1;
+//│ let f11; /** scoped **/
+//│ f1 = function f1() {{
 //│     let tmp; /** scoped **/
 //│     tmp = foo();
 //│     return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│   }
 //│ };
-//│ f1 = f11;
+//│ f11 = f1;
 //│ f1 = fun f1
 
 :expect [42]
@@ -53,14 +54,15 @@ f1()
 :sjs
 let f2 = bar
 //│ JS (unsanitized):
-//│ let f2, f21;
-//│ f21 = function f2(x) {{
+//│ let f2;
+//│ let f21; /** scoped **/
+//│ f2 = function f2(x) {{
 //│     let tmp; /** scoped **/
 //│     tmp = bar(x);
 //│     return runtime.safeCall(tmp(instance$Ident$_Int$_))
 //│   }
 //│ };
-//│ f2 = f21;
+//│ f21 = f2;
 //│ f2 = fun f2
 
 :expect [0.42, 42]
@@ -75,8 +77,9 @@ f2(0.42)
 :sjs
 let f3 = baz
 //│ JS (unsanitized):
-//│ let f3, f31;
-//│ f31 = function f3(x) {
+//│ let f3;
+//│ let f31; /** scoped **/
+//│ f3 = function f3(x) {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (y) {{
 //│       let tmp, tmp1, tmp2; /** scoped **/
@@ -88,7 +91,7 @@ let f3 = baz
 //│   });
 //│   return lambda1
 //│ };
-//│ f3 = f31;
+//│ f31 = f3;
 //│ f3 = fun f3
 
 :expect [43, 42, 44, 0.42]
@@ -99,14 +102,14 @@ f3(43)(44)
 :sjs
 foo()
 //│ JS (unsanitized):
-//│ let tmp1; tmp1 = foo(); runtime.safeCall(tmp1(instance$Ident$_Int$_))
+//│ let tmp1; /** scoped **/ tmp1 = foo(); runtime.safeCall(tmp1(instance$Ident$_Int$_))
 //│ = [42]
 
 // This should not expand
 :sjs
 bar(0.42)
 //│ JS (unsanitized):
-//│ let tmp2; tmp2 = bar(0.42); runtime.safeCall(tmp2(instance$Ident$_Int$_))
+//│ let tmp2; /** scoped **/ tmp2 = bar(0.42); runtime.safeCall(tmp2(instance$Ident$_Int$_))
 //│ = [0.42, 42]
 
 
@@ -115,7 +118,7 @@ module Test with
   fun test(j)(using Int) = 0
   fun main(using Int) = test
 //│ JS (unsanitized):
-//│ let Test1;
+//│ let Test1; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this

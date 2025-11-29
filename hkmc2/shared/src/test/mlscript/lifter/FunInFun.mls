@@ -47,7 +47,8 @@ fun f(used1, unused1) =
   foo(used2) + unused2
 f(1, 2)
 //│ JS (unsanitized):
-//│ let g1, f3, g$3;
+//│ let g1, g$3;
+//│ let f3; /** scoped **/
 //│ g$3 = function g$(used1, used2, g_arg) {{
 //│     let used3; /** scoped **/
 //│     used3 = 2;
@@ -80,7 +81,8 @@ fun f(a1, a2, a3, a4, a5, a6) =
   g
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
-//│ let f4, g$4;
+//│ let g$4;
+//│ let f4; /** scoped **/
 //│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {{
 //│     let tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│     tmp = a1 + a2;
@@ -167,7 +169,8 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let f7, h$2, g$6, f$capture5;
+//│ let h$2, g$6, f$capture5;
+//│ let f7; /** scoped **/
 //│ g$6 = function g$(immutable, f$capture6) {
 //│   f$capture6.mutated$capture$0 = 2;
 //│   return immutable + f$capture6.mutated$capture$0
@@ -258,7 +261,8 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let f14, g6, tmp7, f$1, h$4, g$capture1;
+//│ let f14, f$1, h$4, g$capture1;
+//│ let g6, tmp7; /** scoped **/
 //│ h$4 = function h$(x1, k, g$capture2) {
 //│   k = 5;
 //│   x1 = 4;
@@ -380,7 +384,8 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ JS (unsanitized):
-//│ let g12, f23, g$14;
+//│ let g12, g$14;
+//│ let f23; /** scoped **/
 //│ g$14 = function g$(y1) {
 //│   return y1
 //│ };
@@ -416,7 +421,8 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ JS (unsanitized):
-//│ let g13, f24, g$15, f$capture17;
+//│ let g13, g$15, f$capture17;
+//│ let f24; /** scoped **/
 //│ g$15 = function g$(f$capture18) {
 //│   return f$capture18.x$capture$0
 //│ };

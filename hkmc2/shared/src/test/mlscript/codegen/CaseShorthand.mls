@@ -86,7 +86,7 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, lambda12;
+//│ let isDefined, lambda12; /** scoped **/
 //│ lambda12 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some.class) {
 //│     return true

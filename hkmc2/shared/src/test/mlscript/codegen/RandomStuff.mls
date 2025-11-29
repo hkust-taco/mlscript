@@ -4,7 +4,7 @@
 :sjs
 fun foo() = if false do foo()
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo() {{
 //│     let scrut; /** scoped **/
 //│     scrut = false;
@@ -15,7 +15,7 @@ fun foo() = if false do foo()
 :sjs
 fun foo() = foo()
 //│ JS (unsanitized):
-//│ let foo1; foo1 = function foo() { return foo1() };
+//│ let foo1; /** scoped **/ foo1 = function foo() { return foo1() };
 
 
 :sjs
@@ -23,7 +23,7 @@ data class Foo(x) with
   class Bar with
     val y = x
 //│ JS (unsanitized):
-//│ let Foo1;
+//│ let Foo1; /** scoped **/
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
@@ -55,7 +55,7 @@ fun foo() =
   fun bar() = bar()
   bar()
 //│ JS (unsanitized):
-//│ let foo2;
+//│ let foo2; /** scoped **/
 //│ foo2 = function foo() {{
 //│     let bar; /** scoped **/
 //│     bar = function bar() { return bar() };
@@ -70,7 +70,7 @@ do
   fun f = f
   ()
 //│ JS (unsanitized):
-//│ let f, f1;
+//│ let f, f1; /** scoped **/
 //│ f1 = 1;
 //│ f = function f() {{ let tmp; /** scoped **/ tmp = f(); return tmp } };
 //│ runtime.Unit
@@ -87,7 +87,7 @@ fun foo(x) = foo
 //│ ║  l.82: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;
+//│ let foo3, foo4; /** scoped **/ foo3 = function foo(x) { return foo4 }; foo4 = 1;
 //│ foo = 1
 
 :sjs

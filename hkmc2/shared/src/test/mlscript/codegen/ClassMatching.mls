@@ -9,13 +9,15 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ JS (unsanitized):
-//│ let scrut, x, argument0$;
-//│ scrut = Some(0);
-//│ if (scrut instanceof Some.class) {
-//│   argument0$ = scrut.value;
-//│   x = argument0$;
-//│   x
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ {
+//│   let scrut, x, argument0$; /** scoped **/
+//│   scrut = Some(0);
+//│   if (scrut instanceof Some.class) {
+//│     argument0$ = scrut.value;
+//│     x = argument0$;
+//│     x
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ }
 //│ = 0
 
 
@@ -26,12 +28,14 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS (unsanitized):
-//│ let x1, argument0$1;
-//│ if (s instanceof Some.class) {
-//│   argument0$1 = s.value;
-//│   x1 = argument0$1;
-//│   x1
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ {
+//│   let x1, argument0$1; /** scoped **/
+//│   if (s instanceof Some.class) {
+//│     argument0$1 = s.value;
+//│     x1 = argument0$1;
+//│     x1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ }
 //│ = 0
 
 if s is
@@ -119,7 +123,7 @@ fun f(x) = if x is
   None then "ok"
   else print("oops")
 //│ JS (unsanitized):
-//│ let f4;
+//│ let f4; /** scoped **/
 //│ f4 = function f(x3) {{
 //│     let x4, scrut1, argument0$4, tmp6; /** scoped **/
 //│     split_root$1: {
@@ -166,7 +170,7 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS (unsanitized):
-//│ let f5;
+//│ let f5; /** scoped **/
 //│ f5 = function f(x3) {{
 //│     let u, a, b, argument0$4, argument1$; /** scoped **/
 //│     if (x3 instanceof Some.class) {
@@ -197,7 +201,7 @@ fun f(x) = print of if x is
   None then "ok"
   else "oops"
 //│ JS (unsanitized):
-//│ let f6;
+//│ let f6; /** scoped **/
 //│ f6 = function f(x3) {{
 //│     let argument0$4, tmp10; /** scoped **/
 //│     split_root$1: {

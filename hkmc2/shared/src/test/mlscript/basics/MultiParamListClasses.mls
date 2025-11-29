@@ -77,14 +77,15 @@ Foo(1, 2)
 :sjs
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ JS (unsanitized):
-//│ let f, f1;
-//│ f1 = function f(x, y) {{
+//│ let f;
+//│ let f1; /** scoped **/
+//│ f = function f(x, y) {{
 //│     let tmp4; /** scoped **/
 //│     tmp4 = Foo7(x, y);
 //│     return runtime.safeCall(tmp4(instance$Ident$_Int$_))
 //│   }
 //│ };
-//│ f = f1;
+//│ f1 = f;
 //│ f = fun f
 
 // Eta-expansion happens here. See EtaExpansion.mls.

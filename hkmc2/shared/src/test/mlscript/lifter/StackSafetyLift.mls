@@ -21,7 +21,8 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
+//│ let Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
+//│ let hi; /** scoped **/
 //│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
 //│   let tmp, tmp1;
 //│   if (isMut === true) {
@@ -94,7 +95,8 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
+//│ let Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
+//│ let sum1; /** scoped **/
 //│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
 //│   let tmp1, tmp2;
 //│   if (isMut === true) {
@@ -276,7 +278,7 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max;
+//│ let max; /** scoped **/
 //│ max = function max(a, b) {{
 //│     let scrut; /** scoped **/
 //│     scrut = a < b;
@@ -291,7 +293,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ JS (unsanitized):
-//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
+//│ let hi1; /** scoped **/ hi1 = function hi(n) { return n }; hi1(0)
 //│ = 0
 
 :stackSafe 42

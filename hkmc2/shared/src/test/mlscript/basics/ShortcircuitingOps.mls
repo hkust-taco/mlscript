@@ -4,7 +4,9 @@
 :sjs
 1 && 2
 //│ JS (unsanitized):
-//│ let lambda; lambda = (undefined, function () { return 2 }); runtime.short_and(1, lambda)
+//│ let lambda; /** scoped **/
+//│ lambda = (undefined, function () { return 2 });
+//│ runtime.short_and(1, lambda)
 //│ = 2
 
 1 || 2
@@ -18,7 +20,9 @@ fun test(x) =
 :sjs
 123 || test(42)
 //│ JS (unsanitized):
-//│ let lambda2; lambda2 = (undefined, function () { return test(42) }); runtime.short_or(123, lambda2)
+//│ let lambda2; /** scoped **/
+//│ lambda2 = (undefined, function () { return test(42) });
+//│ runtime.short_or(123, lambda2)
 //│ = 123
 
 0 || test(42)
@@ -32,7 +36,7 @@ fun test(x) =
 :sjs
 fold(||)(0, false, 42, 123)
 //│ JS (unsanitized):
-//│ let lambda5, tmp;
+//│ let lambda5, tmp; /** scoped **/
 //│ lambda5 = (undefined, function (arg1, arg2) {{
 //│     let lambda6; /** scoped **/
 //│     lambda6 = (undefined, function () {

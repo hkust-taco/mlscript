@@ -11,7 +11,7 @@ fun foo() =
   "a" ~ "b" ~ "c"
 foo()
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo() {{
 //│     let tmp; /** scoped **/
 //│     tmp = M.concat("a", "b");

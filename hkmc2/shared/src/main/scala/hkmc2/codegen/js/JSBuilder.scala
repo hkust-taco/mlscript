@@ -103,6 +103,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     else s.toIntOption match
       case S(index) => doc"[$index]"
       case N => doc"[${JSBuilder.makeStringLiteral(s)}]"
+
+  def tryBraced(original: Block, res: Document)(using Scope) = original match
+    case Scoped(syms, body, _) => // FIXME: remove the hack `!(body.definedVarsNoScoped -- syms).isEmpty` after handling the later passes correctly
+      if (syms.filter(l => scope.lookup(l).isDefined)).isEmpty || !(body.definedVarsNoScoped -- syms).isEmpty then braced(res) else res
+    case _ => braced(res)
   
   def result(r: Result)(using Raise, Scope): Document = r match
     case Value.This(sym) => scope.findThis_!(sym)
@@ -148,7 +153,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       else doc"$runtimeVar.safeCall(${base}(${argsDoc}))"
     case Lambda(ps, bod) => scope.nest givenIn:
       val (params, bodyDoc) = setupFunction(none, ps, bod)
-      doc"($params) => ${ braced(bodyDoc) }"
+      doc"($params) => ${ tryBraced(bod, bodyDoc) }"
     case s @ Select(qual, id) => 
       val dotClass = s.symbol match
         case S(ds) if ds.shouldBeLifted => doc".class"
@@ -237,10 +242,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             if sym.nameIsMeaningful then
               // If the name is not valid JavaScript identifiers, do not use it in the generated function.
               val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-              doc"${getVar(sym, sym.toLoc)} = function $nme($params) ${ braced(bodyDoc) };"
+              doc"${getVar(sym, sym.toLoc)} = function $nme($params) ${ tryBraced(result, bodyDoc) };"
             else
               // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
-              doc"${getVar(sym, sym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              doc"${getVar(sym, sym.toLoc)} = (undefined, function ($params) ${ tryBraced(result, bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -257,9 +262,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                       Return(Lambda(ps, block), false)
                   val (params, bodyDoc) = scope.nest.givenIn:
                     setupFunction(S(td.sym.nme), ps, result)
-                  doc" # $mtdPrefix${td.sym.nme}($params) ${ braced(bodyDoc) }"
+                  doc" # $mtdPrefix${td.sym.nme}($params) ${ tryBraced(result, bodyDoc) }"
                 case td @ FunDefn(params = Nil, body = bod) =>
-                  doc" # ${mtdPrefix}get ${td.sym.nme}() ${ braced(body(bod, endSemi = true)) }"
+                  doc" # ${mtdPrefix}get ${td.sym.nme}() ${ tryBraced(bod, body(bod, endSemi = true)) }"
               .mkDocument(" ")
             
             def mkPrivs(pubFlds: Ls[BlockMemberSymbol -> TermSymbol], privFlds: Ls[TermSymbol],
@@ -469,17 +474,17 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
         case Case.Field(name = n, safe = true) =>
           doc""""${n.name}" in $sd"""
-      val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
+      val h = doc" # if (${ cond(hd._1) }) ${ tryBraced(hd._2, returningTerm(hd._2, endSemi = false)) }"
       val t = tl.foldLeft(h)((acc, arm) =>
-        acc :: doc" else if (${ cond(arm._1) }) ${ braced(returningTerm(arm._2, endSemi = false)) }")
+        acc :: doc" else if (${ cond(arm._1) }) ${ tryBraced(arm._2, returningTerm(arm._2, endSemi = false)) }")
       val e = els match
       case S(el) =>
-        doc" else ${ braced(returningTerm(el, endSemi = false)) }"
+        doc" else ${ tryBraced(el, returningTerm(el, endSemi = false)) }"
       case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
     case Begin(sub, thn) =>
-        doc"${returningTerm(sub, endSemi = true)}${returningTerm(thn, endSemi)}"
+      doc"${returningTerm(sub, endSemi = true)}${returningTerm(thn, endSemi)}"
       
     case End("") => doc""
     case End(msg) =>
@@ -504,8 +509,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
-      doc" # try ${ braced(returningTerm(sub, endSemi = false)) } finally ${
-        braced(returningTerm(fin, endSemi = false))
+      doc" # try ${ tryBraced(sub, returningTerm(sub, endSemi = false)) } finally ${
+        tryBraced(fin, returningTerm(fin, endSemi = false))
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
 
@@ -525,13 +530,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           else
             Some(l -> scope.allocateName(l))
         // NOTE: currently this does not generate pretty JS codes...
-        braced:
-          val res = (if vars.isEmpty then doc"" else
-            doc" # let " :: vars.map: (_, nme) =>
-              nme
-            .toList.mkDocument(", ")
-            :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
-          if !topLevel then doc""" # { ${res} # }""" else res // TODO: pp
+        val res = (if vars.isEmpty then doc"" else
+          doc" # let " :: vars.map: (_, nme) =>
+            nme
+          .toList.mkDocument(", ")
+          :: doc"; /** scoped **/") :: returningTerm(body, endSemi)
+        if !topLevel then braced(res) else res          
     
     // case _ => ???
   
@@ -598,10 +602,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
     // NOTE: this is to make sure that we are NOT generating the top level
     // block in a nested scope, because for exported symbols they are looked up in the outer scope
-    val unscopedMain = p.main match
-      case Scoped(syms, body, _) /* if exprt.isDefined */ => body
-      case _ => p.main
-    imps.mkDocument(doc" # ") :/: block(unscopedMain, endSemi = false).stripBreaks :: (
+    // val unscopedMain = p.main match
+    //   case Scoped(syms, body, _) /* if exprt.isDefined */ => body
+    //   case _ => p.main
+    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""
@@ -776,7 +780,7 @@ trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
       val restAssign = paramRest match
         case N => doc""
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
-      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
+      (doc"...$paramsStr", braced(doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}"))
     else
       super.setupFunction(name, params, body)
 

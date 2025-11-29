@@ -33,7 +33,7 @@ Cross.unapply("0")
 :sjs
 fun foo(x) = x is Cross
 //│ JS (unsanitized):
-//│ let foo;
+//│ let foo; /** scoped **/
 //│ foo = function foo(x2) {{
 //│     let unapplyResult, output, bindings; /** scoped **/
 //│     unapplyResult = runtime.safeCall(Cross.unapply(x2));

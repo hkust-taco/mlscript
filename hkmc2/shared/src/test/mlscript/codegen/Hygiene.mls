@@ -10,7 +10,7 @@ object Test with
     print(Test)
     Test.x
 //│ JS (unsanitized):
-//│ let Test1;
+//│ let Test1; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = globalThis.Object.freeze(new this)
@@ -47,7 +47,7 @@ Test.foo()
 :sjs
 val Test = "oops"
 //│ JS (unsanitized):
-//│ let Test2; Test2 = "oops";
+//│ let Test2; /** scoped **/ Test2 = "oops";
 //│ Test = "oops"
 
 :re
@@ -61,7 +61,13 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
+//│ let f;
+//│ let x, f1, x1; /** scoped **/
+//│ x = 1;
+//│ f = function f() { return x };
+//│ f1 = f;
+//│ x1 = 2;
+//│ runtime.safeCall(f1())
 //│ = 1
 //│ f = fun f
 //│ x = 2
@@ -73,10 +79,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.74: 	  let x = 2
+//│ ║  l.80: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.73: 	  val x = 1
+//│ ║  l.79: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
 //│ globalThis.Object.freeze(class Test4 {
@@ -116,7 +122,7 @@ data class Cls(x) with
   fun bar = x
   print(this.x, x)
 //│ JS (unsanitized):
-//│ let Cls1;
+//│ let Cls1; /** scoped **/
 //│ Cls1 = function Cls(x2) {
 //│   return globalThis.Object.freeze(new Cls.class(x2));
 //│ };
@@ -180,7 +186,7 @@ module Whoops with
     val w: module Whoops = this
     fun g() = f()
 //│ JS (unsanitized):
-//│ let Whoops2;
+//│ let Whoops2; /** scoped **/
 //│ globalThis.Object.freeze(class Whoops {
 //│   static {
 //│     Whoops2 = this
@@ -227,7 +233,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.228: 	Runtime
+//│ ║  l.234: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

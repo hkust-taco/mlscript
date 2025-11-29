@@ -11,7 +11,8 @@ fun f(x) =
   fun g = new A
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ JS (unsanitized):
-//│ let f, g$;
+//│ let g$;
+//│ let f; /** scoped **/
 //│ g$ = function g$(A$member, A1, x) {
 //│   return globalThis.Object.freeze(new A$member())
 //│ };

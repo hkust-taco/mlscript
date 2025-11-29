@@ -17,7 +17,7 @@ if
   x then 0
   y then 0
 //│ JS (unsanitized):
-//│ let tmp;
+//│ let tmp; /** scoped **/
 //│ split_root$: {
 //│   split_1$: {
 //│     if (x === true) {

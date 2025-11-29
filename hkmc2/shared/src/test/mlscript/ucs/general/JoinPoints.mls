@@ -58,7 +58,7 @@ fun crazy(v) =
     S(S(S(S(S(S(0)))))) then "bruh!"
     _ then S(S(S(S(S(S(0))))))
 //│ JS (unsanitized):
-//│ let crazy;
+//│ let crazy; /** scoped **/
 //│ crazy = function crazy(v) {{
 //│     let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5; /** scoped **/
 //│     split_root$: {

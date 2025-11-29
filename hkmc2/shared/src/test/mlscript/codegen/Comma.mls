@@ -7,7 +7,7 @@
 fun f() =
   console.log("ok"), 42
 //│ JS (unsanitized):
-//│ let f;
+//│ let f; /** scoped **/
 //│ f = function f() {{
 //│     let tmp; /** scoped **/
 //│     tmp = runtime.safeCall(globalThis.console.log("ok"));
@@ -17,7 +17,7 @@ fun f() =
 
 fun f() = { console.log("ok"), 42 }
 //│ JS (unsanitized):
-//│ let f1;
+//│ let f1; /** scoped **/
 //│ f1 = function f() {{
 //│     let tmp; /** scoped **/
 //│     tmp = runtime.safeCall(globalThis.console.log("ok"));
@@ -27,7 +27,9 @@ fun f() = { console.log("ok"), 42 }
 
 fun f() = console.log("ok"), 42
 //│ JS (unsanitized):
-//│ let f2; f2 = function f() { return runtime.safeCall(globalThis.console.log("ok")) }; 42
+//│ let f2; /** scoped **/
+//│ f2 = function f() { return runtime.safeCall(globalThis.console.log("ok")) };
+//│ 42
 //│ = 42
 
 

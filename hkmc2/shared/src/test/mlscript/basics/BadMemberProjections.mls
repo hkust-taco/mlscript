@@ -31,11 +31,12 @@
 //│ ║  l.24: 	1::x()
 //│ ╙──      	^
 //│ JS:
-//│ lambda1 = (undefined, function (...args1) {
-//│   runtime.checkArgs("", 1, false, args1.length);
-//│   let self = args1[0];
-//│   let args = runtime.Tuple.slice(args1, 1, 0);
-//│   return runtime.safeCall(self.x(...args))
+//│ lambda1 = (undefined, function (...args1) {{
+//│     runtime.checkArgs("", 1, false, args1.length);
+//│     let self = args1[0];
+//│     let args = runtime.Tuple.slice(args1, 1, 0);
+//│     return runtime.safeCall(self.x(...args))
+//│   }
 //│ });
 //│ block$res2 = runtime.checkCall(lambda1());
 //│ undefined
@@ -56,24 +57,24 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.57: 	"A"::x
+//│ ║  l.58: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[ERROR] Expected a statically known class; found string literal.
-//│ ║  l.57: 	"A"::x
+//│ ║  l.58: 	"A"::x
 //│ ╙──      	^^^
 //│ = fun
 
 :e
 "A" ::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.69: 	"A" ::x
+//│ ║  l.70: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
 //│ ╔══[ERROR] Expected a statically known class; found string literal.
-//│ ║  l.69: 	"A" ::x
+//│ ║  l.70: 	"A" ::x
 //│ ╙──      	^^^
 //│ = fun
 

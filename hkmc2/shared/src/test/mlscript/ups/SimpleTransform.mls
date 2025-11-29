@@ -11,7 +11,7 @@ data class Pair[A, B](first: A, second: B)
 :sjs
 pattern SumPair = Pair(a, b) => a + b
 //│ JS (unsanitized):
-//│ let SumPair1;
+//│ let SumPair1; /** scoped **/
 //│ globalThis.Object.freeze(class SumPair {
 //│   static {
 //│     SumPair1 = globalThis.Object.freeze(new this)

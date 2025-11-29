@@ -64,7 +64,7 @@ Infinity
 :sjs
 val Infinity = 1
 //│ JS (unsanitized):
-//│ let Infinity; Infinity = 1;
+//│ let Infinity; /** scoped **/ Infinity = 1;
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'Infinity' has already been declared
 //│ Infinity = Infinity
 
@@ -105,7 +105,7 @@ fun main() =
 object Cls(val x) with
   fun huh = x
 //│ JS (unsanitized):
-//│ let Cls1;
+//│ let Cls1; /** scoped **/
 //│ globalThis.Object.freeze(class Cls {
 //│   static {
 //│     Cls1.class = globalThis.Object.freeze(new this)
@@ -202,7 +202,7 @@ class D extends id(C)
 //│ ║         	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
-//│ let D1;
+//│ let D1; /** scoped **/
 //│ globalThis.Object.freeze(class D extends Predef.id {
 //│   static {
 //│     D1 = this
@@ -251,7 +251,7 @@ set (x += 1; ())
 fun baz = 1
 fun bar() = baz
 //│ JS (unsanitized):
-//│ let bar, baz;
+//│ let bar, baz; /** scoped **/
 //│ baz = function baz() {
 //│   return 1
 //│ };
@@ -354,7 +354,7 @@ fun w(txt) =
   fs.writeFileSync(outFilePath, txt)
   // ()
 //│ JS (unsanitized):
-//│ let w; w = function w(txt) { return globalThis.fs.writeFileSync(outFilePath, txt) };
+//│ let w; /** scoped **/ w = function w(txt) { return globalThis.fs.writeFileSync(outFilePath, txt) };
 
 w("whoops")
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
@@ -382,7 +382,7 @@ module Foo(x)
 //│ ║  l.379: 	module Foo(x)
 //│ ╙──       	           ^
 //│ JS (unsanitized):
-//│ let Foo5;
+//│ let Foo5; /** scoped **/
 //│ globalThis.Object.freeze(class Foo4 {
 //│   static {
 //│     Foo5 = this
@@ -406,7 +406,7 @@ module Foo(val x)
 //│ ║  l.403: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ JS (unsanitized):
-//│ let Foo7;
+//│ let Foo7; /** scoped **/
 //│ globalThis.Object.freeze(class Foo6 {
 //│   static {
 //│     Foo7 = this

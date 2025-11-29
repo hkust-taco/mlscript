@@ -18,7 +18,7 @@ fun f(x) =
     return 0
   x + 1
 //│ JS (unsanitized):
-//│ let f1;
+//│ let f1; /** scoped **/
 //│ f1 = function f(x) {{
 //│     let scrut, tmp, tmp1; /** scoped **/
 //│     scrut = x < 0;
