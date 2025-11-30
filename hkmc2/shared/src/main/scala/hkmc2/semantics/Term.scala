@@ -203,25 +203,6 @@ trait LeadingDotSelImpl(using State):
   val resSym: FlowSymbol = FlowSymbol.lds(self.nme.name)
   var resolvedTargets: Ls[flow.SelectionTarget.CompanionMember] = Nil // * filled during flow analysis
 
-trait LeadingDotRefImpl:
-  self: Term =>
-
-  var originalSel: Opt[Term.LeadingDotSel] = N
-
-  def hasLDS: Boolean = this.originalSel.isDefined
-
-  def withLDS(sel: Opt[Term.LeadingDotSel]) =
-    this.originalSel = sel
-    this
-
-  def inheritLDS(other: Term) = other match
-    case trm: LeadingDotRefImpl =>
-      this.withLDS(trm.originalSel)
-      trm.originalSel = N
-      this
-    case sel: Term.LeadingDotSel => this.withLDS(S(sel))
-    case _ => this
-
 enum Term extends Statement:
   case Error
   case UnitVal()
@@ -230,7 +211,7 @@ enum Term extends Statement:
   case Ref(sym: Symbol)
     (val tree: Tree.Ident, val refNum: Int, val typ: Opt[Type]) extends Term, ResolvableImpl
   case App(lhs: Term, rhs: Term)
-    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl, LeadingDotRefImpl
+    (val tree: Tree.App, val typ: Opt[Type], val resSym: FlowSymbol) extends Term, ResolvableImpl
   case TyApp(lhs: Term, targs: Ls[Term])
     (val typ: Opt[Type]) extends Term, ResolvableImpl
   case Sel(prefix: Term, nme: Tree.Ident)
@@ -240,7 +221,7 @@ enum Term extends Statement:
       //  * instead, we should store a lightweight representation of the context
       val originalCtx: Opt[Elaborator.Ctx]
     )
-    (using State) extends Term, LeadingDotRefImpl, SelImpl
+    (using State) extends Term, SelImpl
   case SynthSel(prefix: Term, nme: Tree.Ident)
     (val sym: Opt[FieldSymbol], val typ: Opt[Type]) extends Term, ResolvableImpl
   case DynSel(prefix: Term, fld: Term, arrayIdx: Bool)
@@ -276,7 +257,6 @@ enum Term extends Statement:
     derivedClsSym: ClassSymbol, defs: Ls[HandlerTermDefinition], body: Term)
   case LeadingDotSel(nme: Tree.Ident)(
       val originalCtx: Opt[Elaborator.Ctx]
-      // val typ: Opt[Type]
     ) (using State) extends Term, ResolvableImpl, LeadingDotSelImpl
   
   def expanded: Term = this match
@@ -286,6 +266,12 @@ enum Term extends Statement:
       case N => this
     case _ => this
   
+  lazy val ldsRoot: Opt[LeadingDotSel] = this match
+    case Sel(prefix, nme) => prefix.ldsRoot
+    case App(lhs, rhs) => lhs.ldsRoot
+    case sel: LeadingDotSel => S(sel)
+    case _ => N
+
   /**
    * The prelinminary symbol for the term that is resolved during
    * elaboration. 

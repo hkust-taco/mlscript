@@ -49,23 +49,24 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   
   def typeBody(b: ObjBody): Unit = typeProd(b.blk)
   
-  def typeProd(t: Term): Producer = typeProdImpl(t.expanded)
+  def typeProd(t: Term, insideSelAppChain: Boolean = false): Producer = typeProdImpl(t.expanded, insideSelAppChain)
   
-  def typeProdImpl(t: Term): Producer =
+  def typeProdImpl(t: Term, insideSelAppChain: Boolean): Producer =
   trace[P](s"Typing producer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     
     def constrain(lhs: P, rhs: C): Unit = collectedConstraints += ((src = t, c = Constraint(lhs, rhs)))
     
-    t match
-    
-    case trm : LeadingDotRefImpl if trm.hasLDS => trm.originalSel match
-      case S(sel) =>
+    def checkLDS(sub: Term)(res: Producer => Producer): Producer = 
+      t.ldsRoot match
+      case S(lds) if !insideSelAppChain =>
         val sym = FlowSymbol("bind")
         log("Constraining leading dot selection at the top level")
-        constrain(P.LeadingDotSel(sel), C.Flow(sym))
-        constrain(typeProd(trm.withLDS(N)), C.Flow(sym))
+        constrain(P.LeadingDotSel(lds), C.Flow(sym))
+        constrain(res(typeProd(sub, true)), C.Flow(sym))
         P.Flow(sym)
-      case N => typeProd(trm.withLDS(N))
+      case _ => res(typeProd(sub, insideSelAppChain))
+
+    t match
 
     case Ref(sym) =>
       sym match
@@ -88,7 +89,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case sym: FlowSymbol => constrain(rhs, C.Flow(sym))
           case _ => ()
         case t: TermDefinition =>
-          val sign_ty = t.sign.map(typeProd) // TODO use sign_ty
+          val sign_ty = t.sign.map(typeProd(_, insideSelAppChain)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
           t.body.foreach: bod =>
             val bod_ty = typeProd(bod)
@@ -147,14 +148,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case sel @ Sel(pre, nme) =>
       selsToExpand += sel
       log(s"Selection ${sel.showDbg} ${sel.typ}")
-      val pre_t = typeProd(pre)
-      sel.resolvedSym match
-      case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
-      case S(_) => P.Unknown(sel)
-      case N =>
-        val sym = sel.resSym
-        constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
-        P.Flow(sym)
+      checkLDS(pre): pre_t =>
+        sel.resolvedSym match
+        case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
+        case S(_) => P.Unknown(sel)
+        case N =>
+          val sym = sel.resSym
+          constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
+          P.Flow(sym)
 
     
     case nw @ New(cls, args, rft) =>
@@ -165,14 +166,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case S(sym) =>
           sym match
           case sym: ClassSymbol =>
-            val args_t = args.map(typeProd)
+            val args_t = args.map(typeProd(_, insideSelAppChain))
             P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
-      val sym = app.resSym
-      val c = C.Fun(typeProd(rhs), C.Flow(sym))
-      constrain(typeProd(lhs), c)
-      P.Flow(sym)
+      checkLDS(lhs): pre_t =>
+        val sym = app.resSym
+        val c = C.Fun(typeProd(rhs), C.Flow(sym))
+        constrain(pre_t, c)
+        P.Flow(sym)
     
     case Lam(pl, bod) =>
       val ps = typeParamList(pl)
@@ -274,33 +276,25 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           :: targets.map:
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
 
-  def getCompanionMember(sel: Term.LeadingDotSel, sym: Symbol): Opt[(Term, BlockMemberSymbol)] = sym match
-    case ms : ModuleOrObjectSymbol =>
-      ms.defn match
-      case S(d) => 
-        d.body.members.get(sel.nme.name) match
+  def getCompanionMember(name: Str, oc: Opt[Ctx], sym: Symbol): Opt[(Term, BlockMemberSymbol)] = sym match
+    case ms: ModuleOrObjectSymbol => ms.defn.flatMap: d =>
+      d.body.members.get(name) match
+      case S(memb: BlockMemberSymbol) =>
+        oc
+        .flatMap(findAccessPath(_, d.path, ms))
+        .map((_, memb))
+      case _ => N
+    case cs: ClassSymbol =>
+      cs.defn
+      .flatMap(_.moduleCompanion)
+      .flatMap(x => x.defn.map((x, _)))
+      .flatMap: (comp, d) =>
+        d.body.members.get(name) match
         case S(memb: BlockMemberSymbol) =>
-          sel.originalCtx
-            .flatMap(ctx => findAccessPath(ctx, d.path, ms))
-            .map(x => (x, memb))
+          oc
+          .flatMap(findAccessPath(_, d.path, comp))
+          .map((_, memb))
         case _ => N
-      case _ => N
-    case cs : ClassSymbol =>
-      cs.defn match
-      case S(d) => 
-        d.moduleCompanion match
-        case S(comp) =>
-          comp.defn match
-          case S(d) => 
-            d.body.members.get(sel.nme.name) match
-            case S(memb: BlockMemberSymbol) =>
-              sel.originalCtx
-                .flatMap(ctx => findAccessPath(ctx, d.path, comp))
-                .map(x => (x, memb))
-            case _ => N
-          case _ => N
-        case _ => N
-      case _ => N
     case _ => N
 
   def solveConstraints(): Unit =
@@ -376,10 +370,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) => 
                 log(s"Examining ${sym} for leading dot selection resolution")
-                getCompanionMember(trm, sym) match
+                getCompanionMember(trm.nme.name, trm.originalCtx, sym) match
                 case S((path, memb)) =>
                   sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
-                  log(s"Found immediate member ${memb}")
+                  log(s"Found member ${memb}")
                   toSolve.push(Constraint(P.Flow(memb.flow), C.Flow(trm.resSym)))
                 case _ =>
                   log(s"Could not find member ${trm.nme.name} in ${sym}")
