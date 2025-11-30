@@ -464,11 +464,15 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Annotated(annot, target) => target.definedSyms
     case Handle(lhs, rhs, args, derivedClsSym, defs, body) =>
       Set.empty // TODO:
-    case LetDecl(sym, annotations) => Set(sym)
+    case LetDecl(sym, annotations) if sym.asTrm.fold(true)(_.owner.isEmpty) => Set(sym)
     case RcdField(field, rhs) => field.definedSyms ++ rhs.definedSyms
     case RcdSpread(rcd) => rcd.definedSyms
-    case termdef: TermDefinition => Set(termdef.sym)
-    case tpeLikeDef: TypeLikeDef if tpeLikeDef.hasDeclareModifier.isEmpty => Set(tpeLikeDef.bsym)
+    case termdef: TermDefinition if termdef.owner.isEmpty => Set(termdef.sym)
+    case tpeLikeDef: TypeLikeDef
+      if tpeLikeDef.hasDeclareModifier.isEmpty
+        && !tpeLikeDef.sym.isInstanceOf[TypeAliasSymbol]
+        && (!tpeLikeDef.isInstanceOf[ClassLikeDef] || tpeLikeDef.asInstanceOf[ClassLikeDef].owner.isEmpty)
+        => Set(tpeLikeDef.bsym)
     case _ => Set.empty
     // this match
     // case Error | Missing | _: Lit | _: Ref | _: UnitVal | FunTy | TyApp => Set.empty

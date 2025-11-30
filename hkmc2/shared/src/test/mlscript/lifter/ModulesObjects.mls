@@ -214,7 +214,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp5, tmp6; /** scoped **/
+//│ let M17, tmp3; /** scoped **/
 //│ globalThis.Object.freeze(class M16 {
 //│   static {
 //│     M17 = this
@@ -223,7 +223,7 @@ M.A().get
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let scrut; /** scoped **/
+//│     let scrut, tmp4; /** scoped **/
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
@@ -240,17 +240,17 @@ M.A().get
 //│     });
 //│     scrut = M16.A();
 //│     if (scrut instanceof M16.A.class) {
-//│       tmp5 = 2;
+//│       tmp4 = 2;
 //│     } else {
-//│       tmp5 = 3;
+//│       tmp4 = 3;
 //│     }
-//│     this.x = tmp5;
+//│     this.x = tmp4;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp6 = M17.A();
-//│ tmp6.get
+//│ tmp3 = M17.A();
+//│ tmp3.get
 //│ = 4
 
 module M with

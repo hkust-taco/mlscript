@@ -61,12 +61,13 @@ module Foo with
 object Foo with
   val self = id(Foo)
 //│ JS (unsanitized):
-//│ let Foo11, tmp; /** scoped **/
+//│ let Foo11; /** scoped **/
 //│ globalThis.Object.freeze(class Foo10 {
 //│   static {
 //│     Foo11 = globalThis.Object.freeze(new this)
 //│   }
 //│   constructor() {
+//│     let tmp; /** scoped **/
 //│     tmp = Predef.id(Foo11);
 //│     this.self = tmp;
 //│     Object.defineProperty(this, "class", {

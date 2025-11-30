@@ -55,7 +55,7 @@ module M with
   val x = 1
   val y = x + 1
 //│ JS (unsanitized):
-//│ let M1, tmp; /** scoped **/
+//│ let M1; /** scoped **/
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -64,6 +64,7 @@ module M with
 //│     runtime.Unit;
 //│   }
 //│   static {
+//│     let tmp; /** scoped **/
 //│     globalThis.Object.freeze(class C {
 //│       static {
 //│         M.C = this
@@ -110,7 +111,7 @@ M.y
 :re
 M.oops
 //│ ╔══[ERROR] Module 'M' does not contain member 'oops'
-//│ ║  l.111: 	M.oops
+//│ ║  l.112: 	M.oops
 //│ ╙──       	 ^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'oops' yielded 'undefined'
 

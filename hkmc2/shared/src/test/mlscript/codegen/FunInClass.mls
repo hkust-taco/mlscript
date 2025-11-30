@@ -21,7 +21,7 @@ fun test(a) =
 //│ JS (unsanitized):
 //│ let test1; /** scoped **/
 //│ test1 = function test(a) {
-//│   let Inner1, tmp; /** scoped **/
+//│   let Inner1; /** scoped **/
 //│   Inner1 = function Inner(b) {
 //│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
@@ -30,6 +30,7 @@ fun test(a) =
 //│       Inner1.class = this
 //│     }
 //│     constructor(b) {
+//│       let tmp; /** scoped **/
 //│       this.b = b;
 //│       tmp = Predef.print(a);
 //│     }
@@ -80,7 +81,7 @@ fun test(a) =
 //│ JS (unsanitized):
 //│ let test2; /** scoped **/
 //│ test2 = function test(a) {
-//│   let C11, C21, tmp, tmp1, tmp2, tmp3; /** scoped **/
+//│   let C11, C21, tmp, tmp1; /** scoped **/
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
@@ -89,12 +90,13 @@ fun test(a) =
 //│       C11.class = this
 //│     }
 //│     constructor(b) {
+//│       let tmp2; /** scoped **/
 //│       this.b = b;
-//│       tmp = globalThis.Object.freeze([
+//│       tmp2 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp);
+//│       Predef.print(tmp2);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C1", ["b"]]; 
@@ -107,19 +109,20 @@ fun test(a) =
 //│       C21.class = this
 //│     }
 //│     constructor(b) {
+//│       let tmp2; /** scoped **/
 //│       this.b = b;
-//│       tmp1 = globalThis.Object.freeze([
+//│       tmp2 = globalThis.Object.freeze([
 //│         a,
 //│         this.b
 //│       ]);
-//│       Predef.print(tmp1);
+//│       Predef.print(tmp2);
 //│     }
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "C2", ["b"]]; 
 //│   });
-//│   tmp2 = C11(1);
-//│   tmp3 = C21(2);
-//│   return globalThis.Object.freeze([ tmp2, tmp3 ])
+//│   tmp = C11(1);
+//│   tmp1 = C21(2);
+//│   return globalThis.Object.freeze([ tmp, tmp1 ])
 //│ };
 
 test(123)
@@ -177,7 +180,7 @@ data class Bar(x) with
   foo()()
 Bar(1)
 //│ JS (unsanitized):
-//│ let Bar1, tmp; /** scoped **/
+//│ let Bar1; /** scoped **/
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
@@ -186,6 +189,7 @@ Bar(1)
 //│     Bar1.class = this
 //│   }
 //│   constructor(x) {
+//│     let tmp; /** scoped **/
 //│     this.x = x;
 //│     tmp = this.foo();
 //│     runtime.safeCall(tmp());

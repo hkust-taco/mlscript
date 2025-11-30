@@ -13,12 +13,13 @@ fun foo() =
 class Test with
   print(foo())
 //│ JS (unsanitized):
-//│ let tmp, Test1; /** scoped **/
+//│ let Test1; /** scoped **/
 //│ globalThis.Object.freeze(class Test {
 //│   static {
 //│     Test1 = this
 //│   }
 //│   constructor() {
+//│     let tmp; /** scoped **/
 //│     tmp = foo();
 //│     Predef.print(tmp);
 //│   }

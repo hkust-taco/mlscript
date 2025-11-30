@@ -886,11 +886,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         reportAnnotations(decl, annotations)
         sym
     val ctor =
-      term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
-        // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
-        .mapTail:
-          case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
-          case t => t
+      inScopedBlock(clsBody.blk.res.definedSyms ++ clsBody.nonMethods.flatMap(_.definedSyms)):
+        term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
+          // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
+          .mapTail:
+            case Return(Value.Lit(syntax.Tree.UnitLit(true)), true) => End()
+            case t => t
     (mtds, publicFlds, privateFlds, ctor)
   
   def args(elems: Ls[Elem])(k: Ls[Arg] => Block)(using LoweringCtx): Block =

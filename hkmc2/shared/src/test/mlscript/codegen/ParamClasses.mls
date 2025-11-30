@@ -185,7 +185,7 @@ class Foo(x, val y, z, val z, z) with
   print("z = " + z)
   print("this.z = " + this.z)
 //│ JS (unsanitized):
-//│ let Foo7, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11; /** scoped **/
+//│ let Foo7; /** scoped **/
 //│ Foo7 = function Foo(x, y, z, z1, z2) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
@@ -194,6 +194,7 @@ class Foo(x, val y, z, val z, z) with
 //│     Foo7.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
+//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11; /** scoped **/
 //│     this.#x = x;
 //│     this.y = y;
 //│     this.#z = z;
@@ -236,10 +237,10 @@ Foo(10, 20, 30, 40, 50)
 class Foo(val z, val z)
 //│ ╔══[ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
-//│ ║  l.236: 	class Foo(val z, val z)
+//│ ║  l.237: 	class Foo(val z, val z)
 //│ ║         	              ^
 //│ ╟── Defined at: 
-//│ ║  l.236: 	class Foo(val z, val z)
+//│ ║  l.237: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ JS (unsanitized):
 //│ let Foo9; /** scoped **/

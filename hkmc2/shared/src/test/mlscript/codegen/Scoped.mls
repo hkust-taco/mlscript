@@ -274,20 +274,119 @@ fun f(x, y) =
 
 
 
-// FIXME: `tmp1` is declared in a wrong place
 :sjs
 class A with
   val x = 1 + 2
 //│ JS (unsanitized):
-//│ let A3, tmp1; /** scoped **/
+//│ let A3; /** scoped **/
 //│ globalThis.Object.freeze(class A2 {
 //│   static {
 //│     A3 = this
 //│   }
 //│   constructor() {
+//│     let tmp1; /** scoped **/
 //│     tmp1 = 1 + 2;
 //│     this.x = tmp1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+
+
+let state = 0
+//│ state = 0
+
+:sjs
+class Foo() with // the class definition is moved to the location of its companion
+  fun foo() = state
+set state += 1
+module Foo with
+  val res = Foo().foo()
+//│ JS (unsanitized):
+//│ let Foo1, tmp1; /** scoped **/
+//│ tmp1 = state + 1;
+//│ state = tmp1;
+//│ Foo1 = function Foo() {
+//│   return globalThis.Object.freeze(new Foo.class());
+//│ };
+//│ globalThis.Object.freeze(class Foo {
+//│   static {
+//│     Foo1.class = this
+//│   }
+//│   constructor() {}
+//│   static {
+//│     let tmp2, tmp3; /** scoped **/
+//│     tmp2 = Foo1();
+//│     tmp3 = tmp2.foo();
+//│     this.res = tmp3;
+//│   }
+//│   foo() {
+//│     return state
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo", []]; 
+//│ });
+
+
+
+:sjs
+type I = Int
+//│ JS (unsanitized):
+//│ 
+
+
+
+:sjs
+class A(x) with
+  val y = x
+//│ JS (unsanitized):
+//│ let A5; /** scoped **/
+//│ A5 = function A(x1) {
+//│   return globalThis.Object.freeze(new A.class(x1));
+//│ };
+//│ globalThis.Object.freeze(class A4 {
+//│   static {
+//│     A5.class = this
+//│   }
+//│   constructor(x1) {
+//│     this.#x = x1;
+//│     this.y = this.#x;
+//│   }
+//│   #x;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", [null]]; 
+//│ });
+
+
+
+:sjs
+module M with
+  data class A(x, y)
+//│ JS (unsanitized):
+//│ let M3; /** scoped **/
+//│ globalThis.Object.freeze(class M2 {
+//│   static {
+//│     M3 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     this.A = function A(x1, y1) {
+//│       return globalThis.Object.freeze(new A.class(x1, y1));
+//│     };
+//│     globalThis.Object.freeze(class A6 {
+//│       static {
+//│         M2.A.class = this
+//│       }
+//│       constructor(x1, y1) {
+//│         this.x = x1;
+//│         this.y = y1;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", ["x", "y"]]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
