@@ -265,7 +265,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val mtds = methods.map:
               case (sym, params, split) =>
                 val paramLists = params :: Nil
-                val bodyBlock = ucs.Normalization(this)(split)(Ret)
+                val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
                 FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(isTailRec = false)
             // The return type is intended to be consistent with `gatherMembers`
             (mtds, Nil, Nil, End())

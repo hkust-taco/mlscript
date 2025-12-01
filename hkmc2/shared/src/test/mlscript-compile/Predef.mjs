@@ -124,7 +124,7 @@ globalThis.Object.freeze(class Predef {
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, scrut, i, init, tmp; /** scoped **/
+      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3; /** scoped **/
       len = rest.length;
       scrut = len == 0;
       if (scrut === true) {
@@ -132,19 +132,18 @@ globalThis.Object.freeze(class Predef {
       } else {
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
-        tmp1: while (true) {
-          let scrut1, tmp2, tmp3, tmp4; /** scoped **/
+        tmp4: while (true) {
           scrut1 = i > 0;
           if (scrut1 === true) {
-            tmp2 = i - 1;
-            i = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f(tmp3, init));
-            init = tmp4;
-            tmp = runtime.Unit;
-            continue tmp1
+            tmp = i - 1;
+            i = tmp;
+            tmp1 = runtime.safeCall(rest.at(i));
+            tmp2 = runtime.safeCall(f(tmp1, init));
+            init = tmp2;
+            tmp3 = runtime.Unit;
+            continue tmp4
           } else {
-            tmp = runtime.Unit;
+            tmp3 = runtime.Unit;
           }
           break;
         }

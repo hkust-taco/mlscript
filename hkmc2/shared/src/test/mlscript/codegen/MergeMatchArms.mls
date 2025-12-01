@@ -107,31 +107,29 @@ let x = if a is
     print("done")
 print(x)
 //│ JS (unsanitized):
-//│ let tmp1, x, tmp2, tmp3; /** scoped **/
+//│ let tmp1, tmp2, tmp3, x, tmp4; /** scoped **/
+//│ tmp4 = 3;
 //│ if (a instanceof A.class) {
 //│   tmp1 = 1;
 //│ } else if (a instanceof B.class) {
 //│   tmp1 = 2;
 //│ } else if (a instanceof C.class) {
 //│   tmp1 = 3;
-//│ } else {
-//│   let tmp4; /** scoped **/
-//│   tmp3 = 3;
-//│   if (a instanceof D.class) {
-//│     if (a instanceof A.class) {
-//│       tmp4 = 1 + tmp3;
-//│     } else if (a instanceof B.class) {
-//│       tmp4 = 2 + tmp3;
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│     tmp2 = tmp4;
-//│   } else if (a instanceof E.class) {
-//│     tmp2 = 5;
+//│ } else if (a instanceof D.class) {
+//│   if (a instanceof A.class) {
+//│     tmp2 = 1 + tmp4;
+//│   } else if (a instanceof B.class) {
+//│     tmp2 = 2 + tmp4;
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
+//│   tmp3 = tmp2;
 //│   tmp1 = Predef.print("done");
+//│ } else if (a instanceof E.class) {
+//│   tmp3 = 5;
+//│   tmp1 = Predef.print("done");
+//│ } else {
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│ }
 //│ x = tmp1;
 //│ Predef.print(x)
