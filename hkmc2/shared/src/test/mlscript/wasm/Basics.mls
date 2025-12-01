@@ -48,15 +48,16 @@ fun foo() = 42
 foo() + foo()
 //│ Wat:
 //│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type (func (result (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (func $foo (type 0) (result (ref null any))
+//│   (func $foo (type 1) (result (ref null any))
 //│     (return
 //│       (ref.i31
 //│         (i32.const 42))))
 //│   (export "foo" (func $foo))
 //│   (elem declare func $foo)
-//│   (func $entry (type 1) (result (ref null any))
+//│   (func $entry (type 2) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
@@ -64,11 +65,11 @@ foo() + foo()
 //│       (nop)
 //│       (block (result (ref null i31))
 //│         (local.set $tmp
-//│           (call_ref 0
+//│           (call_ref 1
 //│             (ref.func $foo)))
 //│         (block (result (ref null i31))
 //│           (local.set $tmp1
-//│             (call_ref 0
+//│             (call_ref 1
 //│               (ref.func $foo)))
 //│           (ref.i31
 //│             (i32.add
@@ -113,16 +114,21 @@ class Foo(val a)
 (new Foo(42)).Foo#a
 //│ Wat:
 //│ (module
-//│   (type $Foo (struct (field $a (mut (ref null any)))))
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $a (mut (ref null any))))))
 //│   (type (func (param $a (ref null any)) (result (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (func $Foo (type 1) (param $a (ref null any)) (result (ref null any))
+//│   (func $Foo (type 2) (param $a (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
 //│         (struct.new_default $Foo))
+//│       (struct.set $Foo 0
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
 //│       (block
-//│         (struct.set $Foo 0
+//│         (struct.set $Foo 1
 //│           (ref.cast (ref $Foo)
 //│             (local.get $this))
 //│           (local.get $a))
@@ -131,7 +137,7 @@ class Foo(val a)
 //│         (local.get $this))))
 //│   (export "Foo" (func $Foo))
 //│   (elem declare func $Foo)
-//│   (func $entry (type 2) (result (ref null any))
+//│   (func $entry (type 3) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (block (result (ref null any))
@@ -141,7 +147,7 @@ class Foo(val a)
 //│           (call $Foo
 //│             (ref.i31
 //│               (i32.const 42))))
-//│         (struct.get $Foo 0
+//│         (struct.get $Foo 1
 //│           (ref.cast (ref $Foo)
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))
