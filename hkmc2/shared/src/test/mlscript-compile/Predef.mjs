@@ -1,7 +1,6 @@
 const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
 const prettyPrint = globalThis.Symbol.for("mlscript.prettyPrint");
 import runtime from "./Runtime.mjs";
-import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";

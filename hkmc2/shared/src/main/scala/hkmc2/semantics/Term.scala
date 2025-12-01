@@ -511,6 +511,81 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Neg(e) => e :: Nil
     case Annotated(ann, target) => ann.subTerms ::: target :: Nil
   
+  /** Check if the term satisfies the predicate. The reason I did not use
+   *  `subTerms` and `subStatements` for traversal is that they consume a
+   *  considerable amount of time and memory, and they fail to terminate on
+   *  `Rule.mls`. */
+  def exists(p: PartialFunction[Statement, Bool]): Bool =
+    def go(stmt: Statement): Bool =
+      stmt match
+      case _ if p.isDefinedAt(stmt) => p(stmt)
+      case Error | _: Lit | _: UnitVal | Missing | _: Ref => false
+      case App(lhs, rhs) => go(lhs) || go(rhs)
+      case RcdField(lhs, rhs) => go(lhs) || go(rhs)
+      case RcdSpread(bod) => go(bod)
+      case FunTy(lhs, rhs, eff) => go(lhs) || go(rhs) || eff.exists(go)
+      case TyApp(pre, tarsg) => go(pre) || tarsg.exists(go)
+      case Sel(pre, _) => go(pre)
+      case SynthSel(pre, _) => go(pre)
+      case DynSel(o, f, _) => go(o) || go(f)
+      case Tup(fields) => fields.exists(_.subTerms.exists(go))
+      case IfLike(_, body) => body.subTerms.exists(go)
+      case Lam(params, body) => params.params.exists(_.subTerms.exists(go)) || go(body)
+      case Blk(stats, res) => stats.exists(go) || go(res)
+      case Rcd(mut, stats) => stats.exists(go)
+      case Quoted(term) => go(term)
+      case Unquoted(term) => go(term)
+      case New(cls, argss, rft) =>
+        go(cls) || argss.exists(_.exists(go(_))) ||
+        rft.exists(_._2.blk.subTerms.exists(go))
+      case SelProj(pre, cls, _) => go(pre) || go(cls)
+      case Asc(term, ty) => go(term) || go(ty)
+      case Ret(res) => go(res)
+      case Throw(res) => go(res)
+      case Forall(_, _, body) => go(body)
+      case WildcardTy(in, out) => in.exists(go) || out.exists(go)
+      case CompType(lhs, rhs, _) => go(lhs) || go(rhs)
+      case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms).exists(go)
+      case DefineVar(sym, rhs) => go(rhs)
+      case Region(_, body) => go(body)
+      case RegRef(reg, value) => go(reg) || go(value)
+      case Assgn(lhs, rhs) => go(lhs) || go(rhs)
+      case SetRef(lhs, rhs) => go(lhs) || go(rhs)
+      case Deref(term) => go(term)
+      case TermDefinition(_, _, _, pss, tps, sign, body, _, _, _, annotations, _) =>
+        pss.toList.flatMap(_.subTerms).exists(go) || tps.getOrElse(Nil).exists:
+          case Param(_, _, sign, _) => sign.exists(go)
+        || sign.toList.exists(go) || body.exists(go) || annotations.exists:
+          case Annot.Trm(term) => go(term)
+          case Annot.Untyped | Annot.Modifier(_) => false
+      case cls: ClassDef =>
+        cls.paramsOpt.toList.flatMap(_.subTerms).exists(go) ||
+        go(cls.body.blk) ||
+        cls.annotations.flatMap(_.subTerms).exists(go)
+      case mod: ModuleOrObjectDef =>
+        mod.paramsOpt.toList.flatMap(_.subTerms).exists(go) ||
+        go(mod.body.blk) ||
+        mod.annotations.flatMap(_.subTerms).exists(go)
+      case td: TypeDef =>
+        td.rhs.toList.exists(go) || td.annotations.flatMap(_.subTerms).exists(go)
+      case pat: PatternDef =>
+        pat.paramsOpt.toList.flatMap(_.subTerms).exists(go) ||
+        go(pat.body.blk) ||
+        pat.annotations.flatMap(_.subTerms).exists(go)
+      case Import(sym, str, file) => false
+      case Try(body, finallyDo) => go(body) && go(finallyDo)
+      case Handle(lhs, rhs, args, derivedClsSym, defs, bod) =>
+        go(rhs) || args.exists(go) || defs.flatMap(_.td.subTerms).exists(go) || go(bod)
+      case Neg(e) => go(e)
+      case Annotated(ann, target) => ann.subTerms.exists(go) || go(target)
+      case Mut(underlying) => go(underlying)
+      case DynNew(cls, args) => go(cls) && args.exists(go)
+      case Resolved(t, sym) => go(t)
+      case CtxTup(fields) => fields.exists(_.subTerms.exists(go))
+      case SynthIf(split) => split.subTerms.exists(go)
+      case Drop(trm) => go(trm)
+    go(this)
+  
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Ls[Located] = t match
     case Tree.DummyApp | Tree.DummyTup => subTerms

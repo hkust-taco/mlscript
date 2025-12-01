@@ -47,25 +47,38 @@ class CompileTestRunner
         
         println(s"Compiling: $relativeName")
         
-        val preludePath = mainTestDir/"mlscript"/"decls"/"Prelude.mls"
-        
         // Stack safety relies on the fact that runtime uses while loops for resumption
         // and does not create extra stack depth. Hence we disable while loop rewriting here.
         given Config = Config.default.copy(rewriteWhileLoops = false)
         given io.FileSystem = io.FileSystem.default
         
+        // * The weird type of `mkOutput` is to allow wrapping the reporting of
+        // * diagnostics in synchronized blocks.
+        // TODO: Fix the weird type, which should be unnecessary in `Watcher`. 
+        val mkOutput = (outputConsumer: (Str => Unit) => Unit) =>
+          // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
+          CompileTestRunner.synchronized:
+            outputConsumer(System.out.println)
+        val report = ReportFormatter(mkOutput)
+        def mkRaise(file: io.Path): Raise =
+          val wd = file.up
+          d => mkOutput:
+            val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
+            _(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
+          report(0, d :: Nil, showRelativeLineNums = false)
+        
         val compiler = MLsCompiler(
-          preludePath,
-          mkOutput =>
-            // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
-            CompileTestRunner.synchronized:
-              mkOutput(System.out.println)
+          new MLsCompiler.Paths:
+            val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
+            val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
+            val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
+          mkRaise
         )
         compiler.compileModule(file)
         
-        if compiler.report.badLines.nonEmpty then
+        if report.badLines.nonEmpty then
           fail(s"Unexpected diagnostic at: " +
-            compiler.report.badLines.distinct.sorted
+            report.badLines.distinct.sorted
               .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   }
       

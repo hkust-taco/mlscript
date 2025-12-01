@@ -1,5 +1,3 @@
-import Predef from "./Predef.mjs";
-
 const RuntimeJS = {
   bitand(lhs, rhs) {
     return lhs & rhs;
