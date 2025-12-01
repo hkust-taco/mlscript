@@ -167,12 +167,15 @@ class TailRecOpt(using State, TL, Raise):
     S(ret)
     
   def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol]): List[FunDefn] =
-    if scc.calls.size == 0 then return scc.funs
-    
     val nonTailCalls = scc.calls
       .collect:
         case c: NormalCall => c.f2 -> c.call
       .toMap
+    
+    if nonTailCalls.size == scc.calls.length then
+      for f <- scc.funs if f.isTailRec do
+        raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
+      return scc.funs
     
     if !nonTailCalls.isEmpty then
       for f <- scc.funs if f.isTailRec do
@@ -181,7 +184,7 @@ class TailRecOpt(using State, TL, Raise):
           case Some(value) => value.toLoc 
           case None => nonTailCalls.head._2.toLoc
         raise(ErrorReport(
-            msg"`${f.sym.nme}` is not tail recursive." -> f.dSym.toLoc
+            msg"This function is not tail recursive." -> f.dSym.toLoc
             :: msg"It could self-recurse through this call, which is not a tail call." -> reportLoc
             :: Nil
           ))

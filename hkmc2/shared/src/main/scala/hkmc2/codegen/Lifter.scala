@@ -359,7 +359,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val imutVars = captureFnVars.vars
     imutVars.filter: s =>
       !mutVars.contains(s) && candVars.contains(s)
-  
+
   case class FunSyms[T <: DefinitionSymbol[?]](b: BlockMemberSymbol, d: T):
     def asPath = Value.Ref(b, S(d))
   object FunSyms:

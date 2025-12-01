@@ -11,6 +11,7 @@ import hkmc2.syntax.Tree
 object LambdaRewriter:
   
   def desugar(b: Block)(using State) =
+    
     def rewriteOneBlk(b: Block) = b match
       case Assign(lhs, Lambda(params, body), rest) if !lhs.isInstanceOf[TempSymbol] =>
         val newSym = BlockMemberSymbol(lhs.nme, Nil,

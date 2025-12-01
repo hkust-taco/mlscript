@@ -18,16 +18,15 @@ class A
 //│ ╙──      	         ^^^^^
 //│ = 4
 
-:todo
 @tailrec
-fun f = 2
+fun f = g
+fun g = f
 
 :w
 @tailcall
 fun g = 2
 //│ ═══[WARNING] This annotation has no effect.
 
-:todo
 fun test =
   @tailcall f
 
@@ -37,14 +36,15 @@ fun test =
   @tailcall f
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.42: 	  @tailcall f
+//│ ║  l.36: 	  @tailcall f
 //│ ╙──      	            ^
 //│ f = 0
 
 :todo
 class A with
   @tailrec
-  fun f = 2
+  fun f() = g()
+  fun g() = f()
 
 :w
 class A with
@@ -77,5 +77,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.84: 	  @tailcall 1 + 2
+//│ ║  l.77: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^

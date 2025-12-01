@@ -20,7 +20,7 @@ fun g(x) = @tailcall f(x)
 @tailrec fun f(x) =
   g(x)
 fun g(x) = f(x); f(x)
-//│ ╔══[ERROR] `f` is not tail recursive.
+//│ ╔══[ERROR] This function is not tail recursive.
 //│ ║  l.20: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
@@ -35,7 +35,7 @@ fun g(x) =
   h(x)
 fun h(x) =
   g(x)
-//│ ╔══[ERROR] `f` is not tail recursive.
+//│ ╔══[ERROR] This function is not tail recursive.
 //│ ║  l.31: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
@@ -50,7 +50,7 @@ fun g(x) =
   f(x)
 fun h(x) =
   f(x)
-//│ ╔══[ERROR] `f` is not tail recursive.
+//│ ╔══[ERROR] This function is not tail recursive.
 //│ ║  l.46: 	@tailrec fun f(x) =
 //│ ║        	             ^
 //│ ╟── It could self-recurse through this call, which is not a tail call.
@@ -67,3 +67,17 @@ module A with
 //│ ║  l.64: 	    @tailcall f(x - 1)
 //│ ╙──      	              ^^^^^^^^
 
+:w
+@tailrec
+fun f = 2
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.72: 	fun f = 2
+//│ ╙──      	    ^
+
+:w
+module A with
+  @tailrec
+  fun f() = 2
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.80: 	  fun f() = 2
+//│ ╙──      	      ^

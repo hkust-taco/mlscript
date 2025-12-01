@@ -328,7 +328,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // The symbol for the loop label if the term is a `while`.
     lazy val loopLabel = new TempSymbol(t)
     lazy val f = new BlockMemberSymbol("while", Nil, false)
-    lazy val tSym = new TermSymbol(syntax.Fun, N, Tree.Ident(f.nme))
+    lazy val tSym = TermSymbol.fromFunBms(f, N)
     val normalized = tl.scoped("ucs:normalize"):
       normalize(inputSplit)(using VarSet())
     tl.scoped("ucs:normalized"):
