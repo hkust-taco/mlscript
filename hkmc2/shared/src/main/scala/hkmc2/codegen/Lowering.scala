@@ -159,9 +159,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
     case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
       reportAnnotations(decl, annotations)
+      if sym.asTrm.fold(true)(_.owner.isEmpty) then subst.collectScopedSym(sym)
       blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
       reportAnnotations(decl, annotations)
+      if sym.asTrm.fold(true)(_.owner.isEmpty) then subst.collectScopedSym(sym)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
@@ -176,6 +178,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       d match
       case td: TermDefinition =>
         reportAnnotations(td, td.extraAnnotations)
+        if td.owner.isEmpty then subst.collectScopedSym(td.sym)
         td.body match
         case N => // abstract declarations have no lowering
           blockImpl(stats, res)(k)
@@ -213,6 +216,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         reportAnnotations(cls, cls.extraAnnotations)
         blockImpl(stats, res)(k)
       case _defn: ClassLikeDef =>
+        if _defn.owner.isEmpty then subst.collectScopedSym(_defn.bsym)
         val defn = _defn match
           case cls: ClassDef => cls
           case mod: ModuleOrObjectDef if mod.kind is syntax.Mod => // * Currently, both objects and modules are represented as `ModuleOrObjectDef`s
@@ -849,6 +853,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
+      subst.collectScopedSym(sym)
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
         val arrSym = new TempSymbol(N, "arr")
@@ -886,7 +891,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         reportAnnotations(decl, annotations)
         sym
     val ctor =
-      inScopedBlock(clsBody.blk.res.definedSyms ++ clsBody.nonMethods.flatMap(_.definedSyms)):
+      inScopedBlock:
         term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
           // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
           .mapTail:
@@ -972,7 +977,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
     val blk =
-      inScopedBlock(main.stats.foldLeft(main.res.definedSyms)(_ ++ _.definedSyms))(using LoweringCtx.empty):
+      inScopedBlock(using LoweringCtx.empty):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     val desug = LambdaRewriter.desugar(blk)
@@ -1017,15 +1022,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case ps => ps
     setupFunctionDef(physicalParams, bodyTerm, name)
   
-  def inScopedBlock(definedSymsInElaborated: Set[Symbol])(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+  def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
-      val scopedSyms = subst.getCollectedSym ++ definedSymsInElaborated
+      val scopedSyms = subst.getCollectedSym
       Scoped(scopedSyms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using LoweringCtx): (List[ParamList], Block) =
-    val scopedBody = inScopedBlock(bodyTerm.definedSyms)(returnedTerm(bodyTerm))
+    val scopedBody = inScopedBlock(returnedTerm(bodyTerm))
     (paramLists, scopedBody)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
@@ -1138,7 +1143,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block =
-    inScopedBlock(bod.definedSyms):
+    inScopedBlock:
       val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
       val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
       val resSym = TempSymbol(N, dbgNme = "traceLogRes")

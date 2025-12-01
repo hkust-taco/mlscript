@@ -132,15 +132,19 @@ mkObj(1, 2)
 // * Note: this is parsed as `{let mkObj = x: _}, y: _, z: 3`
 // * TODO: improve or at least raise a warning
 :e
-// :ge
-// :re
+:ge
+:re
 let mkObj = x: _, y: _, z: 3
 //│ ╔══[ERROR] Illegal position for '_' placeholder.
 //│ ║  l.137: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
 //│ mkObj = fun mkObj
 //│ y = undefined
-//│ z = undefined
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.137: 	let mkObj = x: _, y: _, z: 3
+//│ ╙──       	                        ^
+//│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
 
 // mkObj(1, 2)
 

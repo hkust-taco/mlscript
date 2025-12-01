@@ -24,21 +24,6 @@ enum Split extends AutoLocated with ProductWithTail:
   case Else(default: Term)
   case End
   
-  def definedSyms: Set[Symbol] = this match
-    case Cons(Branch(scrutinee, pattern, continuation), tail) =>
-      tail.definedSyms ++ 
-      locally:
-        continuation.definedSyms ++
-        locally:
-          pattern match
-            case c: FlatPattern.ClassLike => c.arguments.fold(Set.empty)(_.unzip._1)
-            case FlatPattern.Tuple(size, inf) => Set.empty // TODO: seems to be ok to leave this as empty?
-            case FlatPattern.Record(entries) => entries.unzip._2
-            case FlatPattern.Lit(_) => Set.empty
-    case Let(sym, term, tail) => term.definedSyms ++ tail.definedSyms + sym
-    case Else(default) => default.definedSyms
-    case End => Set.empty
-  
   
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   

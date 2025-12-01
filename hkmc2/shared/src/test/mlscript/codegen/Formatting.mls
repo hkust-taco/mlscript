@@ -42,7 +42,7 @@ discard of { aaaa: 1 }
 
 discard of { aaaaaaaaa: 1, bbbb: 2 }
 //│ JS (unsanitized):
-//│ let bbbb, tmp3, aaaaaaaaa; /** scoped **/
+//│ let aaaaaaaaa, bbbb, tmp3; /** scoped **/
 //│ aaaaaaaaa = 1;
 //│ bbbb = 2;
 //│ tmp3 = globalThis.Object.freeze({
