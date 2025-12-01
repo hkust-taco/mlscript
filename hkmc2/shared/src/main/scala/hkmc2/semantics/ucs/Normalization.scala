@@ -395,17 +395,10 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
           case N => innerBlock
       // If there are shared consequents, we need a wrap the entire block in a
       // `Label` so that `Break`s in the shared consequents can jump to the end.
-      val body =
-        val possiblyScoped =
-          // lowering.possiblyScoped(
-          //   LoweringCtx.subst.getCollectedSym ++ inputSplit.definedSyms,
-          //   mainBlock)
-          mainBlock
-        // if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
-        Scoped(
-          if nestScope then LoweringCtx.loweringCtx.getCollectedSym else Set.empty/*  ++ inputSplit.definedSyms */,
-          if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
-        )
+      val body = Scoped(
+        if nestScope then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,
+        if labels.isEmpty then mainBlock else
+        Label(rootBreakLabel, false, mainBlock, End()))
       // Embed the `body` into `Label` if the term is a `while`.
       lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
       val block =
