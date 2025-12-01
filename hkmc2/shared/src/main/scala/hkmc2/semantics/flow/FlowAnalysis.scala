@@ -56,9 +56,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       t.ldsRoot match
       case S(lds) if !insideSelAppChain =>
         val sym = FlowSymbol("bind")
-        log("Constraining leading dot selection at the top level")
+        log(s"Constraining leading dot selection ${lds.showDbg} at the top level")
         constrain(P.LeadingDotSel(lds), C.Flow(sym))
-        constrain(res(typeProd(sub, true)), C.Flow(sym))
+        constrain(res(typeProd(sub, insideSelAppChain = true)), C.Flow(sym))
         P.Flow(sym)
       case _ => res(typeProd(sub, insideSelAppChain))
     
@@ -136,7 +136,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case sel @ LeadingDotSel(nme) =>
       leadingDotSelsToExpand += sel
       log(s"Leading dot selection ${sel.showDbg}")
-      // P.LeadingDotSel(sel)
       val sym = sel.resSym
       constrain(P.LeadingDotSel(sel), C.Flow(sym))
       P.Flow(sym)
@@ -147,7 +146,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       checkLDS(pre): pre_t =>
         sel.resolvedSym match
         case S(sym: BlockMemberSymbol) => P.Flow(sym.flow)
-        case S(_) => P.Unknown(sel)
+        case S(sym) =>
+          log(s"Unhandled symbol reference ${sym.nme} in ${sel.showDbg}")
+          P.Unknown(sel)
         case N =>
           val sym = sel.resSym
           constrain(pre_t, C.Sel(nme, C.Flow(sym))(sel))
@@ -158,7 +159,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       rft match
       case N =>
         cls.resolvedSym.flatMap(_.asCls) match
-        case N => P.Unknown(nw)
+        case N =>
+          log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
+          P.Unknown(nw)
         case S(sym) =>
           sym match
           case sym: ClassSymbol =>
@@ -201,12 +204,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   trace[C](s"Typing param: ${p.showDbg}", post = res => s": ${res.showDbg}"):
     p.signType match
     case S(typ) =>
-      log(p.flow.showDbg)
       p.flow.producers += ConcreteProd(Vector.empty, P.Typ(typ))
       C.Typ(typ)
-    case N =>
-      log("nothing")
-      C.Flow(p.flow)
+    case N => C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
     if ps.restParam.nonEmpty then
