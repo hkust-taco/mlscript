@@ -33,14 +33,10 @@ enum SelectionTarget:
 
 
 
-
 class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   import tl.*
   
   val MAX_FUEL = 1000
-
-  val deconstructConsumer = true
-  val deconstructType = true
   
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
   
@@ -56,7 +52,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     def constrain(lhs: P, rhs: C): Unit = collectedConstraints += ((src = t, c = Constraint(lhs, rhs)))
     
-    def checkLDS(sub: Term)(res: Producer => Producer): Producer = 
+    def checkLDS(sub: Term)(res: Producer => Producer): Producer =
       t.ldsRoot match
       case S(lds) if !insideSelAppChain =>
         val sym = FlowSymbol("bind")
@@ -65,16 +61,16 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         constrain(res(typeProd(sub, true)), C.Flow(sym))
         P.Flow(sym)
       case _ => res(typeProd(sub, insideSelAppChain))
-
+    
     t match
-
+    
     case Ref(sym) =>
       sym match
       case sym: VarSymbol => P.Flow(sym)
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case bs: BuiltinSymbol => bs.signature 
+      case bs: BuiltinSymbol => bs.signature
       case bms: BlockMemberSymbol => P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
@@ -99,9 +95,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case t: Term => typeProd(t)
           
         case cd: ClassDef =>
-
+          
           typeBody(cd.body)
-
+          
           val prod = cd.paramsOpt match
             case S(ps) =>
               ps.restParam match
@@ -116,9 +112,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   Nil,
                 )
             case N => P.Ctor(cd.sym, Nil)(cd.body.blk)
-
+          
           log(s"Class member type: ${prod.showDbg}")
-
+          
           constrain(prod, C.Flow(cd.bsym.flow))
           
         case md: ModuleOrObjectDef =>
@@ -128,7 +124,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
         case _: Import =>
           // TODO?
-        
+
         case stt =>
           log(s"/!\\ Unhandled statement: ${stt} /!\\")
           P.Unknown(stt)
@@ -436,8 +432,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
         if fuel === 0 then
           raise(ErrorReport(
-            msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil
-          ))
+            msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
     val (outermostBase, outermostPath) = dst.outermostAcessibleBase
