@@ -86,7 +86,7 @@ class TailRecOpt(using State, TL, Raise):
       c.match
         case c: TailCall if c.call.explicitTailCall && !cond =>
           raise(ErrorReport(
-            msg"This tail call exits the current scope and cannot be optimized." -> c.call.toLoc :: Nil))
+            msg"This tail call exits the current scope is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
       cond
     
@@ -148,7 +148,7 @@ class TailRecOpt(using State, TL, Raise):
         val hd = for a <- headArgs yield a.spread match
           case Some(true) =>
             if c.explicitTailCall then
-              raise(ErrorReport(msg"Spreads are not yet supported here in calls marked @tailcall." -> a.value.toLoc :: Nil))
+              raise(ErrorReport(msg"Spreads are not yet fully supported in calls marked @tailcall." -> a.value.toLoc :: Nil))
             bad = true
             a.value
           case _ => a.value
@@ -239,6 +239,10 @@ class TailRecOpt(using State, TL, Raise):
     
     val loop = Label(loopSym, true, switch, End())
     
+    val sel = owner match
+      case Some(value) => Select(Value.Ref(value, N), Tree.Ident(bms.nme))(S(dSym))
+      case None => Value.Ref(bms, S(dSym))
+    
     val rewrittenFuns =
       if scc.funs.size == 1 then Nil
       else scc.funs.map: f =>
@@ -248,7 +252,7 @@ class TailRecOpt(using State, TL, Raise):
             :: paramArgs
             ::: List.fill(maxParamLen - paramArgs.length)(Value.Lit(Tree.UnitLit(false)).asArg)
         val newBod = Return(
-          Call(Value.Ref(bms, S(dSym)), args)(true, false, false),
+          Call(sel, args)(true, false, false),
           false
         )
         FunDefn(f.owner, f.sym, f.dSym, f.params, newBod)(false)
@@ -267,13 +271,33 @@ class TailRecOpt(using State, TL, Raise):
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
     partFns(fs).flatMap(optScc(_, owner))
   
+  def reportClassesTailrec(c: ClsLikeDefn) =
+    new BlockTraverserShallow():
+      for f <- c.methods do
+        applyBlock(f.body)
+        if f.isTailRec then
+          raise(ErrorReport(msg"Class methods may not yet be marked @tailrec." -> f.dSym.toLoc :: Nil))
+      override def applyResult(r: Result): Unit = r match
+        case c: Call if c.explicitTailCall =>
+          raise(ErrorReport(msg"Calls from class methods cannot yet be marked @tailcall." -> c.toLoc :: Nil))
+        case _ => super.applyResult(r)
+  
   def optClasses(cs: List[ClsLikeDefn]) = cs.map: c =>
-    val mtds = optFunctions(c.methods, S(c.isym))
-    val companion = c.companion.map: comp =>
-      val cMtds = optFunctions(comp.methods, S(comp.isym))
-      comp.copy(methods = cMtds)
-    c.copy(methods = mtds, companion = companion)
+    // Class methods cannot yet be optimized as they cannot yet be marked final.
     
+    if c.k is syntax.Cls then
+      reportClassesTailrec(c)
+      val companion = c.companion.map: comp =>
+        val cMtds = optFunctions(comp.methods, S(comp.isym))
+        comp.copy(methods = cMtds)
+      c.copy(companion = companion)
+    else
+      val mtds = optFunctions(c.methods, S(c.isym))
+      val companion = c.companion.map: comp =>
+        val cMtds = optFunctions(comp.methods, S(comp.isym))
+        comp.copy(methods = cMtds)
+      c.copy(methods = mtds, companion = companion)
+  
   def transform(b: Block) =
     val (blk, defns) = b.floatOutDefns()
     val (funs, clses) = 
