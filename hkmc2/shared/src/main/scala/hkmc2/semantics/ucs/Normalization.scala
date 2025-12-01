@@ -411,7 +411,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         if config.rewriteWhileLoops then
           val loopResult = TempSymbol(N)
           val isReturned = TempSymbol(N)
-          outerCtx.collectScopedSym(loopResult, isReturned)
+          outerCtx.collectScopedSym(loopResult)
+          outerCtx.collectScopedSym(isReturned)
           val loopEnd: Path =
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
           val blk = blockBuilder

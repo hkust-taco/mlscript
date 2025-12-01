@@ -43,7 +43,7 @@ class LoweringCtx(
 ):  
   val map = initMap
   
-  def collectScopedSym(s: Symbol*) = definedSymsDuringLowering.addAll(s)
+  def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
   def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
@@ -1150,13 +1150,13 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
       val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
       val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
-      subst.collectScopedSym(
-        enterMsgSym,
-        prevIndentLvlSym,
-        resSym,
-        retMsgSym,
-        resInspectedSym)
-      subst.collectScopedSym(psInspectedSyms.unzip._1*)
+      
+      subst.collectScopedSym(enterMsgSym)
+      subst.collectScopedSym(prevIndentLvlSym)
+      subst.collectScopedSym(resSym)
+      subst.collectScopedSym(retMsgSym)
+      subst.collectScopedSym(resInspectedSym)
+      for (s, _) <- psInspectedSyms do subst.collectScopedSym(s)
       
       val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
         case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
@@ -1164,7 +1164,9 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
           else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
       
       val tmp1, tmp2, tmp3 = TempSymbol(N)
-      subst.collectScopedSym(tmp1, tmp2, tmp3)
+      subst.collectScopedSym(tmp1)
+      subst.collectScopedSym(tmp2)
+      subst.collectScopedSym(tmp3)
       
       assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
         pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
