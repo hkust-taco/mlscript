@@ -58,12 +58,12 @@ class LoweringCtx(
     case _ => v
 object LoweringCtx:
   val empty = LoweringCtx(Map.empty, false, collection.mutable.Set.empty)
-  def subst(using sub: LoweringCtx): LoweringCtx = sub
+  def loweringCtx(using sub: LoweringCtx): LoweringCtx = sub
   def nestFunc(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, true, sub.definedSymsDuringLowering)
   def nestScoped(using sub: LoweringCtx): LoweringCtx = LoweringCtx(sub.map, sub.mayRet, collection.mutable.Set.empty)
 end LoweringCtx
 
-import LoweringCtx.subst
+import LoweringCtx.loweringCtx
 
 
 class Lowering()(using Config, TL, Raise, State, Ctx):
@@ -159,11 +159,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
     case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
       reportAnnotations(decl, annotations)
-      if sym.asTrm.fold(true)(_.owner.isEmpty) then subst.collectScopedSym(sym)
+      if sym.asTrm.fold(true)(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
       blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
       reportAnnotations(decl, annotations)
-      if sym.asTrm.fold(true)(_.owner.isEmpty) then subst.collectScopedSym(sym)
+      if sym.asTrm.fold(true)(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
@@ -178,7 +178,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       d match
       case td: TermDefinition =>
         reportAnnotations(td, td.extraAnnotations)
-        if td.owner.isEmpty then subst.collectScopedSym(td.sym)
+        if td.owner.isEmpty then loweringCtx.collectScopedSym(td.sym)
         td.body match
         case N => // abstract declarations have no lowering
           blockImpl(stats, res)(k)
@@ -216,7 +216,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         reportAnnotations(cls, cls.extraAnnotations)
         blockImpl(stats, res)(k)
       case _defn: ClassLikeDef =>
-        if _defn.owner.isEmpty then subst.collectScopedSym(_defn.bsym)
+        if _defn.owner.isEmpty then loweringCtx.collectScopedSym(_defn.bsym)
         val defn = _defn match
           case cls: ClassDef => cls
           case mod: ModuleOrObjectDef if mod.kind is syntax.Mod => // * Currently, both objects and modules are represented as `ModuleOrObjectDef`s
@@ -407,13 +407,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         // * (non-local functions are compiled into getter methods selected on some prefix)
         if td.params.isEmpty then
           val l = new TempSymbol(S(ref))
-          subst.collectScopedSym(l)
+          loweringCtx.collectScopedSym(l)
           return Assign(l, Call(Value.Ref(bs, disamb).withLocOf(ref), Nil)(true, true, annots.contains(Annot.TailCall)), k(Value.Ref(l, disamb)))
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
     case _ => ()
     warnStmt
-    k(subst(Value.Ref(sym, disamb).withLocOf(ref)))
+    k(loweringCtx(Value.Ref(sym, disamb).withLocOf(ref)))
   
   @tailrec
   final def term(t: st, inStmtPos: Bool = false)(k: Result => Block)(using LoweringCtx): Block =
@@ -481,7 +481,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            subst.collectScopedSym(lamSym)
+            loweringCtx.collectScopedSym(lamSym)
             val lamDef = FunDefn.withFreshSymbol(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(isTailRec = false)
             Define(
               lamDef,
@@ -577,7 +577,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
       val resSym = TempSymbol(S(t))
-      subst.collectScopedSym(resSym)
+      loweringCtx.collectScopedSym(resSym)
       subTerm(rhs): par =>
         subTerms(as): asr =>
           HandleBlock(lhs, resSym, par, asr, cls, handlers,
@@ -614,7 +614,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        subst.collectScopedSym(lamSym)
+        loweringCtx.collectScopedSym(lamSym)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(isTailRec = false)
         Define(
           lamDef,
@@ -665,14 +665,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               inner =>
                 lowerArg(arg): asr2 =>
                   val ts = TempSymbol(N)
-                  subst.collectScopedSym(ts)
+                  loweringCtx.collectScopedSym(ts)
                   Assign(ts, Call(inner, asr2)(true, true, false), acc(Value.Ref(ts)))
             val ts = TempSymbol(N)
-            subst.collectScopedSym(ts)
+            loweringCtx.collectScopedSym(ts)
             Assign(ts, Instantiate(mut, sr, asr), z(Value.Ref(ts)))
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
-          subst.collectScopedSym(sym)
+          loweringCtx.collectScopedSym(sym)
           val (mtds, publicFlds, privateFlds, ctor) = gatherMembers(rft)
           val pctor = parentConstructor(cls, as)
           val clsDef = ClsLikeDefn(N, isym, sym, syntax.Cls, N, Nil, S(sr),
@@ -682,7 +682,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       
     case Try(sub, finallyDo) =>
       val l = new TempSymbol(S(sub))
-      subst.collectScopedSym(l)
+      loweringCtx.collectScopedSym(l)
       TryBlock(
         subTerm_nonTail(sub)(p => Assign(l, p, End())),
         subTerm_nonTail(finallyDo)(_ => End()),
@@ -853,7 +853,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
-      subst.collectScopedSym(sym)
+      loweringCtx.collectScopedSym(sym)
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
         val arrSym = new TempSymbol(N, "arr")
@@ -933,7 +933,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       Begin(b, k(asr.reverse))
     else
       val rcdSym = new TempSymbol(N, "rcd")
-      subst.collectScopedSym(rcdSym)
+      loweringCtx.collectScopedSym(rcdSym)
       Begin(
         b,
         Assign(
@@ -963,12 +963,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        subst.collectScopedSym(lamSym)
+        loweringCtx.collectScopedSym(lamSym)
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(isTailRec = false)
         Define(lamDef, k(Value.Ref(lamSym, N)))
       case r =>
         val l = new TempSymbol(N)
-        subst.collectScopedSym(l)
+        loweringCtx.collectScopedSym(l)
         Assign(l, r, k(l |> Value.Ref.apply))
   
   
@@ -1025,7 +1025,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
-      val scopedSyms = subst.getCollectedSym
+      val scopedSyms = loweringCtx.getCollectedSym
       Scoped(scopedSyms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
@@ -1079,7 +1079,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     if !instrument then return super.setupSelection(prefix, nme, disamb)(k)
     subTerm(prefix): p =>
       val selRes = TempSymbol(N, "selRes")
-      subst.collectScopedSym(selRes)
+      loweringCtx.collectScopedSym(selRes)
       // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
       val b0 = blockBuilder
@@ -1089,7 +1089,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
         b0
       else
         val discardedSym = TempSymbol(N, "discarded")
-        subst.collectScopedSym(discardedSym)
+        loweringCtx.collectScopedSym(discardedSym)
         b0
           .assign(discardedSym, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N)))
           .ifthen(selRes.asPath,
@@ -1151,12 +1151,12 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
       val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
       
-      subst.collectScopedSym(enterMsgSym)
-      subst.collectScopedSym(prevIndentLvlSym)
-      subst.collectScopedSym(resSym)
-      subst.collectScopedSym(retMsgSym)
-      subst.collectScopedSym(resInspectedSym)
-      for (s, _) <- psInspectedSyms do subst.collectScopedSym(s)
+      loweringCtx.collectScopedSym(enterMsgSym)
+      loweringCtx.collectScopedSym(prevIndentLvlSym)
+      loweringCtx.collectScopedSym(resSym)
+      loweringCtx.collectScopedSym(retMsgSym)
+      loweringCtx.collectScopedSym(resInspectedSym)
+      for (s, _) <- psInspectedSyms do loweringCtx.collectScopedSym(s)
       
       val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
         case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
@@ -1164,9 +1164,9 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
           else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
       
       val tmp1, tmp2, tmp3 = TempSymbol(N)
-      subst.collectScopedSym(tmp1)
-      subst.collectScopedSym(tmp2)
-      subst.collectScopedSym(tmp3)
+      loweringCtx.collectScopedSym(tmp1)
+      loweringCtx.collectScopedSym(tmp2)
+      loweringCtx.collectScopedSym(tmp3)
       
       assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
         pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)

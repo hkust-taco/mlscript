@@ -237,7 +237,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       topLevel: Bool
   )(using labels: Labels)(using LoweringCtx): Block = split match
     case Split.Let(sym, trm, tl) =>
-      LoweringCtx.subst.collectScopedSym(sym)
+      LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
         Assign(sym, r, lowerSplit(tl, cont, topLevel))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
@@ -250,7 +250,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         pat match
           case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
-            for args <- argsOpt; (arg, _) <- args do LoweringCtx.subst.collectScopedSym(arg)
+            for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
               val args = argsOpt.map(_.map(_._1)).getOrElse(Nil)
@@ -279,7 +279,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctor)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
-            for (_, s) <- entries do LoweringCtx.subst.collectScopedSym(s)
+            for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
@@ -401,7 +401,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         mainBlock
       // if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
       Scoped(
-        LoweringCtx.subst.getCollectedSym/*  ++ inputSplit.definedSyms */,
+        LoweringCtx.loweringCtx.getCollectedSym/*  ++ inputSplit.definedSyms */,
         if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
       )
     // Embed the `body` into `Label` if the term is a `while`.
