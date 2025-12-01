@@ -302,8 +302,8 @@ end Elaborator
 import Elaborator.*
 
 
-class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
-(using val raise: Raise, val state: State)
+class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
+(using val raise: Raise, val state: State, val fs: io.FileSystem)
 extends Importer with ucs.SplitElaborator:
   import tl.*
   

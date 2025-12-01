@@ -5,6 +5,7 @@ import org.scalatest.time._
 
 import mlscript.utils._
 import os.Path
+import io.PlatformPath.given
 
 object BenchTestState extends DiffTestRunner.State:
 

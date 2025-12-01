@@ -780,9 +780,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
           val l1, l2 = new TempSymbol(N)
-          val basePath = base / os.up
+          val basePath = base.up
           val targetPath = filename
-          val relPath = targetPath.relativeTo(basePath).toString
+          val relPath = targetPath.relativeTo(basePath).map(_.toString).getOrElse(targetPath.toString)
           Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.StrLit(relPath)) :: Nil)(r2 =>
             Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
           ))

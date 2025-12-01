@@ -726,7 +726,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
   end returningTerm
 
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using
       Raise,
       Scope
   ): (Document, Str) =

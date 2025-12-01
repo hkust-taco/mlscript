@@ -27,8 +27,9 @@ class Outputter(val out: java.io.PrintWriter):
 
 
 abstract class DiffMaker:
+  protected given fs: io.FileSystem
   
-  val file: os.Path
+  val file: io.Path
   val relativeName: Str
   
   def processOrigin(origin: Origin)(using Raise): Unit
@@ -135,7 +136,7 @@ abstract class DiffMaker:
   
   val fileName = file.last
   
-  val fileContents = os.read(file)
+  val fileContents = fs.read(file)
   val allLines = fileContents.splitSane('\n').toList
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
@@ -351,7 +352,7 @@ abstract class DiffMaker:
     val result = strw.toString
     if result =/= fileContents then
       println(s"Updating $file...")
-      os.write.over(file, result)
+      fs.write(file, result)
   
   // * Called after the very first command block
   // * and every time a further command block with `:init` finishes

@@ -6,6 +6,7 @@ import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
 import mlscript.utils._, shorthands._
+import io.PlatformPath.given
 
 
 class CompileTestRunner
@@ -51,6 +52,7 @@ class CompileTestRunner
         // Stack safety relies on the fact that runtime uses while loops for resumption
         // and does not create extra stack depth. Hence we disable while loop rewriting here.
         given Config = Config.default.copy(rewriteWhileLoops = false)
+        given io.FileSystem = io.FileSystem.default
         
         val compiler = MLsCompiler(
           preludePath,

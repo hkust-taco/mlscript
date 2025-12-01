@@ -553,14 +553,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)
     doc"""const ${getVar(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
       :/: doc"""const ${getVar(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
       :/: programBody(p, exprt, wd)
   
-  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     reserveNames(p)
     // Allocate names for imported modules.
     p.imports.foreach: i =>
@@ -569,7 +569,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     val imps = p.imports.map: i =>
       val path = i._2
       val relPath = if path.startsWith("/")
-        then "./" + os.Path(path).relativeTo(wd).toString
+        then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
     imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (

@@ -3,6 +3,7 @@ package hkmc2
 import scala.collection.mutable
 
 import mlscript.utils.*, shorthands.*
+import hkmc2.io
 import utils.*
 
 import hkmc2.semantics.MemberSymbol
@@ -12,9 +13,9 @@ import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.{Ctx, State}
 
 
-class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise):
-  
-  val block = os.read(file)
+class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, fs: io.FileSystem):
+
+  val block = fs.read(file)
   val fph = new FastParseHelpers(block)
   val origin = Origin(file, 0, fph)
   
@@ -37,10 +38,10 @@ class ParserSetup(file: os.Path, dbgParsing: Bool)(using Elaborator.State, Raise
 
 
 // * The weird type of `mkOutput` is to allow wrapping the reporting of diagnostics in synchronized blocks
-class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Unit)(using Config):
-  
-  val runtimeFile: os.Path = preludeFile/os.up/os.up/os.up/"mlscript-compile"/"Runtime.mjs"
-  val termFile: os.Path = preludeFile/os.up/os.up/os.up/"mlscript-compile"/"Term.mjs"
+class MLsCompiler(preludeFile: io.Path, mkOutput: ((Str => Unit) => Unit) => Unit)(using cfg: Config, fs: io.FileSystem):
+
+  val runtimeFile: io.Path = preludeFile.up.up.up / io.RelPath("mlscript-compile/Runtime.mjs")
+  val termFile: io.Path = preludeFile.up.up.up / io.RelPath("mlscript-compile/Term.mjs")
   
   
   val report = ReportFormatter: outputConsumer =>
@@ -58,13 +59,14 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
   var dbgParsing = false
   
   
-  def compileModule(file: os.Path): Unit =
-    
-    val wd = file / os.up
-    
+  def compileModule(file: io.Path): Unit =
+
+    val wd = file.up
+
     given raise: Raise = d =>
       mkOutput:
-        _(fansi.Color.LightRed(s"/!!!\\ Error in ${file.relativeTo(wd/os.up)} /!!!\\").toString)
+        val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
+        _(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
       report(0, d :: Nil, showRelativeLineNums = false)
     
     given Elaborator.State = new Elaborator.State
@@ -107,8 +109,8 @@ class MLsCompiler(preludeFile: os.Path, mkOutput: ((Str => Unit) => Unit) => Uni
       val je = nestedScp.givenIn:
         jsb.program(le, exportedSymbol, wd)
       val jsStr = je.stripBreaks.mkString(100)
-      val out = file / os.up / (file.baseName + ".mjs")
-      os.write.over(out, jsStr)
+      val out = file.up / io.RelPath(file.baseName + ".mjs")
+      fs.write(out, jsStr)
   
   
 end MLsCompiler

@@ -6,11 +6,13 @@ import scala.jdk.CollectionConverters.*
 import mlscript.utils.*, shorthands.*
 
 import better.files.*
-import io.methvin.better.files.*
-import io.methvin.watcher.{DirectoryWatcher, PathUtils}
-import io.methvin.watcher.hashing.{FileHash, FileHasher}
+import _root_.io.methvin.better.files.*
+import _root_.io.methvin.watcher.{DirectoryWatcher, PathUtils}
+import _root_.io.methvin.watcher.{DirectoryChangeEvent, DirectoryChangeListener}
+import _root_.io.methvin.watcher.hashing.{FileHash, FileHasher}
 import java.time.LocalDateTime
 import java.time.temporal._
+import io.FileSystem, io.PlatformPath.given
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
 // * Only the first path can contain tests. The other paths are only watched for source changes.
@@ -31,8 +33,8 @@ class Watcher(dirs: Ls[File]):
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
     .paths(dirs.map(_.toJava.toPath).asJava)
     .fileHashing(false) // so that simple save events trigger processing eve if there's no file change
-    .listener(new io.methvin.watcher.DirectoryChangeListener {
-      def onEvent(event: io.methvin.watcher.DirectoryChangeEvent): Unit = try
+    .listener(new DirectoryChangeListener {
+      def onEvent(event: DirectoryChangeEvent): Unit = try
         // println(event)
         val hash = PathUtils.hash(fileHasher, event.path)
         val file = File(event.path)
@@ -60,7 +62,7 @@ class Watcher(dirs: Ls[File]):
         val et = event.eventType
         val count = event.count
         et match
-          case io.methvin.watcher.DirectoryChangeEvent.EventType.OVERFLOW => ???
+          case DirectoryChangeEvent.EventType.OVERFLOW => ???
           case _ =>
             et.getWatchEventKind.asInstanceOf[WatchEvent.Kind[Path]] match
               case StandardWatchEventKinds.ENTRY_CREATE => onCreate(file, count)
@@ -96,9 +98,11 @@ class Watcher(dirs: Ls[File]):
       if isModuleFile
       then
         given Config = Config.default
+        given FileSystem = FileSystem.default
         MLsCompiler(preludePath, outputConsumer => outputConsumer(System.out.println)).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
+          override def fs = FileSystem.default
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

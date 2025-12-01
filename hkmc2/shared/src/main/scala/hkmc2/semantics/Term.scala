@@ -744,7 +744,7 @@ case class ObjBody(blk: Term.Blk):
 
 
 /** Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: Symbol, str: Str, file: os.Path) extends Statement
+case class Import(sym: Symbol, str: Str, file: io.Path) extends Statement
 
 
 sealed abstract class Declaration:

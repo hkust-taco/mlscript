@@ -50,7 +50,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
     hostCreated = true
     given TL = replTL
     val h = ReplHost(rootPath)
-    def importRuntimeModule(name: Str, file: os.Path) =
+    def importRuntimeModule(name: Str, file: io.Path) =
       h.execute(s"const $name = (await import(\"${file}\")).default;") match
       case ReplHost.Result(msg) =>
         if msg.startsWith("Uncaught") then output(s"Failed to load $name: $msg")
