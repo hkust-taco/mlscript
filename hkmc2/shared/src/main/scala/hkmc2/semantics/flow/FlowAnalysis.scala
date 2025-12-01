@@ -364,7 +364,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                     ))
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
-              case C.Typ(Type.Ref(sym, _)) => 
+              case C.Typ(Type.Ref(sym, _)) =>
                 log(s"Examining ${sym} for leading dot selection resolution")
                 getCompanionMember(trm.nme.name, trm.originalCtx, sym) match
                 case S((path, memb)) =>
