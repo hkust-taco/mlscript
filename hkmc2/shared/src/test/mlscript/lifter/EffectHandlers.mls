@@ -60,7 +60,7 @@ module A with
 //│   static [definitionMetadata] = ["class", "Cont$ctor$Test$"]; 
 //│ });
 //│ doUnwind$ = function doUnwind$(Test$instance, tmp, res, pc) {
-//│   res.contTrace.last.next = new Cont$ctor$Test$1(pc);
+//│   res.contTrace.last.next = Cont$ctor$Test$$(true, Test$instance, tmp, pc);
 //│   res.contTrace.last = res.contTrace.last.next;
 //│   return res
 //│ };

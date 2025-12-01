@@ -21,7 +21,6 @@ class A
 :todo
 @tailrec
 fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 @tailcall
@@ -31,10 +30,6 @@ fun g = 2
 :todo
 fun test =
   @tailcall f
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ╟── Tail call optimization is not yet implemented.
-//│ ║  l.33: 	  @tailcall f
-//│ ╙──      	            ^
 
 :w
 let f = 0
@@ -50,7 +45,6 @@ fun test =
 class A with
   @tailrec
   fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 class A with
@@ -63,7 +57,6 @@ class A
 module A with
   @tailrec
   fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
 
 :w
 class A
