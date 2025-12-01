@@ -11,7 +11,7 @@ class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
   private val files: MutMap[String, String] = MutMap.from(initialFiles)
   
   def read(path: Path): String =
-    files.getOrElse(path.toString, throw new java.io.FileNotFoundException(path.toString))
+    files.getOrElse(path.toString, throw new FileSystem.FileNotFoundException(path))
   
   def write(path: Path, content: String): Unit =
     files(path.toString) = content

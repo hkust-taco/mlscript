@@ -1,4 +1,5 @@
 import Wart._
+import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
@@ -58,8 +59,46 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .jvmSettings(
   )
   .jsSettings(
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.ESModule) },
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+       .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
+    },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
+    // We directly read the necessary MLscript files from the test folders to
+    // avoid manually embedding the source files in the `WebImporter` class.
+    Compile / sourceGenerators += Def.task {
+      def escape(content: String): String = content.iterator.flatMap {
+        case '\b' => "\\b" case '\t' => "\\t" case '\n' => "\\n"
+        case '\r' => "\\r" case '\f' => "\\f" case '"' => "\\\""
+        case '\\' => "\\\\" case c if c.isControl => f"\\u${c.toInt}%04x"
+        case c => c.toString
+      }.mkString("\"", "", "\"")
+      // Note: baseDirectory.value = ups-web-demo/hkmc2/js
+      val testFolder = baseDirectory.value / ".." / "shared" / "src" / "test"
+      val compileFolder = testFolder / "mlscript-compile"
+      val preludeFile = IO.read(testFolder / "mlscript" / "decls" / "Prelude.mls")
+      val stdFiles = List("Predef", "Runtime", "Rendering", "Stack", "Iter", "Option")
+        .iterator
+        .map { fileName =>
+          (compileFolder / s"$fileName.mls", compileFolder / s"$fileName.mjs")
+        }.map { case (mlsPath, mjsPath) =>
+          (mlsPath.getName(), IO.read(mlsPath), IO.read(mjsPath))
+        }.toList
+      val outFile = (Compile / sourceManaged).value / "generated" / "MLscript.scala"
+      IO.write(
+        outFile,
+        s"""|package hkmc2.generated
+            |import collection.mutable.Map as MutMap
+            |object MLscript:
+            |  val preludeFile = ${escape(preludeFile)}
+            |  val sourceFiles: MutMap[String, (String, String)] = MutMap.empty
+            |""".stripMargin +
+        (stdFiles.iterator.map { case (fileName, mlsContent, mjsContent) =>
+          s"  sourceFiles += (${escape(s"/std/$fileName")} -> (${escape(mlsContent)}, ${escape(mjsContent)}))"
+        }.mkString("\n")) + "\n"
+      )
+      Seq(outFile)
+    }.taskValue
   )
   .dependsOn(core)
 

@@ -17,9 +17,9 @@ private object NodeFs extends js.Object:
   def existsSync(path: String): Boolean = js.native
 
 /**
- * JavaScript implementation of FileSystem using Node.js fs module
+ * JavaScript implementation of [[FileSystem]] using Node.js fs module.
  */
-private class JsFileSystem extends FileSystem:
+private class NodeFileSystem extends FileSystem:
   def read(path: Path): String =
     NodeFs.readFileSync(path.toString, "utf8")
 
@@ -29,6 +29,5 @@ private class JsFileSystem extends FileSystem:
   def exists(path: Path): Bool =
     NodeFs.existsSync(path.toString)
 
-// Platform-specific factory for FileSystem
 private[io] object PlatformFileSystem:
-  def default: FileSystem = new JsFileSystem
+  def default: FileSystem = new NodeFileSystem

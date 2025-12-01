@@ -24,3 +24,6 @@ trait FileSystem:
 object FileSystem:
   /** Get the platform default file system by delegating to the platform. */
   def default: FileSystem = PlatformFileSystem.default
+  
+  class FileNotFoundException(path: Path) extends Exception:
+    override def getMessage(): String = s"File not found: ${path.toString}"
