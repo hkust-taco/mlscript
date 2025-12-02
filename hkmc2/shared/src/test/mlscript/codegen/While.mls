@@ -6,22 +6,19 @@
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function () {
-//│   let tmp, while1, tmp1, tmp2; /** scoped **/
-//│   tmp = undefined;
-//│   while1 = (undefined, function () {
+//│   let tmp; /** scoped **/
+//│   tmp1: while (true) {
 //│     let scrut; /** scoped **/
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
-//│       return while1()
+//│       continue tmp1
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp1 = while1();
-//│   tmp2 = tmp1 !== runtime.LoopEnd;
-//│   if (tmp2 === true) { return tmp1 } else { return tmp }
+//│     break;
+//│   }
+//│   return tmp
 //│ });
 //│ lambda
 //│ = fun
@@ -57,20 +54,18 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let while3, tmp6, tmp7, tmp8; /** scoped **/
-//│ tmp8 = undefined;
-//│ while3 = (undefined, function () {
-//│   let tmp9; /** scoped **/
+//│ let tmp4; /** scoped **/
+//│ tmp5: while (true) {
+//│   let tmp6; /** scoped **/
 //│   if (x2 === true) {
-//│     tmp9 = Predef.print("Hello World");
+//│     tmp6 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp8 = runtime.Unit;
-//│     return while3()
-//│   } else { tmp8 = 42; }
-//│   return runtime.LoopEnd
-//│ });
-//│ tmp6 = while3();
-//│ tmp8
+//│     tmp4 = runtime.Unit;
+//│     continue tmp5
+//│   } else { tmp4 = 42; }
+//│   break;
+//│ }
+//│ tmp4
 //│ > Hello World
 //│ = 42
 
@@ -112,25 +107,20 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let tmp18, while7, tmp19, tmp20; /** scoped **/
-//│   tmp18 = undefined;
-//│   while7 = (undefined, function () {
-//│     let i2, scrut, tmp21; /** scoped **/
+//│   let tmp19; /** scoped **/
+//│   tmp20: while (true) {
+//│     let i2, scrut3, tmp21; /** scoped **/
 //│     i2 = 0;
-//│     scrut = i2 < 10;
-//│     if (scrut === true) {
+//│     scrut3 = i2 < 10;
+//│     if (scrut3 === true) {
 //│       tmp21 = i2 + 1;
 //│       i2 = tmp21;
-//│       tmp18 = runtime.Unit;
-//│       return while7()
-//│     } else {
-//│       tmp18 = runtime.Unit;
-//│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp19 = while7();
-//│   tmp20 = tmp19 !== runtime.LoopEnd;
-//│   if (tmp20 === true) { return tmp19 } else { return tmp18 }
+//│       tmp19 = runtime.Unit;
+//│       continue tmp20
+//│     } else { tmp19 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp19
 //│ });
 //│ lambda2
 //│ = fun
@@ -210,9 +200,8 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f; /** scoped **/
 //│ f = function f(ls) {
-//│   let tmp27, while10, tmp28, tmp29; /** scoped **/
-//│   tmp27 = undefined;
-//│   while10 = (undefined, function () {
+//│   let tmp28; /** scoped **/
+//│   tmp29: while (true) {
 //│     let tl, h, argument0$, argument1$; /** scoped **/
 //│     if (ls instanceof Cons.class) {
 //│       argument0$ = ls.hd;
@@ -220,16 +209,12 @@ fun f(ls) =
 //│       tl = argument1$;
 //│       h = argument0$;
 //│       ls = tl;
-//│       tmp27 = Predef.print(h);
-//│       return while10()
-//│     } else {
-//│       tmp27 = Predef.print("Done!");
-//│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp28 = while10();
-//│   tmp29 = tmp28 !== runtime.LoopEnd;
-//│   if (tmp29 === true) { return tmp28 } else { return tmp27 }
+//│       tmp28 = Predef.print(h);
+//│       continue tmp29
+//│     } else { tmp28 = Predef.print("Done!"); }
+//│     break;
+//│   }
+//│   return tmp28
 //│ };
 
 f(0)
@@ -267,23 +252,19 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37, tmp38, while11, tmp39; /** scoped **/
-//│ tmp39 = undefined;
-//│ while11 = (undefined, function () {
+//│ let tmp37; /** scoped **/
+//│ tmp38: while (true) {
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x3 instanceof Object) {
 //│         break split_1$
-//│       } else {
-//│         break split_1$
-//│       }
+//│       } else { break split_1$ }
 //│     }
-//│     tmp39 = runtime.Unit;
+//│     tmp37 = runtime.Unit;
 //│   }
-//│   return runtime.LoopEnd
-//│ });
-//│ tmp37 = while11();
-//│ tmp39
+//│   break;
+//│ }
+//│ tmp37
 
 
 // ——— FIXME: ———
@@ -297,10 +278,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.297: 	  then 0(0)
+//│ ║  l.278: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.296: 	while print("Hello World"); false
+//│ ║  l.277: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -310,12 +291,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.309: 	while { print("Hello World"), false }
+//│ ║  l.290: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.310: 	  then 0(0)
+//│ ║  l.291: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.311: 	  else 1
+//│ ║  l.292: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -325,14 +306,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.323: 	    print("Hello World")
+//│ ║  l.304: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.324: 	    false
+//│ ║  l.305: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.325: 	  then 0(0)
+//│ ║  l.306: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.326: 	  else 1
+//│ ║  l.307: 	  else 1
 //│ ╙──       	  ^^^^
 
 

@@ -46,49 +46,31 @@ fun foo() =
     return () => x
 //│ JS (unsanitized):
 //│ let foo2; /** scoped **/
-//│ let lambda2, while$1, lambda$2, foo$capture5;
-//│ lambda$2 = function lambda$(foo$capture6) {
-//│   return foo$capture6.x$capture$0
+//│ let lambda2, lambda$2;
+//│ lambda$2 = function lambda$(x) {
+//│   return x
 //│ };
-//│ lambda2 = (undefined, function (foo$capture6) {
+//│ lambda2 = (undefined, function (x) {
 //│   return () => {
-//│     return lambda$2(foo$capture6)
+//│     return lambda$2(x)
 //│   }
-//│ });
-//│ while$1 = function while$(foo$capture6) {
-//│   let scrut, tmp2; /** scoped **/
-//│   let lambda$here;
-//│   scrut = true;
-//│   if (scrut === true) {
-//│     tmp2 = foo$capture6.x$capture$0 + 1;
-//│     foo$capture6.x$capture$0 = tmp2;
-//│     lambda$here = runtime.safeCall(lambda2(foo$capture6));
-//│     return lambda$here
-//│   } else {
-//│     foo$capture6.tmp$capture$1 = runtime.Unit;
-//│   }
-//│   return runtime.LoopEnd
-//│ };
-//│ globalThis.Object.freeze(class foo$capture4 {
-//│   static {
-//│     foo$capture5 = this
-//│   }
-//│   constructor(x$capture$0, tmp$capture$1) {
-//│     this.tmp$capture$1 = tmp$capture$1;
-//│     this.x$capture$0 = x$capture$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo2 = function foo() {
-//│   let x, tmp2, tmp3, tmp4, while1; /** scoped **/
-//│   let capture;
-//│   capture = new foo$capture5(null, null);
-//│   capture.x$capture$0 = 1;
-//│   capture.tmp$capture$1 = undefined;
-//│   tmp3 = while$1(capture);
-//│   tmp4 = tmp3 !== runtime.LoopEnd;
-//│   if (tmp4 === true) { return tmp3 } else { return capture.tmp$capture$1 }
+//│   let x, tmp2; /** scoped **/
+//│   let lambda$here;
+//│   x = 1;
+//│   tmp3: while (true) {
+//│     let scrut, tmp4; /** scoped **/
+//│     scrut = true;
+//│     if (scrut === true) {
+//│       tmp4 = x + 1;
+//│       x = tmp4;
+//│       lambda$here = runtime.safeCall(lambda2(x));
+//│       return lambda$here
+//│     } else { tmp2 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp2
 //│ };
 
 :expect 2

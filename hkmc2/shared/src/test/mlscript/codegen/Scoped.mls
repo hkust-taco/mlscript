@@ -162,30 +162,26 @@ fun f(x) =
 //│ JS (unsanitized):
 //│ let f3; /** scoped **/
 //│ f3 = function f(x1) {
-//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
-//│   tmp1 = undefined;
-//│   while1 = (undefined, function () {
+//│   let tmp1; /** scoped **/
+//│   tmp2: while (true) {
 //│     let a, a1, argument0$, argument1$; /** scoped **/
 //│     if (x1 instanceof A.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a = argument0$;
 //│       tmp1 = runtime.safeCall(a());
-//│       return while1()
+//│       continue tmp2
 //│     } else if (x1 instanceof B.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a1 = argument0$;
 //│       tmp1 = runtime.safeCall(a1());
-//│       return while1()
-//│     } else {
-//│       tmp1 = runtime.safeCall(x1());
-//│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp2 = while1();
-//│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { x1 = tmp1; return x1 }
+//│       continue tmp2
+//│     } else { tmp1 = runtime.safeCall(x1()); }
+//│     break;
+//│   }
+//│   x1 = tmp1;
+//│   return x1
 //│ };
 
 
@@ -202,11 +198,10 @@ fun f() =
 //│ JS (unsanitized):
 //│ let f4; /** scoped **/
 //│ f4 = function f() {
-//│   let y1, tmp1, while1, tmp2, tmp3; /** scoped **/
+//│   let y1, tmp1; /** scoped **/
 //│   y1 = x + 1;
-//│   tmp1 = undefined;
-//│   while1 = (undefined, function () {
-//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp4; /** scoped **/
+//│   tmp2: while (true) {
+//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp3; /** scoped **/
 //│     split_root$: {
 //│       split_1$: {
 //│         if (y1 instanceof A.class) {
@@ -218,28 +213,24 @@ fun f() =
 //│           if (scrut === true) {
 //│             scrut1 = true;
 //│             if (scrut1 === true) {
-//│               tmp4 = z + 1;
-//│               y1 = tmp4;
+//│               tmp3 = z + 1;
+//│               y1 = tmp3;
 //│               tmp1 = runtime.Unit;
-//│               return while1()
+//│               continue tmp2
 //│             } else {
 //│               break split_1$
 //│             }
 //│           } else {
 //│             break split_1$
 //│           }
-//│         } else {
-//│           tmp1 = runtime.Unit;
-//│         }
+//│         } else { tmp1 = runtime.Unit; }
 //│       }
 //│       y1 = a;
 //│       tmp1 = runtime.Unit;
 //│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp2 = while1();
-//│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
+//│     break;
+//│   }
+//│   return tmp1
 //│ };
 
 
@@ -250,26 +241,21 @@ fun f(x, y) =
 //│ JS (unsanitized):
 //│ let f5; /** scoped **/
 //│ f5 = function f(x1, y1) {
-//│   let tmp1, while1, tmp2, tmp3; /** scoped **/
-//│   tmp1 = undefined;
-//│   while1 = (undefined, function () {
-//│     let scrut, lambda, tmp4; /** scoped **/
+//│   let tmp1; /** scoped **/
+//│   tmp2: while (true) {
+//│     let scrut, lambda, tmp3; /** scoped **/
 //│     lambda = (undefined, function () {
 //│       return y1
 //│     });
 //│     scrut = runtime.short_and(x1, lambda);
 //│     if (scrut === true) {
-//│       tmp4 = f5(0, 0);
-//│       tmp1 = tmp4 + 4;
-//│       return while1()
-//│     } else {
-//│       tmp1 = runtime.Unit;
-//│     }
-//│     return runtime.LoopEnd
-//│   });
-//│   tmp2 = while1();
-//│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { return tmp1 }
+//│       tmp3 = f5(0, 0);
+//│       tmp1 = tmp3 + 4;
+//│       continue tmp2
+//│     } else { tmp1 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp1
 //│ };
 
 

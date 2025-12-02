@@ -25,21 +25,21 @@ fun test(x) =
 :sjs
 true and test(42)
 //│ JS (unsanitized):
-//│ let scrut4, tmp5, scrut5; /** scoped **/
-//│ split_root$2: {
-//│   split_1$2: {
-//│     scrut5 = true;
-//│     if (scrut5 === true) {
-//│       scrut4 = test(42);
-//│       if (scrut4 === true) {
-//│         tmp5 = true;
-//│         break split_root$2
-//│       } else { break split_1$2 }
-//│     } else { break split_1$2 }
+//│ let scrut6, scrut7, tmp4; /** scoped **/
+//│ split_root$3: {
+//│   split_1$3: {
+//│     scrut6 = true;
+//│     if (scrut6 === true) {
+//│       scrut7 = test(42);
+//│       if (scrut7 === true) {
+//│         tmp4 = true;
+//│         break split_root$3
+//│       } else { break split_1$3 }
+//│     } else { break split_1$3 }
 //│   }
-//│   tmp5 = false;
+//│   tmp4 = false;
 //│ }
-//│ tmp5
+//│ tmp4
 //│ > 42
 //│ = false
 
