@@ -190,7 +190,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case Error => P.Ctor(Extr(false), Nil)(t)
     
-    case _ => P.Flow(FlowSymbol("TODO"))
+    // case _ => P.Flow(FlowSymbol("TODO"))
   
   
   def typeType(t: Term): Type =
@@ -314,7 +314,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
           def dig(lhs: P, rhs: C, path: Path): Unit =
             
-            log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})   [${path.mkString(", ")}]")
+            log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})")
             
             (lhs, rhs) match
             case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
