@@ -24,6 +24,7 @@ enum Split extends AutoLocated with ProductWithTail:
   case Else(default: Term)
   case End
   
+  
   inline def ~:(head: Branch): Split = Split.Cons(head, this)
   
   def mkClone(using State): Split = this match
