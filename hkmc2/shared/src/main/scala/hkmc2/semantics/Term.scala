@@ -266,6 +266,13 @@ enum Term extends Statement:
       case N => this
     case _ => this
   
+  /**
+   * This field equals `S(lds)` if the term is a chain of selections
+   * and applications that originates with a leading-dot selection,
+   * namely `lds`. Otherwise this field equals `N`.
+   * It is evaluated during flow analysis to constrain the LDS with
+   * the type of the whole term.
+   */
   lazy val ldsRoot: Opt[LeadingDotSel] = this match
     case Sel(prefix, nme) => prefix.ldsRoot
     case App(lhs, rhs) => lhs.ldsRoot
@@ -588,6 +595,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case imp: Import =>
         doc"import ${"\""}.../${imp.file.lastOpt.getOrElse("")}${"\""} as ${imp.sym.showName}"
       case LeadingDotSel(name) => doc"${this.showDbg}"
+      case Error => doc"error"
       case _ =>
         doc"TODO[show:${getClass.getSimpleName}]($showDbg)"
     this match

@@ -263,10 +263,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         sel.expansion = S(S(base))
       case Nil =>
         // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
+        sel.expansion = S(S(Error))
         raise:
           ErrorReport:
             msg"Cannot resolve leading dot selection" -> sel.toLoc :: Nil
-      case targets => raise:
+      case targets => sel.expansion = S(S(Error)); raise:
         ErrorReport:
           msg"Ambiguous selection with multiple apparent targets:" -> sel.toLoc
           :: targets.map:
