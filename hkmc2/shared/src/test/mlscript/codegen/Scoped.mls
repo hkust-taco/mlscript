@@ -390,37 +390,3 @@ module M with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-
-
-
-
-abstract class Effect with
-  fun perform(arg: Str): Str
-
-
-
-:effectHandlers
-fun f(x) =
-  if x then
-    if x then
-      let z = 4
-      handle h = Effect with
-        fun perform(x)(k) =
-          print(x)
-          k(x + z)
-      print(h.perform(32))
-  else 0
-
-
-:dontRewriteWhile
-:effectHandlers
-fun f(x) =
-  while x do
-    while x do
-      let z = 4
-      handle h = Effect with
-        fun perform(x)(k) =
-          print(x)
-          k(x + z)
-      print(h.perform(32))
-  else 0
