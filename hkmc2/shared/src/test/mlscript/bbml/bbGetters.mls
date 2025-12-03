@@ -38,13 +38,13 @@ fun test2() =
     n then funny(n - 1) + 1
   funny
 //│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
-//│ ║  l.32: 	  fun funny = case
+//│ ║  l.36: 	  fun funny = case
 //│ ║        	              ^^^^
-//│ ║  l.33: 	    0 then 0
+//│ ║  l.37: 	    0 then 0
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.34: 	    n then funny(n - 1) + 1
+//│ ║  l.38: 	    n then funny(n - 1) + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.35: 	  funny
+//│ ║  l.39: 	  funny
 //│ ╙──      	^^^^^^^
 //│ Type: ⊤
 
@@ -84,8 +84,8 @@ fun test2() =
     case n then funny(n - 1) + 1
   funny
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.138: 	    case 0 then 0
-//│ ╙──       	    ^^^^^^^^^^^^^
+//│ ║  l.83: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let test22; /** scoped **/
 //│ test22 = function test2() {
@@ -114,16 +114,16 @@ fun test2() =
 //│   return tmp1
 //│ };
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.138: 	    case 0 then 0
-//│ ╙──       	    ^^^^^^^^^^^^^
+//│ ║  l.83: 	    case 0 then 0
+//│ ╙──      	    ^^^^^^^^^^^^^
 //│ ╔══[ERROR] Function definition shape not yet supported for funny
-//│ ║  l.138: 	    case 0 then 0
-//│ ║         	         ^^^^^^^^
-//│ ║  l.139: 	    case n then funny(n - 1) + 1
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.83: 	    case 0 then 0
+//│ ║        	         ^^^^^^^^
+//│ ║  l.84: 	    case n then funny(n - 1) + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Variable not found: funny
-//│ ║  l.140: 	  funny
-//│ ╙──       	  ^^^^^
+//│ ║  l.85: 	  funny
+//│ ╙──      	  ^^^^^
 //│ Type: ⊤
 
 
@@ -131,7 +131,7 @@ fun test2() =
 fun test3 =
   print("Hi")
 //│ ╔══[ERROR] Function definition shape not yet supported for test3
-//│ ║  l.160: 	  print("Hi")
+//│ ║  l.132: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤
 
