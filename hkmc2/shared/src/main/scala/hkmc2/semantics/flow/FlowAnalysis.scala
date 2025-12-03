@@ -56,7 +56,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         constrain(P.LeadingDotSel(lds), C.Flow(sym))
         constrain(res(typeProd(sub, insideSelAppChain = true)), C.Flow(sym))
         P.Flow(sym)
-      case _ => res(typeProd(sub, insideSelAppChain))
+      case _ => res(typeProd(sub, insideSelAppChain = insideSelAppChain))
     
     t match
     
@@ -66,8 +66,10 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
       case ts: TermSymbol => die
-      case bs: BuiltinSymbol => bs.signature
-      case bms: BlockMemberSymbol => P.Flow(bms.flow)
+      case bs: BuiltinSymbol =>
+        bs.signature
+      case bms: BlockMemberSymbol =>
+        P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
         P.Unknown(t)
@@ -81,7 +83,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case sym: FlowSymbol =>
             constrain(rhs, C.Flow(sym))
         case t: TermDefinition =>
-          val sign_ty = t.sign.map(typeProd(_, insideSelAppChain)) // TODO use sign_ty
+          val sign_ty = t.sign.map(typeProd(_, insideSelAppChain = insideSelAppChain)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
           t.body.foreach: bod =>
             val bod_ty = typeProd(bod)
@@ -107,7 +109,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                     ),
                   Nil,
                 )
-            case N => P.Ctor(cd.sym, Nil)(cd.body.blk)
+            case N => P.Unknown(cd)
           
           log(s"Class member type: ${prod.showDbg}")
           
@@ -161,7 +163,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case S(sym) =>
           sym match
           case sym: ClassSymbol =>
-            val args_t = args.map(typeProd(_, insideSelAppChain))
+            val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
             P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
