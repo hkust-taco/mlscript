@@ -345,7 +345,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
     lazy val assignResult = (r: Result) => Assign(l, r, End())
-    lazy val loopCont = if config.rewriteWhileLoops
+    // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
+    // as shouldRewriteWhile is always true when effect handler lowering is on
+    lazy val loopCont = if config.shouldRewriteWhile
       then Return(Call(Value.Ref(f, N), Nil)(true, true, false), false)
       else Continue(loopLabel)
     val cont =
@@ -408,7 +410,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
     val block =
       if kw === `while` then
-        if config.rewriteWhileLoops then
+        // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
+        // as shouldRewriteWhile is always true when effect handler lowering is on
+        if config.shouldRewriteWhile then
           val loopResult = TempSymbol(N)
           val isReturned = TempSymbol(N)
           outerCtx.collectScopedSym(loopResult)

@@ -27,6 +27,12 @@ case class Config(
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
   
+  // NOTE: with `Scoped` blocks inside loop bodies, currently this flag
+  // forces the rewriting of while loops to make sure that
+  // the handler lowering will not create classes containing unbound variables
+  def shouldRewriteWhile: Bool =
+    rewriteWhileLoops || effectHandlers.isDefined
+  
 end Config
 
 

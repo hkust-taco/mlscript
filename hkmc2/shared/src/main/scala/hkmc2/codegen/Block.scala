@@ -190,6 +190,32 @@ sealed abstract class Block extends Product:
     
     (transformer.applyBlock(this), defns)
     
+  
+  // This is currently only used in `HanlderLowering` to prevent
+  // floating things out too aggressively such that the captured variables become unbound.
+  // TODO: clean up this and `floatOutDefns` above; currently there are two variations of this
+  // "floatOut" function because the lifter also uses "floatOut" and
+  // this `floatOutDefnsUntilScoped` below breaks the lifter
+  def floatOutDefnsUntilScoped(
+      ignore: Defn => Bool = _ => false, 
+      preserve: Defn => Bool = _ => false
+    ): (Block, List[Defn]) =
+    var defns: List[Defn] = Nil
+    val transformer = new BlockTransformerShallow(SymbolSubst()):
+      override def applyBlock(b: Block): Block = b match
+        case Scoped(syms, blk) =>
+          val (inner, defs) = blk.floatOutDefnsUntilScoped(ignore, preserve)
+          Scoped(syms ++ defs.map(_.sym), defs.foldLeft(inner)((acc, defn) => Define(defn, acc)))
+        case Define(defn, rest) if !ignore(defn) => defn match
+          case v: ValDefn => super.applyBlock(b)
+          case _ =>
+            defns ::= defn
+            if preserve(defn) then super.applyBlock(b)
+            else applyBlock(rest)
+        case _ => super.applyBlock(b)
+    
+    (transformer.applyBlock(this), defns)
+    
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match

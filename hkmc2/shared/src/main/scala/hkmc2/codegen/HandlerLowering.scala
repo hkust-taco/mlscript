@@ -579,7 +579,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def thirdPass(b: Block): Block =
     // to ensure the fun and class references in the continuation class are properly scoped,
     // we move all function defns to the top level of the handler block
-    val (blk, defns) = b.floatOutDefns()
+    // NOTE: this is to prevent floating things out too aggressively
+    // such that the captured variables become unbound.
+    val (blk, defns) = b.floatOutDefnsUntilScoped()
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def locToStr(l: Loc): Str =
