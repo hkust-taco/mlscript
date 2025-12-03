@@ -86,7 +86,7 @@ g(d)
 //│ Flowed:
 //│   fun g⁰(x⁰: C⁰) ‹flow:g⁰› = x⁰,
 //│   let d⁰,
-//│   d⁰ = _?_.a{ ~> error },
+//│   d⁰ = _?_.a{ ~> ‹error› },
 //│   f⁰(d⁰)‹app⁹›,
 //│   g⁰(d⁰)‹app¹⁰›
 //│ where
@@ -123,7 +123,7 @@ f(.w)
 //│ ║  l.121: 	f(.w)
 //│ ╙──       	  ^^
 //│ Flowed:
-//│   f⁰(_?_.w{ ~> error })‹app¹³›
+//│   f⁰(_?_.w{ ~> ‹error› })‹app¹³›
 //│ where
 //│     app¹³  <~  type A
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 1 argument but got 0
@@ -135,6 +135,6 @@ f(.w)
 //│ ║  l.133: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
-//│   _?_.b{ ~> error }(new A⁰)‹app¹⁴›
+//│   _?_.b{ ~> ‹error› }(new A⁰)‹app¹⁴›
 //│ where
 //│     app¹⁴  ->  bind²
