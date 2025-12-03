@@ -38,12 +38,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   
   val MAX_FUEL = 1000
   
-  val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
-  
-  val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
-  val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
-  
-  def typeBody(b: ObjBody): Unit = typeProd(b.blk)
+  def typeBody(b: ObjBody): Unit =
+    typeProd(b.blk)
   
   def typeProd(t: Term, insideSelAppChain: Boolean = false): Producer = typeProdImpl(t.expanded, insideSelAppChain)
   
@@ -82,8 +78,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         case stmt: DefineVar =>
           val rhs = typeProd(stmt.rhs)
           stmt.sym match
-          case sym: FlowSymbol => constrain(rhs, C.Flow(sym))
-          case _ => ()
+          case sym: FlowSymbol =>
+            constrain(rhs, C.Flow(sym))
         case t: TermDefinition =>
           val sign_ty = t.sign.map(typeProd(_, insideSelAppChain)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
@@ -226,6 +222,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case f: Fld => typeCons(f.term)
         , N)
     case _ => TODO(t)
+  
+  val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty
+  
+  val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
+  val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
   
   def expandTerms() =
     import SelectionTarget.*
