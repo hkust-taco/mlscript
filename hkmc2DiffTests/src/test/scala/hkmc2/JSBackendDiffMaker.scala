@@ -123,7 +123,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
               toplvlDefinedVars = xs
               assignResSym(body, false)
             else
-              Scoped(xs, assignResSym(body, false))
+              Scoped(xs, assignResSym(body, false))(false)
           case tl: (Throw | Break | Continue) => tl
       val le = lowered0.copy(main = assignResSym(lowered0.main, true))
       if showLoweredTree.isSet then

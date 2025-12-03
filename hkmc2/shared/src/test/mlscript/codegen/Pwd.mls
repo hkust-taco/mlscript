@@ -6,7 +6,7 @@ let folderName1 = process.env.PWD.split("/").pop()
 in let folderName2 = process.cwd().split("/").pop()
 in folderName2 === folderName1 || folderName2 === "shared"
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3, lambda, folderName1, folderName2; /** scoped **/
+//│ let folderName1, folderName2, tmp, tmp1, tmp2, tmp3, lambda; /** scoped **/
 //│ tmp = runtime.safeCall(globalThis.process.env.PWD.split("/"));
 //│ folderName1 = runtime.safeCall(tmp.pop());
 //│ tmp1 = runtime.safeCall(globalThis.process.cwd());

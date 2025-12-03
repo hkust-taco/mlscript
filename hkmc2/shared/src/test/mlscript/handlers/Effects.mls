@@ -156,7 +156,7 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let f, tmp20, scrut; /** scoped **/
+//│ let scrut, f, tmp20; /** scoped **/
 //│ let handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
 //│   let h, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;

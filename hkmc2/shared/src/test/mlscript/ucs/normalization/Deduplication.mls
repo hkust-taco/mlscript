@@ -81,7 +81,7 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ JS (unsanitized):
-//│ let qqq, tmp3; /** scoped **/
+//│ let tmp3, qqq; /** scoped **/
 //│ split_root$1: {
 //│   split_1$1: {
 //│     if (x === 0) {

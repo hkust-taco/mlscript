@@ -217,7 +217,7 @@ print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
-//│ let tmp, tmp1, tmp2, tmp3, a; /** scoped **/
+//│ let a, tmp, tmp1, tmp2, tmp3; /** scoped **/
 //│ a = globalThis.Object.freeze(new Foo9());
 //│ tmp = Predef.print(a.x);
 //│ tmp1 = runtime.safeCall(a.foo(1));

@@ -74,7 +74,7 @@ class A with
     g
 (new A).x()
 //│ JS (unsanitized):
-//│ let A3, tmp1; /** scoped **/
+//│ let tmp1, A3; /** scoped **/
 //│ let g, g$;
 //│ g$ = function g$(A$instance) {
 //│   return 2

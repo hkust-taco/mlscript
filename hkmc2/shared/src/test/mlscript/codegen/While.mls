@@ -57,20 +57,20 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let while3, tmp6, tmp7, tmp8; /** scoped **/
-//│ tmp8 = undefined;
+//│ let tmp6, while3, tmp7, tmp8; /** scoped **/
+//│ tmp6 = undefined;
 //│ while3 = (undefined, function () {
 //│   let tmp9; /** scoped **/
 //│   if (x2 === true) {
 //│     tmp9 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp8 = runtime.Unit;
+//│     tmp6 = runtime.Unit;
 //│     return while3()
-//│   } else { tmp8 = 42; }
+//│   } else { tmp6 = 42; }
 //│   return runtime.LoopEnd
 //│ });
-//│ tmp6 = while3();
-//│ tmp8
+//│ tmp7 = while3();
+//│ tmp6
 //│ > Hello World
 //│ = 42
 
@@ -267,8 +267,8 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37, tmp38, while11, tmp39; /** scoped **/
-//│ tmp39 = undefined;
+//│ let tmp37, tmp38, tmp39, while11; /** scoped **/
+//│ tmp37 = undefined;
 //│ while11 = (undefined, function () {
 //│   split_root$: {
 //│     split_1$: {
@@ -278,12 +278,12 @@ while x is {} do()
 //│         break split_1$
 //│       }
 //│     }
-//│     tmp39 = runtime.Unit;
+//│     tmp37 = runtime.Unit;
 //│   }
 //│   return runtime.LoopEnd
 //│ });
-//│ tmp37 = while11();
-//│ tmp39
+//│ tmp38 = while11();
+//│ tmp37
 
 
 // ——— FIXME: ———

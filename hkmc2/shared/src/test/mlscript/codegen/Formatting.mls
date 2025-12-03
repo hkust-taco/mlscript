@@ -53,7 +53,7 @@ discard of { aaaaaaaaa: 1, bbbb: 2 }
 
 discard of { aaaaaaaaa: 1, bbbbbbbb: 2, ccccccccc: 3, dddddddddd: 4 }
 //│ JS (unsanitized):
-//│ let ccccccccc, dddddddddd, tmp4, aaaaaaaaa1, bbbbbbbb; /** scoped **/
+//│ let aaaaaaaaa1, bbbbbbbb, ccccccccc, dddddddddd, tmp4; /** scoped **/
 //│ aaaaaaaaa1 = 1;
 //│ bbbbbbbb = 2;
 //│ ccccccccc = 3;
