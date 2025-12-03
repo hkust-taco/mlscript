@@ -90,7 +90,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             val fun_ty = ps.foldRight(bod_ty): (pl, acc) =>
               P.Fun(C.Tup(pl, N), acc, Nil)
             constrain(fun_ty, C.Flow(t.sym.flow))
-        case t: Term => typeProd(t)
+        case t: Term =>
+          typeProd(t)
           
         case cd: ClassDef =>
           
@@ -129,7 +130,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           
       typeProd(res)
     
-    case Lit(lit) => P.Ctor(LitSymbol(lit), Nil)(t)
+    case Lit(lit) =>
+      P.Ctor(LitSymbol(lit), Nil)(t)
 
     case sel @ LeadingDotSel(nme) =>
       leadingDotSelsToExpand += sel
@@ -156,15 +158,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case nw @ New(cls, args, rft) =>
       rft match
       case N =>
-        cls.resolvedSym.flatMap(_.asCls) match
-        case N =>
-          log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
-          P.Unknown(nw)
-        case S(sym) =>
-          sym match
-          case sym: ClassSymbol =>
-            val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
-            P.Ctor(sym, args_t)(t)
+      cls.resolvedSym.flatMap(_.asCls) match
+      case N =>
+        log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
+        P.Unknown(nw)
+      case S(sym) =>
+        sym match
+        case sym: ClassSymbol =>
+          val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
+          P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
       checkLDS(lhs): pre_t =>
@@ -186,7 +188,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       P.Tup(fields.map:
         case f: Fld => N -> typeProd(f.term))
     
-    case Error => P.Ctor(Extr(false), Nil)(t)
+    case Error =>
+      P.Ctor(Extr(false), Nil)(t)
     
     // case _ => P.Flow(FlowSymbol("TODO"))
   
@@ -204,7 +207,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case S(typ) =>
       p.flow.producers += ConcreteProd(Vector.empty, P.Typ(typ))
       C.Typ(typ)
-    case N => C.Flow(p.flow)
+    case N =>
+      C.Flow(p.flow)
   
   def typeParamList(ps: ParamList): Ls[C] =
     if ps.restParam.nonEmpty then
@@ -321,21 +325,29 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             log(s"Solving: ${lhs.showDbg} <: ${rhs.showDbg}   (${lhs.getClass.getSimpleName}, ${rhs.getClass.getSimpleName})")
             
             (lhs, rhs) match
-            case (P.Flow(sym), rhs) if inCache.contains(sym -> rhs) => log(s"In (in) cache!")
-            case (lhs, C.Flow(sym)) if outCache.contains(lhs -> sym) => log(s"In (out) cache!")
-            case (P.Flow(lsym), C.Flow(rsym)) =>
-              log(s"New flow: ${lsym.showDbg} ~> ${rsym.showDbg}")
-              lsym.outFlows += rsym
-              lsym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
+            case (P.Flow(sym), rhs)
+            if inCache.contains(sym -> rhs)
+              => log(s"In (in) cache!")
+            case (lhs, C.Flow(sym))
+            if outCache.contains(lhs -> sym)
+              => log(s"In (out) cache!")
+            case (P.Flow(sym), C.Flow(sym2)) =>
+              log(s"New flow $sym ~> $sym2")
+              sym.outFlows += sym2
+              sym.producers.foreach(cp =>
+                dig(cp.ctor, rhs, cp.path ++ path))
             case (lhs: ProdCtor, C.Flow(sym)) =>
-              log(s"New flow: ${lhs.showDbg} ~> ${sym.showDbg}")
+              log(s"New flow $lhs ~> $sym")
               sym.producers += ConcreteProd(path, lhs)
-              sym.consumers.foreach(c => dig(lhs, c, path))
+              sym.consumers.foreach: c =>
+                dig(lhs, c, path)
             case (P.Flow(sym), rhs) =>
-              log(s"New flow: ${sym.showDbg} ~> ${rhs.showDbg}")
+              log(s"New flow $sym ~> $rhs")
               sym.consumers += rhs
-              sym.producers.foreach(cp => dig(cp.ctor, rhs, cp.path ++ path))
-              sym.outFlows.foreach(fs => dig(P.Flow(fs), rhs, sym +: path)) // TODO sym or fs?
+              sym.producers.foreach: cp =>
+                dig(cp.ctor, rhs, cp.path ++ path)
+              sym.outFlows.foreach: fs =>
+                dig(P.Flow(fs), rhs, fs +: path)
             case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
               dig(cl, pl, path) // FIXME path
               dig(pr, cr, path) // FIXME path
@@ -345,16 +357,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 dig(a1, a2, path) // FIXME path
               else
                 raise(ErrorReport(
-                  msg"Constructor mismatch" -> trm.toLoc
-                  :: Nil
-                ))
+                  msg"Constructor mismatch" -> trm.toLoc :: Nil))
             case (P.Tup(args), C.Tup(ini, rst)) =>
-              def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit =
-                (args, cons) match
+              def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit
+                    = (args, cons) match
                 case (Nil, Nil) => ()
                 case ((N, a1) :: args, c1 :: cons) =>
-                  zip(args, cons, rst, path)
                   dig(a1, c1, path) // FIXME path
+                  zip(args, cons, rst, path)
                 case ((S(spd), a1) :: args, Nil) =>
                   ???
                 case ((N, a1) :: args, Nil) =>
@@ -363,9 +373,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   case S((spd, a2, post)) => ???
                   case N =>
                     raise(ErrorReport(
-                      msg"Tuple arity mismatch: too many elements on the producer side"->trm.toLoc
-                      :: Nil
-                    ))
+                      msg"Tuple arity mismatch: too many elements on the producer side" -> trm.toLoc :: Nil))
               zip(args, ini, rst, path)
             case (sel @ P.LeadingDotSel(trm), rhs) => rhs match
               case C.Typ(Type.Ref(sym, _)) =>
@@ -439,6 +447,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             msg"Could not solve all constraints within $MAX_FUEL iterations." -> N :: Nil))
   
   def findAccessPath(src: Ctx, dst: Ctx, moduleSym: ModuleOrObjectSymbol): Opt[Term] =
+    log(s"outermostAcessibleBase ${dst.outermostAcessibleBase}")
     val (outermostBase, outermostPath) = dst.outermostAcessibleBase
     var cur = src
     while cur isnt outermostBase do
