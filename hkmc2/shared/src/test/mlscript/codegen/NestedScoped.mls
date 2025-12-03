@@ -1,0 +1,207 @@
+:js
+
+
+:lot
+:sjs
+scope.locally of () =>
+  42
+//│ JS (unsanitized):
+//│ 42
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = HashSet()
+//│     body = Return:
+//│       res = Lit of IntLit of 42
+//│       implct = true
+//│ = 42
+
+
+:lot
+:sjs
+scope.locally of () =>
+  let x = 42 in x
+//│ JS (unsanitized):
+//│ let x; /** scoped **/ x = 42; x
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = HashSet(x)
+//│     body = Assign:
+//│       lhs = x
+//│       rhs = Lit of IntLit of 42
+//│       rest = Return: \
+//│       res = Ref:
+//│         l = x
+//│         disamb = N
+//│       implct = true
+//│ = 42
+
+
+:e
+x
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.44: 	x
+//│ ╙──      	^
+
+
+:ge
+scope.locally of x =>
+  let y = 1 in x + y
+//│ ╔══[COMPILATION ERROR] locally requires a lambda with no parameter.
+//│ ║  l.51: 	scope.locally of x =>
+//│ ╙──      	^^^^^^^^^^^^^
+
+
+
+:ssjs
+fun foo(x) =
+  let z = 1
+  scope.locally of () =>
+    let y = 1 in x + y + z
+//│ JS:
+//│ foo = function foo(...args) {{
+//│     runtime.checkArgs("foo", 1, true, args.length);
+//│     let x1 = args[0];
+//│     let z; /** scoped **/
+//│     z = 1;{
+//│       let y, tmp; /** scoped **/
+//│       y = 1;
+//│       tmp = x1 + y;
+//│       return tmp + z
+//│     }
+//│   }
+//│ };
+//│ block$res5 = undefined;
+
+
+foo(1)
+//│ = 3
+
+
+:sjs
+fun f() =
+  if true then
+    scope.locally of () =>
+      let a = 4
+      a + 4
+  else
+    let b = 5
+    b + 9
+//│ JS (unsanitized):
+//│ let f; /** scoped **/
+//│ f = function f() {
+//│   let scrut, b; /** scoped **/
+//│   scrut = true;
+//│   if (scrut === true) { let a; /** scoped **/ a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│ };
+
+
+f()
+//│ = 8
+
+
+:sjs
+fun f() =
+  if false then
+    let a = 4
+    a + 4
+  else
+    scope.locally of () =>
+      let b = 5
+      b + 9
+//│ JS (unsanitized):
+//│ let f1; /** scoped **/
+//│ f1 = function f() {
+//│   let scrut, a; /** scoped **/
+//│   scrut = false;
+//│   if (scrut === true) { a = 4; return a + 4 } else { let b; /** scoped **/ b = 5; return b + 9 }
+//│ };
+
+
+f()
+//│ = 14
+
+
+:sjs
+fun g(x, y, z) =
+  3 + 4 * if
+    x then 0
+    y then 0
+    z then
+      scope.locally of () =>
+        let a = 1
+        (_ + a)
+//│ JS (unsanitized):
+//│ let g; /** scoped **/
+//│ g = function g(x1, y, z) {
+//│   let tmp, tmp1; /** scoped **/
+//│   let lambda;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x1 === true) {
+//│         break split_1$
+//│       } else {
+//│         if (y === true) {
+//│           break split_1$
+//│         } else {
+//│           if (z === true) {
+//│             let a; /** scoped **/
+//│             a = 1;
+//│             lambda = (undefined, function (_0) {
+//│               return _0 + a
+//│             });
+//│             tmp = lambda;
+//│             break split_root$
+//│           } else {
+//│             throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│           }
+//│         }
+//│       }
+//│     }
+//│     tmp = 0;
+//│   }
+//│   tmp1 = 4 * tmp;
+//│   return 3 + tmp1
+//│ };
+
+
+
+:sjs
+fun foo(x, y) =
+  let z = [1, 2, 3]
+  if not x > z.0 do
+    print("rua")
+  let m = x + y
+  scope.locally of () =>
+    let w1 = z.1 + m
+    let w2 = z.2 - m
+    if w1 == w2 do
+      print("ruarua")
+//│ JS (unsanitized):
+//│ let foo1; /** scoped **/
+//│ foo1 = function foo(x1, y) {
+//│   let z, scrut, m, tmp, tmp1; /** scoped **/
+//│   z = globalThis.Object.freeze([
+//│     1,
+//│     2,
+//│     3
+//│   ]);
+//│   tmp = x1 > z[0];
+//│   scrut = ! tmp;
+//│   if (scrut === true) {
+//│     tmp1 = Predef.print("rua");
+//│   } else {
+//│     tmp1 = runtime.Unit;
+//│   }
+//│   m = x1 + y;{
+//│     let w1, w2, scrut1; /** scoped **/
+//│     w1 = z[1] + m;
+//│     w2 = z[2] - m;
+//│     scrut1 = w1 == w2;
+//│     if (scrut1 === true) { return Predef.print("ruarua") } else { return runtime.Unit }
+//│   }
+//│ };
+

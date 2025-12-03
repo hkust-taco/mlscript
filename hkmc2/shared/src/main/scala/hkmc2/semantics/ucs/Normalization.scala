@@ -405,7 +405,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       Scoped(
         LoweringCtx.loweringCtx.getCollectedSym/*  ++ inputSplit.definedSyms */,
         if labels.isEmpty then possiblyScoped else Label(rootBreakLabel, false, possiblyScoped, End())
-      )
+      )(false)
     // Embed the `body` into `Label` if the term is a `while`.
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
     val block =

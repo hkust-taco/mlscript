@@ -30,10 +30,10 @@ x
 :sjs
 set x += 1 in print(x)
 //│ JS (unsanitized):
-//│ let tmp1, tmp2, old, tmp3; /** scoped **/
+//│ let old, tmp1, tmp2, tmp3; /** scoped **/
 //│ old = x1;
-//│ try { tmp1 = x1 + 1; x1 = tmp1; tmp2 = Predef.print(x1); tmp3 = tmp2; } finally { x1 = old; }
-//│ tmp3
+//│ try { tmp2 = x1 + 1; x1 = tmp2; tmp3 = Predef.print(x1); tmp1 = tmp3; } finally { x1 = old; }
+//│ tmp1
 //│ > 2
 
 x

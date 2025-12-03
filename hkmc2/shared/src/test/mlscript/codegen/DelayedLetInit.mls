@@ -80,7 +80,7 @@ else foo = 1
 //│ ║  l.77: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let foo1, scrut; /** scoped **/
+//│ let scrut, foo1; /** scoped **/
 //│ foo1 = undefined;
 //│ scrut = true;
 //│ if (scrut === true) {

@@ -155,7 +155,7 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let tmp24, tmp25, tmp26, str, scrut, tmp27; /** scoped **/
+//│ let str, scrut, tmp24, tmp25, tmp26, tmp27; /** scoped **/
 //│ let handleBlock$7;
 //│ str = "";
 //│ scrut = true;
@@ -231,11 +231,11 @@ str
 //│       }
 //│       resume(value$) {
 //│         if (this.pc === 6) {
-//│           tmp24 = value$;
+//│           tmp25 = value$;
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 6) {
-//│             return tmp24
+//│             return tmp25
 //│           }
 //│           break;
 //│         }
@@ -321,7 +321,7 @@ str
 //│         }
 //│         resume(value$) {
 //│           if (this.pc === 1) {
-//│             tmp25 = value$;
+//│             tmp26 = value$;
 //│           } else if (this.pc === 2) {
 //│             res7 = value$;
 //│           }
@@ -346,9 +346,9 @@ str
 //│         res8.contTrace.last.next = new Cont$handleBlock$h2$2(pc);
 //│         return runtime.handleBlockImpl(res8, h2)
 //│       };
-//│       tmp25 = runtime.safeCall(h2.perform(runtime.Unit));
-//│       if (tmp25 instanceof runtime.EffectSig.class) {
-//│         return doUnwind1(tmp25, 1)
+//│       tmp26 = runtime.safeCall(h2.perform(runtime.Unit));
+//│       if (tmp26 instanceof runtime.EffectSig.class) {
+//│         return doUnwind1(tmp26, 1)
 //│       }
 //│       res7 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res7 instanceof runtime.EffectSig.class) {
@@ -356,18 +356,18 @@ str
 //│       }
 //│       return res7
 //│     };
-//│     tmp24 = handleBlock$8();
-//│     if (tmp24 instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp24, 6)
+//│     tmp25 = handleBlock$8();
+//│     if (tmp25 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp25, 6)
 //│     }
-//│     return tmp24
+//│     return tmp25
 //│   };
-//│   tmp27 = handleBlock$7();
-//│   if (tmp27 instanceof runtime.EffectSig.class) {
-//│     tmp27 = runtime.topLevelEffect(tmp27, false);
+//│   tmp24 = handleBlock$7();
+//│   if (tmp24 instanceof runtime.EffectSig.class) {
+//│     tmp24 = runtime.topLevelEffect(tmp24, false);
 //│   }
-//│   tmp26 = tmp27;
-//│ } else { tmp26 = runtime.Unit; }
+//│   tmp27 = tmp24;
+//│ } else { tmp27 = runtime.Unit; }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"
