@@ -191,7 +191,6 @@ sealed abstract class Block extends Product:
     
     (transformer.applyBlock(this), defns)
     
-  
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match
@@ -375,7 +374,6 @@ case class HandleBlock(
     body: Block,
     rest: Block
 ) extends Block with ProductWithTail
-
 
 object HandleBlock:
   def apply(

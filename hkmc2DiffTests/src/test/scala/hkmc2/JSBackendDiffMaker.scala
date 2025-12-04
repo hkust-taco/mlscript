@@ -133,7 +133,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       
       val (pre, js) = nestedScp.givenIn:
         jsb.worksheet(le)
-      val preStr = pre.stripBreaks.mkString(100) //+ varsFromScopedStr
+      val preStr = pre.stripBreaks.mkString(100)
       val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then
         output(s"JS:")
