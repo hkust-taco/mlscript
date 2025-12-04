@@ -320,8 +320,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
     // if it's `while`, we always make sure that loop bodies are properly scoped nestedly
-    //  - when handler lowering is off (which means that loops are not rewritten to functions by default), this is crucial for the correct semantics
-    //  - when handler lowering is on (which means loops are always rewritten to functions), this nested scoped blocks also matches the scope of the "while" functions
+    // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2588412258
     val useNestedScoped = kw === `while`
     (if useNestedScoped then LoweringCtx.nestScoped else outerCtx).givenIn:
       var usesResTmp = false

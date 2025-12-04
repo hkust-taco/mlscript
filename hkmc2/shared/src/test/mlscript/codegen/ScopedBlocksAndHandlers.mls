@@ -4,14 +4,13 @@
 
 
 
-:effectHandlers
 fun start(x, f) =
   while x do
     f(() => x)
 
-// NOTE: if `z` is defined in a nested scoped block
+// if `z` and `g` is defined in a nested scoped block
 // and `g` is floated out to the top level, `z` in `g` gets unbound.
-:effectHandlers
+// so currently nested `if`s do not get nested `Scoped` blocks
 :sjs
 fun f(x) =
   if x do
@@ -40,7 +39,6 @@ abstract class Effect with
 
 
 
-:effectHandlers
 :sjs
 fun f(x) =
   if x then
@@ -217,10 +215,6 @@ fun f(x) =
 //│ };
 
 
-// NOTE: currently while loops are always rewritten into functions
-// when `:effectHanlders` are set, so this "dontRewriteWhile" has no effect here
-:dontRewriteWhile
-:effectHandlers
 fun f(x) =
   while x do
     while x do
@@ -254,10 +248,17 @@ foo(h)
 
 
 
-:effectHandlers
 fun f(x) =
   while x do
     while x do
       let z = 3
       fun g() = z
       g()
+
+
+
+fun start(x, f) =
+  while x do
+    let z = 2
+    fun g() = z
+    g()
