@@ -123,6 +123,11 @@ class TypeInfo(
       val parentsSuffix = if parentsDoc.isEmpty then doc"" else doc" " :: parentsDoc
       val structDoc = struct.copy(isSubtype = false).toWat
       doc"(type ${idDoc}(sub$parentsSuffix ${structDoc}))"
+    case array: ArrayType if array.isSubtype =>
+      val parentsDoc = array.parents.map(_.toWat).mkDocument(doc" ")
+      val parentsSuffix = if parentsDoc.isEmpty then doc"" else doc" " :: parentsDoc
+      val arrayDoc = array.copy(isSubtype = false).toWat
+      doc"(type ${idDoc}(sub$parentsSuffix ${arrayDoc}))"
     case _ =>
       doc"(type ${idDoc}${compType.toWat})"
 end TypeInfo

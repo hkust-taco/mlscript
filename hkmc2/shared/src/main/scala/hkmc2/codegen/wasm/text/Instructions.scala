@@ -161,6 +161,14 @@ object Instructions:
       stackargs = Seq(arrayRef),
       resultType = S(I32Type)
     )
+
+    /** Creates an `array.new_fixed` instruction. */
+    def new_fixed(arrayType: TypeIdx, items: Seq[Expr]): FoldedInstr = FoldedInstr(
+      mnemonic = "array.new_fixed",
+      instrargs = Seq(arrayType.toWat, doc"${items.length}"),
+      stackargs = items,
+      resultType = S(RefType(arrayType, nullable = false))
+    )
   end array
 
   object ref:
@@ -251,6 +259,14 @@ object Instructions:
       mnemonic = "struct.new_default",
       instrargs = Seq(ty.toWat),
       stackargs = Seq.empty,
+      resultType = S(RefType(ty, nullable = false))
+    )
+
+    /** Creates a `struct.new` instruction. */
+    def new_(ty: TypeIdx, values: Seq[Expr]): FoldedInstr = FoldedInstr(
+      mnemonic = "struct.new",
+      instrargs = Seq(ty.toWat),
+      stackargs = values,
       resultType = S(RefType(ty, nullable = false))
     )
 

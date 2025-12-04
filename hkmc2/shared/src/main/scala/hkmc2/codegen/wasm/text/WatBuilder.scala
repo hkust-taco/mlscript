@@ -36,6 +36,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
+  private case class TupleArrayInfo(arrayType: TypeIdx)
+  private val tupleArrays: MutMap[Int, TupleArrayInfo] = MutMap.empty
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -47,6 +49,22 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
+
+  private def tupleArray(len: Int)(using Ctx): TupleArrayInfo =
+    tupleArrays.getOrElseUpdate(len, {
+      val sym = BlockMemberSymbol(s"TupleArray$len", Nil)
+      val arrayType = ctx.addType(
+        sym = S(sym),
+        TypeInfo(
+          sym = sym,
+          compType = ArrayType(
+            elemType = RefType.anyref,
+            mutable = false
+          )
+        )
+      )
+      TupleArrayInfo(arrayType)
+    })
 
   /**
    * Raises a [[WarningReport]] with the given `warnMsgs` and `extraInfo`, and emits an
@@ -294,6 +312,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       val objType = ctx.getFuncInfo_!(ctorFuncIdx).body.resultType_!
       call(funcidx = ctorFuncIdx, as.map(argument), Seq(Result(objType.asValType_!)))
+
+    case Tuple(mut, elems) =>
+      if mut then
+        return errExpr(
+          Ls(msg"Mutable tuple literals are not supported in the Wasm backend yet" -> r.toLoc),
+          extraInfo = S(r.toString)
+        )
+      val tupleInfo = tupleArray(elems.length)
+      val tupleValues = elems.map(argument)
+      array.new_fixed(tupleInfo.arrayType, tupleValues)
 
     case r =>
       errExpr(
