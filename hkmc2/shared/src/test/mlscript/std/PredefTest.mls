@@ -237,4 +237,55 @@ mkStr of
 //│ 
 //│ = "01"
 
+// loose equality is disabled
 
+null == undefined
+//│ = false
+
+[] == false
+//│ = false
+
+"0" == false
+//│ = false
+
+1 == true
+//│ = false
+
+// arrays are compared elementwise
+
+[1, 2, 3] == [1, 2, 3]
+//│ = true
+
+// non-data classes unchanged
+
+:silent
+class B(val a, b)
+let x = B(1, 2)
+let y = B(1, 4)
+
+x == y
+//│ = false
+
+// data classes are equal from arguments
+
+:silent
+data class A(a, b, c)
+module M with
+  data class A(a, b, c)
+let x = A(1, 2, 3)
+let y = A(1, 2, 3)
+
+x == y
+//│ = true
+
+x != y
+//│ = false
+
+x == A(2, 3, 4)
+//│ = false
+
+x == M.A(1, 2, 3)
+//│ = false
+
+A([x], 2, 3) == A([y], 2, 3)
+//│ = true
