@@ -116,7 +116,11 @@ tuple passing(1, 2, 3) of 4, 5, 6
 
 
 Symbols
-//│ = Symbols { prettyPrint: Symbol("mlscript.prettyPrint"), class: object Symbols }
+//│ = Symbols {
+//│   prettyPrint: Symbol("mlscript.prettyPrint"),
+//│   definitionMetadata: Symbol("mlscript.definitionMetadata"),
+//│   class: object Symbols
+//│ }
 
 
 // * Function composition is associative
@@ -180,7 +184,7 @@ foldr(tuple)(0, 1, 2, 3)
 :re
 foldr(+)()
 //│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.181: 	foldr(+)()
+//│ ║  l.185: 	foldr(+)()
 //│ ╙──       	        ^^
 
 
@@ -237,4 +241,61 @@ mkStr of
 //│ 
 //│ = "01"
 
+// loose equality is disabled
 
+null == undefined
+//│ = false
+
+undefined == null
+//│ = false
+
+undefined === null
+//│ = false
+
+[] == false
+//│ = false
+
+"0" == false
+//│ = false
+
+1 == true
+//│ = false
+
+// * Arrays are compared elementwise
+
+[1, 2, 3] == [1, 2, 3]
+//│ = true
+
+// non-data classes unchanged
+
+:silent
+class B(val a, b)
+let x = B(1, 2)
+let y = B(1, 4)
+
+x == y
+//│ = false
+
+// data classes are equal from arguments
+
+:silent
+data class A(a, b, c)
+module M with
+  data class A(a, b, c)
+let x = A(1, 2, 3)
+let y = A(1, 2, 3)
+
+x == y
+//│ = true
+
+x != y
+//│ = false
+
+x == A(2, 3, 4)
+//│ = false
+
+x == M.A(1, 2, 3)
+//│ = false
+
+A([x], 2, 3) == A([y], 2, 3)
+//│ = true

@@ -271,7 +271,7 @@ fun f(x) =
 //│ let f16; /** scoped **/
 //│ f16 = function f(x3) {
 //│   let scrut; /** scoped **/
-//│   scrut = x3 == 0;
+//│   scrut = Predef.equals(x3, 0);
 //│   if (scrut === true) { return 1 } else { return 2 }
 //│ };
 

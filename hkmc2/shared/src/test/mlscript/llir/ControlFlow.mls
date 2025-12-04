@@ -28,14 +28,14 @@ f1()
 :intl
 fun f2() =
   let x = 0
-  if x == 1 then 2 else 3
+  if x === 1 then 2 else 3
 f2()
 //│ = 3
 //│ LLIR:
 //│   
 //│   def f2() =
 //│     let x = 0 in
-//│     let x1 = ==(x,1) in
+//│     let x1 = ===(x,1) in
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         2
@@ -82,7 +82,7 @@ f3()
 :intl
 fun f4() =
   let x = 0
-  let x = if x == 1 then 2 else 3
+  let x = if x === 1 then 2 else 3
   x
 f4()
 //│ = 3
@@ -90,7 +90,7 @@ f4()
 //│   
 //│   def f4() =
 //│     let x = 0 in
-//│     let x1 = ==(x,1) in
+//│     let x1 = ===(x,1) in
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = 2 in
@@ -112,8 +112,8 @@ f4()
 :intl
 fun f5() =
   let x = 0
-  let x = if x == 1 then 2 else 3
-  let x = if x == 2 then 4 else 5
+  let x = if x === 1 then 2 else 3
+  let x = if x === 2 then 4 else 5
   x
 f5()
 //│ = 5
@@ -121,7 +121,7 @@ f5()
 //│   
 //│   def f5() =
 //│     let x = 0 in
-//│     let x1 = ==(x,1) in
+//│     let x1 = ===(x,1) in
 //│     case x1 of
 //│       Lit(BoolLit(true)) =>
 //│         let x2 = 2 in
@@ -130,7 +130,7 @@ f5()
 //│         let x3 = 3 in
 //│         jump j(x3)
 //│   def j(tmp) =
-//│     let x4 = ==(tmp,2) in
+//│     let x4 = ===(tmp,2) in
 //│     case x4 of
 //│       Lit(BoolLit(true)) =>
 //│         let x5 = 4 in

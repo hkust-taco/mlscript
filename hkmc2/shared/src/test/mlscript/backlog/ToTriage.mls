@@ -46,18 +46,6 @@ else 0
 
 // ——— ——— ———
 
-// TODO we should give reasonable meaning to `==`
-//  notably taking into account arrays and data classes;
-//  and deprecated `===` (notably does not work for arrays)
-
-undefined == null
-//│ = true
-
-undefined === null
-//│ = false
-
-// ——— ——— ———
-
 Infinity
 //│ = Infinity
 
@@ -127,7 +115,7 @@ object Cls(val x) with
 :e
 Cls.x
 //│ ╔══[ERROR] Object 'Cls' does not contain member 'x'
-//│ ║  l.128: 	Cls.x
+//│ ║  l.116: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
@@ -137,7 +125,7 @@ Cls.huh
 
 let c = new Cls(123)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Cls.
-//│ ║  l.138: 	let c = new Cls(123)
+//│ ║  l.126: 	let c = new Cls(123)
 //│ ║         	            ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Cls1 is not a constructor
@@ -150,7 +138,7 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_1;try { globalThis.Object.freeze(class Foo$_ {   static {     Foo$_1 = this   }   constructor() {     const this$Foo$_ = this;     globalThis.Object.freeze(class Bar$_ {       static {         this$Foo$_.Bar' = this       }       constructor() {}       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Bar'"];      });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Foo'"];  }); block$res20 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let Foo$_1;try { globalThis.Object.freeze(class Foo$_ {   static {     Foo$_1 = this   }   constructor() {     const this$Foo$_ = this;     globalThis.Object.freeze(class Bar$_ {       static {         this$Foo$_.Bar' = this       }       constructor() {}       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Bar'"];      });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Foo'"];  }); block$res18 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
@@ -160,22 +148,22 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.159: 	module Example with
+//│ ║  l.147: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.160: 	// whoops
+//│ ║  l.148: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.161: 	  val a = this
+//│ ║  l.149: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.161: 	  val a = this
+//│ ║  l.149: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.176: 	let xs = new Oopsie
+//│ ║  l.164: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Expected a statically known class; found ‹error›.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -198,7 +186,7 @@ class C
 :sjs
 class D extends id(C)
 //│ ╔══[ERROR] Expected a statically known class; found selection.
-//│ ║  l.199: 	class D extends id(C)
+//│ ║  l.187: 	class D extends id(C)
 //│ ║         	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
@@ -226,13 +214,13 @@ let x = 0
 :fixme
 set x += 1; ()
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.227: 	set x += 1; ()
+//│ ║  l.215: 	set x += 1; ()
 //│ ╙──       	    ^^^^^^^^^^
 
 :e
 set (x += 1; ())
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.233: 	set (x += 1; ())
+//│ ║  l.221: 	set (x += 1; ())
 //│ ╙──       	    ^^^^^^^^^^^^
 
 (set x += 1); ()
@@ -240,7 +228,7 @@ set (x += 1; ())
 :fixme
 [x, set x += 1; x]
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.241: 	[x, set x += 1; x]
+//│ ║  l.229: 	[x, set x += 1; x]
 //│ ╙──       	        ^^^^^^^^^
 //│ = [1]
 
@@ -264,13 +252,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.265: 	open Stack { ::, Nil }
+//│ ║  l.253: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.271: 	open Stack { (::), Nil }
+//│ ║  l.259: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -278,7 +266,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.279: 	1 :: Nil
+//│ ║  l.267: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -289,9 +277,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.289: 	mkStr of ... // hello
+//│ ║  l.277: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.290: 	"oops"
+//│ ║  l.278: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -314,25 +302,25 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread).
-//│ ║  l.315: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.303: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
 //│ ╔══[ERROR] Name not found: args
-//│ ║  l.315: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.303: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                                     ^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.315: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.303: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.327: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.315: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.333: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.321: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -366,10 +354,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.366: 	  let bar(x: Str): Str = x + x
+//│ ║  l.354: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.367: 	  bar("test")
+//│ ║  l.355: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -379,7 +367,7 @@ fun foo() =
 module Foo(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.379: 	module Foo(x)
+//│ ║  l.367: 	module Foo(x)
 //│ ╙──       	           ^
 //│ JS (unsanitized):
 //│ let Foo5; /** scoped **/
@@ -403,7 +391,7 @@ module Foo(x)
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.403: 	module Foo(val x)
+//│ ║  l.391: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ JS (unsanitized):
 //│ let Foo7; /** scoped **/
@@ -426,7 +414,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.427: 	data class Foo(mut x)
+//│ ║  l.415: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -443,10 +431,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.442: 	set this.pc = 0
+//│ ║  l.430: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.444: 	  (this).pc = 0
+//│ ║  l.432: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 
 // But this doesn't...
@@ -455,10 +443,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.456: 	  this.pc = 0
+//│ ║  l.444: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.456: 	  this.pc = 0
+//│ ║  l.444: 	  this.pc = 0
 //│ ╙──       	  ^^^^
 
 // ——— ——— ———
@@ -470,7 +458,7 @@ pattern A(pattern B) = B
 
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.471: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.459: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———

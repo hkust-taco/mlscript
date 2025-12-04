@@ -199,7 +199,7 @@ fun foo(x, y) =
 //│     m = x1 + y;
 //│     w1 = z[1] + m;
 //│     w2 = z[2] - m;
-//│     scrut1 = w1 == w2;
+//│     scrut1 = Predef.equals(w1, w2);
 //│     if (scrut1 === true) { return Predef.print("ruarua") } else { return runtime.Unit }
 //│   }
 //│ };
