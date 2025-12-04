@@ -2,7 +2,7 @@
 
 
 null == undefined
-//│ = true
+//│ = false
 
 null === undefined
 //│ = false

@@ -10,13 +10,13 @@ fun f(x) =
 //│ Split with nested patterns:
 //│ >  if
 //│ >    let $scrut = 1
-//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
+//│ >    let $scrut = (member:Predef.)equals‹member:equals›(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0
 //│ >    else 1
 //│ Expanded split with flattened patterns:
 //│ >  if
 //│ >    let $scrut = 1
-//│ >    let $scrut = builtin:==(x, builtin:+($scrut, 2))
+//│ >    let $scrut = (member:Predef.)equals‹member:equals›(x, builtin:+($scrut, 2))
 //│ >    $scrut is true then 0
 //│ >    else 1
 

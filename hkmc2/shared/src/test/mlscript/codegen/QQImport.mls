@@ -82,10 +82,10 @@ Term.print(`if `true then `true else `false)
 //│ >   else false
 
 
-Term.print(x `=> `if x `== `0.0 then `1.0 else x)
+Term.print(x `=> `if x `=== `0.0 then `1.0 else x)
 //│ > (x_0) =>
 //│ >   if 
-//│ >     let scrut_0 = (==)(x_0, 0)
+//│ >     let scrut_0 = (===)(x_0, 0)
 //│ >     scrut_0 is true then 1
 //│ >     else x_0
 

@@ -51,7 +51,7 @@ else 0
 //  and deprecated `===` (notably does not work for arrays)
 
 undefined == null
-//│ = true
+//│ = false
 
 undefined === null
 //│ = false

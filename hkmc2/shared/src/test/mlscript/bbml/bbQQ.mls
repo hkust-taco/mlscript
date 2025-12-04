@@ -81,7 +81,7 @@ f `=> x `=> y `=> f`(x, y)
 
 
 
-x `=> `if x `== `0.0 then `1.0 else x
+x `=> `if x `=== `0.0 then `1.0 else x
 //│ Type: CodeBase[out 'x -> ('x ∨ Num), ⊥, ?]
 
 run(`1)

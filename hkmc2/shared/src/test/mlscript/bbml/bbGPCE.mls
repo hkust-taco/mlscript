@@ -22,7 +22,7 @@ run(x `=> id(x) `* x)
 
 fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
 fun assertNotZero(x) =
-  `if (x `== `0.0) then `error else x
+  `if (x `=== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
 //│ Type: Num -> (Num -> Num)
