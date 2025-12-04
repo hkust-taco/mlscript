@@ -265,7 +265,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val mtds = methods.map:
               case (sym, params, split) =>
                 val paramLists = params :: Nil
-                val bodyBlock = inScopedBlock(false)(ucs.Normalization(this)(split)(Ret))
+                val bodyBlock = inScopedBlock(ucs.Normalization(this)(split)(Ret))
                 FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(isTailRec = false)
             // The return type is intended to be consistent with `gatherMembers`
             (mtds, Nil, Nil, End())
@@ -547,7 +547,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
         arg match
           case Tup(Fld(_, Lam(ParamList(_, Nil, N), body), N) :: Nil) =>
-            inScopedBlock(true)(block(Nil, R(body))(k))
+            LoweringCtx.nestScoped.givenIn:
+              val res = block(Nil, R(body))(k)
+              val scopedSyms = loweringCtx.getCollectedSym
+              new Begin(new Scoped(scopedSyms, res), End())
           case _ =>
             return fail:
               ErrorReport(
@@ -901,7 +904,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         reportAnnotations(decl, annotations)
         sym
     val ctor =
-      inScopedBlock(false):
+      inScopedBlock:
         term_nonTail(Blk(clsBody.nonMethods, clsBody.blk.res))(ImplctRet)
           // * This is just a minor improvement to get `constructor() {}` instead of `constructor() { null }`
           .mapTail:
@@ -987,7 +990,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val (imps, funs, rest) = splitBlock(main.stats, Nil, Nil, Nil)
     
     val blk =
-      inScopedBlock(false)(using LoweringCtx.empty):
+      inScopedBlock(using LoweringCtx.empty):
         block(funs ::: rest, R(main.res))(ImplctRet)
     
     val desug = LambdaRewriter.desugar(blk)
@@ -1032,15 +1035,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case ps => ps
     setupFunctionDef(physicalParams, bodyTerm, name)
   
-  def inScopedBlock(dontFlatten: Bool)(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
+  def inScopedBlock(using LoweringCtx)(mkBlock: LoweringCtx ?=> Block): Block =
     LoweringCtx.nestScoped.givenIn:
       val body = mkBlock
       val scopedSyms = loweringCtx.getCollectedSym
-      Scoped(scopedSyms, body)(dontFlatten)
+      Scoped(scopedSyms, body)
   
   def setupFunctionDef(paramLists: List[ParamList], bodyTerm: Term, name: Option[Str])
       (using LoweringCtx): (List[ParamList], Block) =
-    val scopedBody = inScopedBlock(false)(returnedTerm(bodyTerm))
+    val scopedBody = inScopedBlock(returnedTerm(bodyTerm))
     (paramLists, scopedBody)
   
   def reportAnnotations(target: Statement, annotations: Ls[Annot]): Unit =
@@ -1153,7 +1156,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block =
-    inScopedBlock(false):
+    inScopedBlock:
       val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
       val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
       val resSym = TempSymbol(N, dbgNme = "traceLogRes")

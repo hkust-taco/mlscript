@@ -7,12 +7,11 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
-//│ f = function f(...args) {{
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let x = args[0];
-//│     let y = args[1];
-//│     return x + y
-//│   }
+//│ f = function f(...args) {
+//│   runtime.checkArgs("f", 2, true, args.length);
+//│   let x = args[0];
+//│   let y = args[1];
+//│   return x + y
 //│ };
 //│ block$res1 = runtime.checkCall(f(2, 3));
 //│ undefined
@@ -46,18 +45,16 @@ id(f)(2)
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ JS:
-//│ f1 = function f(...args) {{
-//│     runtime.checkArgs("f", 1, true, args.length);
-//│     let x = args[0];
-//│     return (...args1) => {{
-//│         runtime.checkArgs("", 2, true, args1.length);
-//│         let y = args1[0];
-//│         let z = args1[1];
-//│         let tmp4; /** scoped **/
-//│         tmp4 = x + y;
-//│         return tmp4 + z
-//│       }
-//│     }
+//│ f1 = function f(...args) {
+//│   runtime.checkArgs("f", 1, true, args.length);
+//│   let x = args[0];
+//│   return (...args1) => {
+//│     runtime.checkArgs("", 2, true, args1.length);
+//│     let y = args1[0];
+//│     let z = args1[1];
+//│     let tmp4; /** scoped **/
+//│     tmp4 = x + y;
+//│     return tmp4 + z
 //│   }
 //│ };
 //│ tmp2 = runtime.checkCall(Predef.id(f1));
@@ -85,12 +82,11 @@ let f = (x, y) => x + y
 f(2)
 //│ JS:
 //│ let f6;
-//│ f6 = function f(...args) {{
-//│     runtime.checkArgs("f", 2, true, args.length);
-//│     let x = args[0];
-//│     let y = args[1];
-//│     return x + y
-//│   }
+//│ f6 = function f(...args) {
+//│   runtime.checkArgs("f", 2, true, args.length);
+//│   let x = args[0];
+//│   let y = args[1];
+//│   return x + y
 //│ };
 //│ f5 = f6;
 //│ block$res6 = runtime.safeCall(f5(2));
@@ -150,15 +146,14 @@ id(Cls(1, 2)).f(3)
 //│     this.y = y;
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {{
-//│       runtime.checkArgs("f", 2, true, args.length);
-//│       let z = args[0];
-//│       let p = args[1];
-//│       let tmp8, tmp9; /** scoped **/
-//│       tmp8 = this.x + this.y;
-//│       tmp9 = tmp8 + z;
-//│       return tmp9 + p
-//│     }
+//│   f(...args) {
+//│     runtime.checkArgs("f", 2, true, args.length);
+//│     let z = args[0];
+//│     let p = args[1];
+//│     let tmp8, tmp9; /** scoped **/
+//│     tmp8 = this.x + this.y;
+//│     tmp9 = tmp8 + z;
+//│     return tmp9 + p
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Cls", ["x", "y"]]; 
@@ -188,22 +183,20 @@ id(Cls(1, 2)).f(3, 4)(5)
 //│     this.y = y;
 //│   }
 //│   get f$__checkNotMethod() { runtime.deboundMethod("f", "Cls"); }
-//│   f(...args) {{
-//│       runtime.checkArgs("f", 2, true, args.length);
-//│       let z = args[0];
-//│       let p = args[1];
-//│       return (...args1) => {{
-//│           runtime.checkArgs("", 2, true, args1.length);
-//│           let q = args1[0];
-//│           let s = args1[1];
-//│           let tmp11, tmp12, tmp13, tmp14; /** scoped **/
-//│           tmp11 = this.x + this.y;
-//│           tmp12 = tmp11 + z;
-//│           tmp13 = tmp12 + p;
-//│           tmp14 = tmp13 + q;
-//│           return tmp14 + s
-//│         }
-//│       }
+//│   f(...args) {
+//│     runtime.checkArgs("f", 2, true, args.length);
+//│     let z = args[0];
+//│     let p = args[1];
+//│     return (...args1) => {
+//│       runtime.checkArgs("", 2, true, args1.length);
+//│       let q = args1[0];
+//│       let s = args1[1];
+//│       let tmp11, tmp12, tmp13, tmp14; /** scoped **/
+//│       tmp11 = this.x + this.y;
+//│       tmp12 = tmp11 + z;
+//│       tmp13 = tmp12 + p;
+//│       tmp14 = tmp13 + q;
+//│       return tmp14 + s
 //│     }
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -281,11 +274,10 @@ if M.A(1).y is
 //│         this.x = x1;
 //│       }
 //│       get f$__checkNotMethod() { runtime.deboundMethod("f", "A"); }
-//│       f(...args) {{
-//│           runtime.checkArgs("f", 1, true, args.length);
-//│           let y = args[0];
-//│           return this.x + y
-//│         }
+//│       f(...args) {
+//│         runtime.checkArgs("f", 1, true, args.length);
+//│         let y = args[0];
+//│         return this.x + y
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "A", ["x"]]; 

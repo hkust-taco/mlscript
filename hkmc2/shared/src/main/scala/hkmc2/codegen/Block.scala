@@ -88,7 +88,7 @@ sealed abstract class Block extends Product:
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
-    case s @ Scoped(syms, body) => Scoped(syms, body.mapTail(f))(s.dontFlatten)
+    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
     case b: BlockTail => f(b)
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
@@ -275,11 +275,11 @@ sealed abstract class Block extends Product:
       then this
       else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
 
-    case s @ Scoped(syms, body) =>
+    case Scoped(syms, body) =>
       val newBody = body.flatten(k)
       if newBody is body
       then this
-      else Scoped(syms, newBody)(s.dontFlatten)
+      else new Scoped(syms, newBody)
 
     case e: End => k(e)
     case t: BlockTail => this
@@ -307,8 +307,7 @@ case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
 
 
-// set dontFlatten to true to force a nested Scoped
-case class Scoped(syms: collection.Set[Local], body: Block)(val dontFlatten: Bool) extends BlockTail
+case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
 
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
@@ -326,44 +325,44 @@ case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
 object Match:
   def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, Match(scrut, arms, dflt, body))(false)
+    case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
     case _ => new Match(scrut, arms, dflt, rest)
 object Label:
   def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
-    case s @ Scoped(syms, rest) if !s.dontFlatten => Scoped(syms, Label(label, loop, body, rest))(false)
+    case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
     case _ => new Label(label, loop, body, rest)
 object Scoped:
-  def apply(syms: collection.Set[Local], body: Block)(dontFlatten: Bool): Block = body match
-    case s @ Scoped(syms2, body) if !s.dontFlatten =>
-      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)(dontFlatten) else Scoped(syms ++ syms2, body)(dontFlatten)
+  def apply(syms: collection.Set[Local], body: Block): Block = body match
+    case Scoped(syms2, body) =>
+      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body) else Scoped(syms ++ syms2, body)
     case _ =>
-      if syms.isEmpty && !dontFlatten then body else new Scoped(syms, body)(dontFlatten)
+      if syms.isEmpty then body else new Scoped(syms, body)
 object Begin:
   def apply(sub: Block, rest: Block): Block = (sub, rest) match
-    case (s1 @ Scoped(symsSub, bodySub), s2 @ Scoped(symsRest, bodyRest)) if !s1.dontFlatten && !s2.dontFlatten =>
-      Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))(false)
-    case (s @ Scoped(symsSub, bodySub), _) if !s.dontFlatten => Scoped(symsSub, Begin(bodySub, rest))(false)
-    case (_, s @ Scoped(symsRest, bodyRest)) if !s.dontFlatten => Scoped(symsRest, Begin(sub, bodyRest))(false)
+    case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
+      Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
+    case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
+    case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
     case _ => new Begin(sub, rest)
 object TryBlock:
   def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, TryBlock(sub, finallyDo, body))(false)
+    case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
     case _ => new TryBlock(sub, finallyDo, rest)
 object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, Assign(lhs, rhs, body))(false)
+    case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
     case _ => new Assign(lhs, rhs, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))(false)
+    case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
     case _ => new AssignField(lhs, nme, rhs, rest)(symbol)
 object AssignDynField:
   def apply(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body))(false)
+    case Scoped(syms, body) => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body))
     case _ => new AssignDynField(lhs, fld, arrayIdx, rhs, rest)
 object Define:
   def apply(defn: Defn, rest: Block): Block = rest match
-    case s @ Scoped(syms, body) if !s.dontFlatten => Scoped(syms, Define(defn, body))(false)
+    case Scoped(syms, body) => Scoped(syms, Define(defn, body))
     case _ => new Define(defn, rest)
 
 case class HandleBlock(
@@ -389,7 +388,7 @@ object HandleBlock:
     body: Block,
     rest: Block
   ) = rest match
-      case s @ Scoped(syms, rest) if !s.dontFlatten =>
+      case Scoped(syms, rest) =>
         Scoped(
           syms,
           new HandleBlock(
@@ -401,7 +400,7 @@ object HandleBlock:
             handlers,
             body,
             rest
-          ))(false)
+          ))
       case _ => new HandleBlock(
         lhs,
         res,
