@@ -61,7 +61,7 @@ hi(0)
 //│   return res1
 //│ };
 //│ hi = function hi(n) {
-//│   let scrut, tmp, doUnwind; /** scoped **/
+//│   let scrut, tmp; /** scoped **/
 //│   let stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
@@ -151,7 +151,7 @@ sum(10000)
 //│   return res2
 //│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, doUnwind; /** scoped **/
+//│   let scrut, tmp, tmp1; /** scoped **/
 //│   let curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;

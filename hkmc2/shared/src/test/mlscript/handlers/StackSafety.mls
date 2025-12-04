@@ -23,8 +23,8 @@ hi(0)
 //│ let hi; /** scoped **/
 //│ let res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, Cont$func$hi$1, doUnwind; /** scoped **/
-//│   let stackDelayRes;
+//│   let scrut, tmp; /** scoped **/
+//│   let Cont$func$hi$1, doUnwind, stackDelayRes;
 //│   globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$hi$1 = this
@@ -79,8 +79,8 @@ sum(10000)
 //│ let sum1; /** scoped **/
 //│ let res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind; /** scoped **/
-//│   let curDepth, stackDelayRes;
+//│   let scrut, tmp, tmp1; /** scoped **/
+//│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
 //│   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$sum$1 = this

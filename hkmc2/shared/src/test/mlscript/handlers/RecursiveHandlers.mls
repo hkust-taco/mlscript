@@ -173,7 +173,8 @@ str
 //│       perform(arg) {
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
-//│           let tmp28, tmp29, tmp30, Cont$handler$h1$perform$2, doUnwind1; /** scoped **/
+//│           let tmp28, tmp29, tmp30; /** scoped **/
+//│           let Cont$handler$h1$perform$2, doUnwind1;
 //│           globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             static {
 //│               Cont$handler$h1$perform$2 = this
@@ -260,7 +261,8 @@ str
 //│         perform(arg) {
 //│           let hdlrFun;
 //│           hdlrFun = function hdlrFun(k) {
-//│             let tmp28, tmp29, tmp30, tmp31, tmp32, Cont$handler$h2$perform$2, doUnwind2; /** scoped **/
+//│             let tmp28, tmp29, tmp30, tmp31, tmp32; /** scoped **/
+//│             let Cont$handler$h2$perform$2, doUnwind2;
 //│             globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               static {
 //│                 Cont$handler$h2$perform$2 = this

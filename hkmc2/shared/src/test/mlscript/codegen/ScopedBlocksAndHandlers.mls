@@ -1,0 +1,263 @@
+:js
+:effectHandlers
+
+
+
+
+:effectHandlers
+fun start(x, f) =
+  while x do
+    f(() => x)
+
+// NOTE: if `z` is defined in a nested scoped block
+// and `g` is floated out to the top level, `z` in `g` gets unbound.
+:effectHandlers
+:sjs
+fun f(x) =
+  if x do
+    if x do
+      let z = 3
+      fun g() = z
+//│ JS (unsanitized):
+//│ let f; /** scoped **/
+//│ f = function f(x) {
+//│   let g, z; /** scoped **/
+//│   g = function g() {
+//│     return z
+//│   };
+//│   if (x === true) {
+//│     if (x === true) {
+//│       z = 3;
+//│       return runtime.Unit
+//│     } else { return runtime.Unit }
+//│   } else { return runtime.Unit }
+//│ };
+
+
+
+abstract class Effect with
+  fun perform()
+
+
+
+:effectHandlers
+:sjs
+fun f(x) =
+  if x then
+    if x then
+      let z = 4
+      handle h = Effect with
+        fun perform(x)(k) =
+          print(x)
+          k(x + z)
+      print(h.perform())
+  else 0
+//│ JS (unsanitized):
+//│ let f1; /** scoped **/
+//│ f1 = function f(x) {
+//│   let z, tmp, tmp1; /** scoped **/
+//│   let handleBlock$, res, Cont$func$f$1, doUnwind;
+//│   globalThis.Object.freeze(class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│     static {
+//│       Cont$func$f$1 = this
+//│     }
+//│     constructor(pc) {
+//│       let tmp2;
+//│       tmp2 = super(null);
+//│       this.pc = pc;
+//│     }
+//│     resume(value$) {
+//│       if (this.pc === 9) {
+//│         res = value$;
+//│       } else if (this.pc === 8) {
+//│         tmp = value$;
+//│       }
+//│       contLoop: while (true) {
+//│         if (this.pc === 9) {
+//│           throw res
+//│         } else if (this.pc === 8) {
+//│           return tmp
+//│         }
+//│         break;
+//│       }
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Cont$func$f$"]; 
+//│   });
+//│   doUnwind = function doUnwind(res1, pc) {
+//│     res1.contTrace.last.next = new Cont$func$f$1(pc);
+//│     res1.contTrace.last = res1.contTrace.last.next;
+//│     return res1
+//│   };
+//│   handleBlock$ = function handleBlock$() {
+//│     let h, res1, Cont$handleBlock$h$1, doUnwind1, Handler$h$1;
+//│     globalThis.Object.freeze(class Handler$h$ extends Effect1 {
+//│       static {
+//│         Handler$h$1 = this
+//│       }
+//│       constructor() {
+//│         let tmp2;
+//│         tmp2 = super();
+//│       }
+//│       perform(x1) {
+//│         let hdlrFun;
+//│         hdlrFun = function hdlrFun(k) {
+//│           let tmp2, tmp3; /** scoped **/
+//│           let Cont$handler$h$perform$1, doUnwind2;
+//│           globalThis.Object.freeze(class Cont$handler$h$perform$ extends runtime.FunctionContFrame.class {
+//│             static {
+//│               Cont$handler$h$perform$1 = this
+//│             }
+//│             constructor(pc) {
+//│               let tmp4;
+//│               tmp4 = super(null);
+//│               this.pc = pc;
+//│             }
+//│             resume(value$) {
+//│               if (this.pc === 4) {
+//│                 tmp2 = value$;
+//│               }
+//│               contLoop: while (true) {
+//│                 if (this.pc === 4) {
+//│                   tmp3 = x1 + z;
+//│                   this.pc = 5;
+//│                   continue contLoop
+//│                 } else if (this.pc === 5) {
+//│                   return runtime.safeCall(k(tmp3))
+//│                 }
+//│                 break;
+//│               }
+//│             }
+//│             toString() { return runtime.render(this); }
+//│             static [definitionMetadata] = ["class", "Cont$handler$h$perform$"]; 
+//│           });
+//│           doUnwind2 = function doUnwind(res2, pc) {
+//│             res2.contTrace.last.next = new Cont$handler$h$perform$1(pc);
+//│             res2.contTrace.last = res2.contTrace.last.next;
+//│             return res2
+//│           };
+//│           tmp2 = Predef.print(x1);
+//│           if (tmp2 instanceof runtime.EffectSig.class) {
+//│             return doUnwind2(tmp2, 4)
+//│           }
+//│           tmp3 = x1 + z;
+//│           return runtime.safeCall(k(tmp3))
+//│         };
+//│         return runtime.mkEffect(this, hdlrFun)
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│     });
+//│     h = new Handler$h$1();
+//│     globalThis.Object.freeze(class Cont$handleBlock$h$ extends runtime.FunctionContFrame.class {
+//│       static {
+//│         Cont$handleBlock$h$1 = this
+//│       }
+//│       constructor(pc) {
+//│         let tmp2;
+//│         tmp2 = super(null);
+//│         this.pc = pc;
+//│       }
+//│       resume(value$) {
+//│         if (this.pc === 1) {
+//│           tmp1 = value$;
+//│         } else if (this.pc === 2) {
+//│           res1 = value$;
+//│         }
+//│         contLoop: while (true) {
+//│           if (this.pc === 3) {
+//│             res1 = Predef.print(tmp1);
+//│             if (res1 instanceof runtime.EffectSig.class) {
+//│               return this.doUnwind(res1, 2)
+//│             }
+//│             this.pc = 2;
+//│             continue contLoop
+//│           } else if (this.pc === 1) {
+//│             this.pc = 3;
+//│             continue contLoop
+//│           } else if (this.pc === 2) {
+//│             return res1
+//│           }
+//│           break;
+//│         }
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
+//│     });
+//│     doUnwind1 = function doUnwind(res2, pc) {
+//│       res2.contTrace.last.next = new Cont$handleBlock$h$1(pc);
+//│       return runtime.handleBlockImpl(res2, h)
+//│     };
+//│     tmp1 = runtime.safeCall(h.perform());
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind1(tmp1, 1)
+//│     }
+//│     res1 = Predef.print(tmp1);
+//│     if (res1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind1(res1, 2)
+//│     }
+//│     return res1
+//│   };
+//│   if (x === true) {
+//│     if (x === true) {
+//│       z = 4;
+//│       tmp = handleBlock$();
+//│       if (tmp instanceof runtime.EffectSig.class) {
+//│         return doUnwind(tmp, 8)
+//│       }
+//│       return tmp
+//│     } else {
+//│       res = globalThis.Object.freeze(new globalThis.Error("match error"));
+//│       if (res instanceof runtime.EffectSig.class) {
+//│         return doUnwind(res, 9)
+//│       }
+//│       throw res
+//│     }
+//│   } else { return 0 }
+//│ };
+
+
+// NOTE: currently while loops are always rewritten into functions
+// when `:effectHanlders` are set, so this "dontRewriteWhile" has no effect here
+:dontRewriteWhile
+:effectHandlers
+fun f(x) =
+  while x do
+    while x do
+      let z = 4
+      handle h = Effect with
+        fun perform(x)(k) =
+          print(x)
+          k(x + z)
+      print(h.perform())
+  else 0
+
+
+// The class body generated by the handler is in the
+// top level of the function, and it refers to `g`.
+// So there would be problems if the declartion of `g`
+// is nested inside the first `if`.
+:expect 2
+fun foo(h) =
+  h.perform()
+  if true then
+    if true then
+      fun g() = 2
+      g()
+  else
+    fun g() = 3
+    g()
+handle h = Effect with
+  fun perform()(k) = k(())
+foo(h)
+//│ = 2
+
+
+
+:effectHandlers
+fun f(x) =
+  while x do
+    while x do
+      let z = 3
+      fun g() = z
+      g()
