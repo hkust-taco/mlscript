@@ -1,0 +1,6 @@
+class CachedHash with
+  let _hash = null
+  fun hash() = if _hash !== null then _hash else
+    let h = this.toString()
+    set _hash = h
+    h
