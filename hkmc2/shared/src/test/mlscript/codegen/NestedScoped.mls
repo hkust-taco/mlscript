@@ -62,16 +62,15 @@ fun foo(x) =
   scope.locally of () =>
     let y = 1 in x + y + z
 //│ JS:
-//│ foo = function foo(...args) {{
-//│     runtime.checkArgs("foo", 1, true, args.length);
-//│     let x1 = args[0];
-//│     let z; /** scoped **/
-//│     z = 1;{
-//│       let y, tmp; /** scoped **/
-//│       y = 1;
-//│       tmp = x1 + y;
-//│       return tmp + z
-//│     }
+//│ foo = function foo(...args) {
+//│   runtime.checkArgs("foo", 1, true, args.length);
+//│   let x1 = args[0];
+//│   let z; /** scoped **/{
+//│     let y, tmp; /** scoped **/
+//│     z = 1;
+//│     y = 1;
+//│     tmp = x1 + y;
+//│     return tmp + z
 //│   }
 //│ };
 //│ block$res5 = undefined;
@@ -183,21 +182,21 @@ fun foo(x, y) =
 //│ JS (unsanitized):
 //│ let foo1; /** scoped **/
 //│ foo1 = function foo(x1, y) {
-//│   let z, scrut, m, tmp, tmp1; /** scoped **/
-//│   z = globalThis.Object.freeze([
-//│     1,
-//│     2,
-//│     3
-//│   ]);
-//│   tmp = x1 > z[0];
-//│   scrut = ! tmp;
-//│   if (scrut === true) {
-//│     tmp1 = Predef.print("rua");
-//│   } else {
-//│     tmp1 = runtime.Unit;
-//│   }
-//│   m = x1 + y;{
+//│   let z, scrut, m, tmp, tmp1; /** scoped **/{
 //│     let w1, w2, scrut1; /** scoped **/
+//│     z = globalThis.Object.freeze([
+//│       1,
+//│       2,
+//│       3
+//│     ]);
+//│     tmp = x1 > z[0];
+//│     scrut = ! tmp;
+//│     if (scrut === true) {
+//│       tmp1 = Predef.print("rua");
+//│     } else {
+//│       tmp1 = runtime.Unit;
+//│     }
+//│     m = x1 + y;
 //│     w1 = z[1] + m;
 //│     w2 = z[2] - m;
 //│     scrut1 = w1 == w2;

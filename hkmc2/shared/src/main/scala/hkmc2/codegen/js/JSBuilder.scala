@@ -787,7 +787,7 @@ trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
       val restAssign = paramRest match
         case N => doc""
         case S(p) => doc"\nlet $p = $runtimeVar.Tuple.slice($paramsStr, ${params.paramCountLB}, 0);"
-      (doc"...$paramsStr", braced(doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}"))
+      (doc"...$paramsStr", doc"$checkArgsNum$paramsAssign$restAssign${this.body(body, endSemi = false)}")
     else
       super.setupFunction(name, params, body)
 

@@ -109,13 +109,13 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)
       val le = lowered0.copy(main = lowered0.main.mapTail:
-          case e: End =>
-            Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
-          case Return(res, implct) =>
-            assert(implct)
-            Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-          case tl: (Throw | Break | Continue) => tl
-        )
+        case e: End =>
+          Assign(resSym, Value.Lit(syntax.Tree.UnitLit(false)), e)
+        case Return(res, implct) =>
+          assert(implct)
+          Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case tl: (Throw | Break | Continue) => tl
+      )
       if showLoweredTree.isSet then
         output(s"Lowered:")
         output(lowered0.showAsTree)
