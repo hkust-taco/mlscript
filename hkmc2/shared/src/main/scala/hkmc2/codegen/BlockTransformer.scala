@@ -118,7 +118,7 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       applyPath(fun): fun2 =>
         applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects))
+          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall))
     case Instantiate(mut, cls, args) =>
       applyPath(cls): cls2 =>
         applyArgs(args): args2 =>
@@ -144,9 +144,9 @@ class BlockTransformer(subst: SymbolSubst):
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
-    case Value.Ref(l) =>
+    case Value.Ref(l, disamb) =>
       val l2 = l.subst
-      k(if (l2 is l) then v else Value.Ref(l2))
+      k(if (l2 is l) then v else Value.Ref(l2, disamb))
     case Value.This(sym) =>
       val sym2 = sym.subst
       k(if (sym2 is sym) then v else Value.This(sym2))
@@ -157,10 +157,11 @@ class BlockTransformer(subst: SymbolSubst):
   def applyFunDefn(fun: FunDefn): FunDefn =
     val own2 = fun.owner.mapConserve(_.subst)
     val sym2 = fun.sym.subst
+    val dSym2 = fun.dSym.subst
     val params2 = fun.params.mapConserve(applyParamList)
     val body2 = applySubBlock(fun.body)
-    if (own2 is fun.owner) && (sym2 is fun.sym) && (params2 is fun.params) && (body2 is fun.body)
-      then fun else FunDefn(own2, sym2, params2, body2)
+    if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
+      then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.isTailRec)
   
   def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
     val ValDefn(tsym, sym, rhs) = defn

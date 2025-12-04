@@ -1,0 +1,88 @@
+:js
+
+:w
+@tailrec
+fun f
+//│ ═══[WARNING] Only functions with a body may be marked as @tailrec.
+
+:w
+@tailrec
+class A
+//│ ═══[WARNING] This annotation has no effect.
+
+:w
+@tailrec 2 + 2
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on application terms.
+//│ ║  l.14: 	@tailrec 2 + 2
+//│ ╙──      	         ^^^^^
+//│ = 4
+
+:todo
+@tailrec
+fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
+
+:w
+@tailcall
+fun g = 2
+//│ ═══[WARNING] This annotation has no effect.
+
+:todo
+fun test =
+  @tailcall f
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── Tail call optimization is not yet implemented.
+//│ ║  l.33: 	  @tailcall f
+//│ ╙──      	            ^
+
+:w
+let f = 0
+fun test =
+  @tailcall f
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── This annotation is not supported on reference terms.
+//│ ║  l.42: 	  @tailcall f
+//│ ╙──      	            ^
+//│ f = 0
+
+:todo
+class A with
+  @tailrec
+  fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
+
+:w
+class A with
+  @tailcall
+  fun f = 2
+//│ ═══[WARNING] This annotation has no effect.
+
+:todo
+class A
+module A with
+  @tailrec
+  fun f = 2
+//│ ═══[WARNING] Tail call optimization is not yet implemented.
+
+:w
+class A
+module A with
+  @tailcall
+  fun f = 2
+//│ ═══[WARNING] This annotation has no effect.
+
+:w
+:effectHandlers
+handle h = Object with
+  @tailcall
+  fun f(r) = 2
+//│ ═══[WARNING] This annotation has no effect.
+
+:w
+fun test =
+  @tailcall 1 + 2
+//│ ╔══[WARNING] This annotation has no effect.
+//│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
+//│ ║  l.84: 	  @tailcall 1 + 2
+//│ ╙──      	            ^^^^^

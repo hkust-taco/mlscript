@@ -235,13 +235,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       split: Split,
       cont: (Result => Block) \/ (Bool => Result => Block),
       topLevel: Bool
-  )(using labels: Labels)(using Subst): Block = split match
+  )(using labels: Labels)(using LoweringCtx): Block = split match
     case Split.Let(sym, trm, tl) =>
       term_nonTail(trm): r =>
         Assign(sym, r, lowerSplit(tl, cont, topLevel))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
       subTerm_nonTail(scrut): sr =>
-        tl.log(s"Binding scrut $scrut to $sr (${summon[Subst].map})") 
+        tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
             S(lowerSplit(restSplit, cont, topLevel = true)),
             End()
@@ -255,21 +255,13 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               // Normalization should reject cases where the user provides
               // more sub-patterns than there are actual class parameters.
               assert(argsOpt.isEmpty || args.length <= clsParams.length, (argsOpt, clsParams))
-              def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using Subst): Case -> Block = args match
+              def mkArgs(args: Ls[TermSymbol -> BlockLocalSymbol])(using LoweringCtx): Case -> Block = args match
                 case Nil =>
                   Case.Cls(ctorSym, st) -> lowerSplit(tail, cont, topLevel = false)
                 case (param, arg) :: args =>
                   val (cse, blk) = mkArgs(args)
                   (cse, Assign(arg, Select(sr, new Tree.Ident(param.id.name).withLocOf(arg))(S(param)), blk))
               mkMatch(mkArgs(clsParams.iterator.zip(args).toList))
-            // Select the constructor's `.class` field.
-            lazy val ctorTerm = ctor.symbol match
-              case S(mem: BlockMemberSymbol) =>
-                // If the class is declaration-only, we do not need to
-                // select the class.
-                if !mem.hasLiftedClass || mem.defn.exists(_.hasDeclareModifier.isDefined) then ctor
-                else Term.SynthSel(ctor, Tree.Ident("class"))(mem.clsTree.orElse(mem.modOrObjTree).map(_.symbol), N).resolve
-              case _ => ctor
             symbol match
               case cls: ClassSymbol if ctx.builtins.virtualClasses contains cls =>
                 // [invariant:0] Some classes (e.g., `Int`) from `Prelude` do
@@ -280,9 +272,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 // and use it `Predef.unreachable` here.
                 k(cls, Nil)(unreachableFn)
               case cls: ClassSymbol =>
-                subTerm_nonTail(ctorTerm)(k(cls, cls.tree.clsParams))
+                subTerm_nonTail(ctor)(k(cls, cls.tree.clsParams))
               case mod: ModuleOrObjectSymbol =>
-                subTerm_nonTail(ctorTerm)(k(mod, Nil))
+                subTerm_nonTail(ctor)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
             val objectSym = ctx.builtins.Object
@@ -310,20 +302,20 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   
   import syntax.Keyword.{`if`, `while`}
   
-  def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using Subst): Block =
+  def apply(t: Term.IfLike)(k: Result => Block)(using config: Config)(using LoweringCtx): Block =
     val newSplit = t.split.getExpandedSplit
     scoped("ucs:desugared"):
       log(s"Split with nested patterns:\n${t.split.prettyPrint}")
       log(s"Expanded split with flattened patterns:\n${newSplit.prettyPrint}")
     this(newSplit, t.kw, S(t), k)
   
-  def apply(t: Term.SynthIf)(k: Result => Block)(using Config, Subst): Block =
+  def apply(t: Term.SynthIf)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(t.split, `if`, S(t), k)
   
-  def apply(split: Split)(k: Result => Block)(using Config, Subst): Block =
+  def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(split, `if`, N, k)
   
-  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using Config, Subst) =
+  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using Config, LoweringCtx) =
     var usesResTmp = false
     // The symbol of the temporary variable for the result of the `if`-like term.
     // It will be created in one of the following situations.
@@ -335,6 +327,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       new TempSymbol(t)
     // The symbol for the loop label if the term is a `while`.
     lazy val loopLabel = new TempSymbol(t)
+    lazy val f = new BlockMemberSymbol("while", Nil, false)
     val normalized = tl.scoped("ucs:normalize"):
       normalize(inputSplit)(using VarSet())
     tl.scoped("ucs:normalized"):
@@ -344,11 +337,14 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
     lazy val assignResult = (r: Result) => Assign(l, r, End())
+    val loopCont = if config.rewriteWhileLoops
+      then Return(Call(Value.Ref(f, N), Nil)(true, true, false), false)
+      else Continue(loopLabel)
     val cont =
       if kw === `while` then
         // If the term is a `while`, the action of `else` branches depends on
         // whether the the enclosing split is at the top level or not.
-        R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else Continue(loopLabel)))
+        R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else loopCont))
       else if labels.isEmpty then
         if k.isInstanceOf[TailOp] then
           // If there are no shared consequents and the continuation is a tail
@@ -395,7 +391,28 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
     val block =
       if kw === `while` then
-        Begin(Label(loopLabel, true, body, End()), rest)
+        if config.rewriteWhileLoops then
+          val loopResult = TempSymbol(N)
+          val isReturned = TempSymbol(N)
+          val loopEnd: Path =
+            Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
+          val blk = blockBuilder
+            .assign(l, Value.Lit(Tree.UnitLit(false)))
+            .define(FunDefn.withFreshSymbol(N, f, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(isTailRec = false))
+            .assign(loopResult, Call(Value.Ref(f, N), Nil)(true, true, false))
+          if summon[LoweringCtx].mayRet then
+            blk
+              .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
+                loopResult.asPath.asArg :: loopEnd.asArg :: Nil)(true, false, false))
+              .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
+                Return(Value.Ref(loopResult), false),
+                S(rest)
+              )
+              .end
+          else
+            blk.rest(rest)
+        else
+          Begin(Label(loopLabel, true, body, End()), rest)
       else if labels.isEmpty && k.isInstanceOf[TailOp] then
         body
       else

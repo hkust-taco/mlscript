@@ -20,6 +20,7 @@ fs.0()
 let fs = mut []
 //│ fs = []
 
+:dontRewriteWhile
 fun foo() =
   let i = 1
   while i < 5 do
@@ -27,7 +28,8 @@ fun foo() =
     set i += 1
     fs.push of () => x
 
-// * Note that this also fails without lifting, as we need to fix [fixme:0]
+// * Note that this works with while loop rewriting
+// * See [fixme:0] for cause of the issue
 :fixme
 :expect 1
 foo()
@@ -43,29 +45,47 @@ fun foo() =
     set x += 1
     return () => x
 //│ JS (unsanitized):
-//│ let foo2, lambda2, lambda$2;
-//│ lambda$2 = function lambda$(x) {
-//│   return x
+//│ let foo2, lambda2, while$1, lambda$2, foo$capture5;
+//│ lambda$2 = function lambda$(foo$capture6) {
+//│   return foo$capture6.x$capture$0
 //│ };
-//│ lambda2 = (undefined, function (x) {
+//│ lambda2 = (undefined, function (foo$capture6) {
 //│   return () => {
-//│     return lambda$2(x)
+//│     return lambda$2(foo$capture6)
 //│   }
 //│ });
-//│ foo2 = function foo() {
-//│   let x, scrut, tmp2, tmp3, lambda$here;
-//│   x = 1;
-//│   tmp4: while (true) {
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       tmp2 = x + 1;
-//│       x = tmp2;
-//│       lambda$here = runtime.safeCall(lambda2(x));
-//│       return lambda$here
-//│     } else { tmp3 = runtime.Unit; }
-//│     break;
+//│ while$1 = function while$(foo$capture6) {
+//│   let scrut, tmp2, lambda$here;
+//│   scrut = true;
+//│   if (scrut === true) {
+//│     tmp2 = foo$capture6.x$capture$0 + 1;
+//│     foo$capture6.x$capture$0 = tmp2;
+//│     lambda$here = runtime.safeCall(lambda2(foo$capture6));
+//│     return lambda$here
+//│   } else {
+//│     foo$capture6.tmp$capture$1 = runtime.Unit;
 //│   }
-//│   return tmp3
+//│   return runtime.LoopEnd
+//│ };
+//│ globalThis.Object.freeze(class foo$capture4 {
+//│   static {
+//│     foo$capture5 = this
+//│   }
+//│   constructor(x$capture$0, tmp$capture$1) {
+//│     this.tmp$capture$1 = tmp$capture$1;
+//│     this.x$capture$0 = x$capture$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "foo$capture"]; 
+//│ });
+//│ foo2 = function foo() {
+//│   let tmp2, tmp3, capture;
+//│   capture = new foo$capture5(null, null);
+//│   capture.x$capture$0 = 1;
+//│   capture.tmp$capture$1 = undefined;
+//│   tmp2 = while$1(capture);
+//│   tmp3 = tmp2 !== runtime.LoopEnd;
+//│   if (tmp3 === true) { return tmp2 } else { return capture.tmp$capture$1 }
 //│ };
 
 :expect 2

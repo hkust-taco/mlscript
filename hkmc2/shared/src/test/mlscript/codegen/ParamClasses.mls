@@ -233,9 +233,15 @@ Foo(10, 20, 30, 40, 50)
 //│ = Foo(_, 20, _, 40, _)
 
 
-:todo // * This should be an error
 :e
 class Foo(val z, val z)
+//│ ╔══[ERROR] Duplicate definition of member named 'z'.
+//│ ╟── Defined at: 
+//│ ║  l.237: 	class Foo(val z, val z)
+//│ ║         	              ^
+//│ ╟── Defined at: 
+//│ ║  l.237: 	class Foo(val z, val z)
+//│ ╙──       	                     ^
 //│ JS (unsanitized):
 //│ let Foo9;
 //│ Foo9 = function Foo(z, z1) {
@@ -245,10 +251,7 @@ class Foo(val z, val z)
 //│   static {
 //│     Foo9.class = this
 //│   }
-//│   constructor(z, z1) {
-//│     this.z = z;
-//│     this.z = z1;
-//│   }
+//│   constructor(z, z1) {}
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo", ["z", "z"]]; 
 //│ });
@@ -256,6 +259,6 @@ class Foo(val z, val z)
 Foo(1, 2)
 //│ JS (unsanitized):
 //│ Foo9(1, 2)
-//│ = Foo(2, 2)
+//│ = Foo(undefined, undefined)
 
 

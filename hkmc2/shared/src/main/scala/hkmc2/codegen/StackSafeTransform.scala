@@ -14,7 +14,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   
   val doUnwindFns = doUnwindMap.values.collect:
       case s: Select if s.symbol.isDefined => s.symbol.get
-      case Value.Ref(sym) => sym
+      case Value.Ref(sym, _) => sym
     .toSet
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
@@ -25,7 +25,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   private def intLit(n: BigInt) = Value.Lit(Tree.IntLit(n))
   
   private def op(op: String, a: Path, b: Path) =
-    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true, false)
+    Call(State.builtinOpsMap(op).asPath, a.asArg :: b.asArg :: Nil)(true, false, false)
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
@@ -40,8 +40,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
-    val bodFun = FunDefn(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)
-    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true), rest))
+    val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(isTailRec = false)
+    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true, false), rest))
 
   def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
     val resSym = sym getOrElse TempSymbol(None, "res")
@@ -50,7 +50,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   // Rewrites anything that can contain a Call to increase the stack depth
   def transform(b: Block, curDepth: => Symbol, isTopLevel: Bool = false): Block =
     def usesStack(r: Result) = r match
-      case Call(Value.Ref(_: BuiltinSymbol), _) => false
+      case Call(Value.Ref(_: BuiltinSymbol, _), _) => false
       case c: Call if !c.mayRaiseEffects => false // a call can only trigger a stack delay if it can raise effects
       case _: Call | _: Instantiate => true
       case _ => false
@@ -98,7 +98,7 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
     new BlockTraverserShallow:
       applyBlock(b)
       override def applyResult(r: Result): Unit = r match
-        case Call(Value.Ref(_: BuiltinSymbol), _) => ()
+        case Call(Value.Ref(_: BuiltinSymbol, _), _) => ()
         case _: Call | _: Instantiate => trivial = false
         case _ => ()
     trivial
@@ -150,12 +150,12 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       val rewritten = blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
-        .assign(resSym, Call(checkDepthPath, Nil)(true, true))
+        .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
         .ifthen(
           resSym.asPath,
           Case.Cls(paths.effectSigSym, paths.effectSigPath),
           Return(
-            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
+            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false, false),
             false
           )
         )
@@ -166,13 +166,13 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       // However, due to how tightly coupled the stack safety and handler lowering are, it might be
       // better to simply merge the two passes in the future.
       val (blk, defns) = doUnwindPath.get match
-        case Value.Ref(sym) => rewritten.floatOutDefns()
+        case Value.Ref(sym, _) => rewritten.floatOutDefns()
         case _ => (rewritten, Nil)
       defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
 
      
   def rewriteFn(defn: FunDefn) = 
     if doUnwindFns.contains(defn.sym) then defn
-    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
+    else FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.isTailRec)
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)

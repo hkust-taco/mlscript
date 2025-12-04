@@ -27,6 +27,7 @@
 //│ ╔══[ERROR] Identifier `Foo` does not name a known class symbol.
 //│ ║  l.23: 	(1).Foo#a()
 //│ ╙──      	   ^^^^
+//│ ═══[ERROR] Expected a statically known class; found ‹error›.
 //│ ═══[ERROR] Not a valid class: ‹error›
 //│ Type: ⊥
 
@@ -34,20 +35,20 @@
 fun Oops() = 1
 Oops().Oops#a()
 //│ ╔══[ERROR] Identifier `Oops` does not name a known class symbol.
-//│ ║  l.35: 	Oops().Oops#a()
+//│ ║  l.36: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ ╔══[ERROR] Not a valid class: reference
-//│ ║  l.35: 	Oops().Oops#a()
+//│ ║  l.36: 	Oops().Oops#a()
 //│ ╙──      	      ^^^^^
 //│ Type: ⊥
 
 data class Oops2()
 (new Oops2()).Oops2#a()
 //│ ╔══[ERROR] Class 'Oops2' does not contain member 'a'.
-//│ ║  l.45: 	(new Oops2()).Oops2#a()
+//│ ║  l.46: 	(new Oops2()).Oops2#a()
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] a is not a valid member in class Oops2
-//│ ║  l.45: 	(new Oops2()).Oops2#a()
+//│ ║  l.46: 	(new Oops2()).Oops2#a()
 //│ ╙──      	 ^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊥
 
@@ -56,7 +57,7 @@ data class Oops2()
 fun inc(x) = x + 1
 inc("oops")
 //│ ╔══[ERROR] Type error in string literal with expected type 'x
-//│ ║  l.57: 	inc("oops")
+//│ ║  l.58: 	inc("oops")
 //│ ║        	    ^^^^^^
 //│ ╟── because: cannot constrain  Str  <:  'x
 //│ ╟── because: cannot constrain  Str  <:  'x
@@ -66,7 +67,7 @@ inc("oops")
 fun inc(x) = x + 1
 inc as Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.67: 	inc as Int
+//│ ║  l.68: 	inc as Int
 //│ ║        	^^^
 //│ ╙── because: cannot constrain  ('x) ->{⊥} (Int)  <:  Int
 //│ Type: Int

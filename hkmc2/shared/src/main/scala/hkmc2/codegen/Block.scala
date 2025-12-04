@@ -219,15 +219,15 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)
+          else d.copy(body = newBody)(isTailRec = d.isTailRec)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
           val newMethods = c.methods.mapConserve:
-            case f@FunDefn(owner, sym, params, body) =>
+            case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)
+              if newBody is body then f else f.copy(body = newBody)(isTailRec = f.isTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
           else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
@@ -280,7 +280,7 @@ case class TryBlock(sub: Block, finallyDo: Block, rest: Block) extends Block wit
 case class Assign(lhs: Local, rhs: Result, rest: Block) extends Block with ProductWithTail
 // case class Assign(lhs: Path, rhs: Result, rest: Block) extends Block with ProductWithTail
 
-case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[FieldSymbol]) extends Block with ProductWithTail
+case class AssignField(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(val symbol: Opt[MemberSymbol]) extends Block with ProductWithTail
 
 case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block) extends Block with ProductWithTail
 
@@ -300,7 +300,7 @@ case class HandleBlock(
 
 
 sealed abstract class Defn:
-  val innerSym: Opt[MemberSymbol[?]]
+  val innerSym: Opt[MemberSymbol]
   val sym: BlockMemberSymbol
   def isOwned: Bool = owner.isDefined
   def owner: Opt[InnerSymbol]
@@ -316,7 +316,7 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -325,7 +325,7 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
   lazy val freeVarsLLIR: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -334,14 +334,21 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
 
+// NOTE: Setting isTailRec to false does not affect whether the function is optimized.
+// It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
+    dSym: TermSymbol,
     params: Ls[ParamList],
     body: Block,
+  )(
+    val isTailRec: Bool,
 ) extends Defn:
   val innerSym = N
-
+object FunDefn:
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(isTailRec: Bool)(using State) =
+    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(isTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -399,7 +406,7 @@ object ValDefn:
 // * a lone module is represented as an empty class with a `companion` module.
 final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
-    isym: MemberSymbol[? <: ClassLikeDef] & InnerSymbol,
+    isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
@@ -414,12 +421,12 @@ final case class ClsLikeDefn(
     bufferable: Option[Bool],
 ) extends Defn:
   require(k isnt syntax.Mod)
-  val innerSym = S(isym)
+  val innerSym = S(isym.asMemSym)
 
 
 // * This is only supposed to be for companion module definitions (notably, not for `object`)
 final case class ClsLikeBody(
-    isym: MemberSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
+    isym: DefinitionSymbol[? <: ModuleOrObjectDef] & InnerSymbol,
     methods: Ls[FunDefn],
     privateFields: Ls[TermSymbol],
     publicFields: Ls[BlockMemberSymbol -> TermSymbol],
@@ -497,7 +504,7 @@ sealed abstract class Result extends AutoLocated:
     case Lambda(params, body) => params :: Nil
     case Tuple(mut, elems) => elems.map(_.value)
     case Record(mut, elems) => elems.map(_.value)
-    case Value.Ref(l) => Nil
+    case Value.Ref(l, disamb) => Nil
     case Value.This(sym) => Nil
     case Value.Lit(lit) => lit :: Nil
   
@@ -518,7 +525,7 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVars).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVars) ++ arg.value.freeVars).toSet
-    case Value.Ref(l) => Set(l)
+    case Value.Ref(l, disamb) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVars ++ fld.freeVars
@@ -531,11 +538,16 @@ sealed abstract class Result extends AutoLocated:
     case Tuple(mut, elems) => elems.flatMap(_.value.freeVarsLLIR).toSet
     case Record(mut, args) =>
       args.flatMap(arg => arg.idx.fold(Set.empty)(_.freeVarsLLIR) ++ arg.value.freeVarsLLIR).toSet
-    case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol)) => Set.empty
-    case Value.Ref(l: MemberSymbol[?]) => l.defn match
+    case Value.Ref(l: (BuiltinSymbol | TopLevelSymbol | ClassSymbol | TermSymbol), disamb) => Set.empty
+    case Value.Ref(l: BlockMemberSymbol, S(disamb)) => disamb.defn match
       case Some(d: ClassLikeDef) => Set.empty
+      case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
       case _ => Set(l)
-    case Value.Ref(l) => Set(l)
+    case Value.Ref(l: DefinitionSymbol[?], N) => l.defn match
+      case Some(d: ClassLikeDef) => Set.empty
+      case Some(d: TermDefinition) if d.companionClass.isDefined => Set.empty
+      case _ => Set(l)
+    case Value.Ref(l, disamb) => Set(l)
     case Value.This(sym) => Set.empty
     case Value.Lit(lit) => Set.empty
     case DynSelect(qual, fld, arrayIdx) => qual.freeVarsLLIR ++ fld.freeVarsLLIR
@@ -547,7 +559,7 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
 
 case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 
@@ -560,19 +572,38 @@ case class Record(mut: Bool, elems: Ls[RcdArg]) extends Result
 
 sealed abstract class Path extends TrivialResult:
   def selN(id: Tree.Ident): Path = Select(this, id)(N)
-  def sel(id: Tree.Ident, sym: FieldSymbol): Path = Select(this, id)(S(sym))
+  def sel(id: Tree.Ident, sym: DefinitionSymbol[?]): Path = Select(this, id)(S(sym))
   def selSN(id: Str): Path = selN(new Tree.Ident(id))
   def asArg = Arg(spread = N, this)
 
-case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[FieldSymbol]) extends Path with ProductWithExtraInfo:
-  def extraInfo: Str = symbol.mkString
+/**
+ * @param symbol The symbol representing the definition that the selection refers to, if known.
+ */
+case class Select(qual: Path, name: Tree.Ident)(val symbol: Opt[DefinitionSymbol[?]]) extends Path with ProductWithExtraInfo:
+  def extraInfo: Str = symbol.map(s => s"sym=${s}").mkString
 
 case class DynSelect(qual: Path, fld: Path, arrayIdx: Bool) extends Path
 
-enum Value extends Path:
-  case Ref(l: Local)
+enum Value extends Path with ProductWithExtraInfo:
+  /**
+   * @param disamb The symbol disambiguating the definition that the reference refers to. This
+   * exists if and only if l is a BlockMemberSymbol.
+   */
+  case Ref(l: Local, disamb: Opt[DefinitionSymbol[?]])
   case This(sym: InnerSymbol) // TODO rm – just use Ref
   case Lit(lit: Literal)
+  
+  override def extraInfo: Str = this match
+    case Ref(l, disamb) => disamb.map(s => s"disamb=${s}").mkString
+    case _ => ""
+
+object Value:
+  object Ref:
+    // * Some helper constructors that allow omitting the disambiguation symbol.
+    // * If the ref itself is a DefinitionSymbol, then disambiguating it results in itself.
+    def apply(l: DefinitionSymbol[?]): Ref = Ref(l, S(l))
+    // * If the ref is a symbol that does not refer to a definition, then there is no disambiguation.
+    def apply(l: TempSymbol | VarSymbol | BuiltinSymbol): Ref = Ref(l, N)
 
 case class Arg(spread: Opt[Bool], value: Path)
 
@@ -603,6 +634,6 @@ extension (k: Block => Block)
 def blockBuilder: Block => Block = identity
 
 extension (l: Local)
-  def asPath: Path = Value.Ref(l)
+  def asPath: Path = Value.Ref(l, N)
 
 

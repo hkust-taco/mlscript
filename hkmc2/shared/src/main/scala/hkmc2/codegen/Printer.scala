@@ -60,13 +60,13 @@ object Printer:
     case _ => TODO(blk)
   
   def mkDocument(defn: Defn)(using Raise, Scope): Document = defn match
-    case FunDefn(own, sym, params, body) =>
+    case FunDefn(own, sym, dSym, params, body) =>
       val docParams = doc"${own.fold("")(_.toString+"::")}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = mkDocument(body)
       doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${tsym.nme} = ${mkDocument(rhs)}"
-    case ClsLikeDefn(own, _, sym, k, paramsOpt, auxParams, parentSym, methods,
+    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       def optFldBody(t: semantics.TermDefinition) =
@@ -82,7 +82,7 @@ object Printer:
       val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
       val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
-      val docStaged = if sym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+      val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
       doc"${docStaged}class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
@@ -92,7 +92,7 @@ object Printer:
       else doc
 
   def mkDocument(value: Value)(using Raise, Scope): Document = value match
-    case Value.Ref(l) => getVar(l)
+    case Value.Ref(l, _) => getVar(l)
     case Value.This(sym) => doc"this"
     case Value.Lit(lit) => doc"${lit.idStr}"
   

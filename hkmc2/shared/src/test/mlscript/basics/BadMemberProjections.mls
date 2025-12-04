@@ -9,6 +9,9 @@
 //│ ║       	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.6: 	1::x
+//│ ╙──     	^
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (self, ...args) { return runtime.safeCall(self.x(...args)) });
@@ -20,10 +23,13 @@
 :re
 1::x()
 //│ ╔══[ERROR] Integer literal is not a known class.
-//│ ║  l.21: 	1::x()
+//│ ║  l.24: 	1::x()
 //│ ║        	^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[ERROR] Expected a statically known class; found integer literal.
+//│ ║  l.24: 	1::x()
+//│ ╙──      	^
 //│ JS:
 //│ lambda1 = (undefined, function (...args1) {
 //│   runtime.checkArgs("", 1, false, args1.length);
@@ -50,19 +56,25 @@ let x = 1
 :e
 "A"::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.51: 	"A"::x
+//│ ║  l.57: 	"A"::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[ERROR] Expected a statically known class; found string literal.
+//│ ║  l.57: 	"A"::x
+//│ ╙──      	^^^
 //│ = fun
 
 :e
 "A" ::x
 //│ ╔══[ERROR] String literal is not a known class.
-//│ ║  l.60: 	"A" ::x
+//│ ║  l.69: 	"A" ::x
 //│ ║        	^^^
 //│ ╟── Note: any expression of the form `‹expression›::‹identifier›` is a member projection;
 //│ ╙──   add a space before ‹identifier› to make it an operator application.
+//│ ╔══[ERROR] Expected a statically known class; found string literal.
+//│ ║  l.69: 	"A" ::x
+//│ ╙──      	^^^
 //│ = fun
 
 

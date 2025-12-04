@@ -54,7 +54,7 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return runtime.safeCall(tmp.foo()) };
+//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
 
 

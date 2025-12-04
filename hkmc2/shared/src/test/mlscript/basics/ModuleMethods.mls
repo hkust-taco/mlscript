@@ -7,7 +7,7 @@ module MM[T]
 
 :e
 fun f(m: M)
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'M'.
+//│ ╔══[ERROR] Expected a non-module type; found reference of type M denoting module 'M'.
 //│ ║  l.9: 	fun f(m: M)
 //│ ║       	         ^
 //│ ╙── Non-module parameter must have a non-module type.
@@ -67,7 +67,7 @@ fun f() = M
 
 :e
 fun f(): M = M
-//│ ╔══[ERROR] Expected a non-module type; found reference denoting module 'M'.
+//│ ╔══[ERROR] Expected a non-module type; found reference of type M denoting module 'M'.
 //│ ║  l.69: 	fun f(): M = M
 //│ ║        	         ^
 //│ ╙── Function must be marked as returning a 'module' in order to have a module return type.
@@ -173,7 +173,7 @@ class C with
   val bar: module M = M
 //│ ╔══[ERROR] Function returning modules should not be a class member.
 //│ ║  l.172: 	  fun foo: module M = M
-//│ ╙──       	                  ^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Value returning modules should not be a class member.
 //│ ║  l.173: 	  val bar: module M = M
-//│ ╙──       	                  ^^^^^
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^

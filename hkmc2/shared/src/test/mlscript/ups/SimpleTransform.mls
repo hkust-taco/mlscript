@@ -28,13 +28,13 @@ pattern SumPair = Pair(a, b) => a + b
 //│       argument1$ = input.second;
 //│       transformResult = runtime.safeCall(transform(argument0$, argument1$));
 //│       tmp = globalThis.Object.freeze({});
-//│       return runtime.MatchSuccess(transformResult, tmp)
+//│       return globalThis.Object.freeze(new runtime.MatchSuccess.class(transformResult, tmp))
 //│     } else {
-//│       return runtime.MatchFailure(null)
+//│       return globalThis.Object.freeze(new runtime.MatchFailure.class(null))
 //│     }
 //│   } 
 //│   unapplyStringPrefix(input) {
-//│     return runtime.MatchFailure(null)
+//│     return globalThis.Object.freeze(new runtime.MatchFailure.class(null))
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["pattern", "SumPair"]; 

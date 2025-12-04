@@ -42,7 +42,7 @@ new 1 :: 2
 :re
 :sjs
 new (1 :: 2)
-//│ ╔══[ERROR] Expected a statically known class; found application.
+//│ ╔══[ERROR] Expected a statically known class; found application of type Cons.
 //│ ║  l.44: 	new (1 :: 2)
 //│ ║        	     ^^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
