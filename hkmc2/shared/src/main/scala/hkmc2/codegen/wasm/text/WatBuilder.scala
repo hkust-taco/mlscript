@@ -36,8 +36,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
-  private case class TupleArrayInfo(arrayType: TypeIdx)
-  private val tupleArrays: MutMap[Int, TupleArrayInfo] = MutMap.empty
+  private case class TupleArrayInfo(arrayType: TypeIdx, elemType: Type)
+  private var tupleArrayInfo: Opt[TupleArrayInfo] = N
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -50,9 +50,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
-  private def tupleArray(len: Int)(using Ctx): TupleArrayInfo =
-    tupleArrays.getOrElseUpdate(len, {
-      val sym = BlockMemberSymbol(s"TupleArray$len", Nil)
+  private def tupleArray(using Ctx): TupleArrayInfo =
+    tupleArrayInfo.getOrElse {
+      val sym = BlockMemberSymbol("TupleArray", Nil)
       val arrayType = ctx.addType(
         sym = S(sym),
         TypeInfo(
@@ -63,8 +63,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           )
         )
       )
-      TupleArrayInfo(arrayType)
-    })
+      val info = TupleArrayInfo(arrayType, RefType.anyref)
+      tupleArrayInfo = S(info)
+      info
+    }
 
   /**
    * Raises a [[WarningReport]] with the given `warnMsgs` and `extraInfo`, and emits an
@@ -263,25 +265,61 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case sel @ Select(qual, id) =>
       val qualRes = result(qual)
-      val selSym = sel.symbol getOrElse:
-        lastWords(s"Symbol for Select(...) expression must be resolved")
-      val selTrmSym = selSym match
-        case termSym: TermSymbol => termSym
-        case sym => lastWords(
-            s"Expected resolved Select(...) expression to be a TermSymbol, but got $sym (${sym.getClass.getName})"
+      sel.symbol match
+        case S(selSym: TermSymbol) =>
+          val selOwner = selSym.owner getOrElse:
+            lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
+          val selCls = selOwner.asBlkMember getOrElse:
+            lastWords(
+              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+            )
+          val fieldidx = fieldSelect(selCls, selSym)
+          struct.get(
+            fieldidx,
+            ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+            ty = RefType.anyref
           )
-      val selOwner = selTrmSym.owner getOrElse:
-        lastWords(s"Expected resolved Select(...) expression `$selTrmSym` to have an owner")
-      val selCls = selOwner.asBlkMember getOrElse:
-        lastWords(
-          s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+        case S(otherSym) =>
+          lastWords(
+            s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
+          )
+        case N =>
+          id.name.toIntOption.filter(_ >= 0)
+            .map: idx =>
+              val tupleInfo = tupleArray
+              val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
+              array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
+            .getOrElse:
+              errExpr(
+                Ls(
+                  msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${id.name}`)" -> sel.toLoc
+                ),
+                extraInfo = S(sel.toString)
+              )
+
+    case dyn @ DynSelect(qual, fld, arrayIdx) =>
+      val qualRes = result(qual)
+      if arrayIdx then
+        val idxOpt = fld match
+          case Value.Lit(IntLit(value)) if value.isValidInt && value >= 0 => S(value.toInt)
+          case _ => N
+        idxOpt
+          .map: idx =>
+            val tupleInfo = tupleArray
+            val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
+            array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
+          .getOrElse:
+            errExpr(
+              Ls(
+                msg"WatBuilder::result for array-style dynamic selections requires a non-negative integer literal index" -> dyn.toLoc
+              ),
+              extraInfo = S(dyn.toString)
+            )
+      else
+        errExpr(
+          Ls(msg"WatBuilder::result for dynamic field selections is not implemented yet" -> dyn.toLoc),
+          extraInfo = S(dyn.toString)
         )
-      val fieldidx = fieldSelect(selCls, selSym)
-      struct.get(
-        fieldidx,
-        ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
-        ty = RefType.anyref
-      )
 
     case Instantiate(_, cls, as) =>
       val ctorClsSymOpt = cls match
@@ -319,7 +357,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           Ls(msg"Mutable tuple literals are not supported in the Wasm backend yet" -> r.toLoc),
           extraInfo = S(r.toString)
         )
-      val tupleInfo = tupleArray(elems.length)
+      val tupleInfo = tupleArray
       val tupleValues = elems.map(argument)
       array.new_fixed(tupleInfo.arrayType, tupleValues)
 

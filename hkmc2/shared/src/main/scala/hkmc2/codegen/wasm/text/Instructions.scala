@@ -169,6 +169,14 @@ object Instructions:
       stackargs = items,
       resultType = S(RefType(arrayType, nullable = false))
     )
+
+    /** Creates an `array.get` instruction. */
+    def get(arrayType: TypeIdx, arrayRef: Expr, index: Expr, elemType: Type): FoldedInstr = FoldedInstr(
+      mnemonic = "array.get",
+      instrargs = Seq(arrayType.toWat),
+      stackargs = Seq(arrayRef, index),
+      resultType = S(elemType)
+    )
   end array
 
   object ref:
