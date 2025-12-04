@@ -20,7 +20,6 @@ fs.0()
 let fs = mut []
 //│ fs = []
 
-:dontRewriteWhile
 fun foo() =
   let i = 1
   while i < 5 do
