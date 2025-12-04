@@ -246,6 +246,12 @@ mkStr of
 null == undefined
 //│ = false
 
+undefined == null
+//│ = false
+
+undefined === null
+//│ = false
+
 [] == false
 //│ = false
 
@@ -255,7 +261,7 @@ null == undefined
 1 == true
 //│ = false
 
-// arrays are compared elementwise
+// * Arrays are compared elementwise
 
 [1, 2, 3] == [1, 2, 3]
 //│ = true
