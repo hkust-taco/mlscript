@@ -158,15 +158,15 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     case nw @ New(cls, args, rft) =>
       rft match
       case N =>
-      cls.resolvedSym.flatMap(_.asCls) match
-      case N =>
-        log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
-        P.Unknown(nw)
-      case S(sym) =>
-        sym match
-        case sym: ClassSymbol =>
-          val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
-          P.Ctor(sym, args_t)(t)
+        cls.resolvedSym.flatMap(_.asCls) match
+        case N =>
+          log(s"Unresolved or invalid class symbol in ${cls.showDbg}")
+          P.Unknown(nw)
+        case S(sym) =>
+          sym match
+          case sym: ClassSymbol =>
+            val args_t = args.map(typeProd(_, insideSelAppChain = insideSelAppChain))
+            P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
       checkLDS(lhs): pre_t =>
@@ -351,13 +351,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
               dig(cl, pl, path) // FIXME path
               dig(pr, cr, path) // FIXME path
-            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2)) =>
-              if (sym1 is sym2) && args1.size === args2.size // TODO generalize
-              then args1.zip(args2).foreach: (a1, a2) =>
+            case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))
+            if (sym1 is sym2) && args1.size === args2.size // TODO generalize
+              =>
+              args1.zip(args2).foreach: (a1, a2) =>
                 dig(a1, a2, path) // FIXME path
-              else
-                raise(ErrorReport(
-                  msg"Constructor mismatch" -> trm.toLoc :: Nil))
             case (P.Tup(args), C.Tup(ini, rst)) =>
               def zip(args: Ls[Opt[SpreadKind] -> P], cons: Ls[C], rst: Opt[(SpreadKind, C, Ls[C])], path: Path): Unit
                     = (args, cons) match
