@@ -81,7 +81,7 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ JS (unsanitized):
-//│ let tmp3, qqq; /** scoped **/
+//│ let qqq, tmp3; /** scoped **/
 //│ split_root$1: {
 //│   split_1$1: {
 //│     if (x === 0) {
@@ -382,7 +382,7 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo3; /** scoped **/
 //│ foo3 = function foo(x1, y1, z1) {
-//│   if (x1 instanceof A.class) { return "Hello" } else { return "Goodbye" }
+//│   if (x1 instanceof A1.class) { return "Hello" } else { return "Goodbye" }
 //│ };
 
 :sjs
@@ -406,9 +406,9 @@ fun foo(x, y, z) =
 //│   let tmp6; /** scoped **/
 //│   split_root$4: {
 //│     split_1$4: {
-//│       if (x1 instanceof A.class) {
-//│         if (y1 instanceof B.class) {
-//│           if (z1 instanceof C.class) {
+//│       if (x1 instanceof A1.class) {
+//│         if (y1 instanceof B1.class) {
+//│           if (z1 instanceof C1.class) {
 //│             tmp6 = "Hello";
 //│             break split_root$4
 //│           } else {
@@ -432,9 +432,9 @@ fun foo(x, y, z) =
 //│   let tmp6; /** scoped **/
 //│   split_root$4: {
 //│     split_default$: {
-//│       if (x1 instanceof A.class) {
-//│         if (y1 instanceof B.class) {
-//│           if (z1 instanceof C.class) {
+//│       if (x1 instanceof A1.class) {
+//│         if (y1 instanceof B1.class) {
+//│           if (z1 instanceof C1.class) {
 //│             tmp6 = "Hello";
 //│             break split_root$4
 //│           } else {

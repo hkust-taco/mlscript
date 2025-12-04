@@ -39,7 +39,7 @@ print(Test)
 :sjs
 Test.foo()
 //│ JS (unsanitized):
-//│ Test.foo()
+//│ Test1.foo()
 //│ > Test { x: 12, class: object Test }
 //│ = 12
 
@@ -84,9 +84,9 @@ module Test with
 //│ ║  l.78: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
-//│ globalThis.Object.freeze(class Test4 {
+//│ globalThis.Object.freeze(class Test3 {
 //│   static {
-//│     Test3 = this
+//│     Test4 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
@@ -94,7 +94,7 @@ module Test with
 //│   static #x;
 //│   static {
 //│     this.x = 1;
-//│     Test4.#x = 2;
+//│     Test3.#x = 2;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Test"]; 

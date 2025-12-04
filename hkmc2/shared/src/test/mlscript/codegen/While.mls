@@ -203,7 +203,7 @@ fun f(ls) =
 //│   let tmp28; /** scoped **/
 //│   tmp29: while (true) {
 //│     let tl, h, argument0$, argument1$; /** scoped **/
-//│     if (ls instanceof Cons.class) {
+//│     if (ls instanceof Cons1.class) {
 //│       argument0$ = ls.hd;
 //│       argument1$ = ls.tl;
 //│       tl = argument1$;

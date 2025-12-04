@@ -87,9 +87,9 @@ val isDefined = case
 //│ JS (unsanitized):
 //│ let isDefined, lambda12; /** scoped **/
 //│ lambda12 = (undefined, function (caseScrut) {
-//│   if (caseScrut instanceof Some.class) {
+//│   if (caseScrut instanceof Some1.class) {
 //│     return true
-//│   } else if (caseScrut instanceof None.class) {
+//│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))

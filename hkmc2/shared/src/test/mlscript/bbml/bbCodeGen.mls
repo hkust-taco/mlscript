@@ -81,7 +81,7 @@ data class Foo(x: Int)
 :sjs
 new Foo(42)
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new Foo.class(42))
+//│ globalThis.Object.freeze(new Foo1.class(42))
 //│ = Foo(42)
 //│ Type: Foo
 
@@ -89,7 +89,7 @@ new Foo(42)
 :sjs
 let foo = new Foo(42) in foo.Foo#x
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/ foo = globalThis.Object.freeze(new Foo.class(42)); foo.x
+//│ let foo; /** scoped **/ foo = globalThis.Object.freeze(new Foo1.class(42)); foo.x
 //│ = 42
 //│ Type: Int
 
@@ -135,8 +135,8 @@ let foo = new Foo()
 if foo is Foo then 1 else 0
 //│ JS (unsanitized):
 //│ let foo1; /** scoped **/
-//│ foo1 = globalThis.Object.freeze(new Foo2.class());
-//│ if (foo1 instanceof Foo2.class) { 1 } else { 0 }
+//│ foo1 = globalThis.Object.freeze(new Foo3.class());
+//│ if (foo1 instanceof Foo3.class) { 1 } else { 0 }
 //│ = 1
 //│ foo = Foo()
 //│ Type: Int

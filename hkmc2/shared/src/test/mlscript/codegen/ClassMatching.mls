@@ -10,8 +10,8 @@ object None
 if Some(0) is Some(x) then x
 //│ JS (unsanitized):
 //│ let scrut, x, argument0$; /** scoped **/
-//│ scrut = Some(0);
-//│ if (scrut instanceof Some.class) {
+//│ scrut = Some1(0);
+//│ if (scrut instanceof Some1.class) {
 //│   argument0$ = scrut.value;
 //│   x = argument0$;
 //│   x
@@ -27,7 +27,7 @@ if s is
   Some(x) then x
 //│ JS (unsanitized):
 //│ let x1, argument0$1; /** scoped **/
-//│ if (s instanceof Some.class) {
+//│ if (s instanceof Some1.class) {
 //│   argument0$1 = s.value;
 //│   x1 = argument0$1;
 //│   x1
@@ -56,7 +56,7 @@ x => if x is Some(x) then x
 //│ let lambda;
 //│ lambda = (undefined, function (x3) {
 //│   let x4, argument0$4; /** scoped **/
-//│   if (x3 instanceof Some.class) {
+//│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     x4 = argument0$4;
 //│     return x4
@@ -123,7 +123,7 @@ fun f(x) = if x is
 //│   let x4, scrut1, argument0$4, tmp5; /** scoped **/
 //│   split_root$1: {
 //│     split_1$: {
-//│       if (x3 instanceof Some.class) {
+//│       if (x3 instanceof Some1.class) {
 //│         argument0$4 = x3.value;
 //│         x4 = argument0$4;
 //│         scrut1 = x4 > 0;
@@ -133,7 +133,7 @@ fun f(x) = if x is
 //│         } else {
 //│           break split_1$
 //│         }
-//│       } else if (x3 instanceof None.class) {
+//│       } else if (x3 instanceof None1.class) {
 //│         tmp5 = "ok";
 //│         break split_root$1
 //│       } else { break split_1$ }
@@ -167,11 +167,11 @@ fun f(x) = if x is
 //│ let f5; /** scoped **/
 //│ f5 = function f(x3) {
 //│   let u, a, b, argument0$4, argument1$; /** scoped **/
-//│   if (x3 instanceof Some.class) {
+//│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     u = argument0$4;
 //│     return u
-//│   } else if (x3 instanceof Pair.class) {
+//│   } else if (x3 instanceof Pair1.class) {
 //│     argument0$4 = x3.fst;
 //│     argument1$ = x3.snd;
 //│     b = argument1$;
@@ -199,7 +199,7 @@ fun f(x) = print of if x is
 //│   let argument0$4, tmp9; /** scoped **/
 //│   split_root$1: {
 //│     split_1$: {
-//│       if (x3 instanceof Some.class) {
+//│       if (x3 instanceof Some1.class) {
 //│         argument0$4 = x3.value;
 //│         if (argument0$4 === 0) {
 //│           tmp9 = "0";
@@ -207,7 +207,7 @@ fun f(x) = print of if x is
 //│         } else {
 //│           break split_1$
 //│         }
-//│       } else if (x3 instanceof None.class) {
+//│       } else if (x3 instanceof None1.class) {
 //│         tmp9 = "ok";
 //│         break split_root$1
 //│       } else { break split_1$ }

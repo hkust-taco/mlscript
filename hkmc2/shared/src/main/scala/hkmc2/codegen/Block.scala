@@ -88,6 +88,7 @@ sealed abstract class Block extends Product:
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
+    case s @ Scoped(syms, body) => Scoped(syms, body.mapTail(f))(s.dontFlatten)
     case b: BlockTail => f(b)
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))

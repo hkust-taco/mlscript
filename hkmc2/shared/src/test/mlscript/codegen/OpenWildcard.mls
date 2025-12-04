@@ -78,7 +78,7 @@ Some
 :sjs
 None
 //│ JS (unsanitized):
-//│ Option2.None
+//│ Option3.None
 //│ = 123
 
 

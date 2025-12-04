@@ -9,11 +9,11 @@ new Foo
 //│ ║  l.7: 	new Foo
 //│ ║       	    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Foo is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
 
 :re
 new! Foo
-//│ ═══[RUNTIME ERROR] TypeError: Foo is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Foo1 is not a constructor
 
 :fixme // Support?
 new! Foo.class

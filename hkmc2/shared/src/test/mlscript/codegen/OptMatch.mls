@@ -12,9 +12,9 @@ fun isDefined(x) = if x is
 //│ JS (unsanitized):
 //│ let isDefined; /** scoped **/
 //│ isDefined = function isDefined(x) {
-//│   if (x instanceof Some.class) {
+//│   if (x instanceof Some1.class) {
 //│     return true
-//│   } else if (x instanceof None.class) {
+//│   } else if (x instanceof None1.class) {
 //│     return false
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
@@ -31,13 +31,13 @@ val isDefined = case
   Some(_) then true
   None    then false
 //│ JS (unsanitized):
-//│ let lambda, isDefined1; /** scoped **/
+//│ let isDefined1, lambda; /** scoped **/
 //│ lambda = (undefined, function (caseScrut) {
 //│   let argument0$; /** scoped **/
-//│   if (caseScrut instanceof Some.class) {
+//│   if (caseScrut instanceof Some1.class) {
 //│     argument0$ = caseScrut.value;
 //│     return true
-//│   } else if (caseScrut instanceof None.class) {
+//│   } else if (caseScrut instanceof None1.class) {
 //│     return false
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))

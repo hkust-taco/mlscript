@@ -595,7 +595,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     val (scopedSyms, unscopedMain) = p.main match
       case Scoped(syms, body) /* if exprt.isDefined */ => (syms, body)
       case _ => (Set.empty, p.main)
-    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.iterator.map(l => l -> scope.allocateName(l)), true) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
+    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.toArray.sortBy(_.uid).iterator.map(l => l -> scope.allocateName(l)), true) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
       exprt match
         case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
         case N => doc""
@@ -605,8 +605,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
-    blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVarsNoScoped.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+    p.main match
+      case Scoped(syms, body) =>
+        blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
+          (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+      case _ =>
+        blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVarsNoScoped.toSeq) ->
+          (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
 
   def genLetDecls(vars: Iterator[(Symbol, Str)], isScoped: Bool): Document =
     if vars.isEmpty then doc"" else

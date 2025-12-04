@@ -162,7 +162,7 @@ str
 //│ if (scrut === true) {
 //│   handleBlock$7 = function handleBlock$() {
 //│     let h1, handleBlock$8, Cont$handleBlock$h1$2, doUnwind, Handler$h1$2;
-//│     globalThis.Object.freeze(class Handler$h1$1 extends Effect {
+//│     globalThis.Object.freeze(class Handler$h1$1 extends Effect1 {
 //│       static {
 //│         Handler$h1$2 = this
 //│       }
@@ -249,7 +249,7 @@ str
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
 //│       let h2, res7, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
-//│       globalThis.Object.freeze(class Handler$h2$1 extends Effect {
+//│       globalThis.Object.freeze(class Handler$h2$1 extends Effect1 {
 //│         static {
 //│           Handler$h2$2 = this
 //│         }

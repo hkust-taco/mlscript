@@ -140,7 +140,7 @@ let c = new Cls(123)
 //│ ║  l.138: 	let c = new Cls(123)
 //│ ║         	            ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Cls is not a constructor
+//│ ═══[RUNTIME ERROR] TypeError: Cls1 is not a constructor
 //│ c = undefined
 
 c.x
@@ -150,8 +150,8 @@ c.x
 
 class Foo' with
   class Bar'
-//│ > let Foo$_;try { globalThis.Object.freeze(class Foo$_1 {   static {     Foo$_ = this   }   constructor() {     const this$Foo$_ = this;     globalThis.Object.freeze(class Bar$_ {       static {         this$Foo$_.Bar' = this       }       constructor() {}       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Bar'"];      });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Foo'"];  }); block$res20 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ > let Foo$_1;try { globalThis.Object.freeze(class Foo$_ {   static {     Foo$_1 = this   }   constructor() {     const this$Foo$_ = this;     globalThis.Object.freeze(class Bar$_ {       static {         this$Foo$_.Bar' = this       }       constructor() {}       toString() { return runtime.render(this); }       static [definitionMetadata] = ["class", "Bar'"];      });   }   toString() { return runtime.render(this); }   static [definitionMetadata] = ["class", "Foo'"];  }); block$res20 = undefined; } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ >                                                                                                                                                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Unexpected string
 
 // ——— ——— ———
@@ -208,7 +208,7 @@ class D extends id(C)
 //│     D1 = this
 //│   }
 //│   constructor() {
-//│     super(C);
+//│     super(C1);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "D"]; 
@@ -341,7 +341,7 @@ if Foo(1, 2, 3) is Foo(arg) then arg
 
 module M with
   val name = "Student"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M1 {   static {     M = this   }   constructor() {     runtime.Unit;   }   static {     this.name = "Stud...<omitted>... }'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   constructor() {     runtime.Unit;   }   static {     this.name = "Stud...<omitted>... }'
 
 // ——— ——— ———
 

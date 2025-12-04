@@ -36,7 +36,7 @@ new
 //│ ║  l.34: 	  Foo()
 //│ ║        	  ^^^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo1 cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 :e
 new

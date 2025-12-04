@@ -19,6 +19,6 @@ Foo
 
 :todo
 Foo()
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo1 cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
 
 

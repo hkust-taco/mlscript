@@ -19,15 +19,15 @@ module None
 :sjs
 None
 //│ JS (unsanitized):
-//│ None
+//│ None1
 //│ = class None
 
 :sjs
 :re
 None()
 //│ JS (unsanitized):
-//│ runtime.safeCall(None())
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor None1 cannot be invoked without 'new'
+//│ runtime.safeCall(None1())
+//│ ═══[RUNTIME ERROR] TypeError: Class constructor None cannot be invoked without 'new'
 
 :e
 new None
@@ -44,7 +44,7 @@ new! None
 //│ ║  l.42: 	new! None
 //│ ╙──      	     ^^^^
 //│ JS (unsanitized):
-//│ globalThis.Object.freeze(new None())
+//│ globalThis.Object.freeze(new None1())
 //│ = None
 
 
@@ -141,7 +141,7 @@ module M with
 :sjs
 M.m
 //│ JS (unsanitized):
-//│ M2.m
+//│ M3.m
 //│ = class M { m: ref'1 } as ref'1
 
 

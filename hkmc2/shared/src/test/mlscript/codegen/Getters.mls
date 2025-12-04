@@ -126,7 +126,7 @@ module M with
 :sjs
 M.t
 //│ JS (unsanitized):
-//│ M.t
+//│ M1.t
 //│ = 0
 
 

@@ -14,8 +14,8 @@ foo()
 //│ let foo; /** scoped **/
 //│ foo = function foo() {
 //│   let tmp; /** scoped **/
-//│   tmp = M.concat("a", "b");
-//│   return M.concat(tmp, "c")
+//│   tmp = M1.concat("a", "b");
+//│   return M1.concat(tmp, "c")
 //│ };
 //│ foo()
 //│ = "abc"

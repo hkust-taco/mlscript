@@ -88,7 +88,7 @@ fun f() = if x is
 //│   let a, b, scrut, c, d, argument0$, argument1$, tmp1; /** scoped **/
 //│   split_root$: {
 //│     split_default$: {
-//│       if (x instanceof A.class) {
+//│       if (x instanceof A1.class) {
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
 //│         b = argument1$;
@@ -100,7 +100,7 @@ fun f() = if x is
 //│         } else {
 //│           break split_default$
 //│         }
-//│       } else if (x instanceof B.class) {
+//│       } else if (x instanceof B1.class) {
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
 //│         d = argument1$;
@@ -126,12 +126,12 @@ fun f() = if A(1, Nil) is
 //│   let scrut, argument0$, argument1$, tmp1; /** scoped **/
 //│   split_root$: {
 //│     split_default$: {
-//│       scrut = A(1, Nil);
-//│       if (scrut instanceof A.class) {
+//│       scrut = A1(1, Nil1);
+//│       if (scrut instanceof A1.class) {
 //│         argument0$ = scrut.a;
 //│         argument1$ = scrut.b;
 //│         if (argument0$ === 1) {
-//│           if (argument1$ instanceof Nil.class) {
+//│           if (argument1$ instanceof Nil1.class) {
 //│             tmp1 = 3;
 //│             break split_root$
 //│           } else {
@@ -165,13 +165,13 @@ fun f(x) =
 //│   let tmp1; /** scoped **/
 //│   tmp2: while (true) {
 //│     let a, a1, argument0$, argument1$; /** scoped **/
-//│     if (x1 instanceof A.class) {
+//│     if (x1 instanceof A1.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a = argument0$;
 //│       tmp1 = runtime.safeCall(a());
 //│       continue tmp2
-//│     } else if (x1 instanceof B.class) {
+//│     } else if (x1 instanceof B1.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
 //│       a1 = argument0$;
@@ -204,7 +204,7 @@ fun f() =
 //│     let a, z, scrut, scrut1, argument0$, argument1$, tmp3; /** scoped **/
 //│     split_root$: {
 //│       split_1$: {
-//│         if (y1 instanceof A.class) {
+//│         if (y1 instanceof A1.class) {
 //│           argument0$ = y1.a;
 //│           argument1$ = y1.b;
 //│           a = argument1$;

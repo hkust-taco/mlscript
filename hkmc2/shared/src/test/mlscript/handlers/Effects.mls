@@ -161,7 +161,7 @@ if true do
 //│ handleBlock$11 = function handleBlock$() {
 //│   let f, scrut, Cont$handleBlock$h$11, doUnwind; /** scoped **/
 //│   let h, res, Handler$h$12;
-//│   globalThis.Object.freeze(class Handler$h$11 extends Effect {
+//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
 //│     static {
 //│       Handler$h$12 = this
 //│     }

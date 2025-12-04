@@ -14,11 +14,11 @@ x => if x is Pair(A, B) then 1
 //│   let argument0$, argument1$, tmp; /** scoped **/
 //│   split_root$: {
 //│     split_default$: {
-//│       if (x instanceof Pair.class) {
+//│       if (x instanceof Pair1.class) {
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
-//│         if (argument0$ instanceof A) {
-//│           if (argument1$ instanceof B) {
+//│         if (argument0$ instanceof A1) {
+//│           if (argument1$ instanceof B1) {
 //│             tmp = 1;
 //│             break split_root$
 //│           } else {
@@ -50,18 +50,18 @@ fun f(x) = if x is
 //│   let argument0$, argument1$, tmp; /** scoped **/
 //│   split_root$: {
 //│     split_default$: {
-//│       if (x instanceof Pair.class) {
+//│       if (x instanceof Pair1.class) {
 //│         argument0$ = x.a;
 //│         argument1$ = x.b;
-//│         if (argument0$ instanceof A) {
-//│           if (argument1$ instanceof A) {
+//│         if (argument0$ instanceof A1) {
+//│           if (argument1$ instanceof A1) {
 //│             tmp = 1;
 //│             break split_root$
 //│           } else {
 //│             break split_default$
 //│           }
-//│         } else if (argument0$ instanceof B) {
-//│           if (argument1$ instanceof B) {
+//│         } else if (argument0$ instanceof B1) {
+//│           if (argument1$ instanceof B1) {
 //│             tmp = 2;
 //│             break split_root$
 //│           } else {
