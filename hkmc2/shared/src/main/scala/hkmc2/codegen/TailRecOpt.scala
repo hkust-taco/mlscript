@@ -215,16 +215,18 @@ class TailRecOpt(using State, TL, Raise):
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
       
-      def applyVarSym(l: VarSymbol): VarSymbol = paramsIdxes.get(l) match
-        case Some(idx) => paramSymsArr(idx)
-        case _ => l
+      val symRewriter = new BlockTransformer(SymbolSubst()):
+        def applyVarSym(l: VarSymbol): VarSymbol = paramsIdxes.get(l) match
+          case Some(idx) => paramSymsArr(idx)
+          case _ => l
+        
+        override def applyValue(v: Value)(k: Value => Block): Block = v match
+          case Value.Ref(l: VarSymbol, d) => 
+            val s = applyVarSym(l)
+            if s is l then k(v)
+            else k(Value.Ref(s, d))
+          case _ => super.applyValue(v)(k)
       
-      override def applyValue(v: Value)(k: Value => Block): Block = v match
-        case Value.Ref(l: VarSymbol, d) => 
-          val s = applyVarSym(l)
-          if s is l then k(v)
-          else k(Value.Ref(s, d))
-        case _ => super.applyValue(v)(k)
       
       override def applyBlock(b: Block): Block = b match
         case TailCallShape(dSym, c) => dSymIds.get(dSym) match
@@ -272,9 +274,12 @@ class TailRecOpt(using State, TL, Raise):
               case ((v, l), acc) => Assign(l, Value.Ref(v), acc)
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
+      
+      def rewrite(b: Block) =
+        applyBlock(symRewriter.applyBlock(b))
     
     val arms = scc.funs.map: f =>
-      Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).applyBlock(f.body)
+      Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).rewrite(f.body)
     
     val switch = 
       if arms.length === 1 then arms.head._2

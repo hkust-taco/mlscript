@@ -39,36 +39,61 @@ globalThis.Object.freeze(class Predef {
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
   }
-  static id(x) {
-    return x
-  } 
-  static apply(f, ...args) {
-    return runtime.safeCall(f(...args))
-  } 
-  static pipeInto(x, f) {
-    return runtime.safeCall(f(x))
-  } 
   static pipeFrom(f, x) {
     return runtime.safeCall(f(x))
+  } 
+  static call(receiver, f) {
+    return (...args) => {
+      return f.call(receiver, ...args)
+    }
   } 
   static pipeIntoHi(x, f) {
     return runtime.safeCall(f(x))
   } 
-  static pipeFromHi(f, x) {
-    return runtime.safeCall(f(x))
+  static foldr(f) {
+    return (first, ...rest) => {
+      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
+      len = rest.length;
+      scrut = len === 0;
+      if (scrut === true) {
+        return first
+      } else {
+        i = len - 1;
+        init = runtime.safeCall(rest.at(i));
+        tmp4: while (true) {
+          scrut1 = i > 0;
+          if (scrut1 === true) {
+            tmp = i - 1;
+            i = tmp;
+            tmp1 = runtime.safeCall(rest.at(i));
+            tmp2 = runtime.safeCall(f(tmp1, init));
+            init = tmp2;
+            tmp3 = runtime.Unit;
+            continue tmp4
+          } else {
+            tmp3 = runtime.Unit;
+          }
+          break;
+        }
+        return runtime.safeCall(f(first, init))
+      }
+    }
   } 
-  static tap(x, f) {
-    let tmp;
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
-  } 
-  static pat(f, x) {
-    let tmp;
-    tmp = runtime.safeCall(f(x));
-    return (tmp , x)
-  } 
-  static alsoDo(x, eff) {
-    return x
+  static mkStr(...xs) {
+    let lambda, tmp;
+    lambda = (undefined, function (acc, x) {
+      let tmp1, tmp2, tmp3;
+      if (typeof x === 'string') {
+        tmp1 = true;
+      } else {
+        tmp1 = false;
+      }
+      tmp2 = runtime.safeCall(Predef.assert(tmp1));
+      tmp3 = acc + x;
+      return (tmp2 , tmp3)
+    });
+    tmp = runtime.safeCall(Predef.fold(lambda));
+    return runtime.safeCall(tmp(...xs))
   } 
   static andThen(f, g) {
     return (x) => {
@@ -77,27 +102,32 @@ globalThis.Object.freeze(class Predef {
       return runtime.safeCall(g(tmp))
     }
   } 
-  static compose(f, g) {
-    return (x) => {
-      let tmp;
-      tmp = runtime.safeCall(g(x));
-      return runtime.safeCall(f(tmp))
-    }
+  static enterHandleBlock(handler, body) {
+    return Runtime.enterHandleBlock(handler, body)
+  } 
+  static alsoDo(x, eff) {
+    return x
+  } 
+  static notImplemented(msg) {
+    let tmp;
+    tmp = "Not implemented: " + msg;
+    throw globalThis.Error(tmp)
+  } 
+  static use(instance) {
+    return instance
   } 
   static passTo(receiver, f) {
     return (...args) => {
       return runtime.safeCall(f(receiver, ...args))
     }
   } 
-  static passToLo(receiver, f) {
-    return (...args) => {
-      return runtime.safeCall(f(receiver, ...args))
-    }
+  static tap(x, f) {
+    let tmp;
+    tmp = runtime.safeCall(f(x));
+    return (tmp , x)
   } 
-  static call(receiver, f) {
-    return (...args) => {
-      return f.call(receiver, ...args)
-    }
+  static tuple(...xs) {
+    return xs
   } 
   static equals(a, b) {
     let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, tmp, lambda, lambda1, tmp1, tmp2, tmp3;
@@ -228,16 +258,8 @@ globalThis.Object.freeze(class Predef {
     }
     return tmp
   } 
-  static nequals(a, b) {
-    let tmp;
-    tmp = Predef.equals(a, b);
-    return ! tmp
-  } 
-  static print(...xs) {
-    let tmp, tmp1;
-    tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
-    tmp1 = runtime.safeCall(tmp(...xs));
-    return runtime.safeCall(globalThis.console.log(...tmp1))
+  static apply(f, ...args) {
+    return runtime.safeCall(f(...args))
   } 
   static renderAsStr(arg) {
     if (typeof arg === 'string') {
@@ -246,70 +268,48 @@ globalThis.Object.freeze(class Predef {
       return runtime.safeCall(Predef.render(arg))
     }
   } 
-  static notImplemented(msg) {
-    let tmp;
-    tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp)
-  } 
   static get notImplementedError() {
     throw globalThis.Error("Not implemented");
   } 
-  static tuple(...xs) {
-    return xs
+  static id(x) {
+    return x
   } 
-  static foldr(f) {
-    return (first, ...rest) => {
-      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
-      len = rest.length;
-      scrut = len === 0;
-      if (scrut === true) {
-        return first
-      } else {
-        i = len - 1;
-        init = runtime.safeCall(rest.at(i));
-        tmp4: while (true) {
-          scrut1 = i > 0;
-          if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            tmp3 = runtime.Unit;
-            continue tmp4
-          } else {
-            tmp3 = runtime.Unit;
-          }
-          break;
-        }
-        return runtime.safeCall(f(first, init))
-      }
+  static nequals(a, b) {
+    let tmp;
+    tmp = Predef.equals(a, b);
+    return ! tmp
+  } 
+  static compose(f, g) {
+    return (x) => {
+      let tmp;
+      tmp = runtime.safeCall(g(x));
+      return runtime.safeCall(f(tmp))
     }
   } 
-  static mkStr(...xs) {
-    let lambda, tmp;
-    lambda = (undefined, function (acc, x) {
-      let tmp1, tmp2, tmp3;
-      if (typeof x === 'string') {
-        tmp1 = true;
-      } else {
-        tmp1 = false;
-      }
-      tmp2 = runtime.safeCall(Predef.assert(tmp1));
-      tmp3 = acc + x;
-      return (tmp2 , tmp3)
-    });
-    tmp = runtime.safeCall(Predef.fold(lambda));
-    return runtime.safeCall(tmp(...xs))
-  } 
-  static use(instance) {
-    return instance
-  } 
-  static enterHandleBlock(handler, body) {
-    return Runtime.enterHandleBlock(handler, body)
+  static pat(f, x) {
+    let tmp;
+    tmp = runtime.safeCall(f(x));
+    return (tmp , x)
   } 
   static raiseUnhandledEffect() {
     return Runtime.mkEffect(Runtime.FatalEffect, null)
+  } 
+  static pipeFromHi(f, x) {
+    return runtime.safeCall(f(x))
+  } 
+  static passToLo(receiver, f) {
+    return (...args) => {
+      return runtime.safeCall(f(receiver, ...args))
+    }
+  } 
+  static pipeInto(x, f) {
+    return runtime.safeCall(f(x))
+  } 
+  static print(...xs) {
+    let tmp, tmp1;
+    tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
+    tmp1 = runtime.safeCall(tmp(...xs));
+    return runtime.safeCall(globalThis.console.log(...tmp1))
   }
   toString() { return runtime.render(this); }
   static [definitionMetadata] = ["class", "Predef"]; 
