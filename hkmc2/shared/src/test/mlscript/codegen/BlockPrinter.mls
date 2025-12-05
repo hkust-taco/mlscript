@@ -21,7 +21,7 @@ let x = x + 1
 //│ Pretty Lowered:
 //│  
 //│ set x1 = 1 in
-//│ set scrut = ==(x1, 0) in
+//│ set scrut = Predef.equals(x1, 0) in
 //│ match scrut
 //│   true =>
 //│     set tmp = 1 in

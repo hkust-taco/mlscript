@@ -95,6 +95,8 @@ declare fun (<=): (Int, Int) -> Bool
 declare fun (>=): (Int, Int) -> Bool
 declare fun (==): [T] -> (T, T) -> Bool
 declare fun (!=): [T] -> (T, T) -> Bool
+declare fun (===): [T] -> (T, T) -> Bool
+declare fun (!==): [T] -> (T, T) -> Bool
 
 declare fun (&&): (Bool, Bool) -> Bool
 declare fun (||): (Bool, Bool) -> Bool
