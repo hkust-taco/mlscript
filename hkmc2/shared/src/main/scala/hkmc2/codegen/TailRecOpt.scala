@@ -166,23 +166,25 @@ class TailRecOpt(using State, TL, Raise):
     S(ret)
     
   def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol]): (Opt[FunDefn], List[FunDefn]) =
+    // sort the functions so the order is more predictable
+    val funs = scc.funs.sortBy(f => f.dSym.uid)
     // remove calls which don't flow into this scc
-    val fSyms = scc.funs.map(_.dSym).toSet
+    val fSyms = funs.map(_.dSym).toSet
     
     val calls = scc.calls.filter(c => fSyms.contains(c.f2)) 
     
-    val nonTailCalls = calls
+    val nonTailCallsLs = calls
       .collect:
         case c: CallEdge.NormalCall => c.f2 -> c.call
-      .toMap
-    
-    if nonTailCalls.size === calls.length then
-      for f <- scc.funs if f.isTailRec do
+    val nonTailCalls = nonTailCallsLs.toMap
+
+    if nonTailCallsLs.size === calls.length then
+      for f <- funs if f.isTailRec do
         raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
-      return (N, scc.funs)
+      return (N, funs)
     
     if !nonTailCalls.isEmpty then
-      for f <- scc.funs if f.isTailRec do
+      for f <- funs if f.isTailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
           case Some(value) => value.toLoc 
@@ -193,19 +195,19 @@ class TailRecOpt(using State, TL, Raise):
             :: Nil
           ))
 
-    val maxParamLen = maxInt(scc.funs, paramsLen)
+    val maxParamLen = maxInt(funs, paramsLen)
     val paramSyms =
-        if scc.funs.length === 1 then (getParamSyms(scc.funs.head))
+        if funs.length === 1 then (getParamSyms(funs.head))
         else
           for i <- 0 to maxParamLen - 1 yield VarSymbol(Tree.Ident("param" + i))
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
-    val dSymIds = scc.funs.map(_.dSym).zipWithIndex.toMap
+    val dSymIds = funs.map(_.dSym).zipWithIndex.toMap
     val bms =
-      if scc.funs.size === 1 then scc.funs.head.sym
-      else BlockMemberSymbol(scc.funs.map(_.sym.nme).mkString("_"), Nil, true)
+      if funs.size === 1 then funs.head.sym
+      else BlockMemberSymbol(funs.map(_.sym.nme).mkString("_"), Nil, true)
     val dSym =
-      if scc.funs.size === 1 then scc.funs.head.dSym
+      if funs.size === 1 then funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     val loopSym = TempSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
@@ -278,7 +280,7 @@ class TailRecOpt(using State, TL, Raise):
       def rewrite(b: Block) =
         applyBlock(symRewriter.applyBlock(b))
     
-    val arms = scc.funs.map: f =>
+    val arms = funs.map: f =>
       Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).rewrite(f.body)
     
     val switch = 
@@ -292,8 +294,8 @@ class TailRecOpt(using State, TL, Raise):
       case None => Value.Ref(bms, S(dSym))
     
     val rewrittenFuns =
-      if scc.funs.size === 1 then Nil
-      else scc.funs.map: f =>
+      if funs.size === 1 then Nil
+      else funs.map: f =>
         val paramArgs = getParamSyms(f).map(_.asPath.asArg)
         val args = 
           Value.Lit(Tree.IntLit(dSymIds(f.dSym))).asArg
@@ -307,7 +309,7 @@ class TailRecOpt(using State, TL, Raise):
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
-      if scc.funs.length === 1 then initial
+      if funs.length === 1 then initial
       else Param.simple(curIdSym) :: initial
     
     val loopDefn = FunDefn(
@@ -315,7 +317,7 @@ class TailRecOpt(using State, TL, Raise):
       PlainParamList(params) :: Nil,
       loop)(false)
     
-    if scc.funs.size === 1 then (N, loopDefn :: Nil)
+    if funs.size === 1 then (N, loopDefn :: Nil)
     else (S(loopDefn), rewrittenFuns)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
@@ -361,12 +363,10 @@ class TailRecOpt(using State, TL, Raise):
   
   def transform(b: Block) =
     val (blk, defns) = b.floatOutDefns()
-    val (funs, clses) = 
-      defns.foldLeft[(List[FunDefn], List[ClsLikeDefn])](Nil, Nil):
-        case ((fs, cs), d) => d match
-          case f: FunDefn => (f :: fs, cs)
-          case c: ClsLikeDefn => (fs, c :: cs)
-          case _ => (fs, cs) // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
+    val (funs, clses) = defns.partitionMap:
+      case f: FunDefn => L(f)
+      case c: ClsLikeDefn => R(c)
+      case _ => die // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
     val (optFNew, optF) = optFunctions(funs, N)
     val optC = optClasses(clses)
     

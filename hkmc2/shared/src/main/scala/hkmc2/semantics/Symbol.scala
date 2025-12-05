@@ -265,9 +265,11 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def toString: Str = s"term:${owner.map(o => s"${o}.").getOrElse("")}${id.name}${State.dbgUid(uid)}"
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
+
 object TermSymbol:
   def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
     TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
+
 
 sealed trait CtorSymbol extends Symbol:
   def subst(using sub: SymbolSubst): CtorSymbol = sub.mapCtorSym(this)
