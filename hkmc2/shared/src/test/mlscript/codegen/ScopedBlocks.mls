@@ -377,3 +377,51 @@ module M with
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 
+:sjs
+fun f(x) =
+  while x do
+    let y = x
+    x
+//│ JS (unsanitized):
+//│ let f6; /** scoped **/
+//│ f6 = function f(x1) {
+//│   let tmp2; /** scoped **/
+//│   tmp3: while (true) {
+//│     let y1; /** scoped **/
+//│     if (x1 === true) {
+//│       y1 = x1;
+//│       tmp2 = x1;
+//│       continue tmp3
+//│     } else { tmp2 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp2
+//│ };
+
+
+:sjs
+:rewriteWhile
+fun f(x) =
+  while x do
+    let y = x
+    x
+//│ JS (unsanitized):
+//│ let f7; /** scoped **/
+//│ f7 = function f(x1) {
+//│   let tmp2, while1, tmp3, tmp4; /** scoped **/
+//│   tmp2 = undefined;
+//│   while1 = (undefined, function () {
+//│     let y1; /** scoped **/
+//│     if (x1 === true) {
+//│       y1 = x1;
+//│       tmp2 = x1;
+//│       return while1()
+//│     } else {
+//│       tmp2 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp3 = while1();
+//│   tmp4 = tmp3 !== runtime.LoopEnd;
+//│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
+//│ };

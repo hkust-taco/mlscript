@@ -44,6 +44,7 @@ class LoweringCtx(
   val map = initMap
   
   def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
+  def collectScopedSym(s: Symbol*) = definedSymsDuringLowering.addAll(s)
   def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
@@ -159,11 +160,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
     case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
       reportAnnotations(decl, annotations)
-      if sym.asTrm.fold(true)(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
+      if sym.asTrm.forall(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
       blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
       reportAnnotations(decl, annotations)
-      if sym.asTrm.fold(true)(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
+      if sym.asTrm.forall(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
       blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
@@ -1177,11 +1178,12 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
       val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
       val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
       
-      loweringCtx.collectScopedSym(enterMsgSym)
-      loweringCtx.collectScopedSym(prevIndentLvlSym)
-      loweringCtx.collectScopedSym(resSym)
-      loweringCtx.collectScopedSym(retMsgSym)
-      loweringCtx.collectScopedSym(resInspectedSym)
+      loweringCtx.collectScopedSym(
+        enterMsgSym,
+        prevIndentLvlSym,
+        resSym,
+        retMsgSym,
+        resInspectedSym)
       for (s, _) <- psInspectedSyms do loweringCtx.collectScopedSym(s)
       
       val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
@@ -1190,9 +1192,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
           else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
       
       val tmp1, tmp2, tmp3 = TempSymbol(N)
-      loweringCtx.collectScopedSym(tmp1)
-      loweringCtx.collectScopedSym(tmp2)
-      loweringCtx.collectScopedSym(tmp3)
+      loweringCtx.collectScopedSym(tmp1, tmp2, tmp3)
       
       assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
         pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
