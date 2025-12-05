@@ -12,7 +12,7 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/
+//│ let foo;
 //│ let bar, bar$, foo$capture1;
 //│ bar$ = function bar$(foo$capture2) {
 //│   return foo$capture2.x$capture$0
@@ -33,7 +33,7 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo = function foo() {
-//│   let x, tmp; /** scoped **/
+//│   let x, tmp;
 //│   let capture, bar$here;
 //│   capture = new foo$capture1(null);
 //│   capture.x$capture$0 = 1;
@@ -86,13 +86,9 @@ fun foo() =
     x
   bar
 //│ JS (unsanitized):
-//│ let foo3; /** scoped **/
+//│ let foo3;
 //│ let bar3;
-//│ bar3 = function bar() {
-//│   let x; /** scoped **/
-//│   x = undefined;
-//│   return x
-//│ };
+//│ bar3 = function bar() { let x; x = undefined; return x };
 //│ foo3 = function foo() { return bar3 };
 
 

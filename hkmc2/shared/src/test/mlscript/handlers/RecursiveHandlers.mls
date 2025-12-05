@@ -155,7 +155,7 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp24, tmp25, tmp26, tmp27; /** scoped **/
+//│ let str, scrut, tmp24, tmp25, tmp26, tmp27;
 //│ let handleBlock$7;
 //│ str = "";
 //│ scrut = true;
@@ -173,7 +173,7 @@ str
 //│       perform(arg) {
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
-//│           let tmp28, tmp29, tmp30; /** scoped **/
+//│           let tmp28, tmp29, tmp30;
 //│           let Cont$handler$h1$perform$2, doUnwind1;
 //│           globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             static {
@@ -261,7 +261,7 @@ str
 //│         perform(arg) {
 //│           let hdlrFun;
 //│           hdlrFun = function hdlrFun(k) {
-//│             let tmp28, tmp29, tmp30, tmp31, tmp32; /** scoped **/
+//│             let tmp28, tmp29, tmp30, tmp31, tmp32;
 //│             let Cont$handler$h2$perform$2, doUnwind2;
 //│             globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               static {

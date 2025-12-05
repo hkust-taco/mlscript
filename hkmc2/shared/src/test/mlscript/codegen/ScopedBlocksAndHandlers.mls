@@ -18,9 +18,9 @@ fun f(x) =
       let z = 3
       fun g() = z
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
+//│ let f;
 //│ f = function f(x) {
-//│   let g, z; /** scoped **/
+//│   let g, z;
 //│   g = function g() {
 //│     return z
 //│   };

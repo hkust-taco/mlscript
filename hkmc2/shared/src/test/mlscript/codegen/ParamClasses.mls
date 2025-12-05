@@ -6,7 +6,7 @@
 
 data class Foo()
 //│ JS (unsanitized):
-//│ let Foo1; /** scoped **/
+//│ let Foo1;
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
@@ -37,7 +37,7 @@ Foo.class
 
 data class Foo(a)
 //│ JS (unsanitized):
-//│ let Foo3; /** scoped **/
+//│ let Foo3;
 //│ Foo3 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
@@ -64,19 +64,19 @@ Foo(1)
 
 Foo(1).a
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/ tmp = Foo3(1); tmp.a
+//│ let tmp; tmp = Foo3(1); tmp.a
 //│ = 1
 
 fun foo(y) = Foo(y)
 foo(27)
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/ foo = function foo(y) { return Foo3(y) }; foo(27)
+//│ let foo; foo = function foo(y) { return Foo3(y) }; foo(27)
 //│ = Foo(27)
 
 
 data class Foo(a, b)
 //│ JS (unsanitized):
-//│ let Foo5; /** scoped **/
+//│ let Foo5;
 //│ Foo5 = function Foo(a, b) {
 //│   return globalThis.Object.freeze(new Foo.class(a, b));
 //│ };
@@ -94,17 +94,17 @@ data class Foo(a, b)
 
 let foo = Foo
 //│ JS (unsanitized):
-//│ let foo1; /** scoped **/ foo1 = Foo5;
+//│ let foo1; foo1 = Foo5;
 //│ foo = fun Foo { class: class Foo }
 
 let f = foo(1, 2)
 //│ JS (unsanitized):
-//│ let f; /** scoped **/ f = runtime.safeCall(foo1(1, 2));
+//│ let f; f = runtime.safeCall(foo1(1, 2));
 //│ f = Foo(1, 2)
 
 let f = new! foo(1, 2)
 //│ JS (unsanitized):
-//│ let f1; /** scoped **/ f1 = globalThis.Object.freeze(new foo1(1, 2));
+//│ let f1; f1 = globalThis.Object.freeze(new foo1(1, 2));
 //│ f = Foo(1, 2)
 
 f.a
@@ -119,7 +119,7 @@ f.b
 
 let f = Foo(1, 2)
 //│ JS (unsanitized):
-//│ let f2; /** scoped **/ f2 = Foo5(1, 2);
+//│ let f2; f2 = Foo5(1, 2);
 //│ f = Foo(1, 2)
 
 f.a
@@ -134,7 +134,7 @@ f.b
 
 Foo(print(1), print(2))
 //│ JS (unsanitized):
-//│ let tmp1, tmp2; /** scoped **/ tmp1 = Predef.print(1); tmp2 = Predef.print(2); Foo5(tmp1, tmp2)
+//│ let tmp1, tmp2; tmp1 = Predef.print(1); tmp2 = Predef.print(2); Foo5(tmp1, tmp2)
 //│ > 1
 //│ > 2
 //│ = Foo((), ())
@@ -144,7 +144,7 @@ data class Inner(c) with
   fun i1(d) = c + d
   print(c)
 //│ JS (unsanitized):
-//│ let Inner1; /** scoped **/
+//│ let Inner1;
 //│ Inner1 = function Inner(c) {
 //│   return globalThis.Object.freeze(new Inner.class(c));
 //│ };
@@ -165,7 +165,7 @@ data class Inner(c) with
 
 let i = new Inner(100)
 //│ JS (unsanitized):
-//│ let i; /** scoped **/ i = globalThis.Object.freeze(new Inner1.class(100));
+//│ let i; i = globalThis.Object.freeze(new Inner1.class(100));
 //│ > 100
 //│ i = Inner(100)
 
@@ -185,7 +185,7 @@ class Foo(x, val y, z, val z, z) with
   print("z = " + z)
   print("this.z = " + this.z)
 //│ JS (unsanitized):
-//│ let Foo7; /** scoped **/
+//│ let Foo7;
 //│ Foo7 = function Foo(x, y, z, z1, z2) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
@@ -194,7 +194,7 @@ class Foo(x, val y, z, val z, z) with
 //│     Foo7.class = this
 //│   }
 //│   constructor(x, y, z, z1, z2) {
-//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11; /** scoped **/
+//│     let tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
 //│     this.#x = x;
 //│     this.y = y;
 //│     this.#z = z;
@@ -243,7 +243,7 @@ class Foo(val z, val z)
 //│ ║  l.237: 	class Foo(val z, val z)
 //│ ╙──       	                     ^
 //│ JS (unsanitized):
-//│ let Foo9; /** scoped **/
+//│ let Foo9;
 //│ Foo9 = function Foo(z, z1) {
 //│   return globalThis.Object.freeze(new Foo.class(z, z1));
 //│ };

@@ -58,7 +58,7 @@ if a is
   B then 2
   C then 3
 //│ JS (unsanitized):
-//│ let tmp; /** scoped **/
+//│ let tmp;
 //│ split_root$: {
 //│   split_default$: {
 //│     split_1$: {
@@ -107,7 +107,7 @@ let x = if a is
     print("done")
 print(x)
 //│ JS (unsanitized):
-//│ let x, tmp1, tmp2, tmp3, tmp4; /** scoped **/
+//│ let x, tmp1, tmp2, tmp3, tmp4;
 //│ tmp1 = 3;
 //│ if (a instanceof A1.class) {
 //│   tmp2 = 1;
@@ -145,7 +145,7 @@ if a is
   let tmp = 2
   B then 2 + tmp
 //│ JS (unsanitized):
-//│ let tmp5; /** scoped **/
+//│ let tmp5;
 //│ tmp5 = 2;
 //│ if (a instanceof A1.class) {
 //│   1
@@ -167,7 +167,7 @@ if a is
   let tmp = printAndId(3)
   B then 2 + tmp
 //│ JS (unsanitized):
-//│ let tmp6; /** scoped **/
+//│ let tmp6;
 //│ if (a instanceof A1.class) {
 //│   1
 //│ } else {
@@ -190,7 +190,7 @@ if a is
       C then 3
     print(x)
 //│ JS (unsanitized):
-//│ let x1, tmp7; /** scoped **/
+//│ let x1, tmp7;
 //│ if (a instanceof A1.class) {
 //│   1
 //│ } else if (a instanceof B1.class) {
@@ -219,7 +219,7 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ JS (unsanitized):
-//│ let x2, tmp8, tmp9, tmp10, tmp11, tmp12; /** scoped **/
+//│ let x2, tmp8, tmp9, tmp10, tmp11, tmp12;
 //│ if (a instanceof B1.class) {
 //│   1
 //│ } else {

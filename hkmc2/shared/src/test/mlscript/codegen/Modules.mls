@@ -4,7 +4,7 @@
 :sjs
 module None
 //│ JS (unsanitized):
-//│ let None1; /** scoped **/
+//│ let None1;
 //│ globalThis.Object.freeze(class None {
 //│   static {
 //│     None1 = this
@@ -55,7 +55,7 @@ module M with
   val x = 1
   val y = x + 1
 //│ JS (unsanitized):
-//│ let M1; /** scoped **/
+//│ let M1;
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -64,7 +64,7 @@ module M with
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let tmp; /** scoped **/
+//│     let tmp;
 //│     globalThis.Object.freeze(class C {
 //│       static {
 //│         M.C = this
@@ -123,7 +123,7 @@ M.oops
 module M with
   val m: module M = M
 //│ JS (unsanitized):
-//│ let M3; /** scoped **/
+//│ let M3;
 //│ globalThis.Object.freeze(class M2 {
 //│   static {
 //│     M3 = this
@@ -156,7 +156,7 @@ module AA with
     val y = 2
     [x, y]
 //│ JS (unsanitized):
-//│ let AA1; /** scoped **/
+//│ let AA1;
 //│ globalThis.Object.freeze(class AA {
 //│   static {
 //│     AA1 = this

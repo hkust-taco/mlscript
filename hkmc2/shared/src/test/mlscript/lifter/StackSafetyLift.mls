@@ -23,7 +23,7 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi; /** scoped **/
+//│ let hi;
 //│ let Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
 //│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
 //│   let tmp, tmp1;
@@ -63,7 +63,7 @@ hi(0)
 //│   return res1
 //│ };
 //│ hi = function hi(n) {
-//│   let scrut, tmp; /** scoped **/
+//│   let scrut, tmp;
 //│   let stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
@@ -96,7 +96,7 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1; /** scoped **/
+//│ let sum1;
 //│ let Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
 //│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
 //│   let tmp1, tmp2;
@@ -153,7 +153,7 @@ sum(10000)
 //│   return res2
 //│ };
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1; /** scoped **/
+//│   let scrut, tmp, tmp1;
 //│   let curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -278,9 +278,9 @@ foo(h)
 :sjs
 fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
-//│ let max; /** scoped **/
+//│ let max;
 //│ max = function max(a, b) {
-//│   let scrut; /** scoped **/
+//│   let scrut;
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };
@@ -292,7 +292,7 @@ fun hi(n) = n
 hi(0)
 //│ /!!!\ Option ':stackSafe' requires ':effectHandlers' to be set
 //│ JS (unsanitized):
-//│ let hi1; /** scoped **/ hi1 = function hi(n) { return n }; hi1(0)
+//│ let hi1; hi1 = function hi(n) { return n }; hi1(0)
 //│ = 0
 
 :stackSafe 42

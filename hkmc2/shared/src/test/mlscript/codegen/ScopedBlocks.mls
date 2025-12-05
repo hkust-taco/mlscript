@@ -6,7 +6,7 @@ let x =
   let y = 1 + 3 * 4
   y + 4
 //│ JS (unsanitized):
-//│ let x, y, tmp; /** scoped **/ tmp = 3 * 4; y = 1 + tmp; x = y + 4;
+//│ let x, y, tmp; tmp = 3 * 4; y = 1 + tmp; x = y + 4;
 //│ x = 17
 
 
@@ -19,9 +19,9 @@ fun f() =
     let b = 5
     b + 9
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
+//│ let f;
 //│ f = function f() {
-//│   let scrut, a, b; /** scoped **/
+//│   let scrut, a, b;
 //│   scrut = true;
 //│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
@@ -39,9 +39,9 @@ fun g(x, y, z) =
       let a = 1
       (_ + a)
 //│ JS (unsanitized):
-//│ let g; /** scoped **/
+//│ let g;
 //│ g = function g(x1, y1, z) {
-//│   let a, tmp1, tmp2; /** scoped **/
+//│   let a, tmp1, tmp2;
 //│   let lambda;
 //│   split_root$: {
 //│     split_1$: {
@@ -83,9 +83,9 @@ fun f() = if x is
   A(a, b) and a > b then true
   B(c, d) then false
 //│ JS (unsanitized):
-//│ let f1; /** scoped **/
+//│ let f1;
 //│ f1 = function f() {
-//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1; /** scoped **/
+//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (x instanceof A1.class) {
@@ -121,9 +121,9 @@ fun f() = if x is
 fun f() = if A(1, Nil) is
   A(1, Nil) then 3
 //│ JS (unsanitized):
-//│ let f2; /** scoped **/
+//│ let f2;
 //│ f2 = function f() {
-//│   let scrut, argument0$, argument1$, tmp1; /** scoped **/
+//│   let scrut, argument0$, argument1$, tmp1;
 //│   split_root$: {
 //│     split_default$: {
 //│       scrut = A1(1, Nil1);
@@ -160,11 +160,11 @@ fun f(x) =
     x()
   x
 //│ JS (unsanitized):
-//│ let f3; /** scoped **/
+//│ let f3;
 //│ f3 = function f(x1) {
-//│   let tmp1; /** scoped **/
+//│   let tmp1;
 //│   tmp2: while (true) {
-//│     let a, a1, argument0$, argument1$; /** scoped **/
+//│     let a, a1, argument0$, argument1$;
 //│     if (x1 instanceof A1.class) {
 //│       argument0$ = x1.a;
 //│       argument1$ = x1.b;
@@ -196,12 +196,12 @@ fun f() =
       else
         y = a
 //│ JS (unsanitized):
-//│ let f4; /** scoped **/
+//│ let f4;
 //│ f4 = function f() {
-//│   let y1, tmp1; /** scoped **/
+//│   let y1, tmp1;
 //│   y1 = x + 1;
 //│   tmp2: while (true) {
-//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp3; /** scoped **/
+//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp3;
 //│     split_root$: {
 //│       split_1$: {
 //│         if (y1 instanceof A1.class) {
@@ -239,11 +239,11 @@ fun f(x, y) =
   while x && y do
     f(0, 0) + 4
 //│ JS (unsanitized):
-//│ let f5; /** scoped **/
+//│ let f5;
 //│ f5 = function f(x1, y1) {
-//│   let tmp1; /** scoped **/
+//│   let tmp1;
 //│   tmp2: while (true) {
-//│     let scrut, lambda, tmp3; /** scoped **/
+//│     let scrut, lambda, tmp3;
 //│     lambda = (undefined, function () {
 //│       return y1
 //│     });
@@ -264,13 +264,13 @@ fun f(x, y) =
 class A with
   val x = 1 + 2
 //│ JS (unsanitized):
-//│ let A3; /** scoped **/
+//│ let A3;
 //│ globalThis.Object.freeze(class A2 {
 //│   static {
 //│     A3 = this
 //│   }
 //│   constructor() {
-//│     let tmp1; /** scoped **/
+//│     let tmp1;
 //│     tmp1 = 1 + 2;
 //│     this.x = tmp1;
 //│   }
@@ -289,7 +289,7 @@ set state += 1
 module Foo with
   val res = Foo().foo()
 //│ JS (unsanitized):
-//│ let Foo1, tmp1; /** scoped **/
+//│ let Foo1, tmp1;
 //│ tmp1 = state + 1;
 //│ state = tmp1;
 //│ Foo1 = function Foo() {
@@ -301,7 +301,7 @@ module Foo with
 //│   }
 //│   constructor() {}
 //│   static {
-//│     let tmp2, tmp3; /** scoped **/
+//│     let tmp2, tmp3;
 //│     tmp2 = Foo1();
 //│     tmp3 = tmp2.foo();
 //│     this.res = tmp3;
@@ -326,7 +326,7 @@ type I = Int
 class A(x) with
   val y = x
 //│ JS (unsanitized):
-//│ let A5; /** scoped **/
+//│ let A5;
 //│ A5 = function A(x1) {
 //│   return globalThis.Object.freeze(new A.class(x1));
 //│ };
@@ -349,7 +349,7 @@ class A(x) with
 module M with
   data class A(x, y)
 //│ JS (unsanitized):
-//│ let M3; /** scoped **/
+//│ let M3;
 //│ globalThis.Object.freeze(class M2 {
 //│   static {
 //│     M3 = this
@@ -383,11 +383,11 @@ fun f(x) =
     let y = x
     x
 //│ JS (unsanitized):
-//│ let f6; /** scoped **/
+//│ let f6;
 //│ f6 = function f(x1) {
-//│   let tmp2; /** scoped **/
+//│   let tmp2;
 //│   tmp3: while (true) {
-//│     let y1; /** scoped **/
+//│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
 //│       tmp2 = x1;
@@ -406,12 +406,12 @@ fun f(x) =
     let y = x
     x
 //│ JS (unsanitized):
-//│ let f7; /** scoped **/
+//│ let f7;
 //│ f7 = function f(x1) {
-//│   let tmp2, while1, tmp3, tmp4; /** scoped **/
+//│   let tmp2, while1, tmp3, tmp4;
 //│   tmp2 = undefined;
 //│   while1 = (undefined, function () {
-//│     let y1; /** scoped **/
+//│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
 //│       tmp2 = x1;

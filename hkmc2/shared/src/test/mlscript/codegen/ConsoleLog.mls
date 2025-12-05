@@ -7,14 +7,14 @@
 :silent
 declare val console
 //│ JS (unsanitized):
-//│ let console; /** scoped **/
+//│ let console;
 
 
 console.log("a")
 console.log("b")
 123
 //│ JS (unsanitized):
-//│ let tmp, tmp1; /** scoped **/
+//│ let tmp, tmp1;
 //│ tmp = runtime.safeCall(globalThis.console.log("a"));
 //│ tmp1 = runtime.safeCall(globalThis.console.log("b"));
 //│ 123
@@ -25,7 +25,7 @@ console.log("b")
 let l = console.log
 l(123)
 //│ JS (unsanitized):
-//│ let l; /** scoped **/ l = globalThis.console.log; runtime.safeCall(l(123))
+//│ let l; l = globalThis.console.log; runtime.safeCall(l(123))
 //│ > 123
 //│ l = fun log
 
@@ -49,7 +49,7 @@ let y = x + 1
 console.log("c")
 y * 2
 //│ JS (unsanitized):
-//│ let x, y, tmp2, tmp3, tmp4; /** scoped **/
+//│ let x, y, tmp2, tmp3, tmp4;
 //│ tmp2 = runtime.safeCall(globalThis.console.log("a"));
 //│ x = 123;
 //│ tmp3 = runtime.safeCall(globalThis.console.log("b"));

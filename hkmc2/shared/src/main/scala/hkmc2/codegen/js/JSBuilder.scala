@@ -498,7 +498,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       scope.allocateName(lbl)
       
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
-
+      
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
           nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
@@ -590,35 +590,31 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
-    // NOTE: this is to make sure that we are NOT generating the top level
-    // block in a nested scope, because for exported symbols they are looked up in the outer scope
-    val (scopedSyms, unscopedMain) = p.main match
-      case Scoped(syms, body) /* if exprt.isDefined */ => (syms, body)
-      case _ => (Set.empty, p.main)
-    imps.mkDocument(doc" # ") :/: (genLetDecls(scopedSyms.toArray.sortBy(_.uid).iterator.map(l => l -> scope.allocateName(l)), true) :: block(unscopedMain, endSemi = false)).stripBreaks :: (
+    imps.mkDocument(doc" # ") :/:
+    nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks ::
+    locally:
       exprt match
-        case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
-        case N => doc""
-      )
+      case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+      case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     p.main match
-      case Scoped(syms, body) =>
-        blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
-          (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
-      case _ =>
-        blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVarsNoScoped.toSeq) ->
-          (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+    case Scoped(syms, body) =>
+      blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
+      (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+    case _ =>
+      blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVarsNoScoped.toSeq) ->
+      (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
 
   def genLetDecls(vars: Iterator[(Symbol, Str)], isScoped: Bool): Document =
     if vars.isEmpty then doc"" else
       doc" # let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
-      :: (if isScoped then doc"; /** scoped **/" else doc";")
+      :: doc";"
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
     // TODO document: mutable var assnts require the lookup
@@ -641,7 +637,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     pre :: rest
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
-    nonNestedScoped(t)(bd => block(bd, endSemi)) 
+    nonNestedScoped(t)(bd => block(bd, endSemi))
   
   def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
     doc"Object.defineProperty(${target}, ${prop.escaped}, ${

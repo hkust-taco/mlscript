@@ -6,9 +6,9 @@ fun test(a) =
   class C with { val x = a }
   new C
 //│ JS (unsanitized):
-//│ let test; /** scoped **/
+//│ let test;
 //│ test = function test(a) {
-//│   let C1; /** scoped **/
+//│   let C1;
 //│   globalThis.Object.freeze(class C {
 //│     static {
 //│       C1 = this
@@ -37,9 +37,9 @@ fun test(x) =
   data class Foo(a, b)
   Foo(x, x + 1)
 //│ JS (unsanitized):
-//│ let test2; /** scoped **/
+//│ let test2;
 //│ test2 = function test(x) {
-//│   let Foo2, tmp; /** scoped **/
+//│   let Foo2, tmp;
 //│   Foo2 = function Foo(a, b) {
 //│     return globalThis.Object.freeze(new Foo.class(a, b));
 //│   };

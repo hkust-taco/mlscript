@@ -44,7 +44,7 @@ fun foo() =
     set x += 1
     return () => x
 //│ JS (unsanitized):
-//│ let foo2; /** scoped **/
+//│ let foo2;
 //│ let lambda2, lambda$2;
 //│ lambda$2 = function lambda$(x) {
 //│   return x
@@ -55,11 +55,11 @@ fun foo() =
 //│   }
 //│ });
 //│ foo2 = function foo() {
-//│   let x, tmp2; /** scoped **/
+//│   let x, tmp2;
 //│   let lambda$here;
 //│   x = 1;
 //│   tmp3: while (true) {
-//│     let scrut, tmp4; /** scoped **/
+//│     let scrut, tmp4;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp4 = x + 1;

@@ -22,7 +22,7 @@ scope.locally of 42
 scope.locally of
   let x = 42 in x
 //│ JS (unsanitized):
-//│ let x; /** scoped **/ x = 42; x
+//│ let x; x = 42; x
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -46,7 +46,7 @@ scope.locally of (
   x
 )
 //│ JS (unsanitized):
-//│ let x1; /** scoped **/ x1 = 42; x1
+//│ let x1; x1 = 42; x1
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -70,7 +70,7 @@ scope.locally of scope.locally of (
   x
 )
 //│ JS (unsanitized):
-//│ { let x2; /** scoped **/ x2 = 42; x2 }
+//│ { let x2; x2 = 42; x2 }
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
@@ -106,13 +106,7 @@ fun foo(x) =
 //│ foo = function foo(...args) {
 //│   runtime.checkArgs("foo", 1, true, args.length);
 //│   let x3 = args[0];
-//│   let z; /** scoped **/{
-//│     let y, tmp; /** scoped **/
-//│     z = 1;
-//│     y = 1;
-//│     tmp = x3 + y;
-//│     return tmp + z
-//│   }
+//│   let z;{ let y, tmp; z = 1; y = 1; tmp = x3 + y; return tmp + z }
 //│ };
 //│ block$res6 = undefined;
 
@@ -132,11 +126,11 @@ fun f() =
     let b = 5
     b + 9
 //│ JS (unsanitized):
-//│ let f; /** scoped **/
+//│ let f;
 //│ f = function f() {
-//│   let scrut, b; /** scoped **/
+//│   let scrut, b;
 //│   scrut = true;
-//│   if (scrut === true) { let a; /** scoped **/ a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
 
 
@@ -155,11 +149,11 @@ fun f() =
       b + 9
     )
 //│ JS (unsanitized):
-//│ let f1; /** scoped **/
+//│ let f1;
 //│ f1 = function f() {
-//│   let scrut, a; /** scoped **/
+//│   let scrut, a;
 //│   scrut = false;
-//│   if (scrut === true) { a = 4; return a + 4 } else { let b; /** scoped **/ b = 5; return b + 9 }
+//│   if (scrut === true) { a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
 //│ };
 
 
@@ -178,9 +172,9 @@ fun g(x, y, z) =
         (_ + a)
       )
 //│ JS (unsanitized):
-//│ let g; /** scoped **/
+//│ let g;
 //│ g = function g(x3, y, z) {
-//│   let tmp, tmp1; /** scoped **/
+//│   let tmp, tmp1;
 //│   let lambda;
 //│   split_root$: {
 //│     split_1$: {
@@ -191,7 +185,7 @@ fun g(x, y, z) =
 //│           break split_1$
 //│         } else {
 //│           if (z === true) {
-//│             let a; /** scoped **/
+//│             let a;
 //│             a = 1;
 //│             lambda = (undefined, function (_0) {
 //│               return _0 + a
@@ -225,10 +219,10 @@ fun foo(x, y) =
       print("ruarua")
   )
 //│ JS (unsanitized):
-//│ let foo1; /** scoped **/
+//│ let foo1;
 //│ foo1 = function foo(x3, y) {
-//│   let z, scrut, m, tmp, tmp1; /** scoped **/{
-//│     let w1, w2, scrut1; /** scoped **/
+//│   let z, scrut, m, tmp, tmp1;{
+//│     let w1, w2, scrut1;
 //│     z = globalThis.Object.freeze([
 //│       1,
 //│       2,
@@ -257,12 +251,12 @@ scope.locally()
 :sjs
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ JS (unsanitized):
-//│ let x3, y; /** scoped **/ x3 = 1; y = 2; y
+//│ let x3, y; x3 = 1; y = 2; y
 //│ = 2
 
 
 :e
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.265: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.259: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^

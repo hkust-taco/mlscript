@@ -88,7 +88,7 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let f6, tmp9; /** scoped **/
+//│ let f6, tmp9;
 //│ let Bad1, Good1, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp10, tmp11;
@@ -131,7 +131,7 @@ f().foo()
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   foo() {
-//│     let tmp10, tmp11; /** scoped **/
+//│     let tmp10, tmp11;
 //│     this.z = 100;
 //│     tmp10 = this.x + this.y;
 //│     tmp11 = tmp10 + this.z;
@@ -186,7 +186,7 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, z, w, tmp10, tmp11; /** scoped **/
+//│   let x, y, z, w, tmp10, tmp11;
 //│   let capture;
 //│   capture = new f$capture3(null);
 //│   x = 1;

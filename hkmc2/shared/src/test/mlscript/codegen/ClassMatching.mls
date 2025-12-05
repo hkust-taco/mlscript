@@ -9,7 +9,7 @@ object None
 :sjs
 if Some(0) is Some(x) then x
 //│ JS (unsanitized):
-//│ let scrut, x, argument0$; /** scoped **/
+//│ let scrut, x, argument0$;
 //│ scrut = Some1(0);
 //│ if (scrut instanceof Some1.class) {
 //│   argument0$ = scrut.value;
@@ -26,7 +26,7 @@ let s = Some(0)
 if s is
   Some(x) then x
 //│ JS (unsanitized):
-//│ let x1, argument0$1; /** scoped **/
+//│ let x1, argument0$1;
 //│ if (s instanceof Some1.class) {
 //│   argument0$1 = s.value;
 //│   x1 = argument0$1;
@@ -55,7 +55,7 @@ x => if x is Some(x) then x
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (x3) {
-//│   let x4, argument0$4; /** scoped **/
+//│   let x4, argument0$4;
 //│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     x4 = argument0$4;
@@ -118,9 +118,9 @@ fun f(x) = if x is
   None then "ok"
   else print("oops")
 //│ JS (unsanitized):
-//│ let f4; /** scoped **/
+//│ let f4;
 //│ f4 = function f(x3) {
-//│   let x4, scrut1, argument0$4, tmp5; /** scoped **/
+//│   let x4, scrut1, argument0$4, tmp5;
 //│   split_root$1: {
 //│     split_1$: {
 //│       if (x3 instanceof Some1.class) {
@@ -164,9 +164,9 @@ fun f(x) = if x is
   Some(u) then u
   Pair(a, b) then a + b
 //│ JS (unsanitized):
-//│ let f5; /** scoped **/
+//│ let f5;
 //│ f5 = function f(x3) {
-//│   let u, a, b, argument0$4, argument1$; /** scoped **/
+//│   let u, a, b, argument0$4, argument1$;
 //│   if (x3 instanceof Some1.class) {
 //│     argument0$4 = x3.value;
 //│     u = argument0$4;
@@ -194,9 +194,9 @@ fun f(x) = print of if x is
   None then "ok"
   else "oops"
 //│ JS (unsanitized):
-//│ let f6; /** scoped **/
+//│ let f6;
 //│ f6 = function f(x3) {
-//│   let argument0$4, tmp9; /** scoped **/
+//│   let argument0$4, tmp9;
 //│   split_root$1: {
 //│     split_1$: {
 //│       if (x3 instanceof Some1.class) {

@@ -101,7 +101,7 @@ class T
 class Foo(using T) with
   print(T)
 //│ JS (unsanitized):
-//│ let Foo9; /** scoped **/
+//│ let Foo9;
 //│ Foo9 = function Foo(tmp5) {
 //│   return globalThis.Object.freeze(new Foo.class(tmp5));
 //│ };

@@ -782,7 +782,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           source = Diagnostic.Source.Compilation
         )
   
-  // NOTE: nothing in `quote...` is handled yet
   def quoteSplit(split: Split)(k: Result => Block)(using LoweringCtx): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
       val l1, l2, l3, l4, l5 = new TempSymbol(N)
@@ -880,7 +879,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       rec(rhs, Nil)(k)
     case Blk(LetDecl(sym, _) :: DefineVar(sym2, rhs) :: Nil, res) => // Let bindings
       require(sym2 is sym)
-      loweringCtx.collectScopedSym(sym)
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
         val arrSym = new TempSymbol(N, "arr")

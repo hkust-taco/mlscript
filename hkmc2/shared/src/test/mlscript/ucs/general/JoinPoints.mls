@@ -20,7 +20,7 @@ x => if x is [[0]] then 1
 //│ JS (unsanitized):
 //│ let lambda1;
 //│ lambda1 = (undefined, function (x) {
-//│   let element0$, element0$1, tmp; /** scoped **/
+//│   let element0$, element0$1, tmp;
 //│   split_root$: {
 //│     split_default$: {
 //│       if (runtime.Tuple.isArrayLike(x) && x.length === 1) {
@@ -57,9 +57,9 @@ fun crazy(v) =
     S(S(S(S(S(S(0)))))) then "bruh!"
     _ then S(S(S(S(S(S(0))))))
 //│ JS (unsanitized):
-//│ let crazy; /** scoped **/
+//│ let crazy;
 //│ crazy = function crazy(v) {
-//│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5; /** scoped **/
+//│   let argument0$, argument0$1, argument0$2, argument0$3, argument0$4, argument0$5, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (v instanceof S1.class) {

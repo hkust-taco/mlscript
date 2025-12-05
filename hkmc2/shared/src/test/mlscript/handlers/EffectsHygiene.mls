@@ -13,9 +13,9 @@ fun foo(h): module M =
     module A
     A
 //│ JS (unsanitized):
-//│ let foo; /** scoped **/
+//│ let foo;
 //│ foo = function foo(h) {
-//│   let A2, A3, scrut; /** scoped **/
+//│   let A2, A3, scrut;
 //│   globalThis.Object.freeze(class A {
 //│     static {
 //│       A2 = this
