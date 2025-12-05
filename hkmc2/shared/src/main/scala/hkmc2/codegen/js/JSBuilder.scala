@@ -514,7 +514,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) =>
       scope.nest.givenIn:
         val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
-          if scope.lookup(l).isDefined then
+          if scope.lookup(l).isDefined then // FIXME: this logic is incorrect and should eventually be removed
             // NOTE: this warning is turned off because the lifter is not
             // yet updated to maintian the Scoped blocks, so when
             // something is lifted out, its symbol may be already declared in an outer level,
@@ -591,9 +591,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         then "./" + os.Path(path).relativeTo(wd).toString
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
-    imps.mkDocument(doc" # ") :/:
-    nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks ::
-    locally:
+    imps.mkDocument(doc" # ")
+    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    :: locally:
       exprt match
       case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
       case N => doc""
@@ -606,9 +606,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) =>
       blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
       (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
-    case _ =>
-      blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVarsNoScoped.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+    case body =>
+      blockPreamble(p.imports.map(_._1).toSeq ++ body.definedVarsNoScoped.toSeq) ->
+      (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
 
   def genLetDecls(vars: Iterator[(Symbol, Str)], isScoped: Bool): Document =
     if vars.isEmpty then doc"" else

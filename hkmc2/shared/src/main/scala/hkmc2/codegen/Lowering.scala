@@ -158,14 +158,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         subTerm(lhs): l =>
           subTerm_nonTail(rhs): r =>
             blockImpl(stats, L((mut, RcdArg(S(l), r) :: flds)))(k)
-    case (decl @ LetDecl(sym, annotations)) :: (stats @ ((_: DefineVar) :: _)) =>
-      reportAnnotations(decl, annotations)
-      if sym.asTrm.forall(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
-      blockImpl(stats, res)(k)
     case (decl @ LetDecl(sym, annotations)) :: stats =>
       reportAnnotations(decl, annotations)
       if sym.asTrm.forall(_.owner.isEmpty) then loweringCtx.collectScopedSym(sym)
-      blockImpl(DefineVar(sym, Term.Lit(Tree.UnitLit(false))) :: stats, res)(k)
+      blockImpl(stats, res)(k)
     case DefineVar(sym, rhs) :: stats =>
       term(rhs): r =>
         Assign(sym, r, blockImpl(stats, res)(k))
@@ -1172,55 +1168,54 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         case h :: t => go(t, Term.Lam(h, bod))
     go(paramLists.reverse, bod)
   
-  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block =
-    inScopedBlock:
-      val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
-      val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
-      val resSym = TempSymbol(N, dbgNme = "traceLogRes")
-      val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
-      val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
-      val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
-      
-      loweringCtx.collectScopedSym(
-        enterMsgSym,
-        prevIndentLvlSym,
-        resSym,
-        retMsgSym,
-        resInspectedSym)
-      for (s, _) <- psInspectedSyms do loweringCtx.collectScopedSym(s)
-      
-      val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
-        case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
-          then Arg(N, Value.Ref(s)) :: acc
-          else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
-      
-      val tmp1, tmp2, tmp3 = TempSymbol(N)
-      loweringCtx.collectScopedSym(tmp1, tmp2, tmp3)
-      
-      assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
-        pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
-      *) |>:
-      assignStmts(
-        enterMsgSym -> pureCall(
-          strConcatFn,
-          Arg(N, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
-        ),
-        tmp1 -> pureCall(traceLogFn, Arg(N, Value.Ref(enterMsgSym)) :: Nil),
-        prevIndentLvlSym -> pureCall(traceLogIndentFn, Nil)
-      ) |>: 
-      term(bod)(r =>
-      assignStmts(
-        resSym -> r,
-        resInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(resSym)) :: Nil),
-        retMsgSym -> pureCall(
-          strConcatFn,
-          Arg(N, Value.Lit(Tree.StrLit("=> "))) :: Arg(N, Value.Ref(resInspectedSym)) :: Nil
-        ),
-        tmp2 -> pureCall(traceLogResetFn, Arg(N, Value.Ref(prevIndentLvlSym)) :: Nil),
-        tmp3 -> pureCall(traceLogFn, Arg(N, Value.Ref(retMsgSym)) :: Nil)
-      ) |>:
-        Ret(Value.Ref(resSym))
-      )
+  def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block = inScopedBlock:
+    val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
+    val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
+    val resSym = TempSymbol(N, dbgNme = "traceLogRes")
+    val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
+    
+    loweringCtx.collectScopedSym(
+      enterMsgSym,
+      prevIndentLvlSym,
+      resSym,
+      retMsgSym,
+      resInspectedSym)
+    for (s, _) <- psInspectedSyms do loweringCtx.collectScopedSym(s)
+    
+    val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
+      case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
+        then Arg(N, Value.Ref(s)) :: acc
+        else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
+    
+    val tmp1, tmp2, tmp3 = TempSymbol(N)
+    loweringCtx.collectScopedSym(tmp1, tmp2, tmp3)
+    
+    assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
+      pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
+    *) |>:
+    assignStmts(
+      enterMsgSym -> pureCall(
+        strConcatFn,
+        Arg(N, Value.Lit(Tree.StrLit(s"CALL ${name.getOrElse("[arrow function]")}("))) :: psSymArgs
+      ),
+      tmp1 -> pureCall(traceLogFn, Arg(N, Value.Ref(enterMsgSym)) :: Nil),
+      prevIndentLvlSym -> pureCall(traceLogIndentFn, Nil)
+    ) |>: 
+    term(bod)(r =>
+    assignStmts(
+      resSym -> r,
+      resInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(resSym)) :: Nil),
+      retMsgSym -> pureCall(
+        strConcatFn,
+        Arg(N, Value.Lit(Tree.StrLit("=> "))) :: Arg(N, Value.Ref(resInspectedSym)) :: Nil
+      ),
+      tmp2 -> pureCall(traceLogResetFn, Arg(N, Value.Ref(prevIndentLvlSym)) :: Nil),
+      tmp3 -> pureCall(traceLogFn, Arg(N, Value.Ref(retMsgSym)) :: Nil)
+    ) |>:
+      Ret(Value.Ref(resSym))
+    )
 
 
 object TrivialStatementsAndMatch:

@@ -29,10 +29,10 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
-  // this variation of `definedVars` excludes the `syms` in `Scoped` blocks
-  // so that `Scoped` blocks' vars can be seen in the output js code;
-  // otherwise `blockPreamble` allocates all the `definedVars` such that
-  // we cannot see and test vars generated because of the existence of the `Scoped` blocks
+  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks
+    * so that `Scoped` blocks' vars can be seen in the output js code;
+    * otherwise `blockPreamble` allocates all the `definedVars` such that
+    * we cannot see and test vars generated because of the existence of the `Scoped` blocks */
   lazy val definedVarsNoScoped: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
@@ -54,6 +54,8 @@ sealed abstract class Block extends Product:
     case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
     case Scoped(syms, body) => body.definedVarsNoScoped -- syms
   
+  // * Note: there is a good chance that historical users of `definedVars` do not properly respect Scoped blocks
+  // * and should adapt their logic to use `definedVarsNoScoped` instead.
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars

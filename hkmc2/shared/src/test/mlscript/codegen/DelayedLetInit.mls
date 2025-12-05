@@ -6,7 +6,7 @@
 
 let x
 //│ JS (unsanitized):
-//│ let x; x = undefined;
+//│ let x;
 //│ x = undefined
 
 x = 1
@@ -81,7 +81,6 @@ else foo = 1
 //│ ╙──      	         ^
 //│ JS (unsanitized):
 //│ let foo1, scrut;
-//│ foo1 = undefined;
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   foo1
@@ -96,7 +95,6 @@ else
   foo = 1
 //│ JS (unsanitized):
 //│ let foo2, scrut1;
-//│ foo2 = undefined;
 //│ scrut1 = true;
 //│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
 //│ foo = 0
@@ -120,7 +118,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.121: 	fun f() = foo = 0
+//│ ║  l.119: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
 //│ let f4; f4 = function f() { return foo2 };

@@ -27,9 +27,11 @@ case class Config(
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
   
-  // NOTE: with `Scoped` blocks inside loop bodies, currently this flag
-  // forces the rewriting of while loops when handler lowering is on to make sure that
-  // we do create programs with unbound variables
+  // NOTE: We force the rewriting of while loops to functions when handler lowering is on
+  // to prevent the "floating out" of definitions done by handler lowering,
+  // which currently does not respect scopes introduced by `Scoped` blocks.
+  // Currently, this is only a problem with while loops because we do not yet
+  // construct nested Scoped blocks in other places (but will in the future).
   // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2579529893
   // and https://github.com/hkust-taco/mlscript/pull/356#discussion_r2585183902
   def shouldRewriteWhile: Bool =
