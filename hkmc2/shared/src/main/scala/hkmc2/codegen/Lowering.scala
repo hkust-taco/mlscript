@@ -512,14 +512,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               t.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.debug.getLocals) =>
-        if !config.effectHandlers.exists(_.debug) then
-          return fail:
-            ErrorReport(
-              msg"Debugging functions are not enabled" ->
-              t.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
-        conclude(Value.Ref(ctx.builtins.debug.getLocals, N).withLocOf(f))
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>
@@ -955,7 +947,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
     val lifted =
-      if config.effectHandlers.nonEmpty || lift then Lifter(S(handlerPaths)).transform(withHandlers1)
+      if lift then Lifter(S(handlerPaths)).transform(withHandlers1)
       else withHandlers1
     
     val (withHandlers2, doUnwindPaths) = config.effectHandlers.fold((lifted, Map.empty)): opt =>

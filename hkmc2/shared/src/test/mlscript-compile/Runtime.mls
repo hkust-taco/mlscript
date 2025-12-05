@@ -122,7 +122,7 @@ module TraceLogger with
 // Private definitions for algebraic effects
 
 // layout:
-// | callCnt | f | pc | this | localCnt | locals... |
+// | callCnt | f | debugInfo | pcStr | pc | this | localCnt | locals... |
 
 mut val isResuming = false
 mut val resumeValue = null
@@ -146,9 +146,19 @@ data class FunctionContFrame(next, saved) with
       isResuming = true
       resumeValue = value
       resumeArr = saved
-      resumeIdx = 5
-      resumePc = saved.[2]
-    f.apply(saved.[3], [])
+      resumeIdx = 7
+      resumePc = saved.[4]
+    f.apply(saved.[5], [])
+  fun getLocal =
+    let debugInfo = saved.[2]
+    let res = mut []
+    let i = 1
+    while i < debugInfo.length do
+      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[7 + debugInfo.[i]]))
+      set i += 2
+    res
+  fun getNme = saved.[2].[0]
+  fun getLoc = saved.[3]
 
 data abstract class FunctionContFrameOld(next) with
   fun resume(value)
@@ -191,16 +201,15 @@ fun showStackTrace(header, tr, debug, showLocals) =
     while curHandler !== null do
       let cur = curHandler.next
       while cur !== null do
-        let locals = cur.getLocals
-        let curLocals = locals.at(locals.length - 1)
+        let curLocals = cur.getLocal
         let loc = cur.getLoc
         let loc = if loc is null then "pc=" + cur.pc else loc
-        let localsMsg = if showLocals and curLocals.locals.length > 0 then
-          " with locals: " + curLocals.locals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+        let localsMsg = if showLocals and curLocals.length > 0 then
+          " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
         else
           ""
         set
-          msg += "\n\tat " + curLocals.fnName + " (" + loc + ")"
+          msg += "\n\tat " + cur.getNme + " (" + loc + ")"
           msg += localsMsg
           cur = cur.next
           atTail = false

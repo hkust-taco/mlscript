@@ -247,9 +247,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case PubField(isym, sym) => Select(isym.asPath, Tree.Ident(sym.nme))(d)
   
   
-  def isHandlerClsPath(p: Path) = handlerPaths match
-    case None => false
-    case Some(paths) => paths.isHandlerClsPath(p)
+
+  val ignoredSet = Set(State.globalThisSymbol.asPath.selSN("Object"), State.runtimeSymbol.asPath.selSN("NonLocalReturn"))
+  
+  def isIgnoredPath(p: Path) = ignoredSet.contains(p)
   
   /**
     * Creates a capture class for a function consisting of its mutable (and possibly immutable) local variables.
@@ -476,7 +477,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
-            case Some(path) if isHandlerClsPath(path) => ()
+            case Some(path) if isIgnoredPath(path) => ()
             case Some(Select(RefOfBms(s, _), Tree.Ident("class"))) =>
               if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
             case Some(RefOfBms(s, _)) =>
@@ -639,14 +640,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(l, ctx)
                 case _ => getCallArgs(l, ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, c.mayRaiseEffects))
             case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l), args) =>
             ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(l, ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, true))
             case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
           // variable here. But, since this closure may be re-used later, this doesn't work
@@ -944,7 +945,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val args2 = headPlistCopy.params.map(p => p.sym.asPath.asArg)
 
           val bdy = blockBuilder
-            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false)) // TODO: restParams not considered
+            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, true)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)
           val auxDefn = FunDefn(N, singleCallBms, flatPlist, lifted.body)
@@ -1035,7 +1036,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             )
             
             for ps <- newAuxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false)
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, true)
               curSym = TempSymbol(None, "tmp")
               val thisSym = curSym
               acc = acc.assign(thisSym, call)

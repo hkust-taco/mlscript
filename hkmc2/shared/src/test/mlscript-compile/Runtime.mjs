@@ -328,10 +328,39 @@ globalThis.Object.freeze(class Runtime {
         Runtime.isResuming = true;
         Runtime.resumeValue = value;
         Runtime.resumeArr = this.saved;
-        Runtime.resumeIdx = 5;
-        Runtime.resumePc = this.saved.at(2);
+        Runtime.resumeIdx = 7;
+        Runtime.resumePc = this.saved.at(4);
         tmp4 = globalThis.Object.freeze([]);
-        return f.apply(this.saved.at(3), tmp4)
+        return f.apply(this.saved.at(5), tmp4)
+      } 
+      get getLocal() {
+        let debugInfo, res, i, scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
+        debugInfo = this.saved.at(2);
+        res = [];
+        i = 1;
+        tmp6: while (true) {
+          scrut = i < debugInfo.length;
+          if (scrut === true) {
+            tmp = i + 1;
+            tmp1 = 7 + debugInfo.at(i);
+            tmp2 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp), this.saved.at(tmp1)));
+            tmp3 = runtime.safeCall(res.push(tmp2));
+            tmp4 = i + 2;
+            i = tmp4;
+            tmp5 = runtime.Unit;
+            continue tmp6
+          } else {
+            tmp5 = runtime.Unit;
+          }
+          break;
+        }
+        return res;
+      } 
+      get getNme() {
+        return this.saved.at(2).at(0);
+      } 
+      get getLoc() {
+        return this.saved.at(3);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
@@ -603,42 +632,40 @@ globalThis.Object.freeze(class Runtime {
     }
   } 
   static showStackTrace(header, tr, debug, showLocals) {
-    let msg, curHandler, atTail, scrut, cur, scrut1, locals, curLocals, loc, loc1, localsMsg, scrut2, scrut3, tmp, tmp1, lambda, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+    let msg, curHandler, atTail, scrut, cur, scrut1, curLocals, loc, loc1, localsMsg, scrut2, scrut3, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
     msg = header;
     curHandler = tr.contTrace;
     atTail = true;
     if (debug === true) {
-      tmp19: while (true) {
+      tmp18: while (true) {
         scrut = curHandler !== null;
         if (scrut === true) {
           cur = curHandler.next;
-          tmp20: while (true) {
+          tmp19: while (true) {
             scrut1 = cur !== null;
             if (scrut1 === true) {
-              locals = cur.getLocals;
-              tmp = locals.length - 1;
-              curLocals = runtime.safeCall(locals.at(tmp));
+              curLocals = cur.getLocal;
               loc = cur.getLoc;
               if (loc === null) {
-                tmp1 = "pc=" + cur.pc;
+                tmp = "pc=" + cur.pc;
               } else {
-                tmp1 = loc;
+                tmp = loc;
               }
-              loc1 = tmp1;
+              loc1 = tmp;
               split_root$: {
                 split_1$: {
                   if (showLocals === true) {
-                    scrut2 = curLocals.locals.length > 0;
+                    scrut2 = curLocals.length > 0;
                     if (scrut2 === true) {
                       lambda = (undefined, function (l) {
-                        let tmp21, tmp22;
-                        tmp21 = l.localName + "=";
-                        tmp22 = Rendering.render(l.value);
-                        return tmp21 + tmp22
+                        let tmp20, tmp21;
+                        tmp20 = l.localName + "=";
+                        tmp21 = Rendering.render(l.value);
+                        return tmp20 + tmp21
                       });
-                      tmp2 = runtime.safeCall(curLocals.locals.map(lambda));
-                      tmp3 = runtime.safeCall(tmp2.join(", "));
-                      tmp4 = " with locals: " + tmp3;
+                      tmp1 = runtime.safeCall(curLocals.map(lambda));
+                      tmp2 = runtime.safeCall(tmp1.join(", "));
+                      tmp3 = " with locals: " + tmp2;
                       break split_root$
                     } else {
                       break split_1$
@@ -647,54 +674,54 @@ globalThis.Object.freeze(class Runtime {
                     break split_1$
                   }
                 }
-                tmp4 = "";
+                tmp3 = "";
               }
-              localsMsg = tmp4;
-              tmp5 = "\n\tat " + curLocals.fnName;
-              tmp6 = tmp5 + " (";
-              tmp7 = tmp6 + loc1;
-              tmp8 = tmp7 + ")";
-              tmp9 = msg + tmp8;
+              localsMsg = tmp3;
+              tmp4 = "\n\tat " + cur.getNme;
+              tmp5 = tmp4 + " (";
+              tmp6 = tmp5 + loc1;
+              tmp7 = tmp6 + ")";
+              tmp8 = msg + tmp7;
+              msg = tmp8;
+              tmp9 = msg + localsMsg;
               msg = tmp9;
-              tmp10 = msg + localsMsg;
-              msg = tmp10;
               cur = cur.next;
               atTail = false;
-              tmp11 = runtime.Unit;
-              continue tmp20
+              tmp10 = runtime.Unit;
+              continue tmp19
             } else {
-              tmp11 = runtime.Unit;
+              tmp10 = runtime.Unit;
             }
             break;
           }
           curHandler = curHandler.nextHandler;
           scrut3 = curHandler !== null;
           if (scrut3 === true) {
-            tmp12 = "\n\twith handler " + curHandler.handler.constructor.name;
-            tmp13 = msg + tmp12;
-            msg = tmp13;
+            tmp11 = "\n\twith handler " + curHandler.handler.constructor.name;
+            tmp12 = msg + tmp11;
+            msg = tmp12;
             atTail = false;
-            tmp14 = runtime.Unit;
+            tmp13 = runtime.Unit;
           } else {
-            tmp14 = runtime.Unit;
+            tmp13 = runtime.Unit;
           }
-          tmp15 = tmp14;
-          continue tmp19
+          tmp14 = tmp13;
+          continue tmp18
         } else {
-          tmp15 = runtime.Unit;
+          tmp14 = runtime.Unit;
         }
         break;
       }
       if (atTail === true) {
-        tmp16 = msg + "\n\tat tail position";
-        msg = tmp16;
-        tmp17 = runtime.Unit;
+        tmp15 = msg + "\n\tat tail position";
+        msg = tmp15;
+        tmp16 = runtime.Unit;
       } else {
-        tmp17 = runtime.Unit;
+        tmp16 = runtime.Unit;
       }
-      tmp18 = tmp17;
+      tmp17 = tmp16;
     } else {
-      tmp18 = runtime.Unit;
+      tmp17 = runtime.Unit;
     }
     return msg
   } 

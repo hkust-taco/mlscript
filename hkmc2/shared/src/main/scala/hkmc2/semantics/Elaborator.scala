@@ -181,7 +181,6 @@ object Elaborator:
         val plus_impl = assumeObject("plus_impl")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
-        val getLocals = assumeObject("getLocals")
       object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
