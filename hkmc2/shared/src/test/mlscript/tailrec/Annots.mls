@@ -28,7 +28,7 @@ fun g = 2
 //│ ═══[WARNING] This annotation has no effect.
 
 fun test =
-  @tailcall f
+  @tailcall test
 
 :w
 let f = 0
@@ -45,6 +45,9 @@ class A with
   @tailrec
   fun f() = g()
   fun g() = f()
+//│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
+//│ ║  l.46: 	  fun f() = g()
+//│ ╙──      	      ^
 
 :w
 class A with
@@ -57,6 +60,9 @@ class A
 module A with
   @tailrec
   fun f = 2
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.62: 	  fun f = 2
+//│ ╙──      	      ^
 
 :w
 class A
@@ -77,5 +83,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.77: 	  @tailcall 1 + 2
+//│ ║  l.83: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^

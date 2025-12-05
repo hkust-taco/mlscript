@@ -27,17 +27,16 @@ class TailRecOpt(using State, TL, Raise):
   object TailCallShape:
     def unapply(b: Block): Opt[(TermSymbol, Call)] = b match
       case Return(c @ CallToFun(r), _) => S((r, c))
-      case Assign(a, c @ CallToFun(r), Return(b, _)) if a == b => S((r, c))
+      case Assign(a, c @ CallToFun(r), Return(Value.Ref(b, _), _)) if a === b => S((r, c))
       case _ => N
     
   
-  sealed abstract class CallEdge:
+  enum CallEdge:
     val f1: TermSymbol
     val f2: TermSymbol
     val call: Call
-  
-  case class TailCall(f1: TermSymbol, f2: TermSymbol)(val call: Call) extends CallEdge
-  case class NormalCall(f1: TermSymbol, f2: TermSymbol)(val call: Call) extends CallEdge
+    case TailCall(f1: TermSymbol, f2: TermSymbol)(val call: Call)
+    case NormalCall(f1: TermSymbol, f2: TermSymbol)(val call: Call)
   
   class CallFinder(f: FunDefn) extends BlockTraverserShallow:
     
@@ -55,7 +54,7 @@ class TailRecOpt(using State, TL, Raise):
         edges
     
     override def applyBlock(b: Block): Unit = b match
-      case TailCallShape(r, c) => edges ::= TailCall(f.dSym, r)(c)
+      case TailCallShape(r, c) => edges ::= CallEdge.TailCall(f.dSym, r)(c)
       case Return(c: Call, _) =>
         if c.explicitTailCall then
           raise(ErrorReport(msg"Only direct calls in tail position may be marked @tailcall." -> c.toLoc :: Nil))
@@ -66,7 +65,7 @@ class TailRecOpt(using State, TL, Raise):
         if c.explicitTailCall then
           raise(ErrorReport(msg"This call is not in tail position." -> c.toLoc :: Nil))
         c match
-          case CallToFun(r) => edges ::= NormalCall(f.dSym, r)(c)
+          case CallToFun(r) => edges ::= CallEdge.NormalCall(f.dSym, r)(c)
           case _ =>
       case _ => super.applyResult(r)
   
@@ -84,7 +83,7 @@ class TailRecOpt(using State, TL, Raise):
     val cg = buildCallGraph(fs).filter: c =>
       val cond = defnSyms.contains(c.f1) && defnSyms.contains(c.f2)
       c.match
-        case c: TailCall if c.call.explicitTailCall && !cond =>
+        case c: CallEdge.TailCall if c.call.explicitTailCall && !cond =>
           raise(ErrorReport(
             msg"This tail call exits the current scope is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
@@ -101,13 +100,13 @@ class TailRecOpt(using State, TL, Raise):
       .groupBy: c =>
         val s1 = sccMap(c.f1)
         val s2 = sccMap(c.f2)
-        if s1 != s2 && c.call.explicitTailCall then
+        if s1 =/= s2 && c.call.explicitTailCall then
           raise(ErrorReport(
             msg"This call is not optimized as it does not directly recurse through its parent function." -> c.call.toLoc :: Nil))
           -1
         else s1
       .filter:
-        (id, _) => id != -1
+        (id, _) => id =/= -1
     
     sccs.sccs.toList.map: v =>
       val (id, tss) = v
@@ -166,16 +165,21 @@ class TailRecOpt(using State, TL, Raise):
       case _ => return N
     S(ret)
     
-  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol]): List[FunDefn] =
-    val nonTailCalls = scc.calls
+  def optScc(scc: SccOfCalls, owner: Opt[InnerSymbol]): (Opt[FunDefn], List[FunDefn]) =
+    // remove calls which don't flow into this scc
+    val fSyms = scc.funs.map(_.dSym).toSet
+    
+    val calls = scc.calls.filter(c => fSyms.contains(c.f2)) 
+    
+    val nonTailCalls = calls
       .collect:
-        case c: NormalCall => c.f2 -> c.call
+        case c: CallEdge.NormalCall => c.f2 -> c.call
       .toMap
     
-    if nonTailCalls.size == scc.calls.length then
+    if nonTailCalls.size === calls.length then
       for f <- scc.funs if f.isTailRec do
         raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
-      return scc.funs
+      return (N, scc.funs)
     
     if !nonTailCalls.isEmpty then
       for f <- scc.funs if f.isTailRec do
@@ -191,22 +195,22 @@ class TailRecOpt(using State, TL, Raise):
 
     val maxParamLen = maxInt(scc.funs, paramsLen)
     val paramSyms =
-        if scc.funs.length == 1 then (getParamSyms(scc.funs.head))
+        if scc.funs.length === 1 then (getParamSyms(scc.funs.head))
         else
           for i <- 0 to maxParamLen - 1 yield VarSymbol(Tree.Ident("param" + i))
       .toList
     val paramSymsArr = ArrayBuffer.from(paramSyms)
     val dSymIds = scc.funs.map(_.dSym).zipWithIndex.toMap
     val bms =
-      if scc.funs.size == 1 then scc.funs.head.sym
+      if scc.funs.size === 1 then scc.funs.head.sym
       else BlockMemberSymbol(scc.funs.map(_.sym.nme).mkString("_"), Nil, true)
     val dSym =
-      if scc.funs.size == 1 then scc.funs.head.dSym
+      if scc.funs.size === 1 then scc.funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
     val loopSym = TempSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
     
-    class FunRewriter(f: FunDefn) extends BlockTransformer(SymbolSubst()):
+    class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst()):
       val params = getParamSyms(f)
       val paramsSet = f.params.toSet
       val paramsIdxes = params.zipWithIndex.toMap
@@ -225,11 +229,13 @@ class TailRecOpt(using State, TL, Raise):
             val argVals = rewriteCallArgs(f, c) match
               case Some(value) => value
               case None => return super.applyBlock(b)
-            val cont = Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(dSym))), Continue(loopSym))
+            val cont =
+              if scc.funs.size === 1 then Continue(loopSym)
+              else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(dSym))), Continue(loopSym))
             paramSyms.zip(argVals).foldRight[Block](cont):
-              case ((sym, res), acc) => res match
-                case Value.Ref(`sym`, _) => acc
-                case _ => applyResult(res)(Assign(sym, _, acc))
+              case ((sym, res), acc) => applyResult(res)(Assign(sym, _, acc)) match
+                case Assign(sym, Value.Ref(sym1, _), rest) if sym === sym1 => rest
+                case x => x
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
     
@@ -237,7 +243,7 @@ class TailRecOpt(using State, TL, Raise):
       Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).applyBlock(f.body)
     
     val switch = 
-      if arms.length == 1 then arms.head._2
+      if arms.length === 1 then arms.head._2
       else Match(curIdSym.asPath, arms, N, End())
     
     val loop = Label(loopSym, true, switch, End())
@@ -247,7 +253,7 @@ class TailRecOpt(using State, TL, Raise):
       case None => Value.Ref(bms, S(dSym))
     
     val rewrittenFuns =
-      if scc.funs.size == 1 then Nil
+      if scc.funs.size === 1 then Nil
       else scc.funs.map: f =>
         val paramArgs = getParamSyms(f).map(_.asPath.asArg)
         val args = 
@@ -262,17 +268,22 @@ class TailRecOpt(using State, TL, Raise):
     
     val params =
       val initial = paramSyms.map(Param.simple(_))
-      if scc.funs.length == 1 then initial
+      if scc.funs.length === 1 then initial
       else Param.simple(curIdSym) :: initial
-      
-    FunDefn(
+    
+    val loopDefn = FunDefn(
       owner, bms, dSym,
       PlainParamList(params) :: Nil,
-      loop
-    )(false) :: rewrittenFuns
+      loop)(false)
+    
+    if scc.funs.size === 1 then (N, loopDefn :: Nil)
+    else (S(loopDefn), rewrittenFuns)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
-    partFns(fs).flatMap(optScc(_, owner))
+    partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
+      case ((newFns, fns), (newFnOpt, fns_)) => newFnOpt match
+        case Some(value) => (value :: newFns, fns_ ::: fns)
+        case None => (newFns, fns_ ::: fns)
   
   def reportClassesTailrec(c: ClsLikeDefn) =
     new BlockTraverserShallow():
@@ -285,19 +296,23 @@ class TailRecOpt(using State, TL, Raise):
           raise(ErrorReport(msg"Calls from class methods cannot yet be marked @tailcall." -> c.toLoc :: Nil))
         case _ => super.applyResult(r)
   
+  def optFunctionsFlat(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
+    val (a, b) = optFunctions(fs, owner)
+    a ::: b
+    
   def optClasses(cs: List[ClsLikeDefn]) = cs.map: c =>
     // Class methods cannot yet be optimized as they cannot yet be marked final.
     
     if c.k is syntax.Cls then
       reportClassesTailrec(c)
       val companion = c.companion.map: comp =>
-        val cMtds = optFunctions(comp.methods, S(comp.isym))
+        val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
       c.copy(companion = companion)
     else
-      val mtds = optFunctions(c.methods, S(c.isym))
+      val mtds = optFunctionsFlat(c.methods, S(c.isym))
       val companion = c.companion.map: comp =>
-        val cMtds = optFunctions(comp.methods, S(comp.isym))
+        val cMtds = optFunctionsFlat(comp.methods, S(comp.isym))
         comp.copy(methods = cMtds)
       c.copy(methods = mtds, companion = companion)
   
@@ -309,7 +324,26 @@ class TailRecOpt(using State, TL, Raise):
           case f: FunDefn => (f :: fs, cs)
           case c: ClsLikeDefn => (fs, c :: cs)
           case _ => (fs, cs) // unreachable as floatOutDefns only floats out FunDefns and ClsLikeDefns
-    val bod1 = optFunctions(funs, N).foldLeft(blk):
+    val (optFNew, optF) = optFunctions(funs, N)
+    val optC = optClasses(clses)
+    
+    val fMap = optF.map(f => f.dSym -> f).toMap
+    // Scala needs this annotation to type check for some reason
+    val cMap: Map[DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol, ClsLikeDefn] =
+      optC.map(c => c.isym -> c).toMap
+    
+    // replace them in place 
+    val transformer = new BlockTransformerShallow(SymbolSubst()):
+      override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+        case f: FunDefn => fMap.get(f.dSym) match
+          case Some(value) => k(value)
+          case None => k(f)
+        
+        case c: ClsLikeDefn => cMap.get(c.isym) match
+          case Some(value) => k(value)
+          case None => k(c)
+        
+        case _ => super.applyDefn(defn)(k)
+    
+    optFNew.foldLeft(transformer.applyBlock(b)):
       case (acc, f) => Define(f, acc)
-    optClasses(clses).foldLeft(bod1):
-      case (acc, c) => Define(c, acc)

@@ -41,7 +41,7 @@ object Config:
     target = CompilationTarget.JS,
     rewriteWhileLoops = true,
     stageCode = false,
-    tailRecOpt = false,
+    tailRecOpt = true,
   )
   
   case class SanityChecks(light: Bool)

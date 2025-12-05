@@ -6,6 +6,8 @@
 :silent
 import "fs"
 
+:noTailRec
+
 :...
 //│ ————————————————————————————————————————————————————————————————————————————————
 fun rqpart(le, x, ys, rle, rgt, r) = if ys is
@@ -573,5 +575,9 @@ print(nofibListToString(testMate_nofib(0)))
 //│ >  if K-K7; 2. N/QR2-QN4,
 //│ >   if K-Q7; 3. Q/QN1-K1++
 //│ >   if K-K6; 3. Q/QN1-Q3++
-//│ >  if P/QN6xN/QR7; 2. Q/QN1-QB2, ...; 3. B/KR4-KB2++
+//│ >   if K-K6; 3. Q/QN1-Q3++
+//│ >  if K-K7; 2. N/QR2-QN4,
+//│ >   if K-Q7; 3. Q/QN1-K1++
+//│ >   if K-K6; 3. Q/QN1-Q3++
+//│ >   if K-K6; 3. Q/QN1-Q3++
 //│ > 

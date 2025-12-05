@@ -2,6 +2,7 @@
 :llir
 :cpp
 :intl
+:noTailRec // The LLIR lowering does not yet support Label blocks
 
 //│ 
 //│ Interpreted:
