@@ -74,7 +74,7 @@ A.sum(20000)
 //│   static sum_impl(n, acc) {
 //│     let scrut, tmp, tmp1;
 //│     loopLabel: while (true) {
-//│       scrut = n == 0;
+//│       scrut = Predef.equals(n, 0);
 //│       if (scrut === true) {
 //│         return acc
 //│       } else {

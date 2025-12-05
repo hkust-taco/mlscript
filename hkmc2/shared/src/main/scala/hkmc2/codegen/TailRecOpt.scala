@@ -220,7 +220,10 @@ class TailRecOpt(using State, TL, Raise):
         case _ => l
       
       override def applyValue(v: Value)(k: Value => Block): Block = v match
-        case Value.Ref(l: VarSymbol, d) => k(Value.Ref(applyVarSym(l), d))
+        case Value.Ref(l: VarSymbol, d) => 
+          val s = applyVarSym(l)
+          if s is l then k(v)
+          else k(Value.Ref(s, d))
         case _ => super.applyValue(v)(k)
       
       override def applyBlock(b: Block): Block = b match
