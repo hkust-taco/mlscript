@@ -319,10 +319,14 @@ class TailRecOpt(using State, TL, Raise):
     else (S(loopDefn), rewrittenFuns)
   
   def optFunctions(fs: List[FunDefn], owner: Opt[InnerSymbol]) =
-    partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
+    val (newFsOpt, fsOpt) = partFns(fs).map(optScc(_, owner)).foldLeft[(List[FunDefn], List[FunDefn])](Nil, Nil):
       case ((newFns, fns), (newFnOpt, fns_)) => newFnOpt match
         case Some(value) => (value :: newFns, fns_ ::: fns)
         case None => (newFns, fns_ ::: fns)
+    // preserve the order of function defns
+    val fMap = fsOpt.map(f => (f.dSym, f)).toMap
+    val fsRet = fs.map(f => fMap(f.dSym))
+    (newFsOpt, fsRet)
   
   def reportClassesTailrec(c: ClsLikeDefn) =
     new BlockTraverserShallow():
