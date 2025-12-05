@@ -179,7 +179,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       d match
       case td: TermDefinition =>
         reportAnnotations(td, td.extraAnnotations)
-        if td.owner.isEmpty then loweringCtx.collectScopedSym(td.sym)
+        if td.owner.isEmpty && td.hasDeclareModifier.isEmpty then
+          loweringCtx.collectScopedSym(td.sym)
         td.body match
         case N => // abstract declarations have no lowering
           blockImpl(stats, res)(k)
@@ -304,7 +305,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case S(ext) =>
           assert(k isnt syntax.Mod) // modules can't extend things and can't have super calls
           subTerm(ext.cls): clsp =>
-            val pctor = parentConstructor(ext.cls, ext.args)
+            val pctor = inScopedBlock(parentConstructor(ext.cls, ext.args))
             Define(
               ClsLikeDefn(
                 defn.owner, defn.sym, defn.bsym, defn.kind, defn.paramsOpt, defn.auxParams, S(clsp),
@@ -483,7 +484,11 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
             loweringCtx.collectScopedSym(lamSym)
-            val lamDef = FunDefn.withFreshSymbol(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(isTailRec = false)
+            val lamDef = FunDefn.withFreshSymbol(
+              N,
+              lamSym,
+              PlainParamList(Nil) :: Nil,
+              inScopedBlock(returnedTerm(arg2)))(isTailRec = false)
             Define(
               lamDef,
               k(Call(

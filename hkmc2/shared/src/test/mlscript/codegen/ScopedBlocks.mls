@@ -425,3 +425,36 @@ fun f(x) =
 //│   tmp4 = tmp3 !== runtime.LoopEnd;
 //│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
 //│ };
+
+
+
+data class Bar(x)
+
+:sjs
+data class Baz(z) extends Bar(z * 1) with
+  val k = 1 + 2 + 3
+  fun baz = this.bar * 2
+//│ JS (unsanitized):
+//│ let Baz1;
+//│ Baz1 = function Baz(z) {
+//│   return globalThis.Object.freeze(new Baz.class(z));
+//│ };
+//│ globalThis.Object.freeze(class Baz extends Bar1.class {
+//│   static {
+//│     Baz1.class = this
+//│   }
+//│   constructor(z) {
+//│     let tmp2, tmp3, tmp4;
+//│     tmp4 = z * 1;
+//│     super(tmp4);
+//│     this.z = z;
+//│     tmp2 = 1 + 2;
+//│     tmp3 = tmp2 + 3;
+//│     this.k = tmp3;
+//│   }
+//│   get baz() {
+//│     return this.bar * 2;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
+//│ });

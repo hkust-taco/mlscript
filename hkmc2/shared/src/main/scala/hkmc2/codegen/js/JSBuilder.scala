@@ -303,8 +303,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             
             val privs = mkPrivs(pubFlds, privFlds, mtdPrefix, isym)
             
-            val preCtorCode = body(preCtor, true)
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}${
+            // when both `preCtor` and `ctor` are `Scoped` blocks
+            // the `Begin` constructor can merge them 
+            val ctorCode = doc"${body(Begin(preCtor, ctor), endSemi = true)}${
                 kind match
                 case syntax.Obj =>
                   doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")}"

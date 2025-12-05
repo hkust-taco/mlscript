@@ -16,13 +16,14 @@ x
 
 val x
 
-
+// with Scoped blocks, `x` is declared
 // :ge
 x
 
 
 val x: Int
 
+// with Scoped blocks, `x` is declared
 // :ge
 x
 

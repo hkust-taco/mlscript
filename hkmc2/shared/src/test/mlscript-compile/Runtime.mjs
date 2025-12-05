@@ -427,9 +427,10 @@ globalThis.Object.freeze(class Runtime {
     throw globalThis.Error("unreachable");
   } 
   static checkArgs(functionName, expected, isUB, got) {
-    let scrut, name, scrut1, scrut2, tmp, lambda, lambda1, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
+    let scrut, name, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
     tmp = got < expected;
     lambda = (undefined, function () {
+      let lambda1;
       lambda1 = (undefined, function () {
         return got > expected
       });

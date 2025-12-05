@@ -51,7 +51,7 @@ b is String
 data class Baz(z) extends Bar(z * 1) with
   fun baz = this.bar * 2
 //│ JS (unsanitized):
-//│ let Baz1, tmp;
+//│ let Baz1;
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
 //│ };
@@ -60,6 +60,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
+//│     let tmp;
 //│     tmp = z * 1;
 //│     super(tmp);
 //│     this.z = z;
@@ -99,8 +100,8 @@ data class Barr(x: Int)(y: Int) with
 data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
   fun g = z
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.99: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
-//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	data class Bazz(z: Int) extends Bar(z % 10)(z / 10) with
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^
 
 :todo
 Bazz(42).f
@@ -110,7 +111,7 @@ Bazz(42).f
 new Barr(40)(2) with
   fun f = 43
 //│ ╔══[COMPILATION ERROR] Extending a class with multiple parameter lists is not supported
-//│ ║  l.110: 	new Barr(40)(2) with
+//│ ║  l.111: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^^
 //│ = fun
 
