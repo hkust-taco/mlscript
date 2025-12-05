@@ -300,10 +300,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.301: 	  then 0(0)
+//│ ║  l.300: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.300: 	while print("Hello World"); false
+//│ ║  l.299: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -313,12 +313,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.313: 	while { print("Hello World"), false }
+//│ ║  l.312: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.314: 	  then 0(0)
+//│ ║  l.313: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.315: 	  else 1
+//│ ║  l.314: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -328,14 +328,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.327: 	    print("Hello World")
+//│ ║  l.326: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.328: 	    false
+//│ ║  l.327: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.329: 	  then 0(0)
+//│ ║  l.328: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.330: 	  else 1
+//│ ║  l.329: 	  else 1
 //│ ╙──       	  ^^^^
 
 

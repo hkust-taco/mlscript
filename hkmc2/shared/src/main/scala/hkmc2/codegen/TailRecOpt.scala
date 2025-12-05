@@ -232,10 +232,41 @@ class TailRecOpt(using State, TL, Raise):
             val cont =
               if scc.funs.size === 1 then Continue(loopSym)
               else Assign(curIdSym, Value.Lit(Tree.IntLit(dSymIds(dSym))), Continue(loopSym))
-            paramSyms.zip(argVals).foldRight[Block](cont):
-              case ((sym, res), acc) => applyResult(res)(Assign(sym, _, acc)) match
-                case Assign(sym, Value.Ref(sym1, _), rest) if sym === sym1 => rest
+            
+            // In some cases, we could have assignments like this:
+            // param0 = whatever
+            // param1 = <a result containing param0>
+            // which means param1's value is incorrect.
+            // We should thus assign the params to temporary symbols
+            // if they are needed for a subsequent assignment.
+            var assignedSyms: Map[VarSymbol, TempSymbol] = paramSyms.map:
+                case sym => sym -> TempSymbol(N, sym.nme + "_tmp")
+              .toMap
+            var requiredTmps: Set[(VarSymbol, TempSymbol)] = Set.empty
+            
+            val paramRewriter = new BlockDataTransformer(SymbolSubst()):
+              override def applyValue(v: Value)(k: Value => Block): Block = v match
+                case Value.Ref(l: VarSymbol, disamb) => assignedSyms.get(l) match
+                  case S(v) =>
+                    requiredTmps += (l, v)
+                    k(Value.Ref(v, disamb))
+                  case _ => super.applyValue(v)(k)
+                case _ => super.applyValue(v)(k)
+              
+            // remove symbols from assignedSyms as we encounter them
+            // note that foldRight will call the function right to left
+            val assigns = paramSyms.zip(argVals).foldRight[Block](cont): (v, acc) =>
+              val (sym, res) = v
+              assignedSyms -= sym
+              val ret = applyResult(res)(Assign(sym, _, acc)) match
+                case Assign(sym, res, rest) => paramRewriter.applyResult(res)(Assign(sym, _, rest)) match
+                  case Assign(sym, Value.Ref(sym1, _), rest) if sym === sym1 => rest
+                  case x => x
                 case x => x
+              ret
+            // bind the tmps
+            requiredTmps.toList.foldRight(assigns):
+              case ((v, l), acc) => Assign(l, Value.Ref(v), acc)
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
     
