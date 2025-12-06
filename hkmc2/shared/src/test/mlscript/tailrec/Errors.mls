@@ -80,3 +80,15 @@ module A with
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
 //│ ║  l.79: 	  fun f() = 2
 //│ ╙──      	      ^
+
+:w
+@tailrec
+fun foo() = Foo.bar()
+module Foo with
+  fun bar() = foo()
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.86: 	fun foo() = Foo.bar()
+//│ ╙──      	    ^^^
+
+
+

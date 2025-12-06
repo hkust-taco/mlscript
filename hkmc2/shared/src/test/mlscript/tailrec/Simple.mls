@@ -1,0 +1,50 @@
+:js
+
+
+:sjs
+@tailrec
+fun f = f
+//│ JS (unsanitized):
+//│ let f; f = function f() { loopLabel: while (true) { continue loopLabel; break; } };
+
+:fixme
+module Foo with
+  @tailrec
+  fun bar = bar
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.13: 	  fun bar = bar
+//│ ╙──      	      ^^^
+
+@tailrec
+fun f() = f()
+
+module Foo with
+  @tailrec
+  fun bar() = bar()
+
+fun f(x) = f(x + 1)
+
+:sjs
+fun f(x) = f(f(x) + 1)
+//│ JS (unsanitized):
+//│ let f3;
+//│ f3 = function f(x) {
+//│   let tmp, tmp1;
+//│   loopLabel: while (true) { tmp = f3(x); tmp1 = tmp + 1; x = tmp1; continue loopLabel; break; }
+//│ };
+
+module A with
+  fun f(x) = @tailcall f(f(x) + 1)
+
+
+:fixme // TODO: support
+module A with
+  @tailrec
+  fun f(x) = B.g(x + 1)
+module B with
+  fun g(x) = A.f(x * 2)
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.43: 	  fun f(x) = B.g(x + 1)
+//│ ╙──      	      ^
+
+

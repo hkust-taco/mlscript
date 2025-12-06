@@ -254,7 +254,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               case (sym, params, split) =>
                 val paramLists = params :: Nil
                 val bodyBlock = ucs.Normalization(this)(split)(Ret)
-                FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(isTailRec = false)
+                FunDefn.withFreshSymbol(N, sym, paramLists, bodyBlock)(forceTailRec = false)
             // The return type is intended to be consistent with `gatherMembers`
             (mtds, Nil, Nil, End())
           case _ => gatherMembers(defn.body)
@@ -468,7 +468,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           val isOr = sym is State.orSymbol
           if isAnd || isOr then
             val lamSym = BlockMemberSymbol("lambda", Nil, false)
-            val lamDef = FunDefn.withFreshSymbol(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(isTailRec = false)
+            val lamDef = FunDefn.withFreshSymbol(N, lamSym, PlainParamList(Nil) :: Nil, returnedTerm(arg2))(forceTailRec = false)
             Define(
               lamDef,
               k(Call(
@@ -599,7 +599,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       then k(Lambda(paramLists.head, bodyBlock))
       else
         val lamSym = new BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(isTailRec = false)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, paramLists, bodyBlock)(forceTailRec = false)
         Define(
           lamDef,
           k(lamDef.asPath))
@@ -939,7 +939,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       case p: Path => k(p)
       case Lambda(params, body) =>
         val lamSym = BlockMemberSymbol("lambda", Nil, false)
-        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(isTailRec = false)
+        val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(forceTailRec = false)
         Define(lamDef, k(lamDef.asPath))
       case r =>
         val l = new TempSymbol(N)

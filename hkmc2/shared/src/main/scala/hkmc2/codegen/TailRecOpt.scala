@@ -45,7 +45,7 @@ class TailRecOpt(using State, TL, Raise):
     def find =
       // Ignore functions with multiple parameter lists
       if f.params.length > 1 then
-        if f.isTailRec then
+        if f.forceTailRec then
           raise(ErrorReport(msg"Functions with more than one parameter list may not be marked @tailrec." -> f.dSym.toLoc :: Nil))
         Nil
       else
@@ -177,14 +177,14 @@ class TailRecOpt(using State, TL, Raise):
       .collect:
         case c: CallEdge.NormalCall => c.f2 -> c.call
     val nonTailCalls = nonTailCallsLs.toMap
-
-    if nonTailCallsLs.size === calls.length then
-      for f <- funs if f.isTailRec do
+    
+    if nonTailCallsLs.sizeCompare(calls) === 0 then
+      for f <- funs if f.forceTailRec do
         raise(WarningReport(msg"This function does not directly self-recurse, but is marked @tailrec." -> f.dSym.toLoc :: Nil))
       return (N, funs)
     
     if !nonTailCalls.isEmpty then
-      for f <- funs if f.isTailRec do
+      for f <- funs if f.forceTailRec do
         val reportLoc = nonTailCalls.get(f.dSym) match
           // always display a call to f, if possible
           case Some(value) => value.toLoc 
@@ -334,7 +334,7 @@ class TailRecOpt(using State, TL, Raise):
     new BlockTraverserShallow():
       for f <- c.methods do
         applyBlock(f.body)
-        if f.isTailRec then
+        if f.forceTailRec then
           raise(ErrorReport(msg"Class methods may not yet be marked @tailrec." -> f.dSym.toLoc :: Nil))
       override def applyResult(r: Result): Unit = r match
         case c: Call if c.explicitTailCall =>

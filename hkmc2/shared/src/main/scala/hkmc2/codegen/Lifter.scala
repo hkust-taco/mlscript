@@ -943,7 +943,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
 
           val newDef = FunDefn(
             base.owner, f.sym, f.dSym, PlainParamList(extraParams) :: f.params, f.body
-          )(f.isTailRec)
+          )(f.forceTailRec)
           val Lifted(lifted, extras) = liftDefnsInFn(newDef, newCtx)
 
           val args1 = extraParamsCpy.map(p => p.sym.asPath.asArg)
@@ -953,7 +953,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false, false)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, f.dSym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)(false)
-          val auxDefn = FunDefn(N, singleCallBms.b, singleCallBms.d, flatPlist, lifted.body)(isTailRec = f.isTailRec)
+          val auxDefn = FunDefn(N, singleCallBms.b, singleCallBms.d, flatPlist, lifted.body)(forceTailRec = f.forceTailRec)
           
           if ctx.firstClsFns.contains(f.sym) then
             Lifted(mainDefn, auxDefn :: extras)
@@ -1186,7 +1186,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case value => S(value.copy(methods = cMethods, ctor = newCCtor.get))
 
     val extras = (ctorDefnsLifted ++ fExtra ++ cfExtra ++ ctorIgnoredExtra).map:
-      case f: FunDefn => f.copy(owner = N)(isTailRec = f.isTailRec)
+      case f: FunDefn => f.copy(owner = N)(forceTailRec = f.forceTailRec)
       case c: ClsLikeDefn => c.copy(owner = N)
       case d => d
 
@@ -1251,7 +1251,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val transformed = BlockRewriter(ctx.inScopeISyms, captureCtx.addreplacedDefns(ignoredRewrite)).applyBlock(blk)
 
     if thisVars.reqCapture.size == 0 then
-      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, transformed)(isTailRec = f.isTailRec), newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, transformed)(forceTailRec = f.forceTailRec), newDefns)
     else
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
@@ -1262,7 +1262,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
         .rest(transformed)
-      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(isTailRec = f.isTailRec), captureCls :: newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(forceTailRec = f.forceTailRec), captureCls :: newDefns)
 
   end liftDefnsInFn
 
