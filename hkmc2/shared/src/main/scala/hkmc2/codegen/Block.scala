@@ -29,10 +29,15 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
-  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks
-    * so that `Scoped` blocks' vars can be seen in the output js code;
-    * otherwise `blockPreamble` allocates all the `definedVars` such that
-    * we cannot see and test vars generated because of the existence of the `Scoped` blocks */
+  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks.
+    * It is used in JSBuilder now: names are allocated in JSBuilder for these `definedVarsNoScoped` symbols.
+    * This is needed now because
+    *   - there are symbols that are not collected in the `Scoped` blocks (due to later passes),
+    *     and they still need to be allocated a name in JSBuilder
+    *   - if we don't exlude the `Scoped` symbols, they may be allocated a name
+    *     prematurely and decalred in wrong places, e.g. symbols inside while bodies
+    *     may be declared in an outer level
+    */
   lazy val definedVarsNoScoped: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
