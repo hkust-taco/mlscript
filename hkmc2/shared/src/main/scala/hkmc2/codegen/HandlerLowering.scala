@@ -460,8 +460,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               S(Value.Ref(isym)), s"${sym.nme}#${f.sym.nme}")
             debugInfos += debugInfoSym -> debugInfo
             fun2
-          val blk = Begin(preCtor, ctor)
-          val newCtor = translateTrivialOrTopLevel(blk)
           val companion2 = companion.map: bod =>
             val newMtds = bod.methods.map: f =>
               val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, Value.Ref(bod.isym).sel(new Tree.Ident(f.sym.nme), f.sym.asTrm.get),
@@ -470,7 +468,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               fun2
             val newCtor = translateTrivialOrTopLevel(bod.ctor)
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor)
-          val c2 = ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields, End(), newCtor, companion2, bufferable)
+          val c2 = ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields, translateTrivialOrTopLevel(preCtor), translateTrivialOrTopLevel(ctor), companion2, bufferable)
           if opt.debug then
             debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2), blk)
