@@ -70,6 +70,46 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   val lowerHandlers: Bool = config.effectHandlers.isDefined
   val lift: Bool = config.liftDefns.isDefined
 
+  private lazy val wasmBinaryIntrinsicMap: Map[Str, Str] = Map(
+    "+" -> "plus_impl",
+    "-" -> "minus_impl",
+    "*" -> "times_impl",
+    "/" -> "div_impl",
+    "%" -> "mod_impl",
+    "===" -> "eq_impl",
+    "!==" -> "neq_impl",
+    "<" -> "lt_impl",
+    "<=" -> "le_impl",
+    ">" -> "gt_impl",
+    ">=" -> "ge_impl"
+  )
+  private lazy val wasmUnaryIntrinsicMap: Map[Str, Str] = Map(
+    "-" -> "neg_impl",
+    "+" -> "pos_impl",
+    "!" -> "not_impl"
+  )
+  private def wasmIntrinsicPath(sym: BuiltinSymbol, unary: Bool): Opt[Path] =
+    if config.target is CompilationTarget.Wasm then
+      val map = if unary then wasmUnaryIntrinsicMap else wasmBinaryIntrinsicMap
+      map.get(sym.nme).map(name => Value.Ref(State.wasmSymbol).selN(Tree.Ident(name)))
+    else N
+  private lazy val wasmIntrinsicSymbols: Set[BlockMemberSymbol] = Set(
+    ctx.builtins.wasm.plus_impl,
+    ctx.builtins.wasm.minus_impl,
+    ctx.builtins.wasm.times_impl,
+    ctx.builtins.wasm.div_impl,
+    ctx.builtins.wasm.mod_impl,
+    ctx.builtins.wasm.eq_impl,
+    ctx.builtins.wasm.neq_impl,
+    ctx.builtins.wasm.lt_impl,
+    ctx.builtins.wasm.le_impl,
+    ctx.builtins.wasm.gt_impl,
+    ctx.builtins.wasm.ge_impl,
+    ctx.builtins.wasm.neg_impl,
+    ctx.builtins.wasm.pos_impl,
+    ctx.builtins.wasm.not_impl
+  )
+
   lazy val unreachableFn =
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(N)
   
@@ -457,7 +497,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             msg"Builtin '${sym.nme}' is not a unary operator" -> t.toLoc :: Nil, S(arg),
             source = Diagnostic.Source.Compilation)
         subTerm(arg): ar =>
-          k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar) :: Nil)(true, false, false))
+          val target = wasmIntrinsicPath(sym, unary = true)
+            .getOrElse(Value.Ref(sym).withLocOf(ref))
+          k(Call(target, Arg(N, ar) :: Nil)(true, false, false))
       case st.Tup(Fld(FldFlags.benign(), arg1, N) :: Fld(FldFlags.benign(), arg2, N) :: Nil) =>
         if !sym.binary then raise:
           ErrorReport(
@@ -477,7 +519,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               )(true, false, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
-              k(Call(Value.Ref(sym).withLocOf(ref), Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false, false))
+              val target = wasmIntrinsicPath(sym, unary = false)
+                .getOrElse(Value.Ref(sym).withLocOf(ref))
+              k(Call(target, Arg(N, ar1) :: Arg(N, ar2) :: Nil)(true, false, false))
       case _ => fail:
         ErrorReport(
           msg"Unexpected arguments for builtin symbol '${sym.nme}'" -> arg.toLoc :: Nil, S(arg),
@@ -510,9 +554,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("shl")))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.js.try_catch) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("try_catch")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.wasm.plus_impl) =>
-        conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("plus_impl")))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.Int31) =>
+      case t if t.resolvedSym.exists {
+        case sym: BlockMemberSymbol => wasmIntrinsicSymbols.contains(sym)
+        case _ => false
+      } =>
+        val sym = t.resolvedSym.get.asInstanceOf[BlockMemberSymbol]
+        conclude(Value.Ref(State.wasmSymbol).selN(Tree.Ident(sym.nme)))
+      case t if t.resolvedSym.exists(_ is ctx.builtins.Int31) =>
         conclude(Value.Ref(State.runtimeSymbol).selN(Tree.Ident("Int31")))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.debug.printStack) =>
         if !config.effectHandlers.exists(_.debug) then
