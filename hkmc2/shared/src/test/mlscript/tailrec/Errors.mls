@@ -81,7 +81,7 @@ module A with
 //│ ║  l.79: 	  fun f() = 2
 //│ ╙──      	      ^
 
-:w
+:fixme // TODO: support
 @tailrec
 fun foo() = Foo.bar()
 module Foo with
