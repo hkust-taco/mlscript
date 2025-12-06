@@ -23,6 +23,12 @@ object HandlerLowering:
   private val nextIdent: Tree.Ident = Tree.Ident("next")
   private val lastIdent: Tree.Ident = Tree.Ident("last")
   private val contTraceIdent: Tree.Ident = Tree.Ident("contTrace")
+  private def unit = Value.Lit(Tree.UnitLit(true))
+  private def intLit(i: BigInt) = Value.Lit(Tree.IntLit(i))
+
+  private def locToStr(loc: Loc) =
+    val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
+    Value.Lit(Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col"))
   
   extension (p: Path)
     def pc = p.selN(pcIdent)
@@ -49,9 +55,22 @@ object HandlerLowering:
       thisPath: Option[Path],
       plCnt: Int,
       currentLocals: List[Local],
+      currentStackSafetySym: Option[FnOrCls],
       debugInfo: DebugInfo,
   ):
     def isTopLevel = currentFun.isEmpty
+    def doUnwind(res: Path, stateId: BigInt)(using paths: HandlerPaths) =
+      Return(Call(paths.unwindPath, (
+        res ::
+        intLit(plCnt) ::
+        currentFun.get ::
+        debugInfo.debugInfoPath ::
+        res.toLoc.fold(unit)(locToStr(_)) ::
+        intLit(stateId) ::
+        thisPath.getOrElse(unit) ::
+        intLit(currentLocals.length) ::
+        currentLocals.map(_.asPath)
+      ).map(_.asArg))(true, true), false)
   
   // inScopeLocals: Local variables that are in scope, including those that come from outer.
   // prevLocalsFn: The function that gets the outer function's locals.
@@ -89,18 +108,8 @@ class HandlerPaths(using Elaborator.State):
   val resumePc: Path = runtimePath.selSN("resumePc")
 
 class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
-
-  private def funcLikeHandlerCtx(funcPath: Path, thisPath: Option[Path], debugNme: Str, plCnt: Int, debugInfoPath: Path, scopedLocals: List[Local])(using h: HandlerCtx) =
-    HandlerCtx(S(funcPath), thisPath, plCnt, scopedLocals, h.debugInfo.nest(debugNme, debugInfoPath, scopedLocals))
-  private def topLevelCtx(nme: Str, debugNme: Str, curLocals: Set[Local]) =
-    HandlerCtx(N, N, 0, curLocals.toList, DebugInfo.topLevel(debugNme, curLocals))
-  private def ctorCtx(bms: BlockMemberSymbol, cls: ClassSymbol, debugNme: Str, plCnt: Int, debugInfoPath: Path, scopedLocals: List[Local])(using h: HandlerCtx) =
-    HandlerCtx(N, N, 0, scopedLocals, h.debugInfo.nest(debugNme, debugInfoPath, scopedLocals))
-    // funcLikeHandlerCtx(Value.Ref(bms, S(cls)), S(Value.Ref(cls)), debugNme, 0, curLocals)
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
-  private def intLit(i: BigInt) = Value.Lit(Tree.IntLit(i))
-  private def unit = Value.Lit(Tree.UnitLit(true))
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
@@ -128,8 +137,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _ => N
   
   private class FreshId:
-    // IMPORTANT: this must be >= 1 otherwise we get state ID collions with the "entry" state 0.
-    var id: Int = 1
+    var id: Int = 0
     def apply() =
       val tmp = id
       id += 1
@@ -262,17 +270,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           .ifthen(
             sym.asPath,
             Case.Cls(paths.effectSigSym, paths.effectSigPath),
-            Return(Call(paths.unwindPath, (
-              sym.asPath ::
-              intLit(h.plCnt) ::
-              h.currentFun.get ::
-              h.debugInfo.debugInfoPath ::
-              res.toLoc.fold(unit)(locToStr(_)) ::
-              intLit(stateId) ::
-              h.thisPath.getOrElse(unit) ::
-              intLit(h.currentLocals.length) ::
-              h.currentLocals.map(_.asPath)
-            ).map(_.asArg))(true, true), false)
+            h.doUnwind(sym.asPath, stateId)(using paths)
           )
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
@@ -414,7 +412,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
   //   FunDefn(N, BlockMemberSymbol("getLocals", Nil), PlainParamList(Nil) :: Nil, body)
     
-  var doUnwindMap: Map[FnOrCls, Path] = Map.empty
+  val doUnwindMap: mutable.Map[FnOrCls, Path => Return] = mutable.HashMap.empty
     
   /**
    * The actual translation:
@@ -432,14 +430,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     given HandlerCtx = h
 
     def translateFunLike(fun: FunDefn, funcPath: Path, thisPath: Option[Path], debugNme: Str) =
-      val varList = (fun.body.definedVars ++ fun.params.flatMap(_.params.map(_.sym))).toList.sortBy(_.uid)
+      val varList = (fun.body.definedVars ++ fun.params.flatMap(_.params.map(_.sym)))
+        .filterNot(h.debugInfo.inScopeLocals(_)).toList.sortBy(_.uid)
       val debugInfo = Value.Lit(Tree.StrLit(debugNme)).asArg :: varList.zipWithIndex.filter(_._1.isInstanceOf[VarSymbol])
         .flatMap: (sym, idx) =>
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
         .map(_.asArg)
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
-      val bod2 = translateBlock(fun.body, funcLikeHandlerCtx(funcPath, thisPath, debugNme, fun.params.length,
-        if opt.debug then debugInfoSym.asPath else Value.Lit(Tree.UnitLit(true)), varList))
+      val newCtx = HandlerCtx(S(funcPath), thisPath, fun.params.length, varList, S(L(fun.sym)),
+        h.debugInfo.nest(debugNme, if opt.debug then debugInfoSym.asPath else unit, varList))
+      val bod2 = translateBlock(fun.body, newCtx)
       val fun2 = if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.params, bod2)
       (debugInfoSym, debugInfo, fun2)
@@ -466,9 +466,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
                 S(Value.Ref(bod.isym)), s"${sym.nme}.${f.sym.nme}")
               debugInfos += debugInfoSym -> debugInfo
               fun2
-            val newCtor = translateTrivialOrTopLevel(bod.ctor)
+            // We cannot use this bc there is no subblock transform...
+            // val newCtor = translateTrivialOrTopLevel(bod.ctor)
+            // TODO: Companion's ctor is more well behaved, handle this properly.
+            val newCtor = translateCtorLike(bod.ctor)
+            tl.log(s"companion name: ${bod.isym.nme}")
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor)
-          val c2 = ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields, translateTrivialOrTopLevel(preCtor), translateTrivialOrTopLevel(ctor), companion2, bufferable)
+          val c2 = ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, newMtds, privateFields, publicFields, translateCtorLike(preCtor), translateCtorLike(ctor), companion2, bufferable)
           if opt.debug then
             debugInfos.foldRight(k(c2)): (elem, blk) =>
               Assign(elem._1, Tuple(false, elem._2), blk)
@@ -478,6 +482,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if h.isTopLevel then
       return translateTrivialOrTopLevel(b)
     val parts = partitionBlock(b)
+    h.currentStackSafetySym.foreach: fnOrCls =>
+      doUnwindMap +=
+        fnOrCls ->
+        (res => h.doUnwind(res, parts.entry)(using paths))
     if parts.states.size <= 1 then
       return translateTrivialOrTopLevel(b)
 
@@ -524,6 +532,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       S(Assign(pcVar, intLit(parts.entry), End())),
       mainLoop)
   
+  private def translateCtorLike(b: Block)(using h: HandlerCtx): Block =
+    translateBlock(b, HandlerCtx(N, N, 0, b.definedVars.filterNot(h.debugInfo.inScopeLocals(_)).toList, N,
+      h.debugInfo.nest("ctor-like block", unit, b.definedVars.toList)))
+
   private def translateTrivialOrTopLevel(b: Block)(using HandlerCtx): Block =
     // We shall add back the top level effect checks here
     // If said block is trivial, this function will still add the debug information, for in the case where the error
@@ -649,10 +661,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   //   // we move all function defns to the top level of the handler block
   //   val (blk, defns) = b.floatOutDefns()
   //   defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
-
-  private def locToStr(loc: Loc) =
-    val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
-    Value.Lit(Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col"))
   
   private def locToVarStr(l: Loc): Str =
     Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
@@ -963,8 +971,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
   
 
-  def translateTopLevel(b: Block): (Block, Map[FnOrCls, Path]) =
-    doUnwindMap = Map.empty
-    val transformed = translateBlock(b, topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›", b.definedVars))
+  def translateTopLevel(b: Block): (Block, collection.Map[FnOrCls, Path => Return]) =
+    doUnwindMap.clear()
+    val ctx = HandlerCtx(N, N, 0, b.definedVars.toList, N, DebugInfo.topLevel(
+      "‹top level›",
+      b.definedVars
+    ))
+    val transformed = translateBlock(b, ctx)
     (transformed, doUnwindMap)
     

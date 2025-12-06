@@ -9,13 +9,8 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[FnOrCls, Path])(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: collection.Map[FnOrCls, Path => Return])(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
-  
-  val doUnwindFns = doUnwindMap.values.collect:
-      case s: Select if s.symbol.isDefined => s.symbol.get
-      case Value.Ref(sym, _) => sym
-    .toSet
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
   private val checkDepthPath: Path = runtimePath.selN(Tree.Ident("checkDepth"))
@@ -135,44 +130,33 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       usedDepth = true
       TempSymbol(None, "curDepth")
       
-    val doUnwindPath = doUnwindMap.get(fnOrCls)
+    val doUnwind = doUnwindMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
     
     if isTrivial(blk) then
       newBody
-    else if doUnwindPath.isEmpty then
+    else if doUnwind.isEmpty then
+      // The current function is not instrumented and we cannot provide stack safety.
+      // TODO: shouldn't we just return the old blk?
       val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .rest(newBody)
     else
       val resSym = TempSymbol(None, "stackDelayRes")
-      val rewritten = blockBuilder
+      blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
         .assign(resSym, Call(checkDepthPath, Nil)(true, true))
         .ifthen(
           resSym.asPath,
           Case.Cls(paths.effectSigSym, paths.effectSigPath),
-          Return(
-            Call(doUnwindPath.get, resSym.asPath.asArg :: intLit(0).asArg :: Nil)(true, false),
-            false
-          )
+          doUnwind.get(resSym.asPath)
         )
         .rest(newBody)
-      // Float out defns, including the doUnwind function, so that they appear at the top of the block
-      // This is because the doUnwind function must appear before the checks inserted by the stack
-      // safety pass.
-      // However, due to how tightly coupled the stack safety and handler lowering are, it might be
-      // better to simply merge the two passes in the future.
-      val (blk, defns) = doUnwindPath.get match
-        case Value.Ref(sym, _) => rewritten.floatOutDefns()
-        case _ => (rewritten, Nil)
-      defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
 
      
   def rewriteFn(defn: FunDefn) = 
-    if doUnwindFns.contains(defn.sym) then defn
-    else FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
+    FunDefn(defn.owner, defn.sym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))
 
   def transformTopLevel(b: Block) = transform(b, TempSymbol(N), true)
