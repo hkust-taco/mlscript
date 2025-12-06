@@ -548,20 +548,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(ctx.builtins.debug.getLocals, N).withLocOf(f))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
         arg match
-          case Tup(flds) =>
-            val body = (flds.foldRight[Term](UnitVal()) {
-              case (Fld(_, t, _), UnitVal()) => Blk(Nil, t)
-              case (Fld(_, t, _), Blk(stmts, res)) => Blk(t :: stmts, res)
-              case (_, _: UnitVal | Blk) =>
-                ErrorReport(
-                  msg"Unsupported form for scope.locally." ->
-                  t.toLoc :: Nil,
-                  source = Diagnostic.Source.Compilation)
-                Error
-              case _ => ??? // impossible
-            }) match
-              case Blk(stmts, res) => Blk(stmts.reverse, res)
-              case t => t
+          case Tup(Fld(_, body, _) :: Nil) =>
             LoweringCtx.nestScoped.givenIn:
               val res = block(Nil, R(body))(k)
               val scopedSyms = loweringCtx.getCollectedSym

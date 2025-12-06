@@ -526,7 +526,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           else
             Some(l -> scope.allocateName(l))
         braced:
-          genLetDecls(vars, true) :: returningTerm(body, endSemi)   
+          genLetDecls(vars) :: returningTerm(body, endSemi)   
     
     // case _ => ???
   
@@ -610,7 +610,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       blockPreamble(p.imports.map(_._1).toSeq ++ body.definedVarsNoScoped.toSeq) ->
       (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
 
-  def genLetDecls(vars: Iterator[(Symbol, Str)], isScoped: Bool): Document =
+  def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
     if vars.isEmpty then doc"" else
       doc" # let " :: vars.map: (_, nme) =>
         nme
@@ -621,14 +621,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     // TODO document: mutable var assnts require the lookup
     val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
       l -> scope.allocateName(l))
-    genLetDecls(vars, false)
+    genLetDecls(vars)
 
   // Only handle non-nested Scoped nodes: we output the bindings, but do not add another brace
   def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
     case Scoped(syms, body) => 
-      val vars = syms.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
-        l -> scope.allocateName(l))
-      genLetDecls(vars, true) :: k(body)
+      blockPreamble(syms) :: k(body)
     case _ => k(blk)
   
   

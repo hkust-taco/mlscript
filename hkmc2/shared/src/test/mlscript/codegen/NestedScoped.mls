@@ -244,19 +244,26 @@ fun foo(x, y) =
 //│ };
 
 
-// does nothing
+:ge
 scope.locally()
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.248: 	scope.locally()
+//│ ╙──       	^^^^^^^^^^^^^
 
 
-:sjs
+:ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
-//│ JS (unsanitized):
-//│ let x3, y; x3 = 1; y = 2; y
-//│ = 2
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.255: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ╙──       	^^^^^^^^^^^^^
 
 
 :e
+:ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.259: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.263: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.263: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╙──       	^^^^^^^^^^^^^
