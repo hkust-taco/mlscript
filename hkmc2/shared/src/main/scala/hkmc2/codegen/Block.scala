@@ -251,7 +251,7 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)(isTailRec = d.isTailRec)
+          else d.copy(body = newBody)(forceTailRec = d.forceTailRec)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
@@ -259,7 +259,7 @@ sealed abstract class Block extends Product:
           val newMethods = c.methods.mapConserve:
             case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)(isTailRec = f.isTailRec)
+              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
           else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
@@ -459,12 +459,13 @@ final case class FunDefn(
     params: Ls[ParamList],
     body: Block,
   )(
-    val isTailRec: Bool,
+    val forceTailRec: Bool,
 ) extends Defn:
   val innerSym = N
+  val asPath = Value.Ref(sym, S(dSym))
 object FunDefn:
-  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(isTailRec: Bool)(using State) =
-    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(isTailRec)
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
+    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(forceTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,

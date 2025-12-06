@@ -100,7 +100,7 @@ case
 //│               modulefulness = Modulefulness of N
 //│           restParam = N
 //│       body = Scoped:
-//│         syms = HashSet($argument0$, a)
+//│         syms = HashSet(a, $argument0$)
 //│         body = Match:
 //│           scrut = Ref:
 //│             l = caseScrut
@@ -142,9 +142,9 @@ case
 //│                 value = Lit of StrLit of "match error"
 //│           rest = End of ""
 //│     rest = Return: \
-//│     res = Ref:
+//│     res = Ref{disamb=term:lambda}:
 //│       l = member:lambda
-//│       disamb = N
+//│       disamb = S of term:lambda
 //│     implct = true
 //│ = fun
 

@@ -340,6 +340,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
         res
+      lazy val tSym = TermSymbol.fromFunBms(f, N)
       val normalized = tl.scoped("ucs:normalize"):
         normalize(inputSplit)(using VarSet())
       tl.scoped("ucs:normalized"):
@@ -352,7 +353,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
-        then Return(Call(Value.Ref(f, N), Nil)(true, true, false), false)
+        then Return(Call(Value.Ref(f, S(tSym)), Nil)(true, true, false), false)
         else Continue(loopLabel)
       val cont =
         if kw === `while` then
@@ -418,8 +419,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
             val blk = blockBuilder
               .assign(l, Value.Lit(Tree.UnitLit(false)))
-              .define(FunDefn.withFreshSymbol(N, f, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(isTailRec = false))
-              .assign(loopResult, Call(Value.Ref(f, N), Nil)(true, true, false))
+              .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false))
+              .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil)(true, true, false))
             if summon[LoweringCtx].mayRet then
               blk
                 .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),

@@ -1,5 +1,6 @@
 :js
 :lift
+:noTailRec
 
 // * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 

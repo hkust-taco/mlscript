@@ -1,6 +1,7 @@
 :js
 :llir
 :cpp
+:noTailRec // The LLIR lowering does not yet support Label blocks
 
 // This file contains all tests for LLIR in the original MLscript compiler.
 

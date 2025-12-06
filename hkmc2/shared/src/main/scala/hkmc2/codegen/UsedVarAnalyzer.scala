@@ -368,7 +368,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             handleCalledBms(l)
           case Instantiate(mut, InstSel(l), args) =>
             args.map(super.applyArg)
-            handleCalledBms(l)
+            handleCalledBms(l._1)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
