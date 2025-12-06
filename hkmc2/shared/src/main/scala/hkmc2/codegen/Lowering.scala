@@ -548,7 +548,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(ctx.builtins.debug.getLocals, N).withLocOf(f))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
         arg match
-          case Tup(Fld(_, body, _) :: Nil) =>
+          case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
             LoweringCtx.nestScoped.givenIn:
               val res = block(Nil, R(body))(k)
               val scopedSyms = loweringCtx.getCollectedSym
