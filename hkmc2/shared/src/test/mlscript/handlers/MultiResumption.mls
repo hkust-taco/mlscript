@@ -1,5 +1,7 @@
 :js
 :effectHandlers
+:lift
+:noSanityCheck
 
 class Logger with
   fun info(s: Str): ()

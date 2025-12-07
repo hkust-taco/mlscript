@@ -482,12 +482,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     if h.isTopLevel then
       return translateTrivialOrTopLevel(b)
     val parts = partitionBlock(b)
+    if parts.states.size <= 1 && opt.stackSafety.isEmpty then
+      return translateTrivialOrTopLevel(b)
     h.currentStackSafetySym.foreach: fnOrCls =>
       doUnwindMap +=
         fnOrCls ->
         (res => h.doUnwind(res, parts.entry)(using paths))
-    if parts.states.size <= 1 then
-      return translateTrivialOrTopLevel(b)
 
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshTmp("main")

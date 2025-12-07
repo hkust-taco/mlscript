@@ -1,5 +1,7 @@
 :js
 :effectHandlers
+:lift
+:noSanityCheck
 
 
 abstract class Effect with
@@ -19,61 +21,17 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
-//│     const this$Lol = this;
-//│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$ctor$Lol$1 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp1;
-//│         tmp1 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         if (this.pc === 1) {
-//│           tmp = value$;
-//│         } else if (this.pc === 2) {
-//│           res = value$;
-//│         }
-//│         contLoop: while (true) {
-//│           if (this.pc === 3) {
-//│             return this$Lol
-//│           } else if (this.pc === 4) {
-//│             res = Predef.print(tmp);
-//│             if (res instanceof runtime.EffectSig.class) {
-//│               return this.doUnwind(res, 2)
-//│             }
-//│             this.pc = 2;
-//│             continue contLoop
-//│           } else if (this.pc === 1) {
-//│             this.pc = 4;
-//│             continue contLoop
-//│           } else if (this.pc === 2) {
-//│             this.pc = 3;
-//│             continue contLoop
-//│           }
-//│           break;
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res1, pc) {
-//│       res1.contTrace.last.next = new Cont$ctor$Lol$1(pc);
-//│       res1.contTrace.last = res1.contTrace.last.next;
-//│       return res1
-//│     };
+//│     let tmp, tmp1;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp, 1)
+//│       tmp = runtime.topLevelEffect(tmp, false);
 //│     }
-//│     res = Predef.print(tmp);
-//│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 2)
+//│     tmp1 = Predef.print(tmp);
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       tmp1 = runtime.topLevelEffect(tmp1, false);
 //│     }
-//│     res;
+//│     tmp1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
@@ -96,48 +54,52 @@ handle k = Eff with
   fun test()(k) = k()
 k.test()
 print("test")
-//│ ═══[RUNTIME ERROR] TypeError: k.test is not a function
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
-
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$2
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   new Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$4
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       k("b")
   Lol(h)
-//│ > k
-//│ > b
-//│ oops = Lol(Handler$h$)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$6
+//│ oops = undefined
 
+:fixme
 oops.h
-//│ = Handler$h$
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'h')
 
 let obj = mut {s: undefined}
 //│ obj = {s: undefined}

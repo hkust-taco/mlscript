@@ -467,6 +467,22 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "LocalVarInfo", ["localName", "value"]]; 
     });
+    this.FakeError = function FakeError(stack) {
+      return globalThis.Object.freeze(new FakeError.class(stack));
+    };
+    globalThis.Object.freeze(class FakeError {
+      static {
+        Runtime.FakeError.class = this
+      }
+      constructor(stack) {
+        this.stack = stack;
+      }
+      toString() {
+        return this.stack
+      }
+      [prettyPrint]() { return this.toString(); }
+      static [definitionMetadata] = ["class", "FakeError", ["stack"]]; 
+    });
     this.stackLimit = 0;
     this.stackDepth = 0;
     this.stackHandler = null;
@@ -608,8 +624,8 @@ globalThis.Object.freeze(class Runtime {
     return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)
   } 
   static topLevelEffect(tr, debug) {
-    let scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5;
-    tmp6: while (true) {
+    let scrut, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+    tmp7: while (true) {
       scrut = tr.handler === Runtime.PrintStackEffect;
       if (scrut === true) {
         tmp = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
@@ -618,7 +634,7 @@ globalThis.Object.freeze(class Runtime {
         tmp3 = runtime.safeCall(tmp2(runtime.Unit));
         tr = tmp3;
         tmp4 = runtime.Unit;
-        continue tmp6
+        continue tmp7
       } else {
         tmp4 = runtime.Unit;
       }
@@ -626,7 +642,8 @@ globalThis.Object.freeze(class Runtime {
     }
     if (tr instanceof Runtime.EffectSig.class) {
       tmp5 = "Error: Unhandled effect " + tr.handler.constructor.name;
-      throw Runtime.showStackTrace(tmp5, tr, debug, false)
+      tmp6 = Runtime.showStackTrace(tmp5, tr, debug, false);
+      throw Runtime.FakeError(tmp6)
     } else {
       return tr
     }

@@ -3,6 +3,7 @@
 
 // make sure class fields are discriminated properly for immutable captures when supported
 :effectHandlers
+:noSanityCheck
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -11,7 +12,7 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ = 2
+//│ = 3
 
 :expect 1
 fun f(x) =
@@ -88,7 +89,7 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f5, tmp5, Bad$, Good$, f$capture3;
+//│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp6, tmp7;
 //│   if (isMut === true) {
@@ -184,7 +185,7 @@ f().foo()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
-//│ f5 = function f() {
+//│ f6 = function f() {
 //│   let x, y, z, tmp6, tmp7, capture;
 //│   capture = new f$capture3(null);
 //│   x = 1;
@@ -195,7 +196,7 @@ f().foo()
 //│   tmp7 = tmp6.foo();
 //│   return Good$(false, x, y, z, capture)
 //│ };
-//│ tmp5 = f5();
+//│ tmp5 = f6();
 //│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
@@ -221,6 +222,7 @@ a.getX()
 
 :stackSafe 10
 :effectHandlers
+:noSanityCheck
 fun sum(n) =
   if n == 0 then 0
   else

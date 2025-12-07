@@ -178,6 +178,8 @@ class NonLocalReturn with
 
 data class FnLocalsInfo(fnName, locals)
 data class LocalVarInfo(localName, value)
+data class FakeError(stack) with
+  fun toString() = stack
 
 
 fun raisePrintStackEffect(showLocals) =
@@ -188,7 +190,7 @@ fun topLevelEffect(tr, debug) =
     console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
     set tr = resume(tr.contTrace)(())
   if tr is EffectSig then
-    throw showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false)
+    throw FakeError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
   else
     tr
 

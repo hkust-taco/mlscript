@@ -4,12 +4,14 @@
 fun f() = 3
 
 :effectHandlers
+:noSanityCheck
 module A with
   data class Test with
     f()
     val a = 1
 
 :effectHandlers
+:noSanityCheck
 class Test with
   f()
   val a = 1

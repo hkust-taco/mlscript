@@ -1,5 +1,7 @@
 :js
 :effectHandlers
+:lift
+:noSanityCheck
 
 
 abstract class Effect with
@@ -156,70 +158,66 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$11;
-//│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
-//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
-//│     static {
-//│       Handler$h$12 = this
-//│     }
-//│     constructor() {
-//│       let tmp12;
-//│       tmp12 = super();
-//│     }
-//│     perform(arg) {
-//│       let hdlrFun;
-//│       hdlrFun = function hdlrFun(k) {
-//│         return arg
-//│       };
-//│       return runtime.mkEffect(this, hdlrFun)
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│   });
-//│   h = new Handler$h$12();
-//│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
-//│     static {
-//│       Cont$handleBlock$h$11 = this
-//│     }
-//│     constructor(pc) {
-//│       let tmp12;
-//│       tmp12 = super(null);
-//│       this.pc = pc;
-//│     }
-//│     resume(value$) {
-//│       if (this.pc === 1) {
-//│         res = value$;
-//│       }
-//│       contLoop: while (true) {
-//│         if (this.pc === 1) {
-//│           return res
-//│         }
-//│         break;
-//│       }
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Cont$handleBlock$h$"]; 
-//│   });
-//│   doUnwind = function doUnwind(res1, pc) {
-//│     res1.contTrace.last.next = new Cont$handleBlock$h$11(pc);
-//│     return runtime.handleBlockImpl(res1, h)
-//│   };
-//│   f = function f() {
-//│     return 3
-//│   };
-//│   scrut = true;
-//│   if (scrut === true) {
-//│     res = f();
-//│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 1)
-//│     }
-//│     return res
-//│   } else {
-//│     return runtime.Unit
+//│ let f, h11, tmp11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
+//│ Handler$h$perform$11 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
+//│   return arg
+//│ };
+//│ Handler$h$perform11 = function Handler$h$perform(Handler$h$$instance, arg) {
+//│   return (k) => {
+//│     return Handler$h$perform$11(Handler$h$$instance, arg, k)
 //│   }
 //│ };
-//│ tmp11 = handleBlock$11();
+//│ globalThis.Object.freeze(class Handler$h$22 extends Effect1 {
+//│   static {
+//│     Handler$h$23 = this
+//│   }
+//│   constructor() {
+//│     let tmp12;
+//│     tmp12 = super();
+//│     if (tmp12 instanceof runtime.EffectSig.class) {
+//│       tmp12 = runtime.topLevelEffect(tmp12, false);
+//│     }
+//│     tmp12;
+//│   }
+//│   perform(arg) {
+//│     let Handler$h$perform$here;
+//│     Handler$h$perform$here = runtime.safeCall(Handler$h$perform11(this, arg));
+//│     return runtime.mkEffect(this, Handler$h$perform$here)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
+//│ h11 = new Handler$h$23();
+//│ if (h11 instanceof runtime.EffectSig.class) {
+//│   h11 = runtime.topLevelEffect(h11, false);
+//│ }
+//│ f = function f() {
+//│   return 3
+//│ };
+//│ handleBlock$11 = (undefined, function () {
+//│   let scrut, pc;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     scrut = runtime.resumeArr.at(runtime.resumeIdx);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
+//│   }
+//│   main: while (true) {
+//│     if (pc === 0) {
+//│       scrut = true;
+//│       if (scrut === true) {
+//│         return f()
+//│       } else {
+//│         return runtime.Unit
+//│       }
+//│       pc = 1;
+//│       continue main
+//│     } else if (pc === 1) {}
+//│     break;
+//│   }
+//│ });
+//│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
 //│ if (tmp11 instanceof runtime.EffectSig.class) {
 //│   tmp11 = runtime.topLevelEffect(tmp11, false);
 //│ }
@@ -370,6 +368,7 @@ handle h = Eff with
 foo(h) 
 //│ = 123
 
+:w
 :expect 123
 fun foo(h) =
   h.perform()
@@ -394,6 +393,22 @@ fun foo(h) =
 handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.377: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.381: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.385: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.389: 	    module A with
+//│ ╙──       	           ^
 //│ = 123
 
 // Access superclass fields

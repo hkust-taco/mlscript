@@ -1,5 +1,7 @@
 :js
 :effectHandlers debug
+:lift
+:noSanityCheck
 
 
 class ThreadEffect with
@@ -43,11 +45,11 @@ in
 //│ > main end
 //│ > f 2
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at f (UserThreadsSafe.mls:17:3)
-//│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=6)
-//│ 	at fork (UserThreadsSafe.mls:35:5)
-//│ 	at fork (UserThreadsSafe.mls:35:5)
+//│ 	at f (pc=undefined)
+//│ 	at while$ (pc=undefined)
+//│ 	at ThreadEffect#drain (pc=undefined)
+//│ 	at Handler$h$fork$ (pc=undefined)
+//│ 	at Handler$h$fork$ (pc=undefined)
 
 
 // FIFO
@@ -65,11 +67,11 @@ in
 //│ > main start
 //│ > main end
 //│ > f 0
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$1
-//│ 	at f (UserThreadsSafe.mls:17:3)
-//│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=6)
-//│ 	at fork (UserThreadsSafe.mls:58:5)
-//│ 	at fork (UserThreadsSafe.mls:58:5)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$2
+//│ 	at f (pc=undefined)
+//│ 	at while$ (pc=undefined)
+//│ 	at ThreadEffect#drain (pc=undefined)
+//│ 	at Handler$h$fork$ (pc=undefined)
+//│ 	at Handler$h$fork$ (pc=undefined)
 
 

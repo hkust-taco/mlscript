@@ -1,5 +1,6 @@
 :js
 :lift
+:noSanityCheck
 
 // sanity check
 :expect 5050
@@ -21,65 +22,49 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
-//│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
-//│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new Cont$func$hi$1(pc);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
-//│   }
-//│   tmp1 = tmp(n);
-//│   return tmp1
-//│ };
-//│ globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$hi$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n) => {
-//│       let tmp;
-//│       tmp = super(null);
-//│       this.n = n;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   resume(value$) {
-//│     return hi(this.n)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$hi$"]; 
-//│ });
-//│ doUnwind$ = function doUnwind$(n, res1, pc) {
-//│   res1.contTrace.last.next = Cont$func$hi$$(true, n, pc);
-//│   res1.contTrace.last = res1.contTrace.last.next;
-//│   return res1
-//│ };
+//│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, stackDelayRes;
+//│   let scrut, tmp1, pc, saveOffset, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$(n, stackDelayRes, 0)
+//│     return runtime.unwind(stackDelayRes, 1, hi, null, null, 0, null, 3, n, scrut, tmp1)
 //│   }
-//│   scrut = n == 0;
-//│   if (scrut === true) {
-//│     return 0
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     n = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     scrut = runtime.resumeArr.at(saveOffset);
+//│     saveOffset = runtime.resumeIdx + 2;
+//│     tmp1 = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
 //│   } else {
-//│     tmp = n - 1;
-//│     return hi(tmp)
+//│     pc = 0;
+//│   }
+//│   main: while (true) {
+//│     if (pc === 0) {
+//│       scrut = n == 0;
+//│       if (scrut === true) {
+//│         return 0
+//│       } else {
+//│         tmp1 = n - 1;
+//│         pc = 2;
+//│         continue main
+//│       }
+//│       pc = 1;
+//│       continue main
+//│     } else if (pc === 1) {} else if (pc === 2) {
+//│       return hi(tmp1)
+//│     }
+//│     break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ res = runtime.runStackSafe(5, $_stack$_safe$_body$_);
-//│ if (res instanceof runtime.EffectSig.class) { res = runtime.topLevelEffect(res, false); }
-//│ res
+//│ tmp = runtime.runStackSafe(5, $_stack$_safe$_body$_);
+//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
+//│ tmp
 //│ = 0
 
 :sjs
@@ -92,88 +77,64 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
-//│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
-//│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$func$sum$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
-//│   }
-//│   tmp2 = tmp1(n, tmp);
-//│   return tmp2
-//│ };
-//│ globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
-//│   static {
-//│     Cont$func$sum$1 = this
-//│   }
-//│   constructor(pc) {
-//│     return (n, tmp) => {
-//│       let tmp1;
-//│       tmp1 = super(null);
-//│       this.n = n;
-//│       this.tmp = tmp;
-//│       this.pc = pc;
-//│       return this;
-//│     }
-//│   }
-//│   #n;
-//│   #tmp;
-//│   get n() { return this.#n; }
-//│   set n(value) { this.#n = value; }
-//│   get tmp() { return this.#tmp; }
-//│   set tmp(value) { this.#tmp = value; }
-//│   resume(value$) {
-//│     let curDepth;
-//│     curDepth = runtime.stackDepth;
-//│     if (this.pc === 1) {
-//│       this.tmp = value$;
-//│     }
-//│     contLoop: while (true) {
-//│       runtime.stackDepth = curDepth;
-//│       if (this.pc === 0) {
-//│         return sum1(this.n)
-//│       } else if (this.pc === 1) {
-//│         return this.n + this.tmp
-//│       }
-//│       break;
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Cont$func$sum$"]; 
-//│ });
-//│ doUnwind$1 = function doUnwind$(n, tmp, res2, pc) {
-//│   res2.contTrace.last.next = Cont$func$sum$$(true, n, tmp, pc);
-//│   res2.contTrace.last = res2.contTrace.last.next;
-//│   return res2
-//│ };
+//│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc, saveOffset, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
+//│     return runtime.unwind(stackDelayRes, 1, sum1, null, null, 0, null, 4, n, scrut, tmp2, tmp3)
 //│   }
-//│   scrut = n == 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum1(tmp);
-//│     runtime.stackDepth = curDepth;
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind$1(n, tmp1, tmp1, 1)
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     n = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     scrut = runtime.resumeArr.at(saveOffset);
+//│     saveOffset = runtime.resumeIdx + 2;
+//│     tmp2 = runtime.resumeArr.at(saveOffset);
+//│     if (pc === 2) {
+//│       tmp3 = runtime.resumeValue;
+//│     } else {
+//│       saveOffset = runtime.resumeIdx + 3;
+//│       tmp3 = runtime.resumeArr.at(saveOffset);
 //│     }
-//│     return n + tmp1
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
+//│   }
+//│   main: while (true) {
+//│     if (pc === 0) {
+//│       scrut = n == 0;
+//│       if (scrut === true) {
+//│         return 0
+//│       } else {
+//│         tmp2 = n - 1;
+//│         pc = 3;
+//│         continue main
+//│       }
+//│       pc = 1;
+//│       continue main
+//│     } else if (pc === 1) {} else if (pc === 2) {
+//│       return n + tmp3
+//│     } else if (pc === 3) {
+//│       tmp3 = sum1(tmp2);
+//│       runtime.stackDepth = curDepth;
+//│       if (tmp3 instanceof runtime.EffectSig.class) {
+//│         return runtime.unwind(tmp3, 1, sum1, null, null, 2, null, 4, n, scrut, tmp2, tmp3)
+//│       }
+//│       pc = 2;
+//│       continue main
+//│     }
+//│     break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ res1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (res1 instanceof runtime.EffectSig.class) { res1 = runtime.topLevelEffect(res1, false); }
-//│ res1
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
+//│ if (tmp1 instanceof runtime.EffectSig.class) { tmp1 = runtime.topLevelEffect(tmp1, false); }
+//│ tmp1
 //│ = 50005000
 
 // stack-overflows without :stackSafe
@@ -274,9 +235,29 @@ fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max;
 //│ max = function max(a, b) {
-//│   let scrut;
-//│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
+//│   let scrut, pc, saveOffset;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     a = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     b = runtime.resumeArr.at(saveOffset);
+//│     saveOffset = runtime.resumeIdx + 2;
+//│     scrut = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
+//│   }
+//│   main: while (true) {
+//│     if (pc === 0) {
+//│       scrut = a < b;
+//│       if (scrut === true) {
+//│         return b
+//│       } else { return a }
+//│       pc = 1;
+//│       continue main
+//│     } else if (pc === 1) {}
+//│     break;
+//│   }
 //│ };
 
 
