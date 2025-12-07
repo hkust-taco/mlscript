@@ -606,7 +606,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) =>
       blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
       (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
-    case body =>
+    case body => // TODO: remove body.definedVarsNoScoped after we can handle lambda lifting-related code correctly
       blockPreamble(p.imports.map(_._1).toSeq ++ body.definedVarsNoScoped.toSeq) ->
       (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
 
@@ -619,6 +619,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
     // TODO document: mutable var assnts require the lookup
+    // TODO: remove the filter and lookup after we can handle lambda lifting-related code correctly
     val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
       l -> scope.allocateName(l))
     genLetDecls(vars)
