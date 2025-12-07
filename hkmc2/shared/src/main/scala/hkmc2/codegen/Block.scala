@@ -32,7 +32,7 @@ sealed abstract class Block extends Product:
   /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks.
     * It is used in JSBuilder now: names are allocated in JSBuilder for these `definedVarsNoScoped` symbols.
     * This is needed now because
-    *   - there are symbols that are not collected in the `Scoped` blocks (due to later passes),
+    *   - there are symbols that are not collected in the `Scoped` blocks (due to some passes that have not yet been adapted to Scoped),
     *     and they still need to be allocated a name in JSBuilder
     *   - if we don't exlude the `Scoped` symbols, they may be allocated a name
     *     prematurely and decalred in wrong places, e.g. symbols inside while bodies
