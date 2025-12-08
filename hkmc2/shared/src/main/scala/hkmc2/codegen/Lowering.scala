@@ -44,7 +44,7 @@ class LoweringCtx(
   val map = initMap
   
   def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
-  def collectScopedSym(s: Symbol*) = definedSymsDuringLowering.addAll(s)
+  def collectScopedSyms(s: Symbol*) = definedSymsDuringLowering.addAll(s)
   def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
@@ -1215,7 +1215,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
     val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
     
-    loweringCtx.collectScopedSym(
+    loweringCtx.collectScopedSyms(
       enterMsgSym,
       prevIndentLvlSym,
       resSym,
@@ -1229,7 +1229,7 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
         else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
     
     val tmp1, tmp2, tmp3 = TempSymbol(N)
-    loweringCtx.collectScopedSym(tmp1, tmp2, tmp3)
+    loweringCtx.collectScopedSyms(tmp1, tmp2, tmp3)
     
     assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
       pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
