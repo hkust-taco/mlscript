@@ -12,8 +12,8 @@ import scala.collection.Map
 extension (doc: Document)
   /** Surrounds a document by the given `prefix` and `suffix`, unless the document is empty. */
   private def surroundUnlessEmpty(
-      prefix: Document = Document.empty,
-      postfix: Document = Document.empty
+      prefix: => Document = Document.empty,
+      postfix: => Document = Document.empty
   ): Document =
     doc.optionUnless(_.isEmpty).fold(doc):
       prefix :: _ :: postfix
@@ -36,15 +36,15 @@ abstract sealed class Type extends ToWat:
     lastWords(s"asValType_! called on non-ValType: `$toWat` (${getClass.getName})")
 
 private case object I32Type extends Type:
-  def toWat: Document = doc"i32"
+  def toWat: Document = Document.text("i32")
 private case object I64Type extends Type:
-  def toWat: Document = doc"i64"
+  def toWat: Document = Document.text("i64")
 private case object F32Type extends Type:
-  def toWat: Document = doc"f32"
+  def toWat: Document = Document.text("f32")
 private case object F64Type extends Type:
-  def toWat: Document = doc"f64"
+  def toWat: Document = Document.text("f64")
 private case object V128Type extends Type:
-  def toWat: Document = doc"v128"
+  def toWat: Document = Document.text("v128")
 private case object UnreachableType extends Type:
   def toWat: Document = throw UnsupportedOperationException(
     s"${toString} is a compiler-internal type and cannot be converted to WAT"
@@ -61,39 +61,49 @@ object RefType:
 /** Wasm type representing a reference to a [[HeapType]]. */
 case class RefType(heapType: HeapType, nullable: Bool) extends Type:
   def toWat: Document =
-    doc"(ref${if nullable then " null" else ""} ${heapType.toWat})"
+    import Document.*
+    text(s"(ref ${if nullable then "null " else ""}")
+      :: heapType.toWat
+      :: text(")")
 
 object HeapType:
   case object Func extends ToWat:
-    def toWat: Document = doc"func"
+    def toWat: Document = Document.text("func")
   case object Ext extends ToWat:
-    def toWat: Document = doc"extern"
+    def toWat: Document = Document.text("extern")
   case object Any extends ToWat:
-    def toWat: Document = doc"any"
+    def toWat: Document = Document.text("any")
   case object Eq extends ToWat:
-    def toWat: Document = doc"eq"
+    def toWat: Document = Document.text("eq")
   case object I31 extends ToWat:
-    def toWat: Document = doc"i31"
+    def toWat: Document = Document.text("i31")
   case object Struct extends ToWat:
-    def toWat: Document = doc"struct"
+    def toWat: Document = Document.text("struct")
   case object Array extends ToWat:
-    def toWat: Document = doc"array"
+    def toWat: Document = Document.text("array")
   case object None extends ToWat:
-    def toWat: Document = doc"none"
+    def toWat: Document = Document.text("none")
   case object NoExt extends ToWat:
-    def toWat: Document = doc"noextern"
+    def toWat: Document = Document.text("noextern")
   case object NoFunc extends ToWat:
-    def toWat: Document = doc"nofunc"
+    def toWat: Document = Document.text("nofunc")
 type ValType = NumType | VecType | RefType
 
 /** A Wasm parameter clause. Appears in function signatures. */
 case class Param(id: Opt[Str], valtype: ValType) extends ToWat:
   def toWat: Document =
-    doc"(param${id.fold(doc"")(id => doc" $$$id")} ${valtype.toWat})"
+    import Document.*
+    text("(param")
+      :: id.fold(empty)(id => text(s" $$$id"))
+      :: text(" ")
+      :: valtype.toWat
+      :: text(")")
 
 /** A Wasm result clause. Appears in function signatures and some instructions. */
 case class Result(valtype: ValType) extends ToWat:
-  def toWat: Document = doc"(result ${valtype.toWat})"
+  def toWat: Document =
+    import Document.*
+    text("(result ") :: valtype.toWat :: text(")")
 
 /**
  * A type representing a function signature.
@@ -101,7 +111,9 @@ case class Result(valtype: ValType) extends ToWat:
  * Function signatures differ from [[FunctionType]] in that they do not include the `func` keyword.
  */
 case class SignatureType(params: Seq[Param], results: Seq[Result]) extends ToWat:
-  def toWat: Document = (params.map(_.toWat) ++ results.map(_.toWat)).mkDocument(doc" ")
+  def toWat: Document =
+    import Document.*
+    (params.map(_.toWat) ++ results.map(_.toWat)).mkDocument(text(" "))
 
 object FunctionType:
   def apply(params: Seq[Param], results: Seq[Result]): FunctionType =
@@ -110,7 +122,8 @@ object FunctionType:
 /** A type representing a function type. */
 case class FunctionType(sigType: SignatureType) extends ToWat:
   def toWat: Document =
-    doc"(func${sigType.toWat.surroundUnlessEmpty(doc" ")})"
+    import Document.*
+    text("(func") :: sigType.toWat.surroundUnlessEmpty(text(" ")) :: text(")")
 
 /** A type representing a struct field. */
 case class Field(
@@ -119,21 +132,26 @@ case class Field(
     id: Opt[Str]
 ) extends ToWat:
   def toWat: Document =
-    doc"(field ${id.fold(doc"")(id => doc"$$$id ")}${
-        if mutable then doc"(mut ${ty.toWat})" else ty.toWat
-      })"
+    import Document.*
+    text("(field ")
+      :: id.fold(empty)(id => text(s"$$$id "))
+      :: (if mutable then text("(mut ") :: ty.toWat :: text(")") else ty.toWat)
+      :: text(")")
 
 /** A type representing a structure type. */
 case class StructType(
-  fields: Map[DefinitionSymbol[?], NumIdx -> Field],
-  parents: Seq[TypeIdx] = Seq.empty,
-  isSubtype: Bool = false
+    fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+    parents: Seq[TypeIdx] = Seq.empty,
+    isSubtype: Bool = false
 ) extends ToWat:
 
   def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
 
   def toWat: Document =
-    doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
+    import Document.*
+    text("(struct")
+      :: fieldSeq.map(_.toWat).mkDocument(text(" ")).surroundUnlessEmpty(text(" "))
+      :: text(")")
 
 /** A composite type. */
 type CompType = StructType | FunctionType
@@ -155,11 +173,11 @@ abstract sealed class Index extends ToWat
 
 /** A numeric index. */
 case class NumIdx(val index: Int) extends Index:
-  def toWat: Document = doc"${index.toString}"
+  def toWat: Document = Document.text(index.toString)
 
 /** A symbolic identifier. */
 case class SymIdx(val id: Str) extends Index:
-  def toWat: Document = doc"$$$id"
+  def toWat: Document = Document.text(s"$$$id")
 
 /** An index that is bound to an index space. */
 abstract sealed class CtxIdx(idx: Index) extends ToWat:
@@ -228,16 +246,18 @@ case class FoldedInstr(
   def resultType_! : Type = resultType.getOrElse:
     lastWords(s"resultType_! called on instruction with a non-unique result type: $this")
 
-  def toWat: Document = doc"($mnemonic${
-      instrargs.map: a =>
+  def toWat: Document =
+    import Document.*
+
+    text(s"($mnemonic")
+      :: instrargs.map: a =>
         a match
           case a: ToWat => a.toWat
           case a: Document => a
-      .mkDocument(doc" ").surroundUnlessEmpty(doc" ")
-    }${
-      stackargs.map(_.toWat).optionIf(_.nonEmpty).map(_.mkDocument(doc" # ")).fold(doc""): args =>
-        doc" #{  # $args #} "
-    })"
+      .mkDocument(text(" ")).surroundUnlessEmpty(text(" "))
+      :: stackargs.map(_.toWat).optionIf(_.nonEmpty).map(_.mkDocument(break)).fold(empty): args =>
+        nest(break :: args)
+      :: text(")")
 end FoldedInstr
 
 /**
