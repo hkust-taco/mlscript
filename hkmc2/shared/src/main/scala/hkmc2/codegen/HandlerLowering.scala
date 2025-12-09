@@ -101,6 +101,8 @@ class HandlerPaths(using Elaborator.State):
   val unwindPath: Path = runtimePath.selSN("unwind")
   val isResuming: Path = runtimePath.selSN("isResuming")
   val resumePc: Path = runtimePath.selSN("resumePc")
+  val resumeValueIdent = new Tree.Ident("resumeValue")
+  val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
 class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   
@@ -153,7 +155,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   // blk: the block of code within this state
   // sym: the variable to which the resumed value should set
-  case class BlockPartition(blk: Block, sym: Opt[Local])
+  case class BlockPartition(blk: Block)
   case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition])
   
   // Tries to remove states that jump directly to other states
@@ -272,43 +274,39 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     def go(blk: Block)(using labelIds: Map[Symbol, (LazyId, LazyId)], afterEnd: Option[LazyId], partitioned: Bool): Block = boundary:
       // First check if the current block contain any non trivial call, if so we need a partition
 
+      def forceId(blk: Block): StateId = blk match
+        case StateTransition(uid) => uid
+        case _ =>
+          val id = allocId()
+          result(id) = BlockPartition(blk)
+          id
+
       // sym: the local that stores the result
-      def doNewEffectPartition(sym: Local, res: Result, rst: Block) =
-        val stateId = allocId()
-        result(stateId) = BlockPartition(go(rst)(using partitioned = true), S(sym))
+      def doNewEffectPartition(res: Result, rst: Block) =
+        val stateId = forceId(go(rst)(using partitioned = true))
         val newBlock = blockBuilder
-          .assign(sym, res)
+          .assignFieldN(paths.runtimePath, paths.resumeValueIdent, res)
           .ifthen(
-            sym.asPath,
+            paths.resumeValue,
             Case.Cls(paths.effectSigSym, paths.effectSigPath),
-            h.doUnwind(sym.asPath, stateId)(using paths)
+            h.doUnwind(paths.resumeValue, stateId)(using paths)
           )
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
       class RestLazyId(rst: Block) extends LazyId:
-        def getImpl: StateId =
-          go(rst)(using partitioned = true) match
-            case StateTransition(uid) => uid
-            case newRst =>
-              val id = allocId()
-              result(id) = BlockPartition(newRst, N)
-              id
+        def getImpl: StateId = forceId(go(rst)(using partitioned = true))
         def transitionSoft: Block = transitionOrBlk(go(rst))
 
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
           case Return(c @ Call(fun, args), false) => b // Prevents the recursion into applyResult
-          case Assign(lhs, EffectfulResult(r), rest) =>
-            // Optimization to reuse lhs instead of fresh local
-            doNewEffectPartition(lhs, r, rest)
           case _ => super.applyBlock(b)
         override def applyResult(r: Result)(k: Result => Block) = r match
           case EffectfulResult(r) =>
             // Fallback case, this may lead to unnecessary vars if it is assign-like
             // FIXME: This fall back case might be not needed at all.
-            val l = freshTmp()
-            doNewEffectPartition(l, r, k(Value.Ref(l)))
+            doNewEffectPartition(r, k(paths.resumeValue))
           case _ => super.applyResult(r)(k)
       
       // If current block contains direct effectful result the following call will early exit.
@@ -328,7 +326,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           def getImpl = allocId()
         val newBody = go(body)(using labelIds + (label -> (startId, restId)), S(restId))
         if startId.isUsed then
-          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft), N)
+          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft))
           StateTransition(startId.get)
         else
           Label(label, loop, newBody, restId.transitionSoft)
@@ -391,7 +389,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val initId = allocId()
-    val initPart = BlockPartition(go(blk)(using Map(), N, false), N)
+    val initPart = BlockPartition(go(blk)(using Map(), N, false))
     result(initId) = initPart
     PartitionedBlock(initId, Map.from(result))
   
@@ -523,18 +521,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false), _)
       (computeOff, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
 
-    val restoreMap = mutable.HashMap.empty[Local, mutable.ArrayBuffer[StateId]]
-    parts.states.foreach: (id, part) =>
-      part.sym.foreach: l =>
-        restoreMap.getOrElseUpdate(l, mutable.ArrayBuffer.empty) += id
     val restoreVars = h.currentLocals.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc)):
       case (builder, (local, idx)) =>
         val (computeOff, savePath) = getSaved(idx)
-        builder.chain(Match(
-          pcVar.asPath,
-          restoreMap.getOrElse(local, mutable.ArrayBuffer.empty).map(id => Case.Lit(Tree.IntLit(id)) -> Assign(local, paths.runtimePath.selSN("resumeValue"), End())).toList,
-          S(blockBuilder.chain(computeOff).assign(local, savePath).end),
-          _))
+        builder.chain(computeOff).assign(local, savePath)
     
     Match(
       paths.isResuming,

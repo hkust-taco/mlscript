@@ -170,15 +170,8 @@ str
 //│           k = runtime.resumeArr.at(runtime.resumeIdx);
 //│           saveOffset = runtime.resumeIdx + 1;
 //│           tmp13 = runtime.resumeArr.at(saveOffset);
-//│           switch (pc) {
-//│             case 1:
-//│               tmp14 = runtime.resumeValue;
-//│               break;
-//│             default:
-//│               saveOffset = runtime.resumeIdx + 2;
-//│               tmp14 = runtime.resumeArr.at(saveOffset);
-//│               break;
-//│           }
+//│           saveOffset = runtime.resumeIdx + 2;
+//│           tmp14 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 3;
 //│           tmp15 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 4;
@@ -196,14 +189,15 @@ str
 //│           case 0:
 //│             tmp13 = str + "A";
 //│             str = tmp13;
-//│             tmp14 = runtime.safeCall(k(arg));
-//│             if (tmp14 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp14, 1, Handler$h1$perform$1, null, null, 1, null, 6, k, tmp13, tmp14, tmp15, arg, Handler$h1$$instance)
+//│             runtime.resumeValue = runtime.safeCall(k(arg));
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, null, 1, null, 6, k, tmp13, tmp14, tmp15, arg, Handler$h1$$instance)
 //│             }
 //│             pc = 1;
 //│             continue main;
 //│             break;
 //│           case 1:
+//│             tmp14 = runtime.resumeValue;
 //│             tmp15 = str + "A";
 //│             str = tmp15;
 //│             return runtime.Unit;
@@ -251,15 +245,8 @@ str
 //│           tmp13 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 2;
 //│           tmp14 = runtime.resumeArr.at(saveOffset);
-//│           switch (pc) {
-//│             case 1:
-//│               tmp15 = runtime.resumeValue;
-//│               break;
-//│             default:
-//│               saveOffset = runtime.resumeIdx + 3;
-//│               tmp15 = runtime.resumeArr.at(saveOffset);
-//│               break;
-//│           }
+//│           saveOffset = runtime.resumeIdx + 3;
+//│           tmp15 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 4;
 //│           tmp16 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 5;
@@ -280,14 +267,15 @@ str
 //│             tmp13 = str + "B";
 //│             tmp14 = str + tmp13;
 //│             str = tmp14;
-//│             tmp15 = runtime.safeCall(k(arg));
-//│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp15, 1, Handler$h2$perform$1, null, null, 1, null, 8, k, tmp13, tmp14, tmp15, tmp16, tmp17, arg, Handler$h2$$instance)
+//│             runtime.resumeValue = runtime.safeCall(k(arg));
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, null, 1, null, 8, k, tmp13, tmp14, tmp15, tmp16, tmp17, arg, Handler$h2$$instance)
 //│             }
 //│             pc = 1;
 //│             continue main;
 //│             break;
 //│           case 1:
+//│             tmp15 = runtime.resumeValue;
 //│             tmp16 = str + "B";
 //│             tmp17 = str + tmp16;
 //│             str = tmp17;
@@ -327,14 +315,7 @@ str
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           switch (pc) {
-//│             case 1:
-//│               tmp13 = runtime.resumeValue;
-//│               break;
-//│             default:
-//│               tmp13 = runtime.resumeArr.at(runtime.resumeIdx);
-//│               break;
-//│           }
+//│           tmp13 = runtime.resumeArr.at(runtime.resumeIdx);
 //│           saveOffset = runtime.resumeIdx + 1;
 //│           h22 = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
@@ -346,19 +327,20 @@ str
 //│       main: while (true) {
 //│         switch (pc) {
 //│           case 0:
-//│             tmp13 = runtime.safeCall(h22.perform(runtime.Unit));
-//│             if (tmp13 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp13, 1, handleBlock$$2, null, null, 1, null, 2, tmp13, h22)
+//│             runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$$2, null, null, 2, null, 2, tmp13, h22)
 //│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│           case 1:
 //│             pc = 2;
 //│             continue main;
 //│             break;
-//│           case 2:
+//│           case 1:
 //│             return runtime.safeCall(h11.perform(runtime.Unit));
+//│             break;
+//│           case 2:
+//│             tmp13 = runtime.resumeValue;
+//│             pc = 1;
+//│             continue main;
 //│             break;
 //│         }
 //│         break;
@@ -374,23 +356,9 @@ str
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           switch (pc) {
-//│             case 1:
-//│               h22 = runtime.resumeValue;
-//│               break;
-//│             default:
-//│               h22 = runtime.resumeArr.at(runtime.resumeIdx);
-//│               break;
-//│           }
-//│           switch (pc) {
-//│             case 2:
-//│               tmp13 = runtime.resumeValue;
-//│               break;
-//│             default:
-//│               saveOffset = runtime.resumeIdx + 1;
-//│               tmp13 = runtime.resumeArr.at(saveOffset);
-//│               break;
-//│           }
+//│           h22 = runtime.resumeArr.at(runtime.resumeIdx);
+//│           saveOffset = runtime.resumeIdx + 1;
+//│           tmp13 = runtime.resumeArr.at(saveOffset);
 //│           saveOffset = runtime.resumeIdx + 2;
 //│           handleBlock$$here = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
@@ -402,24 +370,26 @@ str
 //│       main: while (true) {
 //│         switch (pc) {
 //│           case 0:
-//│             h22 = new Handler$h2$3();
-//│             if (h22 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(h22, 1, handleBlock$10, null, null, 1, null, 3, h22, tmp13, handleBlock$$here)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│           case 1:
-//│             handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
-//│             tmp13 = runtime.enterHandleBlock(h22, handleBlock$$here);
-//│             if (tmp13 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp13, 1, handleBlock$10, null, null, 2, null, 3, h22, tmp13, handleBlock$$here)
+//│             runtime.resumeValue = new Handler$h2$3();
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 3, h22, tmp13, handleBlock$$here)
 //│             }
 //│             pc = 2;
 //│             continue main;
 //│             break;
-//│           case 2:
+//│           case 1:
+//│             tmp13 = runtime.resumeValue;
 //│             return tmp13;
+//│             break;
+//│           case 2:
+//│             h22 = runtime.resumeValue;
+//│             handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
+//│             runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 3, h22, tmp13, handleBlock$$here)
+//│             }
+//│             pc = 1;
+//│             continue main;
 //│             break;
 //│         }
 //│         break;

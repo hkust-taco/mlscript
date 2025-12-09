@@ -41,24 +41,10 @@ fun f() =
 //│       k = runtime.resumeArr.at(saveOffset);
 //│       saveOffset = runtime.resumeIdx + 3;
 //│       scrut = runtime.resumeArr.at(saveOffset);
-//│       switch (pc) {
-//│         case 1:
-//│           tmp1 = runtime.resumeValue;
-//│           break;
-//│         default:
-//│           saveOffset = runtime.resumeIdx + 4;
-//│           tmp1 = runtime.resumeArr.at(saveOffset);
-//│           break;
-//│       }
-//│       switch (pc) {
-//│         case 2:
-//│           tmp2 = runtime.resumeValue;
-//│           break;
-//│         default:
-//│           saveOffset = runtime.resumeIdx + 5;
-//│           tmp2 = runtime.resumeArr.at(saveOffset);
-//│           break;
-//│       }
+//│       saveOffset = runtime.resumeIdx + 4;
+//│       tmp1 = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 5;
+//│       tmp2 = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
 //│       break;
 //│     default:
@@ -74,37 +60,39 @@ fun f() =
 //│         scrut = i == 0;
 //│         switch (scrut) {
 //│           case true:
-//│             tmp1 = Predef.raiseUnhandledEffect();
-//│             if (tmp1 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp1, 1, f, f$debugInfo, null, 1, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│             runtime.resumeValue = Predef.raiseUnhandledEffect();
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, null, 4, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│             }
-//│             pc = 1;
+//│             pc = 4;
 //│             continue main;
 //│             break;
 //│           default:
 //│             tmp2 = runtime.Unit;
 //│             break;
 //│         }
-//│         pc = 3;
+//│         pc = 1;
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         pc = 4;
-//│         continue main;
+//│         return j / i;
 //│         break;
 //│       case 2:
-//│         pc = 3;
+//│         tmp2 = runtime.resumeValue;
+//│         pc = 1;
 //│         continue main;
 //│         break;
 //│       case 3:
-//│         return j / i;
-//│         break;
-//│       case 4:
-//│         tmp2 = Predef.print(tmp1);
-//│         if (tmp2 instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(tmp2, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│         runtime.resumeValue = Predef.print(tmp1);
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
+//│         continue main;
+//│         break;
+//│       case 4:
+//│         tmp1 = runtime.resumeValue;
+//│         pc = 3;
 //│         continue main;
 //│         break;
 //│     }

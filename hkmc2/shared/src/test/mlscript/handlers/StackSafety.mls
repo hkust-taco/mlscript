@@ -73,7 +73,7 @@ sum(10000)
 //│ JS (unsanitized):
 //│ let sum, tmp1, $_stack$_safe$_body$_1;
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc, saveOffset, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc, saveOffset, tmp4, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
@@ -88,15 +88,8 @@ sum(10000)
 //│       scrut = runtime.resumeArr.at(saveOffset);
 //│       saveOffset = runtime.resumeIdx + 2;
 //│       tmp2 = runtime.resumeArr.at(saveOffset);
-//│       switch (pc) {
-//│         case 1:
-//│           tmp3 = runtime.resumeValue;
-//│           break;
-//│         default:
-//│           saveOffset = runtime.resumeIdx + 3;
-//│           tmp3 = runtime.resumeArr.at(saveOffset);
-//│           break;
-//│       }
+//│       saveOffset = runtime.resumeIdx + 3;
+//│       tmp3 = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
 //│       break;
 //│     default:
@@ -113,10 +106,11 @@ sum(10000)
 //│             break;
 //│           default:
 //│             tmp2 = n - 1;
-//│             tmp3 = sum(tmp2);
+//│             tmp4 = sum(tmp2);
 //│             runtime.stackDepth = curDepth;
-//│             if (tmp3 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp3, 1, sum, null, null, 1, null, 4, n, scrut, tmp2, tmp3)
+//│             runtime.resumeValue = tmp4;
+//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(runtime.resumeValue, 1, sum, null, null, 1, null, 4, n, scrut, tmp2, tmp3)
 //│             }
 //│             pc = 1;
 //│             continue main;
@@ -124,6 +118,7 @@ sum(10000)
 //│         }
 //│         break;
 //│       case 1:
+//│         tmp3 = runtime.resumeValue;
 //│         return n + tmp3;
 //│         break;
 //│     }
