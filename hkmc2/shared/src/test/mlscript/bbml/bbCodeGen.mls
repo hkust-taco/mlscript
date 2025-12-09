@@ -112,7 +112,7 @@ inc(41)
 :sjs
 if 1 == 2 then 0 else 42
 //│ JS (unsanitized):
-//│ let scrut; scrut = 1 == 2; if (scrut === true) { 0 } else { 42 }
+//│ let scrut; scrut = 1 == 2; switch (scrut) { case true: 0; break; default: 42; break; }
 //│ = 42
 //│ Type: Int
 
@@ -152,14 +152,17 @@ fun pow(x) = case
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp, tmp1, tmp2;
-//│     if (caseScrut === 0) {
-//│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp = pow(x1);
-//│       tmp1 = n - 1;
-//│       tmp2 = runtime.safeCall(tmp(tmp1));
-//│       return x1 * tmp2
+//│     switch (caseScrut) {
+//│       case 0:
+//│         return 1;
+//│         break;
+//│       default:
+//│         n = caseScrut;
+//│         tmp = pow(x1);
+//│         tmp1 = n - 1;
+//│         tmp2 = runtime.safeCall(tmp(tmp1));
+//│         return x1 * tmp2;
+//│         break;
 //│     }
 //│   });
 //│   return lambda1
@@ -176,12 +179,16 @@ fun nott = case
 //│ nott = function nott() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     if (caseScrut === true) {
-//│       return false
-//│     } else if (caseScrut === false) {
-//│       return true
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     switch (caseScrut) {
+//│       case true:
+//│         return false;
+//│         break;
+//│       case false:
+//│         return true;
+//│         break;
+//│       default:
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│         break;
 //│     }
 //│   });
 //│   return lambda1
@@ -208,14 +215,17 @@ fun fact = case
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
 //│     let n, tmp1, tmp2, tmp3;
-//│     if (caseScrut === 0) {
-//│       return 1
-//│     } else {
-//│       n = caseScrut;
-//│       tmp1 = fact();
-//│       tmp2 = n - 1;
-//│       tmp3 = tmp1(tmp2);
-//│       return n * tmp3
+//│     switch (caseScrut) {
+//│       case 0:
+//│         return 1;
+//│         break;
+//│       default:
+//│         n = caseScrut;
+//│         tmp1 = fact();
+//│         tmp2 = n - 1;
+//│         tmp3 = tmp1(tmp2);
+//│         return n * tmp3;
+//│         break;
 //│     }
 //│   });
 //│   return lambda1

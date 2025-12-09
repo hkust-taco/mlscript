@@ -196,24 +196,34 @@ if true do
 //│ };
 //│ handleBlock$11 = (undefined, function () {
 //│   let scrut, pc;
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     scrut = runtime.resumeArr.at(runtime.resumeIdx);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       scrut = runtime.resumeArr.at(runtime.resumeIdx);
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = true;
-//│       if (scrut === true) {
-//│         return f()
-//│       } else {
-//│         return runtime.Unit
-//│       }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {}
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = true;
+//│         switch (scrut) {
+//│           case true:
+//│             return f();
+//│             break;
+//│           default:
+//│             return runtime.Unit;
+//│             break;
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         break;
+//│     }
 //│     break;
 //│   }
 //│ });
@@ -398,16 +408,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.377: 	    module A with
+//│ ║  l.387: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.381: 	    module A with
+//│ ║  l.391: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.385: 	    module A with
+//│ ║  l.395: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.389: 	    module A with
+//│ ║  l.399: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

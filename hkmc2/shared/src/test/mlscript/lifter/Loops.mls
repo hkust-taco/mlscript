@@ -57,13 +57,16 @@ fun foo() =
 //│ while$1 = function while$(foo$capture6) {
 //│   let scrut, tmp2, lambda$here;
 //│   scrut = true;
-//│   if (scrut === true) {
-//│     tmp2 = foo$capture6.x$capture$0 + 1;
-//│     foo$capture6.x$capture$0 = tmp2;
-//│     lambda$here = runtime.safeCall(lambda2(foo$capture6));
-//│     return lambda$here
-//│   } else {
-//│     foo$capture6.tmp$capture$1 = runtime.Unit;
+//│   switch (scrut) {
+//│     case true:
+//│       tmp2 = foo$capture6.x$capture$0 + 1;
+//│       foo$capture6.x$capture$0 = tmp2;
+//│       lambda$here = runtime.safeCall(lambda2(foo$capture6));
+//│       return lambda$here;
+//│       break;
+//│     default:
+//│       foo$capture6.tmp$capture$1 = runtime.Unit;
+//│       break;
 //│   }
 //│   return runtime.LoopEnd
 //│ };
@@ -85,7 +88,14 @@ fun foo() =
 //│   capture.tmp$capture$1 = undefined;
 //│   tmp2 = while$1(capture);
 //│   tmp3 = tmp2 !== runtime.LoopEnd;
-//│   if (tmp3 === true) { return tmp2 } else { return capture.tmp$capture$1 }
+//│   switch (tmp3) {
+//│     case true:
+//│       return tmp2;
+//│       break;
+//│     default:
+//│       return capture.tmp$capture$1;
+//│       break;
+//│   }
 //│ };
 
 :expect 2

@@ -41,17 +41,13 @@ object HandlerLowering:
   
   type FnOrCls = Either[BlockMemberSymbol, DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol]
   
-  // TODO: Fix these comments
-  // isTopLevel:
-  // whether the current block is the top level block, as we do not emit code for continuation class on the top level
-  // since we cannot return an effect signature on the top level (we are not in a function so return statement are invalid)
-  // contName: the name of the continuation class
-  // ctorThis: the path to `this` in the constructor, this is used to insert `return this;` at the end of constructor.
-  // linkAndHandle:
-  // a function that takes a LinkState and returns a block that links the continuation class and handles the effect
-  // this is a convenience function which initializes the continuation class in function context or throw an error in top level
+  // currentFun: path to the current function for resumption, none if not instrumented like top level or constructor
+  // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
+  // plCnt: how many times to call this function for resumption, as we have arbitrary number of parameter lists
+  // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
+  // currentStackSafetySym: The symbol to be used for stack safety
   private case class HandlerCtx(
-      currentFun: Opt[Path],
+      currentFun: Option[Path],
       thisPath: Option[Path],
       plCnt: Int,
       currentLocals: List[Local],
@@ -72,8 +68,7 @@ object HandlerLowering:
         currentLocals.map(_.asPath)
       ).map(_.asArg))(true, true), false)
   
-  // inScopeLocals: Local variables that are in scope, including those that come from outer.
-  // prevLocalsFn: The function that gets the outer function's locals.
+  // inScopeLocals: All variables that are in scope, including those that come from outer scope.
   private case class DebugInfo(
     debugNme: Str,
     debugInfoPath: Path,

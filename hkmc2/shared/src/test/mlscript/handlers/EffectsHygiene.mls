@@ -27,50 +27,60 @@ fun foo(h): module M =
 //│ let foo;
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut, pc, saveOffset;
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     A2 = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     A3 = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
-//│     h = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 3;
-//│     scrut = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       A2 = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = runtime.resumeIdx + 1;
+//│       A3 = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 2;
+//│       h = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 3;
+//│       scrut = runtime.resumeArr.at(saveOffset);
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = false;
-//│       if (scrut === true) {
-//│         globalThis.Object.freeze(class A {
-//│           static {
-//│             A2 = this
-//│           }
-//│           constructor() {
-//│             runtime.Unit;
-//│           }
-//│           toString() { return runtime.render(this); }
-//│           static [definitionMetadata] = ["class", "A"]; 
-//│         });
-//│         return A2
-//│       } else {
-//│         globalThis.Object.freeze(class A1 {
-//│           static {
-//│             A3 = this
-//│           }
-//│           constructor() {
-//│             runtime.Unit;
-//│           }
-//│           toString() { return runtime.render(this); }
-//│           static [definitionMetadata] = ["class", "A"]; 
-//│         });
-//│         return A3
-//│       }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {}
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = false;
+//│         switch (scrut) {
+//│           case true:
+//│             globalThis.Object.freeze(class A {
+//│               static {
+//│                 A2 = this
+//│               }
+//│               constructor() {
+//│                 runtime.Unit;
+//│               }
+//│               toString() { return runtime.render(this); }
+//│               static [definitionMetadata] = ["class", "A"]; 
+//│             });
+//│             return A2;
+//│             break;
+//│           default:
+//│             globalThis.Object.freeze(class A1 {
+//│               static {
+//│                 A3 = this
+//│               }
+//│               constructor() {
+//│                 runtime.Unit;
+//│               }
+//│               toString() { return runtime.render(this); }
+//│               static [definitionMetadata] = ["class", "A"]; 
+//│             });
+//│             return A3;
+//│             break;
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         break;
+//│     }
 //│     break;
 //│   }
 //│ };

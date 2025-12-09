@@ -127,27 +127,33 @@ globalThis.Object.freeze(class Predef {
       let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
       len = rest.length;
       scrut = len == 0;
-      if (scrut === true) {
-        return first
-      } else {
-        i = len - 1;
-        init = runtime.safeCall(rest.at(i));
-        tmp4: while (true) {
-          scrut1 = i > 0;
-          if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            tmp3 = runtime.Unit;
-            continue tmp4
-          } else {
-            tmp3 = runtime.Unit;
-          }
+      switch (scrut) {
+        case true:
+          return first;
           break;
-        }
-        return runtime.safeCall(f(first, init))
+        default:
+          i = len - 1;
+          init = runtime.safeCall(rest.at(i));
+          tmp4: while (true) {
+            scrut1 = i > 0;
+            switch (scrut1) {
+              case true:
+                tmp = i - 1;
+                i = tmp;
+                tmp1 = runtime.safeCall(rest.at(i));
+                tmp2 = runtime.safeCall(f(tmp1, init));
+                init = tmp2;
+                tmp3 = runtime.Unit;
+                continue tmp4;
+                break;
+              default:
+                tmp3 = runtime.Unit;
+                break;
+            }
+            break;
+          }
+          return runtime.safeCall(f(first, init));
+          break;
       }
     }
   } 

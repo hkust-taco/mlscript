@@ -31,64 +31,85 @@ fun f() =
 //│ ]);
 //│ f = function f() {
 //│   let i, j, k, scrut, tmp1, tmp2, pc, saveOffset;
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     i = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     j = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
-//│     k = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 3;
-//│     scrut = runtime.resumeArr.at(saveOffset);
-//│     if (pc === 4) {
-//│       tmp1 = runtime.resumeValue;
-//│     } else {
-//│       saveOffset = runtime.resumeIdx + 4;
-//│       tmp1 = runtime.resumeArr.at(saveOffset);
-//│     }
-//│     if (pc === 2) {
-//│       tmp2 = runtime.resumeValue;
-//│     } else {
-//│       saveOffset = runtime.resumeIdx + 5;
-//│       tmp2 = runtime.resumeArr.at(saveOffset);
-//│     }
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       i = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = runtime.resumeIdx + 1;
+//│       j = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 2;
+//│       k = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 3;
+//│       scrut = runtime.resumeArr.at(saveOffset);
+//│       switch (pc) {
+//│         case 4:
+//│           tmp1 = runtime.resumeValue;
+//│           break;
+//│         default:
+//│           saveOffset = runtime.resumeIdx + 4;
+//│           tmp1 = runtime.resumeArr.at(saveOffset);
+//│           break;
+//│       }
+//│       switch (pc) {
+//│         case 2:
+//│           tmp2 = runtime.resumeValue;
+//│           break;
+//│         default:
+//│           saveOffset = runtime.resumeIdx + 5;
+//│           tmp2 = runtime.resumeArr.at(saveOffset);
+//│           break;
+//│       }
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       i = 0;
-//│       j = 100;
-//│       k = 2000;
-//│       scrut = i == 0;
-//│       if (scrut === true) {
-//│         tmp1 = Predef.raiseUnhandledEffect();
-//│         if (tmp1 instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(tmp1, 1, f, f$debugInfo, null, 4, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│     switch (pc) {
+//│       case 0:
+//│         i = 0;
+//│         j = 100;
+//│         k = 2000;
+//│         scrut = i == 0;
+//│         switch (scrut) {
+//│           case true:
+//│             tmp1 = Predef.raiseUnhandledEffect();
+//│             if (tmp1 instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(tmp1, 1, f, f$debugInfo, null, 4, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│             }
+//│             pc = 4;
+//│             continue main;
+//│             break;
+//│           default:
+//│             tmp2 = runtime.Unit;
+//│             pc = 1;
+//│             continue main;
+//│             break;
 //│         }
-//│         pc = 4;
-//│         continue main
-//│       } else {
-//│         tmp2 = runtime.Unit;
 //│         pc = 1;
-//│         continue main
-//│       }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {
-//│       return j / i
-//│     } else if (pc === 2) {
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 3) {
-//│       tmp2 = Predef.print(tmp1);
-//│       if (tmp2 instanceof runtime.EffectSig.class) {
-//│         return runtime.unwind(tmp2, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
-//│       }
-//│       pc = 2;
-//│       continue main
-//│     } else if (pc === 4) { pc = 3; continue main }
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         return j / i;
+//│         break;
+//│       case 2:
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 3:
+//│         tmp2 = Predef.print(tmp1);
+//│         if (tmp2 instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(tmp2, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│         }
+//│         pc = 2;
+//│         continue main;
+//│         break;
+//│       case 4:
+//│         pc = 3;
+//│         continue main;
+//│         break;
+//│     }
 //│     break;
 //│   }
 //│ };

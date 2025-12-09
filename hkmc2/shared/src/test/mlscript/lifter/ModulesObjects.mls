@@ -30,10 +30,13 @@ foo(10)
 //│ let M3, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
-//│   if (isMut === true) {
-//│     tmp = new M3(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new M3(y));
+//│   switch (isMut) {
+//│     case true:
+//│       tmp = new M3(y);
+//│       break;
+//│     default:
+//│       tmp = globalThis.Object.freeze(new M3(y));
+//│       break;
 //│   }
 //│   return tmp
 //│ };

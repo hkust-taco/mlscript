@@ -23,9 +23,14 @@ if false then 0
 //│ JS (unsanitized):
 //│ let scrut;
 //│ scrut = false;
-//│ if (scrut === true) {
-//│   0
-//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ switch (scrut) {
+//│   case true:
+//│     0;
+//│     break;
+//│   default:
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│     break;
+//│ }
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')
 
@@ -41,9 +46,14 @@ foo()
 //│ foo = function foo() {
 //│   let scrut1;
 //│   scrut1 = false;
-//│   if (scrut1 === true) {
-//│     return 0
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│   switch (scrut1) {
+//│     case true:
+//│       return 0;
+//│       break;
+//│     default:
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│       break;
+//│   }
 //│ };
 //│ foo()
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'freeze')

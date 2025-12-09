@@ -30,31 +30,42 @@ hi(0)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return runtime.unwind(stackDelayRes, 1, hi, null, null, 0, null, 3, n, scrut, tmp1)
 //│   }
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     n = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     scrut = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
-//│     tmp1 = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       n = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = runtime.resumeIdx + 1;
+//│       scrut = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 2;
+//│       tmp1 = runtime.resumeArr.at(saveOffset);
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = n == 0;
-//│       if (scrut === true) {
-//│         return 0
-//│       } else {
-//│         tmp1 = n - 1;
-//│         pc = 2;
-//│         continue main
-//│       }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {} else if (pc === 2) {
-//│       return hi(tmp1)
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = n == 0;
+//│         switch (scrut) {
+//│           case true:
+//│             return 0;
+//│             break;
+//│           default:
+//│             tmp1 = n - 1;
+//│             pc = 2;
+//│             continue main;
+//│             break;
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         break;
+//│       case 2:
+//│         return hi(tmp1);
+//│         break;
 //│     }
 //│     break;
 //│   }
@@ -86,45 +97,60 @@ sum(10000)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return runtime.unwind(stackDelayRes, 1, sum1, null, null, 0, null, 4, n, scrut, tmp2, tmp3)
 //│   }
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     n = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     scrut = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
-//│     tmp2 = runtime.resumeArr.at(saveOffset);
-//│     if (pc === 2) {
-//│       tmp3 = runtime.resumeValue;
-//│     } else {
-//│       saveOffset = runtime.resumeIdx + 3;
-//│       tmp3 = runtime.resumeArr.at(saveOffset);
-//│     }
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       n = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = runtime.resumeIdx + 1;
+//│       scrut = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 2;
+//│       tmp2 = runtime.resumeArr.at(saveOffset);
+//│       switch (pc) {
+//│         case 2:
+//│           tmp3 = runtime.resumeValue;
+//│           break;
+//│         default:
+//│           saveOffset = runtime.resumeIdx + 3;
+//│           tmp3 = runtime.resumeArr.at(saveOffset);
+//│           break;
+//│       }
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = n == 0;
-//│       if (scrut === true) {
-//│         return 0
-//│       } else {
-//│         tmp2 = n - 1;
-//│         pc = 3;
-//│         continue main
-//│       }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {} else if (pc === 2) {
-//│       return n + tmp3
-//│     } else if (pc === 3) {
-//│       tmp3 = sum1(tmp2);
-//│       runtime.stackDepth = curDepth;
-//│       if (tmp3 instanceof runtime.EffectSig.class) {
-//│         return runtime.unwind(tmp3, 1, sum1, null, null, 2, null, 4, n, scrut, tmp2, tmp3)
-//│       }
-//│       pc = 2;
-//│       continue main
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = n == 0;
+//│         switch (scrut) {
+//│           case true:
+//│             return 0;
+//│             break;
+//│           default:
+//│             tmp2 = n - 1;
+//│             pc = 3;
+//│             continue main;
+//│             break;
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         break;
+//│       case 2:
+//│         return n + tmp3;
+//│         break;
+//│       case 3:
+//│         tmp3 = sum1(tmp2);
+//│         runtime.stackDepth = curDepth;
+//│         if (tmp3 instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(tmp3, 1, sum1, null, null, 2, null, 4, n, scrut, tmp2, tmp3)
+//│         }
+//│         pc = 2;
+//│         continue main;
+//│         break;
 //│     }
 //│     break;
 //│   }
@@ -236,26 +262,38 @@ fun max(a, b) = if a < b then b else a
 //│ let max;
 //│ max = function max(a, b) {
 //│   let scrut, pc, saveOffset;
-//│   if (runtime.isResuming === true) {
-//│     pc = runtime.resumePc;
-//│     a = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     b = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
-//│     scrut = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│   switch (runtime.isResuming) {
+//│     case true:
+//│       pc = runtime.resumePc;
+//│       a = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = runtime.resumeIdx + 1;
+//│       b = runtime.resumeArr.at(saveOffset);
+//│       saveOffset = runtime.resumeIdx + 2;
+//│       scrut = runtime.resumeArr.at(saveOffset);
+//│       runtime.isResuming = false;
+//│       break;
+//│     default:
+//│       pc = 0;
+//│       break;
 //│   }
 //│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = a < b;
-//│       if (scrut === true) {
-//│         return b
-//│       } else { return a }
-//│       pc = 1;
-//│       continue main
-//│     } else if (pc === 1) {}
+//│     switch (pc) {
+//│       case 0:
+//│         scrut = a < b;
+//│         switch (scrut) {
+//│           case true:
+//│             return b;
+//│             break;
+//│           default:
+//│             return a;
+//│             break;
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         break;
+//│     }
 //│     break;
 //│   }
 //│ };
