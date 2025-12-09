@@ -47,3 +47,19 @@ f(false)
 //│ };
 //│ f3(false)
 //│ ═══[RUNTIME ERROR] Error: y
+
+
+:re
+:sjs
+if false then throw 0
+throw 1
+//│ JS (unsanitized):
+//│ let scrut;
+//│ scrut = false;
+//│ if (scrut === true) {
+//│   throw 0
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ /* unreachable */
+//│ ═══[RUNTIME ERROR] Error: match error
+
+

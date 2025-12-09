@@ -82,8 +82,7 @@ fun f() =
 //│               this.pc = 4;
 //│               continue contLoop
 //│             }
-//│             this.pc = 4;
-//│             continue contLoop;
+//│             /* unreachable */
 //│             break;
 //│           case 5:
 //│             tmp1 = Predef.print(tmp);
@@ -162,8 +161,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:162:3)
-//│ 	at lambda_test (Debugging.mls:159:3)
+//│ 	at lambda (Debugging.mls:161:3)
+//│ 	at lambda_test (Debugging.mls:158:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -242,9 +241,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:235:3) with locals: j=200
+//│ > 	at f (Debugging.mls:234:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:237:3)
+//│ > 	at f (Debugging.mls:236:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:238:3) with locals: j=300
+//│ > 	at f (Debugging.mls:237:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]
