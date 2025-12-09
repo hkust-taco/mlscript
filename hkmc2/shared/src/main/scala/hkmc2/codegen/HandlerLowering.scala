@@ -325,7 +325,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         override def applyBlock(blk: Block): Unit = blk match
           case Unwind(uid, loc) => ()
           case StateTransition(uid) =>
-            if !traversed.contains(uid) then
+            if !traversed.contains(uid) && !parts.states(uid).resumable then
               traversed += stateId
               applyBlock(parts.states(uid).blk)
           case Assign(lhs, rhs, rest) =>
