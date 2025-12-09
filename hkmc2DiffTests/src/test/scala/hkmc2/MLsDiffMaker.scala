@@ -72,6 +72,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val importQQ = NullaryCommand("qq")
   val stageCode = NullaryCommand("staging")
   val dontRewriteWhile = NullaryCommand("dontRewriteWhile")
+  val noTailRecOpt = NullaryCommand("noTailRec")
   
   def mkConfig: Config =
     import Config.*
@@ -100,6 +101,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = !dontRewriteWhile.isSet,
+      tailRecOpt = !noTailRecOpt.isSet,
     )
   
   

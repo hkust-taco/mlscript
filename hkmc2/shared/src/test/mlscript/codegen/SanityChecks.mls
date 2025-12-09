@@ -289,7 +289,7 @@ if M.A(1).y is
 //│ }
 //│ scrut = selRes2;
 //│ x = scrut;
-//│ scrut1 = x == 1;
+//│ scrut1 = Predef.equals(x, 1);
 //│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 

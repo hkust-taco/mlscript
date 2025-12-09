@@ -61,13 +61,16 @@ while x
 //│ tmp4 = undefined;
 //│ while3 = (undefined, function () {
 //│   let tmp6;
-//│   if (x2 === true) {
-//│     tmp6 = Predef.print("Hello World");
-//│     x2 = false;
-//│     tmp4 = runtime.Unit;
-//│     return while3()
-//│   } else { tmp4 = 42; }
-//│   return runtime.LoopEnd
+//│   loopLabel: while (true) {
+//│     if (x2 === true) {
+//│       tmp6 = Predef.print("Hello World");
+//│       x2 = false;
+//│       tmp4 = runtime.Unit;
+//│       continue loopLabel
+//│     } else { tmp4 = 42; }
+//│     return runtime.LoopEnd;
+//│     break;
+//│   }
 //│ });
 //│ tmp5 = while3();
 //│ tmp4
@@ -297,10 +300,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.297: 	  then 0(0)
+//│ ║  l.300: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.296: 	while print("Hello World"); false
+//│ ║  l.299: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -310,12 +313,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.309: 	while { print("Hello World"), false }
+//│ ║  l.312: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.310: 	  then 0(0)
+//│ ║  l.313: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.311: 	  else 1
+//│ ║  l.314: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -325,14 +328,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.323: 	    print("Hello World")
+//│ ║  l.326: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.324: 	    false
+//│ ║  l.327: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.325: 	  then 0(0)
+//│ ║  l.328: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.326: 	  else 1
+//│ ║  l.329: 	  else 1
 //│ ╙──       	  ^^^^
 
 
@@ -362,6 +365,7 @@ class Lazy[out A](f: () -> A) with
     cached
 
 :expect [1, 2, 3]
+:lift
 let arr = [1, 2, 3]
 let output = mut []
 let i = 0

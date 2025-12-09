@@ -328,6 +328,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     // The symbol for the loop label if the term is a `while`.
     lazy val loopLabel = new TempSymbol(t)
     lazy val f = new BlockMemberSymbol("while", Nil, false)
+    lazy val tSym = TermSymbol.fromFunBms(f, N)
     val normalized = tl.scoped("ucs:normalize"):
       normalize(inputSplit)(using VarSet())
     tl.scoped("ucs:normalized"):
@@ -338,7 +339,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
     lazy val assignResult = (r: Result) => Assign(l, r, End())
     val loopCont = if config.rewriteWhileLoops
-      then Return(Call(Value.Ref(f, N), Nil)(true, true, false), false)
+      then Return(Call(Value.Ref(f, S(tSym)), Nil)(true, true, false), false)
       else Continue(loopLabel)
     val cont =
       if kw === `while` then
@@ -398,8 +399,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
           val blk = blockBuilder
             .assign(l, Value.Lit(Tree.UnitLit(false)))
-            .define(FunDefn.withFreshSymbol(N, f, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(isTailRec = false))
-            .assign(loopResult, Call(Value.Ref(f, N), Nil)(true, true, false))
+            .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false))
+            .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil)(true, true, false))
           if summon[LoweringCtx].mayRet then
             blk
               .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
