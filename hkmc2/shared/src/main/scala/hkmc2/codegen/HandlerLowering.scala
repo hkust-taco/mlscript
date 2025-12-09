@@ -130,14 +130,26 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case Return(PureCall(Value.Ref(`transitionSymbol`, _), List(Value.Lit(Tree.IntLit(uid)))), false) =>
         S(uid)
       case _ => N
+
+  abstract class LazyId:
+    private var id: Opt[StateId] = N
+    protected def getImpl: StateId
+    def get: StateId = id match
+      case S(value) => value
+      case N =>
+        val value = getImpl
+        id = S(value)
+        value
+    def isUsed: Bool = id.isDefined
+    def transitionOrBlk(blk: => Block) =
+      if isUsed then StateTransition(get) else blk
   
-  private class FreshId:
+  private class IdAllocator:
     var id: Int = 0
     def apply() =
       val tmp = id
       id += 1
       tmp
-  private val freshId = FreshId()
   
   // blk: the block of code within this state
   // sym: the variable to which the resumed value should set
@@ -246,20 +258,24 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   private def partitionBlock(blk: Block)(using h: HandlerCtx): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
-    val freshId = FreshId()
+    val allocId = new IdAllocator()
 
     // * blk: The block to transform
+    // * partitioned: whether we are already in a partitioned state
+    // *              if we are not partitioned, we do not need to jump to afterEnd,
+    // *              this is because we are still in the original block, which shares
+    // *              the same code path.
     // * labelIds: maps label IDs to the state at the start of the label and the state after the label
     // * afterEnd: what state End should jump to, if at all
     // TODO: don't split within Match, Begin and Labels when not needed, ideally keep it intact.
     // Need careful analysis for this.
-    def go(blk: Block)(using labelIds: Map[Symbol, (StateId, StateId)], afterEnd: Option[StateId]): Block = boundary:
+    def go(blk: Block)(using labelIds: Map[Symbol, (LazyId, LazyId)], afterEnd: Option[LazyId], partitioned: Bool): Block = boundary:
       // First check if the current block contain any non trivial call, if so we need a partition
 
       // sym: the local that stores the result
       def doNewEffectPartition(sym: Local, res: Result, rst: Block) =
-        val stateId = freshId()
-        result(stateId) = BlockPartition(go(rst), S(sym))
+        val stateId = allocId()
+        result(stateId) = BlockPartition(go(rst)(using partitioned = true), S(sym))
         val newBlock = blockBuilder
           .assign(sym, res)
           .ifthen(
@@ -269,6 +285,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           )
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
+      class RestLazyId(rst: Block) extends LazyId:
+        def getImpl: StateId =
+          go(rst)(using partitioned = true) match
+            case StateTransition(uid) => uid
+            case newRst =>
+              val id = allocId()
+              result(id) = BlockPartition(newRst, N)
+              id
+        def transitionSoft: Block = transitionOrBlk(go(rst))
+
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
@@ -291,29 +317,21 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       blk match
 
       case Match(scrut, arms, dflt, rest) =>
-        val newRest = go(rest)
-        val restId: StateId = newRest match
-          case StateTransition(uid) => uid
-          case _ =>
-            val id = freshId()
-            result(id) = BlockPartition(newRest, N)
-            id
+        val restId = RestLazyId(rest)
         val newArms = arms.map((cse, blkk) => (cse, go(blkk)(using afterEnd = S(restId))))
         val newDflt = dflt.map(blkk => go(blkk)(using afterEnd = S(restId)))
-        Match(scrut, newArms, newDflt, StateTransition(restId))
+        Match(scrut, newArms, newDflt, restId.transitionSoft)
 
       case Label(label, loop, body, rest) =>
-        val startId = freshId() // start of body
-        val newRest = go(rest)
-        val endId: StateId = newRest match // start of rest
-          case StateTransition(uid) => uid
-          case _ =>
-            val id = freshId()
-            result(id) = BlockPartition(newRest, N)
-            id
-        val newBody = go(body)(using labelIds + (label -> (startId, endId)), S(endId))
-        result(startId) = BlockPartition(newBody, N)
-        StateTransition(startId)
+        val restId = RestLazyId(rest)
+        val startId = new LazyId:
+          def getImpl = allocId()
+        val newBody = go(body)(using labelIds + (label -> (startId, restId)), S(restId))
+        if startId.isUsed then
+          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft), N)
+          StateTransition(startId.get)
+        else
+          Label(label, loop, newBody, restId.transitionSoft)
 
       case Break(label) =>
         val (start, end) = labelIds.get(label) match
@@ -323,7 +341,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             source = Diagnostic.Source.Compilation))
             return blk
           case S(value) => value
-        StateTransition(end)
+        if partitioned then
+          StateTransition(end.get)
+        else
+          Break(label)
 
       case Continue(label) =>
         val (start, end) = labelIds.get(label) match
@@ -333,32 +354,28 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             source = Diagnostic.Source.Compilation))
             return blk
           case S(value) => value
-        StateTransition(start)
-
-      // An optimization to omit useless state
-      case Begin(End(_), blk) => go(blk)
+        if partitioned then
+          StateTransition(start.get)
+        else
+          Continue(label)
 
       case Begin(sub, rest) =>
-        val newRest = go(rest)
-        newRest match
-          case StateTransition(uid) => go(sub)(using afterEnd = S(uid))
-          case _ =>
-            val id = freshId()
-            result(id) = BlockPartition(newRest, N)
-            go(sub)(using afterEnd = S(id))
+        val restId = RestLazyId(rest)
+        val newSub = go(sub)(using afterEnd = S(restId))
+        Begin(newSub, restId.transitionSoft)
 
-      case End(_) => afterEnd match
-        case None => blk
-        case Some(id) => StateTransition(id)
+      case End(_) =>
+        if partitioned then
+          afterEnd.fold(blk)(id => StateTransition(id.get))
+        else
+          blk
 
       // Currently, implicit returns are only used in top level and tail call of constructor
       // The former case never enters the partitioning function, so it must be the later case here.
-      // If the constructor is non-trivial, we will append `return thisVar;` afterwards.
-      // Erasing the implicit return early here is sound since trivial constructor will
-      // do the trivial transformation instead of continuing the instrumentation.
-      case Return(_, true) => afterEnd match
-        case None => End()
-        case Some(id) => StateTransition(id)
+      // We no longer handle the later case, hence we can ignore this case.
+      // case Return(_, true) => afterEnd match
+      //   case None => End()
+      //   case Some(id) => StateTransition(id)
 
       // identity cases
 
@@ -373,8 +390,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case Throw(_) => blk
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
-    val initId = freshId()
-    val initPart = BlockPartition(go(blk)(using Map(), N), N)
+    val initId = allocId()
+    val initPart = BlockPartition(go(blk)(using Map(), N, false), N)
     result(initId) = initPart
     PartitionedBlock(initId, Map.from(result))
   

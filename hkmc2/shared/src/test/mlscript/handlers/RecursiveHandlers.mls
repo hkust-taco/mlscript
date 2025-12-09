@@ -354,6 +354,10 @@ str
 //│             continue main;
 //│             break;
 //│           case 1:
+//│             pc = 2;
+//│             continue main;
+//│             break;
+//│           case 2:
 //│             return runtime.safeCall(h11.perform(runtime.Unit));
 //│             break;
 //│         }

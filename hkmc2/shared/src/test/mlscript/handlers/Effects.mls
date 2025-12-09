@@ -195,36 +195,15 @@ if true do
 //│   return 3
 //│ };
 //│ handleBlock$11 = (undefined, function () {
-//│   let scrut, pc;
-//│   switch (runtime.isResuming) {
+//│   let scrut;
+//│   scrut = true;
+//│   switch (scrut) {
 //│     case true:
-//│       pc = runtime.resumePc;
-//│       scrut = runtime.resumeArr.at(runtime.resumeIdx);
-//│       runtime.isResuming = false;
+//│       return f();
 //│       break;
 //│     default:
-//│       pc = 0;
+//│       return runtime.Unit;
 //│       break;
-//│   }
-//│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = true;
-//│         switch (scrut) {
-//│           case true:
-//│             return f();
-//│             break;
-//│           default:
-//│             return runtime.Unit;
-//│             break;
-//│         }
-//│         pc = 1;
-//│         continue main;
-//│         break;
-//│       case 1:
-//│         break;
-//│     }
-//│     break;
 //│   }
 //│ });
 //│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
@@ -408,16 +387,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.387: 	    module A with
+//│ ║  l.366: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.391: 	    module A with
+//│ ║  l.370: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.395: 	    module A with
+//│ ║  l.374: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.399: 	    module A with
+//│ ║  l.378: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

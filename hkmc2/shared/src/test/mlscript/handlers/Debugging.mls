@@ -42,7 +42,7 @@ fun f() =
 //│       saveOffset = runtime.resumeIdx + 3;
 //│       scrut = runtime.resumeArr.at(saveOffset);
 //│       switch (pc) {
-//│         case 4:
+//│         case 1:
 //│           tmp1 = runtime.resumeValue;
 //│           break;
 //│         default:
@@ -76,37 +76,35 @@ fun f() =
 //│           case true:
 //│             tmp1 = Predef.raiseUnhandledEffect();
 //│             if (tmp1 instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(tmp1, 1, f, f$debugInfo, null, 4, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│               return runtime.unwind(tmp1, 1, f, f$debugInfo, null, 1, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│             }
-//│             pc = 4;
+//│             pc = 1;
 //│             continue main;
 //│             break;
 //│           default:
 //│             tmp2 = runtime.Unit;
-//│             pc = 1;
-//│             continue main;
 //│             break;
 //│         }
-//│         pc = 1;
+//│         pc = 3;
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         return j / i;
+//│         pc = 4;
+//│         continue main;
 //│         break;
 //│       case 2:
-//│         pc = 1;
+//│         pc = 3;
 //│         continue main;
 //│         break;
 //│       case 3:
+//│         return j / i;
+//│         break;
+//│       case 4:
 //│         tmp2 = Predef.print(tmp1);
 //│         if (tmp2 instanceof runtime.EffectSig.class) {
 //│           return runtime.unwind(tmp2, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
-//│         continue main;
-//│         break;
-//│       case 4:
-//│         pc = 3;
 //│         continue main;
 //│         break;
 //│     }

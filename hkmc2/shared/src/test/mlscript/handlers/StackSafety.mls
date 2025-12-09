@@ -46,17 +46,9 @@ hi(0)
 //│             break;
 //│           default:
 //│             tmp1 = n - 1;
-//│             pc = 2;
-//│             continue main;
+//│             return hi(tmp1);
 //│             break;
 //│         }
-//│         pc = 1;
-//│         continue main;
-//│         break;
-//│       case 1:
-//│         break;
-//│       case 2:
-//│         return hi(tmp1);
 //│         break;
 //│     }
 //│     break;
@@ -97,7 +89,7 @@ sum(10000)
 //│       saveOffset = runtime.resumeIdx + 2;
 //│       tmp2 = runtime.resumeArr.at(saveOffset);
 //│       switch (pc) {
-//│         case 2:
+//│         case 1:
 //│           tmp3 = runtime.resumeValue;
 //│           break;
 //│         default:
@@ -121,26 +113,18 @@ sum(10000)
 //│             break;
 //│           default:
 //│             tmp2 = n - 1;
-//│             pc = 3;
+//│             tmp3 = sum(tmp2);
+//│             runtime.stackDepth = curDepth;
+//│             if (tmp3 instanceof runtime.EffectSig.class) {
+//│               return runtime.unwind(tmp3, 1, sum, null, null, 1, null, 4, n, scrut, tmp2, tmp3)
+//│             }
+//│             pc = 1;
 //│             continue main;
 //│             break;
 //│         }
-//│         pc = 1;
-//│         continue main;
 //│         break;
 //│       case 1:
-//│         break;
-//│       case 2:
 //│         return n + tmp3;
-//│         break;
-//│       case 3:
-//│         tmp3 = sum(tmp2);
-//│         runtime.stackDepth = curDepth;
-//│         if (tmp3 instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(tmp3, 1, sum, null, null, 2, null, 4, n, scrut, tmp2, tmp3)
-//│         }
-//│         pc = 2;
-//│         continue main;
 //│         break;
 //│     }
 //│     break;
@@ -277,10 +261,6 @@ fun max(a, b) = if a < b then b else a
 //│             return a;
 //│             break;
 //│         }
-//│         pc = 1;
-//│         continue main;
-//│         break;
-//│       case 1:
 //│         break;
 //│     }
 //│     break;
