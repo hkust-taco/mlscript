@@ -19,7 +19,7 @@ import scala.collection.mutable.Map as MutMap
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
+class UsedVarAnalyzer(b: Block)(using State):
   import Lifter.*
 
   private case class DefnMetadata(

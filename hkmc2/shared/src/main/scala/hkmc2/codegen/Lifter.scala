@@ -123,7 +123,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
+class Lifter()(using State, Raise):
   import Lifter.*
 
   /**
@@ -1267,7 +1267,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     // so we need to desugar them again
     val blk = LambdaRewriter.desugar(_blk)
 
-    val analyzer = UsedVarAnalyzer(blk, handlerPaths)
+    val analyzer = UsedVarAnalyzer(blk)
     val ctx = LifterCtx
       .withLocals(analyzer.findUsedLocals)
       .withDefns(analyzer.defnsMap)

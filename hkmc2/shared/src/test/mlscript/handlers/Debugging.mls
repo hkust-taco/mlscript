@@ -62,7 +62,7 @@ fun f() =
 //│           case true:
 //│             runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, null, 4, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│               return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, "Debugging.mls:19:14", 4, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│             }
 //│             pc = 4;
 //│             continue main;
@@ -85,7 +85,7 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, null, 2, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, "Debugging.mls:19:5", 2, null, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -103,7 +103,7 @@ fun f() =
 :re
 f()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at f (pc=undefined)
+//│ 	at f (Debugging.mls:19:14)
 
 :re
 fun lambda_test(f) =
@@ -113,8 +113,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (pc=undefined)
-//│ 	at lambda_test (pc=undefined)
+//│ 	at lambda (Debugging.mls:113:3)
+//│ 	at lambda_test (Debugging.mls:110:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -182,8 +182,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (pc=undefined) with locals: j=200
+//│ > 	at f (Debugging.mls:177:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (pc=undefined)
+//│ > 	at f (Debugging.mls:179:3)
 //│ > Stack Trace:
 //│ > 	at tail position

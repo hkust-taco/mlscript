@@ -55,17 +55,17 @@ object HandlerLowering:
       debugInfo: DebugInfo,
   ):
     def isTopLevel = currentFun.isEmpty
-    def doUnwind(res: Path, stateId: BigInt)(using paths: HandlerPaths) =
+    def doUnwind(path: Path, loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
-        res ::
+        path ::
         intLit(plCnt) ::
         currentFun.get ::
         debugInfo.debugInfoPath ::
-        res.toLoc.fold(unit)(locToStr(_)) ::
+        loc ::
         intLit(stateId) ::
         thisPath.getOrElse(unit) ::
-        intLit(currentLocals.length) ::
-        currentLocals.map(_.asPath)
+        intLit(restoreList.length) ::
+        restoreList.map(_.asPath)
       ).map(_.asArg))(true, true), false)
   
   // inScopeLocals: All variables that are in scope, including those that come from outer scope.
@@ -133,6 +133,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         S(uid)
       case _ => N
 
+  object Unwind:
+    private val unwindSymbol = freshTmp("unwind")
+    def apply(uid: StateId, loc: Value) =
+      Return(PureCall(Value.Ref(unwindSymbol), List(Value.Lit(Tree.IntLit(uid)), loc)), false)
+    def unapply(blk: Block) = blk match
+      case Return(PureCall(Value.Ref(`unwindSymbol`, _), List(Value.Lit(Tree.IntLit(uid)), loc: Value)), false) =>
+        S(uid, loc)
+      case _ => N
+
   abstract class LazyId:
     private var id: Opt[StateId] = N
     protected def getImpl: StateId
@@ -154,103 +163,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       tmp
   
   // blk: the block of code within this state
-  // sym: the variable to which the resumed value should set
-  case class BlockPartition(blk: Block)
+  case class BlockPartition(blk: Block, resumable: Bool)
   case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition])
-  
-  // Tries to remove states that jump directly to other states
-  // Note: Currently it doesn't seem to do anything, so it's not used. Maybe the states are already pretty optimal.
-  /*
-  def optParts(entryState: BlockState, states: Ls[BlockState]): (BlockState, Ls[BlockState]) =
-    val statesMap = (entryState :: states).map(state => state.id -> state).toMap
-    def findEdges(state: BlockState) =
-      var edges: List[BlockState] = Nil
-      new BlockTraverser:
-        applyBlock(state.blk)
-        override def applyBlock(b: Block): Unit = b match
-          case StateTransition(id) => edges ::= statesMap(id)
-          case _ => super.applyBlock(b)
-      state.id -> edges
-    // build edges
-    val edges = (entryState :: states).map(findEdges).toMap
-    // assume that all states are reachable from the entry point
-    var dests: Map[StateId, StateId] = Map.empty
-    var visited: Set[StateId] = Set.empty
-    
-    // whether a state purely jumps to another state, and if so, which state it jumps to
-    def getJmp(state: BlockState): Opt[StateId] =
-      if state.sym.isDefined then N
-      else state.blk match
-        case StateTransition(id) => S(id)
-        case _ => N
-    
-    // build the `dests` map by doing a dfs from the entry state
-    def dfs(state: BlockState): Unit =
-      visited += state.id
-      getJmp(state) match
-        case None => ()
-        case Some(value) =>
-          dests += (state.id -> value)
-      for e <- edges(state.id) do
-        if !visited.contains(e.id) then
-          dfs(e)
-    dfs(entryState)
-    
-    // cycles should be impossible -- if there are, just don't bother
-    val sorted = 
-      try topologicalSort(dests).toList
-      catch case c: CyclicGraphError => 
-        return (entryState, states)
-    
-    var finalDests: Map[StateId, StateId] = Map.empty
-    def dp(state: StateId): StateId = finalDests.get(state) match
-      case Some(value) => value
-      case None =>
-        val ret = dests.get(state) match
-          case None => state
-          case Some(dest) => dp(dest)
-        finalDests += (state -> ret)
-        ret
-    
-    val transformer = new BlockTransformer(SymbolSubst()):
-      override def applyBlock(b: Block): Block = b match
-        case StateTransition(uid) => StateTransition(dp(uid))
-        case _ => super.applyBlock(b)
-    
-    def rewriteState(s: BlockState) = s.copy(blk = transformer.applyBlock(s.blk))
-    
-    val rewrittenEntry = rewriteState(entryState)
-    val rewrittenStates = states.map(rewriteState)
-    
-    (rewrittenEntry, rewrittenStates)
-  */
-  
-  // removes states that are not reachable from any resumption point (no longer in use as we always include everything)
-  // def removeUselessStates(states: PartitionedBlock): PartitionedBlock =
-  //   def findEdges(part: BlockPartition) =
-  //     val edges: mutable.Set[StateId] = mutable.Set.empty
-  //     new BlockTraverser:
-  //       applyBlock(part.blk)
-  //       override def applyBlock(b: Block): Unit = b match
-  //         case StateTransition(id) => edges += id
-  //         case _ => super.applyBlock(b)
-  //     edges
-  //   // build edges
-  //   val edges = states.map((id, part) => id -> findEdges(part))
-
-  //   val visited: mutable.Set[StateId] = mutable.Set.empty
-  //   val remaining: mutable.Set[StateId] = mutable.Set.from(states.flatMap(part => part._2.sym.fold(N)(_ => S(part._1))))
-
-  //   def dfs(state: StateId): Unit =
-  //     visited += state
-  //     remaining -= state
-  //     for e <- edges(state) do
-  //       if !visited.contains(e) then dfs(e)
-
-  //   while !remaining.isEmpty do
-  //     dfs(remaining.head)
-
-  //   states.filter(state => visited.contains(state._1))
 
   object EffectfulResult:
     def unapply(r: Result) = r match
@@ -274,27 +188,30 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     def go(blk: Block)(using labelIds: Map[Symbol, (LazyId, LazyId)], afterEnd: Option[LazyId], partitioned: Bool): Block = boundary:
       // First check if the current block contain any non trivial call, if so we need a partition
 
-      def forceId(blk: Block): StateId = blk match
-        case StateTransition(uid) => uid
+      def forceId(blk: Block, resumable: Bool): StateId = blk match
+        case StateTransition(uid) =>
+          if !result(uid).resumable && resumable then
+            result(uid) = BlockPartition(result(uid).blk, true)
+          uid
         case _ =>
           val id = allocId()
-          result(id) = BlockPartition(blk)
+          result(id) = BlockPartition(blk, resumable)
           id
 
       // sym: the local that stores the result
       def doNewEffectPartition(res: Result, rst: Block) =
-        val stateId = forceId(go(rst)(using partitioned = true))
+        val stateId = forceId(go(rst)(using partitioned = true), true)
         val newBlock = blockBuilder
           .assignFieldN(paths.runtimePath, paths.resumeValueIdent, res)
           .ifthen(
             paths.resumeValue,
             Case.Cls(paths.effectSigSym, paths.effectSigPath),
-            h.doUnwind(paths.resumeValue, stateId)(using paths)
+            Unwind(stateId, res.toLoc.fold(unit)(locToStr(_)))
           )
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
       class RestLazyId(rst: Block) extends LazyId:
-        def getImpl: StateId = forceId(go(rst)(using partitioned = true))
+        def getImpl: StateId = forceId(go(rst)(using partitioned = true), false)
         def transitionSoft: Block = transitionOrBlk(go(rst))
 
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
@@ -326,7 +243,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           def getImpl = allocId()
         val newBody = go(body)(using labelIds + (label -> (startId, restId)), S(restId))
         if startId.isUsed then
-          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft))
+          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft), false)
           StateTransition(startId.get)
         else
           Label(label, loop, newBody, restId.transitionSoft)
@@ -389,39 +306,55 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val initId = allocId()
-    val initPart = BlockPartition(go(blk)(using Map(), N, false))
+    // Note: initial part will only be resumed if stack safety is on.
+    val initPart = BlockPartition(go(blk)(using Map(), N, false), opt.stackSafety.isDefined)
     result(initId) = initPart
     PartitionedBlock(initId, Map.from(result))
-  
-  // extraLocals is used for things like immutable parameters, they are not mutated but they should still be added as locals for debugging
-  // private def createGetLocalsFn(b: Block, extraLocals: Set[Local] = Set.empty)(using h: HandlerCtx) =
-  //   val locals = (b.userDefinedVars ++ extraLocals) -- h.debugInfo.inScopeLocals
-  //   val localsInfo = locals.toList.sortBy(_.uid).map: s =>
-  //     FlowSymbol(s.nme) -> Instantiate(mut = true, paths.localVarInfoPath,
-  //       Value.Lit(Tree.StrLit(s.nme)).asArg :: s.asPath.asArg :: Nil
-  //     )
-  //   val startSym = FlowSymbol("prev")
-  //   val thisInfo = FlowSymbol("thisInfo")
-  //   val arrSym = TempSymbol(N, "arr")
-    
-  //   val body = blockBuilder
-  //     .assign(startSym, h.debugInfo.prevLocalsFn match
-  //         case None => Tuple(mut = true, Nil)
-  //         case Some(value) => PureCall(value, Nil)
-  //       )
-  //     .foldLeft(localsInfo):
-  //       case (acc, (sym, res)) => acc.assign(sym, res)
-  //     .assign(arrSym, Tuple(mut = false, localsInfo.map(v => v._1.asPath.asArg)))
-  //     .assign(thisInfo, Instantiate(mut = true, paths.fnLocalsPath,
-  //         Value.Lit(Tree.StrLit(h.debugInfo.debugNme)).asArg
-  //           :: Value.Ref(arrSym).asArg
-  //           :: Nil
-  //       ))
-  //     .assign(TempSymbol(N, ""), Call(startSym.asPath.selSN("push"), thisInfo.asPath.asArg :: Nil)(false, false))
-  //     .ret(startSym.asPath)
 
-  //   FunDefn(N, BlockMemberSymbol("getLocals", Nil), PlainParamList(Nil) :: Nil, body)
-    
+  private def computeRestoreList(parts: PartitionedBlock)(using HandlerCtx): List[Local] =
+    val localSet = summon[HandlerCtx].currentLocals.toSet
+    val result = mutable.HashSet.empty[Local]
+
+    def traverseEntry(stateId: StateId) =
+      val traversed = mutable.HashSet.empty[StateId]
+      var initialized = Set.empty[Local]
+
+      new BlockTraverserShallow():
+        traversed += stateId
+        applyBlock(parts.states(stateId).blk)
+        override def applyBlock(blk: Block): Unit = blk match
+          case Unwind(uid, loc) => ()
+          case StateTransition(uid) =>
+            if !traversed.contains(uid) then
+              traversed += stateId
+              applyBlock(parts.states(uid).blk)
+          case Assign(lhs, rhs, rest) =>
+            applyResult(rhs)
+            val saved = initialized
+            initialized += lhs
+            applyBlock(rest)
+            initialized = saved
+          case Define(defn: ValDefn, rest) =>
+            applyPath(defn.rhs)
+            val saved = initialized
+            initialized += defn.sym
+            applyBlock(rest)
+            initialized = saved
+          case Define(defn, rest) =>
+            val saved = initialized
+            initialized += defn.sym
+            applyBlock(rest)
+            initialized = saved
+          case _ => super.applyBlock(blk)
+        override def applySymbol(l: Symbol): Unit =
+          if localSet.contains(l) && !initialized.contains(l) then
+            result += l
+
+    parts.states.foreach: (stateId, part) =>
+      if part.resumable then traverseEntry(stateId)
+
+    result.toList
+
   val doUnwindMap: mutable.Map[FnOrCls, Path => Return] = mutable.HashMap.empty
     
   /**
@@ -494,10 +427,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val parts = partitionBlock(b)
     if parts.states.size <= 1 && opt.stackSafety.isEmpty then
       return translateTrivialOrTopLevel(b)
+    val vars = if opt.debug then h.currentLocals else computeRestoreList(parts)
     h.currentStackSafetySym.foreach: fnOrCls =>
       doUnwindMap +=
-        fnOrCls ->
-        (res => h.doUnwind(res, parts.entry)(using paths))
+        fnOrCls -> (res => h.doUnwind(res, fnOrCls.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), parts.entry, vars)(using paths))
 
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshTmp("main")
@@ -506,6 +439,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyBlock(b: Block) = b match
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
+        case Unwind(uid, loc) =>
+          h.doUnwind(paths.resumeValue, loc, uid, vars)(using paths)
         case _ => super.applyBlock(b)
 
     val arms = parts.states.toList.map: (id, part) =>
@@ -521,7 +456,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false), _)
       (computeOff, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
 
-    val restoreVars = h.currentLocals.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc)):
+    val restoreVars = vars.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc)):
       case (builder, (local, idx)) =>
         val (computeOff, savePath) = getSaved(idx)
         builder.chain(computeOff).assign(local, savePath)
@@ -539,9 +474,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       h.debugInfo.nest("ctor-like block", unit, b.definedVars.toList)))
 
   private def translateTrivialOrTopLevel(b: Block)(using HandlerCtx): Block =
-    // We shall add back the top level effect checks here
-    // If said block is trivial, this function will still add the debug information, for in the case where the error
-    // is raised in a tail call.
     def topLevelCheck(l: Local, r: Result, rst: Block): Block =
       blockBuilder
         .assign(l, r)
@@ -568,107 +500,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           topLevelCheck(l, r, k(Value.Ref(l)))
         case _ => super.applyResult(r)(k)
     trivialTransform.applyBlock(b)
-  
-  // private def firstPass(b: Block)(using HandlerCtx): Block =
-  //   val getLocalsSym = ctx.builtins.debug.getLocals
-  //   val transformer = new BlockTransformerShallow(SymbolSubst()):
-  //     // FIXME: there is a HUGE amount of error-prone, maintenance-heavy manually duplicated code in there to refactor
-  //     override def applyBlock(b: Block) = b match
-  //       case b: HandleBlock =>
-  //         die
-  //       // This block optimizes tail-calls in the handler transformation. We do not optimize implicit returns.
-  //       // Implicit returns are used in top level and constructor:
-  //       // For top level, this correspond to the last statement which should also be checked for effect.
-  //       // For constructor, we will append `return this;` after the implicit return so it is not a tail call.
-  //       case Return(c @ Call(fun, args), false) if !handlerCtx.isHandlerBody =>
-  //         applyPath(fun): fun2 =>
-  //           applyArgs(args): args2 =>
-  //             val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-  //             if c2 is c then b else Return(c2, false)
-  //       // Optimization to avoid generation of unnecessary variables
-  //       case Assign(lhs, c @ Call(fun, args), rest) if c.mayRaiseEffects =>
-  //         applyPath(fun): fun2 =>
-  //           applyArgs(args): args2 =>
-  //             val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-  //             ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
-  //       case Assign(lhs, c @ Instantiate(mut, cls, args), rest) =>
-  //         applyPath(cls): cls2 =>
-  //           applyArgs(args): args2 =>
-  //             val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
-  //             ResultPlaceholder(lhs, freshId(), c2, applyBlock(rest))
-  //       case _ => super.applyBlock(b)
-  //     override def applyResult(r: Result)(k: Result => Block): Block = r match
-  //       case c @ Call(fun, args) if c.mayRaiseEffects =>
-  //         val res = freshTmp("res")
-  //         applyPath(fun): fun2 =>
-  //           applyArgs(args): args2 =>
-  //             val c2 = if (fun2 is fun) && (args2 is args) then c else Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects)
-  //             ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-  //       case c @ Instantiate(mut, cls, args) =>
-  //         val res = freshTmp("res")
-  //         applyPath(cls): cls2 =>
-  //           applyArgs(args): args2 =>
-  //             val c2 = if (cls2 is cls) && (args2 is args) then c else Instantiate(mut, cls2, args2)
-  //             ResultPlaceholder(res, freshId(), c2, k(Value.Ref(res)))
-  //       case r => super.applyResult(r)(k)
-  //     override def applyPath(p: Path)(k: Path => Block): Block = p match
-  //       case Value.Ref(`getLocalsSym`, _) => k(handlerCtx.debugInfo.prevLocalsFn.get) // TODO: Port debug to new transformation
-  //       case _ => super.applyPath(p)(k)
-  //     override def applyLam(lam: Lambda): Lambda =
-  //       // This should normally be unreachable due to prior desugaring of lambda
-  //       raise(InternalError(msg"Unexpected lambda during handler lowering" -> lam.toLoc :: Nil,
-  //         source = Diagnostic.Source.Compilation))
-  //       Lambda(lam.params, translateBlock(lam.body, lam.params.paramSyms.toSet, N, L(BlockMemberSymbol("", Nil, false)), functionHandlerCtx(s"Cont$$lambda$$", "‹lambda›")))
-  //     override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
-  //       case f: FunDefn => k(translateFun(f))
-  //       case c: ClsLikeDefn => k(translateCls(c))
-  //       case _: ValDefn => super.applyDefn(defn)(k)
-  //   transformer.applyBlock(b)
-    
-  // private def secondPass(b: Block, fnOrCls: FnOrCls, callSelf: Opt[Result], getLocalsFn: FunDefn)(using h: HandlerCtx): Block =
-  //   // val cls = if handlerCtx.isTopLevel then N else genContClass(b, callSelf)
-
-  //   val ret =
-  //     if handlerCtx.isTopLevel then genNormalBody(b, N)
-  //     else
-  //       // create the doUnwind function
-  //       val doUnwindSym = BlockMemberSymbol("doUnwind", Nil, true)
-  //       doUnwindMap += fnOrCls -> doUnwindSym.asPath
-  //       val pcSym = VarSymbol(Tree.Ident("pc"))
-  //       val resSym = VarSymbol(Tree.Ident("res"))
-  //       val doUnwindBlk = h.linkAndHandle(
-  //         LinkState(resSym, paths.contClsPath, pcSym.asPath)
-  //       )
-  //       val doUnwindDef = FunDefn(
-  //         N, doUnwindSym,
-  //         PlainParamList(Param.simple(resSym) :: Param.simple(pcSym) :: Nil) :: Nil,
-  //         doUnwindBlk
-  //       )
-  //       val doUnwindLazy = Lazy(doUnwindSym.asPath)
-  //       val rst = genNormalBody(b, S(doUnwindLazy))
-        
-  //       if doUnwindLazy.isEmpty && opt.stackSafety.isEmpty then rst
-  //       else
-  //         blockBuilder
-  //         .define(doUnwindDef)
-  //         .rest(rst)
-  //   if opt.debug then
-  //     Define(getLocalsFn, ret)
-  //   else
-  //     ret
-  
-  // // moves definitions to the top level of the block
-  // private def thirdPass(b: Block): Block =
-  //   // to ensure the fun and class references in the continuation class are properly scoped,
-  //   // we move all function defns to the top level of the handler block
-  //   val (blk, defns) = b.floatOutDefns()
-  //   defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
-  
-  private def locToVarStr(l: Loc): Str =
-    Scope.replaceInvalidCharacters(l.origin.fileName.last + "_L" + l.origin.startLineNum + "_" + l.spanStart + "_" + l.spanEnd)
-  
-  private def symToStr(s: Symbol): Str =
-      s"${Scope.replaceInvalidCharacters(s.nme)}"
   
   // Handle block is rewritten into:
   // 1. Instantiation of the handler
@@ -727,251 +558,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           translateHandleBlockShallow(HandleBlock(lhs, res, par, args, cls, hdr2, bod2, rst2))
         case _ => super.applyBlock(b)
     transform.applyBlock(b)
-
-  
-  // private def genContClass(b: Block, callSelf: Opt[Result])(using h: HandlerCtx): Opt[ClsLikeDefn] =
-  //   val clsSym = ClassSymbol(
-  //     Tree.DummyTypeDef(syntax.Cls),
-  //     Tree.Ident(handlerCtx.contName)
-  //   )
-    
-  //   val pcVar = VarSymbol(pcIdent)
-    
-  //   val loopLbl = freshTmp("contLoop")
-  //   val pcSymbol = TermSymbol(ParamBind, S(clsSym), pcIdent)
-
-  //   // This maps each state id to an optional location
-  //   // Note that the value is an Option, and None must be inserted even if the location is not known
-  //   // so that we can use the same map to enumerate all possible state id and check if there is any state id
-  //   val pcToLoc = collection.mutable.Map.empty[StateId, Option[Loc]]
-  //   var containsCall = false
-    
-  //   // Create the DoUnwind function
-  //   doUnwindMap += R(clsSym) -> Select(clsSym.asPath, Tree.Ident("doUnwind"))(
-  //     N /* this refers to the method defined in Runtime.FunctionContFrame */
-  //   )
-  //   val newPcSym = VarSymbol(Tree.Ident("newPc"))
-  //   val resSym = VarSymbol(Tree.Ident("res"))
-  //   val doUnwindBlk = blockBuilder
-  //     .assign(pcSymbol, newPcSym.asPath)
-  //     .assignFieldN(resSym.asPath.contTrace.last, nextIdent, clsSym.asPath)
-  //     .assignFieldN(resSym.asPath.contTrace, lastIdent, clsSym.asPath)
-  //     .ret(resSym.asPath)
-    
-  //   // Replaces ResultPlaceholders to check for effects and link the effect trace
-  //   def prepareBlock(b: Block): Block =
-  //     val transform = new BlockTransformerShallow(SymbolSubst()):
-  //       override def applyResult(r: Result)(k: Result => Block): Block = 
-  //         r match
-  //           case c @ Call(Value.Ref(s: BuiltinSymbol, _), _) => ()
-  //           case c: Call if !c.mayRaiseEffects => ()
-  //           case _: Call | _: Instantiate => containsCall = true
-  //           case _ => ()
-  //         super.applyResult(r)(k)
-          
-  //       override def applyBlock(b: Block): Block = b match
-  //         case Define(_: (ClsLikeDefn | FunDefn), rst) => applyBlock(rst)
-  //         case ResultPlaceholder(res, uid, c, rest) =>
-  //           pcToLoc(uid) = c.toLoc
-  //           containsCall = true
-  //           blockBuilder
-  //             .assign(res, c)
-  //             .ifthen(
-  //               res.asPath,
-  //               Case.Cls(paths.effectSigSym, paths.effectSigPath),
-  //               ReturnCont(res, uid)
-  //             )
-  //             .chain(ResumptionPoint(res, uid, _))
-  //             .rest(applyBlock(rest))
-  //         case _ => super.applyBlock(b)
-  //     transform.applyBlock(b)
-  //   val actualBlock = handlerCtx.ctorThis match
-  //     case N => prepareBlock(b)
-  //     case S(thisPath) => Begin(prepareBlock(b), Return(thisPath, false))
-  //   // If there is no state id found during prepareBlock, the block is trivial.
-  //   val trivial = pcToLoc.isEmpty
-    
-  //   // there are three types of functions:
-  //   // (1) functions that have no calls, indicated by `containsCall`
-  //   // (2) functions that have only tail calls, indicated by `trivial`
-  //   // (3) all other functions
-  //   //
-  //   // Here, (2) and (3) need a continuation class when stack safety is enabled, otherwise only (3) needs it
-  //   // If (2) and stack safety is enabled, we can just create a continuation class with one state
-    
-  //   if trivial && opt.stackSafety.isEmpty then return N // case (1) or (2) if no stack safety
-  //   if !containsCall then return N // case (1)
-
-  //   val depthSym = freshTmp("curDepth")
-  //   val resumedVal = VarSymbol(Tree.Ident("value$"))
-    
-  //   def createResumeBod =
-  //     val parts = 
-  //       if opt.stackSafety.isDefined then callSelf match
-  //         case None => partitionBlock(actualBlock, true)
-  //         case Some(value) => 
-  //           val someParts = partitionBlock(actualBlock, false)
-  //           BlockPartition(0, Return(value, false), N) :: someParts
-  //       else
-  //         partitionBlock(actualBlock, false)
-        
-  //     def transformPart(blk: Block): Block = 
-  //       val transform = new BlockTransformerShallow(SymbolSubst()):
-  //         override def applyBlock(b: Block): Block = b match
-  //           case ReturnCont(res, uid) => Return(Call(
-  //               Select(clsSym.asPath, Tree.Ident("doUnwind"))(
-  //                 N /* this refers to the method defined in Runtime.FunctionContFrame */
-  //               ),
-  //               res.asPath.asArg :: Value.Lit(Tree.IntLit(uid)).asArg :: Nil)(true, false),
-  //               false
-  //             )
-  //           case StateTransition(uid) =>
-  //             blockBuilder
-  //               .assign(pcSymbol, Value.Lit(Tree.IntLit(uid)))
-  //               .continue(loopLbl)
-  //           case FnEnd() =>
-  //             blockBuilder.break(loopLbl)
-  //           case _ => super.applyBlock(b)
-  //       transform.applyBlock(blk)
-
-  //     // match block representing the function body
-  //     val mainMatchCases = parts.toList.map(b => (Case.Lit(Tree.IntLit(b.id)), transformPart(b.blk)))
-  //     val mainMatchBlk = Match(
-  //       pcSymbol.asPath,
-  //       mainMatchCases,
-  //       N,
-  //       End() 
-  //     )
-      
-  //     val tmp = freshTmp()
-  //     val withResetDepth =
-  //       if opt.stackSafety.isDefined && !trivial then
-  //         AssignField(runtimePath, stackDepthIdent, depthSym.asPath, mainMatchBlk)(N)
-  //       else mainMatchBlk
-
-  //     val lbl = blockBuilder.label(loopLbl, loop = true, withResetDepth).rest(End())
-
-  //     def createAssignment(sym: Local) = Assign(sym, resumedVal.asPath, End())
-      
-  //     val assignedResumedCases = for 
-  //       b   <- parts
-  //       sym <- b.sym
-  //     yield Case.Lit(Tree.IntLit(b.id)) -> createAssignment(sym) // NOTE: assume sym is in localsMap
-
-  //     // assigns the resumed value
-  //     val body =
-  //       if assignedResumedCases.isEmpty then
-  //         lbl
-  //       else
-  //         Match(
-  //           pcSymbol.asPath,
-  //           assignedResumedCases,
-  //           N,
-  //           lbl
-  //         )
-
-  //     // assign cur depth
-  //     if opt.stackSafety.isDefined && !trivial then 
-  //       Assign(depthSym, stackDepthPath, body)
-  //     else
-  //       body
-        
-  //   val resumeBody = 
-  //     if trivial then callSelf match
-  //       case None => actualBlock
-  //       case Some(value) => Return(value, false)
-  //     else createResumeBod
-      
-    
-  //   val resumeSym = BlockMemberSymbol("resume", List())
-  //   val resumeFnDef = FunDefn(
-  //     S(clsSym), // owner
-  //     resumeSym,
-  //     List(PlainParamList(List(Param(FldFlags.empty, resumedVal, N, Modulefulness.none)))),
-  //     resumeBody
-  //   )
-
-  //   val debugMtds = if !opt.debug then Nil else
-    
-  //     val getLocalsSym = BlockMemberSymbol("getLocals", List())
-      
-  //     val localsRes = h.debugInfo.prevLocalsFn match
-  //       case Some(value) => PureCall(value, Nil)
-  //       case None => Tuple(mut = true, Nil)
-      
-  //     val getLocalsFnDef = FunDefn(
-  //       S(clsSym),
-  //       getLocalsSym,
-  //       List(),
-  //       Return(localsRes, false)
-  //     )
-
-  //     val getLocSym = BlockMemberSymbol("getLoc", List())
-  //     val getLocFnDef = FunDefn(
-  //       S(clsSym),
-  //       getLocSym,
-  //       List(),
-  //       Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
-  //         Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
-  //           val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
-  //           Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col")
-  //         ), false)
-  //       .toList, N, End()),
-  //     )
-
-  //     getLocalsFnDef :: getLocFnDef :: Nil
-    
-  //   val mtds = resumeFnDef :: debugMtds
-    
-  //   S(ClsLikeDefn(
-  //     N, // no owner
-  //     clsSym,
-  //     BlockMemberSymbol(clsSym.nme, Nil),
-  //     syntax.Cls,
-  //     N,
-  //     PlainParamList({
-  //       val p = Param(FldFlags.empty.copy(isVal = true), pcVar, N, Modulefulness.none)
-  //       pcVar.decl = S(p)
-  //       p
-  //     } :: Nil) :: Nil,
-  //     S(paths.contClsPath),
-  //     mtds,
-  //     Nil,
-  //     Nil,
-  //     Assign(freshTmp(), PureCall(
-  //       Value.Ref(State.builtinOpsMap("super")), // refers to runtime.FunctionContFrame which is pure
-  //       Value.Lit(Tree.UnitLit(true)) :: Nil), End()),
-  //     AssignField(
-  //       clsSym.asPath,
-  //       pcVar.id,
-  //       Value.Ref(pcVar),
-  //       End()
-  //     )(S(pcSymbol)),
-  //     N,
-  //     N, // TODO: bufferable?
-  //   ))
-  
-  // // Rewriites ResultPlaceholder. Checks if the result in the placeholder is an effect.
-  // private def genNormalBody(b: Block, doUnwind: Opt[Lazy[Path]])(using HandlerCtx): Block =
-  //   val transform = new BlockTransformerShallow(SymbolSubst()):
-  //     override def applyBlock(b: Block): Block = b match
-  //       case ResultPlaceholder(res, uid, c, rest) => 
-  //         val doUnwindBlk = doUnwind match
-  //           case None => Assign(res, topLevelCall(LinkState(res, paths.contClsPath, Value.Lit(Tree.IntLit(uid)))), End())
-  //           case Some(doUnwind) => Return(PureCall(doUnwind.get_!, res.asPath :: Value.Lit(Tree.IntLit(uid)) :: Nil), false)
-  //         blockBuilder
-  //           .assign(res, c)
-  //           .ifthen(
-  //             res.asPath,
-  //             Case.Cls(paths.effectSigSym, paths.effectSigPath),
-  //             doUnwindBlk
-  //           )
-  //           .rest(applyBlock(rest))
-  //       case _ => super.applyBlock(b)
-    
-  //   transform.applyBlock(b)
-    
-  
 
   def translateTopLevel(b: Block): (Block, collection.Map[FnOrCls, Path => Return]) =
     doUnwindMap.clear()

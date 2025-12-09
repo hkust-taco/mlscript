@@ -138,7 +138,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: coll
     else if doUnwind.isEmpty then
       // The current function is not instrumented and we cannot provide stack safety.
       // TODO: shouldn't we just return the old blk?
-      val resSym = TempSymbol(None, "stackDelayRes")
       blockBuilder
         .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
         .rest(newBody)

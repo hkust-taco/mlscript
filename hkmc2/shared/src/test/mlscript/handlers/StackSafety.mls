@@ -20,15 +20,13 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, hi, null, null, 0, null, 3, n, scrut, tmp1)
+//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafety.mls:12:1", 0, null, 2, n, tmp1)
 //│   }
 //│   switch (runtime.isResuming) {
 //│     case true:
 //│       pc = runtime.resumePc;
 //│       n = runtime.resumeArr.at(runtime.resumeIdx);
 //│       saveOffset = runtime.resumeIdx + 1;
-//│       scrut = runtime.resumeArr.at(saveOffset);
-//│       saveOffset = runtime.resumeIdx + 2;
 //│       tmp1 = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
 //│       break;
@@ -78,18 +76,14 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum, null, null, 0, null, 4, n, scrut, tmp2, tmp3)
+//│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:66:1", 0, null, 2, tmp2, n)
 //│   }
 //│   switch (runtime.isResuming) {
 //│     case true:
 //│       pc = runtime.resumePc;
-//│       n = runtime.resumeArr.at(runtime.resumeIdx);
+//│       tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
 //│       saveOffset = runtime.resumeIdx + 1;
-//│       scrut = runtime.resumeArr.at(saveOffset);
-//│       saveOffset = runtime.resumeIdx + 2;
-//│       tmp2 = runtime.resumeArr.at(saveOffset);
-//│       saveOffset = runtime.resumeIdx + 3;
-//│       tmp3 = runtime.resumeArr.at(saveOffset);
+//│       n = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
 //│       break;
 //│     default:
@@ -110,7 +104,7 @@ sum(10000)
 //│             runtime.stackDepth = curDepth;
 //│             runtime.resumeValue = tmp4;
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, sum, null, null, 1, null, 4, n, scrut, tmp2, tmp3)
+//│               return runtime.unwind(runtime.resumeValue, 1, sum, null, "StackSafety.mls:69:9", 1, null, 2, tmp2, n)
 //│             }
 //│             pc = 1;
 //│             continue main;
@@ -236,8 +230,6 @@ fun max(a, b) = if a < b then b else a
 //│       a = runtime.resumeArr.at(runtime.resumeIdx);
 //│       saveOffset = runtime.resumeIdx + 1;
 //│       b = runtime.resumeArr.at(saveOffset);
-//│       saveOffset = runtime.resumeIdx + 2;
-//│       scrut = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
 //│       break;
 //│     default:

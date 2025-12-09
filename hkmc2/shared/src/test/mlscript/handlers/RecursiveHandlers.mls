@@ -163,21 +163,10 @@ str
 //│ switch (scrut) {
 //│   case true:
 //│     Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
-//│       let tmp13, tmp14, tmp15, pc, saveOffset;
+//│       let tmp13, tmp14, tmp15, pc;
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           k = runtime.resumeArr.at(runtime.resumeIdx);
-//│           saveOffset = runtime.resumeIdx + 1;
-//│           tmp13 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 2;
-//│           tmp14 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 3;
-//│           tmp15 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 4;
-//│           arg = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 5;
-//│           Handler$h1$$instance = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
 //│           break;
 //│         default:
@@ -191,7 +180,7 @@ str
 //│             str = tmp13;
 //│             runtime.resumeValue = runtime.safeCall(k(arg));
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, null, 1, null, 6, k, tmp13, tmp14, tmp15, arg, Handler$h1$$instance)
+//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, "RecursiveHandlers.mls:149:7", 1, null, 0)
 //│             }
 //│             pc = 1;
 //│             continue main;
@@ -236,25 +225,10 @@ str
 //│       h11 = runtime.topLevelEffect(h11, false);
 //│     }
 //│     Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
-//│       let tmp13, tmp14, tmp15, tmp16, tmp17, pc, saveOffset;
+//│       let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           k = runtime.resumeArr.at(runtime.resumeIdx);
-//│           saveOffset = runtime.resumeIdx + 1;
-//│           tmp13 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 2;
-//│           tmp14 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 3;
-//│           tmp15 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 4;
-//│           tmp16 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 5;
-//│           tmp17 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 6;
-//│           arg = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 7;
-//│           Handler$h2$$instance = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
 //│           break;
 //│         default:
@@ -269,7 +243,7 @@ str
 //│             str = tmp14;
 //│             runtime.resumeValue = runtime.safeCall(k(arg));
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, null, 1, null, 8, k, tmp13, tmp14, tmp15, tmp16, tmp17, arg, Handler$h2$$instance)
+//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, "RecursiveHandlers.mls:154:7", 1, null, 0)
 //│             }
 //│             pc = 1;
 //│             continue main;
@@ -311,13 +285,10 @@ str
 //│       static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│     });
 //│     handleBlock$$2 = function handleBlock$$(h22) {
-//│       let tmp13, pc, saveOffset;
+//│       let tmp13, pc;
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           tmp13 = runtime.resumeArr.at(runtime.resumeIdx);
-//│           saveOffset = runtime.resumeIdx + 1;
-//│           h22 = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
 //│           break;
 //│         default:
@@ -329,7 +300,7 @@ str
 //│           case 0:
 //│             runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$$2, null, null, 2, null, 2, tmp13, h22)
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$$2, null, "RecursiveHandlers.mls:156:5", 2, null, 0)
 //│             }
 //│             pc = 2;
 //│             continue main;
@@ -352,15 +323,10 @@ str
 //│       }
 //│     });
 //│     handleBlock$10 = (undefined, function () {
-//│       let h22, tmp13, handleBlock$$here, pc, saveOffset;
+//│       let h22, tmp13, handleBlock$$here, pc;
 //│       switch (runtime.isResuming) {
 //│         case true:
 //│           pc = runtime.resumePc;
-//│           h22 = runtime.resumeArr.at(runtime.resumeIdx);
-//│           saveOffset = runtime.resumeIdx + 1;
-//│           tmp13 = runtime.resumeArr.at(saveOffset);
-//│           saveOffset = runtime.resumeIdx + 2;
-//│           handleBlock$$here = runtime.resumeArr.at(saveOffset);
 //│           runtime.isResuming = false;
 //│           break;
 //│         default:
@@ -372,7 +338,7 @@ str
 //│           case 0:
 //│             runtime.resumeValue = new Handler$h2$3();
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 3, h22, tmp13, handleBlock$$here)
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 0)
 //│             }
 //│             pc = 2;
 //│             continue main;
@@ -386,7 +352,7 @@ str
 //│             handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
 //│             runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
 //│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 3, h22, tmp13, handleBlock$$here)
+//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 0)
 //│             }
 //│             pc = 1;
 //│             continue main;

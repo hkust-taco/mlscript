@@ -947,7 +947,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
     val lifted =
-      if lift then Lifter(S(handlerPaths)).transform(withHandlers1)
+      if lift then Lifter().transform(withHandlers1)
       else withHandlers1
     
     val (withHandlers2, doUnwindPaths) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
