@@ -447,6 +447,16 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case S(el) => returningTerm(el, endSemi = true)
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case Match(scrut, arms, els, rest) if arms.forall(_._1.isInstanceOf[Case.Lit]) =>
+      val l = arms.foldLeft(doc""): (acc, arm) =>
+        acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
+          returningTerm(arm._2, endSemi = true)
+        } # break; #} "
+      val e = els match
+      case S(el) =>
+        doc" # default: #{ ${ returningTerm(el, endSemi = true) } # break; #} "
+      case N => doc""
+      doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match

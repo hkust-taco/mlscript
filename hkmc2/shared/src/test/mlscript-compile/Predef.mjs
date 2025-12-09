@@ -104,122 +104,164 @@ globalThis.Object.freeze(class Predef {
     split_root$: {
       split_1$: {
         scrut = a === b;
-        if (scrut === true) {
-          tmp = true;
-          break split_root$
-        } else {
-          if (a instanceof globalThis.Array) {
-            if (b instanceof globalThis.Array) {
-              scrut1 = a.length === b.length;
-              if (scrut1 === true) {
-                lambda = (undefined, function (a1, i) {
-                  let tmp4;
-                  tmp4 = runtime.safeCall(b.at(i));
-                  return Predef.equals(a1, tmp4)
-                });
-                tmp = runtime.safeCall(a.every(lambda));
-                break split_root$
+        switch (scrut) {
+          case true:
+            tmp = true;
+            break split_root$;
+            break;
+          default:
+            if (a instanceof globalThis.Array) {
+              if (b instanceof globalThis.Array) {
+                scrut1 = a.length === b.length;
+                switch (scrut1) {
+                  case true:
+                    lambda = (undefined, function (a1, i) {
+                      let tmp4;
+                      tmp4 = runtime.safeCall(b.at(i));
+                      return Predef.equals(a1, tmp4)
+                    });
+                    tmp = runtime.safeCall(a.every(lambda));
+                    break split_root$;
+                    break;
+                  default:
+                    break split_1$;
+                    break;
+                }
               } else {
                 break split_1$
               }
             } else {
               break split_1$
             }
-          } else {
-            break split_1$
-          }
+            break;
         }
       }
       split_root$1: {
         split_1$1: {
           scrut2 = a !== undefined;
-          if (scrut2 === true) {
-            scrut11 = a !== null;
-            if (scrut11 === true) {
-              scrut10 = b !== undefined;
-              if (scrut10 === true) {
-                scrut9 = b !== null;
-                if (scrut9 === true) {
-                  ac = a.constructor;
-                  split_root$2: {
-                    split_1$2: {
-                      scrut3 = ac !== undefined;
-                      if (scrut3 === true) {
-                        scrut7 = ac === b.constructor;
-                        if (scrut7 === true) {
-                          md = ac[Predef.Symbols.definitionMetadata];
-                          split_root$3: {
-                            split_1$3: {
-                              scrut4 = md !== undefined;
-                              if (scrut4 === true) {
-                                lambda1 = (undefined, function (field) {
-                                  let scrut12, scrut13, tmp4;
-                                  split_root$4: {
-                                    split_1$4: {
-                                      scrut12 = field !== null;
-                                      if (scrut12 === true) {
-                                        scrut13 = Predef.equals(a[field], b[field]);
-                                        if (scrut13 === true) {
-                                          tmp4 = true;
-                                          break split_root$4
-                                        } else {
-                                          break split_1$4
+          switch (scrut2) {
+            case true:
+              scrut11 = a !== null;
+              switch (scrut11) {
+                case true:
+                  scrut10 = b !== undefined;
+                  switch (scrut10) {
+                    case true:
+                      scrut9 = b !== null;
+                      switch (scrut9) {
+                        case true:
+                          ac = a.constructor;
+                          split_root$2: {
+                            split_1$2: {
+                              scrut3 = ac !== undefined;
+                              switch (scrut3) {
+                                case true:
+                                  scrut7 = ac === b.constructor;
+                                  switch (scrut7) {
+                                    case true:
+                                      md = ac[Predef.Symbols.definitionMetadata];
+                                      split_root$3: {
+                                        split_1$3: {
+                                          scrut4 = md !== undefined;
+                                          switch (scrut4) {
+                                            case true:
+                                              lambda1 = (undefined, function (field) {
+                                                let scrut12, scrut13, tmp4;
+                                                split_root$4: {
+                                                  split_1$4: {
+                                                    scrut12 = field !== null;
+                                                    switch (scrut12) {
+                                                      case true:
+                                                        scrut13 = Predef.equals(a[field], b[field]);
+                                                        switch (scrut13) {
+                                                          case true:
+                                                            tmp4 = true;
+                                                            break split_root$4;
+                                                            break;
+                                                          default:
+                                                            break split_1$4;
+                                                            break;
+                                                        }
+                                                        break;
+                                                      default:
+                                                        break split_1$4;
+                                                        break;
+                                                    }
+                                                  }
+                                                  tmp4 = false;
+                                                }
+                                                return tmp4
+                                              });
+                                              scrut5 = runtime.safeCall(md[2].every(lambda1));
+                                              switch (scrut5) {
+                                                case true:
+                                                  tmp1 = true;
+                                                  break split_root$3;
+                                                  break;
+                                                default:
+                                                  break split_1$3;
+                                                  break;
+                                              }
+                                              break;
+                                            default:
+                                              break split_1$3;
+                                              break;
+                                          }
                                         }
-                                      } else {
-                                        break split_1$4
+                                        tmp1 = false;
                                       }
-                                    }
-                                    tmp4 = false;
+                                      scrut6 = tmp1;
+                                      switch (scrut6) {
+                                        case true:
+                                          tmp2 = true;
+                                          break split_root$2;
+                                          break;
+                                        default:
+                                          break split_1$2;
+                                          break;
+                                      }
+                                      break;
+                                    default:
+                                      break split_1$2;
+                                      break;
                                   }
-                                  return tmp4
-                                });
-                                scrut5 = runtime.safeCall(md[2].every(lambda1));
-                                if (scrut5 === true) {
-                                  tmp1 = true;
-                                  break split_root$3
-                                } else {
-                                  break split_1$3
-                                }
-                              } else {
-                                break split_1$3
+                                  break;
+                                default:
+                                  break split_1$2;
+                                  break;
                               }
                             }
-                            tmp1 = false;
+                            tmp2 = false;
                           }
-                          scrut6 = tmp1;
-                          if (scrut6 === true) {
-                            tmp2 = true;
-                            break split_root$2
-                          } else {
-                            break split_1$2
+                          scrut8 = tmp2;
+                          switch (scrut8) {
+                            case true:
+                              tmp3 = true;
+                              break split_root$1;
+                              break;
+                            default:
+                              break split_1$1;
+                              break;
                           }
-                        } else {
-                          break split_1$2
-                        }
-                      } else {
-                        break split_1$2
+                          break;
+                        default:
+                          break split_1$1;
+                          break;
                       }
-                    }
-                    tmp2 = false;
+                      break;
+                    default:
+                      break split_1$1;
+                      break;
                   }
-                  scrut8 = tmp2;
-                  if (scrut8 === true) {
-                    tmp3 = true;
-                    break split_root$1
-                  } else {
-                    break split_1$1
-                  }
-                } else {
-                  break split_1$1
-                }
-              } else {
-                break split_1$1
+                  break;
+                default:
+                  break split_1$1;
+                  break;
               }
-            } else {
-              break split_1$1
-            }
-          } else {
-            break split_1$1
+              break;
+            default:
+              break split_1$1;
+              break;
           }
         }
         tmp3 = false;
@@ -262,27 +304,33 @@ globalThis.Object.freeze(class Predef {
       let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
       len = rest.length;
       scrut = len === 0;
-      if (scrut === true) {
-        return first
-      } else {
-        i = len - 1;
-        init = runtime.safeCall(rest.at(i));
-        tmp4: while (true) {
-          scrut1 = i > 0;
-          if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            tmp3 = runtime.Unit;
-            continue tmp4
-          } else {
-            tmp3 = runtime.Unit;
-          }
+      switch (scrut) {
+        case true:
+          return first;
           break;
-        }
-        return runtime.safeCall(f(first, init))
+        default:
+          i = len - 1;
+          init = runtime.safeCall(rest.at(i));
+          tmp4: while (true) {
+            scrut1 = i > 0;
+            switch (scrut1) {
+              case true:
+                tmp = i - 1;
+                i = tmp;
+                tmp1 = runtime.safeCall(rest.at(i));
+                tmp2 = runtime.safeCall(f(tmp1, init));
+                init = tmp2;
+                tmp3 = runtime.Unit;
+                continue tmp4;
+                break;
+              default:
+                tmp3 = runtime.Unit;
+                break;
+            }
+            break;
+          }
+          return runtime.safeCall(f(first, init));
+          break;
       }
     }
   } 

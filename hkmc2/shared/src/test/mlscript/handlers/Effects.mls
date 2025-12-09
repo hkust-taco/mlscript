@@ -188,12 +188,16 @@ if true do
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 1) {
-//│         res = value$;
+//│       switch (this.pc) {
+//│         case 1:
+//│           res = value$;
+//│           break;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 1) {
-//│           return res
+//│         switch (this.pc) {
+//│           case 1:
+//│             return res;
+//│             break;
 //│         }
 //│         break;
 //│       }
@@ -209,14 +213,17 @@ if true do
 //│     return 3
 //│   };
 //│   scrut = true;
-//│   if (scrut === true) {
-//│     res = f();
-//│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 1)
-//│     }
-//│     return res
-//│   } else {
-//│     return runtime.Unit
+//│   switch (scrut) {
+//│     case true:
+//│       res = f();
+//│       if (res instanceof runtime.EffectSig.class) {
+//│         return doUnwind(res, 1)
+//│       }
+//│       return res;
+//│       break;
+//│     default:
+//│       return runtime.Unit;
+//│       break;
 //│   }
 //│ };
 //│ tmp11 = handleBlock$11();

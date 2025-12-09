@@ -91,10 +91,13 @@ f().foo()
 //│ let Bad1, Good1, f5, tmp5, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp6, tmp7;
-//│   if (isMut === true) {
-//│     tmp6 = new Good1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Good1.class());
+//│   switch (isMut) {
+//│     case true:
+//│       tmp6 = new Good1.class();
+//│       break;
+//│     default:
+//│       tmp6 = globalThis.Object.freeze(new Good1.class());
+//│       break;
 //│   }
 //│   tmp7 = tmp6(x, y, z, f$capture4);
 //│   return tmp7
@@ -141,10 +144,13 @@ f().foo()
 //│ });
 //│ Bad$ = function Bad$(isMut, f$capture4) {
 //│   let tmp6, tmp7;
-//│   if (isMut === true) {
-//│     tmp6 = new Bad1.class();
-//│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│   switch (isMut) {
+//│     case true:
+//│       tmp6 = new Bad1.class();
+//│       break;
+//│     default:
+//│       tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│       break;
 //│   }
 //│   tmp7 = tmp6(f$capture4);
 //│   return tmp7

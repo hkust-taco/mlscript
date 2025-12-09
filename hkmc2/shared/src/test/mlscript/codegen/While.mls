@@ -11,17 +11,27 @@
 //│   while1 = (undefined, function () {
 //│     let scrut;
 //│     scrut = true;
-//│     if (scrut === true) {
-//│       tmp = 0;
-//│       return while1()
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     switch (scrut) {
+//│       case true:
+//│         tmp = 0;
+//│         return while1();
+//│         break;
+//│       default:
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│         break;
 //│     }
 //│     return runtime.LoopEnd
 //│   });
 //│   tmp1 = while1();
 //│   tmp2 = tmp1 !== runtime.LoopEnd;
-//│   if (tmp2 === true) { return tmp1 } else { return tmp }
+//│   switch (tmp2) {
+//│     case true:
+//│       return tmp1;
+//│       break;
+//│     default:
+//│       return tmp;
+//│       break;
+//│   }
 //│ });
 //│ lambda
 //│ = fun
@@ -62,12 +72,17 @@ while x
 //│ while3 = (undefined, function () {
 //│   let tmp6;
 //│   loopLabel: while (true) {
-//│     if (x2 === true) {
-//│       tmp6 = Predef.print("Hello World");
-//│       x2 = false;
-//│       tmp4 = runtime.Unit;
-//│       continue loopLabel
-//│     } else { tmp4 = 42; }
+//│     switch (x2) {
+//│       case true:
+//│         tmp6 = Predef.print("Hello World");
+//│         x2 = false;
+//│         tmp4 = runtime.Unit;
+//│         continue loopLabel;
+//│         break;
+//│       default:
+//│         tmp4 = 42;
+//│         break;
+//│     }
 //│     return runtime.LoopEnd;
 //│     break;
 //│   }
@@ -121,19 +136,29 @@ while
 //│     let i2, scrut, tmp15;
 //│     i2 = 0;
 //│     scrut = i2 < 10;
-//│     if (scrut === true) {
-//│       tmp15 = i2 + 1;
-//│       i2 = tmp15;
-//│       tmp12 = runtime.Unit;
-//│       return while7()
-//│     } else {
-//│       tmp12 = runtime.Unit;
+//│     switch (scrut) {
+//│       case true:
+//│         tmp15 = i2 + 1;
+//│         i2 = tmp15;
+//│         tmp12 = runtime.Unit;
+//│         return while7();
+//│         break;
+//│       default:
+//│         tmp12 = runtime.Unit;
+//│         break;
 //│     }
 //│     return runtime.LoopEnd
 //│   });
 //│   tmp13 = while7();
 //│   tmp14 = tmp13 !== runtime.LoopEnd;
-//│   if (tmp14 === true) { return tmp13 } else { return tmp12 }
+//│   switch (tmp14) {
+//│     case true:
+//│       return tmp13;
+//│       break;
+//│     default:
+//│       return tmp12;
+//│       break;
+//│   }
 //│ });
 //│ lambda2
 //│ = fun
@@ -232,7 +257,14 @@ fun f(ls) =
 //│   });
 //│   tmp19 = while10();
 //│   tmp20 = tmp19 !== runtime.LoopEnd;
-//│   if (tmp20 === true) { return tmp19 } else { return tmp18 }
+//│   switch (tmp20) {
+//│     case true:
+//│       return tmp19;
+//│       break;
+//│     default:
+//│       return tmp18;
+//│       break;
+//│   }
 //│ };
 
 f(0)
@@ -300,10 +332,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.300: 	  then 0(0)
+//│ ║  l.332: 	  then 0(0)
 //│ ╙──       	  ^^^^
 //│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.299: 	while print("Hello World"); false
+//│ ║  l.331: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 //│ ═══[RUNTIME ERROR] Error: match error
@@ -313,12 +345,12 @@ while { print("Hello World"), false }
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.312: 	while { print("Hello World"), false }
+//│ ║  l.344: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.313: 	  then 0(0)
+//│ ║  l.345: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.314: 	  else 1
+//│ ║  l.346: 	  else 1
 //│ ╙──       	  ^^^^
 
 :fixme
@@ -328,14 +360,14 @@ while
   then 0(0)
   else 1
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.326: 	    print("Hello World")
+//│ ║  l.358: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.327: 	    false
+//│ ║  l.359: 	    false
 //│ ║         	^^^^^^^^^
-//│ ║  l.328: 	  then 0(0)
+//│ ║  l.360: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.329: 	  else 1
+//│ ║  l.361: 	  else 1
 //│ ╙──       	  ^^^^
 
 

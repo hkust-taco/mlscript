@@ -11,7 +11,14 @@ let f = x => if x then print("ok") else print("ko")
 //│ JS (unsanitized):
 //│ let f, lambda;
 //│ lambda = (undefined, function (x) {
-//│   if (x === true) { return Predef.print("ok") } else { return Predef.print("ko") }
+//│   switch (x) {
+//│     case true:
+//│       return Predef.print("ok");
+//│       break;
+//│     default:
+//│       return Predef.print("ko");
+//│       break;
+//│   }
 //│ });
 //│ f = lambda;
 //│ f = fun
@@ -29,9 +36,14 @@ let f = x => print((if x then "ok" else "ko") + "!")
 //│ let f1, lambda1;
 //│ lambda1 = (undefined, function (x) {
 //│   let tmp, tmp1;
-//│   if (x === true) {
-//│     tmp = "ok";
-//│   } else { tmp = "ko"; }
+//│   switch (x) {
+//│     case true:
+//│       tmp = "ok";
+//│       break;
+//│     default:
+//│       tmp = "ko";
+//│       break;
+//│   }
 //│   tmp1 = tmp + "!";
 //│   return Predef.print(tmp1)
 //│ });
@@ -44,9 +56,14 @@ let f = x => print((if x and x then "ok" else "ko") + "!")
 //│ let f2, lambda2;
 //│ lambda2 = (undefined, function (x) {
 //│   let tmp, tmp1;
-//│   if (x === true) {
-//│     tmp = "ok";
-//│   } else { tmp = "ko"; }
+//│   switch (x) {
+//│     case true:
+//│       tmp = "ok";
+//│       break;
+//│     default:
+//│       tmp = "ko";
+//│       break;
+//│   }
 //│   tmp1 = tmp + "!";
 //│   return Predef.print(tmp1)
 //│ });

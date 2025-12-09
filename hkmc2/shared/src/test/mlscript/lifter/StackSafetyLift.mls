@@ -27,10 +27,13 @@ hi(0)
 //│ let hi, Cont$func$hi$1, res, $_stack$_safe$_body$_, doUnwind$, Cont$func$hi$$;
 //│ Cont$func$hi$$ = function Cont$func$hi$$(isMut, n, pc) {
 //│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new Cont$func$hi$1(pc);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
+//│   switch (isMut) {
+//│     case true:
+//│       tmp = new Cont$func$hi$1(pc);
+//│       break;
+//│     default:
+//│       tmp = globalThis.Object.freeze(new Cont$func$hi$1(pc));
+//│       break;
 //│   }
 //│   tmp1 = tmp(n);
 //│   return tmp1
@@ -70,11 +73,14 @@ hi(0)
 //│     return doUnwind$(n, stackDelayRes, 0)
 //│   }
 //│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     return hi(tmp)
+//│   switch (scrut) {
+//│     case true:
+//│       return 0;
+//│       break;
+//│     default:
+//│       tmp = n - 1;
+//│       return hi(tmp);
+//│       break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
@@ -98,10 +104,13 @@ sum(10000)
 //│ let sum1, Cont$func$sum$1, res1, $_stack$_safe$_body$_1, doUnwind$1, Cont$func$sum$$;
 //│ Cont$func$sum$$ = function Cont$func$sum$$(isMut, n, tmp, pc) {
 //│   let tmp1, tmp2;
-//│   if (isMut === true) {
-//│     tmp1 = new Cont$func$sum$1(pc);
-//│   } else {
-//│     tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
+//│   switch (isMut) {
+//│     case true:
+//│       tmp1 = new Cont$func$sum$1(pc);
+//│       break;
+//│     default:
+//│       tmp1 = globalThis.Object.freeze(new Cont$func$sum$1(pc));
+//│       break;
 //│   }
 //│   tmp2 = tmp1(n, tmp);
 //│   return tmp2
@@ -129,15 +138,20 @@ sum(10000)
 //│   resume(value$) {
 //│     let curDepth;
 //│     curDepth = runtime.stackDepth;
-//│     if (this.pc === 1) {
-//│       this.tmp = value$;
+//│     switch (this.pc) {
+//│       case 1:
+//│         this.tmp = value$;
+//│         break;
 //│     }
 //│     contLoop: while (true) {
 //│       runtime.stackDepth = curDepth;
-//│       if (this.pc === 0) {
-//│         return sum1(this.n)
-//│       } else if (this.pc === 1) {
-//│         return this.n + this.tmp
+//│       switch (this.pc) {
+//│         case 0:
+//│           return sum1(this.n);
+//│           break;
+//│         case 1:
+//│           return this.n + this.tmp;
+//│           break;
 //│       }
 //│       break;
 //│     }
@@ -159,16 +173,19 @@ sum(10000)
 //│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
 //│   }
 //│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum1(tmp);
-//│     runtime.stackDepth = curDepth;
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind$1(n, tmp1, tmp1, 1)
-//│     }
-//│     return n + tmp1
+//│   switch (scrut) {
+//│     case true:
+//│       return 0;
+//│       break;
+//│     default:
+//│       tmp = n - 1;
+//│       tmp1 = sum1(tmp);
+//│       runtime.stackDepth = curDepth;
+//│       if (tmp1 instanceof runtime.EffectSig.class) {
+//│         return doUnwind$1(n, tmp1, tmp1, 1)
+//│       }
+//│       return n + tmp1;
+//│       break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
@@ -279,7 +296,14 @@ fun max(a, b) = if a < b then b else a
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
+//│   switch (scrut) {
+//│     case true:
+//│       return b;
+//│       break;
+//│     default:
+//│       return a;
+//│       break;
+//│   }
 //│ };
 
 

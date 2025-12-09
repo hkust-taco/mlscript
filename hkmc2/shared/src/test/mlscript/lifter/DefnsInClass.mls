@@ -10,10 +10,13 @@ data class A(x) with
 //│ let B1, A1, B$;
 //│ B$ = function B$(isMut, A$instance, y) {
 //│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new B1.class(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new B1.class(y));
+//│   switch (isMut) {
+//│     case true:
+//│       tmp = new B1.class(y);
+//│       break;
+//│     default:
+//│       tmp = globalThis.Object.freeze(new B1.class(y));
+//│       break;
 //│   }
 //│   tmp1 = tmp(A$instance);
 //│   return tmp1

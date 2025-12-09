@@ -52,11 +52,14 @@ hi(0)
 //│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     return hi(tmp)
+//│   switch (scrut) {
+//│     case true:
+//│       return 0;
+//│       break;
+//│     default:
+//│       tmp = n - 1;
+//│       return hi(tmp);
+//│       break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
@@ -92,15 +95,20 @@ sum(10000)
 //│     resume(value$) {
 //│       let curDepth1;
 //│       curDepth1 = runtime.stackDepth;
-//│       if (this.pc === 1) {
-//│         tmp1 = value$;
+//│       switch (this.pc) {
+//│         case 1:
+//│           tmp1 = value$;
+//│           break;
 //│       }
 //│       contLoop: while (true) {
 //│         runtime.stackDepth = curDepth1;
-//│         if (this.pc === 0) {
-//│           return sum1(n)
-//│         } else if (this.pc === 1) {
-//│           return n + tmp1
+//│         switch (this.pc) {
+//│           case 0:
+//│             return sum1(n);
+//│             break;
+//│           case 1:
+//│             return n + tmp1;
+//│             break;
 //│         }
 //│         break;
 //│       }
@@ -120,16 +128,19 @@ sum(10000)
 //│     return doUnwind(stackDelayRes, 0)
 //│   }
 //│   scrut = n === 0;
-//│   if (scrut === true) {
-//│     return 0
-//│   } else {
-//│     tmp = n - 1;
-//│     tmp1 = sum1(tmp);
-//│     runtime.stackDepth = curDepth;
-//│     if (tmp1 instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp1, 1)
-//│     }
-//│     return n + tmp1
+//│   switch (scrut) {
+//│     case true:
+//│       return 0;
+//│       break;
+//│     default:
+//│       tmp = n - 1;
+//│       tmp1 = sum1(tmp);
+//│       runtime.stackDepth = curDepth;
+//│       if (tmp1 instanceof runtime.EffectSig.class) {
+//│         return doUnwind(tmp1, 1)
+//│       }
+//│       return n + tmp1;
+//│       break;
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
@@ -148,6 +159,8 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
 
 :effectHandlers
 :stackSafe 100
@@ -263,7 +276,14 @@ fun max(a, b) = if a < b then b else a
 //│ max = function max(a, b) {
 //│   let scrut;
 //│   scrut = a < b;
-//│   if (scrut === true) { return b } else { return a }
+//│   switch (scrut) {
+//│     case true:
+//│       return b;
+//│       break;
+//│     default:
+//│       return a;
+//│       break;
+//│   }
 //│ };
 
 

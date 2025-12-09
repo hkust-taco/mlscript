@@ -22,14 +22,17 @@ fun buildPalindrome = case
 //│   let lambda;
 //│   lambda = (undefined, function (caseScrut) {
 //│     let n, tmp3, tmp4, tmp5;
-//│     if (caseScrut === 0) {
-//│       return globalThis.Object.freeze([])
-//│     } else {
-//│       n = caseScrut;
-//│       tmp3 = buildPalindrome();
-//│       tmp4 = n - 1;
-//│       tmp5 = tmp3(tmp4);
-//│       return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n))
+//│     switch (caseScrut) {
+//│       case 0:
+//│         return globalThis.Object.freeze([]);
+//│         break;
+//│       default:
+//│         n = caseScrut;
+//│         tmp3 = buildPalindrome();
+//│         tmp4 = n - 1;
+//│         tmp5 = tmp3(tmp4);
+//│         return globalThis.Object.freeze(runtime.Tuple.lazyConcat(n, runtime.Tuple.split, tmp5, n));
+//│         break;
 //│     }
 //│   });
 //│   return lambda
@@ -80,13 +83,13 @@ sum2(arr)
 :e
 fun f(..xs) = xs
 //│ ╔══[ERROR] Lazy spread parameters not allowed.
-//│ ║  l.81: 	fun f(..xs) = xs
+//│ ║  l.84: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 
 :ge
 sum2(..arr)
 //│ ╔══[COMPILATION ERROR] Lazy spreads are not supported in call arguments
-//│ ║  l.87: 	sum2(..arr)
+//│ ║  l.90: 	sum2(..arr)
 //│ ╙──      	    ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 2
 

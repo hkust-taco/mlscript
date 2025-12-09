@@ -20,14 +20,20 @@ if
 //│ let tmp;
 //│ split_root$: {
 //│   split_1$: {
-//│     if (x === true) {
-//│       break split_1$
-//│     } else {
-//│       if (y === true) {
-//│         break split_1$
-//│       } else {
-//│         throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│       }
+//│     switch (x) {
+//│       case true:
+//│         break split_1$;
+//│         break;
+//│       default:
+//│         switch (y) {
+//│           case true:
+//│             break split_1$;
+//│             break;
+//│           default:
+//│             throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│             break;
+//│         }
+//│         break;
 //│     }
 //│   }
 //│   tmp = 0;
@@ -41,12 +47,20 @@ if
   x then 0
   y then 1
 //│ JS (unsanitized):
-//│ if (x === true) {
-//│   0
-//│ } else {
-//│   if (y === true) {
-//│     1
-//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ switch (x) {
+//│   case true:
+//│     0;
+//│     break;
+//│   default:
+//│     switch (y) {
+//│       case true:
+//│         1;
+//│         break;
+//│       default:
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│         break;
+//│     }
+//│     break;
 //│ }
 //│ = 0
 
@@ -80,11 +94,25 @@ if
 //│ split_root$1: {
 //│   split_default$: {
 //│     split_1$1: {
-//│       if (x === true) {
-//│         if (z === true) {
-//│           tmp1 = 1;
-//│           break split_root$1
-//│         } else {
+//│       switch (x) {
+//│         case true:
+//│           switch (z) {
+//│             case true:
+//│               tmp1 = 1;
+//│               break split_root$1;
+//│               break;
+//│             default:
+//│               if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
+//│                 element0$ = runtime.Tuple.get(y, 0);
+//│                 b = element0$;
+//│                 break split_1$1
+//│               } else {
+//│                 break split_default$
+//│               }
+//│               break;
+//│           }
+//│           break;
+//│         default:
 //│           if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
 //│             element0$ = runtime.Tuple.get(y, 0);
 //│             b = element0$;
@@ -92,15 +120,7 @@ if
 //│           } else {
 //│             break split_default$
 //│           }
-//│         }
-//│       } else {
-//│         if (runtime.Tuple.isArrayLike(y) && y.length === 1) {
-//│           element0$ = runtime.Tuple.get(y, 0);
-//│           b = element0$;
-//│           break split_1$1
-//│         } else {
-//│           break split_default$
-//│         }
+//│           break;
 //│       }
 //│     }
 //│     x1 = 1;
