@@ -22,15 +22,10 @@ fun f(x) =
 //│ f1 = function f(x) {
 //│   let scrut, tmp, tmp1;
 //│   scrut = x < 0;
-//│   switch (scrut) {
-//│     case true:
-//│       tmp = Predef.print("whoops");
-//│       return 0;
-//│       break;
-//│     default:
-//│       tmp1 = runtime.Unit;
-//│       break;
-//│   }
+//│   if (scrut === true) {
+//│     tmp = Predef.print("whoops");
+//│     return 0
+//│   } else { tmp1 = runtime.Unit; }
 //│   return x + 1
 //│ };
 

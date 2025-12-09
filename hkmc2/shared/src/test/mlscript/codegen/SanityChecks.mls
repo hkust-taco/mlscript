@@ -210,10 +210,8 @@ console.log(1)
 //│ JS:
 //│ selRes = globalThis.console;
 //│ discarded = globalThis.console$__checkNotMethod;
-//│ switch (selRes) {
-//│   case undefined:
-//│     throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"));
-//│     break;
+//│ if (selRes === undefined) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
 //│ block$res10 = runtime.safeCall(selRes.log(1));
 //│ undefined
@@ -226,10 +224,8 @@ globalThis.x
 //│ JS:
 //│ selRes1 = globalThis.x;
 //│ discarded1 = globalThis.x$__checkNotMethod;
-//│ switch (selRes1) {
-//│   case undefined:
-//│     throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"));
-//│     break;
+//│ if (selRes1 === undefined) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"))
 //│ }
 //│ block$res11 = selRes1;
 //│ undefined
@@ -288,24 +284,13 @@ if M.A(1).y is
 //│ tmp11 = runtime.checkCall(M1.A(1));
 //│ selRes2 = tmp11.y;
 //│ discarded2 = tmp11.y$__checkNotMethod;
-//│ switch (selRes2) {
-//│   case undefined:
-//│     throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"));
-//│     break;
+//│ if (selRes2 === undefined) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ scrut = selRes2;
 //│ x = scrut;
 //│ scrut1 = Predef.equals(x, 1);
-//│ switch (scrut1) {
-//│   case true:
-//│     block$res13 = x;
-//│     undefined;
-//│     break;
-//│   default:
-//│     block$res13 = 0;
-//│     undefined;
-//│     break;
-//│ }
+//│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 
 
@@ -317,18 +302,14 @@ M.A(1).y
 //│ JS:
 //│ selRes3 = globalThis.console;
 //│ discarded3 = globalThis.console$__checkNotMethod;
-//│ switch (selRes3) {
-//│   case undefined:
-//│     throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"));
-//│     break;
+//│ if (selRes3 === undefined) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
 //│ }
 //│ tmp12 = runtime.checkCall(M1.A(1));
 //│ selRes4 = tmp12.y;
 //│ discarded4 = tmp12.y$__checkNotMethod;
-//│ switch (selRes4) {
-//│   case undefined:
-//│     throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"));
-//│     break;
+//│ if (selRes4 === undefined) {
+//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
 //│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
 //│ undefined

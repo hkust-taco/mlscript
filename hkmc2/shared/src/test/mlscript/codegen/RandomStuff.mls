@@ -9,14 +9,7 @@ fun foo() = if false do foo()
 //│   let scrut;
 //│   loopLabel: while (true) {
 //│     scrut = false;
-//│     switch (scrut) {
-//│       case true:
-//│         continue loopLabel;
-//│         break;
-//│       default:
-//│         return runtime.Unit;
-//│         break;
-//│     }
+//│     if (scrut === true) { continue loopLabel } else { return runtime.Unit }
 //│     break;
 //│   }
 //│ };
@@ -84,10 +77,10 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.84: 	let foo = 1
+//│ ║  l.77: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.85: 	fun foo(x) = foo
+//│ ║  l.78: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;

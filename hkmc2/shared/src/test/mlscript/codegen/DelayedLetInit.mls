@@ -83,14 +83,9 @@ else foo = 1
 //│ let foo1, scrut;
 //│ foo1 = undefined;
 //│ scrut = true;
-//│ switch (scrut) {
-//│   case true:
-//│     foo1;
-//│     break;
-//│   default:
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│     break;
-//│ }
+//│ if (scrut === true) {
+//│   foo1
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ foo = undefined
 
 let foo
@@ -103,16 +98,7 @@ else
 //│ let foo2, scrut1;
 //│ foo2 = undefined;
 //│ scrut1 = true;
-//│ switch (scrut1) {
-//│   case true:
-//│     foo2 = 0;
-//│     runtime.Unit;
-//│     break;
-//│   default:
-//│     foo2 = 1;
-//│     runtime.Unit;
-//│     break;
-//│ }
+//│ if (scrut1 === true) { foo2 = 0; runtime.Unit } else { foo2 = 1; runtime.Unit }
 //│ foo = 0
 
 
@@ -134,7 +120,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.135: 	fun f() = foo = 0
+//│ ║  l.121: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS (unsanitized):
 //│ let f4; f4 = function f() { return foo2 };

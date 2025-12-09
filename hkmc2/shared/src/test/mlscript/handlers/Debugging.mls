@@ -70,20 +70,17 @@ fun f() =
 //│             return j / i;
 //│             break;
 //│           case 1:
-//│             switch (scrut) {
-//│               case true:
-//│                 tmp = Predef.raiseUnhandledEffect();
-//│                 if (tmp instanceof runtime.EffectSig.class) {
-//│                   return this.doUnwind(tmp, 2)
-//│                 }
-//│                 this.pc = 2;
-//│                 continue contLoop;
-//│                 break;
-//│               default:
-//│                 tmp1 = runtime.Unit;
-//│                 this.pc = 4;
-//│                 continue contLoop;
-//│                 break;
+//│             if (scrut === true) {
+//│               tmp = Predef.raiseUnhandledEffect();
+//│               if (tmp instanceof runtime.EffectSig.class) {
+//│                 return this.doUnwind(tmp, 2)
+//│               }
+//│               this.pc = 2;
+//│               continue contLoop
+//│             } else {
+//│               tmp1 = runtime.Unit;
+//│               this.pc = 4;
+//│               continue contLoop
 //│             }
 //│             this.pc = 4;
 //│             continue contLoop;
@@ -139,21 +136,16 @@ fun f() =
 //│   if (scrut instanceof runtime.EffectSig.class) {
 //│     return doUnwind(scrut, 1)
 //│   }
-//│   switch (scrut) {
-//│     case true:
-//│       tmp = Predef.raiseUnhandledEffect();
-//│       if (tmp instanceof runtime.EffectSig.class) {
-//│         return doUnwind(tmp, 2)
-//│       }
-//│       tmp1 = Predef.print(tmp);
-//│       if (tmp1 instanceof runtime.EffectSig.class) {
-//│         return doUnwind(tmp1, 3)
-//│       }
-//│       break;
-//│     default:
-//│       tmp1 = runtime.Unit;
-//│       break;
-//│   }
+//│   if (scrut === true) {
+//│     tmp = Predef.raiseUnhandledEffect();
+//│     if (tmp instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp, 2)
+//│     }
+//│     tmp1 = Predef.print(tmp);
+//│     if (tmp1 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp1, 3)
+//│     }
+//│   } else { tmp1 = runtime.Unit; }
 //│   return j / i
 //│ };
 
@@ -170,8 +162,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:170:3)
-//│ 	at lambda_test (Debugging.mls:167:3)
+//│ 	at lambda (Debugging.mls:162:3)
+//│ 	at lambda_test (Debugging.mls:159:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -250,9 +242,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:243:3) with locals: j=200
+//│ > 	at f (Debugging.mls:235:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:245:3)
+//│ > 	at f (Debugging.mls:237:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:246:3) with locals: j=300
+//│ > 	at f (Debugging.mls:238:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

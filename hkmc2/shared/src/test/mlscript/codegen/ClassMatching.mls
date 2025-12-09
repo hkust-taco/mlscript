@@ -127,14 +127,11 @@ fun f(x) = if x is
 //│         argument0$4 = x3.value;
 //│         x4 = argument0$4;
 //│         scrut1 = x4 > 0;
-//│         switch (scrut1) {
-//│           case true:
-//│             tmp5 = 42;
-//│             break split_root$1;
-//│             break;
-//│           default:
-//│             break split_1$;
-//│             break;
+//│         if (scrut1 === true) {
+//│           tmp5 = 42;
+//│           break split_root$1
+//│         } else {
+//│           break split_1$
 //│         }
 //│       } else if (x3 instanceof None1.class) {
 //│         tmp5 = "ok";
@@ -204,14 +201,11 @@ fun f(x) = print of if x is
 //│     split_1$: {
 //│       if (x3 instanceof Some1.class) {
 //│         argument0$4 = x3.value;
-//│         switch (argument0$4) {
-//│           case 0:
-//│             tmp9 = "0";
-//│             break split_root$1;
-//│             break;
-//│           default:
-//│             break split_1$;
-//│             break;
+//│         if (argument0$4 === 0) {
+//│           tmp9 = "0";
+//│           break split_root$1
+//│         } else {
+//│           break split_1$
 //│         }
 //│       } else if (x3 instanceof None1.class) {
 //│         tmp9 = "ok";

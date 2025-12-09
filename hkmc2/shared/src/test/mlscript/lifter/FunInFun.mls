@@ -383,20 +383,17 @@ fun f(x) =
 //│   let y1, scrut, g$here;
 //│   y1 = undefined;
 //│   scrut = x1 < 0;
-//│   switch (scrut) {
-//│     case true:
-//│       y1 = 1;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([
-//│         g$here,
-//│         g$here
-//│       ]);
-//│       break;
-//│     default:
-//│       y1 = 2;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([ g$here, g$here ]);
-//│       break;
+//│   if (scrut === true) {
+//│     y1 = 1;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([
+//│       g$here,
+//│       g$here
+//│     ])
+//│   } else {
+//│     y1 = 2;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([ g$here, g$here ])
 //│   }
 //│ };
 

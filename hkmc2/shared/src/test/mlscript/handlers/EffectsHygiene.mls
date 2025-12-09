@@ -37,14 +37,7 @@ fun foo(h): module M =
 //│     static [definitionMetadata] = ["class", "A"]; 
 //│   });
 //│   scrut = false;
-//│   switch (scrut) {
-//│     case true:
-//│       return A2;
-//│       break;
-//│     default:
-//│       return A3;
-//│       break;
-//│   }
+//│   if (scrut === true) { return A2 } else { return A3 }
 //│ };
 
 

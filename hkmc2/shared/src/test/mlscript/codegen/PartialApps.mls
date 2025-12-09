@@ -267,13 +267,6 @@ fun f(x) =
 //│ f16 = function f(x3) {
 //│   let scrut;
 //│   scrut = Predef.equals(x3, 0);
-//│   switch (scrut) {
-//│     case true:
-//│       return 1;
-//│       break;
-//│     default:
-//│       return 2;
-//│       break;
-//│   }
+//│   if (scrut === true) { return 1 } else { return 2 }
 //│ };
 
