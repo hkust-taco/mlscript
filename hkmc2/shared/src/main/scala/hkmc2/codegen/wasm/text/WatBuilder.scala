@@ -39,6 +39,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
   private case class TupleArrayInfo(arrayType: TypeIdx, elemType: Type)
   private var tupleArrayInfo: Opt[TupleArrayInfo] = N
+  private case class ActiveLabel(sym: Local, breakLabel: Str, continueLabel: Opt[Str])
+  private var activeLabels: List[ActiveLabel] = Nil
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -955,6 +957,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     resultTypes = Seq.empty
                   ),
                   ifFalse = N,
+                  resultTypes = Seq.empty
+                ),
+                ifFalse = N,
+                resultTypes = Seq.empty
+              ))
+            case Case.Tup(len, inf) => 
+              val arrayRefType = RefType(HeapType.Array, nullable = true)
+              val isArrayTest = ref.test(getScrutExpr, arrayRefType)
+
+              // Length check
+              val scrutArray = ref.cast(getScrutExpr, arrayRefType)
+              val arrayLength = array.len(scrutArray)
+              val lengthTest = if inf then
+                i32.ge_u(arrayLength, i32.const(len))
+              else
+                i32.eq(arrayLength, i32.const(len))
+              
+              val testExpr = i32.and(isArrayTest, lengthTest)
+              val bodyExpr = returningTerm(body)
+              val armLabelSym = TempSymbol(N, "arm")
+              val armLabel = scope.allocateName(armLabelSym)
+              S(Instructions.`if`(
+                condition = testExpr,
+                ifTrue = Instructions.block(
+                  label = S(armLabel),
+                  children = Seq(bodyExpr, br(matchLabel)),
                   resultTypes = Seq.empty
                 ),
                 ifFalse = N,
