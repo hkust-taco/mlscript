@@ -184,10 +184,10 @@ sealed abstract class Block extends Product:
   // Note that this returns the definitions in reverse order, with the bottommost definiton appearing
   // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
   // we don't need to reverse the list again to preserve the order of the definitions.
-  def floatOutDefns(
-      ignore: Defn => Bool = _ => false, 
-      preserve: Defn => Bool = _ => false
-    ) =
+  def extractDefns(
+        ignore: Defn => Bool = _ => false, 
+        preserve: Defn => Bool = _ => false
+      ): (Block, List[Defn]) =
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
@@ -201,6 +201,12 @@ sealed abstract class Block extends Product:
     
     (transformer.applyBlock(this), defns)
     
+  def gatherDefns(
+      ignore: Defn => Bool = _ => false, 
+      preserve: Defn => Bool = _ => false
+    ): List[Defn] = extractDefns(ignore, preserve)._2 // TODO: fix this very inefficient implementation
+  
+  
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match

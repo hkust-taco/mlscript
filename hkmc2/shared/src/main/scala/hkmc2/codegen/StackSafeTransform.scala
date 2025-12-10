@@ -166,11 +166,11 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
       // However, due to how tightly coupled the stack safety and handler lowering are, it might be
       // better to simply merge the two passes in the future.
       val (blk, defns) = doUnwindPath.get match
-        case Value.Ref(sym, _) => rewritten.floatOutDefns()
+        case Value.Ref(sym, _) => rewritten.extractDefns()
         case _ => (rewritten, Nil)
       defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
-
-     
+  
+  
   def rewriteFn(defn: FunDefn) = 
     if doUnwindFns.contains(defn.sym) then defn
     else FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.forceTailRec)
