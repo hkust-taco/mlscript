@@ -15,6 +15,10 @@ const RuntimeJS = {
     try { return computation() }
     catch (error) { return onError(error) }
   },
+  try_finally(computation, onFinally) {
+    try { return computation() }
+    finally { return onFinally() }
+  },
   symbols: {
     definitionMetadata: Symbol.for("mlscript.definitionMetadata"),
     prettyPrint: Symbol.for("mlscript.prettyPrint")
