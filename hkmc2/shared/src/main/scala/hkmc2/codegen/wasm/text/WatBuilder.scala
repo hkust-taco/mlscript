@@ -37,7 +37,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
-  private case class TupleArrayInfo(arrayType: TypeIdx, elemType: Type)
+  private case class TupleArrayInfo(arrayType: TypeIdx, elemType: Type, mutable: Bool)
+  private var mutTupleArrayInfo: Opt[TupleArrayInfo] = N
   private var tupleArrayInfo: Opt[TupleArrayInfo] = N
   private case class ActiveLabel(sym: Local, breakLabel: Str, continueLabel: Opt[Str])
   private var activeLabels: List[ActiveLabel] = Nil
@@ -53,23 +54,82 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
-  private def tupleArray(using Ctx): TupleArrayInfo =
-    tupleArrayInfo.getOrElse {
-      val sym = BlockMemberSymbol("TupleArray", Nil)
-      val arrayType = ctx.addType(
-        sym = S(sym),
-        TypeInfo(
-          sym = sym,
-          compType = ArrayType(
-            elemType = RefType.anyref,
-            mutable = true
+  private def tupleArray(mut: Bool)(using Ctx): TupleArrayInfo =
+    val cached = if mut then mutTupleArrayInfo else tupleArrayInfo
+    cached match
+      case S(info) => info
+      case N =>
+        val suffix = if mut then "Mut" else ""
+        val sym = BlockMemberSymbol(s"TupleArray$suffix", Nil)
+        val arrayType = ctx.addType(
+          sym = S(sym),
+          TypeInfo(
+            sym = sym,
+            compType = ArrayType(
+              elemType = RefType.anyref,
+              mutable = mut
+            )
           )
         )
-      )
-      val info = TupleArrayInfo(arrayType, RefType.anyref)
-      tupleArrayInfo = S(info)
-      info
-    }
+        val info = TupleArrayInfo(arrayType, RefType.anyref, mutable = mut)
+        if mut then mutTupleArrayInfo = S(info) else tupleArrayInfo = S(info)
+        info
+
+  private def tupleArrayGet(
+      tupleExpr: Expr,
+      idxBuilder: Expr => Expr
+  )(using Ctx, Raise, Scope): Expr =
+    val mutInfo = tupleArray(true)
+    val immInfo = tupleArray(false)
+    val tupleIsMutable = ref.test(tupleExpr, RefType(mutInfo.arrayType, nullable = true))
+    val mutableBranch =
+      val tupleRef = ref.cast(tupleExpr, RefType(mutInfo.arrayType, nullable = false))
+      array.get(mutInfo.arrayType, tupleRef, idxBuilder(tupleRef), mutInfo.elemType)
+    val immutableBranch =
+      val tupleRef = ref.cast(tupleExpr, RefType(immInfo.arrayType, nullable = false))
+      array.get(immInfo.arrayType, tupleRef, idxBuilder(tupleRef), immInfo.elemType)
+    Instructions.`if`(
+      condition = tupleIsMutable,
+      ifTrue = mutableBranch,
+      ifFalse = S(immutableBranch),
+      resultTypes = Seq(Result(mutInfo.elemType.asValType_!))
+    )
+
+  private def tupleIndexBuilder(
+      fld: Path,
+      loc: Opt[Loc],
+      errCtx: Str,
+      extra: => Str
+  )(using Ctx, Raise, Scope): Expr => Expr =
+    fld match
+      case Value.Lit(IntLit(value)) if value.isValidInt =>
+        val idx = value.toInt
+        tupleRef =>
+          if idx >= 0 then i32.const(idx)
+          else i32.add(array.len(tupleRef), i32.const(idx))
+      case _ =>
+        val rawIdx = result(fld)
+        val idxI32 = rawIdx.resultType match
+          case S(I32Type) => rawIdx
+          case S(RefType(HeapType.I31, _)) => i31.get(rawIdx, signed = true)
+          case S(RefType(HeapType.Any, _)) =>
+            val casted = ref.cast(rawIdx, RefType.i31ref)
+            i31.get(casted, signed = true)
+          case ty =>
+            val err = errExpr(
+              Ls(
+                msg"$errCtx expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> loc
+              ),
+              extraInfo = S(extra)
+            )
+            return (_: Expr) => err
+        tupleRef =>
+          Instructions.`if`(
+            condition = i32.lt_s(idxI32, i32.const(0)),
+            ifTrue = i32.add(idxI32, array.len(tupleRef)),
+            ifFalse = S(idxI32),
+            resultTypes = Seq(Result(I32Type))
+          )
 
   /**
    * Raises a [[WarningReport]] with the given `warnMsgs` and `extraInfo`, and emits an
@@ -280,9 +340,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case N =>
           id.name.toIntOption.filter(_ >= 0)
             .map: idx =>
-              val tupleInfo = tupleArray
-              val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
-              array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
+              tupleArrayGet(
+                tupleExpr = qualRes,
+                idxBuilder = _ => i32.const(idx)
+              )
             .getOrElse:
               errExpr(
                 Ls(
@@ -294,39 +355,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
       if arrayIdx then
-        val tupleInfo = tupleArray
-        val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
-        fld match
-          case Value.Lit(IntLit(value)) if value.isValidInt =>
-            val idx = value.toInt
-            if idx >= 0 then
-              array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
-            else
-              val lenExpr = array.len(tupleRef)
-              val adjIdx = i32.add(lenExpr, i32.const(idx))
-              array.get(tupleInfo.arrayType, tupleRef, adjIdx, tupleInfo.elemType)
-          case _ =>
-            val rawIdx = result(fld)
-            val idxI32 = rawIdx.resultType match
-              case S(I32Type) => rawIdx
-              case S(RefType(HeapType.I31, _)) => i31.get(rawIdx, signed = true)
-              case S(RefType(HeapType.Any, _)) =>
-                val casted = ref.cast(rawIdx, RefType.i31ref)
-                i31.get(casted, signed = true)
-              case ty =>
-                return errExpr(
-                  Ls(
-                    msg"WatBuilder::result for array-style dynamic selections expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> dyn.toLoc
-                  ),
-                  extraInfo = S(dyn.toString)
-                )
-            val finalIdx = Instructions.`if`(
-              condition = i32.lt_s(idxI32, i32.const(0)),
-              ifTrue = i32.add(idxI32, array.len(tupleRef)),
-              ifFalse = S(idxI32),
-              resultTypes = Seq(Result(I32Type))
-            )
-            array.get(tupleInfo.arrayType, tupleRef, finalIdx, tupleInfo.elemType)
+        val idxBuilder = tupleIndexBuilder(
+          fld = fld,
+          loc = fld.toLoc,
+          errCtx = "WatBuilder::result for array-style dynamic selections",
+          extra = dyn.toString
+        )
+        tupleArrayGet(qualRes, idxBuilder)
       else
         errExpr(
           Ls(msg"WatBuilder::result for dynamic field selections is not implemented yet" -> dyn.toLoc),
@@ -364,12 +399,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       call(funcidx = ctorFuncIdx, as.map(argument), Seq(Result(objType.asValType_!)))
 
     case Tuple(mut, elems) =>
-      if mut then
-        return errExpr(
-          Ls(msg"Mutable tuple literals are not supported in the Wasm backend yet" -> r.toLoc),
-          extraInfo = S(r.toString)
-        )
-      val tupleInfo = tupleArray
+      val tupleInfo = tupleArray(mut)
       val tupleValues = elems.map(argument)
       array.new_fixed(tupleInfo.arrayType, tupleValues)
 
@@ -544,9 +574,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
           )
         case N =>
-          nme.name.toIntOption.filter(_ >= 0)
-            .map: idx =>
-              val tupleInfo = tupleArray
+          nme.name.toIntOption.filter(_ >= 0).map: idx =>
+              val tupleInfo = tupleArray(mut = true)
               val tupleRef = ref.cast(lhsExpr, RefType(tupleInfo.arrayType, nullable = false))
               array.set(tupleInfo.arrayType, tupleRef, i32.const(idx), rhsExpr)
             .getOrElse:
@@ -570,36 +599,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val rhsExpr = result(rhs)
       val assignInstr =
         if arrayIdx then
-          val tupleInfo = tupleArray
+          val tupleInfo = tupleArray(mut = true)
           val tupleRef = ref.cast(lhsExpr, RefType(tupleInfo.arrayType, nullable = false))
-          val idxExpr = fld match
-            case Value.Lit(IntLit(value)) if value.isValidInt =>
-              val idx = value.toInt
-              if idx >= 0 then i32.const(idx)
-              else
-                val lenExpr = array.len(tupleRef)
-                i32.add(lenExpr, i32.const(idx))
-            case _ =>
-              val rawIdx = result(fld)
-              val idxI32 = rawIdx.resultType match
-                case S(I32Type) => rawIdx
-                case S(RefType(HeapType.I31, _)) => i31.get(rawIdx, signed = true)
-                case S(RefType(HeapType.Any, _)) =>
-                  val casted = ref.cast(rawIdx, RefType.i31ref)
-                  i31.get(casted, signed = true)
-                case ty =>
-                  return errExpr(
-                    Ls(
-                      msg"WatBuilder::returningTerm for AssignDynField(...) expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> fld.toLoc
-                    ),
-                    extraInfo = S(assign.toString)
-                  )
-              Instructions.`if`(
-                condition = i32.lt_s(idxI32, i32.const(0)),
-                ifTrue = i32.add(idxI32, array.len(tupleRef)),
-                ifFalse = S(idxI32),
-                resultTypes = Seq(Result(I32Type))
-              )
+          val idxBuilder = tupleIndexBuilder(
+            fld = fld,
+            loc = fld.toLoc,
+            errCtx = "WatBuilder::returningTerm for AssignDynField(...)",
+            extra = assign.toString
+          )
+          val idxExpr = idxBuilder(tupleRef)
           array.set(tupleInfo.arrayType, tupleRef, idxExpr, rhsExpr)
         else
           errExpr(

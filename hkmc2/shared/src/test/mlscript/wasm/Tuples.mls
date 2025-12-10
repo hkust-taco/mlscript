@@ -11,7 +11,7 @@
 //│ = {}
 
 fun makePair(x, y) = [x, y]
-makePair(40, 2).1
+makePair(1, 2).1
 //│ Wasm result:
 //│ = 2
 
@@ -26,14 +26,21 @@ nums.[-1]
 //│ Wasm result:
 //│ = 3
 
-let nums = [1, 2, 3]
-set nums.0 = 10
+let nums = mut [1, 2, 3]
+set nums.0 = 0
 nums.0
 //│ Wasm result:
-//│ = 10
+//│ = 0
 
 :re
-let nums = [5, 6, 7]
+let nums = [1, 2, 3]
+set nums.0 = 0
+nums.0
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: illegal cast
+
+:re
+let nums = [1, 2, 3]
 nums.3
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] RuntimeError: array element access out of bounds
@@ -45,9 +52,10 @@ c.3
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $TupleArray (array (mut (ref null any))))
+//│   (type $TupleArray (array (ref null any)))
+//│   (type $TupleArrayMut (array (mut (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (func $entry (type 2) (result (ref null any))
+//│   (func $entry (type 3) (result (ref null any))
 //│     (local $c (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $c
@@ -60,10 +68,19 @@ c.3
 //│             (i32.const 30))
 //│           (ref.i31
 //│             (i32.const 40))))
-//│       (array.get $TupleArray
-//│         (ref.cast (ref $TupleArray)
+//│       (if (result (ref null any))
+//│         (ref.test (ref null $TupleArrayMut)
 //│           (local.get $c))
-//│         (i32.const 3))))
+//│         (then
+//│           (array.get $TupleArrayMut
+//│             (ref.cast (ref $TupleArrayMut)
+//│               (local.get $c))
+//│             (i32.const 3)))
+//│         (else
+//│           (array.get $TupleArray
+//│             (ref.cast (ref $TupleArray)
+//│               (local.get $c))
+//│             (i32.const 3))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:
