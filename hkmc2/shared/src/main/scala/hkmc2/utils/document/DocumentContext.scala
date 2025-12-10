@@ -1,7 +1,9 @@
 package hkmc2
 package document
 
+import collection.immutable.ArraySeq
 import collection.immutable.ArraySeq.unsafeWrapArray
+import util.matching.Regex
 
 import mlscript.utils.*, shorthands.*
 import utils.*
@@ -35,6 +37,13 @@ import DocumentContext.*
 class DocumentContext(ctx: StringContext) {
   
   object doc {
+    private val nestRegex = " #\\{ ".r
+    private val unnestRegex = " #\\} ".r
+    private val beginGroupRegex = "\\\\\\{".r
+    private val endGroupRegex = "\\\\\\}".r
+    private val docBreakRegex = " # ".r
+    private val forceDocBreakRegex = """\\n""".r
+  
     def apply(docs: Document*): Document =
       
       type DocsMarkers = Document | Nest | UnNest | BeginGroup | EndGroup | RawDocText
@@ -45,18 +54,19 @@ class DocumentContext(ctx: StringContext) {
       def interleave(docs: Seq[DocsMarkersInsert], interleaved: DocsMarkersInsert) =
         docs.head :: (docs.iterator.drop(1).map { List(interleaved, _) }.flatten.toList: Ls[DocsMarkersInsert])
       
-      def splitOn(mark: String, interleaved: DocsMarkersInsert) = (ds: Ls[DocsMarkersInsert]) => ds.flatMap:
-        case RawDocText(str) => interleave(unsafeWrapArray(str.split(mark, -1)).map(RawDocText(_)), interleaved)
+      def splitOn(mark: Regex, interleaved: DocsMarkersInsert) = (ds: Ls[DocsMarkersInsert]) => ds.flatMap:
+        case RawDocText(str) => 
+          interleave(unsafeWrapArray(mark.pattern.split(str, -1)).map(RawDocText(_)), interleaved)
         case d: DocsMarkersInsert     => Seq(d)
       
       // Makes a sequence of the parts separated with Nest, UnNest and Insert (for positions where docs are to be inserted)
       val parts = (
-        splitOn(" #\\{ ", Nest) andThen
-        splitOn(" #\\} ", UnNest) andThen
-        splitOn("\\\\\\{", BeginGroup) andThen
-        splitOn("\\\\\\}", EndGroup) andThen
-        splitOn(" # ", DocBreak(false)) andThen
-        splitOn("""\\n""", DocBreak(true)) // interpolated strings don't get special chars replaced (we escape \n for the regex)
+        splitOn(nestRegex, Nest) andThen
+        splitOn(unnestRegex, UnNest) andThen
+        splitOn(beginGroupRegex, BeginGroup) andThen
+        splitOn(endGroupRegex, EndGroup) andThen
+        splitOn(docBreakRegex, DocBreak(false)) andThen
+        splitOn(forceDocBreakRegex, DocBreak(true)) // interpolated strings don't get special chars replaced (we escape \n for the regex)
       )(interleave(ctx.parts.map(RawDocText(_)), Insert)).map:
           case RawDocText(s) => text(s) // 'text' escapes \n chars
           case d             => d
