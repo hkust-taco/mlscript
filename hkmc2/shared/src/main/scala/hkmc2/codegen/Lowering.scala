@@ -600,7 +600,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             LoweringCtx.nestScoped.givenIn:
               val res = block(Nil, R(body))(k)
               val scopedSyms = loweringCtx.getCollectedSym
-              new Begin(new Scoped(scopedSyms, res), End())
+              // Put the Scoped in the rest, so that the returned result can be found correctly
+              new Begin(End(), new Scoped(scopedSyms, res))
           case _ =>
             return fail:
               ErrorReport(

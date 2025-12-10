@@ -220,6 +220,13 @@ sealed abstract class Block extends Product:
       if (newBody is body) && (newRest is rest)
       then this
       else Label(label, loop, newBody, newRest)
+
+    // * Do not omit the `Begin`s that are used for nested scopes
+    case Begin(e: End, Scoped(syms, body)) =>
+      val newBody = body.flatten(k)
+      if newBody is body
+      then this
+      else new Begin(e, new Scoped(syms, newBody)) 
       
     case Begin(sub, rest) =>
       sub.flatten(_ => rest.flatten(k))
@@ -288,7 +295,7 @@ sealed abstract class Block extends Product:
       val newBody = body.flatten(k)
       if newBody is body
       then this
-      else new Scoped(syms, newBody)
+      else Scoped(syms, newBody)
 
     case e: End => k(e)
     case t: BlockTail => this
