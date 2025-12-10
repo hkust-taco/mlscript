@@ -60,7 +60,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           sym = sym,
           compType = ArrayType(
             elemType = RefType.anyref,
-            mutable = false
+            mutable = true
           )
         )
       )
@@ -292,21 +292,39 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
       if arrayIdx then
-        val idxOpt = fld match
-          case Value.Lit(IntLit(value)) if value.isValidInt && value >= 0 => S(value.toInt)
-          case _ => N
-        idxOpt
-          .map: idx =>
-            val tupleInfo = tupleArray
-            val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
-            array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
-          .getOrElse:
-            errExpr(
-              Ls(
-                msg"WatBuilder::result for array-style dynamic selections requires a non-negative integer literal index" -> dyn.toLoc
-              ),
-              extraInfo = S(dyn.toString)
+        val tupleInfo = tupleArray
+        val tupleRef = ref.cast(qualRes, RefType(tupleInfo.arrayType, nullable = false))
+        fld match
+          case Value.Lit(IntLit(value)) if value.isValidInt =>
+            val idx = value.toInt
+            if idx >= 0 then
+              array.get(tupleInfo.arrayType, tupleRef, i32.const(idx), tupleInfo.elemType)
+            else
+              val lenExpr = array.len(tupleRef)
+              val adjIdx = i32.add(lenExpr, i32.const(idx))
+              array.get(tupleInfo.arrayType, tupleRef, adjIdx, tupleInfo.elemType)
+          case _ =>
+            val rawIdx = result(fld)
+            val idxI32 = rawIdx.resultType match
+              case S(I32Type) => rawIdx
+              case S(RefType(HeapType.I31, _)) => i31.get(rawIdx, signed = true)
+              case S(RefType(HeapType.Any, _)) =>
+                val casted = ref.cast(rawIdx, RefType.i31ref)
+                i31.get(casted, signed = true)
+              case ty =>
+                return errExpr(
+                  Ls(
+                    msg"WatBuilder::result for array-style dynamic selections expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> dyn.toLoc
+                  ),
+                  extraInfo = S(dyn.toString)
+                )
+            val finalIdx = Instructions.`if`(
+              condition = i32.lt_s(idxI32, i32.const(0)),
+              ifTrue = i32.add(idxI32, array.len(tupleRef)),
+              ifFalse = S(idxI32),
+              resultTypes = Seq(Result(I32Type))
             )
+            array.get(tupleInfo.arrayType, tupleRef, finalIdx, tupleInfo.elemType)
       else
         errExpr(
           Ls(msg"WatBuilder::result for dynamic field selections is not implemented yet" -> dyn.toLoc),
@@ -501,6 +519,96 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
+        resultTypes = rstBlk.resultTypes.map: ty =>
+          Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
+      )
+
+    case assign @ AssignField(lhs, nme, rhs, rst) =>
+      val lhsExpr = result(lhs)
+      val rhsExpr = result(rhs)
+      val assignInstr = assign.symbol match
+        case S(selSym: TermSymbol) =>
+          val selOwner = selSym.owner getOrElse
+            lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
+          val selCls = selOwner.asBlkMember getOrElse
+            lastWords(
+              s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+            )
+          val fieldidx = fieldSelect(selCls, selSym)
+          val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+          struct.set(fieldidx, objRef, rhsExpr)
+        case S(otherSym) =>
+          lastWords(
+            s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
+          )
+        case N =>
+          nme.name.toIntOption.filter(_ >= 0)
+            .map: idx =>
+              val tupleInfo = tupleArray
+              val tupleRef = ref.cast(lhsExpr, RefType(tupleInfo.arrayType, nullable = false))
+              array.set(tupleInfo.arrayType, tupleRef, i32.const(idx), rhsExpr)
+            .getOrElse:
+              errExpr(
+                Ls(
+                  msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${nme.name}`)" -> nme.toLoc
+                ),
+                extraInfo = S(assign.toString)
+              )
+
+      val rstBlk = returningTerm(rst)
+      Instructions.block(
+        label = N,
+        children = Seq(assignInstr, rstBlk),
+        resultTypes = rstBlk.resultTypes.map: ty =>
+          Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
+      )
+
+    case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
+      val lhsExpr = result(lhs)
+      val rhsExpr = result(rhs)
+      val assignInstr =
+        if arrayIdx then
+          val tupleInfo = tupleArray
+          val tupleRef = ref.cast(lhsExpr, RefType(tupleInfo.arrayType, nullable = false))
+          val idxExpr = fld match
+            case Value.Lit(IntLit(value)) if value.isValidInt =>
+              val idx = value.toInt
+              if idx >= 0 then i32.const(idx)
+              else
+                val lenExpr = array.len(tupleRef)
+                i32.add(lenExpr, i32.const(idx))
+            case _ =>
+              val rawIdx = result(fld)
+              val idxI32 = rawIdx.resultType match
+                case S(I32Type) => rawIdx
+                case S(RefType(HeapType.I31, _)) => i31.get(rawIdx, signed = true)
+                case S(RefType(HeapType.Any, _)) =>
+                  val casted = ref.cast(rawIdx, RefType.i31ref)
+                  i31.get(casted, signed = true)
+                case ty =>
+                  return errExpr(
+                    Ls(
+                      msg"WatBuilder::returningTerm for AssignDynField(...) expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> fld.toLoc
+                    ),
+                    extraInfo = S(assign.toString)
+                  )
+              Instructions.`if`(
+                condition = i32.lt_s(idxI32, i32.const(0)),
+                ifTrue = i32.add(idxI32, array.len(tupleRef)),
+                ifFalse = S(idxI32),
+                resultTypes = Seq(Result(I32Type))
+              )
+          array.set(tupleInfo.arrayType, tupleRef, idxExpr, rhsExpr)
+        else
+          errExpr(
+            Ls(msg"WatBuilder::returningTerm for AssignDynField(...) where `arrayIdx = false` is not implemented yet" -> lhs.toLoc),
+            extraInfo = S(assign.toString)
+          )
+
+      val rstBlk = returningTerm(rst)
+      Instructions.block(
+        label = N,
+        children = Seq(assignInstr, rstBlk),
         resultTypes = rstBlk.resultTypes.map: ty =>
           Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
       )

@@ -262,6 +262,14 @@ object Instructions:
       stackargs = Seq(arrayRef, index),
       resultType = S(elemType)
     )
+
+    /** Creates an `array.set` instruction. */
+    def set(arrayType: TypeIdx, arrayRef: Expr, index: Expr, value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "array.set",
+      instrargs = Seq(arrayType.toWat),
+      stackargs = Seq(arrayRef, index, value),
+      resultType = N
+    )
   end array
 
   object ref:

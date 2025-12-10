@@ -1,7 +1,7 @@
+
 :global
 :wasm
 
-//│ Error: hkmc2.ErrorReport: Import of symbol `/Users/fetullakh/Desktop/FYP/mlscript/hkmc2/shared/src/test/mlscript-compile/Predef.mjs` not implemented yet
 []
 //│ Wasm result:
 //│ = {}
@@ -9,12 +9,6 @@
 [0, 1, 2]
 //│ Wasm result:
 //│ = {}
-
-
-let a = [10, 20]
-a.0
-//│ Wasm result:
-//│ = 10
 
 fun makePair(x, y) = [x, y]
 makePair(40, 2).1
@@ -27,13 +21,31 @@ if b.0 is Foo(x, y) then x else 3
 //│ Wasm result:
 //│ = 0
 
+let nums = [1, 2, 3]
+nums.[-1]
+//│ Wasm result:
+//│ = 3
+
+let nums = [1, 2, 3]
+set nums.0 = 10
+nums.0
+//│ Wasm result:
+//│ = 10
+
+:re
+let nums = [5, 6, 7]
+nums.3
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] RuntimeError: array element access out of bounds
+
+
 :wat
 let c = [10, 20, 30, 40]
 c.3
 //│ Wat:
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
-//│   (type $TupleArray (array (ref null any)))
+//│   (type $TupleArray (array (mut (ref null any))))
 //│   (type (func (result (ref null any))))
 //│   (func $entry (type 2) (result (ref null any))
 //│     (local $c (ref null any))
