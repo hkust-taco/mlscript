@@ -9,20 +9,18 @@ import scala.scalajs.js, js.annotation.JSExport, js.JSConverters.*
  * from path strings to content strings. Note that separators are not normalized.
  */
 class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
+  // We assume that all paths are normalized here.
   private val files: MutMap[String, String] = MutMap.from(initialFiles)
   
-  def read(path: Path): String =
-    files.getOrElse(path.toString, throw new FileSystem.FileNotFoundException(path))
+  def read(path: Path): String = read(path.toString)
   
   def write(path: Path, content: String): Unit =
-    print(s"Writing to $path")
-    files(path.toString) = content
+    write(path.toString, content)
   
   def exists(path: Path): Bool = files.contains(path.toString)
   
   @JSExport("write")
   def write(path: Str, content: Str): Unit =
-    print(s"I'm writing to $path")
     files(path) = content
   
   @JSExport("read")
