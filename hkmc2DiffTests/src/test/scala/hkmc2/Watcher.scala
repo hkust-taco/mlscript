@@ -99,17 +99,12 @@ class Watcher(dirs: Ls[File]):
       then
         given Config = Config.default
         given FileSystem = FileSystem.default
-        // * The weird type of `mkOutput` is to allow wrapping the reporting of
-        // * diagnostics in synchronized blocks.
-        // TODO: Fix the weird type, which should be unnecessary in `Watcher`. 
-        val mkOutput = (outputConsumer: (Str => Unit) => Unit) =>
-          outputConsumer(System.out.println)
-        val report = ReportFormatter(mkOutput)
+        val report = ReportFormatter(System.out.println)
         def mkRaise(file: io.Path): Raise =
           val wd = file.up
-          d => mkOutput:
+          d =>
             val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
-            _(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
+            System.out.println(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
           report(0, d :: Nil, showRelativeLineNums = false)
         // Necessary paths used by the compiler.
         val paths = new MLsCompiler.Paths:
@@ -143,5 +138,3 @@ class Watcher(dirs: Ls[File]):
   def onDelete(file: File, count: Int) =
     println(pre + show(file).toString + fansi.Color.Blue(" deleted"))
     // go(file)
-
-

@@ -5,13 +5,17 @@ import collection.mutable
 import mlscript.utils.*, shorthands.*
 
 
-class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
+class ReportFormatter(
+  output: Str => Unit,
+  // Allows callers to wrap a whole diagnostic emission (e.g. synchronized).
+  val wrap: Opt[(=> Unit) => Unit] = N
+):
   
   val badLines = mutable.Buffer.empty[Int]
   
   // report errors and warnings
-  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit = mkOutput: output =>
-    diags.foreach { diag =>
+  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
+    def mk = diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty
       val headStr =
@@ -89,4 +93,6 @@ class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
       
       ()
     }
+    
+    wrap.fold(mk)(_ => mk)
 

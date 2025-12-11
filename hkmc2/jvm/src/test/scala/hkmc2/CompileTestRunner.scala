@@ -52,19 +52,15 @@ class CompileTestRunner
         given Config = Config.default.copy(rewriteWhileLoops = false)
         given io.FileSystem = io.FileSystem.default
         
-        // * The weird type of `mkOutput` is to allow wrapping the reporting of
-        // * diagnostics in synchronized blocks.
-        // TODO: Fix the weird type, which should be unnecessary in `Watcher`. 
-        val mkOutput = (outputConsumer: (Str => Unit) => Unit) =>
-          // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
-          CompileTestRunner.synchronized:
-            outputConsumer(System.out.println)
-        val report = ReportFormatter(mkOutput)
+        val output: Str => Unit = System.out.println
+        // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
+        val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)
+        val report = ReportFormatter(output, Some(wrap))
         def mkRaise(file: io.Path): Raise =
           val wd = file.up
-          d => mkOutput:
+          d => wrap:
             val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
-            _(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
+            output(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
           report(0, d :: Nil, showRelativeLineNums = false)
         
         val compiler = MLsCompiler(
@@ -85,5 +81,3 @@ class CompileTestRunner
 end CompileTestRunner
 
 object CompileTestRunner
-
-
