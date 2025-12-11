@@ -3,8 +3,9 @@ import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.7.3"
+val scala3Version = "3.7.4"
 val directoryWatcherVersion = "0.18.0"
+val scalaTestVersion = "3.2.19"
 
 ThisBuild / scalaVersion     := "2.13.18"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
@@ -46,8 +47,8 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.2", // Scala.js / Scala Native
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
     
-    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.mls", NothingFilter),
@@ -75,8 +76,8 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
   .settings(
     scalaVersion := scala3Version,
     
-    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
@@ -169,7 +170,7 @@ lazy val hkmc2Benchmarks = project.in(file("hkmc2Benchmarks"))
     name := "benchmark",
     scalaVersion := scala3Version,
     sourceDirectory := baseDirectory.value/"src",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     watchSources += WatchSource(
       baseDirectory.value/"src"/"test"/"bench", "*.mls", NothingFilter),
 

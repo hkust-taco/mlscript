@@ -19,8 +19,8 @@ use[Num]
 //│ ║  l.17: 	use[Num]
 //│ ║        	^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.92: 	fun use[T](using instance: T) = instance
-//│ ║        	                 ^^^^^^^^^^^
+//│ ║  l.115: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
@@ -55,8 +55,8 @@ fun f(using Int) = use[Num]
 //│ ║  l.53: 	fun f(using Int) = use[Num]
 //│ ║        	                   ^^^^^^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.92: 	fun use[T](using instance: T) = instance
-//│ ║        	                 ^^^^^^^^^^^
+//│ ║  l.115: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Missing instance: Expected: Num (type parameter T); Available: Int, Str
 
 
@@ -79,8 +79,8 @@ use{[Some[Int]].value}
 //│ ║  l.74: 	use{[Some[Int]].value}
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.92: 	fun use[T](using instance: T) = instance
-//│ ║        	                 ^^^^^^^^^^^
+//│ ║  l.115: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
@@ -91,8 +91,8 @@ use([Some[Int]].value)
 //│ ║  l.89: 	use([Some[Int]].value)
 //│ ║        	^^^
 //│ ╟── Required by contextual parameter declaration: 
-//│ ║  l.92: 	fun use[T](using instance: T) = instance
-//│ ║        	                 ^^^^^^^^^^^
+//│ ║  l.115: 	fun use[T](using instance: T) = instance
+//│ ║         	                 ^^^^^^^^^^^
 //│ ╙── Illegal query for an unspecified type variable T.
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 

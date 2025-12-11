@@ -230,17 +230,34 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             lastWords("cannot generate function with no parameter list")
           case FunDefn(own, sym, dSym, ps :: pss, bod) =>
             val result = pss.foldRight(bod):
-              case (ps, block) => 
+              case (ps, block) =>
                 Return(Lambda(ps, block), false)
-            val name = if sym.nameIsMeaningful then S(sym.nme) else N
-            val (params, bodyDoc) = setupFunction(name, ps, result)
-            if sym.nameIsMeaningful then
-              // If the name is not valid JavaScript identifiers, do not use it in the generated function.
-              val nme = if isValidIdentifier(sym.nme) then sym.nme else ""
-              doc"${getVar(sym, sym.toLoc)} = function $nme($params) ${ braced(bodyDoc) };"
+            val displayName = if sym.nameIsMeaningful then S(dSym.name) else N
+            
+            // * We may need to set up the function in a nested scope in one case below, so this is marked as lazy.
+            lazy val (params, bodyDoc) = setupFunction(displayName, ps, result)
+            
+            val symName = sym.nme
+            
+            // * If the name is a valid JavaScript identifier, use it in the generated function code.
+            if sym.nameIsMeaningful && isValidIdentifier(symName)
+            then
+              val varName = getVar(sym, dSym.toLoc)
+              scope.reverseLookup(sym.nme) match
+              // * Maybe the function's internal name was already bound in scope;
+              // * in that case, we need to forward it to a different variable to avoid unintended capture.
+              case S(otherSym) if (otherSym isnt sym) && bod.freeVars.contains(otherSym) => scope.nest.givenIn:
+                val externalName = scope.allocateName(otherSym, prefix = "proxy$", shadow = true)
+                val (params, bodyDoc) = setupFunction(displayName, ps, result)
+                doc"const $externalName = $symName; ${
+                  varName} = function $symName($params) ${ braced(bodyDoc) };"
+              case _ =>
+                doc"${varName} = function ${sym.nme}($params) ${ braced(bodyDoc) };"
             else
-              // in JS, let name = (0, function (args) => {} ) prevents function's name from being bound to `name`
-              doc"${getVar(sym, sym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
+              // * In JS, `let x = (0, function (args) {...})` makes the function anonymous;
+              // * otherwise, using `let x = function (args) {...}` would name the function `x`,
+              // * which is not meaningful, here.
+              doc"${getVar(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
             
           case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
@@ -447,6 +464,17 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case S(el) => returningTerm(el, endSemi = true)
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case Match(scrut, arms, els, rest)
+    if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
+      val l = arms.foldLeft(doc""): (acc, arm) =>
+        acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
+          returningTerm(arm._2, endSemi = true)
+        } # break; #} "
+      val e = els match
+      case S(el) =>
+        doc" # default: #{ ${ returningTerm(el, endSemi = true) } # break; #} "
+      case N => doc""
+      doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match

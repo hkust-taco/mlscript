@@ -1,10 +1,13 @@
 :js
 :lift
+:noTailRec
+
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 
 // sanity check
 :expect 5050
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(100)
@@ -17,7 +20,7 @@ sum(100)
 :expect 0
 :sjs
 fun hi(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
@@ -66,7 +69,7 @@ hi(0)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind$(n, stackDelayRes, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n === 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
@@ -87,7 +90,7 @@ hi(0)
 :effectHandlers
 :expect 50005000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
@@ -131,10 +134,13 @@ sum(10000)
 //│     }
 //│     contLoop: while (true) {
 //│       runtime.stackDepth = curDepth;
-//│       if (this.pc === 0) {
-//│         return sum1(this.n)
-//│       } else if (this.pc === 1) {
-//│         return this.n + this.tmp
+//│       switch (this.pc) {
+//│         case 0:
+//│           return sum1(this.n);
+//│           break;
+//│         case 1:
+//│           return this.n + this.tmp;
+//│           break;
 //│       }
 //│       break;
 //│     }
@@ -155,7 +161,7 @@ sum(10000)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind$1(n, tmp1, stackDelayRes, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n === 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
@@ -179,7 +185,7 @@ sum(10000)
 // stack-overflows without :stackSafe
 :re
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
@@ -299,7 +305,7 @@ hi(0)
 :effectHandlers
 :expect 100010000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)

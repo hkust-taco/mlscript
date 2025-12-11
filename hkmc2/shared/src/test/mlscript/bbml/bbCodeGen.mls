@@ -176,12 +176,16 @@ fun nott = case
 //│ nott = function nott() {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (caseScrut) {
-//│     if (caseScrut === true) {
-//│       return false
-//│     } else if (caseScrut === false) {
-//│       return true
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     switch (caseScrut) {
+//│       case true:
+//│         return false;
+//│         break;
+//│       case false:
+//│         return true;
+//│         break;
+//│       default:
+//│         throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│         break;
 //│     }
 //│   });
 //│   return lambda1

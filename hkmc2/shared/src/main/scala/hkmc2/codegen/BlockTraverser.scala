@@ -127,6 +127,7 @@ class BlockTraverser:
       cls.traverse
       applyPath(path)
     case Case.Tup(len, inf) => ()
+    case Case.Field(_, _) => ()
   
   def applyHandler(hdr: Handler): Unit =
     hdr.sym.traverse

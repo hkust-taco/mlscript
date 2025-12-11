@@ -141,9 +141,9 @@ case
 //│         rest = End of ""
 //│     rest = Assign: \
 //│     lhs = $block$res
-//│     rhs = Ref:
+//│     rhs = Ref{disamb=term:lambda}:
 //│       l = member:lambda
-//│       disamb = N
+//│       disamb = S of term:lambda
 //│     rest = Return: \
 //│     res = Lit of UnitLit of false
 //│     implct = true
