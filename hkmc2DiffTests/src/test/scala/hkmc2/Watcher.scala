@@ -138,3 +138,5 @@ class Watcher(dirs: Ls[File]):
   def onDelete(file: File, count: Int) =
     println(pre + show(file).toString + fansi.Color.Blue(" deleted"))
     // go(file)
+
+

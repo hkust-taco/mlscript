@@ -68,7 +68,7 @@ class Importer:
           resBlk.definedSymbols.find(_._1 === nme) match
           case Some(nme -> sym) => sym
           case None => lastWords(s"File $file does not define a symbol named $nme")
-          
+        
         val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
