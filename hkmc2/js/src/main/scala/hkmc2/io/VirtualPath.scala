@@ -16,7 +16,7 @@ private[io] class VirtualPath(val pathString: String) extends Path:
       val isAbs = path.startsWith(sep)
 
       // Resolve . and .. segments
-      val normalized = segments.foldLeft(List.empty[String]) { (acc, seg) =>
+      val normalized = segments.foldLeft(List.empty[String]): (acc, seg) =>
         seg match
           case "." => acc  // Current directory, skip it
           case ".." =>
@@ -24,8 +24,7 @@ private[io] class VirtualPath(val pathString: String) extends Path:
             if acc.isEmpty || acc.last == ".." then acc :+ seg
             else acc.dropRight(1)
           case _ => acc :+ seg
-      }
-
+      
       if isAbs then sep + normalized.mkString(sep)
       else if normalized.isEmpty then "."
       else normalized.mkString(sep)

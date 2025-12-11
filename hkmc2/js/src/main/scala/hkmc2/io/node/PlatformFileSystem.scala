@@ -22,10 +22,10 @@ private object NodeFs extends js.Object:
 private class NodeFileSystem extends FileSystem:
   def read(path: Path): String =
     NodeFs.readFileSync(path.toString, "utf8")
-
+  
   def write(path: Path, content: String): Unit =
     NodeFs.writeFileSync(path.toString, content)
-
+  
   def exists(path: Path): Bool =
     NodeFs.existsSync(path.toString)
 
