@@ -15,7 +15,7 @@ import semantics.Elaborator.{Ctx, State}
 
 
 class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, fs: io.FileSystem):
-
+  
   val block = fs.read(file)
   val fph = new FastParseHelpers(block)
   val origin = Origin(file, 0, fph)

@@ -81,3 +81,5 @@ class CompileTestRunner
 end CompileTestRunner
 
 object CompileTestRunner
+
+

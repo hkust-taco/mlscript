@@ -15,7 +15,7 @@ import hkmc2.syntax.LetBind
 class Importer:
   self: Elaborator =>
   import tl.*
-
+  
   def importPath(path: Str)(using cfg: Config, fs: io.FileSystem): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
@@ -42,15 +42,15 @@ class Importer:
         Import(sym, file.toString, file)
         
       case "mls" =>
-
+        
         val block = fs.read(file)
         val fph = new FastParseHelpers(block)
         val origin = Origin(file, 0, fph)
-
+        
         val sym = tl.trace(s">>> Importing $file"):
-
+          
           // TODO add parser option to omit internal impls
-
+          
           val lexer = new syntax.Lexer(origin, dbg = tl.doTrace)
           val tokens = lexer.bracketedTokens
           val rules = syntax.ParseRules()
@@ -60,15 +60,15 @@ class Importer:
               if dbg then tl.log(msg)
           val res = p.parseAll(p.block(allowNewlines = true))
           val resBlk = new syntax.Tree.Block(res)
-
+          
           given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
           val elab = Elaborator(tl, file.up, prelude)
           elab.importFrom(resBlk)
-
+          
           resBlk.definedSymbols.find(_._1 === nme) match
           case Some(nme -> sym) => sym
           case None => lastWords(s"File $file does not define a symbol named $nme")
-
+          
         val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
