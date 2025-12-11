@@ -41,7 +41,7 @@ abstract class Path:
 object Path:
   /** Create path from string - delegates to platform-specific implementation */
   def apply(str: String): Path = PathFactory.fromString(str)
-
+  
   /** Platform-specific path separator */
   def separator: String = PathFactory.separator
 
@@ -56,6 +56,6 @@ abstract class RelPath:
 object RelPath:
   /** Create relative path from string - delegates to platform-specific implementation */
   def apply(str: String): RelPath = PathFactory.relPathFromString(str)
-
+  
   /** Represents parent directory (..) */
   val up: RelPath = PathFactory.relPathUp
