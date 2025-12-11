@@ -59,62 +59,11 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .jvmSettings(
   )
   .jsSettings(
-    Compile / fastOptJS / artifactPath :=
-      baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript-compile"/"apps"/"web-demo"/"build"/"MLscript.mjs",
-    Compile / fullOptJS / artifactPath :=
-      baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript-compile"/"apps"/"web-demo"/"build"/"MLscript.mjs",
     scalaJSLinkerConfig ~= {
-      _.withModuleKind(ModuleKind.ESModule).withMinify(true)
-      //  .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
+      _.withModuleKind(ModuleKind.ESModule)
+       .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
-    // We directly read the necessary MLscript files from the test folders to
-    // avoid manually embedding the source files in the `WebImporter` class.
-    Compile / sourceGenerators += Def.task {
-      def escape(content: String): String = content.iterator.flatMap {
-        case '\b' => "\\b" case '\t' => "\\t" case '\n' => "\\n"
-        case '\r' => "\\r" case '\f' => "\\f" case '"' => "\\\""
-        case '\\' => "\\\\" case c if c.isControl => f"\\u${c.toInt}%04x"
-        case c => c.toString
-      }.mkString("\"", "", "\"")
-      // Note: baseDirectory.value = ups-web-demo/hkmc2/js
-      val testFolder = baseDirectory.value / ".." / "shared" / "src" / "test"
-      val compileFolder = testFolder / "mlscript-compile"
-      val preludeFile = IO.read(testFolder / "mlscript" / "decls" / "Prelude.mls")
-      val stdFiles = List("Char", "FingerTreeList", "Iter", "LazyArray",
-          "LazyFingerTree", "MutMap", "ObjectBuffer", "Option", "Predef",
-          "Record", "Rendering", "Runtime", "RuntimeJS", "Stack", "StrOps",
-          "Term", "TreeTracer", "XML")
-        .iterator
-        .map { fileName =>
-          (compileFolder / s"$fileName.mls", compileFolder / s"$fileName.mjs")
-        }.map { case (mlsPath, mjsPath) =>
-          // Only read when the corresponding file exists.
-          val mls = if (mlsPath.exists()) Some(IO.read(mlsPath)) else None
-          val mjs = if (mjsPath.exists()) Some(IO.read(mjsPath)) else None
-          (mlsPath.getName(), mls, mjs)
-        }.toList
-      val outFile = (Compile / sourceManaged).value / "generated" / "MLscript.scala"
-      IO.write(
-        outFile,
-        s"""|package hkmc2.generated
-            |import collection.mutable.Map as MutMap
-            |object MLscript:
-            |  val preludeFile = ${escape(preludeFile)}
-            |  val sourceFiles: MutMap[String, (mls: Option[String], mjs: Option[String])] = MutMap.empty
-            |""".stripMargin +
-        (stdFiles.iterator.map { case (fileName, mlsSourceOpt, mjsSourceOpt) =>
-          val mls = mlsSourceOpt match {
-            case Some(source) => s"Some(${escape(source)})"
-            case None => "None" }
-          val mjs = mjsSourceOpt match {
-            case Some(source) => s"Some(${escape(source)})"
-            case None => "None" }
-          s"  sourceFiles += (${escape(s"/std/$fileName")} -> ($mls, $mjs))"
-        }.mkString("\n")) + "\n"
-      )
-      Seq(outFile)
-    }.taskValue
   )
   .dependsOn(core)
 
