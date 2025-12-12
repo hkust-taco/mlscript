@@ -16,7 +16,7 @@ import scala.collection.mutable.{ArrayBuffer, Buffer}
 
 @JSExportTopLevel("Compiler")
 class Compiler(fs: FileSystem, paths: MLsCompiler.Paths):
-  private given Config = Config.default.copy(rewriteWhileLoops = false)
+  private given Config = Config.default
   
   private given FileSystem = fs
   
