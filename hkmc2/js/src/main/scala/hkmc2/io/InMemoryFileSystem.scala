@@ -3,6 +3,7 @@ package hkmc2.io
 import mlscript.utils._, shorthands._
 import collection.mutable.Map as MutMap
 import scala.scalajs.js, js.annotation.JSExport, js.JSConverters.*
+import scala.scalajs.js.annotation.JSExportTopLevel
 
 /**
  * In-memory file system for testing and web compiler. Stores files as a map
@@ -32,3 +33,9 @@ class InMemoryFileSystem(initialFiles: Map[String, String]) extends FileSystem:
   
   /** Get all files (for debugging) */
   def allFiles: Map[String, String] = files.toMap
+
+object InMemoryFileSystem:
+  /** Create an empty in-memory file system. */
+  @JSExportTopLevel("InMemoryFileSystem")
+  def apply(files: js.Array[js.Tuple2[Str, Str]]): InMemoryFileSystem =
+    new InMemoryFileSystem(files.map(t => t._1 -> t._2).toMap)
