@@ -31,7 +31,7 @@ class Compiler(fs: FileSystem, paths: MLsCompiler.Paths):
     pathDiagnosticsMap.toArray.sortBy(_._2._1).map:
       case (path, (_, diagnostics)) => js.Dynamic.literal(
         path = path,
-        diagnostics = diagnostics.map: d =>
+        diagnostics = diagnostics.iterator.map: d =>
           js.Dynamic.literal(
             kind = d.kind.toString().toLowerCase(),
             source = d.source.toString().toLowerCase(),
