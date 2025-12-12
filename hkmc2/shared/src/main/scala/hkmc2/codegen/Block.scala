@@ -394,9 +394,7 @@ object Match:
   def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
     case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
       // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
-      rest match
-        case Scoped(syms, body) => Scoped(syms, Match(scrut, arms ::: arms2, dflt2, body))
-        case _ => new Match(scrut, arms ::: arms2, dflt2, rest)
+      Match(scrut, arms ::: arms2, dflt2, rest)
     case _ =>
       if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
       then new Match(scrut, arms, dflt, End("unreachable"))
