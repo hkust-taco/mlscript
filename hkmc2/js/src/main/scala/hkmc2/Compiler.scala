@@ -36,7 +36,7 @@ class Compiler(fs: FileSystem, paths: MLsCompiler.Paths):
             kind = d.kind.toString().toLowerCase(),
             source = d.source.toString().toLowerCase(),
             mainMessage = d.theMsg,
-            allMessages = d.allMsgs.map:
+            allMessages = d.allMsgs.iterator.map:
               case (message, loc) =>
                 lazy val ctx = ShowCtx.mk:
                   message.bits.collect:
