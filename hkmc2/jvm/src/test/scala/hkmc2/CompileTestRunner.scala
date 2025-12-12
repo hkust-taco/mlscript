@@ -45,30 +45,23 @@ class CompileTestRunner
       
       test(relativeName):
         
-        println(s"Compiling: $relativeName")
+        CompileTestRunner.synchronized:
+          println(s"Compiling: $relativeName")
         
         // Stack safety relies on the fact that runtime uses while loops for resumption
         // and does not create extra stack depth. Hence we disable while loop rewriting here.
         given Config = Config.default.copy(rewriteWhileLoops = false)
         given io.FileSystem = io.FileSystem.default
         
-        val output: Str => Unit = System.out.println
         // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
         val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)
-        val report = ReportFormatter(output, Some(wrap))
-        def mkRaise(file: io.Path): Raise =
-          val wd = file.up
-          d => wrap:
-            val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
-            output(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
-          report(0, d :: Nil, showRelativeLineNums = false)
-        
+        val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
         val compiler = MLsCompiler(
-          new MLsCompiler.Paths:
+          paths = new MLsCompiler.Paths:
             val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
             val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
             val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
-          mkRaise
+          mkRaise = report.mkRaise
         )
         compiler.compileModule(file)
         

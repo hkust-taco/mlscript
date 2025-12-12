@@ -99,19 +99,13 @@ class Watcher(dirs: Ls[File]):
       then
         given Config = Config.default
         given FileSystem = FileSystem.default
-        val report = ReportFormatter(System.out.println)
-        def mkRaise(file: io.Path): Raise =
-          val wd = file.up
-          d =>
-            val relPath = file.relativeTo(wd.up).map(_.toString).getOrElse(file.toString)
-            System.out.println(fansi.Color.LightRed(s"/!!!\\ Error in $relPath /!!!\\").toString)
-          report(0, d :: Nil, showRelativeLineNums = false)
-        // Necessary paths used by the compiler.
-        val paths = new MLsCompiler.Paths:
-          val preludeFile = preludePath
-          val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
-          val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs"
-        MLsCompiler(paths, mkRaise).compileModule(path)
+        MLsCompiler(
+          paths = new MLsCompiler.Paths:
+            val preludeFile = preludePath
+            val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
+            val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs",
+          mkRaise = ReportFormatter(System.out.println, colorize = false).mkRaise
+        ).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
           override def fs = FileSystem.default

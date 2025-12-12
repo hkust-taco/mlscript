@@ -141,7 +141,7 @@ abstract class DiffMaker:
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
   val output = Outputter(out)
-  val report = ReportFormatter(output(_))
+  val report = ReportFormatter(output(_), colorize = false)
   
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
