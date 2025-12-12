@@ -170,7 +170,7 @@ f(1, 2, 1000)
 //│ h$2 = function h$(f$capture6) {
 //│   return f$capture6.mutated$capture$0
 //│ };
-//│ globalThis.Object.freeze(class f$capture4 {
+//│ (class f$capture4 {
 //│   static {
 //│     f$capture5 = this
 //│   }
@@ -268,7 +268,7 @@ g()(1)
 //│     return f$1(g$capture2, x1)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class g$capture {
+//│ (class g$capture {
 //│   static {
 //│     g$capture1 = this
 //│   }
@@ -413,7 +413,7 @@ fun f(x) =
 //│     return g$15(f$capture18)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class f$capture16 {
+//│ (class f$capture16 {
 //│   static {
 //│     f$capture17 = this
 //│   }

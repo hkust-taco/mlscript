@@ -41,6 +41,6 @@ Oops.fakeField
 //│ ╔══[ERROR] Object 'Oops' does not contain member 'fakeField'
 //│ ║  l.40: 	Oops.fakeField
 //│ ╙──      	    ^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'fakeField')
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'fakeField' yielded 'undefined'
 
 

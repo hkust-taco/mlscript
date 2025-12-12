@@ -14,14 +14,14 @@ data class Lol(h) with
 //│ Lol1 = function Lol(h) {
 //│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
-//│ globalThis.Object.freeze(class Lol {
+//│ (class Lol {
 //│   static {
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
 //│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
-//│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│     (class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       static {
 //│         Cont$ctor$Lol$1 = this
 //│       }

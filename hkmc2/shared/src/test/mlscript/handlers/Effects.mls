@@ -159,7 +159,7 @@ if true do
 //│ let tmp11, handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
 //│   let f, h, scrut, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
-//│   globalThis.Object.freeze(class Handler$h$11 extends Effect1 {
+//│   (class Handler$h$11 extends Effect1 {
 //│     static {
 //│       Handler$h$12 = this
 //│     }
@@ -178,7 +178,7 @@ if true do
 //│     static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│   });
 //│   h = new Handler$h$12();
-//│   globalThis.Object.freeze(class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
+//│   (class Cont$handleBlock$h$10 extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$handleBlock$h$11 = this
 //│     }

@@ -23,7 +23,7 @@ data class A(x) with
 //│     return globalThis.Object.freeze(new B.class(y)(A$instance));
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class B {
+//│ (class B {
 //│   static {
 //│     B1.class = this
 //│   }
@@ -46,7 +46,7 @@ data class A(x) with
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ globalThis.Object.freeze(class A {
+//│ (class A {
 //│   static {
 //│     A1.class = this
 //│   }
@@ -82,7 +82,7 @@ class A with
 //│     return g$(A$instance)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class A2 {
+//│ (class A2 {
 //│   static {
 //│     A3 = this
 //│   }

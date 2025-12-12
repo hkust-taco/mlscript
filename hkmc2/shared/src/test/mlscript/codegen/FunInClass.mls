@@ -25,7 +25,7 @@ fun test(a) =
 //│   Inner1 = function Inner(b) {
 //│     return globalThis.Object.freeze(new Inner.class(b));
 //│   };
-//│   globalThis.Object.freeze(class Inner {
+//│   (class Inner {
 //│     static {
 //│       Inner1.class = this
 //│     }
@@ -85,7 +85,7 @@ fun test(a) =
 //│   C11 = function C1(b) {
 //│     return globalThis.Object.freeze(new C1.class(b));
 //│   };
-//│   globalThis.Object.freeze(class C1 {
+//│   (class C1 {
 //│     static {
 //│       C11.class = this
 //│     }
@@ -104,7 +104,7 @@ fun test(a) =
 //│   C21 = function C2(b) {
 //│     return globalThis.Object.freeze(new C2.class(b));
 //│   };
-//│   globalThis.Object.freeze(class C2 {
+//│   (class C2 {
 //│     static {
 //│       C21.class = this
 //│     }
@@ -145,7 +145,7 @@ Foo(123)
 //│ Foo1 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -184,7 +184,7 @@ Bar(1)
 //│ Bar1 = function Bar(x) {
 //│   return globalThis.Object.freeze(new Bar.class(x));
 //│ };
-//│ globalThis.Object.freeze(class Bar {
+//│ (class Bar {
 //│   static {
 //│     Bar1.class = this
 //│   }

@@ -81,13 +81,13 @@ class C with
     new C
 //│ JS (unsanitized):
 //│ let C2;
-//│ globalThis.Object.freeze(class C {
+//│ (class C {
 //│   static {
 //│     C2 = this
 //│   }
 //│   constructor() {
 //│     const this$C = this;
-//│     globalThis.Object.freeze(class C1 {
+//│     (class C1 {
 //│       static {
 //│         this$C.C = this
 //│       }
@@ -112,7 +112,7 @@ class CC with
   new CC
 //│ JS (unsanitized):
 //│ let CC1;
-//│ globalThis.Object.freeze(class CC {
+//│ (class CC {
 //│   static {
 //│     CC1 = this
 //│   }
@@ -121,7 +121,7 @@ class CC with
 //│   }
 //│   get foo() {
 //│     let CC21;
-//│     globalThis.Object.freeze(class CC2 {
+//│     (class CC2 {
 //│       static {
 //│         CC21 = this
 //│       }

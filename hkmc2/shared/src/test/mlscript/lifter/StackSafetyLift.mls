@@ -35,7 +35,7 @@ hi(0)
 //│   tmp1 = tmp(n);
 //│   return tmp1
 //│ };
-//│ globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│ (class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│   static {
 //│     Cont$func$hi$1 = this
 //│   }
@@ -106,7 +106,7 @@ sum(10000)
 //│   tmp2 = tmp1(n, tmp);
 //│   return tmp2
 //│ };
-//│ globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│ (class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│   static {
 //│     Cont$func$sum$1 = this
 //│   }

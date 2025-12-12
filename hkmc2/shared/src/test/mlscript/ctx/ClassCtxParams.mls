@@ -105,7 +105,7 @@ class Foo(using T) with
 //│ Foo9 = function Foo(tmp5) {
 //│   return globalThis.Object.freeze(new Foo.class(tmp5));
 //│ };
-//│ globalThis.Object.freeze(class Foo8 {
+//│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }

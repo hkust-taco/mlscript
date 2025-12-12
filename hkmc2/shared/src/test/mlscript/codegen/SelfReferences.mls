@@ -6,7 +6,7 @@ module Foo with
   val self: module Foo = Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1 = this
 //│   }
@@ -55,37 +55,35 @@ module Foo with
   print(Foo.foo)
 //│ > 1
 
-// * This should be an initialization error
-:fixme
+// * This used not to work, and it could be argued it should be an initialization error
 :sjs
 object Foo with
   val self = id(Foo)
 //│ JS (unsanitized):
 //│ let Foo11;
-//│ globalThis.Object.freeze(class Foo10 {
+//│ (class Foo10 {
 //│   static {
-//│     Foo11 = globalThis.Object.freeze(new this)
+//│     new this
 //│   }
 //│   constructor() {
+//│     Foo11 = this;
 //│     let tmp;
 //│     tmp = Predef.id(Foo11);
 //│     this.self = tmp;
 //│     Object.defineProperty(this, "class", {
 //│       value: Foo10
-//│     })
+//│     });
+//│     globalThis.Object.freeze(this);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Foo"]; 
 //│ });
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 
-// * This should be an initialization error
+// * This used not to work, and it could be argued it should be an initialization error
 // * (leaking a partially-initialized module)
-:fixme
 object Foo with
   val self = id(Foo)
   val lateInit = 1
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 

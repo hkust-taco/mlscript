@@ -30,6 +30,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   def checkMLsCalls: Bool = false
   def checkSelections: Bool = false
+  def freezeDefinitions: Bool = false
   
   val builtinOpsBase: Ls[Str] = Ls(
     "+", "-", "*", "/", "%",
@@ -43,6 +44,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   val needsParens: Set[Str] = Set(",")
   
   val freeze = "globalThis.Object.freeze"
+  lazy val freezeDefns = if freezeDefinitions then "globalThis.Object.freeze" else ""
   
   // TODO use this to avoid parens when we generate recomposed expressions later
   enum Context:
@@ -320,13 +322,26 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
             
             val privs = mkPrivs(pubFlds, privFlds, mtdPrefix, isym)
             
+            val isSingleton = (kind is syntax.Obj) || (kind is syntax.Pat)
+            
+            val (singletonInit, singletonFreeze) =
+              if isSingleton
+              then
+                val fz = doc" # $freeze(this);"
+                ownr match
+                case S(owner) =>
+                  (doc" # ${result(Value.Ref(owner, N))}.${sym.nme} = this;", fz)
+                case N =>
+                  (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
+              else (doc"", doc"")
+            
             val preCtorCode = body(preCtor, true)
-            val ctorCode = doc"$preCtorCode${body(ctor, endSemi = true)}${
+            val ctorCode = doc"$preCtorCode$singletonInit${body(ctor, endSemi = true)}${
                 kind match
                 case syntax.Obj =>
-                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")}"
+                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
                 case _ => ""
-              }"
+              }$singletonFreeze"
             
             // * If there are no ctor params, pop one param list off the aux params
             val (newCtorAuxParams, initialCtorParams) = paramsOpt match
@@ -349,19 +364,19 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   initialCtorParams.unzip._2.mkDocument(", ")
                 })"
             
-            val ctorBod = {
+            val ctorBod = {{
                 val extraPath = if paramsOpt.isDefined then ".class" else ""
                 doc" # static " :: braced:
                   val v = getVar(isym, isym.toLoc)
-                  val rhs = if (kind is syntax.Obj) || (kind is syntax.Pat)
-                    then doc"$freeze(new $v)"
-                    else v
-                  ownr match
-                  case S(owner) =>
-                    doc" # ${result(Value.Ref(owner, N))}.${sym.nme}$extraPath = $rhs"
-                  case N =>
-                    doc" # ${getVar(sym, sym.toLoc)}$extraPath = $rhs"
-              } :/: ctorHead :: " " :: braced(ctorAux)
+                  if isSingleton
+                  then doc" # new $v"
+                  else
+                    ownr match
+                    case S(owner) =>
+                      doc" # ${result(Value.Ref(owner, N))}.${sym.nme}$extraPath = $v"
+                    case N =>
+                      doc" # ${getVar(sym, sym.toLoc)}$extraPath = $v"
+              }} :/: ctorHead :: " " :: braced(ctorAux)
             
             val clsJS = doc"class ${scope.lookup_!(isym, isym.toLoc)}${
                 par.map(p => doc" extends ${
@@ -405,13 +420,13 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   }]; """
               }
             
-            if (kind is syntax.Obj) || (kind is syntax.Pat) then
+            if isSingleton then
               ownr match
               case S(owner) =>
                 assert((kind is syntax.Pat) || paramsOpt.isEmpty)
-                doc"$freeze(${clsJS});"
+                doc"$freezeDefns(${clsJS});"
               case N =>
-                doc"$freeze(${clsJS});"
+                doc"$freezeDefns(${clsJS});"
             else
               val paramsAll = paramsOpt match
                 case None => auxParams
@@ -437,15 +452,15 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                 val ths = mkThis(owner)
                 fun match
                 case S(f) =>
-                  doc"${ths}.${sym.nme} = ${f}; # $freeze($clsJS);"
+                  doc"${ths}.${sym.nme} = ${f}; # $freezeDefns($clsJS);"
                 case N =>
-                  doc"$freeze(${clsJS});"
+                  doc"$freezeDefns(${clsJS});"
               case N =>
                 fun match
                 case S(f) =>
-                  doc"${getVar(sym, sym.toLoc)} = ${f}; # $freeze($clsJS);"
+                  doc"${getVar(sym, sym.toLoc)} = ${f}; # $freezeDefns($clsJS);"
                 case N =>
-                  doc"$freeze(${clsJS});"
+                  doc"$freezeDefns(${clsJS});"
         
         thisProxy match
           case S(proxy) if !scope.thisProxyDefined =>
@@ -645,10 +660,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
 
 
 object JSBuilder:
-  import scala.util.matching.Regex
   
-  private val identifierPattern: Regex = "^[A-Za-z_$][A-Za-z0-9_$]*$".r
-
   def isValidIdentifier(s: Str): Bool = identifierPattern.matches(s) && !keywords.contains(s)
   
   // in this case, a keyword can be used as a field name
@@ -750,13 +762,18 @@ object JSBuilder:
 end JSBuilder
 
 
-trait JSBuilderArgNumSanityChecks(using Config, Elaborator.State)
+trait JSBuilderArgNumSanityChecks(using TL, Config, Elaborator.State)
     extends JSBuilder:
   
-  val instrument: Bool = config.sanityChecks.isDefined
+  private val doInstrument = config.sanityChecks.isDefined
+  private val init = true
+  def instrument: Bool =
+    require(init, "trait body is not yet initialized")
+    doInstrument
   
   override def checkMLsCalls: Bool = instrument
   override def checkSelections: Bool = instrument
+  override def freezeDefinitions: Bool = instrument
   
   val functionParamVarargSymbol = semantics.TempSymbol(N, "args")
   

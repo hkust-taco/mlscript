@@ -21,7 +21,7 @@ fun foo() =
 //│     return bar$(foo$capture2)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class foo$capture {
+//│ (class foo$capture {
 //│   static {
 //│     foo$capture1 = this
 //│   }

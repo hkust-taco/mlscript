@@ -67,7 +67,7 @@ module A with
 A.sum(20000)
 //│ JS (unsanitized):
 //│ let A1;
-//│ globalThis.Object.freeze(class A {
+//│ (class A {
 //│   static {
 //│     A1 = this
 //│   }

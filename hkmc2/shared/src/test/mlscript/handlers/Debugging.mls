@@ -43,7 +43,7 @@ fun f() =
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   globalThis.Object.freeze(class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│   (class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$f$1 = this
 //│     }

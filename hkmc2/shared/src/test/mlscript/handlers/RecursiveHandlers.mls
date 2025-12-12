@@ -161,7 +161,7 @@ str
 //│ if (scrut === true) {
 //│   handleBlock$7 = function handleBlock$() {
 //│     let h1, tmp11, handleBlock$8, Cont$handleBlock$h1$2, doUnwind, Handler$h1$2;
-//│     globalThis.Object.freeze(class Handler$h1$1 extends Effect1 {
+//│     (class Handler$h1$1 extends Effect1 {
 //│       static {
 //│         Handler$h1$2 = this
 //│       }
@@ -173,7 +173,7 @@ str
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
 //│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2, doUnwind1;
-//│           globalThis.Object.freeze(class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
+//│           (class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             static {
 //│               Cont$handler$h1$perform$2 = this
 //│             }
@@ -219,7 +219,7 @@ str
 //│       static [definitionMetadata] = ["class", "Handler$h1$"]; 
 //│     });
 //│     h1 = new Handler$h1$2();
-//│     globalThis.Object.freeze(class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
+//│     (class Cont$handleBlock$h1$1 extends runtime.FunctionContFrame.class {
 //│       static {
 //│         Cont$handleBlock$h1$2 = this
 //│       }
@@ -248,7 +248,7 @@ str
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
 //│       let h2, tmp12, res7, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
-//│       globalThis.Object.freeze(class Handler$h2$1 extends Effect1 {
+//│       (class Handler$h2$1 extends Effect1 {
 //│         static {
 //│           Handler$h2$2 = this
 //│         }
@@ -260,7 +260,7 @@ str
 //│           let hdlrFun;
 //│           hdlrFun = function hdlrFun(k) {
 //│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2, doUnwind2;
-//│             globalThis.Object.freeze(class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
+//│             (class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               static {
 //│                 Cont$handler$h2$perform$2 = this
 //│               }
@@ -309,7 +309,7 @@ str
 //│         static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│       });
 //│       h2 = new Handler$h2$2();
-//│       globalThis.Object.freeze(class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
+//│       (class Cont$handleBlock$h2$1 extends runtime.FunctionContFrame.class {
 //│         static {
 //│           Cont$handleBlock$h2$2 = this
 //│         }
