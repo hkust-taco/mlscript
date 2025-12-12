@@ -484,7 +484,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
       val l = arms.foldLeft(doc""): (acc, arm) =>
         acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
-          returningTerm(arm._2, endSemi = true)
+          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
         } # break; #} "
       val e = els match
       case S(el) =>

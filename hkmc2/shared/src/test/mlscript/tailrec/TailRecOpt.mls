@@ -21,34 +21,32 @@ f(10000, 20000, 0)
 //│ g_f = function g_f(id, param0, param1, param2, param3) {
 //│   loopLabel: while (true) {
 //│     switch (id) {
-//│       case 0:{
-//│           let tmp;
-//│           tmp = param2 + param3;
-//│           param2 = tmp;
-//│           id = 1;
-//│           continue loopLabel;
-//│         }
+//│       case 0:
+//│         let tmp;
+//│         tmp = param2 + param3;
+//│         param2 = tmp;
+//│         id = 1;
+//│         continue loopLabel;
 //│         break;
-//│       case 1:{
-//│           let scrut, scrut1, tmp, tmp1;
-//│           scrut = param0 > 0;
-//│           if (scrut === true) {
-//│             tmp = param0 - 1;
-//│             param0 = tmp;
-//│             param3 = 1;
+//│       case 1:
+//│         let scrut, scrut1, tmp1, tmp2;
+//│         scrut = param0 > 0;
+//│         if (scrut === true) {
+//│           tmp1 = param0 - 1;
+//│           param0 = tmp1;
+//│           param3 = 1;
+//│           id = 0;
+//│           continue loopLabel
+//│         } else {
+//│           scrut1 = param1 > 0;
+//│           if (scrut1 === true) {
+//│             tmp2 = param1 - 1;
+//│             param1 = tmp2;
+//│             param3 = 2;
 //│             id = 0;
 //│             continue loopLabel
 //│           } else {
-//│             scrut1 = param1 > 0;
-//│             if (scrut1 === true) {
-//│               tmp1 = param1 - 1;
-//│               param1 = tmp1;
-//│               param3 = 2;
-//│               id = 0;
-//│               continue loopLabel
-//│             } else {
-//│               return param2
-//│             }
+//│             return param2
 //│           }
 //│         }
 //│         break;
@@ -150,7 +148,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[ERROR] This call is not in tail position.
-//│ ║  l.149: 	    @tailcall f(x)
+//│ ║  l.147: 	    @tailcall f(x)
 //│ ╙──       	              ^
 
 :lift
@@ -168,10 +166,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.167: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.165: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.168: 	    @tailcall g(x - 1)
+//│ ║  l.166: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -198,12 +196,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.197: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.197: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.198: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.196: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0
