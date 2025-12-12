@@ -28,7 +28,7 @@ class Compiler(fs: FileSystem, paths: MLsCompiler.Paths):
   private val compiler = MLsCompiler(paths, mkRaise)
   
   private def collectDiagnostics(): js.Array[js.Dynamic] =
-    pathDiagnosticsMap.iterator.toArray.sortBy(_._2._1).map:
+    pathDiagnosticsMap.toArray.sortBy(_._2._1).map:
       case (path, (_, diagnostics)) => js.Dynamic.literal(
         path = path,
         diagnostics = diagnostics.map: d =>
