@@ -29,14 +29,14 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
 //│   constructor(x) {
 //│     this.x = x;
 //│     const this$Foo = this;
-//│     globalThis.Object.freeze(class Bar {
+//│     (class Bar {
 //│       static {
 //│         this$Foo.Bar = this
 //│       }

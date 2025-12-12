@@ -28,7 +28,7 @@ hi(0)
 //│ hi = function hi(n) {
 //│   let scrut, tmp;
 //│   let Cont$func$hi$1, doUnwind, stackDelayRes;
-//│   globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│   (class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$hi$1 = this
 //│     }
@@ -84,7 +84,7 @@ sum(10000)
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp, tmp1;
 //│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
-//│   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│   (class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$sum$1 = this
 //│     }
@@ -101,10 +101,13 @@ sum(10000)
 //│       }
 //│       contLoop: while (true) {
 //│         runtime.stackDepth = curDepth1;
-//│         if (this.pc === 0) {
-//│           return sum1(n)
-//│         } else if (this.pc === 1) {
-//│           return n + tmp1
+//│         switch (this.pc) {
+//│           case 0:
+//│             return sum1(n);
+//│             break;
+//│           case 1:
+//│             return n + tmp1;
+//│             break;
 //│         }
 //│         break;
 //│       }
@@ -152,6 +155,8 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
 
 :effectHandlers
 :stackSafe 100

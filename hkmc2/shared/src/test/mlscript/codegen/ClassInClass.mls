@@ -18,7 +18,7 @@ data class Outer(a, b) with
 //│ Outer1 = function Outer(a, b) {
 //│   return globalThis.Object.freeze(new Outer.class(a, b));
 //│ };
-//│ globalThis.Object.freeze(class Outer {
+//│ (class Outer {
 //│   static {
 //│     Outer1.class = this
 //│   }
@@ -30,7 +30,7 @@ data class Outer(a, b) with
 //│     this.Inner = function Inner(c) {
 //│       return globalThis.Object.freeze(new Inner.class(c));
 //│     };
-//│     globalThis.Object.freeze(class Inner {
+//│     (class Inner {
 //│       static {
 //│         this$Outer.Inner.class = this
 //│       }

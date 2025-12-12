@@ -1,0 +1,150 @@
+:js
+
+
+// * Functions
+
+
+fun f(x) = x
+
+:sjs
+fun f(x) = x
+fun f1(x) = f(x) + 1
+//│ JS (unsanitized):
+//│ let f1, f11;
+//│ f1 = function f(x) {
+//│   return x
+//│ };
+//│ const proxy$f = f1; f11 = function f1(x) { let tmp; tmp = proxy$f(x); return tmp + 1 };
+
+:expect 42
+f1(41)
+//│ = 42
+
+
+:sjs
+fun g(x) = g(x) + 1
+//│ JS (unsanitized):
+//│ let g; g = function g(x) { let tmp; tmp = g(x); return tmp + 1 };
+
+
+fun ff(x) = 0
+
+:sjs
+fun ff(x) = x
+fun g() =
+  fun ff1(x) = ff(x)
+  ff1
+//│ JS (unsanitized):
+//│ let ff1, g1;
+//│ ff1 = function ff(x) {
+//│   return x
+//│ };
+//│ g1 = function g() {
+//│   let ff11;
+//│   const proxy$ff = ff1; ff11 = function ff1(x) { return proxy$ff(x) };
+//│   return ff11
+//│ };
+
+:expect 42
+g()(42)
+//│ = 42
+
+
+:sjs
+fun h(x) = x
+fun g() =
+  fun h1(x) = h(x) + h1(x)
+  h1
+//│ JS (unsanitized):
+//│ let g2, h;
+//│ h = function h(x) {
+//│   return x
+//│ };
+//│ g2 = function g() {
+//│   let h1;
+//│   h1 = function h1(x) {
+//│     let tmp1, tmp2;
+//│     tmp1 = h(x);
+//│     tmp2 = h1(x);
+//│     return tmp1 + tmp2
+//│   };
+//│   return h1
+//│ };
+
+
+// * Classes
+
+
+:sjs
+class C with
+  class C with
+    new C
+//│ JS (unsanitized):
+//│ let C2;
+//│ (class C {
+//│   static {
+//│     C2 = this
+//│   }
+//│   constructor() {
+//│     const this$C = this;
+//│     (class C1 {
+//│       static {
+//│         this$C.C = this
+//│       }
+//│       constructor() {
+//│         globalThis.Object.freeze(new this$C.C());
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "C"]; 
+//│     });
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "C"]; 
+//│ });
+
+
+:sjs
+class CC with
+  fun foo =
+    class CC2 with
+      new CC2
+    new CC2
+  new CC
+//│ JS (unsanitized):
+//│ let CC1;
+//│ (class CC {
+//│   static {
+//│     CC1 = this
+//│   }
+//│   constructor() {
+//│     globalThis.Object.freeze(new CC1());
+//│   }
+//│   get foo() {
+//│     let CC21;
+//│     (class CC2 {
+//│       static {
+//│         CC21 = this
+//│       }
+//│       constructor() {
+//│         globalThis.Object.freeze(new CC21());
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "CC2"]; 
+//│     });
+//│     return globalThis.Object.freeze(new CC21());
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "CC"]; 
+//│ });
+
+
+class F
+module M with
+  object F1 with
+    val res = new F
+
+:expect true
+M.F1.res is F
+//│ = true
+
+

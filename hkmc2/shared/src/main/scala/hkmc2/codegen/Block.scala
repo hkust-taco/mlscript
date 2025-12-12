@@ -58,6 +58,20 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
     case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
     case Scoped(syms, body) => body.definedVarsNoScoped -- syms
+  lazy val isAbortive: Bool = this match
+    case _: End => false
+    case _: Throw | _: Break | _: Continue => true
+    case ret: Return => !ret.implct
+    case Begin(sub, rst) => sub.isAbortive || rst.isAbortive
+    case Assign(_, _, rst) => rst.isAbortive
+    case AssignField(_, _, _, rst) => rst.isAbortive
+    case AssignDynField(_, _, _, _, rst) => rst.isAbortive
+    case Match(_, arms, dflt, rst) => rst.isAbortive
+    case Define(_, rst) => rst.isAbortive
+    case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
+    case Label(_, _, bod, rst) => rst.isAbortive
+    case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
+    case Scoped(_, body) => body.isAbortive
   
   // * Note: there is a good chance that historical users of `definedVars` do not properly respect Scoped blocks
   // * and should adapt their logic to use `definedVarsNoScoped` instead.
@@ -345,10 +359,6 @@ case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, res
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
-object Match:
-  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = rest match
-    case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
-    case _ => new Match(scrut, arms, dflt, rest)
 object Label:
   def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
     case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
@@ -359,13 +369,6 @@ object Scoped:
       if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body) else Scoped(syms ++ syms2, body)
     case _ =>
       if syms.isEmpty then body else new Scoped(syms, body)
-object Begin:
-  def apply(sub: Block, rest: Block): Block = (sub, rest) match
-    case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
-      Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
-    case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
-    case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
-    case _ => new Begin(sub, rest)
 object TryBlock:
   def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
     case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
@@ -386,6 +389,32 @@ object Define:
   def apply(defn: Defn, rest: Block): Block = rest match
     case Scoped(syms, body) => Scoped(syms, Define(defn, body))
     case _ => new Define(defn, rest)
+
+object Match:
+  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
+    case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
+      // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
+      rest match
+        case Scoped(syms, body) => Scoped(syms, Match(scrut, arms ::: arms2, dflt2, body))
+        case _ => new Match(scrut, arms ::: arms2, dflt2, rest)
+    case _ =>
+      if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
+      then new Match(scrut, arms, dflt, End("unreachable"))
+      else rest match
+        case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
+        case _ => new Match(scrut, arms, dflt, rest)
+
+object Begin:
+  def apply(sub: Block, rest: Block): Block =
+    if sub.isEmpty then rest
+    else if sub.isAbortive then sub
+    else (sub, rest) match
+      case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
+        Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
+      case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
+      case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+      case _ => new Begin(sub, rest)
+
 
 case class HandleBlock(
     lhs: Local,

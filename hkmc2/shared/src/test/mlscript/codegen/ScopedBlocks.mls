@@ -265,7 +265,7 @@ class A with
   val x = 1 + 2
 //│ JS (unsanitized):
 //│ let A3;
-//│ globalThis.Object.freeze(class A2 {
+//│ (class A2 {
 //│   static {
 //│     A3 = this
 //│   }
@@ -295,7 +295,7 @@ module Foo with
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -330,7 +330,7 @@ class A(x) with
 //│ A5 = function A(x1) {
 //│   return globalThis.Object.freeze(new A.class(x1));
 //│ };
-//│ globalThis.Object.freeze(class A4 {
+//│ (class A4 {
 //│   static {
 //│     A5.class = this
 //│   }
@@ -350,7 +350,7 @@ module M with
   data class A(x, y)
 //│ JS (unsanitized):
 //│ let M3;
-//│ globalThis.Object.freeze(class M2 {
+//│ (class M2 {
 //│   static {
 //│     M3 = this
 //│   }
@@ -361,7 +361,7 @@ module M with
 //│     this.A = function A(x1, y1) {
 //│       return globalThis.Object.freeze(new A.class(x1, y1));
 //│     };
-//│     globalThis.Object.freeze(class A6 {
+//│     (class A6 {
 //│       static {
 //│         M2.A.class = this
 //│       }
@@ -439,18 +439,19 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
 //│ };
-//│ globalThis.Object.freeze(class Baz extends Bar1.class {
+//│ (class Baz extends Bar1.class {
 //│   static {
 //│     Baz1.class = this
 //│   }
 //│   constructor(z) {
-//│     let tmp2, tmp3, tmp4;
-//│     tmp4 = z * 1;
-//│     super(tmp4);
+//│     let tmp2;
+//│     tmp2 = z * 1;
+//│     super(tmp2);
+//│     let tmp3, tmp4;
 //│     this.z = z;
-//│     tmp2 = 1 + 2;
-//│     tmp3 = tmp2 + 3;
-//│     this.k = tmp3;
+//│     tmp3 = 1 + 2;
+//│     tmp4 = tmp3 + 3;
+//│     this.k = tmp4;
 //│   }
 //│   get baz() {
 //│     return this.bar * 2;
