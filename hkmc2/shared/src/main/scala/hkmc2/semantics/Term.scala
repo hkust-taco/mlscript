@@ -743,8 +743,11 @@ case class ObjBody(blk: Term.Blk):
   override def toString: String = blk.showDbg
 
 
-/** Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: Symbol, str: Str, file: io.Path) extends Statement
+/** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
+  * in which case it is a `BlockMemberSymbol` when importing files explicitly
+  * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
+  * Note that the `file` Path may not represent a real file; eg when importing "fs". */
+case class Import(sym: TempSymbol | MemberSymbol, str: Str, file: io.Path) extends Statement
 
 
 sealed abstract class Declaration:

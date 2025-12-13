@@ -22,6 +22,8 @@ object DiffTestRunner:
   
   class State:
     
+    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+    
     val pwd = os.pwd
     
     // println(s"INITIALIZING DiffTestRunner.State in ${pwd}")
@@ -120,7 +122,7 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
     relativeName: String
   ): DiffMaker =
     new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName):
-      override def fs = FileSystem.default
+      def cctx = state.cctx
   
   diffTestFiles.foreach: file =>
     

@@ -7,7 +7,7 @@ import VirtualPath.sep
 /**
  * Pure JavaScript implementation of Path without using Node.js path module
  */
-private[io] class VirtualPath(val pathString: String) extends Path:
+private[io] case class VirtualPath(val pathString: String) extends Path:
   private def normalizePath(path: String): String =
     if path.isEmpty then path
     else

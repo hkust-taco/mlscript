@@ -20,6 +20,8 @@ abstract class Path:
   /** Get the file extension (without dot) */
   def ext: String
   
+  def lastChangedTimestamp: Long = 0 // TODO
+  
   /** Navigate to parent directory */
   def up: Path
   

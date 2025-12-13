@@ -6,7 +6,7 @@ import mlscript.utils._, shorthands._
 /**
  * JVM implementation of [[Path]] that wraps [[os.Path]].
  */
-private[io] class WrappedPath(private[io] val underlying: os.Path) extends Path:
+private[io] case class WrappedPath(private[io] val underlying: os.Path) extends Path:
   override def toString: String = underlying.toString
 
   def last: String = underlying.last
