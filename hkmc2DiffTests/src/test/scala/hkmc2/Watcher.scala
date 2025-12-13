@@ -6,10 +6,10 @@ import scala.jdk.CollectionConverters.*
 import mlscript.utils.*, shorthands.*
 
 import better.files.*
-import _root_.io.methvin.better.files.*
-import _root_.io.methvin.watcher.{DirectoryWatcher, PathUtils}
-import _root_.io.methvin.watcher.{DirectoryChangeEvent, DirectoryChangeListener}
-import _root_.io.methvin.watcher.hashing.{FileHash, FileHasher}
+import _root_.io.methvin
+import methvin.better.files.*
+import methvin.watcher.{DirectoryWatcher, PathUtils, DirectoryChangeEvent, DirectoryChangeListener}
+import methvin.watcher.hashing.{FileHash, FileHasher}
 import java.time.LocalDateTime
 import java.time.temporal._
 import io.FileSystem, io.PlatformPath.given
