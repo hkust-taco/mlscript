@@ -527,17 +527,17 @@ sealed abstract class Result extends AutoLocated:
   // * for the location to be valid, we should NOT have it include children whose location
   // * is from some different place (with a different Origin), such as the location attached to symbols.
   // * That's why for example, we're not adding the `l` of `Value.Ref` to the children list.
-  protected def children: List[Located] = this match
-    case Call(fun, args) => fun :: args.map(_.value)
-    case Instantiate(mut, cls, args) => cls :: args.map(_.value)
-    case Select(qual, name) => qual :: name :: Nil
-    case DynSelect(qual, fld, arrayIdx) => qual :: fld :: Nil
-    case Lambda(params, body) => params :: Nil
-    case Tuple(mut, elems) => elems.map(_.value)
-    case Record(mut, elems) => elems.map(_.value)
-    case Value.Ref(l, disamb) => Nil
-    case Value.This(sym) => Nil
-    case Value.Lit(lit) => lit :: Nil
+  protected def children: Vector[Located] = this match
+    case Call(fun, args) => fun +: args.iterator.map(_.value).toVector
+    case Instantiate(mut, cls, args) => cls +: args.iterator.map(_.value).toVector
+    case Select(qual, name) => Vector(qual, name)
+    case DynSelect(qual, fld, arrayIdx) => Vector(qual, fld)
+    case Lambda(params, body) => Vector(params)
+    case Tuple(mut, elems) => elems.iterator.map(_.value).toVector
+    case Record(mut, elems) => elems.iterator.map(_.value).toVector
+    case Value.Ref(l, disamb) => Vector.empty
+    case Value.This(sym) => Vector.empty
+    case Value.Lit(lit) => Vector(lit)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match

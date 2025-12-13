@@ -281,39 +281,41 @@ enum Pattern extends AutoLocated:
     case Annotated(pattern, _) => pattern.variables
     case Guarded(pattern, _) => pattern.variables
   
-  def children: Ls[Located] = this match
-    case Constructor(target, arguments) => target :: arguments.getOrElse(Nil)
-    case Composition(polarity, left, right) => left :: right :: Nil
-    case Negation(pattern) => pattern :: Nil
-    case Wildcard() => Nil
-    case Literal(literal) => literal :: Nil
-    case Range(lower, upper, rightInclusive) => lower :: upper :: Nil
-    case Concatenation(left, right) => left :: right :: Nil
-    case Tuple(leading, spread) => leading ::: spread.fold(Nil):
-      case (_, middle, trailing) => middle :: trailing
-    case Record(fields) => fields.flatMap:
-      case (name, pattern) => name :: pattern.children
-    case Chain(first, second) => first :: second :: Nil
-    case Alias(pattern, alias) => pattern :: alias :: Nil
-    case Transform(pattern, _, transform) => pattern :: transform :: Nil
-    case Annotated(pattern, annotations) => pattern ::
-      annotations.iterator.collect { case R(term) => term }.toList
+  def children: Vector[Located] = this match
+    case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
+    case Composition(polarity, left, right) => Vector(left, right)
+    case Negation(pattern) => Vector(pattern)
+    case Wildcard() => Vector.empty
+    case Literal(literal) => Vector(literal)
+    case Range(lower, upper, rightInclusive) => Vector(lower, upper)
+    case Concatenation(left, right) => Vector(left, right)
+    case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
+      case (_, middle, trailing) => middle +: trailing.toVector
+    case Record(fields) =>
+      fields.iterator.flatMap:
+        case (name, pattern) => name +: pattern.children
+      .toVector
+    case Chain(first, second) => Vector(first, second)
+    case Alias(pattern, alias) => Vector(pattern, alias)
+    case Transform(pattern, _, transform) => Vector(pattern, transform)
+    case Annotated(pattern, annotations) => pattern +:
+      annotations.iterator.collect { case R(term) => term }.toVector
     case Guarded(pattern, guard) => pattern.children :+ guard
   
-  def subTerms: Ls[Term] = this match
+  def subTerms: Vector[Term] = this match
     case Constructor(target, arguments) =>
-      target :: arguments.fold(Nil)(_.flatMap(_.subTerms))
-    case Composition(_, left, right) => left.subTerms ::: right.subTerms
+      target +: Vector.concat(arguments.fold(Vector.empty)(_.iterator.flatMap(_.subTerms).toVector))
+    case Composition(_, left, right) => left.subTerms ++ right.subTerms
     case Negation(pattern) => pattern.subTerms
-    case _: (Wildcard | Literal | Range) => Nil
-    case Concatenation(left, right) => left.subTerms ::: right.subTerms
-    case Tuple(leading, spread) => leading.flatMap(_.subTerms) ::: spread.fold(Nil):
-      case (_, middle, trailing) => middle.subTerms ::: trailing.flatMap(_.subTerms)
-    case Record(fields) => fields.flatMap(_._2.subTerms)
-    case Chain(first, second) => first.subTerms ::: second.subTerms
+    case _: (Wildcard | Literal | Range) => Vector.empty
+    case Concatenation(left, right) => left.subTerms ++ right.subTerms
+    case Tuple(leading, spread) => leading.iterator.flatMap(_.subTerms).toVector ++ spread.fold(Vector.empty):
+      case (_, middle, trailing) => middle.subTerms ++ trailing.iterator.flatMap(_.subTerms).toVector
+    case Record(fields) => fields.iterator.flatMap(_._2.subTerms).toVector
+    case Chain(first, second) => first.subTerms ++ second.subTerms
     case Alias(pattern, _) => pattern.subTerms
     case Transform(pattern, _, transform) => pattern.subTerms :+ transform
-    case Annotated(pattern, annotations) => pattern.subTerms :::
+    case Annotated(pattern, annotations) => pattern.subTerms ++
       annotations.iterator.collect { case R(term) => term }.toList
     case Guarded(pattern, guard) => pattern.subTerms :+ guard
   
