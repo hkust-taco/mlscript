@@ -88,9 +88,11 @@ class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using con
       val (blk0, _) = elab.importFrom(parsed)
       val resolver = Resolver(rtl)
       resolver.traverseBlock(blk0)(using Resolver.ICtx.empty)
-      val hasQuote = blk0.exists:
+      def findQuote(t: semantics.Statement): Bool = t match
         case Term.Quoted(_) | Term.Unquoted(_) => true
         case Term.Ref(sym) => sym === State.termSymbol
+        case _ => t.subTerms.exists(findQuote)
+      val hasQuote = findQuote(blk0)
       val blk = new Term.Blk(
         Import(State.runtimeSymbol, runtimeFile.toString, runtimeFile) ::
           // Only import `Term.mls` when necessary.
