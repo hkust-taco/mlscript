@@ -104,7 +104,7 @@ class Watcher(dirs: Ls[File]):
             val preludeFile = preludePath
             val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
             val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs",
-          mkRaise = ReportFormatter(System.out.println, colorize = false).mkRaise
+          mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
