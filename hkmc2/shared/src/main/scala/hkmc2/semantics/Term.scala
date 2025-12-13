@@ -26,11 +26,11 @@ enum Annot extends AutoLocated:
     case _ => N
   
   def subTerms: Vector[Term] = this match
-    case Trm(trm) => Vector(trm)
+    case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
   
   def children: Vector[Located] = this match
-    case Trm(trm) => Vector(trm)
+    case Trm(trm) => Vector.single(trm)
     case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
   
   def mkClone(using State): Annot = this match
@@ -459,74 +459,74 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case _ => subTerms
   def subTerms: Vector[Term] = this match
     case Error | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
-    case Resolved(t, sym) => Vector(t)
-    case App(lhs, rhs) => Vector(lhs, rhs)
-    case RcdField(lhs, rhs) => Vector(lhs, rhs)
-    case RcdSpread(bod) => Vector(bod)
-    case FunTy(lhs, rhs, eff) => Vector(lhs, rhs) ++ eff.toVector
+    case Resolved(t, sym) => Vector.single(t)
+    case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdSpread(bod) => Vector.single(bod)
+    case FunTy(lhs, rhs, eff) => Vector.double(lhs, rhs) ++ eff.toVector
     case TyApp(pre, tarsg) => pre +: tarsg.toVector
-    case Sel(pre, _) => Vector(pre)
-    case SynthSel(pre, _) => Vector(pre)
-    case DynSel(o, f, _) => Vector(o, f)
+    case Sel(pre, _) => Vector.single(pre)
+    case SynthSel(pre, _) => Vector.single(pre)
+    case DynSel(o, f, _) => Vector.double(o, f)
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
-    case Mut(und) => Vector(und)
+    case Mut(und) => Vector.single(und)
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
     case IfLike(_, split) => split.subTerms
     case SynthIf(split) => split.subTerms
-    case Lam(params, body) => Vector(body)
+    case Lam(params, body) => Vector.single(body)
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
     case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
-    case Quoted(term) => Vector(term)
-    case Unquoted(term) => Vector(term)
+    case Quoted(term) => Vector.single(term)
+    case Unquoted(term) => Vector.single(term)
     case New(cls, args, rft) => (cls +: args.toVector) ++ rft.toVector.flatMap(_._2.blk.subTerms)
     case DynNew(cls, args) => cls +: args.toVector
-    case SelProj(pre, cls, _) => Vector(pre, cls)
-    case Asc(term, ty) => Vector(term, ty)
-    case Ret(res) => Vector(res)
-    case Throw(res) => Vector(res)
-    case Forall(_, _, body) => Vector(body)
+    case SelProj(pre, cls, _) => Vector.double(pre, cls)
+    case Asc(term, ty) => Vector.double(term, ty)
+    case Ret(res) => Vector.single(res)
+    case Throw(res) => Vector.single(res)
+    case Forall(_, _, body) => Vector.single(body)
     case WildcardTy(in, out) => in.toVector ++ out.toVector
-    case CompType(lhs, rhs, _) => Vector(lhs, rhs)
+    case CompType(lhs, rhs, _) => Vector.double(lhs, rhs)
     case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms).toVector
-    case DefineVar(sym, rhs) => Vector(rhs)
-    case Region(_, body) => Vector(body)
-    case RegRef(reg, value) => Vector(reg, value)
-    case Assgn(lhs, rhs) => Vector(lhs, rhs)
-    case SetRef(lhs, rhs) => Vector(lhs, rhs)
-    case Drop(term) => Vector(term)
-    case Deref(term) => Vector(term)
+    case DefineVar(sym, rhs) => Vector.single(rhs)
+    case Region(_, body) => Vector.single(body)
+    case RegRef(reg, value) => Vector.double(reg, value)
+    case Assgn(lhs, rhs) => Vector.double(lhs, rhs)
+    case SetRef(lhs, rhs) => Vector.double(lhs, rhs)
+    case Drop(term) => Vector.single(term)
+    case Deref(term) => Vector.single(term)
     case TermDefinition(_, _, _, pss, tps, sign, body, res, _, _, annotations, _) =>
       pss.toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
     case cls: ClassDef =>
       (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
-     ( mod.paramsOpt.toVector.flatMap(_.subTerms) :+ mod.body.blk) ++ mod.annotations.flatMap(_.subTerms).toVector
+      ( mod.paramsOpt.toVector.flatMap(_.subTerms) :+ mod.body.blk) ++ mod.annotations.flatMap(_.subTerms).toVector
     case td: TypeDef =>
       td.rhs.toVector ++ td.annotations.flatMap(_.subTerms).toVector
     case pat: PatternDef =>
       (pat.paramsOpt.toVector.flatMap(_.subTerms) :+ pat.body.blk) ++ pat.annotations.flatMap(_.subTerms).toVector
     case Import(sym, str, pth) => Vector.empty
-    case Try(body, finallyDo) => Vector(body, finallyDo)
+    case Try(body, finallyDo) => Vector.single(body) ++ Vector.single(finallyDo)
     case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => (rhs +: args.toVector) ++ defs.flatMap(_.td.subTerms).toVector :+ bod
-    case Neg(e) => Vector(e)
-    case Annotated(ann, target) => ann.subTerms ++ Vector(target)
+    case Neg(e) => Vector.single(e)
+    case Annotated(ann, target) => ann.subTerms ++ Vector.single(target)
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
   private def treeOrSubterms(t: Tree): Vector[Located] = t match
     case Tree.DummyApp | Tree.DummyTup => subTerms
-    case _ => Vector(t)
+    case _ => Vector.single(t)
   
   protected def children: Vector[Located] = this match
-    case t: Lit => Vector(t.lit.asTree)
+    case t: Lit => Vector.single(t.lit.asTree)
     case t: Ref => treeOrSubterms(t.tree)
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => l.params.paramSyms.map(_.id).toVector :+ l.body
     case t: App => treeOrSubterms(t.tree)
-    case IfLike(_, split) => Vector(split)
-    case SynthIf(split) => Vector(split)
-    case SynthSel(pre, nme) => Vector(pre, nme)
-    case Sel(pre, nme) => Vector(pre, nme)
-    case SelProj(prefix, cls, proj) => Vector(prefix, cls, proj)
+    case IfLike(_, split) => Vector.single(split)
+    case SynthIf(split) => Vector.single(split)
+    case SynthSel(pre, nme) => Vector.double(pre, nme)
+    case Sel(pre, nme) => Vector.double(pre, nme)
+    case SelProj(prefix, cls, proj) => Vector.triple(prefix, cls, proj)
     case _ =>
       subTerms // TODO more precise (include located things that aren't terms)
   

@@ -206,10 +206,12 @@ package object utils {
     }
   }
   
+  // * The goal of these is to avoid the use of varargs, which I've found to be a source of
+  // * overhead in the past, due to the allocation of intermediate arrays.
+  // * Remains to be seen if using these is always (or ever?) necessarily a win.
   implicit class MutSetObjectHelpers(self: mutable.Set.type) {
     def single[A](a: A): mutable.Set[A] = mutable.Set.empty[A] += a
   }
-  
   implicit class SetObjectHelpers(self: Set.type) {
     def single[A](a: A): Set[A] = (Set.newBuilder[A] += a).result()
   }
@@ -221,6 +223,11 @@ package object utils {
   }
   implicit class SortedMapObjectHelpers(self: SortedMap.type) {
     def single[A: Ordering, B](ab: A -> B): SortedMap[A, B] = (SortedMap.newBuilder[A, B] += ab).result()
+  }
+  implicit class VectorObjectHelpers(self: Vector.type) {
+    def single[A](a: A): Vector[A] = a +: Vector.empty
+    def double[A](a: A, b: A): Vector[A] = a +: b +: Vector.empty
+    def triple[A](a: A, b: A, c: A): Vector[A] = a +: b +: c +: Vector.empty
   }
   
   def TODO(msg: Any): Nothing = throw new NotImplementedError(

@@ -30,15 +30,15 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case End => this
   
   protected def children: Vector[Located] = this match
-    case Cons(branch, tail) => Vector(branch, tail)
+    case Cons(branch, tail) => Vector.double(branch, tail)
     case els @ Else(default) => els.kw match
-      case N => Vector(default)
-      case S(kw) => Vector(kw, default)
+      case N => Vector.single(default)
+      case S(kw) => Vector.double(kw, default)
     case End => Vector.empty
   
   def subTerms: Vector[Term] = this match
     case Cons(branch, tail) => branch.subTerms.toVector ++ tail.subTerms
-    case Else(default) => Vector(default)
+    case Else(default) => Vector.single(default)
     case End => Vector.empty
   
   def showDbg: Str = this match
@@ -87,7 +87,7 @@ object SimpleSplit:
     def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>
         scrutinee +: (pattern.subTerms ++ consequent.subTerms)
-      case Let(_, term) => Vector(term)
+      case Let(_, term) => Vector.single(term)
     
     def showDbg: Str = this match
       case Match(scrutinee, pattern, consequent) =>
@@ -100,8 +100,8 @@ object SimpleSplit:
     
     protected def children: Vector[Located] = this match
       case Match(scrutinee, pattern, consequent) =>
-        Vector(scrutinee, pattern, consequent)
-      case Let(binding, term) => Vector(binding, term)
+        Vector.triple(scrutinee, pattern, consequent)
+      case Let(binding, term) => Vector.double(binding, term)
   
   private[semantics] object prettyPrint:
     /** Represents lines with indentations. */

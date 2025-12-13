@@ -49,7 +49,7 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
   
   // TODO: Associate with locations.
   protected def children: Vector[Located] = this match
-    case Literal(lit) => Vector(lit)
+    case Literal(lit) => Vector.single(lit)
     case ClassLike(sym, arguments) => arguments.fold(Vector.empty):
       _.map((id, p) => p).toVector
     case Record(entries) => entries.values.toVector
@@ -57,9 +57,9 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       case (_, middle, trailing) => middle +: trailing.toVector
     case And(patterns) => patterns.toVector
     case Or(patterns) => patterns.toVector
-    case Not(pattern) => Vector(pattern)
-    case Rename(pattern, name) => Vector(pattern)
-    case Extract(pattern, _, term) => Vector(pattern, term)
+    case Not(pattern) => Vector.single(pattern)
+    case Rename(pattern, name) => Vector.single(pattern)
+    case Extract(pattern, _, term) => Vector.double(pattern, term)
     case Synonym(pattern) => pattern.symbol +: pattern.arguments.toVector
   
   lazy val symbols: Ls[VarSymbol] = this match

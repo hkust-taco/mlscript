@@ -530,14 +530,14 @@ sealed abstract class Result extends AutoLocated:
   protected def children: Vector[Located] = this match
     case Call(fun, args) => fun +: args.iterator.map(_.value).toVector
     case Instantiate(mut, cls, args) => cls +: args.iterator.map(_.value).toVector
-    case Select(qual, name) => Vector(qual, name)
-    case DynSelect(qual, fld, arrayIdx) => Vector(qual, fld)
-    case Lambda(params, body) => Vector(params)
+    case Select(qual, name) => Vector.double(qual, name)
+    case DynSelect(qual, fld, arrayIdx) => Vector.double(qual, fld)
+    case Lambda(params, body) => Vector.single(params)
     case Tuple(mut, elems) => elems.iterator.map(_.value).toVector
     case Record(mut, elems) => elems.iterator.map(_.value).toVector
     case Value.Ref(l, disamb) => Vector.empty
     case Value.This(sym) => Vector.empty
-    case Value.Lit(lit) => Vector(lit)
+    case Value.Lit(lit) => Vector.single(lit)
   
   // TODO rm Lam from values and thus the need for this method
   def subBlocks: Ls[Block] = this match

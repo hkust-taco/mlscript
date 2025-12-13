@@ -254,7 +254,7 @@ enum Pattern extends AutoLocated:
     this match
       case Annotated(pattern, annotations) =>
         Annotated(pattern, annotations :+ elem)
-      case _ => Annotated(this, Vector(elem))
+      case _ => Annotated(this, Vector.single(elem))
   
   inline def withGuard(guard: Term) = Pattern.Guarded(this, guard)
   
@@ -283,21 +283,21 @@ enum Pattern extends AutoLocated:
   
   def children: Vector[Located] = this match
     case Constructor(target, arguments) => target +: arguments.fold(Vector.empty)(_.toVector)
-    case Composition(polarity, left, right) => Vector(left, right)
-    case Negation(pattern) => Vector(pattern)
+    case Composition(polarity, left, right) => Vector.double(left, right)
+    case Negation(pattern) => Vector.single(pattern)
     case Wildcard() => Vector.empty
-    case Literal(literal) => Vector(literal)
-    case Range(lower, upper, rightInclusive) => Vector(lower, upper)
-    case Concatenation(left, right) => Vector(left, right)
+    case Literal(literal) => Vector.single(literal)
+    case Range(lower, upper, rightInclusive) => Vector.double(lower, upper)
+    case Concatenation(left, right) => Vector.double(left, right)
     case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
       case (_, middle, trailing) => middle +: trailing.toVector
     case Record(fields) =>
       fields.iterator.flatMap:
         case (name, pattern) => name +: pattern.children
       .toVector
-    case Chain(first, second) => Vector(first, second)
-    case Alias(pattern, alias) => Vector(pattern, alias)
-    case Transform(pattern, _, transform) => Vector(pattern, transform)
+    case Chain(first, second) => Vector.double(first, second)
+    case Alias(pattern, alias) => Vector.double(pattern, alias)
+    case Transform(pattern, _, transform) => Vector.double(pattern, transform)
     case Annotated(pattern, annotations) => pattern +:
       annotations.iterator.collect { case R(term) => term }.toVector
     case Guarded(pattern, guard) => pattern.children :+ guard
