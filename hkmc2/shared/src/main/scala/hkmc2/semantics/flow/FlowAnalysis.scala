@@ -66,7 +66,11 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       sym match
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
-      case ts: TermSymbol => P.Flow(ts.bms.get.flow)
+      case ts: TermSymbol =>
+        t.asResolvable.foreach: t =>
+          constrainContextualCall(t).foreach: c =>
+            collectedConstraints += ((src = t, c = c))
+        P.Flow(ts.bms.get.flow)
       // typeProd(trm)
       
     case Ref(sym) =>
@@ -154,6 +158,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     case sel @ Sel(pre, nme) =>
       // selsToExpand += sel
+      t.asResolvable.foreach: t =>
+        constrainContextualCall(t).foreach: c =>
+          collectedConstraints += ((src = t, c = c))
       log(s"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
         sel.resolvedSym match
@@ -184,6 +191,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
+      t.asResolvable.foreach: t =>
+        constrainContextualCall(t).foreach: c =>
+          collectedConstraints += ((src = t, c = c))
       checkLDS(lhs): pre_t =>
         val sym = app.resSym
         val c = C.Fun(typeProd(rhs), C.Flow(sym))
@@ -249,6 +259,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
   val selsToExpand: mutable.Buffer[Sel] = mutable.Buffer.empty
   val leadingDotSelsToExpand: mutable.Buffer[LeadingDotSel] = mutable.Buffer.empty
   
+  /**
+   * A buffer containing candidate terms that possibly represent function calls that possibly accept
+   * some contextual parameters. 
+   */
+  val contextualCallsToExpand: mutable.Buffer[Resolvable] = mutable.Buffer.empty
+  
   def expandTerms() =
     import SelectionTarget.*
     selsToExpand.foreach: sel =>
@@ -294,7 +310,45 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           msg"Ambiguous selection with multiple apparent targets:" -> sel.toLoc
           :: targets.map:
             case CompanionMember(_, sym) => msg"companion member ${sym.nme}" -> sym.toLoc
-
+    contextualCallsToExpand.foreach: t =>
+      expandContextualCall(t.expanded.asResolvable.getOrElse(die))
+  
+  def constrainContextualCall(t: Resolvable): Ls[Constraint] = t.resolvedSym match
+    case S(sym: TermSymbol) =>
+      val defn = sym.defn.getOrElse(die)
+      defn.params.headOption match
+        case S(ps) if ps.flags.ctx =>
+          log(s"Constraining contextual call ${t.showDbg}")
+          contextualCallsToExpand += t
+          val placeholders = ps.params.map: p =>
+            val sig = p.signType.getOrElse(die)
+            val sym = FlowSymbol(s"using-${p.sym.name}-flow")
+            val placeholder = ContextualPlaceholder(sym)
+            (sig, placeholder)
+          t.resolvedContextuals = S(placeholders)
+          val constraints = placeholders.map:
+            case (typ, placeholder) =>
+              val prod = P.Flow(placeholder.sym)
+              val cons = C.Typ(typ)
+              Constraint(prod, cons)
+          constraints
+        case _ =>
+          Nil
+    case _ => die
+  
+  def expandContextualCall(t: Resolvable): Unit = t.resolvedContextuals match
+    case S(cs) => 
+      cs.foreach:
+        case (typ, placeholder) if placeholder.solution.isEmpty =>
+          val solution = t.ictx.getOrElse(die).query(typ).getOrElse(die)
+          placeholder.solution = S(solution.sym.ref())
+        case (typ, placeholder) => ()
+      t.expand(S(App(t.duplicate, Tup(
+        cs.map: 
+          case (typ, placeholder) => PlainFld(placeholder.solution.get)
+      )(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())))
+    case N => ()
+  
   def getCompanionMember(name: Str, oc: Opt[Ctx], sym: Symbol): Opt[(Term, BlockMemberSymbol)] = sym match
     case ms: ModuleOrObjectSymbol => ms.defn.flatMap: d =>
       d.body.members.get(name) match
@@ -363,7 +417,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                 dig(cp.ctor, rhs, cp.path ++ path)
               sym.outFlows.foreach: fs =>
                 dig(P.Flow(fs), rhs, fs +: path)
-            case (P.Fun(pl, pr, _), C.Fun(cl, cr)) =>
+            case (P.Fun(pl, pr, _, _ctx), C.Fun(cl, cr)) =>
               dig(cl, pl, path) // FIXME path
               dig(pr, cr, path) // FIXME path
             case (P.Ctor(sym1, args1), C.Ctor(sym2, args2))

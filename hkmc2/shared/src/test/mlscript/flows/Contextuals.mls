@@ -1,0 +1,136 @@
+:js
+:flow
+:sf
+
+//│ Flowed:
+//│   import ".../Predef.mjs" as Predef⁰
+//│ where
+//│     
+
+
+fun f(using x: Int) = x + 1
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: mlscript.utils.package$.die(package.scala:229)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$10(FlowAnalysis.scala:195)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+//│ 	at: scala.Option.foreach(Option.scala:437)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:194)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+
+using Int = 42
+//│ Flowed:
+//│   using instance$Ident(Int)⁰: Int⁰{ ~> Int⁰ } ‹flow:instance$Ident(Int)⁰› = 42
+//│ where
+//│     flow:instance$Ident(Int)⁰  <~  42
+
+
+:df
+f
+//│ Typing producer: { member:f }
+//│ | Typing producer: member:f‹term:f›
+//│ | | Typing producer: member:f
+//│ | | : flow:f‹729›
+//│ | | Constraining contextual call member:f‹term:f›
+//│ | : flow:f‹729›
+//│ : flow:f‹729›
+//│ Handling constraint: using-x-flow‹730› <: type class:Int (from member:f‹term:f›)
+//│ | Solving: using-x-flow‹730› <: type class:Int   (Flow, Typ)
+//│ | New flow using-x-flow ~> Typ(Ref(class:Int,List()))
+//│ Flowed:
+//│   f⁰{ ~> f⁰(instance$Ident(Int)⁰)‹app⁰› }
+//│ where
+//│     
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:120)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:f
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parentOrCfg = Left of Cfg:
+//│       escapeChars = true
+//│       useSuperscripts = false
+//│       includeZero = false
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap(member:instance$Ident(Int) -> instance$Ident$_Int$_, member:Predef -> Predef, $runtime -> runtime, $block$res -> block$res1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
+//│ ║  l.33: 	f
+//│ ║        	^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.11: 	fun f(using x: Int) = x + 1
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] ReferenceError: f is not defined
+//│     at REPL13:1:28
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:593:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:922:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+
+fun id(x) = x
+//│ Flowed:
+//│   fun id⁰(x⁰) ‹flow:id⁰› = x⁰
+//│ where
+//│     flow:id⁰  <~  ((x⁰) -> x⁰)
+
+class Foo with
+  fun f(using x: Int) = x + 1
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: mlscript.utils.package$.die(package.scala:229)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$10(FlowAnalysis.scala:195)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+//│ 	at: scala.Option.foreach(Option.scala:437)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:194)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+
+:df
+(new Foo).f
+//│ Typing producer: { new member:Foo.f }
+//│ | Typing producer: new member:Foo.f‹term:class:Foo.f›
+//│ | | Typing producer: new member:Foo.f‹member:f›
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: mlscript.utils.package$.die(package.scala:229)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$5(FlowAnalysis.scala:162)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+//│ 	at: scala.Option.foreach(Option.scala:437)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:161)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+
+
+:df
+id(new Foo).f
+//│ Typing producer: { member:id(new member:Foo).f }
+//│ | Typing producer: member:id(new member:Foo).f
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
+//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
+//│ 	at: mlscript.utils.package$.die(package.scala:229)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$5(FlowAnalysis.scala:162)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+//│ 	at: scala.Option.foreach(Option.scala:437)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:161)
+//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
+//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)

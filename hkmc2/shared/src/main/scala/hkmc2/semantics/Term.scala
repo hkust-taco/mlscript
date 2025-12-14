@@ -58,6 +58,9 @@ sealed trait SelImpl(using val state: State) extends ResolvableImpl:
   var resolvedTargets: Ls[flow.SelectionTarget] = Nil // * filled during flow analysis
   var isErroneous: Bool = false // * to avoid reporting follow-on errors after a flow/resolution error
 
+case class ContextualPlaceholder(val sym: FlowSymbol):
+  var solution: Opt[Term] = N
+
 sealed trait ResolvableImpl:
   this: Term =>
   
@@ -72,6 +75,14 @@ sealed trait ResolvableImpl:
    */
   private[semantics]
   var expansion: Opt[Opt[Term]] = N
+  
+  /**
+   * The lexical context in which this term is resolved. 
+   * This is for later to flow-resolve implicits.
+   */
+  var ictx: Opt[Resolver.ICtx] = N
+  
+  var resolvedContextuals: Opt[Ls[Type -> ContextualPlaceholder]] = N
 
   def duplicate(using State): this.type =
     this.match
@@ -355,6 +366,10 @@ enum Term extends Statement:
   def app(args: Term*)(using State) =
     App(this, Tup(args.toList.map(PlainFld(_)))(Tree.DummyTup))
       (Tree.App(Tree.Dummy, Tree.Dummy), N, FlowSymbol(""))
+  
+  def asResolvable: Opt[Resolvable] = this match
+    case r: Resolvable => S(r)
+    case _ => N
   
   override def mkClone(using State): Term = 
     val that = this match

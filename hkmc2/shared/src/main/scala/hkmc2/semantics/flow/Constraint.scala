@@ -22,7 +22,7 @@ case class Constraint(lhs: Producer, rhs: Consumer):
 
 enum Producer:
   case Flow(sym: FlowSymbol)
-  case Fun(lhs: Consumer, rhs: Producer, captures: Ls[(Producer, Consumer)])
+  case Fun(lhs: Consumer, rhs: Producer, captures: Ls[(Producer, Consumer)], ctx: Bool = false) // TODO: default arg
   case Tup(elems: Ls[Opt[SpreadKind] -> Producer])
   case Ctor(sym: CtorSymbol, args: List[Producer])(val trm: Term) extends Producer, CtorImpl
   case LeadingDotSel(trm: Term.LeadingDotSel)
@@ -39,7 +39,8 @@ enum Producer:
   
   def show(using Scope): Document = this match
     case Flow(sym) => scope.allocateOrGetName(sym)
-    case Fun(lhs, rhs, caps) => doc"(${lhs.showAsParams} -> ${rhs.show})"
+    case Fun(lhs, rhs, caps, ctx) if ctx => doc"(using ${lhs.showAsParams} -> ${rhs.show})"
+    case Fun(lhs, rhs, caps, ctx) => doc"(${lhs.showAsParams} -> ${rhs.show})"
     case tup: Tup => Document.bracketed("[", "]")(showTupElems(tup))
     case Ctor(LitSymbol(UnitLit(false)), Nil) => "()"
     case Ctor(sym, args) => doc"${sym.nme}${args.map(_.showAsParams).mkDocument()}"
@@ -60,7 +61,8 @@ enum Producer:
   
   def showDbg: Str = this match
     case Flow(sym) => sym.showDbg
-    case Fun(lhs, rhs, caps) => s"(${lhs.showDbgAsParams} -> ${rhs.showDbg})"
+    case Fun(lhs, rhs, caps, ctx) if ctx => s"(using ${lhs.showDbgAsParams} -> ${rhs.showDbg})"
+    case Fun(lhs, rhs, caps, ctx) => s"(${lhs.showDbgAsParams} -> ${rhs.showDbg})"
     case Ctor(LitSymbol(UnitLit(false)), Nil) => "()"
     case Ctor(sym, Nil) => sym.nme
     case Tup(args) => s"[${args.map((spd, a) => spd.fold("")(_.str) + a.showDbg).mkString(", ")}]"
@@ -88,6 +90,7 @@ enum Consumer:
   case Ctor(sym: CtorSymbol, args: List[Consumer])
   case Sel(nme: Ident, res: Consumer)(val trm: Term.Sel)
   case Typ(typ: Type)
+  case Ins()
   
   
   def show(using Scope): Document = this match

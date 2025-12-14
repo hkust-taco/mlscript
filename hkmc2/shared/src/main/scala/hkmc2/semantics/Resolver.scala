@@ -619,6 +619,8 @@ class Resolver(tl: TraceLogger)
         case N =>
           ictx
       
+      t.ictx = S(newICtx2)
+      
       // Resolve the implicit arguments.
       newICtx2.givenIn:
         // Create a new term definition for App terms. The new term
@@ -773,7 +775,7 @@ class Resolver(tl: TraceLogger)
           val (expansionFn, pss) = expand(defn.params, identity, identity)
           if defn.params.length =/= pss.length then
             val expansion = expansionFn(t.duplicate)
-            t.expand(S(expansion))
+            // t.expand(S(expansion))
             expansion match // * expansion may change the semantics, thus symbol is also changed
             case r: Resolvable => 
               resolveSymbol(r, prefer = prefer, sign = false)
