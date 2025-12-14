@@ -29,6 +29,19 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
+  lazy val isAbortive: Bool = this match
+    case _: End => false
+    case _: Throw | _: Break | _: Continue => true
+    case ret: Return => !ret.implct
+    case Begin(sub, rst) => sub.isAbortive || rst.isAbortive
+    case Assign(_, _, rst) => rst.isAbortive
+    case AssignField(_, _, _, rst) => rst.isAbortive
+    case AssignDynField(_, _, _, _, rst) => rst.isAbortive
+    case Match(_, arms, dflt, rst) => rst.isAbortive
+    case Define(_, rst) => rst.isAbortive
+    case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
+    case Label(_, _, bod, rst) => rst.isAbortive
+    case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
   
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
@@ -219,15 +232,15 @@ sealed abstract class Block extends Product:
           val newBody = d.body.flattened
           if newBody is d.body
           then d
-          else d.copy(body = newBody)
+          else d.copy(body = newBody)(forceTailRec = d.forceTailRec)
         case v: ValDefn => v
         case c: ClsLikeDefn =>
           val newPreCtor = c.preCtor.flattened
           val newCtor = c.ctor.flattened
           val newMethods = c.methods.mapConserve:
-            case f@FunDefn(owner, sym, params, body) =>
+            case f@FunDefn(owner, sym, dSym, params, body) =>
               val newBody = body.flattened
-              if newBody is body then f else f.copy(body = newBody)
+              if newBody is body then f else f.copy(body = newBody)(forceTailRec = f.forceTailRec)
           if (newPreCtor is c.preCtor) && (newCtor is c.ctor) && (newMethods is c.methods)
           then c
           else c.copy(preCtor = newPreCtor, ctor = newCtor, methods = newMethods)
@@ -287,6 +300,23 @@ case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, res
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
 
+object Match:
+  def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
+    case S(Match(`scrut`, arms2, dflt2, _: End)) => // TODO: also handle non-End rest (may require a join point)
+      // * Currently, this branch does not seem used, because the UCS already does a good job at merging matches
+      Match(scrut, arms ::: arms2, dflt2, rest)
+    case _ =>
+      if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
+      then new Match(scrut, arms, dflt, End("unreachable"))
+      else new Match(scrut, arms, dflt, rest)
+
+object Begin:
+  def apply(sub: Block, rest: Block): Block =
+    if sub.isEmpty then rest
+    else if sub.isAbortive then sub
+    else new Begin(sub, rest)
+
+
 case class HandleBlock(
     lhs: Local,
     res: Local,
@@ -316,7 +346,7 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVars
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -325,7 +355,7 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
   lazy val freeVarsLLIR: Set[Local] = this match
-    case FunDefn(own, sym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
+    case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
     case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
@@ -334,14 +364,22 @@ sealed abstract class Defn:
         -- auxParams.flatMap(_.paramSyms)
   
 
+// NOTE: Setting isTailRec to false does not affect whether the function is optimized.
+// It only affects whether a warning is thrown if the function is not actually tailrec.
 final case class FunDefn(
     owner: Opt[InnerSymbol],
     sym: BlockMemberSymbol,
+    dSym: TermSymbol,
     params: Ls[ParamList],
     body: Block,
+  )(
+    val forceTailRec: Bool,
 ) extends Defn:
   val innerSym = N
-
+  val asPath = Value.Ref(sym, S(dSym))
+object FunDefn:
+  def withFreshSymbol(owner: Opt[InnerSymbol], sym: BlockMemberSymbol, params: Ls[ParamList], body: Block)(forceTailRec: Bool)(using State) =
+    FunDefn(owner, sym, TermSymbol(syntax.Fun, owner, Tree.Ident(sym.nme)), params, body)(forceTailRec)
 
 final case class ValDefn(
     tsym: TermSymbol,
@@ -552,7 +590,7 @@ type Local = Symbol
  * regardless of whether the check for effect is inserted or not.
  * Note that the check for effect is inserted during HandlerLowering and setting this to true
  * after handler is lowered does not have any effect on the code generation. */
-case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool) extends Result
+case class Call(fun: Path, args: Ls[Arg])(val isMlsFun: Bool, val mayRaiseEffects: Bool, val explicitTailCall: Bool) extends Result
 
 case class Instantiate(mut: Bool, cls: Path, args: Ls[Arg]) extends Result
 

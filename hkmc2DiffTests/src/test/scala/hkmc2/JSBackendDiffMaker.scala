@@ -104,8 +104,8 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
           with codegen.LoweringSelSanityChecks
           with codegen.LoweringTraceLog(traceJS.isSet)
       val jsb = ltl.givenIn:
-          new JSBuilder
-            with JSBuilderArgNumSanityChecks
+        new JSBuilder
+          with JSBuilderArgNumSanityChecks
       val resSym = new TempSymbol(S(blk), "block$res")
       val lowered0 = low.program(blk)
       val le = lowered0.copy(main = lowered0.main.mapTail:
@@ -193,7 +193,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
             Return(
               Call(
                 Value.Ref(Elaborator.State.runtimeSymbol).selSN("printRaw"),
-                Arg(N, Value.Ref(sym, N)) :: Nil)(true, false),
+                Arg(N, Value.Ref(sym, N)) :: Nil)(true, false, false),
             implct = true)
           val je = nestedScp.givenIn:
             jsb.block(le, endSemi = false)

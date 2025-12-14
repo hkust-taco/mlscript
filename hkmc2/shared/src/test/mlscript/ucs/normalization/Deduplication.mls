@@ -10,23 +10,13 @@ let z = 0
 :sjs
 if x === 0 then 1 else 2
 //│ JS (unsanitized):
-//│ let scrut; scrut = x === 0; switch (scrut) { case true: 1; break; default: 2; break; }
+//│ let scrut; scrut = x === 0; if (scrut === true) { 1 } else { 2 }
 //│ = 1
 
 :sjs
 let a = if x === 0 then 1 else 2
 //│ JS (unsanitized):
-//│ let a, scrut1, tmp;
-//│ scrut1 = x === 0;
-//│ switch (scrut1) {
-//│   case true:
-//│     tmp = 1;
-//│     break;
-//│   default:
-//│     tmp = 2;
-//│     break;
-//│ }
-//│ a = tmp;
+//│ let a, scrut1, tmp; scrut1 = x === 0; if (scrut1 === true) { tmp = 1; } else { tmp = 2; } a = tmp;
 //│ a = 1
 
 :sjs
@@ -34,14 +24,7 @@ print of if x === 0 then 1 else 2
 //│ JS (unsanitized):
 //│ let scrut2, tmp1;
 //│ scrut2 = x === 0;
-//│ switch (scrut2) {
-//│   case true:
-//│     tmp1 = 1;
-//│     break;
-//│   default:
-//│     tmp1 = 2;
-//│     break;
-//│ }
+//│ if (scrut2 === true) { tmp1 = 1; } else { tmp1 = 2; }
 //│ Predef.print(tmp1)
 //│ > 1
 
@@ -305,20 +288,14 @@ print of if
 //│                 break split_root$3;
 //│                 break;
 //│               default:
-//│                 switch (z) {
-//│                   case 1:
-//│                     break split_1$3;
-//│                     break;
-//│                   default:
-//│                     switch (y) {
-//│                       case 2:
-//│                         break split_3$;
-//│                         break;
-//│                       default:
-//│                         break split_2$;
-//│                         break;
-//│                     }
-//│                     break;
+//│                 if (z === 1) {
+//│                   break split_1$3
+//│                 } else {
+//│                   if (y === 2) {
+//│                     break split_3$
+//│                   } else {
+//│                     break split_2$
+//│                   }
 //│                 }
 //│                 break;
 //│             }
@@ -328,13 +305,10 @@ print of if
 //│             break split_root$3;
 //│             break;
 //│           default:
-//│             switch (y) {
-//│               case 2:
-//│                 break split_3$;
-//│                 break;
-//│               default:
-//│                 break split_2$;
-//│                 break;
+//│             if (y === 2) {
+//│               break split_3$
+//│             } else {
+//│               break split_2$
 //│             }
 //│             break;
 //│         }
@@ -390,20 +364,14 @@ fun foo(x, y, z) = if
 //│                   break split_root$4;
 //│                   break;
 //│                 default:
-//│                   switch (z1) {
-//│                     case 1:
-//│                       break split_1$4;
-//│                       break;
-//│                     default:
-//│                       switch (y1) {
-//│                         case 2:
-//│                           break split_3$1;
-//│                           break;
-//│                         default:
-//│                           break split_2$1;
-//│                           break;
-//│                       }
-//│                       break;
+//│                   if (z1 === 1) {
+//│                     break split_1$4
+//│                   } else {
+//│                     if (y1 === 2) {
+//│                       break split_3$1
+//│                     } else {
+//│                       break split_2$1
+//│                     }
 //│                   }
 //│                   break;
 //│               }
@@ -413,13 +381,10 @@ fun foo(x, y, z) = if
 //│               break split_root$4;
 //│               break;
 //│             default:
-//│               switch (y1) {
-//│                 case 2:
-//│                   break split_3$1;
-//│                   break;
-//│                 default:
-//│                   break split_2$1;
-//│                   break;
+//│               if (y1 === 2) {
+//│                 break split_3$1
+//│               } else {
+//│                 break split_2$1
 //│               }
 //│               break;
 //│           }
@@ -595,13 +560,6 @@ let y = if true then 1 else 2
 //│ JS (unsanitized):
 //│ let y1, scrut3, tmp6;
 //│ scrut3 = true;
-//│ switch (scrut3) {
-//│   case true:
-//│     tmp6 = 1;
-//│     break;
-//│   default:
-//│     tmp6 = 2;
-//│     break;
-//│ }
+//│ if (scrut3 === true) { tmp6 = 1; } else { tmp6 = 2; }
 //│ y1 = tmp6;
 //│ y = 1

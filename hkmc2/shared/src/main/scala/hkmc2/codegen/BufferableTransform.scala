@@ -29,11 +29,11 @@ class BufferableTransform()(using Ctx, State, Raise):
             def mkFieldReplacer(buf: Local, baseIdx: Local) =
               def getOffset(off: Int)(k: Path => Block): Block =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false),
+                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
                   k(DynSelect(buf.asPath.selSN("buf"), idxSymbol.asPath, true)))
               def assignToOffset(off: Int, r: Result, rst: Block) =
                 val idxSymbol = new TempSymbol(N, "idx")
-                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false),
+                Assign(idxSymbol, Call(State.builtinOpsMap("+").asPath, baseIdx.asPath.asArg :: Value.Lit(Tree.IntLit(off)).asArg :: Nil)(true, false, false),
                   AssignDynField(buf.asPath.selSN("buf"), idxSymbol.asPath, true, r, applyBlock(rst)))
               new BlockTransformer(SymbolSubst()):
                 override def applyBlock(b: Block): Block = b match
@@ -66,10 +66,15 @@ class BufferableTransform()(using Ctx, State, Raise):
               val buf = VarSymbol(new Tree.Ident("buf"))
               val idx = VarSymbol(new Tree.Ident("idx"))
               val blk = mkFieldReplacer(buf, idx).applyBlock(f.body)
-              FunDefn(f.owner, f.sym, PlainParamList(
+              FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)
-            val fakeCtor = transformFunDefn(FunDefn(S(companionSym), BlockMemberSymbol("ctor", Nil, false), cls.paramsOpt.toList, Begin(cls.preCtor, cls.ctor)), true)
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec)
+            val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
+                S(companionSym), 
+                BlockMemberSymbol("ctor", Nil, false), 
+                cls.paramsOpt.toList,
+                Begin(cls.preCtor, cls.ctor),
+              )(false), true)
             val fakeCompanion = ClsLikeBody(
               companionSym,
               fakeCtor :: cls.methods.map(transformFunDefn(_, false)),

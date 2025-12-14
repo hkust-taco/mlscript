@@ -170,7 +170,7 @@ f(1, 2, 1000)
 //│ h$2 = function h$(f$capture6) {
 //│   return f$capture6.mutated$capture$0
 //│ };
-//│ globalThis.Object.freeze(class f$capture4 {
+//│ (class f$capture4 {
 //│   static {
 //│     f$capture5 = this
 //│   }
@@ -268,7 +268,7 @@ g()(1)
 //│     return f$1(g$capture2, x1)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class g$capture {
+//│ (class g$capture {
 //│   static {
 //│     g$capture1 = this
 //│   }
@@ -383,20 +383,17 @@ fun f(x) =
 //│   let y1, scrut, g$here;
 //│   y1 = undefined;
 //│   scrut = x1 < 0;
-//│   switch (scrut) {
-//│     case true:
-//│       y1 = 1;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([
-//│         g$here,
-//│         g$here
-//│       ]);
-//│       break;
-//│     default:
-//│       y1 = 2;
-//│       g$here = runtime.safeCall(g12(y1));
-//│       return globalThis.Object.freeze([ g$here, g$here ]);
-//│       break;
+//│   if (scrut === true) {
+//│     y1 = 1;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([
+//│       g$here,
+//│       g$here
+//│     ])
+//│   } else {
+//│     y1 = 2;
+//│     g$here = runtime.safeCall(g12(y1));
+//│     return globalThis.Object.freeze([ g$here, g$here ])
 //│   }
 //│ };
 
@@ -416,7 +413,7 @@ fun f(x) =
 //│     return g$15(f$capture18)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class f$capture16 {
+//│ (class f$capture16 {
 //│   static {
 //│     f$capture17 = this
 //│   }

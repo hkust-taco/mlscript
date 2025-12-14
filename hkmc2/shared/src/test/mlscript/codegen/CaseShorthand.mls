@@ -16,14 +16,9 @@ x => if x is
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function (x) {
-//│   switch (x) {
-//│     case 0:
-//│       return true;
-//│       break;
-//│     default:
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│       break;
-//│   }
+//│   if (x === 0) {
+//│     return true
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda2
 //│ = fun
@@ -33,14 +28,9 @@ case 0 then true
 //│ JS (unsanitized):
 //│ let lambda3;
 //│ lambda3 = (undefined, function (caseScrut) {
-//│   switch (caseScrut) {
-//│     case 0:
-//│       return true;
-//│       break;
-//│     default:
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│       break;
-//│   }
+//│   if (caseScrut === 0) {
+//│     return true
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda3
 //│ = fun
@@ -63,10 +53,10 @@ case 0 then true
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.64: 	case [x] then x, [] then 0
+//│ ║  l.54: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.64: 	case [x] then x, [] then 0
+//│ ║  l.54: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
 
 :sjs
@@ -76,14 +66,7 @@ case
 //│ JS (unsanitized):
 //│ let lambda11;
 //│ lambda11 = (undefined, function (caseScrut) {
-//│   switch (caseScrut) {
-//│     case 0:
-//│       return true;
-//│       break;
-//│     default:
-//│       return false;
-//│       break;
-//│   }
+//│   if (caseScrut === 0) { return true } else { return false }
 //│ });
 //│ lambda11
 //│ = fun

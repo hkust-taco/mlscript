@@ -28,33 +28,30 @@ fun foo(h): module M =
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut;
 //│   scrut = false;
-//│   switch (scrut) {
-//│     case true:
-//│       globalThis.Object.freeze(class A {
-//│         static {
-//│           A2 = this
-//│         }
-//│         constructor() {
-//│           runtime.Unit;
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "A"]; 
-//│       });
-//│       return A2;
-//│       break;
-//│     default:
-//│       globalThis.Object.freeze(class A1 {
-//│         static {
-//│           A3 = this
-//│         }
-//│         constructor() {
-//│           runtime.Unit;
-//│         }
-//│         toString() { return runtime.render(this); }
-//│         static [definitionMetadata] = ["class", "A"]; 
-//│       });
-//│       return A3;
-//│       break;
+//│   if (scrut === true) {
+//│     (class A {
+//│       static {
+//│         A2 = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A"]; 
+//│     });
+//│     return A2
+//│   } else {
+//│     (class A1 {
+//│       static {
+//│         A3 = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A"]; 
+//│     });
+//│     return A3
 //│   }
 //│ };
 //│ ═══[WARNING] Modules are not yet lifted.

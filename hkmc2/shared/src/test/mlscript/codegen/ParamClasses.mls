@@ -10,7 +10,7 @@ data class Foo()
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -41,7 +41,7 @@ data class Foo(a)
 //│ Foo3 = function Foo(a) {
 //│   return globalThis.Object.freeze(new Foo.class(a));
 //│ };
-//│ globalThis.Object.freeze(class Foo2 {
+//│ (class Foo2 {
 //│   static {
 //│     Foo3.class = this
 //│   }
@@ -80,7 +80,7 @@ data class Foo(a, b)
 //│ Foo5 = function Foo(a, b) {
 //│   return globalThis.Object.freeze(new Foo.class(a, b));
 //│ };
-//│ globalThis.Object.freeze(class Foo4 {
+//│ (class Foo4 {
 //│   static {
 //│     Foo5.class = this
 //│   }
@@ -148,7 +148,7 @@ data class Inner(c) with
 //│ Inner1 = function Inner(c) {
 //│   return globalThis.Object.freeze(new Inner.class(c));
 //│ };
-//│ globalThis.Object.freeze(class Inner {
+//│ (class Inner {
 //│   static {
 //│     Inner1.class = this
 //│   }
@@ -189,7 +189,7 @@ class Foo(x, val y, z, val z, z) with
 //│ Foo7 = function Foo(x, y, z, z1, z2) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z, z1, z2));
 //│ };
-//│ globalThis.Object.freeze(class Foo6 {
+//│ (class Foo6 {
 //│   static {
 //│     Foo7.class = this
 //│   }
@@ -247,7 +247,7 @@ class Foo(val z, val z)
 //│ Foo9 = function Foo(z, z1) {
 //│   return globalThis.Object.freeze(new Foo.class(z, z1));
 //│ };
-//│ globalThis.Object.freeze(class Foo8 {
+//│ (class Foo8 {
 //│   static {
 //│     Foo9.class = this
 //│   }

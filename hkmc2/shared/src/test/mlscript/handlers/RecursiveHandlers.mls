@@ -160,217 +160,196 @@ str
 //│ let str, scrut, h11, tmp11, tmp12, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
 //│ str = "";
 //│ scrut = true;
-//│ switch (scrut) {
-//│   case true:
-//│     Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
-//│       let tmp13, tmp14, tmp15, pc;
-//│       switch (runtime.isResuming) {
-//│         case true:
-//│           pc = runtime.resumePc;
-//│           runtime.isResuming = false;
-//│           break;
-//│         default:
-//│           pc = 0;
-//│           break;
-//│       }
-//│       main: while (true) {
-//│         switch (pc) {
-//│           case 0:
-//│             tmp13 = str + "A";
-//│             str = tmp13;
-//│             runtime.resumeValue = runtime.safeCall(k(arg));
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, "RecursiveHandlers.mls:149:7", 1, null, 0)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│           case 1:
-//│             tmp14 = runtime.resumeValue;
-//│             tmp15 = str + "A";
-//│             str = tmp15;
-//│             return runtime.Unit;
-//│             break;
-//│         }
-//│         break;
-//│       }
-//│     };
-//│     Handler$h1$perform1 = function Handler$h1$perform(Handler$h1$$instance, arg) {
-//│       return (k) => {
-//│         return Handler$h1$perform$1(Handler$h1$$instance, arg, k)
-//│       }
-//│     };
-//│     globalThis.Object.freeze(class Handler$h1$2 extends Effect1 {
-//│       static {
-//│         Handler$h1$3 = this
-//│       }
-//│       constructor() {
-//│         let tmp13;
-//│         tmp13 = super();
-//│         if (tmp13 instanceof runtime.EffectSig.class) {
-//│           tmp13 = runtime.topLevelEffect(tmp13, false);
-//│         }
-//│         tmp13;
-//│       }
-//│       perform(arg) {
-//│         let Handler$h1$perform$here;
-//│         Handler$h1$perform$here = runtime.safeCall(Handler$h1$perform1(this, arg));
-//│         return runtime.mkEffect(this, Handler$h1$perform$here)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Handler$h1$"]; 
-//│     });
-//│     h11 = new Handler$h1$3();
-//│     if (h11 instanceof runtime.EffectSig.class) {
-//│       h11 = runtime.topLevelEffect(h11, false);
+//│ if (scrut === true) {
+//│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
+//│     let tmp13, tmp14, tmp15, pc;
+//│     if (runtime.isResuming === true) {
+//│       pc = runtime.resumePc;
+//│       runtime.isResuming = false;
+//│     } else {
+//│       pc = 0;
 //│     }
-//│     Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
-//│       let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
-//│       switch (runtime.isResuming) {
-//│         case true:
-//│           pc = runtime.resumePc;
-//│           runtime.isResuming = false;
+//│     main: while (true) {
+//│       switch (pc) {
+//│         case 0:
+//│           tmp13 = str + "A";
+//│           str = tmp13;
+//│           runtime.resumeValue = runtime.safeCall(k(arg));
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, "RecursiveHandlers.mls:149:7", 1, null, 0)
+//│           }
+//│           pc = 1;
+//│           continue main;
 //│           break;
-//│         default:
-//│           pc = 0;
-//│           break;
-//│       }
-//│       main: while (true) {
-//│         switch (pc) {
-//│           case 0:
-//│             tmp13 = str + "B";
-//│             tmp14 = str + tmp13;
-//│             str = tmp14;
-//│             runtime.resumeValue = runtime.safeCall(k(arg));
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, "RecursiveHandlers.mls:154:7", 1, null, 0)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│           case 1:
-//│             tmp15 = runtime.resumeValue;
-//│             tmp16 = str + "B";
-//│             tmp17 = str + tmp16;
-//│             str = tmp17;
-//│             return runtime.Unit;
-//│             break;
-//│         }
-//│         break;
-//│       }
-//│     };
-//│     Handler$h2$perform1 = function Handler$h2$perform(Handler$h2$$instance, arg) {
-//│       return (k) => {
-//│         return Handler$h2$perform$1(Handler$h2$$instance, arg, k)
-//│       }
-//│     };
-//│     globalThis.Object.freeze(class Handler$h2$2 extends Effect1 {
-//│       static {
-//│         Handler$h2$3 = this
-//│       }
-//│       constructor() {
-//│         let tmp13;
-//│         tmp13 = super();
-//│         if (tmp13 instanceof runtime.EffectSig.class) {
-//│           tmp13 = runtime.topLevelEffect(tmp13, false);
-//│         }
-//│         tmp13;
-//│       }
-//│       perform(arg) {
-//│         let Handler$h2$perform$here;
-//│         Handler$h2$perform$here = runtime.safeCall(Handler$h2$perform1(this, arg));
-//│         return runtime.mkEffect(this, Handler$h2$perform$here)
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Handler$h2$"]; 
-//│     });
-//│     handleBlock$$2 = function handleBlock$$(h22) {
-//│       let tmp13, pc;
-//│       switch (runtime.isResuming) {
-//│         case true:
-//│           pc = runtime.resumePc;
-//│           runtime.isResuming = false;
-//│           break;
-//│         default:
-//│           pc = 0;
+//│         case 1:
+//│           tmp14 = runtime.resumeValue;
+//│           tmp15 = str + "A";
+//│           str = tmp15;
+//│           return runtime.Unit;
 //│           break;
 //│       }
-//│       main: while (true) {
-//│         switch (pc) {
-//│           case 0:
-//│             runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$$2, null, "RecursiveHandlers.mls:156:5", 2, null, 0)
-//│             }
-//│             pc = 2;
-//│             continue main;
-//│             break;
-//│           case 1:
-//│             return runtime.safeCall(h11.perform(runtime.Unit));
-//│             break;
-//│           case 2:
-//│             tmp13 = runtime.resumeValue;
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│         }
-//│         break;
-//│       }
-//│     };
-//│     handleBlock$9 = (undefined, function (h22) {
-//│       return () => {
-//│         return handleBlock$$2(h22)
-//│       }
-//│     });
-//│     handleBlock$10 = (undefined, function () {
-//│       let h22, tmp13, handleBlock$$here, pc;
-//│       switch (runtime.isResuming) {
-//│         case true:
-//│           pc = runtime.resumePc;
-//│           runtime.isResuming = false;
-//│           break;
-//│         default:
-//│           pc = 0;
-//│           break;
-//│       }
-//│       main: while (true) {
-//│         switch (pc) {
-//│           case 0:
-//│             runtime.resumeValue = new Handler$h2$3();
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 0)
-//│             }
-//│             pc = 2;
-//│             continue main;
-//│             break;
-//│           case 1:
-//│             tmp13 = runtime.resumeValue;
-//│             return tmp13;
-//│             break;
-//│           case 2:
-//│             h22 = runtime.resumeValue;
-//│             handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
-//│             runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 0)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
-//│         }
-//│         break;
-//│       }
-//│     });
-//│     tmp11 = runtime.enterHandleBlock(h11, handleBlock$10);
-//│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       tmp11 = runtime.topLevelEffect(tmp11, false);
+//│       break;
 //│     }
-//│     tmp12 = tmp11;
-//│     break;
-//│   default:
-//│     tmp12 = runtime.Unit;
-//│     break;
-//│ }
+//│   };
+//│   Handler$h1$perform1 = function Handler$h1$perform(Handler$h1$$instance, arg) {
+//│     return (k) => {
+//│       return Handler$h1$perform$1(Handler$h1$$instance, arg, k)
+//│     }
+//│   };
+//│   (class Handler$h1$2 extends Effect1 {
+//│     static {
+//│       Handler$h1$3 = this
+//│     }
+//│     constructor() {
+//│       let tmp13;
+//│       tmp13 = super();
+//│       if (tmp13 instanceof runtime.EffectSig.class) {
+//│         tmp13 = runtime.topLevelEffect(tmp13, false);
+//│       }
+//│       tmp13;
+//│     }
+//│     perform(arg) {
+//│       let Handler$h1$perform$here;
+//│       Handler$h1$perform$here = runtime.safeCall(Handler$h1$perform1(this, arg));
+//│       return runtime.mkEffect(this, Handler$h1$perform$here)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h1$"]; 
+//│   });
+//│   h11 = new Handler$h1$3();
+//│   if (h11 instanceof runtime.EffectSig.class) {
+//│     h11 = runtime.topLevelEffect(h11, false);
+//│   }
+//│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
+//│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
+//│     if (runtime.isResuming === true) {
+//│       pc = runtime.resumePc;
+//│       runtime.isResuming = false;
+//│     } else {
+//│       pc = 0;
+//│     }
+//│     main: while (true) {
+//│       switch (pc) {
+//│         case 0:
+//│           tmp13 = str + "B";
+//│           tmp14 = str + tmp13;
+//│           str = tmp14;
+//│           runtime.resumeValue = runtime.safeCall(k(arg));
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, "RecursiveHandlers.mls:154:7", 1, null, 0)
+//│           }
+//│           pc = 1;
+//│           continue main;
+//│           break;
+//│         case 1:
+//│           tmp15 = runtime.resumeValue;
+//│           tmp16 = str + "B";
+//│           tmp17 = str + tmp16;
+//│           str = tmp17;
+//│           return runtime.Unit;
+//│           break;
+//│       }
+//│       break;
+//│     }
+//│   };
+//│   Handler$h2$perform1 = function Handler$h2$perform(Handler$h2$$instance, arg) {
+//│     return (k) => {
+//│       return Handler$h2$perform$1(Handler$h2$$instance, arg, k)
+//│     }
+//│   };
+//│   (class Handler$h2$2 extends Effect1 {
+//│     static {
+//│       Handler$h2$3 = this
+//│     }
+//│     constructor() {
+//│       let tmp13;
+//│       tmp13 = super();
+//│       if (tmp13 instanceof runtime.EffectSig.class) {
+//│         tmp13 = runtime.topLevelEffect(tmp13, false);
+//│       }
+//│       tmp13;
+//│     }
+//│     perform(arg) {
+//│       let Handler$h2$perform$here;
+//│       Handler$h2$perform$here = runtime.safeCall(Handler$h2$perform1(this, arg));
+//│       return runtime.mkEffect(this, Handler$h2$perform$here)
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Handler$h2$"]; 
+//│   });
+//│   handleBlock$$2 = function handleBlock$$(h22) {
+//│     let tmp13, pc;
+//│     if (runtime.isResuming === true) {
+//│       pc = runtime.resumePc;
+//│       runtime.isResuming = false;
+//│     } else {
+//│       pc = 0;
+//│     }
+//│     main: while (true) {
+//│       switch (pc) {
+//│         case 0:
+//│           runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$$2, null, "RecursiveHandlers.mls:156:5", 1, null, 0)
+//│           }
+//│           pc = 1;
+//│           continue main;
+//│           break;
+//│         case 1:
+//│           tmp13 = runtime.resumeValue;
+//│           return runtime.safeCall(h11.perform(runtime.Unit));
+//│           break;
+//│       }
+//│       break;
+//│     }
+//│   };
+//│   handleBlock$9 = (undefined, function (h22) {
+//│     return () => {
+//│       return handleBlock$$2(h22)
+//│     }
+//│   });
+//│   handleBlock$10 = (undefined, function () {
+//│     let h22, tmp13, handleBlock$$here, pc;
+//│     if (runtime.isResuming === true) {
+//│       pc = runtime.resumePc;
+//│       runtime.isResuming = false;
+//│     } else {
+//│       pc = 0;
+//│     }
+//│     main: while (true) {
+//│       switch (pc) {
+//│         case 0:
+//│           runtime.resumeValue = new Handler$h2$3();
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 0)
+//│           }
+//│           pc = 2;
+//│           continue main;
+//│           break;
+//│         case 1:
+//│           tmp13 = runtime.resumeValue;
+//│           return tmp13;
+//│           break;
+//│         case 2:
+//│           h22 = runtime.resumeValue;
+//│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
+//│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 0)
+//│           }
+//│           pc = 1;
+//│           continue main;
+//│           break;
+//│       }
+//│       break;
+//│     }
+//│   });
+//│   tmp11 = runtime.enterHandleBlock(h11, handleBlock$10);
+//│   if (tmp11 instanceof runtime.EffectSig.class) {
+//│     tmp11 = runtime.topLevelEffect(tmp11, false);
+//│   }
+//│   tmp12 = tmp11;
+//│ } else { tmp12 = runtime.Unit; }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"

@@ -78,6 +78,7 @@ class BlockTraverser:
   def applyFunDefn(fun: FunDefn): Unit =
     fun.owner.foreach(_.traverse)
     fun.sym.traverse
+    fun.dSym.traverse
     fun.params.foreach(applyParamList)
     applySubBlock(fun.body)
   

@@ -8,7 +8,7 @@ module A with
   fun f(x) = x is Option.Some
 //│ JS (unsanitized):
 //│ let A1;
-//│ globalThis.Object.freeze(class A {
+//│ (class A {
 //│   static {
 //│     A1 = this
 //│   }

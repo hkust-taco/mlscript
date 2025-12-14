@@ -6,6 +6,9 @@ declare type Nothing
 
 declare type untyped
 
+declare type tailrec
+declare type tailcall
+
 declare class Object
 declare val Object
 declare class JSON
@@ -182,6 +185,19 @@ declare module js with
 declare module wasm with
   fun
     plus_impl
+    minus_impl
+    times_impl
+    div_impl
+    mod_impl
+    eq_impl
+    neq_impl
+    lt_impl
+    le_impl
+    gt_impl
+    ge_impl
+    neg_impl
+    pos_impl
+    not_impl
 
 declare module debug with
   fun printStack

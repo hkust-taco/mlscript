@@ -7,14 +7,9 @@ x => if x is 0 then 1
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function (x) {
-//│   switch (x) {
-//│     case 0:
-//│       return 1;
-//│       break;
-//│     default:
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│       break;
-//│   }
+//│   if (x === 0) {
+//│     return 1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ });
 //│ lambda
 //│ = fun
@@ -32,14 +27,11 @@ x => if x is [[0]] then 1
 //│         element0$ = runtime.Tuple.get(x, 0);
 //│         if (runtime.Tuple.isArrayLike(element0$) && element0$.length === 1) {
 //│           element0$1 = runtime.Tuple.get(element0$, 0);
-//│           switch (element0$1) {
-//│             case 0:
-//│               tmp = 1;
-//│               break split_root$;
-//│               break;
-//│             default:
-//│               break split_default$;
-//│               break;
+//│           if (element0$1 === 0) {
+//│             tmp = 1;
+//│             break split_root$
+//│           } else {
+//│             break split_default$
 //│           }
 //│         } else {
 //│           break split_default$
@@ -82,14 +74,11 @@ fun crazy(v) =
 //│                 argument0$4 = argument0$3.value;
 //│                 if (argument0$4 instanceof S1.class) {
 //│                   argument0$5 = argument0$4.value;
-//│                   switch (argument0$5) {
-//│                     case 0:
-//│                       tmp = "bruh!";
-//│                       break split_root$;
-//│                       break;
-//│                     default:
-//│                       break split_1$;
-//│                       break;
+//│                   if (argument0$5 === 0) {
+//│                     tmp = "bruh!";
+//│                     break split_root$
+//│                   } else {
+//│                     break split_1$
 //│                   }
 //│                 } else {
 //│                   break split_1$

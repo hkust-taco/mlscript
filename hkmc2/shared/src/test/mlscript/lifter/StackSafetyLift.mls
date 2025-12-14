@@ -1,11 +1,17 @@
 :js
 :lift
+<<<<<<< HEAD
 :noSanityCheck
+=======
+:noTailRec
+
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
+>>>>>>> upstream/hkmc2
 
 // sanity check
 :expect 5050
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(100)
@@ -18,44 +24,41 @@ sum(100)
 :expect 0
 :sjs
 fun hi(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else hi(n - 1)
 hi(0)
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ JS (unsanitized):
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, pc, saveOffset, stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
-//│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafetyLift.mls:20:1", 0, null, 2, tmp1, n)
-//│   }
-//│   switch (runtime.isResuming) {
-//│     case true:
+//│   loopLabel: while (true) {
+//│     runtime.stackDepth = runtime.stackDepth + 1;
+//│     stackDelayRes = runtime.checkDepth();
+//│     if (stackDelayRes instanceof runtime.EffectSig.class) {
+//│       return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafetyLift.mls:26:1", 0, null, 2, n, tmp1)
+//│     }
+//│     if (runtime.isResuming === true) {
 //│       pc = runtime.resumePc;
-//│       tmp1 = runtime.resumeArr.at(runtime.resumeIdx);
+//│       n = runtime.resumeArr.at(runtime.resumeIdx);
 //│       saveOffset = runtime.resumeIdx + 1;
-//│       n = runtime.resumeArr.at(saveOffset);
+//│       tmp1 = runtime.resumeArr.at(saveOffset);
 //│       runtime.isResuming = false;
-//│       break;
-//│     default:
+//│     } else {
 //│       pc = 0;
-//│       break;
-//│   }
-//│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = n == 0;
-//│         switch (scrut) {
-//│           case true:
-//│             return 0;
-//│             break;
-//│           default:
-//│             tmp1 = n - 1;
-//│             return hi(tmp1);
-//│             break;
+//│     }
+//│     main: while (true) {
+//│       if (pc === 0) {
+//│         scrut = n === 0;
+//│         if (scrut === true) {
+//│           return 0
+//│         } else {
+//│           tmp1 = n - 1;
+//│           n = tmp1;
+//│           continue loopLabel
 //│         }
-//│         break;
+//│       }
+//│       break;
 //│     }
 //│     break;
 //│   }
@@ -73,10 +76,11 @@ hi(0)
 :effectHandlers
 :expect 50005000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ JS (unsanitized):
 //│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
@@ -85,39 +89,33 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:75:1", 0, null, 2, n, tmp2)
+//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:78:1", 0, null, 2, tmp2, n)
 //│   }
-//│   switch (runtime.isResuming) {
-//│     case true:
-//│       pc = runtime.resumePc;
-//│       n = runtime.resumeArr.at(runtime.resumeIdx);
-//│       saveOffset = runtime.resumeIdx + 1;
-//│       tmp2 = runtime.resumeArr.at(saveOffset);
-//│       runtime.isResuming = false;
-//│       break;
-//│     default:
-//│       pc = 0;
-//│       break;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     n = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         scrut = n == 0;
-//│         switch (scrut) {
-//│           case true:
-//│             return 0;
-//│             break;
-//│           default:
-//│             tmp2 = n - 1;
-//│             tmp4 = sum1(tmp2);
-//│             runtime.stackDepth = curDepth;
-//│             runtime.resumeValue = tmp4;
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:78:9", 1, null, 2, n, tmp2)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
+//│         scrut = n === 0;
+//│         if (scrut === true) {
+//│           return 0
+//│         } else {
+//│           tmp2 = n - 1;
+//│           tmp4 = sum1(tmp2);
+//│           runtime.stackDepth = curDepth;
+//│           runtime.resumeValue = tmp4;
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:81:9", 1, null, 2, tmp2, n)
+//│           }
+//│           pc = 1;
+//│           continue main
 //│         }
 //│         break;
 //│       case 1:
@@ -134,12 +132,27 @@ sum(10000)
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (tmp1 instanceof runtime.EffectSig.class) { tmp1 = runtime.topLevelEffect(tmp1, false); }
 //│ tmp1
-//│ = 50005000
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'sum' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:588:24)
+//│     at sum (REPL13:1:87)
+//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:342:18)
+//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1057:37)
+//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1046:22
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1123:32)
+//│     at REPL13:1:1664
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
 
 // stack-overflows without :stackSafe
 :re
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
@@ -155,8 +168,21 @@ fun foo(f) =
     set ctr += 1
     dummy(f(f))
 foo(foo)
-//│ = 0
-//│ ctr = 10001
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] TypeError: f is not a function
+//│     at foo (REPL19:1:1308)
+//│     at $_stack$_safe$_body$_2 (REPL19:1:2023)
+//│     at Runtime.enterHandleBlock (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:947:28)
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1116:22)
+//│     at REPL19:1:2052
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│ ctr = 1
 
 :stackSafe 1000
 :effectHandlers
@@ -167,8 +193,24 @@ val foo =
     else n + f(n-1)
   f(10000)
 foo
-//│ = 50005000
-//│ foo = 50005000
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:588:24)
+//│     at lambda (REPL23:1:109)
+//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:342:18)
+//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1057:37)
+//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1046:22
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1123:32)
+//│     at REPL23:1:1671
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
+//│ foo = undefined
 
 :re
 fun foo() =
@@ -196,7 +238,23 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
-//│ = 50005000
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'lambda$' expected 3 arguments but got 0
+//│     at Runtime.checkArgs (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:588:24)
+//│     at lambda$ (REPL33:1:610)
+//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:342:18)
+//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1057:37)
+//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1046:22
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1123:32)
+//│     at REPL33:1:9240
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
 
 // function call and defn inside handler
 :effectHandlers
@@ -212,7 +270,23 @@ handle h = Eff with
 in
   fun foo(h) = h.perform
   foo(h)
-//│ = 50005000
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'lambda$' expected 3 arguments but got 0
+//│     at Runtime.checkArgs (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:588:24)
+//│     at lambda$ (REPL36:1:239)
+//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:342:18)
+//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1057:37)
+//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1046:22
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1123:32)
+//│     at REPL36:1:9263
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '50005000', got: 'undefined'
 
 :re
 :effectHandlers
@@ -225,42 +299,29 @@ handle h = Eff with
       else n + f(n-1)
     resume(f(10000))
 foo(h)
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
 :stackSafe
 :sjs
 fun max(a, b) = if a < b then b else a
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ JS (unsanitized):
 //│ let max;
 //│ max = function max(a, b) {
 //│   let scrut, pc, saveOffset;
-//│   switch (runtime.isResuming) {
-//│     case true:
-//│       pc = runtime.resumePc;
-//│       a = runtime.resumeArr.at(runtime.resumeIdx);
-//│       saveOffset = runtime.resumeIdx + 1;
-//│       b = runtime.resumeArr.at(saveOffset);
-//│       runtime.isResuming = false;
-//│       break;
-//│     default:
-//│       pc = 0;
-//│       break;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     a = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     b = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
 //│   }
 //│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = a < b;
-//│         switch (scrut) {
-//│           case true:
-//│             return b;
-//│             break;
-//│           default:
-//│             return a;
-//│             break;
-//│         }
-//│         break;
-//│     }
+//│     if (pc === 0) { scrut = a < b; if (scrut === true) { return b } else { return a } }
 //│     break;
 //│   }
 //│ };
@@ -285,10 +346,26 @@ hi(0)
 :effectHandlers
 :expect 100010000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)
 bad()
-//│ = 100010000
+//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
+//│ ═══[RUNTIME ERROR] Error: Function 'sum' expected 1 argument but got 0
+//│     at Runtime.checkArgs (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:588:24)
+//│     at sum (REPL51:1:92)
+//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:342:18)
+//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1057:37)
+//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1046:22
+//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1123:32)
+//│     at REPL51:1:3312
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:208)
+//│ ═══[RUNTIME ERROR] Expected: '100010000', got: 'undefined'
 

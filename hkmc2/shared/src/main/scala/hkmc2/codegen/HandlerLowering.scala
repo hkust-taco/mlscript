@@ -18,7 +18,6 @@ import scala.util.boundary
 import hkmc2.codegen.js.JSBuilder
 
 object HandlerLowering:
-
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
   private val nextIdent: Tree.Ident = Tree.Ident("next")
   private val lastIdent: Tree.Ident = Tree.Ident("last")
@@ -66,7 +65,7 @@ object HandlerLowering:
         thisPath.getOrElse(unit) ::
         intLit(restoreList.length) ::
         restoreList.map(_.asPath)
-      ).map(_.asArg))(true, true), false)
+      ).map(_.asArg))(true, true, false), false)
   
   // inScopeLocals: All variables that are in scope, including those that come from outer scope.
   private case class DebugInfo(
@@ -114,7 +113,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   )
   
   object PureCall:
-    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)))(true, false)
+    def apply(fun: Path, args: List[Path]) = Call(fun, args.map(Arg(N, _)))(true, false, false)
     def unapply(res: Result) = res match
       case Call(fun, args) => args.foldRight[Opt[List[Path]]](S(Nil)): (arg, acc) =>
           acc.flatMap: acc =>
@@ -384,7 +383,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         h.debugInfo.nest(debugNme, if opt.debug then debugInfoSym.asPath else unit, varList))
       val bod2 = translateBlock(fun.body, newCtx)
       val fun2 = if fun.body is bod2 then fun else
-        FunDefn(fun.owner, fun.sym, fun.params, bod2)
+        FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
       (debugInfoSym, debugInfo, fun2)
 
     val subblockTransform = new BlockTransformer(SymbolSubst()):
@@ -392,7 +391,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case fun: FunDefn =>
           if !h.isTopLevel then
             raise(WarningReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil, source = Diagnostic.Source.Compilation))
-          val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, Value.Ref(fun.sym, N), N, fun.sym.nme)
+          val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, Value.Ref(fun.sym, S(fun.dSym)), N, fun.sym.nme)
           if opt.debug then Assign(debugInfoSym, Tuple(false, debugInfo), k(fun2)) else k(fun2)
         case ClsLikeDefn(owner, isym, sym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
           if !h.isTopLevel then
@@ -453,7 +452,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     def getSaved(off: BigInt): (Block => Block, Path) =
       if off == 0 then
         return (id, DynSelect(paths.runtimePath.selSN("resumeArr"), paths.runtimePath.selSN("resumeIdx"), true))
-      val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false), _)
+      val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false, false), _)
       (computeOff, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
 
     val restoreVars = vars.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc)):
@@ -480,7 +479,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         .ifthen(
           l.asPath,
           Case.Cls(paths.effectSigSym, paths.effectSigPath),
-          Assign(l, Call(paths.topLevelEffectPath, l.asPath.asArg :: Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false), End()),
+          Assign(l, Call(paths.topLevelEffectPath, l.asPath.asArg :: Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false), End()),
           N)
         .rest(rst)
     val trivialTransform = new BlockTransformerShallow(SymbolSubst()):
@@ -507,20 +506,21 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def translateHandleBlockShallow(h: HandleBlock): Block =
     val sym = new BlockMemberSymbol("handleBlock$", Nil, false)
 
-    val bodyDefn = FunDefn(N, sym, PlainParamList(Nil) :: Nil, h.body)
+    val bodyDefn = FunDefn.withFreshSymbol(N, sym, PlainParamList(Nil) :: Nil, h.body)(false)
     
     val handlerMtds = h.handlers.map: handler =>
       val sym = BlockMemberSymbol(h.cls.nme + handler.sym.nme, Nil, true)
-      val fDef = FunDefn(
+      val fDef = FunDefn.withFreshSymbol(
         N, sym, PlainParamList(Param(FldFlags.empty, handler.resumeSym, N, Modulefulness.none) :: Nil) :: Nil,
         handler.body
-        )
-      FunDefn(
+        )(false)
+      FunDefn.withFreshSymbol(
         S(h.cls),
-        handler.sym, handler.params,
+        handler.sym,
+        handler.params,
         Define(
           fDef,
-          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, N) :: Nil), false)))
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false)))(false)
 
     // Some limited handling of effects extending classes and having access to their fields.
     // Currently does not support super() raising effects.
@@ -534,7 +534,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
       // Apparently, the lifter is not happy with any assignment in the preCtor...
-      Return(Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true), true),
+      Return(Call(Value.Ref(State.builtinOpsMap("super")), h.args.map(_.asArg))(true, true, false), true),
       End(),
       N,
       N,
@@ -544,7 +544,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .define(clsDefn)
       .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(h.cls)), Nil))
       .define(bodyDefn)
-      .assign(h.res, Call(paths.enterHandleBlockPath, List(h.lhs.asPath.asArg, Value.Ref(sym, N).asArg))(true, true))
+      .assign(h.res, Call(paths.enterHandleBlockPath, List(h.lhs.asPath.asArg, Value.Ref(sym, S(bodyDefn.dSym)).asArg))(true, true, false))
       .rest(h.rest)
   
   def translateHandleBlocks(b: Block): Block =

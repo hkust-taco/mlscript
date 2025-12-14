@@ -2,15 +2,18 @@
 :effectHandlers
 :lift
 :noSanityCheck
+:noTailRec
+
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 
 
 // preserve tail calls
-// MUST see "return hi1(tmp)" in the output
+// MUST see "return hi(tmp)" in the output
 :stackSafe 5
 :expect 0
 :sjs
 fun hi(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
@@ -20,34 +23,26 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafety.mls:12:1", 0, null, 2, n, tmp1)
+//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafety.mls:15:1", 0, null, 2, tmp1, n)
 //│   }
-//│   switch (runtime.isResuming) {
-//│     case true:
-//│       pc = runtime.resumePc;
-//│       n = runtime.resumeArr.at(runtime.resumeIdx);
-//│       saveOffset = runtime.resumeIdx + 1;
-//│       tmp1 = runtime.resumeArr.at(saveOffset);
-//│       runtime.isResuming = false;
-//│       break;
-//│     default:
-//│       pc = 0;
-//│       break;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     tmp1 = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     n = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
 //│   }
 //│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = n == 0;
-//│         switch (scrut) {
-//│           case true:
-//│             return 0;
-//│             break;
-//│           default:
-//│             tmp1 = n - 1;
-//│             return hi(tmp1);
-//│             break;
-//│         }
-//│         break;
+//│     if (pc === 0) {
+//│       scrut = n === 0;
+//│       if (scrut === true) {
+//│         return 0
+//│       } else {
+//│         tmp1 = n - 1;
+//│         return hi(tmp1)
+//│       }
 //│     }
 //│     break;
 //│   }
@@ -64,7 +59,7 @@ hi(0)
 :expect 50005000
 :sjs
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
@@ -76,39 +71,33 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:66:1", 0, null, 2, tmp2, n)
+//│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:61:1", 0, null, 2, tmp2, n)
 //│   }
-//│   switch (runtime.isResuming) {
-//│     case true:
-//│       pc = runtime.resumePc;
-//│       tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
-//│       saveOffset = runtime.resumeIdx + 1;
-//│       n = runtime.resumeArr.at(saveOffset);
-//│       runtime.isResuming = false;
-//│       break;
-//│     default:
-//│       pc = 0;
-//│       break;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     n = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         scrut = n == 0;
-//│         switch (scrut) {
-//│           case true:
-//│             return 0;
-//│             break;
-//│           default:
-//│             tmp2 = n - 1;
-//│             tmp4 = sum(tmp2);
-//│             runtime.stackDepth = curDepth;
-//│             runtime.resumeValue = tmp4;
-//│             if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│               return runtime.unwind(runtime.resumeValue, 1, sum, null, "StackSafety.mls:69:9", 1, null, 2, tmp2, n)
-//│             }
-//│             pc = 1;
-//│             continue main;
-//│             break;
+//│         scrut = n === 0;
+//│         if (scrut === true) {
+//│           return 0
+//│         } else {
+//│           tmp2 = n - 1;
+//│           tmp4 = sum(tmp2);
+//│           runtime.stackDepth = curDepth;
+//│           runtime.resumeValue = tmp4;
+//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│             return runtime.unwind(runtime.resumeValue, 1, sum, null, "StackSafety.mls:64:9", 1, null, 2, tmp2, n)
+//│           }
+//│           pc = 1;
+//│           continue main
 //│         }
 //│         break;
 //│       case 1:
@@ -224,32 +213,17 @@ fun max(a, b) = if a < b then b else a
 //│ let max;
 //│ max = function max(a, b) {
 //│   let scrut, pc, saveOffset;
-//│   switch (runtime.isResuming) {
-//│     case true:
-//│       pc = runtime.resumePc;
-//│       a = runtime.resumeArr.at(runtime.resumeIdx);
-//│       saveOffset = runtime.resumeIdx + 1;
-//│       b = runtime.resumeArr.at(saveOffset);
-//│       runtime.isResuming = false;
-//│       break;
-//│     default:
-//│       pc = 0;
-//│       break;
+//│   if (runtime.isResuming === true) {
+//│     pc = runtime.resumePc;
+//│     a = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = runtime.resumeIdx + 1;
+//│     b = runtime.resumeArr.at(saveOffset);
+//│     runtime.isResuming = false;
+//│   } else {
+//│     pc = 0;
 //│   }
 //│   main: while (true) {
-//│     switch (pc) {
-//│       case 0:
-//│         scrut = a < b;
-//│         switch (scrut) {
-//│           case true:
-//│             return b;
-//│             break;
-//│           default:
-//│             return a;
-//│             break;
-//│         }
-//│         break;
-//│     }
+//│     if (pc === 0) { scrut = a < b; if (scrut === true) { return b } else { return a } }
 //│     break;
 //│   }
 //│ };
@@ -258,7 +232,7 @@ fun max(a, b) = if a < b then b else a
 :stackSafe 1000
 :expect 100010000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)

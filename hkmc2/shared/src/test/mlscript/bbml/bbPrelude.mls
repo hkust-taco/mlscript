@@ -7,6 +7,9 @@ declare class Object
 
 declare class untyped
 
+declare class tailrec
+declare class tailcall
+
 declare class Unit
 declare class Bool
 declare class Int
@@ -62,6 +65,19 @@ declare module js with
 declare module wasm with
   fun
     plus_impl
+    minus_impl
+    times_impl
+    div_impl
+    mod_impl
+    eq_impl
+    neq_impl
+    lt_impl
+    le_impl
+    gt_impl
+    ge_impl
+    neg_impl
+    pos_impl
+    not_impl
 
 declare module debug with
   fun printStack
@@ -91,6 +107,8 @@ declare fun (<=): (Int, Int) -> Bool
 declare fun (>=): (Int, Int) -> Bool
 declare fun (==): [T] -> (T, T) -> Bool
 declare fun (!=): [T] -> (T, T) -> Bool
+declare fun (===): [T] -> (T, T) -> Bool
+declare fun (!==): [T] -> (T, T) -> Bool
 
 declare fun (&&): (Bool, Bool) -> Bool
 declare fun (||): (Bool, Bool) -> Bool

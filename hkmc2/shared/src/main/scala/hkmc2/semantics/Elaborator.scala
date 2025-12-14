@@ -155,6 +155,8 @@ object Elaborator:
       val Array = assumeBuiltinCls("Array")
       val TypedArray = assumeBuiltinCls("TypedArray")
       val untyped = assumeBuiltinTpe("untyped")
+      val tailrec = assumeBuiltinTpe("tailrec")
+      val tailcall = assumeBuiltinTpe("tailcall")
       // println(s"Builtins: $Int, $Num, $Str, $untyped")
       class VirtualModule(val module: ModuleOrObjectSymbol):
         val bms = getBuiltin(module.nme) match
@@ -179,6 +181,19 @@ object Elaborator:
         val try_catch = assumeObject("try_catch")
       object wasm extends VirtualModule(assumeBuiltinMod("wasm")):
         val plus_impl = assumeObject("plus_impl")
+        val minus_impl = assumeObject("minus_impl")
+        val times_impl = assumeObject("times_impl")
+        val div_impl = assumeObject("div_impl")
+        val mod_impl = assumeObject("mod_impl")
+        val eq_impl = assumeObject("eq_impl")
+        val neq_impl = assumeObject("neq_impl")
+        val lt_impl = assumeObject("lt_impl")
+        val le_impl = assumeObject("le_impl")
+        val gt_impl = assumeObject("gt_impl")
+        val ge_impl = assumeObject("ge_impl")
+        val neg_impl = assumeObject("neg_impl")
+        val pos_impl = assumeObject("pos_impl")
+        val not_impl = assumeObject("not_impl")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
       object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
@@ -304,6 +319,10 @@ class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
 extends Importer with ucs.SplitElaborator:
   import tl.*
   
+  lazy val illegalMemberNameTail =
+    msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
+    :: Nil
+  
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
   
@@ -332,6 +351,10 @@ extends Importer with ucs.SplitElaborator:
           sym.asTpe match
           case S(ctx.builtins.untyped) =>
             return S(Annot.Untyped)
+          case S(ctx.builtins.tailcall) =>
+            return S(Annot.TailCall)
+          case S(ctx.builtins.tailrec) =>
+            return S(Annot.TailRec)
           case _ => ()
         case _ => ()
         S(Annot.Trm(trm))
@@ -1068,6 +1091,12 @@ extends Importer with ucs.SplitElaborator:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer.inner
+            if owner.isDefined && !identifierPattern.matches(id.name) then
+              raise:
+                ErrorReport:
+                  msg"Illegal member ${k.desc} name: '${id.name}'" -> nme.toLoc
+                  :: illegalMemberNameTail
+              return go(sts, Nil, acc)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             val tdf = ctx.nest(OuterCtx.NonReturnContext).givenIn: newCtx ?=>
               // * Add type parameters to context
@@ -1134,6 +1163,7 @@ extends Importer with ucs.SplitElaborator:
             raise(d)
             go(sts, Nil, acc)
       case (td @ TypeDef(k, head, rhs)) :: sts =>
+        val owner = ctx.outer.inner
         
         assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
         val body = td.withPart
@@ -1146,6 +1176,14 @@ extends Importer with ucs.SplitElaborator:
           case L(d) =>
             raise(d)
             return go(sts, Nil, acc)
+        
+        if owner.isDefined && !identifierPattern.matches(nme.name) then
+          raise:
+            ErrorReport:
+              msg"Illegal member ${k.desc} name: '${nme.name}'" -> nme.toLoc
+              :: illegalMemberNameTail
+          return go(sts, Nil, acc)
+        
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
         var newCtx = S(td.symbol).collectFirst:
@@ -1262,7 +1300,6 @@ extends Importer with ucs.SplitElaborator:
             d
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             if pss.length > 1 then raise:
                 ErrorReport:
@@ -1313,7 +1350,6 @@ extends Importer with ucs.SplitElaborator:
             pd
         case k: (Mod.type | Obj.type) =>
           val modSym = td.symbol.asInstanceOf[ModuleOrObjectSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             trace(s"Processing module/object definition $nme"):
               val comp = sym.asCls match
@@ -1330,7 +1366,6 @@ extends Importer with ucs.SplitElaborator:
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod

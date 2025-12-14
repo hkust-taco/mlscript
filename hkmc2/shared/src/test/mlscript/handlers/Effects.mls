@@ -167,7 +167,7 @@ if true do
 //│     return Handler$h$perform$11(Handler$h$$instance, arg, k)
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class Handler$h$22 extends Effect1 {
+//│ (class Handler$h$22 extends Effect1 {
 //│   static {
 //│     Handler$h$23 = this
 //│   }
@@ -197,13 +197,10 @@ if true do
 //│ handleBlock$11 = (undefined, function () {
 //│   let scrut;
 //│   scrut = true;
-//│   switch (scrut) {
-//│     case true:
-//│       return f();
-//│       break;
-//│     default:
-//│       return runtime.Unit;
-//│       break;
+//│   if (scrut === true) {
+//│     return f()
+//│   } else {
+//│     return runtime.Unit
 //│   }
 //│ });
 //│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
@@ -387,16 +384,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.366: 	    module A with
+//│ ║  l.363: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.370: 	    module A with
+//│ ║  l.367: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.374: 	    module A with
+//│ ║  l.371: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.378: 	    module A with
+//│ ║  l.375: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

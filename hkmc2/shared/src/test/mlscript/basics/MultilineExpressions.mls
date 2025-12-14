@@ -83,14 +83,9 @@ if 1 + 2
 //│ let scrut, tmp17;
 //│ tmp17 = 2 * 3;
 //│ scrut = 1 + tmp17;
-//│ switch (scrut) {
-//│   case true:
-//│     0;
-//│     break;
-//│   default:
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│     break;
-//│ }
+//│ if (scrut === true) {
+//│   0
+//│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ ═══[RUNTIME ERROR] Error: match error
 
 :pt
@@ -121,23 +116,23 @@ if 1 + 2
   * 3 then 0
   + 4 then 1
 //│ ╔══[PARSE ERROR] Operator cannot be used inside this operator split
-//│ ║  l.122: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ║         	  ^
 //│ ╟── as it has lower precedence than the splitting operator here
-//│ ║  l.121: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in this operator split inner position
-//│ ║  l.122: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ║         	      ^^^^
 //│ ╟── Note: the operator split starts here
-//│ ║  l.121: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.120: 	if 1 + 2
+//│ ║  l.115: 	if 1 + 2
 //│ ║         	       ^
-//│ ║  l.121: 	  * 3 then 0
+//│ ║  l.116: 	  * 3 then 0
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.122: 	  + 4 then 1
+//│ ║  l.117: 	  + 4 then 1
 //│ ╙──       	^^^^^
 
 :pt

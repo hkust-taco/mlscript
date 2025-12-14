@@ -30,17 +30,14 @@ foo(10)
 //│ let M3, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
-//│   switch (isMut) {
-//│     case true:
-//│       tmp = new M3(y);
-//│       break;
-//│     default:
-//│       tmp = globalThis.Object.freeze(new M3(y));
-//│       break;
+//│   if (isMut === true) {
+//│     tmp = new M3(y);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new M3(y));
 //│   }
 //│   return tmp
 //│ };
-//│ globalThis.Object.freeze(class M2 {
+//│ (class M2 {
 //│   static {
 //│     M3 = this
 //│   }
@@ -116,7 +113,7 @@ fun foo(x, y) =
 //│ foo3$ = function foo3$(M6, x, foo$capture4) {
 //│   return M6.foo2()
 //│ };
-//│ globalThis.Object.freeze(class M4 {
+//│ (class M4 {
 //│   static {
 //│     M5 = this
 //│   }
@@ -137,7 +134,7 @@ fun foo(x, y) =
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ globalThis.Object.freeze(class foo$capture2 {
+//│ (class foo$capture2 {
 //│   static {
 //│     foo$capture3 = this
 //│   }
@@ -215,7 +212,7 @@ module M with
 M.A().get
 //│ JS (unsanitized):
 //│ let M17, tmp3;
-//│ globalThis.Object.freeze(class M16 {
+//│ (class M16 {
 //│   static {
 //│     M17 = this
 //│   }
@@ -227,7 +224,7 @@ M.A().get
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
-//│     globalThis.Object.freeze(class A5 {
+//│     (class A5 {
 //│       static {
 //│         M16.A.class = this
 //│       }

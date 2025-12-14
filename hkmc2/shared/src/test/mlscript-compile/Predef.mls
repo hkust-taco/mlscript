@@ -42,8 +42,31 @@ fun (|.) passToLo(receiver, f)(...args) = f(receiver, ...args)
 // x |>. foo(a, b, c) == foo.call(x, a, b, c)
 fun (|>.) call(receiver, f)(...args) = f.call(receiver, ...args)
 
+
 object Symbols with
   val prettyPrint = RuntimeJS.symbols.prettyPrint
+  val definitionMetadata = RuntimeJS.symbols.definitionMetadata
+  // val definitionMetadata = Symbol.for("mlscript.definitionMetadata")
+
+
+// * A generic equality comparison.
+// * Returns true for:
+// * - values that compare equal according to strict equality (===), which includes reference equality;
+// * - arrays of values that are pairwise recursively equal;
+// * - instances of the same parameterized MLscript class when all fields are public and recursively equal.
+// TODO: compare lazy arrays and other sequences and collections
+fun (==) equals(a, b) = if
+  a === b then true
+  a is Array and b is Array and a.length === b.length then a.every((a, i) => a == b.at(i))
+  else a !== undefined and a !== null and b !== undefined and b !== null and 
+    let ac = a.constructor
+    ac !== undefined and ac === b.constructor and
+      let md = ac.(Symbols.definitionMetadata)
+      md !== undefined and
+        md.2.every(field => field !== null and a.(field) == b.(field))
+
+fun (!=) nequals(a, b) = not a == b
+
 
 val pass1 = Rendering.pass1
 val pass2 = Rendering.pass2
@@ -74,7 +97,7 @@ val foldl = fold
 // fun foldr(f)(...rest, init) = // TODO allow this syntax
 fun foldr(f)(first, ...rest) =
   let len = rest.length
-  if len == 0 then first else...
+  if len === 0 then first else...
   let
     i = len - 1
     init = rest.at(i)
