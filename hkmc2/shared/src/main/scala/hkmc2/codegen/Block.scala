@@ -366,7 +366,10 @@ object Label:
 object Scoped:
   def apply(syms: collection.Set[Local], body: Block): Block = body match
     case Scoped(syms2, body) =>
-      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body) else Scoped(syms ++ syms2, body)
+      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
+      else
+        assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
+        Scoped(syms ++ syms2, body)
     case _ =>
       if syms.isEmpty then body else new Scoped(syms, body)
 object TryBlock:
@@ -408,6 +411,7 @@ object Begin:
     else if sub.isAbortive then sub
     else (sub, rest) match
       case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
+        assert(!symsSub.exists(symsRest.contains), "overlapping symbols when trying to merge Scoped blocks")
         Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
       case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
       case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
