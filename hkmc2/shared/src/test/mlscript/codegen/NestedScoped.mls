@@ -290,3 +290,55 @@ scope.locally of (
 //│ let z; z = 114;{ let y; y = 514; y }
 //│ = 514
 //│ z = 114
+
+
+// NOTE: later passes may destroy nested Scoped blocks
+:sjs
+let z = 2
+scope.locally of (
+  let y = () => 1
+  y
+)
+//│ JS (unsanitized):
+//│ let z1, y1; let y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1
+//│ = fun y
+//│ z = 2
+
+
+
+// NOTE: `z2` (bms) should be declared at the same place with `z3`
+:sjs
+fun f(x) =
+  if x then
+    let y = 2
+    scope.locally of (
+      let z = () => 3
+      z
+    )
+//│ JS (unsanitized):
+//│ let f2;
+//│ f2 = function f(x3) {
+//│   let y3;
+//│   let z2;
+//│   if (x3 === true) {
+//│     let z3;
+//│     y3 = 2;
+//│     z2 = function z() {
+//│       return 3
+//│     };
+//│     z3 = z2;
+//│     return z3
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };
+
+
+
+:lift
+scope.locally of scope.locally of (
+  fun h() =
+    fun f() = g()
+    fun g() = f()
+    4
+  3
+)
+//│ = 3
