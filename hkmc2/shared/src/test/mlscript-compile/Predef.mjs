@@ -19,9 +19,9 @@ let Predef1;
         new this
       }
       constructor() {
+        Predef.Symbols = this;
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
         this.definitionMetadata = RuntimeJS.symbols.definitionMetadata;
-        Predef.Symbols = this;
         Object.defineProperty(this, "class", {
           value: Symbols
         });

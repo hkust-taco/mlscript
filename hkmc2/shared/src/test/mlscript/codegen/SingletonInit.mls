@@ -9,9 +9,9 @@ object A with
   val y = 2
   print(A, "|", B)
   print(x, y)
-//│ > undefined | undefined
+//│ > A { x: 1, B: B {} } | B {}
 //│ > 1 undefined
-//│ > undefined | B
+//│ > A { x: 1, B: B, y: 2 } | B
 //│ > 1 2
 
 print(A, "|", A.B)

@@ -16,8 +16,8 @@ object Test with
 //│     new this
 //│   }
 //│   constructor() {
-//│     this.x = 12;
 //│     Test1 = this;
+//│     this.x = 12;
 //│     Object.defineProperty(this, "class", {
 //│       value: Test
 //│     });

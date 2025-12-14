@@ -99,8 +99,8 @@ object Cls(val x) with
 //│     new this
 //│   }
 //│   constructor(x1) {
-//│     this.x = x1;
 //│     Cls1 = this;
+//│     this.x = x1;
 //│     Object.defineProperty(this, "class", {
 //│       value: Cls
 //│     });
