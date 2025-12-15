@@ -45,6 +45,10 @@ class LoweringCtx(
   
   def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: Symbol*) = definedSymsDuringLowering.addAll(s)
+  def registerTempSymbol(trm: Option[Term], dbgNme: Str = "tmp")(using State) =
+    val tmp = new TempSymbol(trm, dbgNme)
+    definedSymsDuringLowering.add(tmp)
+    tmp
   def getCollectedSym: collection.Set[Symbol] = definedSymsDuringLowering
   /*
   def +(kv: (Local, Value)): Subst =
@@ -444,8 +448,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         // * and are lowered to functions with an empty parameter list
         // * (non-local functions are compiled into getter methods selected on some prefix)
         if td.params.isEmpty then
-          val l = new TempSymbol(S(ref))
-          loweringCtx.collectScopedSym(l)
+          val l = loweringCtx.registerTempSymbol(S(ref))
           return Assign(l, Call(Value.Ref(bs, disamb).withLocOf(ref), Nil)(true, true, annots.contains(Annot.TailCall)), k(Value.Ref(l, disamb)))
       case S(_) => ()
       case N => () // TODO panic here; can only lower refs to elab'd symbols
@@ -640,8 +643,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))      
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
-      val resSym = TempSymbol(S(t))
-      loweringCtx.collectScopedSym(resSym)
+      val resSym = loweringCtx.registerTempSymbol(S(t))
       subTerm(rhs): par =>
         subTerms(as): asr =>
           HandleBlock(lhs, resSym, par, asr, cls, handlers,
@@ -728,11 +730,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val z = as.foldLeft[Path => Block](k): (acc, arg) => 
               inner =>
                 lowerArg(arg): asr2 =>
-                  val ts = TempSymbol(N)
-                  loweringCtx.collectScopedSym(ts)
+                  val ts = loweringCtx.registerTempSymbol(N)
                   Assign(ts, Call(inner, asr2)(true, true, false), acc(Value.Ref(ts)))
-            val ts = TempSymbol(N)
-            loweringCtx.collectScopedSym(ts)
+            val ts = loweringCtx.registerTempSymbol(N)
             Assign(ts, Instantiate(mut, sr, asr), z(Value.Ref(ts)))
         case S((isym, rft)) =>
           val sym = new BlockMemberSymbol(isym.name, Nil)
@@ -745,8 +745,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           Define(clsDef, term_nonTail(if mut then Mut(inner) else inner)(k))
       
     case Try(sub, finallyDo) =>
-      val l = new TempSymbol(S(sub))
-      loweringCtx.collectScopedSym(l)
+      val l = loweringCtx.registerTempSymbol(S(sub))
       TryBlock(
         subTerm_nonTail(sub)(p => Assign(l, p, End())),
         subTerm_nonTail(finallyDo)(_ => End()),
@@ -994,8 +993,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     if fsr.isEmpty then
       Begin(b, k(asr.reverse))
     else
-      val rcdSym = new TempSymbol(N, "rcd")
-      loweringCtx.collectScopedSym(rcdSym)
+      val rcdSym = loweringCtx.registerTempSymbol(N, "rcd")
       Begin(
         b,
         Assign(
@@ -1029,8 +1027,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         val lamDef = FunDefn.withFreshSymbol(N, lamSym, params :: Nil, body)(forceTailRec = false)
         Define(lamDef, k(lamDef.asPath))
       case r =>
-        val l = new TempSymbol(N)
-        loweringCtx.collectScopedSym(l)
+        val l = loweringCtx.registerTempSymbol(N)
         Assign(l, r, k(l |> Value.Ref.apply))
   
   
@@ -1144,8 +1141,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
   override def setupSelection(prefix: st, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
     if !instrument then return super.setupSelection(prefix, nme, disamb)(k)
     subTerm(prefix): p =>
-      val selRes = TempSymbol(N, "selRes")
-      loweringCtx.collectScopedSym(selRes)
+      val selRes = loweringCtx.registerTempSymbol(N, "selRes")
       // * We are careful to access `x.f` before `x.f$__checkNotMethod` in case `x` is, eg, `undefined` and
       // * the access should throw an error like `TypeError: Cannot read property 'f' of undefined`.
       val b0 = blockBuilder
@@ -1154,8 +1150,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
         // * If the symbol is known, the resolver will have already checked the access [invariant:1]
         b0
       else
-        val discardedSym = TempSymbol(N, "discarded")
-        loweringCtx.collectScopedSym(discardedSym)
+        val discardedSym = loweringCtx.registerTempSymbol(N, "discarded")
         b0
           .assign(discardedSym, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N)))
           .ifthen(selRes.asPath,
@@ -1209,28 +1204,20 @@ trait LoweringTraceLog(instrument: Bool)(using TL, Raise, State)
     go(paramLists.reverse, bod)
   
   def setupFunctionBody(params: ParamList, bod: Term, name: Option[Str])(using LoweringCtx): Block = inScopedBlock:
-    val enterMsgSym = TempSymbol(N, dbgNme = "traceLogEnterMsg")
-    val prevIndentLvlSym = TempSymbol(N, dbgNme = "traceLogPrevIndent")
-    val resSym = TempSymbol(N, dbgNme = "traceLogRes")
-    val retMsgSym = TempSymbol(N, dbgNme = "traceLogRetMsg")
-    val psInspectedSyms = params.params.map(p => TempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
-    val resInspectedSym = TempSymbol(N, dbgNme = "traceLogResInspected")
+    val enterMsgSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogEnterMsg")
+    val prevIndentLvlSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogPrevIndent")
+    val resSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogRes")
+    val retMsgSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogRetMsg")
+    val psInspectedSyms = params.params.map(p => loweringCtx.registerTempSymbol(N, dbgNme = s"traceLogParam_${p.sym.nme}") -> p.sym)
+    val resInspectedSym = loweringCtx.registerTempSymbol(N, dbgNme = "traceLogResInspected")
     
-    loweringCtx.collectScopedSyms(
-      enterMsgSym,
-      prevIndentLvlSym,
-      resSym,
-      retMsgSym,
-      resInspectedSym)
-    for (s, _) <- psInspectedSyms do loweringCtx.collectScopedSym(s)
     
     val psSymArgs = psInspectedSyms.zipWithIndex.foldRight[Ls[Arg]](Arg(N, Value.Lit(Tree.StrLit(")"))) :: Nil):
       case (((s, p), i), acc) => if i == psInspectedSyms.length - 1
         then Arg(N, Value.Ref(s)) :: acc
         else Arg(N, Value.Ref(s)) :: Arg(N, Value.Lit(Tree.StrLit(", "))) :: acc
     
-    val tmp1, tmp2, tmp3 = TempSymbol(N)
-    loweringCtx.collectScopedSyms(tmp1, tmp2, tmp3)
+    val tmp1, tmp2, tmp3 = loweringCtx.registerTempSymbol(N)
     
     assignStmts(psInspectedSyms.map: (pInspectedSym, pSym) =>
       pInspectedSym -> pureCall(inspectFn, Arg(N, Value.Ref(pSym)) :: Nil)
