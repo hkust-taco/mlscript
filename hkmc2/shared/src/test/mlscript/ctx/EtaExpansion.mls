@@ -31,8 +31,7 @@ using Num = 0.42
 :sjs
 let f1 = foo
 //│ JS (unsanitized):
-//│ let f1;
-//│ let f11;
+//│ let f1, f11;
 //│ f11 = function f1() {
 //│   let tmp;
 //│   tmp = foo();
@@ -53,8 +52,7 @@ f1()
 :sjs
 let f2 = bar
 //│ JS (unsanitized):
-//│ let f2;
-//│ let f21;
+//│ let f2, f21;
 //│ f21 = function f2(x) {
 //│   let tmp;
 //│   tmp = bar(x);
@@ -75,8 +73,7 @@ f2(0.42)
 :sjs
 let f3 = baz
 //│ JS (unsanitized):
-//│ let f3;
-//│ let f31;
+//│ let f3, f31;
 //│ f31 = function f3(x) {
 //│   let lambda1;
 //│   lambda1 = (undefined, function (y) {

@@ -12,7 +12,7 @@ f(2)
 :sjs
 let f = foo(1, _, _)
 //│ JS (unsanitized):
-//│ let f2; let f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
+//│ let f2, f3; f3 = function f(_0, _1) { return foo(1, _0, _1) }; f2 = f3;
 //│ f = fun f
 
 f(2, 3)
@@ -79,7 +79,7 @@ h(1)
 :sjs
 let i = _(0, 1, _)
 //│ JS (unsanitized):
-//│ let i; let i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
+//│ let i, i1; i1 = function i(_0, _1) { return runtime.safeCall(_0(0, 1, _1)) }; i = i1;
 //│ i = fun i
 
 i(print, 2)

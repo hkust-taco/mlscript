@@ -7,10 +7,7 @@
 
 let discard = drop _
 //│ JS (unsanitized):
-//│ let discard;
-//│ let discard1;
-//│ discard1 = function discard(_0) { return runtime.Unit };
-//│ discard = discard1;
+//│ let discard, discard1; discard1 = function discard(_0) { return runtime.Unit }; discard = discard1;
 //│ discard = fun discard
 
 

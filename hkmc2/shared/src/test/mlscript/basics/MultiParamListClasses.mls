@@ -77,8 +77,7 @@ Foo(1, 2)
 :sjs
 let f = Foo // should compile to `(x, y) => Foo(x, y)(use[Int])`
 //│ JS (unsanitized):
-//│ let f;
-//│ let f1;
+//│ let f, f1;
 //│ f1 = function f(x, y) {
 //│   let tmp4;
 //│   tmp4 = Foo7(x, y);

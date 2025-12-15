@@ -41,8 +41,7 @@ fun g(x, y, z) =
 //│ JS (unsanitized):
 //│ let g;
 //│ g = function g(x1, y1, z) {
-//│   let a, tmp1, tmp2;
-//│   let lambda;
+//│   let a, tmp1, tmp2, lambda;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x1 === true) {

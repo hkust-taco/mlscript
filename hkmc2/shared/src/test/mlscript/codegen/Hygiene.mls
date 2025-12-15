@@ -62,7 +62,7 @@ let f = () => x
 let x = 2
 f()
 //│ JS (unsanitized):
-//│ let x, f, x1; let f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
+//│ let x, f, x1, f1; x = 1; f1 = function f() { return x }; f = f1; x1 = 2; runtime.safeCall(f())
 //│ = 1
 //│ f = fun f
 //│ x = 2

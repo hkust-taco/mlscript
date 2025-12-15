@@ -9,8 +9,7 @@ if true then 1 else 0
 :sjs
 let f = x => if x then print("ok") else print("ko")
 //│ JS (unsanitized):
-//│ let f;
-//│ let f1;
+//│ let f, f1;
 //│ f1 = function f(x) {
 //│   if (x === true) { return Predef.print("ok") } else { return Predef.print("ko") }
 //│ };

@@ -69,11 +69,7 @@ id(f)(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
-//│ let f4;
-//│ f4 = function f(x, y) { return x + y };
-//│ f3 = f4;
-//│ block$res5 = runtime.safeCall(f3(2));
-//│ undefined
+//│ f4 = function f(x, y) { return x + y }; f3 = f4; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
 :ssjs
@@ -81,7 +77,6 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
-//│ let f6;
 //│ f6 = function f(...args) {
 //│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];

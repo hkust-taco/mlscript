@@ -186,7 +186,6 @@ fun g(x, y, z) =
 //│ let g;
 //│ g = function g(x3, y, z) {
 //│   let tmp, tmp1;
-//│   let lambda;
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x3 === true) {
@@ -196,7 +195,7 @@ fun g(x, y, z) =
 //│           break split_1$
 //│         } else {
 //│           if (z === true) {
-//│             let a;
+//│             let a, lambda;
 //│             a = 1;
 //│             lambda = (undefined, function (_0) {
 //│               return _0 + a
@@ -258,14 +257,14 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.259: 	scope.locally()
+//│ ║  l.258: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.266: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.265: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -273,10 +272,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.274: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.273: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.274: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.273: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -300,7 +299,7 @@ scope.locally of (
   y
 )
 //│ JS (unsanitized):
-//│ let z1; let y1;{ let y2; z1 = 2; y1 = function y() { return 1 }; y2 = y1; y2 }
+//│ let z1;{ let y1, y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1 }
 //│ = fun y
 //│ z = 2
 
@@ -319,15 +318,14 @@ fun f(x) =
 //│ let f2;
 //│ f2 = function f(x3) {
 //│   let y3;
-//│   let z2;
 //│   if (x3 === true) {
-//│     let z3;
+//│     let z2, z3;
 //│     y3 = 2;
-//│     z2 = function z() {
+//│     z3 = function z() {
 //│       return 3
 //│     };
-//│     z3 = z2;
-//│     return z3
+//│     z2 = z3;
+//│     return z2
 //│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
 //│ };
 

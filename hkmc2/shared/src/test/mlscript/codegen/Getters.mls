@@ -174,8 +174,7 @@ fun baz() =
 //│ JS (unsanitized):
 //│ let baz;
 //│ baz = function baz() {
-//│   let w, z;
-//│   let lambda;
+//│   let w, z, lambda;
 //│   w = function w() {
 //│     return 1
 //│   };
