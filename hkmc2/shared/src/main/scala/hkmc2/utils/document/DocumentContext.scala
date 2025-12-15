@@ -26,6 +26,13 @@ import Document._
  */
 
 object DocumentContext:
+  private val nestRegex = " #\\{ ".r
+  private val unnestRegex = " #\\} ".r
+  private val beginGroupRegex = "\\\\\\{".r
+  private val endGroupRegex = "\\\\\\}".r
+  private val docBreakRegex = " # ".r
+  private val forceDocBreakRegex = """\\n""".r
+
   case object Nest; type Nest = Nest.type
   case object UnNest; type UnNest = UnNest.type
   case object BeginGroup; type BeginGroup = BeginGroup.type
@@ -37,12 +44,6 @@ import DocumentContext.*
 class DocumentContext(ctx: StringContext) {
   
   object doc {
-    private val nestRegex = " #\\{ ".r
-    private val unnestRegex = " #\\} ".r
-    private val beginGroupRegex = "\\\\\\{".r
-    private val endGroupRegex = "\\\\\\}".r
-    private val docBreakRegex = " # ".r
-    private val forceDocBreakRegex = """\\n""".r
   
     def apply(docs: Document*): Document =
       
