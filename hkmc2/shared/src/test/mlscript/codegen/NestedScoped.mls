@@ -214,7 +214,7 @@ scope.locally of (
   y
 )
 //│ JS (unsanitized):
-//│ let z1;{ let y1, y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1 }
+//│ let z1, y1, y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1
 //│ = fun y
 //│ z = 2
 
@@ -255,3 +255,27 @@ scope.locally of scope.locally of (
   3
 )
 //│ = 3
+
+:sjs
+let x = 3
+() => x
+//│ JS (unsanitized):
+//│ let x3, lambda; x3 = 3; lambda = (undefined, function () { return x3 }); lambda
+//│ = fun
+//│ x = 3
+
+:sjs
+fun f(x) =
+  if x then
+    () => 4
+//│ JS (unsanitized):
+//│ let f4;
+//│ f4 = function f(x4) {
+//│   if (x4 === true) {
+//│     let lambda1;
+//│     lambda1 = (undefined, function () {
+//│       return 4
+//│     });
+//│     return lambda1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };
