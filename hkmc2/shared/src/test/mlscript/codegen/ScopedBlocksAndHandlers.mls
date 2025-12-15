@@ -101,7 +101,7 @@ fun start(x, f) =
 
 
 
-// NOTE: `z` should be in the function top level when `:effectHandlers`
+// NOTE: `z` should be in the function top level when `:effectHandlers` to be properly captured by the floated-out `g`.
 :sjs
 fun f(x) =
   if x do
