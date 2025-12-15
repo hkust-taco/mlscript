@@ -77,6 +77,7 @@ if
 //│ >        x = 1
 //│ >        builtin:+(x, b)
 //│ JS:
+//│ let b, x1, element0$, tmp1;
 //│ split_root$1: {
 //│   split_default$: {
 //│     split_1$1: {

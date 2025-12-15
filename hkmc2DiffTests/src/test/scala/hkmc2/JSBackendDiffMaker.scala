@@ -138,6 +138,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then
         output(s"JS:")
+        if preStr.nonEmpty then output(preStr)
         output(jsStr)
       def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
         val queryStr = jsStr.replaceAll("\n", " ")
