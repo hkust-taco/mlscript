@@ -154,6 +154,7 @@ package object utils {
       pf.lift(self).contains(true)
     
     @inline def optionIf(cond: A => Bool): Option[A] = if (cond(self)) Some(self) else None
+    @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
     
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
@@ -172,7 +173,6 @@ package object utils {
     @inline def optionIf(cond: Bool): Option[A] = if (cond) Some(self) else None
     
     @inline def optionUnless(cond: Bool): Option[A] = if (!cond) Some(self) else None
-    @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
     
   }
   
