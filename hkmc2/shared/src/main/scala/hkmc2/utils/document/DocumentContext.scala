@@ -26,12 +26,12 @@ import Document._
  */
 
 object DocumentContext:
-  private val nestRegex = " #\\{ ".r
-  private val unnestRegex = " #\\} ".r
-  private val beginGroupRegex = "\\\\\\{".r
-  private val endGroupRegex = "\\\\\\}".r
-  private val docBreakRegex = " # ".r
-  private val forceDocBreakRegex = """\\n""".r
+  private val NestRegex = " #\\{ ".r
+  private val UnNestRegex = " #\\} ".r
+  private val BeginGroupRegex = "\\\\\\{".r
+  private val EndGroupRegex = "\\\\\\}".r
+  private val DocBreakRegex = " # ".r
+  private val ForceDocBreakRegex = """\\n""".r
 
   case object Nest; type Nest = Nest.type
   case object UnNest; type UnNest = UnNest.type
@@ -62,12 +62,12 @@ class DocumentContext(ctx: StringContext) {
       
       // Makes a sequence of the parts separated with Nest, UnNest and Insert (for positions where docs are to be inserted)
       val parts = (
-        splitOn(nestRegex, Nest) andThen
-        splitOn(unnestRegex, UnNest) andThen
-        splitOn(beginGroupRegex, BeginGroup) andThen
-        splitOn(endGroupRegex, EndGroup) andThen
-        splitOn(docBreakRegex, DocBreak(false)) andThen
-        splitOn(forceDocBreakRegex, DocBreak(true)) // interpolated strings don't get special chars replaced (we escape \n for the regex)
+        splitOn(NestRegex, Nest) andThen
+        splitOn(UnNestRegex, UnNest) andThen
+        splitOn(BeginGroupRegex, BeginGroup) andThen
+        splitOn(EndGroupRegex, EndGroup) andThen
+        splitOn(DocBreakRegex, DocBreak(false)) andThen
+        splitOn(ForceDocBreakRegex, DocBreak(true)) // interpolated strings don't get special chars replaced (we escape \n for the regex)
       )(interleave(ctx.parts.map(RawDocText(_)), Insert)).map:
           case RawDocText(s) => text(s) // 'text' escapes \n chars
           case d             => d
