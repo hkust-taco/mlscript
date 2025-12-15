@@ -67,7 +67,7 @@ fun foo() =
 //│   }
 //│   return runtime.LoopEnd
 //│ };
-//│ globalThis.Object.freeze(class foo$capture4 {
+//│ (class foo$capture4 {
 //│   static {
 //│     foo$capture5 = this
 //│   }

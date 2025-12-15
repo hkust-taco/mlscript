@@ -104,7 +104,7 @@ f().foo()
 //│     return globalThis.Object.freeze(new Good.class()(x, y, z, f$capture4));
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class Good {
+//│ (class Good {
 //│   static {
 //│     Good1.class = this
 //│   }
@@ -154,7 +154,7 @@ f().foo()
 //│     return globalThis.Object.freeze(new Bad.class()(f$capture4));
 //│   }
 //│ };
-//│ globalThis.Object.freeze(class Bad {
+//│ (class Bad {
 //│   static {
 //│     Bad1.class = this
 //│   }
@@ -174,7 +174,7 @@ f().foo()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
-//│ globalThis.Object.freeze(class f$capture2 {
+//│ (class f$capture2 {
 //│   static {
 //│     f$capture3 = this
 //│   }

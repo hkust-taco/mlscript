@@ -7,7 +7,7 @@
 class Foo
 //│ JS (unsanitized):
 //│ let Foo1;
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1 = this
 //│   }
@@ -54,7 +54,7 @@ data class Foo with { print("hi") }
 print("ok")
 //│ JS (unsanitized):
 //│ let Foo3;
-//│ globalThis.Object.freeze(class Foo2 {
+//│ (class Foo2 {
 //│   static {
 //│     Foo3 = this
 //│   }
@@ -75,7 +75,7 @@ fun test() =
 //│ let test;
 //│ test = function test() {
 //│   let Foo5, tmp;
-//│   globalThis.Object.freeze(class Foo4 {
+//│   (class Foo4 {
 //│     static {
 //│       Foo5 = this
 //│     }
@@ -136,7 +136,7 @@ class Foo with
   fun z() = y + x
 //│ JS (unsanitized):
 //│ let Foo6;
-//│ globalThis.Object.freeze(class Foo5 {
+//│ (class Foo5 {
 //│   static {
 //│     Foo6 = this
 //│   }
@@ -163,7 +163,7 @@ class Foo with
   print("hello")
 //│ JS (unsanitized):
 //│ let Foo8;
-//│ globalThis.Object.freeze(class Foo7 {
+//│ (class Foo7 {
 //│   static {
 //│     Foo8 = this
 //│   }
@@ -193,7 +193,7 @@ class Foo with
   fun bar(z) = foo(z) + 1
 //│ JS (unsanitized):
 //│ let Foo10;
-//│ globalThis.Object.freeze(class Foo9 {
+//│ (class Foo9 {
 //│   static {
 //│     Foo10 = this
 //│   }
@@ -244,7 +244,7 @@ class Foo with
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo12;
-//│ globalThis.Object.freeze(class Foo11 {
+//│ (class Foo11 {
 //│   static {
 //│     Foo12 = this
 //│   }
@@ -268,7 +268,7 @@ class Foo with
 //│ ╙──       	  ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo14;
-//│ globalThis.Object.freeze(class Foo13 {
+//│ (class Foo13 {
 //│   static {
 //│     Foo14 = this
 //│   }
@@ -295,7 +295,7 @@ class Foo with val x = 1
 //│ ╙──       	               ^^^^^^^^^
 //│ JS (unsanitized):
 //│ let Foo16;
-//│ globalThis.Object.freeze(class Foo15 {
+//│ (class Foo15 {
 //│   static {
 //│     Foo16 = this
 //│   }

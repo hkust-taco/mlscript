@@ -16,7 +16,7 @@ fun foo(h): module M =
 //│ let foo;
 //│ foo = function foo(h) {
 //│   let A2, A3, scrut;
-//│   globalThis.Object.freeze(class A {
+//│   (class A {
 //│     static {
 //│       A2 = this
 //│     }
@@ -26,7 +26,7 @@ fun foo(h): module M =
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "A"]; 
 //│   });
-//│   globalThis.Object.freeze(class A1 {
+//│   (class A1 {
 //│     static {
 //│       A3 = this
 //│     }

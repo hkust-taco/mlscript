@@ -100,7 +100,7 @@ id(Cls(1, 2)).f(3)
 //│ Cls1 = function Cls(x, y) {
 //│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
-//│ globalThis.Object.freeze(class Cls {
+//│ (class Cls {
 //│   static {
 //│     Cls1.class = this
 //│   }

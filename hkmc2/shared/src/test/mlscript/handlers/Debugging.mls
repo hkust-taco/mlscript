@@ -43,7 +43,7 @@ fun f() =
 //│     tmp2 = runtime.safeCall(prev.push(thisInfo));
 //│     return prev
 //│   };
-//│   globalThis.Object.freeze(class Cont$func$f$ extends runtime.FunctionContFrame.class {
+//│   (class Cont$func$f$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$f$1 = this
 //│     }
@@ -53,44 +53,53 @@ fun f() =
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
-//│       if (this.pc === 1) {
-//│         scrut = value$;
-//│       } else if (this.pc === 2) {
-//│         tmp = value$;
-//│       } else if (this.pc === 3) {
-//│         tmp1 = value$;
+//│       switch (this.pc) {
+//│         case 1:
+//│           scrut = value$;
+//│           break;
+//│         case 2:
+//│           tmp = value$;
+//│           break;
+//│         case 3:
+//│           tmp1 = value$;
+//│           break;
 //│       }
 //│       contLoop: while (true) {
-//│         if (this.pc === 4) {
-//│           return j / i
-//│         } else if (this.pc === 1) {
-//│           if (scrut === true) {
-//│             tmp = Predef.raiseUnhandledEffect();
-//│             if (tmp instanceof runtime.EffectSig.class) {
-//│               return this.doUnwind(tmp, 2)
+//│         switch (this.pc) {
+//│           case 4:
+//│             return j / i;
+//│             break;
+//│           case 1:
+//│             if (scrut === true) {
+//│               tmp = Predef.raiseUnhandledEffect();
+//│               if (tmp instanceof runtime.EffectSig.class) {
+//│                 return this.doUnwind(tmp, 2)
+//│               }
+//│               this.pc = 2;
+//│               continue contLoop
+//│             } else {
+//│               tmp1 = runtime.Unit;
+//│               this.pc = 4;
+//│               continue contLoop
 //│             }
-//│             this.pc = 2;
-//│             continue contLoop
-//│           } else {
-//│             tmp1 = runtime.Unit;
+//│             /* unreachable */
+//│             break;
+//│           case 5:
+//│             tmp1 = Predef.print(tmp);
+//│             if (tmp1 instanceof runtime.EffectSig.class) {
+//│               return this.doUnwind(tmp1, 3)
+//│             }
+//│             this.pc = 3;
+//│             continue contLoop;
+//│             break;
+//│           case 2:
+//│             this.pc = 5;
+//│             continue contLoop;
+//│             break;
+//│           case 3:
 //│             this.pc = 4;
-//│             continue contLoop
-//│           }
-//│           this.pc = 4;
-//│           continue contLoop
-//│         } else if (this.pc === 5) {
-//│           tmp1 = Predef.print(tmp);
-//│           if (tmp1 instanceof runtime.EffectSig.class) {
-//│             return this.doUnwind(tmp1, 3)
-//│           }
-//│           this.pc = 3;
-//│           continue contLoop
-//│         } else if (this.pc === 2) {
-//│           this.pc = 5;
-//│           continue contLoop
-//│         } else if (this.pc === 3) {
-//│           this.pc = 4;
-//│           continue contLoop
+//│             continue contLoop;
+//│             break;
 //│         }
 //│         break;
 //│       }
@@ -99,12 +108,16 @@ fun f() =
 //│       return getLocals3();
 //│     } 
 //│     get getLoc() {
-//│       if (this.pc === 1) {
-//│         return "Debugging.mls:16:6"
-//│       } else if (this.pc === 2) {
-//│         return "Debugging.mls:17:14"
-//│       } else if (this.pc === 3) {
-//│         return "Debugging.mls:17:5"
+//│       switch (this.pc) {
+//│         case 1:
+//│           return "Debugging.mls:16:6";
+//│           break;
+//│         case 2:
+//│           return "Debugging.mls:17:14";
+//│           break;
+//│         case 3:
+//│           return "Debugging.mls:17:5";
+//│           break;
 //│       }
 //│     }
 //│     toString() { return runtime.render(this); }
@@ -148,8 +161,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:148:3)
-//│ 	at lambda_test (Debugging.mls:145:3)
+//│ 	at lambda (Debugging.mls:161:3)
+//│ 	at lambda_test (Debugging.mls:158:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -228,9 +241,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:221:3) with locals: j=200
+//│ > 	at f (Debugging.mls:234:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:223:3)
+//│ > 	at f (Debugging.mls:236:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:224:3) with locals: j=300
+//│ > 	at f (Debugging.mls:237:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

@@ -6,7 +6,7 @@ import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
 let Predef1;
-globalThis.Object.freeze(class Predef {
+(class Predef {
   static {
     Predef1 = this
   }
@@ -14,16 +14,18 @@ globalThis.Object.freeze(class Predef {
     runtime.Unit;
   }
   static {
-    globalThis.Object.freeze(class Symbols {
+    (class Symbols {
       static {
-        Predef.Symbols = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Predef.Symbols = this;
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
         this.definitionMetadata = RuntimeJS.symbols.definitionMetadata;
         Object.defineProperty(this, "class", {
           value: Symbols
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Symbols"]; 

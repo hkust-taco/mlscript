@@ -6,7 +6,7 @@ val scala3Version = "3.7.4"
 val directoryWatcherVersion = "0.18.0"
 val scalaTestVersion = "3.2.19"
 
-ThisBuild / scalaVersion     := "2.13.14"
+ThisBuild / scalaVersion     := "2.13.18"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "hkust-taco.github.io"
 ThisBuild / organizationName := "HKUST-TACO"

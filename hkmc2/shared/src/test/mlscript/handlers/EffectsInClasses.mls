@@ -14,14 +14,14 @@ data class Lol(h) with
 //│ Lol1 = function Lol(h) {
 //│   return globalThis.Object.freeze(new Lol.class(h));
 //│ };
-//│ globalThis.Object.freeze(class Lol {
+//│ (class Lol {
 //│   static {
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
 //│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
-//│     globalThis.Object.freeze(class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
+//│     (class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       static {
 //│         Cont$ctor$Lol$1 = this
 //│       }
@@ -31,27 +31,35 @@ data class Lol(h) with
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
-//│         if (this.pc === 1) {
-//│           tmp = value$;
-//│         } else if (this.pc === 2) {
-//│           res = value$;
+//│         switch (this.pc) {
+//│           case 1:
+//│             tmp = value$;
+//│             break;
+//│           case 2:
+//│             res = value$;
+//│             break;
 //│         }
 //│         contLoop: while (true) {
-//│           if (this.pc === 3) {
-//│             return this$Lol
-//│           } else if (this.pc === 4) {
-//│             res = Predef.print(tmp);
-//│             if (res instanceof runtime.EffectSig.class) {
-//│               return this.doUnwind(res, 2)
-//│             }
-//│             this.pc = 2;
-//│             continue contLoop
-//│           } else if (this.pc === 1) {
-//│             this.pc = 4;
-//│             continue contLoop
-//│           } else if (this.pc === 2) {
-//│             this.pc = 3;
-//│             continue contLoop
+//│           switch (this.pc) {
+//│             case 3:
+//│               return this$Lol;
+//│               break;
+//│             case 4:
+//│               res = Predef.print(tmp);
+//│               if (res instanceof runtime.EffectSig.class) {
+//│                 return this.doUnwind(res, 2)
+//│               }
+//│               this.pc = 2;
+//│               continue contLoop;
+//│               break;
+//│             case 1:
+//│               this.pc = 4;
+//│               continue contLoop;
+//│               break;
+//│             case 2:
+//│               this.pc = 3;
+//│               continue contLoop;
+//│               break;
 //│           }
 //│           break;
 //│         }

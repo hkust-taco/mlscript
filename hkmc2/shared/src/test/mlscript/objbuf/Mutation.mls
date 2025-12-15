@@ -18,7 +18,7 @@ class A(x) with
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ globalThis.Object.freeze(class A {
+//│ (class A {
 //│   static {
 //│     A1.class = this
 //│   }

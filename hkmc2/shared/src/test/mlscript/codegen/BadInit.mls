@@ -10,14 +10,15 @@ object Bar with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar1;
-//│ globalThis.Object.freeze(class Bar {
+//│ (class Bar {
 //│   static {
-//│     Bar1 = globalThis.Object.freeze(new this)
+//│     new this
 //│   }
 //│   constructor() {
+//│     Bar1 = this;
 //│     this.x = 1;
 //│     const this$Bar = this;
-//│     globalThis.Object.freeze(class Baz {
+//│     (class Baz {
 //│       static {
 //│         this$Bar.Baz = this
 //│       }
@@ -32,12 +33,12 @@ object Bar with
 //│     });
 //│     Object.defineProperty(this, "class", {
 //│       value: Bar
-//│     })
+//│     });
+//│     globalThis.Object.freeze(this);
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Bar"]; 
 //│ });
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
 
 
 // * Modules don't have this initialization problem because they set their bindings
@@ -50,7 +51,7 @@ module Bar with
     val a = Bar.x
 //│ JS (unsanitized):
 //│ let Bar3;
-//│ globalThis.Object.freeze(class Bar2 {
+//│ (class Bar2 {
 //│   static {
 //│     Bar3 = this
 //│   }
@@ -59,7 +60,7 @@ module Bar with
 //│   }
 //│   static {
 //│     this.x = 1;
-//│     globalThis.Object.freeze(class Baz1 {
+//│     (class Baz1 {
 //│       static {
 //│         Bar2.Baz = this
 //│       }

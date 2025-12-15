@@ -7,7 +7,7 @@ import Rendering from "./Rendering.mjs";
 import LazyArray from "./LazyArray.mjs";
 import Iter from "./Iter.mjs";
 let Runtime1;
-globalThis.Object.freeze(class Runtime {
+(class Runtime {
   static {
     Runtime1 = this
   }
@@ -27,14 +27,16 @@ globalThis.Object.freeze(class Runtime {
   static get stackResume() { return Runtime.#stackResume; }
   static set stackResume(value) { Runtime.#stackResume = value; }
   static {
-    globalThis.Object.freeze(class Unit {
+    (class Unit {
       static {
-        Runtime.Unit = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Runtime.Unit = this;
         Object.defineProperty(this, "class", {
           value: Unit
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() {
         return "()"
@@ -42,14 +44,16 @@ globalThis.Object.freeze(class Runtime {
       [prettyPrint]() { return this.toString(); }
       static [definitionMetadata] = ["object", "Unit"]; 
     });
-    globalThis.Object.freeze(class LoopEnd {
+    (class LoopEnd {
       static {
-        Runtime.LoopEnd = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Runtime.LoopEnd = this;
         Object.defineProperty(this, "class", {
           value: LoopEnd
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "LoopEnd"]; 
@@ -64,7 +68,7 @@ globalThis.Object.freeze(class Runtime {
     this.EffectHandle = function EffectHandle(_reified) {
       return globalThis.Object.freeze(new EffectHandle.class(_reified));
     };
-    globalThis.Object.freeze(class EffectHandle {
+    (class EffectHandle {
       static {
         Runtime.EffectHandle.class = this
       }
@@ -92,7 +96,7 @@ globalThis.Object.freeze(class Runtime {
     this.MatchSuccess = function MatchSuccess(output, bindings) {
       return globalThis.Object.freeze(new MatchSuccess.class(output, bindings));
     };
-    globalThis.Object.freeze(class MatchSuccess {
+    (class MatchSuccess {
       static {
         Runtime.MatchSuccess.class = this
       }
@@ -106,7 +110,7 @@ globalThis.Object.freeze(class Runtime {
     this.MatchFailure = function MatchFailure(errors) {
       return globalThis.Object.freeze(new MatchFailure.class(errors));
     };
-    globalThis.Object.freeze(class MatchFailure {
+    (class MatchFailure {
       static {
         Runtime.MatchFailure.class = this
       }
@@ -116,7 +120,7 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "MatchFailure", ["errors"]]; 
     });
-    globalThis.Object.freeze(class Tuple {
+    (class Tuple {
       static {
         Runtime.Tuple = this
       }
@@ -162,7 +166,7 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Tuple"]; 
     });
-    globalThis.Object.freeze(class Str {
+    (class Str {
       static {
         Runtime.Str = this
       }
@@ -191,7 +195,7 @@ globalThis.Object.freeze(class Runtime {
       static [definitionMetadata] = ["class", "Str"]; 
     });
     this.render = Rendering.render;
-    globalThis.Object.freeze(class TraceLogger {
+    (class TraceLogger {
       static {
         Runtime.TraceLogger = this
       }
@@ -247,26 +251,30 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "TraceLogger"]; 
     });
-    globalThis.Object.freeze(class FatalEffect {
+    (class FatalEffect {
       static {
-        Runtime.FatalEffect = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Runtime.FatalEffect = this;
         Object.defineProperty(this, "class", {
           value: FatalEffect
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "FatalEffect"]; 
     });
-    globalThis.Object.freeze(class PrintStackEffect {
+    (class PrintStackEffect {
       static {
-        Runtime.PrintStackEffect = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Runtime.PrintStackEffect = this;
         Object.defineProperty(this, "class", {
           value: PrintStackEffect
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
@@ -274,7 +282,7 @@ globalThis.Object.freeze(class Runtime {
     this.FunctionContFrame = function FunctionContFrame(next) {
       return globalThis.Object.freeze(new FunctionContFrame.class(next));
     };
-    globalThis.Object.freeze(class FunctionContFrame {
+    (class FunctionContFrame {
       static {
         Runtime.FunctionContFrame.class = this
       }
@@ -293,7 +301,7 @@ globalThis.Object.freeze(class Runtime {
     this.HandlerContFrame = function HandlerContFrame(next, nextHandler, handler) {
       return globalThis.Object.freeze(new HandlerContFrame.class(next, nextHandler, handler));
     };
-    globalThis.Object.freeze(class HandlerContFrame {
+    (class HandlerContFrame {
       static {
         Runtime.HandlerContFrame.class = this
       }
@@ -308,7 +316,7 @@ globalThis.Object.freeze(class Runtime {
     this.ContTrace = function ContTrace(next, last, nextHandler, lastHandler, resumed) {
       return globalThis.Object.freeze(new ContTrace.class(next, last, nextHandler, lastHandler, resumed));
     };
-    globalThis.Object.freeze(class ContTrace {
+    (class ContTrace {
       static {
         Runtime.ContTrace.class = this
       }
@@ -325,7 +333,7 @@ globalThis.Object.freeze(class Runtime {
     this.EffectSig = function EffectSig(contTrace, handler, handlerFun) {
       return globalThis.Object.freeze(new EffectSig.class(contTrace, handler, handlerFun));
     };
-    globalThis.Object.freeze(class EffectSig {
+    (class EffectSig {
       static {
         Runtime.EffectSig.class = this
       }
@@ -337,7 +345,7 @@ globalThis.Object.freeze(class Runtime {
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "EffectSig", ["contTrace", "handler", "handlerFun"]]; 
     });
-    globalThis.Object.freeze(class NonLocalReturn {
+    (class NonLocalReturn {
       static {
         Runtime.NonLocalReturn = this
       }
@@ -348,7 +356,7 @@ globalThis.Object.freeze(class Runtime {
     this.FnLocalsInfo = function FnLocalsInfo(fnName, locals) {
       return globalThis.Object.freeze(new FnLocalsInfo.class(fnName, locals));
     };
-    globalThis.Object.freeze(class FnLocalsInfo {
+    (class FnLocalsInfo {
       static {
         Runtime.FnLocalsInfo.class = this
       }
@@ -362,7 +370,7 @@ globalThis.Object.freeze(class Runtime {
     this.LocalVarInfo = function LocalVarInfo(localName, value) {
       return globalThis.Object.freeze(new LocalVarInfo.class(localName, value));
     };
-    globalThis.Object.freeze(class LocalVarInfo {
+    (class LocalVarInfo {
       static {
         Runtime.LocalVarInfo.class = this
       }
@@ -377,14 +385,16 @@ globalThis.Object.freeze(class Runtime {
     this.stackDepth = 0;
     this.stackHandler = null;
     this.stackResume = null;
-    globalThis.Object.freeze(class StackDelayHandler {
+    (class StackDelayHandler {
       static {
-        Runtime.StackDelayHandler = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Runtime.StackDelayHandler = this;
         Object.defineProperty(this, "class", {
           value: StackDelayHandler
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       delay() {
         let lambda;
@@ -400,7 +410,7 @@ globalThis.Object.freeze(class Runtime {
     this.Int31 = function Int31(v) {
       return globalThis.Object.freeze(new Int31.class(v));
     };
-    globalThis.Object.freeze(class Int31 {
+    (class Int31 {
       static {
         Runtime.Int31.class = this
       }

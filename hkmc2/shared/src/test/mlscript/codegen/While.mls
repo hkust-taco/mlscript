@@ -17,7 +17,7 @@
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
-//│     return runtime.LoopEnd
+//│     /* unreachable */
 //│   });
 //│   tmp1 = while1();
 //│   tmp2 = tmp1 !== runtime.LoopEnd;

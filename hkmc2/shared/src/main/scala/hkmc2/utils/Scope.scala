@@ -27,7 +27,7 @@ case class Scope
     (val parent: Opt[Scope], val curThis: Opt[Opt[InnerSymbol]], private val bindings: MutMap[Local, Str])
     (using State):
   
-  private val existingNames = MutSet.empty[Str]
+  private val existingNames = MutMap.empty[Str, Local]
   
   private var thisProxyAccessed = false
   lazy val thisProxy =
@@ -49,7 +49,7 @@ case class Scope
   def addToBindings(symbol: Local, name: String, shadow: Bool) =
     if !shadow then assert(lookup(symbol).isEmpty, (symbol, this.showAsTree))
     bindings += symbol -> name
-    existingNames += name
+    existingNames += name -> symbol
   
   def findThis_!(thisSym: InnerSymbol)(using Raise): Str =
     // println(s"findThis_! $thisSym")
@@ -95,6 +95,8 @@ case class Scope
   
   def inScope(name: Str): Bool =
     existingNames.contains(name) || parent.exists(_.inScope(name))
+  def reverseLookup(name: Str): Opt[Local] =
+    existingNames.get(name).orElse(parent.flatMap(_.reverseLookup(name)))
   
   def lookup(l: Local): Opt[Str] =
     // curThis.filter(_ is l).map(_ => thisProxy) orElse
