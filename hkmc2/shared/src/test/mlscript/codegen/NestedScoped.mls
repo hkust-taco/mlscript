@@ -300,7 +300,7 @@ scope.locally of (
   y
 )
 //│ JS (unsanitized):
-//│ let z1, y1; let y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1
+//│ let z1; let y1;{ let y2; z1 = 2; y1 = function y() { return 1 }; y2 = y1; y2 }
 //│ = fun y
 //│ z = 2
 

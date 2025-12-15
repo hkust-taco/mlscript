@@ -14,6 +14,42 @@ import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
 
+
+// - for function bodies, fuse all shallowly-nested scopes into one top-level one
+// - assert the absence of Label(loop = true) blocks
+class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
+  override def applyBlock(b: Block): Block = b match
+    case Label(_, loop, _, _) =>
+      assert(!loop)
+      super.applyBlock(b)
+    case _ => super.applyBlock(b)
+  
+  private var scopedSymForCurrentFun: Option[collection.mutable.Set[Symbol]] = None
+  override def applyFunBodyLikeBlock(b: Block): Block =
+    val prevScopedSymForCurrentFun = scopedSymForCurrentFun
+    val resBlk = b match
+      case Scoped(syms, body) =>
+        scopedSymForCurrentFun = Some(collection.mutable.Set.from(syms))
+        val newBody = applySubBlock(body)
+        new Scoped(scopedSymForCurrentFun.get, newBody)
+      case _ =>
+        scopedSymForCurrentFun = Some(collection.mutable.Set.empty[Symbol])
+        val newBlk = applySubBlock(b)
+        Scoped(scopedSymForCurrentFun.get, newBlk)
+    scopedSymForCurrentFun = prevScopedSymForCurrentFun
+    resBlk
+  
+  override def applyScopedBlock(b: Block): Block = b match
+    case Scoped(syms, body) =>
+      scopedSymForCurrentFun match
+        case None => super.applyScopedBlock(b)
+        case Some(scopedForCurrentFun) =>
+          scopedForCurrentFun.addAll(syms)
+          super.applySubBlock(body)
+    case _ => super.applySubBlock(b)
+    
+
+
 object HandlerLowering:
   
   private final val getLocalsNme = "getLocals"
@@ -954,6 +990,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
   def translateTopLevel(b: Block): (Block, Map[FnOrCls, Path]) =
     doUnwindMap = Map.empty
-    val transformed = translateBlock(b, Set.empty, N, L(BlockMemberSymbol("", Nil)), topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›"))
+    val preTransformed = new PreHandlerLowering().applyBlock(b)
+    val transformed = translateBlock(preTransformed, Set.empty, N, L(BlockMemberSymbol("", Nil)), topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›"))
     (transformed, doUnwindMap)
     

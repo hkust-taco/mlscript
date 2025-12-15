@@ -103,38 +103,25 @@ fun start(x, f) =
 
 // NOTE: `z` should be in the function top level when `:effectHandlers`
 :sjs
-:fixme
 fun f(x) =
   if x do
     scope.locally of (
       let z = 3
       fun g() = z )
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
-//│ ║  l.111: 	      fun g() = z )
-//│ ║         	                ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.110: 	      let z = 3
-//│ ╙──       	          ^
 //│ JS (unsanitized):
 //│ let f4;
 //│ f4 = function f(x) {
-//│   let g;
+//│   let g, z;
 //│   g = function g() {
 //│     return z
 //│   };
-//│   if (x === true) { let z; z = 3; return runtime.Unit } else { return runtime.Unit }
+//│   if (x === true) { z = 3; return runtime.Unit } else { return runtime.Unit }
 //│ };
 
 
-:fixme
+
 class C(x) with
   if x do
     scope.locally of (
       let z = 3
       fun g() = z )
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
-//│ ║  l.134: 	      fun g() = z )
-//│ ║         	                ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.133: 	      let z = 3
-//│ ╙──       	          ^
