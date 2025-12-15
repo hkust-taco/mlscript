@@ -16,15 +16,17 @@ x
 
 val x
 
-// with Scoped blocks, `x` is declared
-// :ge
+// `x` is declared, just never initilized,
+// so there shouldn't be a compilation error
+// of "`x` not found in scope"
 x
 
 
 val x: Int
 
-// with Scoped blocks, `x` is declared
-// :ge
+// `x` is declared, just never initilized,
+// so there shouldn't be a compilation error
+// of "`x` not found in scope"
 x
 
 

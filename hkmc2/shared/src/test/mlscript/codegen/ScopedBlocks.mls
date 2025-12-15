@@ -1,16 +1,12 @@
 :js
 
 
-:sjs
 let x =
   let y = 1 + 3 * 4
   y + 4
-//│ JS (unsanitized):
-//│ let x, y, tmp; tmp = 3 * 4; y = 1 + tmp; x = y + 4;
 //│ x = 17
 
 
-:sjs
 fun f() =
   if true then
     let a = 4
@@ -18,17 +14,9 @@ fun f() =
   else
     let b = 5
     b + 9
-//│ JS (unsanitized):
-//│ let f;
-//│ f = function f() {
-//│   let scrut, a, b;
-//│   scrut = true;
-//│   if (scrut === true) { a = 4; return a + 4 } else { b = 5; return b + 9 }
-//│ };
 
 
-// TODO: improve later: `let a` can be moved to the branch body
-// TODO: `lambda` is not currently included in the symbols in the `Scoped` block (because this is created in `LambdaRewriter`, a later pass)
+// TODO: improve later: `let a` and `lambda` can be moved to the branch body
 // NOTE: `tmp1` and `tmp2` should indeed be declared in the top level of the function body
 :sjs
 fun g(x, y, z) =
@@ -77,80 +65,18 @@ data object Nil
 
 
 
-:sjs
 fun f() = if x is
   A(a, b) and a > b then true
   B(c, d) then false
-//│ JS (unsanitized):
-//│ let f1;
-//│ f1 = function f() {
-//│   let a, b, scrut, c, d, argument0$, argument1$, tmp1;
-//│   split_root$: {
-//│     split_default$: {
-//│       if (x instanceof A1.class) {
-//│         argument0$ = x.a;
-//│         argument1$ = x.b;
-//│         b = argument1$;
-//│         a = argument0$;
-//│         scrut = a > b;
-//│         if (scrut === true) {
-//│           tmp1 = true;
-//│           break split_root$
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else if (x instanceof B1.class) {
-//│         argument0$ = x.a;
-//│         argument1$ = x.b;
-//│         d = argument1$;
-//│         c = argument0$;
-//│         tmp1 = false;
-//│         break split_root$
-//│       } else {
-//│         break split_default$
-//│       }
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp1
-//│ };
 
 
-:sjs
+
 fun f() = if A(1, Nil) is
   A(1, Nil) then 3
-//│ JS (unsanitized):
-//│ let f2;
-//│ f2 = function f() {
-//│   let scrut, argument0$, argument1$, tmp1;
-//│   split_root$: {
-//│     split_default$: {
-//│       scrut = A1(1, Nil1);
-//│       if (scrut instanceof A1.class) {
-//│         argument0$ = scrut.a;
-//│         argument1$ = scrut.b;
-//│         if (argument0$ === 1) {
-//│           if (argument1$ instanceof Nil1.class) {
-//│             tmp1 = 3;
-//│             break split_root$
-//│           } else {
-//│             break split_default$
-//│           }
-//│         } else {
-//│           break split_default$
-//│         }
-//│       } else {
-//│         break split_default$
-//│       }
-//│     }
-//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
-//│   }
-//│   return tmp1
-//│ };
 
 
 
-:sjs
+
 fun f(x) =
   x = while x is
     A(a, _) then a()
@@ -158,34 +84,10 @@ fun f(x) =
   else
     x()
   x
-//│ JS (unsanitized):
-//│ let f3;
-//│ f3 = function f(x1) {
-//│   let tmp1;
-//│   tmp2: while (true) {
-//│     let a, a1, argument0$, argument1$;
-//│     if (x1 instanceof A1.class) {
-//│       argument0$ = x1.a;
-//│       argument1$ = x1.b;
-//│       a = argument0$;
-//│       tmp1 = runtime.safeCall(a());
-//│       continue tmp2
-//│     } else if (x1 instanceof B1.class) {
-//│       argument0$ = x1.a;
-//│       argument1$ = x1.b;
-//│       a1 = argument0$;
-//│       tmp1 = runtime.safeCall(a1());
-//│       continue tmp2
-//│     } else { tmp1 = runtime.safeCall(x1()); }
-//│     break;
-//│   }
-//│   x1 = tmp1;
-//│   return x1
-//│ };
 
 
 
-:sjs
+
 fun f() =
   let y = x + 1
   while y is
@@ -194,123 +96,29 @@ fun f() =
         set y = z + 1
       else
         y = a
-//│ JS (unsanitized):
-//│ let f4;
-//│ f4 = function f() {
-//│   let y1, tmp1;
-//│   y1 = x + 1;
-//│   tmp2: while (true) {
-//│     let a, z, scrut, scrut1, argument0$, argument1$, tmp3;
-//│     split_root$: {
-//│       split_1$: {
-//│         if (y1 instanceof A1.class) {
-//│           argument0$ = y1.a;
-//│           argument1$ = y1.b;
-//│           a = argument1$;
-//│           z = argument0$;
-//│           scrut = false;
-//│           if (scrut === true) {
-//│             scrut1 = true;
-//│             if (scrut1 === true) {
-//│               tmp3 = z + 1;
-//│               y1 = tmp3;
-//│               tmp1 = runtime.Unit;
-//│               continue tmp2
-//│             } else {
-//│               break split_1$
-//│             }
-//│           } else {
-//│             break split_1$
-//│           }
-//│         } else { tmp1 = runtime.Unit; }
-//│       }
-//│       y1 = a;
-//│       tmp1 = runtime.Unit;
-//│     }
-//│     break;
-//│   }
-//│   return tmp1
-//│ };
 
 
-:sjs
+
 fun f(x, y) =
   while x && y do
     f(0, 0) + 4
-//│ JS (unsanitized):
-//│ let f5;
-//│ f5 = function f(x1, y1) {
-//│   let tmp1;
-//│   tmp2: while (true) {
-//│     let scrut, lambda, tmp3;
-//│     lambda = (undefined, function () {
-//│       return y1
-//│     });
-//│     scrut = runtime.short_and(x1, lambda);
-//│     if (scrut === true) {
-//│       tmp3 = f5(0, 0);
-//│       tmp1 = tmp3 + 4;
-//│       continue tmp2
-//│     } else { tmp1 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp1
-//│ };
 
 
 
-:sjs
+
 class A with
   val x = 1 + 2
-//│ JS (unsanitized):
-//│ let A3;
-//│ (class A2 {
-//│   static {
-//│     A3 = this
-//│   }
-//│   constructor() {
-//│     let tmp1;
-//│     tmp1 = 1 + 2;
-//│     this.x = tmp1;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
 
 
 let state = 0
 //│ state = 0
 
-:sjs
+
 class Foo() with // the class definition is moved to the location of its companion
   fun foo() = state
 set state += 1
 module Foo with
   val res = Foo().foo()
-//│ JS (unsanitized):
-//│ let Foo1, tmp1;
-//│ tmp1 = state + 1;
-//│ state = tmp1;
-//│ Foo1 = function Foo() {
-//│   return globalThis.Object.freeze(new Foo.class());
-//│ };
-//│ (class Foo {
-//│   static {
-//│     Foo1.class = this
-//│   }
-//│   constructor() {}
-//│   static {
-//│     let tmp2, tmp3;
-//│     tmp2 = Foo1();
-//│     tmp3 = tmp2.foo();
-//│     this.res = tmp3;
-//│   }
-//│   foo() {
-//│     return state
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Foo", []]; 
-//│ });
 
 
 
@@ -321,61 +129,18 @@ type I = Int
 
 
 
-:sjs
+
 class A(x) with
   val y = x
-//│ JS (unsanitized):
-//│ let A5;
-//│ A5 = function A(x1) {
-//│   return globalThis.Object.freeze(new A.class(x1));
-//│ };
-//│ (class A4 {
-//│   static {
-//│     A5.class = this
-//│   }
-//│   constructor(x1) {
-//│     this.#x = x1;
-//│     this.y = this.#x;
-//│   }
-//│   #x;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", [null]]; 
-//│ });
 
 
 
-:sjs
+
 module M with
   data class A(x, y)
-//│ JS (unsanitized):
-//│ let M3;
-//│ (class M2 {
-//│   static {
-//│     M3 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     this.A = function A(x1, y1) {
-//│       return globalThis.Object.freeze(new A.class(x1, y1));
-//│     };
-//│     (class A6 {
-//│       static {
-//│         M2.A.class = this
-//│       }
-//│       constructor(x1, y1) {
-//│         this.x = x1;
-//│         this.y = y1;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A", ["x", "y"]]; 
-//│     });
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
 
+// NOTE: while bodies are not rewritten to functions by default
+// and are `Scoped`
 :sjs
 fun f(x) =
   while x do
@@ -398,6 +163,7 @@ fun f(x) =
 //│ };
 
 
+// `:rewriteWhile` turns while loop into functions
 :sjs
 :rewriteWhile
 fun f(x) =
@@ -429,6 +195,7 @@ fun f(x) =
 
 data class Bar(x)
 
+// NOTE: `tmp`s in pCtor and ctor shouldn't have name crashes with each other
 :sjs
 data class Baz(z) extends Bar(z * 1) with
   val k = 1 + 2 + 3

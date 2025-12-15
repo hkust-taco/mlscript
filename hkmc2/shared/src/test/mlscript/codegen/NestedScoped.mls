@@ -43,7 +43,6 @@ scope.locally of
 //│ = 42
 
 
-:lot
 :sjs
 scope.locally of (
   let x = 42
@@ -51,21 +50,6 @@ scope.locally of (
 )
 //│ JS (unsanitized):
 //│ { let x1; x1 = 42; x1 }
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Begin:
-//│     sub = End of ""
-//│     rest = Scoped: \
-//│     syms = HashSet(x)
-//│     body = Assign:
-//│       lhs = x
-//│       rhs = Lit of IntLit of 42
-//│       rest = Return: \
-//│       res = Ref:
-//│         l = x
-//│         disamb = N
-//│       implct = true
 //│ = 42
 
 
@@ -103,23 +87,14 @@ scope.locally of scope.locally of (
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.104: 	x
-//│ ╙──       	^
+//│ ║  l.88: 	x
+//│ ╙──      	^
 
 
-:ssjs
 fun foo(x) =
   let z = 1
   scope.locally of
     let y = 1 in x + y + z
-//│ JS:
-//│ foo = function foo(...args) {
-//│   runtime.checkArgs("foo", 1, true, args.length);
-//│   let x3 = args[0];
-//│   let z;
-//│   z = 1;{ let y, tmp; y = 1; tmp = x3 + y; return tmp + z }
-//│ };
-//│ block$res6 = undefined;
 
 
 foo(1)
@@ -172,7 +147,6 @@ f()
 //│ = 14
 
 
-:sjs
 fun g(x, y, z) =
   3 + 4 * if
     x then 0
@@ -182,41 +156,9 @@ fun g(x, y, z) =
         let a = 1
         (_ + a)
       )
-//│ JS (unsanitized):
-//│ let g;
-//│ g = function g(x3, y, z) {
-//│   let tmp, tmp1;
-//│   split_root$: {
-//│     split_1$: {
-//│       if (x3 === true) {
-//│         break split_1$
-//│       } else {
-//│         if (y === true) {
-//│           break split_1$
-//│         } else {
-//│           if (z === true) {
-//│             let a, lambda;
-//│             a = 1;
-//│             lambda = (undefined, function (_0) {
-//│               return _0 + a
-//│             });
-//│             tmp = lambda;
-//│             break split_root$
-//│           } else {
-//│             throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│           }
-//│         }
-//│       }
-//│     }
-//│     tmp = 0;
-//│   }
-//│   tmp1 = 4 * tmp;
-//│   return 3 + tmp1
-//│ };
 
 
 
-:sjs
 fun foo(x, y) =
   let z = [1, 2, 3]
   if not x > z.0 do
@@ -228,43 +170,19 @@ fun foo(x, y) =
     if w1 == w2 do
       print("ruarua")
   )
-//│ JS (unsanitized):
-//│ let foo1;
-//│ foo1 = function foo(x3, y) {
-//│   let z, scrut, m, tmp, tmp1;
-//│   z = globalThis.Object.freeze([
-//│     1,
-//│     2,
-//│     3
-//│   ]);
-//│   tmp = x3 > z[0];
-//│   scrut = ! tmp;
-//│   if (scrut === true) {
-//│     tmp1 = Predef.print("rua");
-//│   } else {
-//│     tmp1 = runtime.Unit;
-//│   }
-//│   m = x3 + y;{
-//│     let w1, w2, scrut1;
-//│     w1 = z[1] + m;
-//│     w2 = z[2] - m;
-//│     scrut1 = Predef.equals(w1, w2);
-//│     if (scrut1 === true) { return Predef.print("ruarua") } else { return runtime.Unit }
-//│   }
-//│ };
 
 
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.258: 	scope.locally()
+//│ ║  l.176: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.265: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -272,21 +190,18 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.273: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.191: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.273: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.191: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
-:sjs
 let z = 114
 scope.locally of (
   let y = 514
   y
 )
-//│ JS (unsanitized):
-//│ let z; z = 114;{ let y; y = 514; y }
 //│ = 514
 //│ z = 114
 
