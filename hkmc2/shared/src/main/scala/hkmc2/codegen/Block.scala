@@ -359,6 +359,9 @@ case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, res
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
+inline def whenValidatingIR(inline code: => Unit): Unit =
+  () // code // * uncomment to run on-the fly IR validations
+  
 object Label:
   def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
     case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
@@ -368,7 +371,8 @@ object Scoped:
     case Scoped(syms2, body) =>
       if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
       else
-        assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
+        whenValidatingIR:
+          assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
         Scoped(syms ++ syms2, body)
     case _ =>
       if syms.isEmpty then body else new Scoped(syms, body)
@@ -411,7 +415,10 @@ object Begin:
     else if sub.isAbortive then sub
     else (sub, rest) match
       case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
-        assert(!symsSub.exists(symsRest.contains), "overlapping symbols when trying to merge Scoped blocks")
+        whenValidatingIR:
+          assert(
+            !symsSub.exists(symsRest.contains),
+            "overlapping symbols when trying to merge Scoped blocks")
         Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
       case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
       case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
