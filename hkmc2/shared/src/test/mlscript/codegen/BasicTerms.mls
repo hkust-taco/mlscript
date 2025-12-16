@@ -24,11 +24,8 @@
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Assign:
-//│     lhs = $block$res
-//│     rhs = Lit of IntLit of 2
-//│     rest = Return: \
-//│     res = Lit of UnitLit of false
+//│   main = Return:
+//│     res = Lit of IntLit of 2
 //│     implct = true
 //│ = 2
 
@@ -46,24 +43,23 @@ print("Hi")
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Assign:
-//│     lhs = $tmp
-//│     rhs = Call:
-//│       fun = Select{sym=term:module:Predef.print}:
-//│         qual = Ref{disamb=module:Predef}:
-//│           l = member:Predef
-//│           disamb = S of module:Predef
-//│         name = Ident of "print"
-//│       args = Ls of 
-//│         Arg:
-//│           spread = N
-//│           value = Lit of StrLit of "Hi"
-//│     rest = Assign: \
-//│     lhs = $block$res
-//│     rhs = Lit of IntLit of 2
-//│     rest = Return: \
-//│     res = Lit of UnitLit of false
-//│     implct = true
+//│   main = Scoped:
+//│     syms = HashSet($tmp)
+//│     body = Assign:
+//│       lhs = $tmp
+//│       rhs = Call:
+//│         fun = Select{sym=term:module:Predef.print}:
+//│           qual = Ref{disamb=module:Predef}:
+//│             l = member:Predef
+//│             disamb = S of module:Predef
+//│           name = Ident of "print"
+//│         args = Ls of 
+//│           Arg:
+//│             spread = N
+//│             value = Lit of StrLit of "Hi"
+//│       rest = Return: \
+//│       res = Lit of IntLit of 2
+//│       implct = true
 //│ > Hi
 //│ = 2
 

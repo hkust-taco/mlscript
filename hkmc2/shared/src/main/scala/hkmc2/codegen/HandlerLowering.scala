@@ -14,6 +14,46 @@ import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
 
+
+/** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
+  *   because handler lowering relies on knowing all local variables in the function.
+  * - Assert the absence of Label(loop = true) blocks,
+  *   because loops should be rewritten to functions first,
+  *   otherwise we cannot fuse scopes correctly.
+  */
+class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
+  override def applyBlock(b: Block): Block = b match
+    case Label(_, loop, _, _) =>
+      assert(!loop)
+      super.applyBlock(b)
+    case _ => super.applyBlock(b)
+  
+  private var scopedSymForCurrentFun: Option[collection.mutable.Set[Symbol]] = None
+  override def applyFunBodyLikeBlock(b: Block): Block =
+    val prevScopedSymForCurrentFun = scopedSymForCurrentFun
+    val resBlk = b match
+      case Scoped(syms, body) =>
+        scopedSymForCurrentFun = Some(collection.mutable.Set.from(syms))
+        val newBody = applySubBlock(body)
+        new Scoped(scopedSymForCurrentFun.get, newBody)
+      case _ =>
+        scopedSymForCurrentFun = Some(collection.mutable.Set.empty[Symbol])
+        val newBlk = applySubBlock(b)
+        Scoped(scopedSymForCurrentFun.get, newBlk)
+    scopedSymForCurrentFun = prevScopedSymForCurrentFun
+    resBlk
+  
+  override def applyScopedBlock(b: Block): Block = b match
+    case Scoped(syms, body) =>
+      scopedSymForCurrentFun match
+        case None => super.applyScopedBlock(b)
+        case Some(scopedForCurrentFun) =>
+          scopedForCurrentFun.addAll(syms)
+          super.applySubBlock(body)
+    case _ => super.applySubBlock(b)
+    
+
+
 object HandlerLowering:
   
   private final val getLocalsNme = "getLocals"
@@ -420,6 +460,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
       case Throw(_) => PartRet(blk, Nil)
+      case Scoped(_, body) => go(body)
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val PartRet(head, states) = go(blk)(using labelIds, N)
@@ -581,7 +622,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def thirdPass(b: Block): Block =
     // to ensure the fun and class references in the continuation class are properly scoped,
     // we move all function defns to the top level of the handler block
-    val (blk, defns) = b.floatOutDefns()
+    val (blk, defns) = b.extractDefns()
     defns.foldLeft(blk)((acc, defn) => Define(defn, acc))
   
   private def locToStr(l: Loc): Str =
@@ -953,6 +994,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
   def translateTopLevel(b: Block): (Block, Map[FnOrCls, Path]) =
     doUnwindMap = Map.empty
-    val transformed = translateBlock(b, Set.empty, N, L(BlockMemberSymbol("", Nil)), topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›"))
+    val preTransformed = new PreHandlerLowering().applyBlock(b)
+    val transformed = translateBlock(preTransformed, Set.empty, N, L(BlockMemberSymbol("", Nil)), topLevelCtx(s"Cont$$topLevel$$BAD", "‹top level›"))
     (transformed, doUnwindMap)
     

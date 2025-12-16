@@ -29,6 +29,35 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
+  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks.
+    * It is used in JSBuilder now: names are allocated in JSBuilder for these `definedVarsNoScoped` symbols.
+    * This is needed now because
+    *   - there are symbols that are not collected in the `Scoped` blocks (due to some passes that have not yet been adapted to Scoped),
+    *     and they still need to be allocated a name in JSBuilder
+    *   - if we don't exlude the `Scoped` symbols, they may be allocated a name
+    *     prematurely and decalred in wrong places, e.g. symbols inside while bodies
+    *     may be declared in an outer level
+    */
+  lazy val definedVarsNoScoped: Set[Local] = this match
+    case _: Return | _: Throw => Set.empty
+    case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Assign(l: TermSymbol, r, rst) => rst.definedVarsNoScoped
+    case Assign(l, r, rst) => rst.definedVarsNoScoped + l
+    case AssignField(l, n, r, rst) => rst.definedVarsNoScoped
+    case AssignDynField(l, n, ai, r, rst) => rst.definedVarsNoScoped
+    case Match(scrut, arms, dflt, rst) =>
+      arms.flatMap(_._2.definedVarsNoScoped).toSet ++ dflt.toList.flatMap(_.definedVarsNoScoped) ++ rst.definedVarsNoScoped
+    case End(_) => Set.empty
+    case Break(_) => Set.empty
+    case Continue(_) => Set.empty
+    case Define(defn, rst) =>
+      val rest = rst.definedVarsNoScoped
+      if defn.isOwned then rest else rest + defn.sym
+    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
+    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVarsNoScoped + res
+    case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
+    case Scoped(syms, body) => body.definedVarsNoScoped -- syms
   lazy val isAbortive: Bool = this match
     case _: End => false
     case _: Throw | _: Break | _: Continue => true
@@ -42,7 +71,10 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
     case Label(_, _, bod, rst) => rst.isAbortive
     case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
+    case Scoped(_, body) => body.isAbortive
   
+  // * Note: there is a good chance that historical users of `definedVars` do not properly respect Scoped blocks
+  // * and should adapt their logic to use `definedVarsNoScoped` instead.
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
@@ -62,6 +94,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
+    case Scoped(syms, body) => body.definedVars
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -75,9 +108,11 @@ sealed abstract class Block extends Product:
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
     case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
+    case Scoped(_, body) => body.size
   
   // TODO conserve if no changes
   def mapTail(f: BlockTail => Block): Block = this match
+    case Scoped(syms, body) => Scoped(syms, body.mapTail(f))
     case b: BlockTail => f(b)
     case Begin(sub, rst) => Begin(sub, rst.mapTail(f))
     case Assign(lhs, rhs, rst) => Assign(lhs, rhs, rst.mapTail(f))
@@ -114,6 +149,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVars - lhs) ++ rst.freeVars ++ hdr.flatMap(_.freeVars)
+    case Scoped(syms, body) => body.freeVars
     case End(msg) => Set.empty
   
   lazy val freeVarsLLIR: Set[Local] = this match
@@ -134,6 +170,7 @@ sealed abstract class Block extends Product:
     case Define(defn, rest) => defn.freeVarsLLIR ++ (rest.freeVarsLLIR - defn.sym)
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
       (bod.freeVarsLLIR - lhs) ++ rst.freeVarsLLIR ++ hdr.flatMap(_.freeVarsLLIR)
+    case Scoped(syms, body) => body.freeVarsLLIR
     case End(msg) => Set.empty
   
   lazy val subBlocks: Ls[Block] = this match
@@ -146,6 +183,7 @@ sealed abstract class Block extends Product:
     case Define(d, rest) => d.subBlocks ::: rest :: Nil
     case HandleBlock(_, _, par, args, _, handlers, body, rest) => par.subBlocks ++ args.flatMap(_.subBlocks) ++ handlers.map(_.body) :+ body :+ rest
     case Label(_, _, body, rest) => body :: rest :: Nil
+    case Scoped(_, body) => body :: Nil
     
     // TODO rm Lam from values and thus the need for these cases
     case Return(r, _) => r.subBlocks
@@ -160,10 +198,10 @@ sealed abstract class Block extends Product:
   // Note that this returns the definitions in reverse order, with the bottommost definiton appearing
   // last. This is so that using defns.foldLeft later to add the definitions to the front of a block, 
   // we don't need to reverse the list again to preserve the order of the definitions.
-  def floatOutDefns(
-      ignore: Defn => Bool = _ => false, 
-      preserve: Defn => Bool = _ => false
-    ) =
+  def extractDefns(
+        ignore: Defn => Bool = _ => false, 
+        preserve: Defn => Bool = _ => false
+      ): (Block, List[Defn]) =
     var defns: List[Defn] = Nil
     val transformer = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
@@ -177,6 +215,12 @@ sealed abstract class Block extends Product:
     
     (transformer.applyBlock(this), defns)
     
+  def gatherDefns(
+      ignore: Defn => Bool = _ => false, 
+      preserve: Defn => Bool = _ => false
+    ): List[Defn] = extractDefns(ignore, preserve)._2 // TODO: fix this very inefficient implementation
+  
+  
   lazy val flattened: Block = this.flatten(identity)
   
   private def flatten(k: End => Block): Block = this match
@@ -189,7 +233,7 @@ sealed abstract class Block extends Product:
       if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
-
+      
     case Label(label, loop, body, rest) =>
       val newBody = body.flattened
       val newRest = rest.flatten(k)
@@ -199,7 +243,7 @@ sealed abstract class Block extends Product:
       
     case Begin(sub, rest) =>
       sub.flatten(_ => rest.flatten(k))
-    
+      
     case TryBlock(sub, finallyDo, rest) =>
       val newSub = sub.flattened
       val newFinallyDo = finallyDo.flattened
@@ -260,6 +304,12 @@ sealed abstract class Block extends Product:
       then this
       else HandleBlock(lhs, res, par, args, cls, newHandlers, newBody, newRest)
 
+    case Scoped(syms, body) =>
+      val newBody = body.flatten(k)
+      if newBody is body
+      then this
+      else Scoped(syms, newBody)
+
     case e: End => k(e)
     case t: BlockTail => this
   
@@ -285,6 +335,9 @@ case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Blo
 case class Break(label: Local) extends BlockTail
 case class Continue(label: Local) extends BlockTail
 
+
+case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
+
 // TODO: remove this form?
 case class Begin(sub: Block, rest: Block) extends Block with ProductWithTail
 
@@ -299,6 +352,43 @@ case class AssignDynField(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, res
 
 case class Define(defn: Defn, rest: Block) extends Block with ProductWithTail
 
+inline def whenValidatingIR(inline code: => Unit): Unit =
+  () // code // * uncomment to run on-the fly IR validations
+  
+object Label:
+  def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
+    case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
+    case _ => new Label(label, loop, body, rest)
+object Scoped:
+  def apply(syms: collection.Set[Local], body: Block): Block = body match
+    case Scoped(syms2, body) =>
+      if syms2.isEmpty && syms.isEmpty then Scoped(Set.empty, body)
+      else
+        whenValidatingIR:
+          assert(!syms2.exists(syms.contains), "overlapping symbols in nested Scoped")
+        Scoped(syms ++ syms2, body)
+    case _ =>
+      if syms.isEmpty then body else new Scoped(syms, body)
+object TryBlock:
+  def apply(sub: Block, finallyDo: Block, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, TryBlock(sub, finallyDo, body))
+    case _ => new TryBlock(sub, finallyDo, rest)
+object Assign:
+  def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
+    case _ => new Assign(lhs, rhs, rest)
+object AssignField:
+  def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))
+    case _ => new AssignField(lhs, nme, rhs, rest)(symbol)
+object AssignDynField:
+  def apply(lhs: Path, fld: Path, arrayIdx: Bool, rhs: Result, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, AssignDynField(lhs, fld, arrayIdx, rhs, body))
+    case _ => new AssignDynField(lhs, fld, arrayIdx, rhs, rest)
+object Define:
+  def apply(defn: Defn, rest: Block): Block = rest match
+    case Scoped(syms, body) => Scoped(syms, Define(defn, body))
+    case _ => new Define(defn, rest)
 
 object Match:
   def apply(scrut: Path, arms: Ls[Case -> Block], dflt: Opt[Block], rest: Block): Block = dflt match
@@ -308,13 +398,24 @@ object Match:
     case _ =>
       if !rest.isEmpty && arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
       then new Match(scrut, arms, dflt, End("unreachable"))
-      else new Match(scrut, arms, dflt, rest)
+      else rest match
+        case Scoped(syms, body) => Scoped(syms, Match(scrut, arms, dflt, body))
+        case _ => new Match(scrut, arms, dflt, rest)
 
 object Begin:
   def apply(sub: Block, rest: Block): Block =
     if sub.isEmpty then rest
     else if sub.isAbortive then sub
-    else new Begin(sub, rest)
+    else (sub, rest) match
+      case (Scoped(symsSub, bodySub), Scoped(symsRest, bodyRest)) =>
+        whenValidatingIR:
+          assert(
+            !symsSub.exists(symsRest.contains),
+            "overlapping symbols when trying to merge Scoped blocks")
+        Scoped(symsSub ++ symsRest, Begin(bodySub, bodyRest))
+      case (Scoped(symsSub, bodySub), _) => Scoped(symsSub, Begin(bodySub, rest))
+      case (_, Scoped(symsRest, bodyRest)) => Scoped(symsRest, Begin(sub, bodyRest))
+      case _ => new Begin(sub, rest)
 
 
 case class HandleBlock(
@@ -327,6 +428,22 @@ case class HandleBlock(
     body: Block,
     rest: Block
 ) extends Block with ProductWithTail
+
+object HandleBlock:
+  def apply(
+      lhs: Local,
+      res: Local,
+      par: Path,
+      args: Ls[Path],
+      cls: ClassSymbol,
+      handlers: Ls[Handler],
+      body: Block,
+      rest: Block
+    ) =
+  rest match
+  case Scoped(syms, rest) =>
+    Scoped(syms, new HandleBlock(lhs, res, par, args, cls, handlers, body, rest))
+  case _ => new HandleBlock(lhs, res, par, args, cls, handlers, body, rest)
 
 
 sealed abstract class Defn:

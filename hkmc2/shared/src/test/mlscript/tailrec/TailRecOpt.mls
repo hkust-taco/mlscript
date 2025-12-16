@@ -16,18 +16,20 @@ fun f(a, b, c) =
     else c
 f(10000, 20000, 0)
 //│ JS (unsanitized):
-//│ let f, g, g_f;
+//│ let f, g;
+//│ let g_f;
 //│ g_f = function g_f(id, param0, param1, param2, param3) {
-//│   let scrut, scrut1, tmp, tmp1, tmp2;
 //│   loopLabel: while (true) {
 //│     switch (id) {
 //│       case 0:
+//│         let tmp;
 //│         tmp = param2 + param3;
 //│         param2 = tmp;
 //│         id = 1;
 //│         continue loopLabel;
 //│         break;
 //│       case 1:
+//│         let scrut, scrut1, tmp1, tmp2;
 //│         scrut = param0 > 0;
 //│         if (scrut === true) {
 //│           tmp1 = param0 - 1;
@@ -75,8 +77,8 @@ A.sum(20000)
 //│     runtime.Unit;
 //│   }
 //│   static sum_impl(n, acc) {
-//│     let scrut, tmp, tmp1;
 //│     loopLabel: while (true) {
+//│       let scrut, tmp, tmp1;
 //│       scrut = Predef.equals(n, 0);
 //│       if (scrut === true) {
 //│         return acc
@@ -146,7 +148,7 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[ERROR] This call is not in tail position.
-//│ ║  l.145: 	    @tailcall f(x)
+//│ ║  l.147: 	    @tailcall f(x)
 //│ ╙──       	              ^
 
 :lift
@@ -164,10 +166,10 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.163: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.165: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.164: 	    @tailcall g(x - 1)
+//│ ║  l.166: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
@@ -194,12 +196,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.193: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.193: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.194: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.196: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

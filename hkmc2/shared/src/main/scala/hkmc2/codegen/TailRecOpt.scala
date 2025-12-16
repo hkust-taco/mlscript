@@ -362,7 +362,7 @@ class TailRecOpt(using State, TL, Raise):
       c.copy(methods = mtds, companion = companion)
   
   def transform(b: Block) =
-    val (blk, defns) = b.floatOutDefns()
+    val defns = b.gatherDefns()
     val (funs, clses) = defns.partitionMap:
       case f: FunDefn => L(f)
       case c: ClsLikeDefn => R(c)

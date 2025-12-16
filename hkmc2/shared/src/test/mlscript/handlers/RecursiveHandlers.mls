@@ -155,41 +155,43 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp9, tmp10, handleBlock$7;
+//│ let str, scrut, tmp24, tmp25, tmp26, tmp27;
+//│ let handleBlock$7;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   handleBlock$7 = function handleBlock$() {
-//│     let h1, tmp11, handleBlock$8, Cont$handleBlock$h1$2, doUnwind, Handler$h1$2;
+//│     let h1, handleBlock$8, Cont$handleBlock$h1$2, doUnwind, Handler$h1$2;
 //│     (class Handler$h1$1 extends Effect1 {
 //│       static {
 //│         Handler$h1$2 = this
 //│       }
 //│       constructor() {
-//│         let tmp12;
-//│         tmp12 = super();
+//│         let tmp28;
+//│         tmp28 = super();
 //│       }
 //│       perform(arg) {
 //│         let hdlrFun;
 //│         hdlrFun = function hdlrFun(k) {
-//│           let tmp12, tmp13, tmp14, Cont$handler$h1$perform$2, doUnwind1;
+//│           let tmp28, tmp29, tmp30;
+//│           let Cont$handler$h1$perform$2, doUnwind1;
 //│           (class Cont$handler$h1$perform$1 extends runtime.FunctionContFrame.class {
 //│             static {
 //│               Cont$handler$h1$perform$2 = this
 //│             }
 //│             constructor(pc) {
-//│               let tmp15;
-//│               tmp15 = super(null);
+//│               let tmp31;
+//│               tmp31 = super(null);
 //│               this.pc = pc;
 //│             }
 //│             resume(value$) {
 //│               if (this.pc === 6) {
-//│                 tmp13 = value$;
+//│                 tmp29 = value$;
 //│               }
 //│               contLoop: while (true) {
 //│                 if (this.pc === 6) {
-//│                   tmp14 = str + "A";
-//│                   str = tmp14;
+//│                   tmp30 = str + "A";
+//│                   str = tmp30;
 //│                   return runtime.Unit
 //│                 }
 //│                 break;
@@ -203,14 +205,14 @@ str
 //│             res7.contTrace.last = res7.contTrace.last.next;
 //│             return res7
 //│           };
-//│           tmp12 = str + "A";
-//│           str = tmp12;
-//│           tmp13 = runtime.safeCall(k(arg));
-//│           if (tmp13 instanceof runtime.EffectSig.class) {
-//│             return doUnwind1(tmp13, 6)
+//│           tmp28 = str + "A";
+//│           str = tmp28;
+//│           tmp29 = runtime.safeCall(k(arg));
+//│           if (tmp29 instanceof runtime.EffectSig.class) {
+//│             return doUnwind1(tmp29, 6)
 //│           }
-//│           tmp14 = str + "A";
-//│           str = tmp14;
+//│           tmp30 = str + "A";
+//│           str = tmp30;
 //│           return runtime.Unit
 //│         };
 //│         return runtime.mkEffect(this, hdlrFun)
@@ -224,17 +226,17 @@ str
 //│         Cont$handleBlock$h1$2 = this
 //│       }
 //│       constructor(pc) {
-//│         let tmp12;
-//│         tmp12 = super(null);
+//│         let tmp28;
+//│         tmp28 = super(null);
 //│         this.pc = pc;
 //│       }
 //│       resume(value$) {
 //│         if (this.pc === 5) {
-//│           tmp11 = value$;
+//│           tmp25 = value$;
 //│         }
 //│         contLoop: while (true) {
 //│           if (this.pc === 5) {
-//│             return tmp11
+//│             return tmp25
 //│           }
 //│           break;
 //│         }
@@ -247,37 +249,38 @@ str
 //│       return runtime.handleBlockImpl(res7, h1)
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
-//│       let h2, tmp12, res7, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
+//│       let h2, res7, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
 //│       (class Handler$h2$1 extends Effect1 {
 //│         static {
 //│           Handler$h2$2 = this
 //│         }
 //│         constructor() {
-//│           let tmp13;
-//│           tmp13 = super();
+//│           let tmp28;
+//│           tmp28 = super();
 //│         }
 //│         perform(arg) {
 //│           let hdlrFun;
 //│           hdlrFun = function hdlrFun(k) {
-//│             let tmp13, tmp14, tmp15, tmp16, tmp17, Cont$handler$h2$perform$2, doUnwind2;
+//│             let tmp28, tmp29, tmp30, tmp31, tmp32;
+//│             let Cont$handler$h2$perform$2, doUnwind2;
 //│             (class Cont$handler$h2$perform$1 extends runtime.FunctionContFrame.class {
 //│               static {
 //│                 Cont$handler$h2$perform$2 = this
 //│               }
 //│               constructor(pc) {
-//│                 let tmp18;
-//│                 tmp18 = super(null);
+//│                 let tmp33;
+//│                 tmp33 = super(null);
 //│                 this.pc = pc;
 //│               }
 //│               resume(value$) {
 //│                 if (this.pc === 3) {
-//│                   tmp15 = value$;
+//│                   tmp30 = value$;
 //│                 }
 //│                 contLoop: while (true) {
 //│                   if (this.pc === 3) {
-//│                     tmp16 = str + "B";
-//│                     tmp17 = str + tmp16;
-//│                     str = tmp17;
+//│                     tmp31 = str + "B";
+//│                     tmp32 = str + tmp31;
+//│                     str = tmp32;
 //│                     return runtime.Unit
 //│                   }
 //│                   break;
@@ -291,16 +294,16 @@ str
 //│               res8.contTrace.last = res8.contTrace.last.next;
 //│               return res8
 //│             };
-//│             tmp13 = str + "B";
-//│             tmp14 = str + tmp13;
-//│             str = tmp14;
-//│             tmp15 = runtime.safeCall(k(arg));
-//│             if (tmp15 instanceof runtime.EffectSig.class) {
-//│               return doUnwind2(tmp15, 3)
+//│             tmp28 = str + "B";
+//│             tmp29 = str + tmp28;
+//│             str = tmp29;
+//│             tmp30 = runtime.safeCall(k(arg));
+//│             if (tmp30 instanceof runtime.EffectSig.class) {
+//│               return doUnwind2(tmp30, 3)
 //│             }
-//│             tmp16 = str + "B";
-//│             tmp17 = str + tmp16;
-//│             str = tmp17;
+//│             tmp31 = str + "B";
+//│             tmp32 = str + tmp31;
+//│             str = tmp32;
 //│             return runtime.Unit
 //│           };
 //│           return runtime.mkEffect(this, hdlrFun)
@@ -314,14 +317,14 @@ str
 //│           Cont$handleBlock$h2$2 = this
 //│         }
 //│         constructor(pc) {
-//│           let tmp13;
-//│           tmp13 = super(null);
+//│           let tmp28;
+//│           tmp28 = super(null);
 //│           this.pc = pc;
 //│         }
 //│         resume(value$) {
 //│           switch (this.pc) {
 //│             case 1:
-//│               tmp12 = value$;
+//│               tmp26 = value$;
 //│               break;
 //│             case 2:
 //│               res7 = value$;
@@ -351,9 +354,9 @@ str
 //│         res8.contTrace.last.next = new Cont$handleBlock$h2$2(pc);
 //│         return runtime.handleBlockImpl(res8, h2)
 //│       };
-//│       tmp12 = runtime.safeCall(h2.perform(runtime.Unit));
-//│       if (tmp12 instanceof runtime.EffectSig.class) {
-//│         return doUnwind1(tmp12, 1)
+//│       tmp26 = runtime.safeCall(h2.perform(runtime.Unit));
+//│       if (tmp26 instanceof runtime.EffectSig.class) {
+//│         return doUnwind1(tmp26, 1)
 //│       }
 //│       res7 = runtime.safeCall(h1.perform(runtime.Unit));
 //│       if (res7 instanceof runtime.EffectSig.class) {
@@ -361,18 +364,18 @@ str
 //│       }
 //│       return res7
 //│     };
-//│     tmp11 = handleBlock$8();
-//│     if (tmp11 instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp11, 5)
+//│     tmp25 = handleBlock$8();
+//│     if (tmp25 instanceof runtime.EffectSig.class) {
+//│       return doUnwind(tmp25, 5)
 //│     }
-//│     return tmp11
+//│     return tmp25
 //│   };
-//│   tmp9 = handleBlock$7();
-//│   if (tmp9 instanceof runtime.EffectSig.class) {
-//│     tmp9 = runtime.topLevelEffect(tmp9, false);
+//│   tmp24 = handleBlock$7();
+//│   if (tmp24 instanceof runtime.EffectSig.class) {
+//│     tmp24 = runtime.topLevelEffect(tmp24, false);
 //│   }
-//│   tmp10 = tmp9;
-//│ } else { tmp10 = runtime.Unit; }
+//│   tmp27 = tmp24;
+//│ } else { tmp27 = runtime.Unit; }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"

@@ -153,6 +153,9 @@ package object utils {
     @inline def matches(pf: PartialFunction[A, Bool]): Bool =
       pf.lift(self).contains(true)
     
+    @inline def optionIf(cond: A => Bool): Option[A] = if (cond(self)) Some(self) else None
+    @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
+    
     /** 
      * A helper to write left-associative applications, mainly used to get rid of paren hell
      * Example:
@@ -168,10 +171,8 @@ package object utils {
   implicit final class LazyGenHelper[A](self: => A) {
     
     @inline def optionIf(cond: Bool): Option[A] = if (cond) Some(self) else None
-    @inline def optionIf(cond: A => Bool): Option[A] = if (cond(self)) Some(self) else None
     
     @inline def optionUnless(cond: Bool): Option[A] = if (!cond) Some(self) else None
-    @inline def optionUnless(cond: A => Bool): Option[A] = if (!cond(self)) Some(self) else None
     
   }
   

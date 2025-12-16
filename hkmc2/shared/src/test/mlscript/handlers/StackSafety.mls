@@ -23,9 +23,11 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, $_stack$_safe$_body$_;
+//│ let hi;
+//│ let res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, Cont$func$hi$1, doUnwind, stackDelayRes;
+//│   let scrut, tmp;
+//│   let Cont$func$hi$1, doUnwind, stackDelayRes;
 //│   (class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$hi$1 = this
@@ -77,9 +79,11 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, $_stack$_safe$_body$_1;
+//│ let sum1;
+//│ let res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
+//│   let scrut, tmp, tmp1;
+//│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
 //│   (class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$sum$1 = this

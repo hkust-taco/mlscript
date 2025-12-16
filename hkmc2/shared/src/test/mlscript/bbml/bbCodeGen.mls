@@ -262,7 +262,8 @@ region x in x.ref 42
 :sjs
 region x in let y = x.ref 42 in !(y)
 //│ JS (unsanitized):
-//│ let x4, y;
+//│ let y;
+//│ let x4;
 //│ x4 = globalThis.Object.freeze(new globalThis.Region());
 //│ y = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
 //│ y.value
@@ -273,7 +274,8 @@ region x in let y = x.ref 42 in !(y)
 :sjs
 region x in let y = x.ref 42 in y := 0
 //│ JS (unsanitized):
-//│ let x5, y1;
+//│ let y1;
+//│ let x5;
 //│ x5 = globalThis.Object.freeze(new globalThis.Region());
 //│ y1 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
 //│ y1.value = 0;

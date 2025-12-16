@@ -156,16 +156,17 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let tmp11, handleBlock$11;
+//│ let f, scrut, tmp20;
+//│ let handleBlock$11;
 //│ handleBlock$11 = function handleBlock$() {
-//│   let f, h, scrut, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
+//│   let h, res, Cont$handleBlock$h$11, doUnwind, Handler$h$12;
 //│   (class Handler$h$11 extends Effect1 {
 //│     static {
 //│       Handler$h$12 = this
 //│     }
 //│     constructor() {
-//│       let tmp12;
-//│       tmp12 = super();
+//│       let tmp21;
+//│       tmp21 = super();
 //│     }
 //│     perform(arg) {
 //│       let hdlrFun;
@@ -183,8 +184,8 @@ if true do
 //│       Cont$handleBlock$h$11 = this
 //│     }
 //│     constructor(pc) {
-//│       let tmp12;
-//│       tmp12 = super(null);
+//│       let tmp21;
+//│       tmp21 = super(null);
 //│       this.pc = pc;
 //│     }
 //│     resume(value$) {
@@ -219,11 +220,11 @@ if true do
 //│     return runtime.Unit
 //│   }
 //│ };
-//│ tmp11 = handleBlock$11();
-//│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   tmp11 = runtime.topLevelEffect(tmp11, false);
+//│ tmp20 = handleBlock$11();
+//│ if (tmp20 instanceof runtime.EffectSig.class) {
+//│   tmp20 = runtime.topLevelEffect(tmp20, false);
 //│ }
-//│ tmp11
+//│ tmp20
 //│ = 3
 
 module A with

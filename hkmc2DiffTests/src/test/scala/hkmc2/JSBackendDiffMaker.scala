@@ -114,11 +114,12 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
+        case _: Scoped => lastWords("impossible: mapTail should have handled this case specially")
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then
         output(s"Lowered:")
-        output(le.showAsTree)
+        output(lowered0.showAsTree)
       
       // * We used to do this to avoid needlessly generating new variable names in separate blocks:
       // val nestedScp = baseScp.nest
@@ -137,6 +138,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
       val jsStr = js.stripBreaks.mkString(100)
       if showSanitizedJS.isSet then
         output(s"JS:")
+        if preStr.nonEmpty then output(preStr)
         output(jsStr)
       def mkQuery(preStr: Str, jsStr: Str)(k: Str => Unit) =
         val queryStr = jsStr.replaceAll("\n", " ")
