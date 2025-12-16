@@ -41,7 +41,7 @@ class CompilerCtx(
     
     // println(s"Cache has: ${cache.elabCache.contains(file)} ${cache.elabCache.keys}")
     
-    val lastMod = file.lastChangedTimestamp
+    val lastMod = fs.getLastChangedTimestamp(file)
     
     def mk =
       val parse =

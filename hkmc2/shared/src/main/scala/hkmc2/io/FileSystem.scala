@@ -21,6 +21,13 @@ trait FileSystem:
   /** Check if a file exists at the given path. */
   def exists(path: Path): Bool
   
+  /**
+    * Get the last changed timestamp of the file at the given path. The meaning
+    * of the timestamp is platform-dependent. The caller should ensure that the
+    * file exists before calling this method.
+    */
+  def getLastChangedTimestamp(path: Path): Long
+  
 object FileSystem:
   /** Get the platform default file system by delegating to the platform. */
   def default: FileSystem = PlatformFileSystem.default
