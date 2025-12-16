@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import scala.annotation.tailrec
+import collection.mutable.Map as MutMap
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
@@ -65,7 +66,7 @@ object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
   
-  def fresh(fs: io.FileSystem): CompilerCtx = CompilerCtx(N, Set.empty, fs, CompilerCache())
+  def fresh(fs: io.FileSystem): CompilerCtx = CompilerCtx(N, Set.empty, fs, new PlatformCompilerCache)
   
 end CompilerCtx
 
@@ -73,17 +74,25 @@ end CompilerCtx
 
 object CompilerCache:
   
-  def apply(): CompilerCache = PlatformCompilerCache()
-  
   class Artifact(val tree: syntax.Tree.Block, val term: semantics.Term.Blk, val lastChangedTimestamp: Long)
   
 end CompilerCache
 
 
 trait CompilerCache:
+  // TODO also use hash comparison to avoid needless re-parses?
+  
+  def elabCache: MutMap[io.Path, Artifact]
   
   /** Create or update an artifact at the given path in the cache. */
-  def upsert(path: io.Path)(update: Option[Artifact] => Artifact): Artifact
+  def upsert(path: io.Path)(update: Option[Artifact] => Artifact): Artifact =
+    elabCache
+      .updateWith(path):
+        case N => S(update(N))
+        case cur @ S(oldArt) =>
+          val newArt = update(cur)
+          if newArt is oldArt then cur else S(newArt)
+      .get // * above, we always returns Some
   
 end CompilerCache
 
