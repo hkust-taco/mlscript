@@ -644,10 +644,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       blockPreamble(p.imports.map(_._1) ++ syms) ->
         (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
     case body =>
-      // * TODO: remove the use of `body.definedVarsNoScoped` after we clean up
-      // *  IR transformation passes to not generate out-of-scope symbol references.
-      // * This code should be just `blockPreamble(p.imports.map(_._1)) -> ...`
-      blockPreamble(p.imports.map(_._1) ++ body.definedVarsNoScoped) ->
+      blockPreamble(p.imports.map(_._1)) ->
         (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
   
   def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
@@ -658,8 +655,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       :: doc";"
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
-    // * TODO: remove the filter and lookup after when the other defs stop using `definedVarsNoScoped`
-    val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
+    val vars = ss.toArray.sortBy(_.uid).iterator.map(l =>
       l -> scope.allocateName(l))
     genLetDecls(vars)
 
@@ -671,11 +667,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
-    // * TODO: like above, remove the use of `body.definedVarsNoScoped` after we clean up
-    // * This code should be just `returningTerm(t, endSemi)`
-    val pre = blockPreamble(t.definedVarsNoScoped)
-    val rest = returningTerm(t, endSemi)
-    pre :: rest
+    returningTerm(t, endSemi)
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
     nonNestedScoped(t)(bd => block(bd, endSemi))

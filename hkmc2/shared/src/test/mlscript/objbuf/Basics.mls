@@ -8,10 +8,218 @@ open annotations
 @buffered
 class A(x) with
   fun f(y) = x + y
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
 
 @bufferable
 class A2(x) with
   fun f(y) = x + y
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, member:A2 -> A21, class:A2 -> A2, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A, $block$res -> block$res3, module:A2 -> A2)
+//│             curThis = S of S of module:A2
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap(x -> x, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, member:A2 -> A21, class:A2 -> A2, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A, $block$res -> block$res3, module:A2 -> A2)
+//│             curThis = S of S of module:A2
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap(x -> x, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, member:A2 -> A21, class:A2 -> A2, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A, $block$res -> block$res3, module:A2 -> A2)
+//│             curThis = S of S of module:A2
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap(y -> y, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res2, module:A -> A, $runtime -> runtime, $definitionMetadata -> definitionMetadata, member:ObjectBuffer -> ObjectBuffer, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, member:A2 -> A21, class:A2 -> A2, $block$res -> block$res1, $block$res -> block$res, member:A -> A1, class:A -> A, $block$res -> block$res3, module:A2 -> A2)
+//│             curThis = S of S of module:A2
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap(y -> y, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
 
 :ge
 @buffered
@@ -22,6 +230,8 @@ class B1(x)
 //│ ║        	 ^^^^^^^^
 //│ ║  l.18: 	@buffered
 //│ ╙──      	^^^^^^^^^
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
 
 :ge
 @buffered
@@ -32,6 +242,8 @@ class B2(x)
 //│ ║        	 ^^^^^^^^
 //│ ║  l.28: 	@bufferable
 //│ ╙──      	^^^^^^^^^^^
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
 
 :w
 @bufferable
@@ -104,5 +316,265 @@ A.f(buf, obj2)(1)
 class A(x) with
   val z = x
   fun f(y) = x + y + z
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap($args -> args, buf -> buf1, idx -> idx)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf1, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp10)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf1, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp10)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf1, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp10)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $idx
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res5, module:B2 -> B2, $block$res -> block$res24, $runtime -> runtime, $definitionMetadata -> definitionMetadata, module:A -> A3, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:B3 -> B31, module:B3 -> B3, $block$res -> block$res6, class:B3 -> B3, member:B3 -> B33, object:B3 -> B32, $block$res -> block$res7, buf -> buf, $block$res -> block$res8, obj1 -> obj1, $block$res -> block$res9, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res10, $tmp -> tmp1, $block$res -> block$res11, $tmp -> tmp2, $block$res -> block$res12, $tmp -> tmp3, $block$res -> block$res1, member:A -> A1, $block$res -> block$res13, class:A -> A, obj3 -> obj3, $block$res -> block$res14, $tmp -> tmp4, $block$res -> block$res15, $tmp -> tmp5, $block$res -> block$res2, module:A -> A, $block$res -> block$res16, $tmp -> tmp6, member:Oops -> Oops1, class:Oops -> Oops, member:Predef -> Predef, $block$res -> block$res17, member:A2 -> A21, module:Oops -> Oops, class:A2 -> A2, $block$res -> block$res, obj1 -> obj11, $block$res -> block$res3, $block$res -> block$res18, module:A2 -> A2, $block$res -> block$res19, obj2 -> obj21, $block$res -> block$res20, $tmp -> tmp7, member:ObjectBuffer -> ObjectBuffer, member:B1 -> B11, $block$res -> block$res21, class:B1 -> B1, $tmp -> tmp8, $block$res -> block$res22, $block$res -> block$res4, $block$res -> block$res23, module:B1 -> B1, $tmp -> tmp9, member:A -> A4, class:A -> A3, member:B2 -> B21, class:B2 -> B2)
+//│             curThis = S of S of module:A
+//│             bindings = HashMap()
+//│           curThis = N
+//│           bindings = HashMap(buf -> buf1, idx -> idx, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap()
+//│       curThis = N
+//│       bindings = HashMap($args -> args1, y -> y)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp10)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
 
 

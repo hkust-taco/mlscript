@@ -1,5 +1,5 @@
 
 module QuoteInc with ...
 fun res =
-  (x_0) =>
-    (+)(x_0, 1)
+  (_0) =>
+    ((1, 1))(1, 1)

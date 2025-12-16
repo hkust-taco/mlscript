@@ -235,37 +235,168 @@ fact(3)
 
 :sjs
 region x in 42
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.237: 	region x in 42
+//│ ║         	       ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.237: 	region x in 42
+//│ ╙──       	       ^
 //│ JS (unsanitized):
-//│ let x1; x1 = globalThis.Object.freeze(new globalThis.Region()); 42
+//│ x = globalThis.Object.freeze(new globalThis.Region()); 42
 //│ = 42
 //│ Type: Int
 
 
 :sjs
 region x in x
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.245: 	region x in x
+//│ ║         	       ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.245: 	region x in x
+//│ ╙──       	       ^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.245: 	region x in x
+//│ ║         	            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.245: 	region x in x
+//│ ╙──       	       ^
 //│ JS (unsanitized):
-//│ let x2; x2 = globalThis.Object.freeze(new globalThis.Region()); x2
+//│ x = globalThis.Object.freeze(new globalThis.Region()); x
 //│ = Region
 //│ Type: Region[?]
 
 
 :sjs
 region x in x.ref 42
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.253: 	region x in x.ref 42
+//│ ║         	       ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.253: 	region x in x.ref 42
+//│ ╙──       	       ^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.253: 	region x in x.ref 42
+//│ ║         	            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.253: 	region x in x.ref 42
+//│ ╙──       	       ^
 //│ JS (unsanitized):
-//│ let x3;
-//│ x3 = globalThis.Object.freeze(new globalThis.Region());
-//│ globalThis.Object.freeze(new globalThis.Ref(x3, 42))
+//│ x = globalThis.Object.freeze(new globalThis.Region());
+//│ globalThis.Object.freeze(new globalThis.Ref(x, 42))
 //│ = Ref(Region, 42)
 //│ Type: Ref[Int, ?]
 
 
 :sjs
 region x in let y = x.ref 42 in !(y)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res25, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap(y -> y)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.263: 	region x in let y = x.ref 42 in !(y)
+//│ ║         	       ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.263: 	region x in let y = x.ref 42 in !(y)
+//│ ╙──       	       ^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res25, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap(y -> y)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.263: 	region x in let y = x.ref 42 in !(y)
+//│ ║         	                    ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.263: 	region x in let y = x.ref 42 in !(y)
+//│ ╙──       	       ^
 //│ JS (unsanitized):
 //│ let y;
-//│ let x4;
-//│ x4 = globalThis.Object.freeze(new globalThis.Region());
-//│ y = globalThis.Object.freeze(new globalThis.Ref(x4, 42));
+//│ x = globalThis.Object.freeze(new globalThis.Region());
+//│ y = globalThis.Object.freeze(new globalThis.Ref(x, 42));
 //│ y.value
 //│ = 42
 //│ Type: Int
@@ -273,11 +404,48 @@ region x in let y = x.ref 42 in !(y)
 
 :sjs
 region x in let y = x.ref 42 in y := 0
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res25, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, y -> y, $block$res -> block$res26, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap(y -> y1)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.275: 	region x in let y = x.ref 42 in y := 0
+//│ ║         	       ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.275: 	region x in let y = x.ref 42 in y := 0
+//│ ╙──       	       ^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = x
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res5, $block$res -> block$res21, $block$res -> block$res6, $block$res -> block$res7, $runtime -> runtime, member:print -> print, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res8, $Block -> Block, member:lambda -> lambda, $block$res -> block$res22, $Shape -> Shape, $tmp -> tmp1, member:Foo -> Foo1, class:Foo -> Foo, $block$res -> block$res23, $block$res -> block$res24, $block$res -> block$res9, $block$res -> block$res10, foo -> foo, $block$res -> block$res25, $block$res -> block$res11, member:inc -> inc, member:Ref -> Ref1, y -> y, $block$res -> block$res26, $block$res -> block$res12, $block$res -> block$res13, $scrut -> scrut, $block$res -> block$res14, $scrut -> scrut1, $block$res -> block$res15, member:Foo -> Foo3, class:Foo -> Foo2, $block$res -> block$res16, foo -> foo1, class:CodeBase -> CodeBase, $block$res -> block$res17, member:pow -> pow, class:Region -> Region, class:Ref -> Ref, member:Predef -> Predef, $block$res -> block$res, $block$res -> block$res18, member:nott -> nott, $block$res -> block$res19, $block$res -> block$res20, $block$res -> block$res1, $tmp -> tmp, member:fact -> fact, member:CodeBase -> CodeBase1, $block$res -> block$res2, member:Region -> Region1, $block$res -> block$res3, $block$res -> block$res4, x -> x)
+//│     curThis = N
+//│     bindings = HashMap(y -> y1)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.275: 	region x in let y = x.ref 42 in y := 0
+//│ ║         	                    ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.275: 	region x in let y = x.ref 42 in y := 0
+//│ ╙──       	       ^
 //│ JS (unsanitized):
 //│ let y1;
-//│ let x5;
-//│ x5 = globalThis.Object.freeze(new globalThis.Region());
-//│ y1 = globalThis.Object.freeze(new globalThis.Ref(x5, 42));
+//│ x = globalThis.Object.freeze(new globalThis.Region());
+//│ y1 = globalThis.Object.freeze(new globalThis.Ref(x, 42));
 //│ y1.value = 0;
 //│ 0
 //│ = 0
