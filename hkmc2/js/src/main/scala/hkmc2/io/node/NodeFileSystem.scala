@@ -19,3 +19,6 @@ private[io] class NodeFileSystem extends FileSystem:
   
   def exists(path: Path): Bool =
     fs.existsSync(path.toString)
+  
+  def getLastChangedTimestamp(path: Path): Long =
+    fs.lstatSync(path.toString).mtime.getTime().toLong

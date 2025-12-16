@@ -8,6 +8,8 @@ import os.up
 import mlscript.utils._, shorthands._
 import io.PlatformPath.given
 
+import CompileTestRunner.given
+
 
 class CompileTestRunner
   extends funsuite.AnyFunSuite
@@ -50,8 +52,7 @@ class CompileTestRunner
         
         // Stack safety relies on the fact that runtime uses while loops for resumption
         // and does not create extra stack depth. Hence we disable while loop rewriting here.
-        given Config = Config.default.copy(rewriteWhileLoops = false)
-        given io.FileSystem = io.FileSystem.default
+        given Config = Config.default
         
         // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
         val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)
@@ -73,6 +74,11 @@ class CompileTestRunner
       
 end CompileTestRunner
 
-object CompileTestRunner
+
+object CompileTestRunner:
+  
+  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  
+end CompileTestRunner
 
 

@@ -5,6 +5,7 @@ import scala.collection.mutable
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
+import hkmc2.utils.*
 import hkmc2.Message.MessageContext
 import hkmc2.io
 import utils.TraceLogger
@@ -12,11 +13,12 @@ import utils.TraceLogger
 import Elaborator.*
 import hkmc2.syntax.LetBind
 
+
 class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(path: Str)(using cfg: Config, fs: io.FileSystem): Import =
+  def importPath(path: Str)(using cfg: Config): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
@@ -41,39 +43,28 @@ class Importer:
       case "mjs" | "js" =>
         Import(sym, file.toString, file)
         
-      case "mls" =>
-        
-        val block = fs.read(file)
-        val fph = new FastParseHelpers(block)
-        val origin = Origin(file, 0, fph)
+      case "mls" if {
+        !cctx.beingCompiled.contains(file) `||`:
+          raise:
+            ErrorReport:
+                msg"Circular imports of `mls` files are not yet supported" -> N
+                :: (cctx.allFilesBeingImported :+ file).map(f => msg"  importing ${f.toString}" -> N)
+          false
+      } =>
         
         val sym = tl.trace(s">>> Importing $file"):
-          
-          // TODO add parser option to omit internal impls
-          
-          val lexer = new syntax.Lexer(origin, dbg = tl.doTrace)
-          val tokens = lexer.bracketedTokens
-          val rules = syntax.ParseRules()
-          val p = new syntax.Parser(origin, tokens, rules, raise, dbg = tl.doTrace):
-            def doPrintDbg(msg: => Str): Unit =
-              // if dbg then output(msg)
-              if dbg then tl.log(msg)
-          val res = p.parseAll(p.block(allowNewlines = true))
-          val resBlk = new syntax.Tree.Block(res)
-          
-          given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
-          val elab = Elaborator(tl, file.up, prelude)
-          elab.importFrom(resBlk)
-          
-          resBlk.definedSymbols.find(_._1 === nme) match
-          case Some(nme -> sym) => sym
+          given TL = tl
+          val artifact = cctx.getElaboratedBlock(file, prelude)
+          artifact.tree.definedSymbols.find(_._1 === nme) match
+          case Some(nme -> imsym) => imsym
           case None => lastWords(s"File $file does not define a symbol named $nme")
         
         val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
       case _ =>
-        raise(ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil))
+        if file.ext =/= "mls" then raise:
+          ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil)
         Import(sym, path, file)
       
     else

@@ -10,7 +10,7 @@ import mlscript.utils._, shorthands._
 /**
  * JavaScript implementation of Path using Node.js path module
  */
-private[io] class NodePath(val pathString: String) extends Path:
+private[io] case class NodePath(val pathString: String) extends Path:
   private lazy val parsed = path.parse(pathString)
   
   override def toString: String = pathString

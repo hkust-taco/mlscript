@@ -183,7 +183,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"Error: $d")
       ()
     
-    val block = fs.read(file)
+    val block = cctx.fs.read(file)
     val fph = new FastParseHelpers(block)
     val origin = Origin(file, 0, fph)
     
