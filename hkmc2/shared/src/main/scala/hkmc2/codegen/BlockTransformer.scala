@@ -75,7 +75,7 @@ class BlockTransformer(subst: SymbolSubst):
       applyDefn(defn): defn2 =>
         val rst2 = applySubBlock(rst)
         if (defn2 is defn) && (rst2 is rst) then b else Define(defn2, rst2)
-    case h @ HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
+    case HandleBlock(l, res, par, args, cls, hdr, bod, rst) =>
       val l2 = applyLocal(l)
       val res2 = applyLocal(res)
       applyPath(par): par2 =>

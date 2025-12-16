@@ -397,11 +397,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
   /**
    * The actual translation:
-   * 1. add call markers. rewrite handler blocks in terms of classes and functions
-   * 2. add debug methods
-   * 3. class lifter
-   * 4. state machine transformation of all functions. add unwind and resume state
-   *    generate normal function body
+   * 1. rewrite handler blocks in terms of classes and functions
+   * 2. class lifter
+   * 3. state machine transformation of all functions
    */
   
 
