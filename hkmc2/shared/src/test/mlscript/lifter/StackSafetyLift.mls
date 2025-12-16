@@ -33,14 +33,14 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafetyLift.mls:23:1", 0, null, 2, n, tmp1)
+//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafetyLift.mls:23:1", 0, null, 2, tmp1, n)
 //│   }
 //│   if (runtime.isResuming === true) {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     n = runtime.resumeArr.at(runtime.resumeIdx);
+//│     tmp1 = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
-//│     tmp1 = runtime.resumeArr.at(saveOffset);
+//│     n = runtime.resumeArr.at(saveOffset);
 //│     runtime.isResuming = false;
 //│   } else {
 //│     pc = 0;
@@ -85,14 +85,14 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:73:1", 0, null, 2, tmp2, n)
+//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:73:1", 0, null, 2, n, tmp2)
 //│   }
 //│   if (runtime.isResuming === true) {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
+//│     n = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
-//│     n = runtime.resumeArr.at(saveOffset);
+//│     tmp2 = runtime.resumeArr.at(saveOffset);
 //│     runtime.isResuming = false;
 //│   } else {
 //│     pc = 0;
@@ -109,7 +109,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:76:9", 1, null, 2, tmp2, n)
+//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:76:9", 1, null, 2, n, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
