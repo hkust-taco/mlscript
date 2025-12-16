@@ -1262,7 +1262,7 @@ class Lifter()(using State, Raise):
         (if paramsSet.contains(s) then s.asPath else Value.Lit(Tree.UnitLit(true))).asArg
       // moved when the capture is instantiated
       val bod = blockBuilder
-        .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
+        .assignScoped(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
         .rest(transformed)
       Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(forceTailRec = f.forceTailRec), captureCls :: newDefns)

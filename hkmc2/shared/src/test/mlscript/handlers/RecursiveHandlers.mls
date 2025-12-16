@@ -157,14 +157,15 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp26, tmp27, tmp28, tmp29;
+//│ let str, scrut, tmp11, tmp12;
 //│ let h11, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
-//│     let tmp30, tmp31, tmp32, pc;
+//│     let tmp13, tmp14, tmp15, pc;
 //│     if (runtime.isResuming === true) {
+//│       let saveOffset;
 //│       pc = runtime.resumePc;
 //│       runtime.isResuming = false;
 //│     } else {
@@ -173,8 +174,8 @@ str
 //│     main: while (true) {
 //│       switch (pc) {
 //│         case 0:
-//│           tmp30 = str + "A";
-//│           str = tmp30;
+//│           tmp13 = str + "A";
+//│           str = tmp13;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
 //│             return runtime.unwind(runtime.resumeValue, 1, Handler$h1$perform$1, null, "RecursiveHandlers.mls:149:7", 1, null, 0)
@@ -183,9 +184,9 @@ str
 //│           continue main;
 //│           break;
 //│         case 1:
-//│           tmp31 = runtime.resumeValue;
-//│           tmp32 = str + "A";
-//│           str = tmp32;
+//│           tmp14 = runtime.resumeValue;
+//│           tmp15 = str + "A";
+//│           str = tmp15;
 //│           return runtime.Unit;
 //│           break;
 //│       }
@@ -202,12 +203,12 @@ str
 //│       Handler$h1$3 = this
 //│     }
 //│     constructor() {
-//│       let tmp30;
-//│       tmp30 = super();
-//│       if (tmp30 instanceof runtime.EffectSig.class) {
-//│         tmp30 = runtime.topLevelEffect(tmp30, false);
+//│       let tmp13;
+//│       tmp13 = super();
+//│       if (tmp13 instanceof runtime.EffectSig.class) {
+//│         tmp13 = runtime.topLevelEffect(tmp13, false);
 //│       }
-//│       tmp30;
+//│       tmp13;
 //│     }
 //│     perform(arg) {
 //│       let Handler$h1$perform$here;
@@ -222,8 +223,9 @@ str
 //│     h11 = runtime.topLevelEffect(h11, false);
 //│   }
 //│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
-//│     let tmp30, tmp31, tmp32, tmp33, tmp34, pc;
+//│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
 //│     if (runtime.isResuming === true) {
+//│       let saveOffset;
 //│       pc = runtime.resumePc;
 //│       runtime.isResuming = false;
 //│     } else {
@@ -232,9 +234,9 @@ str
 //│     main: while (true) {
 //│       switch (pc) {
 //│         case 0:
-//│           tmp30 = str + "B";
-//│           tmp31 = str + tmp30;
-//│           str = tmp31;
+//│           tmp13 = str + "B";
+//│           tmp14 = str + tmp13;
+//│           str = tmp14;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
 //│             return runtime.unwind(runtime.resumeValue, 1, Handler$h2$perform$1, null, "RecursiveHandlers.mls:154:7", 1, null, 0)
@@ -243,10 +245,10 @@ str
 //│           continue main;
 //│           break;
 //│         case 1:
-//│           tmp32 = runtime.resumeValue;
-//│           tmp33 = str + "B";
-//│           tmp34 = str + tmp33;
-//│           str = tmp34;
+//│           tmp15 = runtime.resumeValue;
+//│           tmp16 = str + "B";
+//│           tmp17 = str + tmp16;
+//│           str = tmp17;
 //│           return runtime.Unit;
 //│           break;
 //│       }
@@ -263,12 +265,12 @@ str
 //│       Handler$h2$3 = this
 //│     }
 //│     constructor() {
-//│       let tmp30;
-//│       tmp30 = super();
-//│       if (tmp30 instanceof runtime.EffectSig.class) {
-//│         tmp30 = runtime.topLevelEffect(tmp30, false);
+//│       let tmp13;
+//│       tmp13 = super();
+//│       if (tmp13 instanceof runtime.EffectSig.class) {
+//│         tmp13 = runtime.topLevelEffect(tmp13, false);
 //│       }
-//│       tmp30;
+//│       tmp13;
 //│     }
 //│     perform(arg) {
 //│       let Handler$h2$perform$here;
@@ -279,8 +281,9 @@ str
 //│     static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│   });
 //│   handleBlock$$2 = function handleBlock$$(h22) {
-//│     let pc;
+//│     let tmp13, pc;
 //│     if (runtime.isResuming === true) {
+//│       let saveOffset;
 //│       pc = runtime.resumePc;
 //│       runtime.isResuming = false;
 //│     } else {
@@ -297,7 +300,7 @@ str
 //│           continue main;
 //│           break;
 //│         case 1:
-//│           tmp28 = runtime.resumeValue;
+//│           tmp13 = runtime.resumeValue;
 //│           return runtime.safeCall(h11.perform(runtime.Unit));
 //│           break;
 //│       }
@@ -310,8 +313,10 @@ str
 //│     }
 //│   });
 //│   handleBlock$10 = (undefined, function () {
-//│     let h22, handleBlock$$here, pc;
+//│     let tmp13, pc;
+//│     let h22, handleBlock$$here;
 //│     if (runtime.isResuming === true) {
+//│       let saveOffset;
 //│       pc = runtime.resumePc;
 //│       runtime.isResuming = false;
 //│     } else {
@@ -328,8 +333,8 @@ str
 //│           continue main;
 //│           break;
 //│         case 1:
-//│           tmp27 = runtime.resumeValue;
-//│           return tmp27;
+//│           tmp13 = runtime.resumeValue;
+//│           return tmp13;
 //│           break;
 //│         case 2:
 //│           h22 = runtime.resumeValue;
@@ -345,12 +350,12 @@ str
 //│       break;
 //│     }
 //│   });
-//│   tmp26 = runtime.enterHandleBlock(h11, handleBlock$10);
-//│   if (tmp26 instanceof runtime.EffectSig.class) {
-//│     tmp26 = runtime.topLevelEffect(tmp26, false);
+//│   tmp11 = runtime.enterHandleBlock(h11, handleBlock$10);
+//│   if (tmp11 instanceof runtime.EffectSig.class) {
+//│     tmp11 = runtime.topLevelEffect(tmp11, false);
 //│   }
-//│   tmp29 = tmp26;
-//│ } else { tmp29 = runtime.Unit; }
+//│   tmp12 = tmp11;
+//│ } else { tmp12 = runtime.Unit; }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"

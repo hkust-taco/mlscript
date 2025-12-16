@@ -53,8 +53,8 @@ class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
         case None => super.applyScopedBlock(b)
         case Some(scopedForCurrentFun) =>
           scopedForCurrentFun.addAll(syms)
-          super.applySubBlock(body)
-    case _ => super.applySubBlock(b)
+          applySubBlock(body)
+    case _ => applySubBlock(b)
     
 
 object HandlerLowering:
@@ -111,13 +111,12 @@ object HandlerLowering:
   private case class DebugInfo(
     debugNme: Str,
     debugInfoPath: Path,
-    inScopeLocals: Set[Local], // TODO: Remove this after scoped block is implemented.
   ):
     def nest(debugNme: Str, debugInfoPath: Path, locals: List[Local]) = copy(
-      debugNme = debugNme, debugInfoPath, inScopeLocals = inScopeLocals ++ locals)
+      debugNme = debugNme, debugInfoPath)
   
   private object DebugInfo:
-    def topLevel(debugNme: Str, locals: Set[Local]) = DebugInfo(debugNme, Value.Lit(Tree.UnitLit(true)), locals)
+    def topLevel(debugNme: Str) = DebugInfo(debugNme, Value.Lit(Tree.UnitLit(true)))
   
   type StateId = BigInt
 
@@ -403,13 +402,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
    */
   
 
-  private def translateBlock(blk: Block, h: HandlerCtx): Block =
+  private def translateBlock(blk: Block, h: HandlerCtx, scopedVars: collection.Set[Local]): Block =
     // All the defined variables are masked away from the inner scope (TODO: Scoped)
     given HandlerCtx = h
 
     def translateFunLike(fun: FunDefn, funcPath: Path, thisPath: Option[Path], debugNme: Str) =
-      val varList = (fun.body.definedVars ++ fun.params.flatMap(_.params.map(_.sym)))
-        .filterNot(h.debugInfo.inScopeLocals(_)).toList.sortBy(_.uid)
+      val scopedVars = fun.body match
+        case Scoped(syms, body) => syms
+        case _ => Set()
+      val varList = (scopedVars ++ fun.params.flatMap(_.params.map(_.sym)))
+        .toList.sortBy(_.uid)
       val debugInfo = Value.Lit(Tree.StrLit(debugNme)).asArg :: varList.zipWithIndex.filter(_._1.isInstanceOf[VarSymbol])
         .flatMap: (sym, idx) =>
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
@@ -417,7 +419,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
       val newCtx = HandlerCtx(S(funcPath), thisPath, fun.params.length, varList, S(L(fun.sym)),
         h.debugInfo.nest(debugNme, if opt.debug then debugInfoSym.asPath else unit, varList))
-      val bod2 = translateBlock(fun.body, newCtx)
+      val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
       (debugInfoSym, debugInfo, fun2)
@@ -493,22 +495,24 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false, false), _)
       (computeOff, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
 
-    val restoreVars = vars.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc)):
+    val restoreVars = vars.zipWithIndex.foldLeft(blockBuilder.assign(pcVar, paths.resumePc).chain(Scoped(Set(getSavedTmp), _))):
       case (builder, (local, idx)) =>
         val (computeOff, savePath) = getSaved(idx)
         builder.chain(computeOff).assign(local, savePath)
     
-    Match(
-      paths.isResuming,
-      Case.Lit(Tree.BoolLit(true)) ->
-        restoreVars
-          .assignFieldN(paths.runtimePath, new Tree.Ident("isResuming"), Value.Lit(Tree.BoolLit(false))).end :: Nil,
-      S(Assign(pcVar, intLit(parts.entry), End())),
-      mainLoop)
+    Scoped(
+      scopedVars ++ Set(pcVar),
+      Match(
+        paths.isResuming,
+        Case.Lit(Tree.BoolLit(true)) ->
+          restoreVars
+            .assignFieldN(paths.runtimePath, new Tree.Ident("isResuming"), Value.Lit(Tree.BoolLit(false))).end :: Nil,
+        S(Assign(pcVar, intLit(parts.entry), End())),
+        mainLoop))
   
   private def translateCtorLike(b: Block)(using h: HandlerCtx): Block =
-    translateBlock(b, HandlerCtx(N, N, 0, b.definedVars.filterNot(h.debugInfo.inScopeLocals(_)).toList, N,
-      h.debugInfo.nest("ctor-like block", unit, b.definedVars.toList)))
+    translateBlock(b, HandlerCtx(N, N, 0, Nil, N,
+      h.debugInfo.nest("ctor-like block", unit, b.definedVars.toList)), Set.empty)
 
   private def translateTrivialOrTopLevel(b: Block)(using HandlerCtx): Block =
     def topLevelCheck(l: Local, r: Result, rst: Block): Block =
@@ -533,7 +537,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case EffectfulResult(r) =>
           // Fallback case, this may lead to unnecessary assignments if it is assign-like
           val l = freshTmp()
-          topLevelCheck(l, r, k(Value.Ref(l)))
+          Scoped(Set(l), topLevelCheck(l, r, k(Value.Ref(l))))
         case _ => super.applyResult(r)(k)
     trivialTransform.applyBlock(b)
   
@@ -586,8 +590,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyBlock(b: Block) = b match
         case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) =>
           val hdr2 = hdr.map(applyHandler)
-          val bod2 = applyBlock(bod)
-          val rst2 = applyBlock(rst)
+          val bod2 = applySubBlock(bod)
+          val rst2 = applySubBlock(rst)
           translateHandleBlockShallow(new HandleBlock(lhs, res, par, args, cls, hdr2, bod2, rst2))
         case _ => super.applyBlock(b)
     transform.applyBlock(b)
@@ -596,9 +600,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     doUnwindMap.clear()
     val preTransformed = new PreHandlerLowering().applyBlock(b)
     val ctx = HandlerCtx(N, N, 0, b.definedVars.toList, N, DebugInfo.topLevel(
-      "‹top level›",
-      b.definedVars
+      "‹top level›"
     ))
-    val transformed = translateBlock(preTransformed, ctx)
+    val transformed = translateBlock(preTransformed, ctx, Set.empty)
     (transformed, doUnwindMap)
     

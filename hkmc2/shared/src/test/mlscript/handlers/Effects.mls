@@ -158,8 +158,8 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let f, scrut, tmp20;
-//│ let h11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
+//│ let tmp11;
+//│ let f, h11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
 //│ Handler$h$perform$11 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
 //│   return arg
 //│ };
@@ -173,12 +173,12 @@ if true do
 //│     Handler$h$23 = this
 //│   }
 //│   constructor() {
-//│     let tmp21;
-//│     tmp21 = super();
-//│     if (tmp21 instanceof runtime.EffectSig.class) {
-//│       tmp21 = runtime.topLevelEffect(tmp21, false);
+//│     let tmp12;
+//│     tmp12 = super();
+//│     if (tmp12 instanceof runtime.EffectSig.class) {
+//│       tmp12 = runtime.topLevelEffect(tmp12, false);
 //│     }
-//│     tmp21;
+//│     tmp12;
 //│   }
 //│   perform(arg) {
 //│     let Handler$h$perform$here;
@@ -196,6 +196,7 @@ if true do
 //│   return 3
 //│ };
 //│ handleBlock$11 = (undefined, function () {
+//│   let scrut;
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     return f()
@@ -203,11 +204,11 @@ if true do
 //│     return runtime.Unit
 //│   }
 //│ });
-//│ tmp20 = runtime.enterHandleBlock(h11, handleBlock$11);
-//│ if (tmp20 instanceof runtime.EffectSig.class) {
-//│   tmp20 = runtime.topLevelEffect(tmp20, false);
+//│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
+//│ if (tmp11 instanceof runtime.EffectSig.class) {
+//│   tmp11 = runtime.topLevelEffect(tmp11, false);
 //│ }
-//│ tmp20
+//│ tmp11
 //│ = 3
 
 module A with
@@ -384,16 +385,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.363: 	    module A with
+//│ ║  l.364: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.367: 	    module A with
+//│ ║  l.368: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.371: 	    module A with
+//│ ║  l.372: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.375: 	    module A with
+//│ ║  l.376: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

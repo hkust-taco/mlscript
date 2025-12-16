@@ -31,8 +31,9 @@ fun f() =
 //│   "k"
 //│ ]);
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp1, tmp2, pc, saveOffset;
+//│   let i, j, k, scrut, tmp1, tmp2, pc;
 //│   if (runtime.isResuming === true) {
+//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     i = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
@@ -117,8 +118,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:117:3)
-//│ 	at lambda_test (Debugging.mls:114:3)
+//│ 	at lambda (Debugging.mls:119:3)
+//│ 	at lambda_test (Debugging.mls:116:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -186,8 +187,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:181:3) with locals: j=200
+//│ > 	at f (Debugging.mls:183:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:183:3)
+//│ > 	at f (Debugging.mls:185:3)
 //│ > Stack Trace:
 //│ > 	at tail position

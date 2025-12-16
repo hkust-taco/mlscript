@@ -17,16 +17,18 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi;
-//│ let tmp, $_stack$_safe$_body$_;
+//│ let hi, tmp;
+//│ let $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp1, pc, saveOffset, stackDelayRes;
+//│   let scrut, tmp1, pc;
+//│   let stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafety.mls:15:1", 0, null, 2, n, tmp1)
 //│   }
 //│   if (runtime.isResuming === true) {
+//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     n = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
@@ -65,17 +67,19 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum;
-//│ let tmp1, $_stack$_safe$_body$_1;
+//│ let sum, tmp1;
+//│ let $_stack$_safe$_body$_1;
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc, saveOffset, tmp4, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc;
+//│   let tmp4, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:62:1", 0, null, 2, tmp2, n)
+//│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:64:1", 0, null, 2, tmp2, n)
 //│   }
 //│   if (runtime.isResuming === true) {
+//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
@@ -96,7 +100,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, sum, null, "StackSafety.mls:65:9", 1, null, 2, tmp2, n)
+//│             return runtime.unwind(runtime.resumeValue, 1, sum, null, "StackSafety.mls:67:9", 1, null, 2, tmp2, n)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -214,8 +218,9 @@ fun max(a, b) = if a < b then b else a
 //│ JS (unsanitized):
 //│ let max;
 //│ max = function max(a, b) {
-//│   let scrut, pc, saveOffset;
+//│   let scrut, pc;
 //│   if (runtime.isResuming === true) {
+//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     a = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;

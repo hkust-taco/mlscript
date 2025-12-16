@@ -207,8 +207,7 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let g3, h2, a1, tmp8, tmp9;
-//│   let capture;
+//│   let g3, h2, a1, tmp8, tmp9, capture;
 //│   capture = new f$capture5(mutated);
 //│   a1 = g$6(immutable, capture);
 //│   tmp8 = h$2(capture);
@@ -307,8 +306,8 @@ g()(1)
 //│   static [definitionMetadata] = ["class", "g$capture"]; 
 //│ });
 //│ g6 = function g() {
-//│   let y1;
-//│   let capture, f$here;
+//│   let y1, capture;
+//│   let f$here;
 //│   capture = new g$capture1(null);
 //│   capture.y$capture$0 = 0;
 //│   f$here = runtime.safeCall(f14(capture));
@@ -455,8 +454,8 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f24 = function f(x1) {
-//│   let a1, tmp11;
-//│   let capture, g$here;
+//│   let a1, tmp11, capture;
+//│   let g$here;
 //│   capture = new f$capture17(x1);
 //│   g$here = runtime.safeCall(g13(capture));
 //│   a1 = g$here;
