@@ -660,6 +660,17 @@ let Runtime1;
       return tr
     }
   } 
+  static ctorEffect(tr) {
+    let tmp, tmp1, tmp2;
+    if (tr instanceof Runtime.EffectSig.class) {
+      tmp = "Error: Effect " + tr.handler.constructor.name;
+      tmp1 = tmp + " is raised inside a constructor";
+      tmp2 = Runtime.showStackTrace(tmp1, tr, false, false);
+      throw Runtime.FakeError(tmp2)
+    } else {
+      return tr
+    }
+  } 
   static showStackTrace(header, tr, debug, showLocals) {
     let msg, curHandler, atTail, tmp, tmp1, tmp2, tmp3;
     msg = header;

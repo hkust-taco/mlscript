@@ -206,7 +206,7 @@ str
 //│       let tmp13;
 //│       tmp13 = super();
 //│       if (tmp13 instanceof runtime.EffectSig.class) {
-//│         tmp13 = runtime.topLevelEffect(tmp13, false);
+//│         tmp13 = runtime.ctorEffect(tmp13);
 //│       }
 //│       tmp13;
 //│     }
@@ -268,7 +268,7 @@ str
 //│       let tmp13;
 //│       tmp13 = super();
 //│       if (tmp13 instanceof runtime.EffectSig.class) {
-//│         tmp13 = runtime.topLevelEffect(tmp13, false);
+//│         tmp13 = runtime.ctorEffect(tmp13);
 //│       }
 //│       tmp13;
 //│     }

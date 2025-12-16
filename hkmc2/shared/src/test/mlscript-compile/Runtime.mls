@@ -194,6 +194,12 @@ fun topLevelEffect(tr, debug) =
   else
     tr
 
+fun ctorEffect(tr) =
+  if tr is EffectSig then
+    throw FakeError(showStackTrace("Error: Effect " + tr.handler.constructor.name + " is raised inside a constructor", tr, false, false))
+  else
+    tr
+
 fun showStackTrace(header, tr, debug, showLocals) =
   let
     msg = header

@@ -176,7 +176,7 @@ if true do
 //│     let tmp12;
 //│     tmp12 = super();
 //│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12 = runtime.topLevelEffect(tmp12, false);
+//│       tmp12 = runtime.ctorEffect(tmp12);
 //│     }
 //│     tmp12;
 //│   }

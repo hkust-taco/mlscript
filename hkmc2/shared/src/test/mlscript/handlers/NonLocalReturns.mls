@@ -122,7 +122,7 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_20
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised inside a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -144,5 +144,5 @@ fun f() =
   new A
   4
 f()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_24
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised inside a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
