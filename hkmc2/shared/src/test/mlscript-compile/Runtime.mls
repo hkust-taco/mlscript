@@ -158,7 +158,11 @@ data class FunctionContFrame(next, saved) with
       set i += 2
     res
   fun getNme = saved.[2].[0]
-  fun getLoc = saved.[3]
+  fun getLoc =
+    let loc = saved.[3]
+    if
+      loc is null then "pc=" + saved.[4]
+      else loc
 
 data abstract class FunctionContFrameOld(next) with
   fun resume(value)
@@ -211,7 +215,6 @@ fun showStackTrace(header, tr, debug, showLocals) =
       while cur !== null do
         let curLocals = cur.getLocal
         let loc = cur.getLoc
-        let loc = if loc is null then "pc=" + cur.pc else loc
         let localsMsg = if showLocals and curLocals.length > 0 then
           " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
         else

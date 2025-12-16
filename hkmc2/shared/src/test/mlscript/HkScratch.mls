@@ -8,39 +8,5 @@
 // :d
 // :todo
 
-:lift
-:sjs
-class A with
-  fun f(a) =
-    fun inner(k) = k(1)
-    inner
-//│ JS (unsanitized):
-//│ let A1;
-//│ let inner, inner$;
-//│ inner$ = function inner$(A$instance, k) {
-//│   return runtime.safeCall(k(1))
-//│ };
-//│ inner = function inner(A$instance) {
-//│   return (k) => {
-//│     return inner$(A$instance, k)
-//│   }
-//│ };
-//│ (class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {}
-//│   f(a) {
-//│     let inner$here;
-//│     inner$here = runtime.safeCall(inner(this));
-//│     return inner$here
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
 
-let a = new A
-//│ a = A
 
-a.f(1)((x) => x)
-//│ = 1

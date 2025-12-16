@@ -369,7 +369,13 @@ let Runtime1;
         return this.saved.at(2).at(0);
       } 
       get getLoc() {
-        return this.saved.at(3);
+        let loc;
+        loc = this.saved.at(3);
+        if (loc === null) {
+          return "pc=" + this.saved.at(4)
+        } else {
+          return loc
+        }
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
@@ -683,31 +689,25 @@ let Runtime1;
         if (scrut === true) {
           cur = curHandler.next;
           tmp9: while (true) {
-            let scrut2, curLocals, loc, loc1, localsMsg, scrut3, tmp10, lambda, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19;
+            let scrut2, curLocals, loc, localsMsg, scrut3, lambda, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
             scrut2 = cur !== null;
             if (scrut2 === true) {
               curLocals = cur.getLocal;
               loc = cur.getLoc;
-              if (loc === null) {
-                tmp10 = "pc=" + cur.pc;
-              } else {
-                tmp10 = loc;
-              }
-              loc1 = tmp10;
               split_root$: {
                 split_1$: {
                   if (showLocals === true) {
                     scrut3 = curLocals.length > 0;
                     if (scrut3 === true) {
                       lambda = (undefined, function (l) {
-                        let tmp20, tmp21;
-                        tmp20 = l.localName + "=";
-                        tmp21 = Rendering.render(l.value);
-                        return tmp20 + tmp21
+                        let tmp19, tmp20;
+                        tmp19 = l.localName + "=";
+                        tmp20 = Rendering.render(l.value);
+                        return tmp19 + tmp20
                       });
-                      tmp11 = runtime.safeCall(curLocals.map(lambda));
-                      tmp12 = runtime.safeCall(tmp11.join(", "));
-                      tmp13 = " with locals: " + tmp12;
+                      tmp10 = runtime.safeCall(curLocals.map(lambda));
+                      tmp11 = runtime.safeCall(tmp10.join(", "));
+                      tmp12 = " with locals: " + tmp11;
                       break split_root$
                     } else {
                       break split_1$
@@ -716,17 +716,17 @@ let Runtime1;
                     break split_1$
                   }
                 }
-                tmp13 = "";
+                tmp12 = "";
               }
-              localsMsg = tmp13;
-              tmp14 = "\n\tat " + cur.getNme;
-              tmp15 = tmp14 + " (";
-              tmp16 = tmp15 + loc1;
-              tmp17 = tmp16 + ")";
-              tmp18 = msg + tmp17;
+              localsMsg = tmp12;
+              tmp13 = "\n\tat " + cur.getNme;
+              tmp14 = tmp13 + " (";
+              tmp15 = tmp14 + loc;
+              tmp16 = tmp15 + ")";
+              tmp17 = msg + tmp16;
+              msg = tmp17;
+              tmp18 = msg + localsMsg;
               msg = tmp18;
-              tmp19 = msg + localsMsg;
-              msg = tmp19;
               cur = cur.next;
               atTail = false;
               tmp5 = runtime.Unit;

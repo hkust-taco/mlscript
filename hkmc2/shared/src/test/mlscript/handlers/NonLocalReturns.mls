@@ -114,7 +114,6 @@ f()
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
-// However, there should be a runtime error raised.
 :fixme
 :expect 100
 fun f() =
