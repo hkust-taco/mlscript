@@ -84,7 +84,11 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
 
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
-    Test / test := ((hkmc2DiffTests / Test / test) dependsOn (hkmc2JVM / Test / test)).value
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+        .dependsOn(hkmc2JS / Test / test)
+    ).value
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))

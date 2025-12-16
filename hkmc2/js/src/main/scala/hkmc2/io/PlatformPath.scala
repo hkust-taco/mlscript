@@ -1,4 +1,5 @@
-package hkmc2.io
+package hkmc2
+package io
 
 /**
  * Platform-specific factory for creating Path instances
