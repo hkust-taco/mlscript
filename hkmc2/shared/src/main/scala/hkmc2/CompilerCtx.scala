@@ -54,20 +54,18 @@ class CompilerCtx(
       val elabbed = elab.importFrom(resBlk)
       Artifact(resBlk, elabbed._1, lastMod)
     
-    cache.elabCache
-      .updateWith(file):
-        case N => S(mk)
-        case cur @ S(art) =>
-          if art.lastChangedTimestamp < lastMod then S(mk)
-          else cur
-      .get // * above, we always returns Some
+    cache.upsert(file):
+      case N => mk
+      case cur @ S(art) =>
+        if art.lastChangedTimestamp < lastMod then mk
+        else art
   
   
 object CompilerCtx:
   
   inline def get(using cctx: CompilerCtx) = cctx
   
-  def fresh(fs: io.FileSystem): CompilerCtx = CompilerCtx(N, Set.empty, fs, new CompilerCache)
+  def fresh(fs: io.FileSystem): CompilerCtx = CompilerCtx(N, Set.empty, fs, CompilerCache())
   
 end CompilerCtx
 
@@ -75,18 +73,17 @@ end CompilerCtx
 
 object CompilerCache:
   
+  def apply(): CompilerCache = PlatformCompilerCache()
+  
   class Artifact(val tree: syntax.Tree.Block, val term: semantics.Term.Blk, val lastChangedTimestamp: Long)
   
 end CompilerCache
 
 
-class CompilerCache:
+trait CompilerCache:
   
-  // TODO also use hash comparison to avoid needless re-parses?
-  
-  import collection.concurrent.{Map => ConcMap, TrieMap}
-  val elabCache: ConcMap[io.Path, Artifact] = TrieMap.empty
-  
+  /** Create or update an artifact at the given path in the cache. */
+  def upsert(path: io.Path)(update: Option[Artifact] => Artifact): Artifact
   
 end CompilerCache
 

@@ -1,12 +1,11 @@
 package hkmc2
 
 import org.scalatest.funsuite.AnyFunSuite
-import hkmc2.io.{InMemoryFileSystem, Path}
+import io.{InMemoryFileSystem, Path, node}
 import mlscript.utils._, shorthands._
 import scala.scalajs.js
 import scala.scalajs.js.annotation._
 import scala.scalajs.js.Dynamic.global
-import hkmc2.io.node
 
 class CompilerTest extends AnyFunSuite:
   private def loadStandardLibrary(): Map[String, String] =
