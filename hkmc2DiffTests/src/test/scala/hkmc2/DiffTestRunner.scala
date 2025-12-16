@@ -111,6 +111,7 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
   protected lazy val diffTestFiles = allFiles.filter: file =>
     (
       !file.segments.contains("staging") // Exclude staging test files
+      && !file.segments.contains("mlscript-apps")
       && !file.segments.contains("mlscript-compile")
       && filter(file.relativeTo(state.workingDir))
     )
