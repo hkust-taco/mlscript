@@ -557,17 +557,11 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Scoped(syms, body) =>
       scope.nest.givenIn:
         val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
-          if scope.lookup(l).isDefined then // FIXME: this logic is incorrect and should eventually be removed
-            // NOTE: this warning is turned off because the lifter is not
-            // yet updated to maintian the Scoped blocks, so when
-            // something is lifted out, its symbol may be already declared in an outer level,
-            // but the inner Scoped block still contains the same symbol
-            // raise:
-            //   WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
-            // Some(l -> s"${scope.lookup_!(l, N)}_again")
-            None
-          else
-            Some(l -> scope.allocateName(l))
+          whenValidatingIR:
+            if scope.lookup(l).isDefined then // * It is invalid to shadow symbols in the IR
+              raise:
+                WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+          Some(l -> scope.allocateName(l))
         braced:
           genLetDecls(vars) :: returningTerm(body, endSemi)   
     
@@ -647,12 +641,15 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
     p.main match
     case Scoped(syms, body) =>
-      blockPreamble(p.imports.map(_._1).toSeq ++ syms.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
-    case body => // TODO: remove body.definedVarsNoScoped after we can handle lambda lifting-related code correctly
-      blockPreamble(p.imports.map(_._1).toSeq ++ body.definedVarsNoScoped.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
-
+      blockPreamble(p.imports.map(_._1) ++ syms) ->
+        (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+    case body =>
+      // * TODO: remove the use of `body.definedVarsNoScoped` after we clean up
+      // *  IR transformation passes to not generate out-of-scope symbol references.
+      // * This code should be just `blockPreamble(p.imports.map(_._1)) -> ...`
+      blockPreamble(p.imports.map(_._1) ++ body.definedVarsNoScoped) ->
+        (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
+  
   def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
     if vars.isEmpty then doc"" else
       doc" # let " :: vars.map: (_, nme) =>
@@ -661,13 +658,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       :: doc";"
   
   def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
-    // TODO document: mutable var assnts require the lookup
-    // TODO: remove the filter and lookup after we can handle lambda lifting-related code correctly
+    // * TODO: remove the filter and lookup after when the other defs stop using `definedVarsNoScoped`
     val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
       l -> scope.allocateName(l))
     genLetDecls(vars)
 
-  // Only handle non-nested Scoped nodes: we output the bindings, but do not add another brace
+  // Only handle non-nested Scoped nodes: we output the bindings, but do not add another pair of braces
   def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
     case Scoped(syms, body) => 
       blockPreamble(syms) :: k(body)
@@ -675,6 +671,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   
   
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
+    // * TODO: like above, remove the use of `body.definedVarsNoScoped` after we clean up
+    // * This code should be just `returningTerm(t, endSemi)`
     val pre = blockPreamble(t.definedVarsNoScoped)
     val rest = returningTerm(t, endSemi)
     pre :: rest

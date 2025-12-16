@@ -15,8 +15,12 @@ import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
 
 
-// - for function bodies, fuse all shallowly-nested scopes into one top-level one
-// - assert the absence of Label(loop = true) blocks
+/** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
+  *   because handler lowering relies on knowing all local variables in the function.
+  * - Assert the absence of Label(loop = true) blocks,
+  *   because loops should be rewritten to functions first,
+  *   otherwise we cannot fuse scopes correctly.
+  */
 class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
   override def applyBlock(b: Block): Block = b match
     case Label(_, loop, _, _) =>

@@ -1,36 +1,35 @@
 :js
 
 
+// * NOTE: usually, Scoped blocks are flattened by the IR smart constructors
+
+
+// * Flattened
 :lot
 :sjs
 scope.locally of 42
 //│ JS (unsanitized):
-//│ { 42 }
+//│ 42
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Begin:
-//│     sub = End of ""
-//│     rest = Scoped: \
-//│     syms = HashSet()
-//│     body = Return:
-//│       res = Lit of IntLit of 42
-//│       implct = true
+//│   main = Return:
+//│     res = Lit of IntLit of 42
+//│     implct = true
 //│ = 42
 
 
+// * Flattened
 :lot
 :sjs
 scope.locally of
   let x = 42 in x
 //│ JS (unsanitized):
-//│ { let x; x = 42; x }
+//│ let x; x = 42; x
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Begin:
-//│     sub = End of ""
-//│     rest = Scoped: \
+//│   main = Scoped:
 //│     syms = HashSet(x)
 //│     body = Assign:
 //│       lhs = x
@@ -43,43 +42,33 @@ scope.locally of
 //│ = 42
 
 
-:sjs
+// :sjs
 scope.locally of (
   let x = 42
   x
 )
-//│ JS (unsanitized):
-//│ { let x1; x1 = 42; x1 }
 //│ = 42
 
 
 :lot
-:sjs
+// :sjs
 scope.locally of scope.locally of (
   let x = 42
   x
 )
-//│ JS (unsanitized):
-//│ {{ let x2; x2 = 42; x2 } }
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Begin:
-//│     sub = End of ""
-//│     rest = Scoped: \
-//│     syms = HashSet()
-//│     body = Begin:
-//│       sub = End of ""
-//│       rest = Scoped: \
-//│       syms = HashSet(x)
-//│       body = Assign:
-//│         lhs = x
-//│         rhs = Lit of IntLit of 42
-//│         rest = Return: \
-//│         res = Ref:
-//│           l = x
-//│           disamb = N
-//│         implct = true
+//│   main = Scoped:
+//│     syms = Set(x)
+//│     body = Assign:
+//│       lhs = x
+//│       rhs = Lit of IntLit of 42
+//│       rest = Return: \
+//│       res = Ref:
+//│         l = x
+//│         disamb = N
+//│       implct = true
 //│ = 42
 
 
@@ -87,7 +76,7 @@ scope.locally of scope.locally of (
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.88: 	x
+//│ ║  l.77: 	x
 //│ ╙──      	^
 
 
@@ -101,6 +90,7 @@ foo(1)
 //│ = 3
 
 
+// * Not flattened: in conditional arms
 :sjs
 fun f() =
   if true then
@@ -116,7 +106,7 @@ fun f() =
 //│ f = function f() {
 //│   let scrut, b;
 //│   scrut = true;
-//│   if (scrut === true) {{ let a; a = 4; return a + 4 } } else { b = 5; return b + 9 }
+//│   if (scrut === true) { let a; a = 4; return a + 4 } else { b = 5; return b + 9 }
 //│ };
 
 
@@ -124,6 +114,7 @@ f()
 //│ = 8
 
 
+// * Idem
 :sjs
 fun f() =
   if false then
@@ -139,7 +130,7 @@ fun f() =
 //│ f1 = function f() {
 //│   let scrut, a;
 //│   scrut = false;
-//│   if (scrut === true) { a = 4; return a + 4 } else {{ let b; b = 5; return b + 9 } }
+//│   if (scrut === true) { a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
 //│ };
 
 
@@ -175,14 +166,14 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.176: 	scope.locally()
+//│ ║  l.167: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.183: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -190,10 +181,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.191: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.191: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -206,21 +197,18 @@ scope.locally of (
 //│ z = 114
 
 
-// NOTE: later passes may destroy nested Scoped blocks
-:sjs
+// :sjs
 let z = 2
 scope.locally of (
   let y = () => 1
   y
 )
-//│ JS (unsanitized):
-//│ let z1, y1, y2; z1 = 2; y2 = function y() { return 1 }; y1 = y2; y1
 //│ = fun y
 //│ z = 2
 
 
 
-// NOTE: `z2` (bms) should be declared at the same place with `z3`
+// NOTE: `z2` (bms) should be declared in the same place as `z3`
 :sjs
 fun f(x) =
   if x then
@@ -256,11 +244,9 @@ scope.locally of scope.locally of (
 )
 //│ = 3
 
-:sjs
+// :sjs
 let x = 3
 () => x
-//│ JS (unsanitized):
-//│ let x3, lambda; x3 = 3; lambda = (undefined, function () { return x3 }); lambda
 //│ = fun
 //│ x = 3
 

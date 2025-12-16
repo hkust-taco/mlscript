@@ -114,7 +114,7 @@ abstract class JSBackendDiffMaker extends MLsDiffMaker:
         case Return(res, implct) =>
           assert(implct)
           Assign(resSym, res, Return(Value.Lit(syntax.Tree.UnitLit(false)), true))
-        case _: Scoped => ??? // impossible. mapTail has handled this case specially 
+        case _: Scoped => lastWords("impossible: mapTail should have handled this case specially")
         case tl: (Throw | Break | Continue) => tl
       )
       if showLoweredTree.isSet then

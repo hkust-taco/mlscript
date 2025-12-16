@@ -40,9 +40,8 @@ class LoweringCtx(
   initMap: Map[Local, Value],
   val mayRet: Bool,
   private val definedSymsDuringLowering: collection.mutable.Set[Symbol]
-):  
+):
   val map = initMap
-  
   def collectScopedSym(s: Symbol) = definedSymsDuringLowering.add(s)
   def collectScopedSyms(s: Symbol*) = definedSymsDuringLowering.addAll(s)
   def registerTempSymbol(trm: Option[Term], dbgNme: Str = "tmp")(using State) =
@@ -599,18 +598,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         conclude(Value.Ref(ctx.builtins.debug.getLocals, N).withLocOf(f))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
         arg match
-          case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
-            LoweringCtx.nestScoped.givenIn:
-              val res = block(Nil, R(body))(k)
-              val scopedSyms = loweringCtx.getCollectedSym
-              // Put the Scoped in the rest, so that the returned result can be found correctly
-              new Begin(End(), new Scoped(scopedSyms, res))
-          case _ =>
-            return fail:
-              ErrorReport(
-                msg"Unsupported form for scope.locally." ->
-                t.toLoc :: Nil,
-                source = Diagnostic.Source.Compilation)
+        case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
+          LoweringCtx.nestScoped.givenIn:
+            val res = block(Nil, R(body))(k)
+            val scopedSyms = loweringCtx.getCollectedSym
+            // Put the Scoped in the rest, so that the returned result can be found correctly
+            new Scoped(scopedSyms, res)
+        case _ => return fail:
+          ErrorReport(
+            msg"Unsupported form for scope.locally." ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation)
       // * Due to whacky JS semantics, we need to make sure that selections leading to a call
       // * are preserved in the call and not moved to a temporary variable.
       case sel @ Sel(prefix, nme) =>

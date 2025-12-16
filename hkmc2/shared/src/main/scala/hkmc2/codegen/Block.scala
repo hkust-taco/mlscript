@@ -233,24 +233,17 @@ sealed abstract class Block extends Product:
       if (newRest is rest) && (newArms is arms) && (dflt is newDflt)
       then this
       else Match(scrut, newArms, newDflt, newRest)
-
+      
     case Label(label, loop, body, rest) =>
       val newBody = body.flattened
       val newRest = rest.flatten(k)
       if (newBody is body) && (newRest is rest)
       then this
       else Label(label, loop, newBody, newRest)
-
-    // * Do not omit the `Begin`s that are used for nested scopes
-    case Begin(e: End, Scoped(syms, body)) =>
-      val newBody = body.flatten(k)
-      if newBody is body
-      then this
-      else new Begin(e, new Scoped(syms, newBody)) 
       
     case Begin(sub, rest) =>
       sub.flatten(_ => rest.flatten(k))
-    
+      
     case TryBlock(sub, finallyDo, rest) =>
       val newSub = sub.flattened
       val newFinallyDo = finallyDo.flattened
@@ -438,38 +431,20 @@ case class HandleBlock(
 
 object HandleBlock:
   def apply(
-    lhs: Local,
-    res: Local,
-    par: Path,
-    args: Ls[Path],
-    cls: ClassSymbol,
-    handlers: Ls[Handler],
-    body: Block,
-    rest: Block
-  ) = rest match
-      case Scoped(syms, rest) =>
-        Scoped(
-          syms,
-          new HandleBlock(
-            lhs,
-            res,
-            par,
-            args,
-            cls,
-            handlers,
-            body,
-            rest
-          ))
-      case _ => new HandleBlock(
-        lhs,
-        res,
-        par,
-        args,
-        cls,
-        handlers,
-        body,
-        rest)
-    
+      lhs: Local,
+      res: Local,
+      par: Path,
+      args: Ls[Path],
+      cls: ClassSymbol,
+      handlers: Ls[Handler],
+      body: Block,
+      rest: Block
+    ) =
+  rest match
+  case Scoped(syms, rest) =>
+    Scoped(syms, new HandleBlock(lhs, res, par, args, cls, handlers, body, rest))
+  case _ => new HandleBlock(lhs, res, par, args, cls, handlers, body, rest)
+
 
 sealed abstract class Defn:
   val innerSym: Opt[MemberSymbol]

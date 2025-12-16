@@ -100,11 +100,11 @@ class BlockTransformer(subst: SymbolSubst):
   // FunDefn body, Lambda body, Handler body, ctor and pCtor are considered "funBodyLike"
   def applyFunBodyLikeBlock(b: Block): Block = applyScopedBlock(b)
   
-  // Apply to Blocks that "should" be `Scoped`, which includes:
+  // Apply to Blocks that are conceptually "scoped", which includes:
   // - "funBodyLike" blocks
   // - loop body blocks
   // - manually nested `Scoped` blocks
-  // These blocks "should" be `Scoped`, but "funBodyLike" and loop body
+  // These blocks are usually instances of `Scoped`, but "funBodyLike" and loop bodies
   // may not be `Scoped` in practice, because empty `Scoped` blocks may be ignored
   def applyScopedBlock(b: Block): Block = b match
     case Scoped(s, bd) =>
