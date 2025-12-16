@@ -78,11 +78,7 @@ let rcd =
 //│ ╔══[ERROR] Name not found: bar
 //│ ║  l.73: 	  bar =
 //│ ╙──      	  ^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'rcd'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.71: 	let rcd =
-//│ ╙──      	    ^^^
-//│ rcd = {foo: 1, bar: "..."}
+//│ rcd = undefined
 
 
 // * How about this syntax?
@@ -93,10 +89,10 @@ let rcd = new with
   bar =
     "..."
 //│ ╔══[ERROR] Name not found: foo
-//│ ║  l.92: 	  foo = 1
+//│ ║  l.88: 	  foo = 1
 //│ ╙──      	  ^^^
 //│ ╔══[ERROR] Name not found: bar
-//│ ║  l.93: 	  bar =
+//│ ║  l.89: 	  bar =
 //│ ╙──      	  ^^^
 //│ rcd = $anon
 
@@ -138,7 +134,7 @@ m0.get(41)
 :e
 {get(k): _}
 //│ ╔══[ERROR] Unexpected record key shape.
-//│ ║  l.139: 	{get(k): _}
+//│ ║  l.135: 	{get(k): _}
 //│ ╙──       	 ^^^^^^
 //│ = fun
 
@@ -193,14 +189,14 @@ display(x: 88, y: 99, i: 0)
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.194: 	t("group")
+//│ ║  l.190: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 
 :todo
 t("group")
 //│ ╔══[ERROR] Expected 2 arguments, got 1
-//│ ║  l.201: 	t("group")
+//│ ║  l.197: 	t("group")
 //│ ╙──       	 ^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 't' expected 2 arguments but got 1
 

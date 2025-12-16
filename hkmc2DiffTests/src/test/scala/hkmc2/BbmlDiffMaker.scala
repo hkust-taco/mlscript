@@ -9,7 +9,7 @@ import utils.Scope
 
 abstract class BbmlDiffMaker extends JSBackendDiffMaker:
   
-  val bbPreludeFile = file / os.up / os.RelPath("bbPrelude.mls")
+  val bbPreludeFile = file.up / "bbPrelude.mls"
   
   val bbmlOpt = new NullaryCommand("bbml"):
     override def onSet(): Unit =

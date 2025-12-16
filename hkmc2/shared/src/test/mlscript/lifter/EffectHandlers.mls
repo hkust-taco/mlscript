@@ -19,10 +19,10 @@ class Test with
 class Eff
 
 :effectHandlers
+:noSanityCheck
 :expect 7
 handle h = Eff with
   fun perform(x)(k) = k(x) + 1
 let x = 5
 h.perform(x) + 1
-//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ = 7

@@ -154,7 +154,6 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: coll
         )
         .rest(newBody)
 
-     
   def rewriteFn(defn: FunDefn) = 
     FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.forceTailRec)
 

@@ -25,7 +25,8 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, tmp, $_stack$_safe$_body$_;
+//│ let hi;
+//│ let tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, pc, saveOffset, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
@@ -73,14 +74,15 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, tmp1, $_stack$_safe$_body$_1;
+//│ let sum1;
+//│ let tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, saveOffset, tmp4, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:70:1", 0, null, 2, tmp2, n)
+//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:71:1", 0, null, 2, tmp2, n)
 //│   }
 //│   if (runtime.isResuming === true) {
 //│     pc = runtime.resumePc;
@@ -103,7 +105,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:73:9", 1, null, 2, tmp2, n)
+//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:74:9", 1, null, 2, tmp2, n)
 //│           }
 //│           pc = 1;
 //│           continue main

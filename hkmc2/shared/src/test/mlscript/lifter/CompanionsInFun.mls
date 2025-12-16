@@ -11,12 +11,13 @@ fun f(x) =
   fun g = new A
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ JS (unsanitized):
-//│ let f, g$;
+//│ let f;
+//│ let g$;
 //│ g$ = function g$(A$member, A1, x) {
 //│   return globalThis.Object.freeze(new A$member())
 //│ };
 //│ f = function f(x) {
-//│   let A1;
+//│   let A1, g;
 //│   (class A {
 //│     static {
 //│       A1 = this

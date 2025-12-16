@@ -73,12 +73,12 @@ module A with
 
 :w
 :effectHandlers
+:lift
+:noSanityCheck
 handle h = Object with
   @tailcall
   fun f(r) = 2
-//│ /!!!\ Option ':effectHandlers' requires ':lift' and ':noSanityCheck'
 //│ ═══[WARNING] This annotation has no effect.
-//│ ═══[WARNING] Unexpected nested function: lambdas may not function correctly.
 
 :w
 fun test =

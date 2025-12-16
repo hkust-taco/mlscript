@@ -1,0 +1,267 @@
+:js
+
+
+// * NOTE: usually, Scoped blocks are flattened by the IR smart constructors
+
+
+// * Flattened
+:lot
+:sjs
+scope.locally of 42
+//│ JS (unsanitized):
+//│ 42
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Return:
+//│     res = Lit of IntLit of 42
+//│     implct = true
+//│ = 42
+
+
+// * Flattened
+:lot
+:sjs
+scope.locally of
+  let x = 42 in x
+//│ JS (unsanitized):
+//│ let x; x = 42; x
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = HashSet(x)
+//│     body = Assign:
+//│       lhs = x
+//│       rhs = Lit of IntLit of 42
+//│       rest = Return: \
+//│       res = Ref:
+//│         l = x
+//│         disamb = N
+//│       implct = true
+//│ = 42
+
+
+// :sjs
+scope.locally of (
+  let x = 42
+  x
+)
+//│ = 42
+
+
+:lot
+// :sjs
+scope.locally of scope.locally of (
+  let x = 42
+  x
+)
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = Set(x)
+//│     body = Assign:
+//│       lhs = x
+//│       rhs = Lit of IntLit of 42
+//│       rest = Return: \
+//│       res = Ref:
+//│         l = x
+//│         disamb = N
+//│       implct = true
+//│ = 42
+
+
+
+:e
+x
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.77: 	x
+//│ ╙──      	^
+
+
+fun foo(x) =
+  let z = 1
+  scope.locally of
+    let y = 1 in x + y + z
+
+
+foo(1)
+//│ = 3
+
+
+// * Not flattened: in conditional arms
+:sjs
+fun f() =
+  if true then
+    scope.locally of (
+      let a = 4
+      a + 4
+    )
+  else
+    let b = 5
+    b + 9
+//│ JS (unsanitized):
+//│ let f;
+//│ f = function f() {
+//│   let scrut, b;
+//│   scrut = true;
+//│   if (scrut === true) { let a; a = 4; return a + 4 } else { b = 5; return b + 9 }
+//│ };
+
+
+f()
+//│ = 8
+
+
+// * Idem
+:sjs
+fun f() =
+  if false then
+    let a = 4
+    a + 4
+  else
+    scope.locally of (
+      let b = 5
+      b + 9
+    )
+//│ JS (unsanitized):
+//│ let f1;
+//│ f1 = function f() {
+//│   let scrut, a;
+//│   scrut = false;
+//│   if (scrut === true) { a = 4; return a + 4 } else { let b; b = 5; return b + 9 }
+//│ };
+
+
+f()
+//│ = 14
+
+
+fun g(x, y, z) =
+  3 + 4 * if
+    x then 0
+    y then 0
+    z then
+      scope.locally of (
+        let a = 1
+        (_ + a)
+      )
+
+
+
+fun foo(x, y) =
+  let z = [1, 2, 3]
+  if not x > z.0 do
+    print("rua")
+  let m = x + y
+  scope.locally of (
+    let w1 = z.1 + m
+    let w2 = z.2 - m
+    if w1 == w2 do
+      print("ruarua")
+  )
+
+
+:ge
+scope.locally()
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.167: 	scope.locally()
+//│ ╙──       	^^^^^^^^^^^^^
+
+
+:ge
+scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ╙──       	^^^^^^^^^^^^^
+
+
+:e
+:ge
+scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╔══[ERROR] Name not found: x
+//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╙──       	                                                 ^
+//│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
+//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ╙──       	^^^^^^^^^^^^^
+
+
+let z = 114
+scope.locally of (
+  let y = 514
+  y
+)
+//│ = 514
+//│ z = 114
+
+
+// :sjs
+let z = 2
+scope.locally of (
+  let y = () => 1
+  y
+)
+//│ = fun y
+//│ z = 2
+
+
+
+// NOTE: `z2` (bms) should be declared in the same place as `z3`
+:sjs
+fun f(x) =
+  if x then
+    let y = 2
+    scope.locally of (
+      let z = () => 3
+      z
+    )
+//│ JS (unsanitized):
+//│ let f2;
+//│ f2 = function f(x3) {
+//│   let y3;
+//│   if (x3 === true) {
+//│     let z2, z3;
+//│     y3 = 2;
+//│     z3 = function z() {
+//│       return 3
+//│     };
+//│     z2 = z3;
+//│     return z2
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };
+
+
+
+:lift
+scope.locally of scope.locally of (
+  fun h() =
+    fun f() = g()
+    fun g() = f()
+    4
+  3
+)
+//│ = 3
+
+// :sjs
+let x = 3
+() => x
+//│ = fun
+//│ x = 3
+
+:sjs
+fun f(x) =
+  if x then
+    () => 4
+//│ JS (unsanitized):
+//│ let f4;
+//│ f4 = function f(x4) {
+//│   if (x4 === true) {
+//│     let lambda1;
+//│     lambda1 = (undefined, function () {
+//│       return 4
+//│     });
+//│     return lambda1
+//│   } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
+//│ };

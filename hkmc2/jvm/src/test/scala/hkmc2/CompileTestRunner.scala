@@ -6,6 +6,7 @@ import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
 import mlscript.utils._, shorthands._
+import io.PlatformPath.given
 
 
 class CompileTestRunner
@@ -44,26 +45,29 @@ class CompileTestRunner
       
       test(relativeName):
         
-        println(s"Compiling: $relativeName")
-        
-        val preludePath = mainTestDir/"mlscript"/"decls"/"Prelude.mls"
+        CompileTestRunner.synchronized:
+          println(s"Compiling: $relativeName")
         
         // Stack safety relies on the fact that runtime uses while loops for resumption
         // and does not create extra stack depth. Hence we disable while loop rewriting here.
         given Config = Config.default.copy(rewriteWhileLoops = false)
+        given io.FileSystem = io.FileSystem.default
         
+        // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
+        val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)
+        val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
         val compiler = MLsCompiler(
-          preludePath,
-          mkOutput =>
-            // * Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel
-            CompileTestRunner.synchronized:
-              mkOutput(System.out.println)
+          paths = new MLsCompiler.Paths:
+            val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
+            val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
+            val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
+          mkRaise = report.mkRaise
         )
         compiler.compileModule(file)
         
-        if compiler.report.badLines.nonEmpty then
+        if report.badLines.nonEmpty then
           fail(s"Unexpected diagnostic at: " +
-            compiler.report.badLines.distinct.sorted
+            report.badLines.distinct.sorted
               .map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   }
       

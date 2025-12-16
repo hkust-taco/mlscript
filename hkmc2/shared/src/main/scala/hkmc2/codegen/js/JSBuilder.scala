@@ -335,14 +335,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
             
-            val ctorCode = scope.nest givenIn:
-              val preCtorCode = block(preCtor, true)
-              doc"$preCtorCode$singletonInit${block(ctor, endSemi = true)}${
-                kind match
-                case syntax.Obj =>
-                  doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
-                case _ => ""
-              }$singletonFreeze"
+            val ctorCode = scope.nest.givenIn:
+              val preCtorCode = nonNestedScoped(preCtor)(bd => block(bd, true))
+              doc"$preCtorCode$singletonInit${nonNestedScoped(ctor)(bd => block(bd, true))}${
+                  kind match
+                  case syntax.Obj =>
+                    doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"
+                  case _ => ""
+                }$singletonFreeze"
             
             // * If there are no ctor params, pop one param list off the aux params
             val (newCtorAuxParams, initialCtorParams) = paramsOpt match
@@ -477,14 +477,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     
     case Match(scrut, Nil, els, rest) =>
       val e = els match
-      case S(el) => returningTerm(el, endSemi = true)
+      case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
     case Match(scrut, arms, els, rest)
     if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
       val l = arms.foldLeft(doc""): (acc, arm) =>
         acc :: doc" # case ${arm._1.asInstanceOf[Case.Lit].lit.idStr}: #{ ${
-          returningTerm(arm._2, endSemi = true)
+          nonNestedScoped(arm._2)(bd => returningTerm(bd, endSemi = true))
         } # break; #} "
       val e = els match
       case S(el) =>
@@ -513,12 +513,12 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           doc"""typeof $sd === "object" && $sd !== null && "${n.name}" in $sd"""
         case Case.Field(name = n, safe = true) =>
           doc""""${n.name}" in $sd"""
-      val h = doc" # if (${ cond(hd._1) }) ${ braced(returningTerm(hd._2, endSemi = false)) }"
+      val h = doc" # if (${ cond(hd._1) }) ${ braced(nonNestedScoped(hd._2)(res => returningTerm(res, endSemi = false))) }"
       val t = tl.foldLeft(h)((acc, arm) =>
-        acc :: doc" else if (${ cond(arm._1) }) ${ braced(returningTerm(arm._2, endSemi = false)) }")
+        acc :: doc" else if (${ cond(arm._1) }) ${ braced(nonNestedScoped(arm._2)(res => returningTerm(res, endSemi = false))) }")
       val e = els match
       case S(el) =>
-        doc" else ${ braced(returningTerm(el, endSemi = false)) }"
+        doc" else ${ braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false))) }"
       case N  => doc""
       t :: e :: returningTerm(rest, endSemi)
     
@@ -544,7 +544,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
-          returningTerm(bod, endSemi = true) :: (if loop then doc" # break;" else doc"")
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
@@ -552,6 +552,18 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         braced(returningTerm(fin, endSemi = false))
       } # ${
         returningTerm(rst, endSemi).stripBreaks}"
+
+    // Only nested scopes will be handled here.
+    case Scoped(syms, body) =>
+      scope.nest.givenIn:
+        val vars = syms.toArray.sortBy(_.uid).iterator.flatMap: l =>
+          whenValidatingIR:
+            if scope.lookup(l).isDefined then // * It is invalid to shadow symbols in the IR
+              raise:
+                WarningReport(msg"var ${l.toString()} in scoped is already allocated" -> N :: Nil)
+          Some(l -> scope.allocateName(l))
+        braced:
+          genLetDecls(vars) :: returningTerm(body, endSemi)   
     
     // case _ => ???
   
@@ -597,14 +609,14 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case _ => blk.subBlocks.foreach(go)
     go(p.main)
   
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     scope.allocateName(State.definitionMetadataSymbol)
     scope.allocateName(State.prettyPrintSymbol)
     doc"""const ${getVar(State.definitionMetadataSymbol, N)} = globalThis.Symbol.for("mlscript.definitionMetadata");"""
       :/: doc"""const ${getVar(State.prettyPrintSymbol, N)} = globalThis.Symbol.for("mlscript.prettyPrint");"""
       :/: programBody(p, exprt, wd)
   
-  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using Raise, Scope): Document =
+  def programBody(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using Raise, Scope): Document =
     reserveNames(p)
     // Allocate names for imported modules.
     p.imports.foreach: i =>
@@ -613,37 +625,60 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     val imps = p.imports.map: i =>
       val path = i._2
       val relPath = if path.startsWith("/")
-        then "./" + os.Path(path).relativeTo(wd).toString
+        then "./" + io.Path(path).relativeTo(wd).map(_.toString).getOrElse(path)
         else path
       doc"""import ${getVar(i._1, N)} from "${relPath}";"""
-    imps.mkDocument(doc" # ") :/: block(p.main, endSemi = false).stripBreaks :: (
+    imps.mkDocument(doc" # ")
+    :/: nonNestedScoped(p.main)(block(_, endSemi = false)).stripBreaks
+    :: locally:
       exprt match
-        case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
-        case N => doc""
-      )
+      case S(sym) => doc"\nlet ${sym.nme} = ${scope.lookup_!(sym, sym.toLoc)}; export default ${sym.nme};\n"
+      case N => doc""
   
   def worksheet(p: Program)(using Raise, Scope): (Document, Document) =
     reserveNames(p)
     lazy val imps = p.imports.map: i =>
       doc"""${getVar(i._1, N)} = await import("${i._2.toString}").then(m => m.default ?? m);"""
-    blockPreamble(p.imports.map(_._1).toSeq ++ p.main.definedVars.toSeq) ->
-      (imps.mkDocument(doc" # ") :/: returningTerm(p.main, endSemi = false).stripBreaks)
+    p.main match
+    case Scoped(syms, body) =>
+      blockPreamble(p.imports.map(_._1) ++ syms) ->
+        (imps.mkDocument(doc" # ") :/: block(body, endSemi = false).stripBreaks)
+    case body =>
+      // * TODO: remove the use of `body.definedVarsNoScoped` after we clean up
+      // *  IR transformation passes to not generate out-of-scope symbol references.
+      // * This code should be just `blockPreamble(p.imports.map(_._1)) -> ...`
+      blockPreamble(p.imports.map(_._1) ++ body.definedVarsNoScoped) ->
+        (imps.mkDocument(doc" # ") :/: returningTerm(body, endSemi = false).stripBreaks)
   
-  def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
-    // TODO document: mutable var assnts require the lookup
-    val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
-      l -> scope.allocateName(l))
+  def genLetDecls(vars: Iterator[(Symbol, Str)]): Document =
     if vars.isEmpty then doc"" else
       doc" # let " :: vars.map: (_, nme) =>
         nme
       .toList.mkDocument(", ")
       :: doc";"
   
+  def blockPreamble(ss: Iterable[Symbol])(using Raise, Scope): Document =
+    // * TODO: remove the filter and lookup after when the other defs stop using `definedVarsNoScoped`
+    val vars = ss.filter(scope.lookup(_).isEmpty).toArray.sortBy(_.uid).iterator.map(l =>
+      l -> scope.allocateName(l))
+    genLetDecls(vars)
+
+  // Only handle non-nested Scoped nodes: we output the bindings, but do not add another pair of braces
+  def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
+    case Scoped(syms, body) => 
+      blockPreamble(syms) :: k(body)
+    case _ => k(blk)
+  
+  
   def block(t: Block, endSemi: Bool)(using Raise, Scope): Document =
-    blockPreamble(t.definedVars) :: returningTerm(t, endSemi)
+    // * TODO: like above, remove the use of `body.definedVarsNoScoped` after we clean up
+    // * This code should be just `returningTerm(t, endSemi)`
+    val pre = blockPreamble(t.definedVarsNoScoped)
+    val rest = returningTerm(t, endSemi)
+    pre :: rest
   
   def body(t: Block, endSemi: Bool)(using Raise, Scope): Document = scope.nest givenIn:
-    block(t, endSemi)
+    nonNestedScoped(t)(bd => block(bd, endSemi))
   
   def defineProperty(target: Document, prop: Str, value: Document, enumerable: Bool = false): Document =
     doc"Object.defineProperty(${target}, ${prop.escaped}, ${

@@ -158,7 +158,8 @@ if true do
   fun f() = 3
   f()
 //│ JS (unsanitized):
-//│ let f, h11, tmp11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
+//│ let f, scrut, tmp20;
+//│ let h11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
 //│ Handler$h$perform$11 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
 //│   return arg
 //│ };
@@ -172,12 +173,12 @@ if true do
 //│     Handler$h$23 = this
 //│   }
 //│   constructor() {
-//│     let tmp12;
-//│     tmp12 = super();
-//│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12 = runtime.topLevelEffect(tmp12, false);
+//│     let tmp21;
+//│     tmp21 = super();
+//│     if (tmp21 instanceof runtime.EffectSig.class) {
+//│       tmp21 = runtime.topLevelEffect(tmp21, false);
 //│     }
-//│     tmp12;
+//│     tmp21;
 //│   }
 //│   perform(arg) {
 //│     let Handler$h$perform$here;
@@ -195,7 +196,6 @@ if true do
 //│   return 3
 //│ };
 //│ handleBlock$11 = (undefined, function () {
-//│   let scrut;
 //│   scrut = true;
 //│   if (scrut === true) {
 //│     return f()
@@ -203,11 +203,11 @@ if true do
 //│     return runtime.Unit
 //│   }
 //│ });
-//│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
-//│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   tmp11 = runtime.topLevelEffect(tmp11, false);
+//│ tmp20 = runtime.enterHandleBlock(h11, handleBlock$11);
+//│ if (tmp20 instanceof runtime.EffectSig.class) {
+//│   tmp20 = runtime.topLevelEffect(tmp20, false);
 //│ }
-//│ tmp11
+//│ tmp20
 //│ = 3
 
 module A with

@@ -10,7 +10,7 @@ final case class Branch(scrutinee: Term.Ref, pattern: FlatPattern, continuation:
         (Tree.Ident(scrutinee.tree.name), scrutinee.refNum, scrutinee.typ)
     Branch(scrutineeClone, pattern.mkClone, continuation.mkClone)
   
-  override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+  override def children: Vector[Located] = Vector.triple(scrutinee, pattern, continuation)
   
   def showDbg: String = s"${scrutinee.sym.nme} is ${pattern.showDbg} -> { ${continuation.showDbg} }"
 
@@ -60,18 +60,18 @@ enum Split extends AutoLocated with ProductWithTail:
     case Split.Else(_) | Split.Cons(_, _) => false
     case Split.End => true
   
-  final override def children: Ls[Located] = this match
-    case Split.Cons(head, tail) => List(head, tail)
-    case Split.Let(name, term, tail) => List(name, term, tail)
-    case Split.Else(default) => List(default)
-    case Split.End => Nil
+  final override def children: Vector[Located] = this match
+    case Split.Cons(head, tail) => Vector.double(head, tail)
+    case Split.Let(name, term, tail) => Vector.triple(name, term, tail)
+    case Split.Else(default) => Vector.single(default)
+    case Split.End => Vector.empty
   
-  def subTerms: Ls[Term] = this match
+  def subTerms: Vector[Term] = this match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
-      scrutinee :: pattern.subTerms ++ continuation.subTerms ++ tail.subTerms
-    case Split.Let(_, term, tail) => term :: tail.subTerms
-    case Split.Else(term) => term :: Nil
-    case Split.End => Nil
+      scrutinee +: (pattern.subTerms ++ continuation.subTerms ++ tail.subTerms)
+    case Split.Let(_, term, tail) => term +: tail.subTerms
+    case Split.Else(term) => Vector.single(term)
+    case Split.End => Vector.empty
   
   final def showDbg: String = this match
     case Split.Cons(head, tail) => s"${head.showDbg}; ${tail.showDbg}"

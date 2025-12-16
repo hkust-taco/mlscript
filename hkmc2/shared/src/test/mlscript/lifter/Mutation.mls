@@ -12,7 +12,8 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ JS (unsanitized):
-//│ let bar, foo, bar$, foo$capture1;
+//│ let foo;
+//│ let bar, bar$, foo$capture1;
 //│ bar$ = function bar$(foo$capture2) {
 //│   return foo$capture2.x$capture$0
 //│ };
@@ -32,7 +33,8 @@ fun foo() =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo = function foo() {
-//│   let tmp, capture, bar$here;
+//│   let x, tmp;
+//│   let capture, bar$here;
 //│   capture = new foo$capture1(null);
 //│   capture.x$capture$0 = 1;
 //│   bar$here = runtime.safeCall(bar(capture));
@@ -63,8 +65,31 @@ xs.0()
 //│ = 2
 
 
+:fixme
 fun foo() =
   let x
+  fun bar() =
+    x = 2
+  [bar, () => x]
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.73: 	  [bar, () => x]
+//│ ║        	              ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.70: 	  let x
+//│ ╙──      	      ^
+
+:fixme
+:expect 2
+let b_x = foo()
+b_x.0()
+b_x.1()
+//│ ═══[RUNTIME ERROR] ReferenceError: x is not defined
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ b_x = [fun bar, fun]
+
+
+fun foo() =
+  let x = undefined
   fun bar() =
     x = 2
   [bar, () => x]
@@ -84,8 +109,9 @@ fun foo() =
     x
   bar
 //│ JS (unsanitized):
-//│ let bar3, foo3;
-//│ bar3 = function bar() { let x; x = undefined; return x };
-//│ foo3 = function foo() { return bar3 };
+//│ let foo4;
+//│ let bar4;
+//│ bar4 = function bar() { let x; return x };
+//│ foo4 = function foo() { return bar4 };
 
 

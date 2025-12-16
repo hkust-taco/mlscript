@@ -21,7 +21,8 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, tmp1;
+//│     let tmp;
+//│     let tmp1;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (tmp instanceof runtime.EffectSig.class) {

@@ -15,7 +15,8 @@ class A with
     fun inner(k) = k(1)
     inner
 //│ JS (unsanitized):
-//│ let inner, A1, inner$;
+//│ let A1;
+//│ let inner, inner$;
 //│ inner$ = function inner$(A$instance, k) {
 //│   return runtime.safeCall(k(1))
 //│ };

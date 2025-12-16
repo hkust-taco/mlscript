@@ -24,7 +24,7 @@ trait Located:
   def toLoc: Opt[Loc]
 
 trait AutoLocated extends Located:
-  protected def children: List[Located]
+  protected def children: Vector[Located]
   
   private var loc: Opt[Loc] = N
   

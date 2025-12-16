@@ -200,6 +200,8 @@ object Elaborator:
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
+      object scope extends VirtualModule(assumeBuiltinMod("scope")):
+        val locally = assumeObject("locally")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
@@ -314,8 +316,8 @@ end Elaborator
 import Elaborator.*
 
 
-class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
-(using val raise: Raise, val state: State)
+class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
+(using val raise: Raise, val state: State, val fs: io.FileSystem)
 extends Importer with ucs.SplitElaborator:
   import tl.*
   

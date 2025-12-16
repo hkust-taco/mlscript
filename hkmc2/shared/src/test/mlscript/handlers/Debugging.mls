@@ -19,7 +19,8 @@ fun f() =
     print of raiseUnhandledEffect()
   j / i
 //│ JS (unsanitized):
-//│ let f, f$debugInfo;
+//│ let f;
+//│ let f$debugInfo;
 //│ f$debugInfo = globalThis.Object.freeze([
 //│   "f",
 //│   0,
@@ -116,8 +117,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:116:3)
-//│ 	at lambda_test (Debugging.mls:113:3)
+//│ 	at lambda (Debugging.mls:117:3)
+//│ 	at lambda_test (Debugging.mls:114:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -185,8 +186,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:180:3) with locals: j=200
+//│ > 	at f (Debugging.mls:181:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3)
+//│ > 	at f (Debugging.mls:183:3)
 //│ > Stack Trace:
 //│ > 	at tail position

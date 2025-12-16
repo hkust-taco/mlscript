@@ -5,12 +5,40 @@ import collection.mutable
 import mlscript.utils.*, shorthands.*
 
 
-class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
+/**
+  * Formats diagnostic reports using box drawing characters and/or ANSI colors.
+  *
+  * @param output The output function (e.g., `System.out.println`).
+  * @param colorize Whether to colorize the output using ANSI colors.
+  * @param wrap Optionally wraps each `Raise` call, e.g., with `synchronized`.
+  */
+class ReportFormatter(
+  output: Str => Unit,
+  val colorize: Bool,
+  val wrap: Opt[(=> Unit) => Unit] = N
+):
+  /** Output main text. */
+  private def text(str: Str) =
+    output(if colorize then fansi.Color.Red(str).toString else str)
+  
+  /** Output title text. */
+  private def title(str: Str) =
+    output(if colorize then fansi.Color.LightRed(str).toString else str)
   
   val badLines = mutable.Buffer.empty[Int]
   
-  // report errors and warnings
-  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit = mkOutput: output =>
+  /** Create a `Raise` dedicated to reporting diagnostics for `file`. */
+  def mkRaise(file: io.Path): Raise =
+    // This shows the parent directory of a file and its name.
+    val relPath = file.relativeTo(file.up.up).map(_.toString).getOrElse(file.toString)
+    d =>
+      def mk =
+        title(s"/!!!\\ Error in $relPath /!!!\\")
+        apply(0, d :: Nil, showRelativeLineNums = false)
+      wrap.fold(mk)(_(mk))
+  
+  /** Report errors and warnings. */
+  def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
     diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
       val onlyOneLine = diag.allMsgs.size =:= 1 && diag.allMsgs.head._2.isEmpty
@@ -38,10 +66,10 @@ class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
         val isLast = msgNum =:= lastMsgNum
         val msgStr = msg.showIn(using sctx)
-        if msgNum =:= 0 then output(headStr + msgStr)
+        if msgNum =:= 0 then text(headStr + msgStr)
         else if loco.isEmpty && diag.allMsgs.size =:= 1 then
-          if !onlyOneLine then output("╙──")
-        else output(s"${if isLast && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
+          if !onlyOneLine then text("╙──")
+        else text(s"${if isLast && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
         loco.foreach { loc =>
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
@@ -60,7 +88,7 @@ class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
             val prepre = "║  "
             val pre = s"$shownLineNum: "
             val curLine = loc.origin.fph.lines(l - 1)
-            output(prepre + pre + "\t" + curLine)
+            text(prepre + pre + "\t" + curLine)
             val tickBuilder = new StringBuilder()
             tickBuilder ++= (
               (if isLast && l =:= endLineNum then "╙──" else prepre)
@@ -68,23 +96,23 @@ class ReportFormatter(mkOutput: ((Str => Unit) => Unit) => Unit):
             val lastCol = if l =:= endLineNum then endLineCol else curLine.length + 1
             while c < lastCol do { tickBuilder += ('^'); c += 1 }
             if c =:= startLineCol then tickBuilder += ('^')
-            output(tickBuilder.toString)
+            text(tickBuilder.toString)
             c = 1
             l += 1
         }
       }
-      if diag.allMsgs.isEmpty then output("╙──")
+      if diag.allMsgs.isEmpty then text("╙──")
       
       // if (!mode.fixme) {
       //   if (!allowTypeErrors
       //       && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
-      //     { output("TEST CASE FAILURE: There was an unexpected type error"); failures += globalLineNum }
+      //     { text("TEST CASE FAILURE: There was an unexpected type error"); failures += globalLineNum }
       //   if (!allowParseErrors
       //       && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
-      //     { output("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
+      //     { text("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
       //   if (!allowTypeErrors && !allowParseErrors
       //       && !mode.expectWarnings && diag.isInstanceOf[WarningReport])
-      //     { output("TEST CASE FAILURE: There was an unexpected warning"); failures += globalLineNum }
+      //     { text("TEST CASE FAILURE: There was an unexpected warning"); failures += globalLineNum }
       // }
       
       ()

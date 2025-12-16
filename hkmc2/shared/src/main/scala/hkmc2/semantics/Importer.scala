@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message.MessageContext
+import hkmc2.io
 import utils.TraceLogger
 
 import Elaborator.*
@@ -15,14 +16,14 @@ class Importer:
   self: Elaborator =>
   import tl.*
   
-  def importPath(path: Str)(using Config): Import =
+  def importPath(path: Str)(using cfg: Config, fs: io.FileSystem): Import =
     // log(s"pwd: ${os.pwd}")
     // log(s"wd: ${wd}")
     
     val file =
       if path.startsWith("/")
-      then os.Path(path)
-      else wd / os.RelPath(path)
+      then io.Path(path)
+      else wd / io.RelPath(path)
     
     val nme = file.baseName
     val id = new syntax.Tree.Ident(nme) // TODO loc
@@ -42,7 +43,7 @@ class Importer:
         
       case "mls" =>
         
-        val block = os.read(file)
+        val block = fs.read(file)
         val fph = new FastParseHelpers(block)
         val origin = Origin(file, 0, fph)
         
@@ -61,14 +62,14 @@ class Importer:
           val resBlk = new syntax.Tree.Block(res)
           
           given Elaborator.Ctx = prelude.copy(mode = Mode.Light).nestLocal("prelude")
-          val elab = Elaborator(tl, file / os.up, prelude)
+          val elab = Elaborator(tl, file.up, prelude)
           elab.importFrom(resBlk)
           
           resBlk.definedSymbols.find(_._1 === nme) match
           case Some(nme -> sym) => sym
           case None => lastWords(s"File $file does not define a symbol named $nme")
         
-        val jsFile = file / os.up / (file.baseName + ".mjs")
+        val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
       case _ =>
