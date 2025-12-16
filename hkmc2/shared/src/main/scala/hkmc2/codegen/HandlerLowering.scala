@@ -220,8 +220,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           case _ => super.applyBlock(b)
         override def applyResult(r: Result)(k: Result => Block) = r match
           case EffectfulResult(r) =>
-            // Fallback case, this may lead to unnecessary vars if it is assign-like
-            // FIXME: This fall back case might be not needed at all.
             doNewEffectPartition(r, k(paths.resumeValue))
           case _ => super.applyResult(r)(k)
       
@@ -367,7 +365,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
 
   private def translateBlock(blk: Block, h: HandlerCtx): Block =
-    // TODO: add getLocal, similar mechanism as determine resumption.
     // All the defined variables are masked away from the inner scope (TODO: Scoped)
     given HandlerCtx = h
 
@@ -410,7 +407,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
               fun2
             // We cannot use this bc there is no subblock transform...
             // val newCtor = translateTrivialOrTopLevel(bod.ctor)
-            // TODO: Companion's ctor is more well behaved, handle this properly.
+            // TODO: Companion's ctor is more well behaved so it is possible to handle it
+            // However, JSBuilder inserts extra statements between preCtor and ctor and it's not possible to replicate the exact behavior
+            // without many special handling.
             val newCtor = translateCtorLike(bod.ctor)
             tl.log(s"companion name: ${bod.isym.nme}")
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor)
@@ -493,8 +492,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyBlock(b)
       override def applyResult(r: Result)(k: Result => Block) = r match
         case EffectfulResult(r) =>
-          // Fallback case, this may lead to unnecessary vars if it is assign-like
-          // FIXME: This fall back case might be not needed at all.
+          // Fallback case, this may lead to unnecessary assignments if it is assign-like
           val l = freshTmp()
           topLevelCheck(l, r, k(Value.Ref(l)))
         case _ => super.applyResult(r)(k)
@@ -521,10 +519,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         Define(
           fDef,
           Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false)))(false)
-
-    // Some limited handling of effects extending classes and having access to their fields.
-    // Currently does not support super() raising effects.
-    // TODO: prob fixed (?) ^^^
 
     val clsDefn = ClsLikeDefn(
       N, // no owner

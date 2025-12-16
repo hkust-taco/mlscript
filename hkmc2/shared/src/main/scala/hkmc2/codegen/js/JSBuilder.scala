@@ -335,8 +335,9 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
                   (doc" # ${getVar(sym, sym.toLoc)} = this;", fz)
               else (doc"", doc"")
             
-            val preCtorCode = block(preCtor, true)
-            val ctorCode = doc"$preCtorCode$singletonInit${body(ctor, endSemi = true)}${
+            val ctorCode = scope.nest givenIn:
+              val preCtorCode = block(preCtor, true)
+              doc"$preCtorCode$singletonInit${block(ctor, endSemi = true)}${
                 kind match
                 case syntax.Obj =>
                   doc" # ${defineProperty(doc"this", "class", doc"${scope.lookup_!(isym, isym.toLoc)}")};"

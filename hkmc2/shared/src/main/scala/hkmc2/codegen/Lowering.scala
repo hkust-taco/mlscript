@@ -1085,7 +1085,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
 trait LoweringSelSanityChecks(using Config, TL, Raise, State)
     extends Lowering:
   
-  private val instrument: Bool = config.sanityChecks.isDefined && config.effectHandlers.isEmpty
+  private val instrument: Bool = config.sanityChecks.isDefined
   
   override def setupSelection(prefix: st, nme: Tree.Ident, disamb: Opt[DefinitionSymbol[?]])(k: Result => Block)(using LoweringCtx): Block =
     if !instrument then return super.setupSelection(prefix, nme, disamb)(k)
