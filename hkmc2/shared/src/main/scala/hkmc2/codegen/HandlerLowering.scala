@@ -79,29 +79,28 @@ object HandlerLowering:
   private case class LinkState(res: Local, cls: Path, uid: Path)
   
   type FnOrCls = Either[BlockMemberSymbol, DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol]
+
+  private enum HandlerCtx:
+    // currentFun: path to the current function for resumption
+    // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
+    // plCnt: how many times to call this function for resumption, as we have arbitrary number of parameter lists
+    // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
+    // currentStackSafetySym: The symbol to be used for stack safety
+    case FunctionLike(ctx: FunctionCtx)
+    case Ctor
+    case ModCtor
+    case TopLevel
+
+    def isCtor = this === Ctor || this === ModCtor
+    def isTopLevel = this === TopLevel
+    def allowDefn = isTopLevel || this === ModCtor
   
-  // currentFun: path to the current function for resumption, none if not instrumented like top level or constructor
-  // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
-  // plCnt: how many times to call this function for resumption, as we have arbitrary number of parameter lists
-  // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
-  // currentStackSafetySym: The symbol to be used for stack safety
-  private case class HandlerCtx(
-      currentFun: Option[Path],
-      thisPath: Option[Path],
-      isModCtor: Bool,
-      plCnt: Int,
-      currentLocals: List[Local],
-      currentStackSafetySym: Option[FnOrCls],
-      debugInfo: DebugInfo,
-  ):
-    def isCtor = thisPath.nonEmpty && currentFun.isEmpty
-    def isTopLevel = currentFun.isEmpty && !isCtor
-    def allowDefn = isTopLevel || isModCtor
+  private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo):
     def doUnwind(path: Path, loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
         path ::
-        intLit(plCnt) ::
-        currentFun.get ::
+        intLit(resumeInfo.plCnt) ::
+        currentFun ::
         debugInfo.debugInfoPath ::
         loc ::
         intLit(stateId) ::
@@ -110,16 +109,16 @@ object HandlerLowering:
         restoreList.map(_.asPath)
       ).map(_.asArg))(true, true, false), false)
   
-  // inScopeLocals: All variables that are in scope, including those that come from outer scope.
+  private case class ResumeInfo(
+    plCnt: Int,
+    currentLocals: List[Local],
+    currentStackSafetySym: Opt[FnOrCls],
+  )
+  
   private case class DebugInfo(
     debugNme: Str,
     debugInfoPath: Path,
-  ):
-    def nest(debugNme: Str, debugInfoPath: Path, locals: List[Local]) = copy(
-      debugNme = debugNme, debugInfoPath)
-  
-  private object DebugInfo:
-    def topLevel(debugNme: Str) = DebugInfo(debugNme, Value.Lit(Tree.UnitLit(true)))
+  )
   
   type StateId = BigInt
 
@@ -214,7 +213,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _: Instantiate => S(r)
       case _ => N
   
-  private def partitionBlock(blk: Block)(using h: HandlerCtx): PartitionedBlock =
+  private def partitionBlock(blk: Block)(using h: FunctionCtx): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
     val allocId = new IdAllocator()
 
@@ -350,8 +349,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     result(initId) = initPart
     PartitionedBlock(initId, Map.from(result))
 
-  private def computeRestoreList(parts: PartitionedBlock)(using HandlerCtx): List[Local] =
-    val localSet = summon[HandlerCtx].currentLocals.toSet
+  private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
+    val localSet = ctx.resumeInfo.currentLocals.toSet
     val result = mutable.HashSet.empty[Local]
 
     def traverseEntry(stateId: StateId) =
@@ -418,8 +417,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
         .map(_.asArg)
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
-      val newCtx = HandlerCtx(S(funcPath), thisPath, false, fun.params.length, varList, S(L(fun.sym)),
-        h.debugInfo.nest(debugNme, if opt.debug then debugInfoSym.asPath else unit, varList))
+      val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(fun.params.length, varList, S(L(fun.sym))),
+        DebugInfo(debugNme, if opt.debug then debugInfoSym.asPath else unit)))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
@@ -467,13 +466,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       return translateTopLevelOrCtor(b, res => Call(paths.ctorEffectPath, res.asArg :: Nil)(true, true, false))
     if h.isTopLevel then
       return translateTopLevelOrCtor(b, res => Call(paths.topLevelEffectPath, res.asArg :: Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
+    val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx
+    given FunctionCtx = ctx
     val parts = partitionBlock(b)
     if parts.states.size <= 1 && opt.stackSafety.isEmpty then
       return b
-    val vars = if opt.debug then h.currentLocals else computeRestoreList(parts)
-    h.currentStackSafetySym.foreach: fnOrCls =>
+    val vars = if opt.debug then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
+    ctx.resumeInfo.currentStackSafetySym.foreach: fnOrCls =>
       doUnwindMap +=
-        fnOrCls -> (res => h.doUnwind(res, fnOrCls.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), parts.entry, vars)(using paths))
+        fnOrCls -> (res => ctx.doUnwind(res, fnOrCls.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), parts.entry, vars)(using paths))
 
     val pcVar = freshTmp("pc")
     val mainLoopLbl = freshTmp("main")
@@ -483,7 +484,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
         case Unwind(uid, loc) =>
-          h.doUnwind(paths.resumeValue, loc, uid, vars)(using paths)
+          ctx.doUnwind(paths.resumeValue, loc, uid, vars)(using paths)
         case _ => super.applyBlock(b)
 
     val arms = parts.states.toList.map: (id, part) =>
@@ -515,8 +516,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         mainLoop))
   
   private def translateCtorLike(b: Block, thisPath: Path, isModCtor: Bool)(using h: HandlerCtx): Block =
-    translateBlock(b, HandlerCtx(N, S(thisPath), isModCtor, 0, Nil, N,
-      h.debugInfo.nest("ctor-like block", unit, b.definedVars.toList)), Set.empty)
+    translateBlock(b, if isModCtor then HandlerCtx.ModCtor else HandlerCtx.Ctor, Set.empty)
 
   private def translateTopLevelOrCtor(b: Block, onEffect: Path => Call)(using HandlerCtx): Block =
     def topLevelCheck(l: Local, r: Result, rst: Block): Block =
@@ -600,9 +600,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   def translateTopLevel(b: Block): (Block, collection.Map[FnOrCls, Path => Return]) =
     doUnwindMap.clear()
     val preTransformed = new PreHandlerLowering().applyBlock(b)
-    val ctx = HandlerCtx(N, N, false, 0, b.definedVars.toList, N, DebugInfo.topLevel(
-      "‹top level›"
-    ))
+    val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
     (transformed, doUnwindMap)
     
