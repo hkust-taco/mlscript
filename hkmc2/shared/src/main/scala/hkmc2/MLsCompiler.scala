@@ -6,17 +6,14 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.io
 import utils.*
 
-import hkmc2.semantics.MemberSymbol
-import hkmc2.semantics.Elaborator
-import hkmc2.semantics.Resolver
-import hkmc2.semantics.{Import, Term}
+import hkmc2.semantics.*
 import hkmc2.syntax.Keyword.`override`
 import semantics.Elaborator.{Ctx, State}
 
 
-class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, fs: io.FileSystem):
+class ParserSetup(file: io.Path, dbgParsing: Bool)(using state: Elaborator.State, raise: Raise, cctx: CompilerCtx):
   
-  val block = fs.read(file)
+  val block = cctx.fs.read(file)
   val fph = new FastParseHelpers(block)
   val origin = Origin(file, 0, fph)
   
@@ -51,7 +48,9 @@ object MLsCompiler:
   * @param config the compiler's configuration object
   * @param fs the file system interface
   */
-class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using config: Config, fs: io.FileSystem):
+class MLsCompiler
+    (paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)
+    (using cctx: CompilerCtx, config: Config):
   import paths.*
   
   
@@ -59,10 +58,12 @@ class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using con
   // TODO adapt logic
   val etl = new TraceLogger{override def doTrace: Bool = false}
   val ltl = new TraceLogger{override def doTrace: Bool = false}
+  // val ltl = new TraceLogger{override def doTrace: Bool = true}
   val rtl = new TraceLogger{override def doTrace: Bool = false}
   
   
   var dbgParsing = false
+  var dbgElab = false
   
   
   def compileModule(file: io.Path): Unit =
@@ -71,7 +72,8 @@ class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using con
     
     given Raise = mkRaise(file)
     
-    given Elaborator.State = new Elaborator.State
+    given Elaborator.State = new Elaborator.State:
+      override def dbg: Bool = dbgElab
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)
@@ -83,6 +85,7 @@ class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using con
     val (pblk, newCtx) = elab.importFrom(preludeParse.resultBlk)(using initState)
     
     newCtx.nestLocal("file:"+file.baseName).givenIn:
+      given CompilerCtx = cctx.derive(file)
       val elab = Elaborator(etl, wd, newCtx)
       val parsed = mainParse.resultBlk
       val (blk0, _) = elab.importFrom(parsed)
@@ -120,7 +123,7 @@ class MLsCompiler(paths: MLsCompiler.Paths, mkRaise: io.Path => Raise)(using con
         jsb.program(le, exportedSymbol, wd)
       val jsStr = je.stripBreaks.mkString(100)
       val out = file.up / io.RelPath(file.baseName + ".mjs")
-      fs.write(out, jsStr)
+      cctx.fs.write(out, jsStr)
   
   
 end MLsCompiler

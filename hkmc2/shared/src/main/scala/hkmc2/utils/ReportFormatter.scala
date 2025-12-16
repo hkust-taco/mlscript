@@ -17,6 +17,8 @@ class ReportFormatter(
   val colorize: Bool,
   val wrap: Opt[(=> Unit) => Unit] = N
 ):
+  val MaxLineCount = 5
+  
   /** Output main text. */
   private def text(str: Str) =
     output(if colorize then fansi.Color.Red(str).toString else str)
@@ -64,12 +66,12 @@ class ReportFormatter(
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-        val isLast = msgNum =:= lastMsgNum
+        val isLastMsg = msgNum =:= lastMsgNum
         val msgStr = msg.showIn(using sctx)
         if msgNum =:= 0 then text(headStr + msgStr)
         else if loco.isEmpty && diag.allMsgs.size =:= 1 then
           if !onlyOneLine then text("╙──")
-        else text(s"${if isLast && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
+        else text(s"${if isLastMsg && loco.isEmpty then "╙──" else "╟──"} ${msgStr}")
         loco.foreach { loc =>
           val (startLineNum, startLineStr, startLineCol) =
             loc.origin.fph.getLineColAt(loc.spanStart)
@@ -79,7 +81,10 @@ class ReportFormatter(
             loc.origin.fph.getLineColAt(loc.spanEnd)
           var l = startLineNum
           var c = startLineCol
-          while l <= endLineNum do
+          var lineCount = 0
+          while l <= endLineNum && lineCount < MaxLineCount do
+            val isLastLineOfLoc = l === endLineNum || lineCount === MaxLineCount - 1
+            lineCount += 1
             val globalLineNum = loc.origin.startLineNum + l - 1
             val relativeLineNum = globalLineNum - blockLineNum + 1
             val shownLineNum =
@@ -87,11 +92,13 @@ class ReportFormatter(
               else "l." + globalLineNum
             val prepre = "║  "
             val pre = s"$shownLineNum: "
-            val curLine = loc.origin.fph.lines(l - 1)
+            val curLine = if lineCount < MaxLineCount
+              then loc.origin.fph.lines(l - 1)
+              else "... (more lines omitted) ..."
             text(prepre + pre + "\t" + curLine)
             val tickBuilder = new StringBuilder()
             tickBuilder ++= (
-              (if isLast && l =:= endLineNum then "╙──" else prepre)
+              (if isLastMsg && isLastLineOfLoc then "╙──" else prepre)
               + " " * pre.length + "\t" + " " * (c - 1))
             val lastCol = if l =:= endLineNum then endLineCol else curLine.length + 1
             while c < lastCol do { tickBuilder += ('^'); c += 1 }

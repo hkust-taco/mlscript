@@ -21,6 +21,28 @@ package object node:
     def writeFileSync(path: Str, data: Str): Unit = js.native
     def readdirSync(path: Str): js.Array[Str] = js.native
     def existsSync(path: Str): Bool = js.native
+    def lstatSync(path: Str): Stats = js.native
+  
+  /**
+    * The facade for [[fs.Stats]]. Only a few useful members are listed here.
+    * Refer to https://nodejs.org/api/fs.html#class-fsstats for the full list
+    * of methods.
+    */
+  @js.native
+  trait Stats extends js.Object:
+    def isDirectory(): Bool = js.native
+    def isFile(): Bool = js.native
+    def isSymbolicLink(): Bool = js.native
+    /** The size of the file in bytes. */
+    val size: Long = js.native
+    /** The timestamp indicating the last time this file was accessed. */
+    def atime: js.Date = js.native
+    /** The timestamp indicating the last time this file was modified. */
+    def mtime: js.Date = js.native
+    /** The timestamp indicating the last time the file status was changed. */
+    def ctime: js.Date = js.native
+    /** The timestamp indicating the creation time of this file. */
+    def birthtime: js.Date = js.native
   
   @js.native
   trait ParsedPath extends js.Object:

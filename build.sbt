@@ -62,7 +62,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .jsSettings(
     scalaJSLinkerConfig ~= {
       _.withModuleKind(ModuleKind.ESModule)
-       .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
+        .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
     },
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
@@ -80,6 +80,14 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % "test",
     
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
+  )
+
+lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
+  .settings(
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+    ).value
   )
 
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))

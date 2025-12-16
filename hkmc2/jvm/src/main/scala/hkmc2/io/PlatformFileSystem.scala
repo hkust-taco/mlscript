@@ -10,6 +10,8 @@ private[io] class JavaFileSystem extends FileSystem:
 
   def exists(path: Path): Bool = os.exists(unwrap(path))
   
+  def getLastChangedTimestamp(path: Path): Long = os.mtime(unwrap(path))
+  
   private def unwrap(path: Path): os.Path = path match
     case path: WrappedPath => path.underlying
     case _ => lastWords(s"The given path is not compatible with the current platform (JVM).")

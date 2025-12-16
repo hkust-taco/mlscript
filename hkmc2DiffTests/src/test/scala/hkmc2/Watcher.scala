@@ -29,6 +29,8 @@ class Watcher(dirs: Ls[File]):
   val completionTime = mutable.Map.empty[File, LocalDateTime]
   val fileHasher = FileHasher.DEFAULT_FILE_HASHER
   
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default)
+  
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
     .paths(dirs.map(_.toJava.toPath).asJava)
@@ -70,8 +72,9 @@ class Watcher(dirs: Ls[File]):
               case StandardWatchEventKinds.ENTRY_DELETE => onDelete(file, count)
         completionTime(event.path) = LocalDateTime.now()
       catch ex =>
-        System.err.println("Unexpected error in watcher: " + ex)
-        ex.printStackTrace()
+        // System.err.println("Unexpected error in watcher: " + ex)
+        // ex.printStackTrace()
+        System.err.println("Unexpected error in watcher (" + ex.getClass() + ")")
         watcher.close()
         throw ex
     })
@@ -98,7 +101,6 @@ class Watcher(dirs: Ls[File]):
       if isModuleFile
       then
         given Config = Config.default
-        given FileSystem = FileSystem.default
         MLsCompiler(
           paths = new MLsCompiler.Paths:
             val preludeFile = preludePath
@@ -108,7 +110,7 @@ class Watcher(dirs: Ls[File]):
         ).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
-          override def fs = FileSystem.default
+          def cctx = Watcher.this.cctx
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)
