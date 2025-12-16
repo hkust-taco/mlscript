@@ -63,6 +63,7 @@ class MLsCompiler
   
   
   var dbgParsing = false
+  var dbgElab = false
   
   
   def compileModule(file: io.Path): Unit =
@@ -72,7 +73,7 @@ class MLsCompiler
     given Raise = mkRaise(file)
     
     given Elaborator.State = new Elaborator.State:
-      override def dbg: Bool = true
+      override def dbg: Bool = dbgElab
     
     val preludeParse = ParserSetup(preludeFile, dbgParsing)
     val mainParse = ParserSetup(file, dbgParsing)

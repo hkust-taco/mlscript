@@ -10,8 +10,6 @@ class BenchDiffMaker
     (using val cctx: CompilerCtx)
   extends LlirDiffMaker:
   
-  override def fs = io.FileSystem.default
-
   override def processTerm(blk: semantics.Term.Blk, inImport: Bool)(using Config, Raise): Unit =
     super.processTerm(blk, inImport)
 
