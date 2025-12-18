@@ -57,6 +57,7 @@ handle h = Effect with
 //│ = "Hello World!"
 
 :expect "54321"
+:sjs
 let result = ""
 handle h = Effect with
   fun perform(arg)(k) =
@@ -70,6 +71,125 @@ in
   h.perform("4")
   h.perform("5")
 result
+//│ JS (unsanitized):
+//│ let result, tmp7;
+//│ let h7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$7;
+//│ result = "";
+//│ Handler$h$perform$7 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
+//│   let v, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     arg = runtime.resumeArr.at(runtime.resumeIdx);
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         runtime.resumeValue = runtime.safeCall(k(arg));
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, Handler$h$perform$7, null, "Effects.mls:64:13", 1, null, 1, arg)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         v = runtime.resumeValue;
+//│         result = result + arg;
+//│         return v;
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ Handler$h$perform7 = function Handler$h$perform(Handler$h$$instance, arg) {
+//│   return (k) => {
+//│     return Handler$h$perform$7(Handler$h$$instance, arg, k)
+//│   }
+//│ };
+//│ (class Handler$h$14 extends Effect1 {
+//│   static {
+//│     Handler$h$15 = this
+//│   }
+//│   constructor() {
+//│     let tmp8;
+//│     tmp8 = super();
+//│     if (tmp8 instanceof runtime.EffectSig.class) {
+//│       tmp8 = runtime.ctorEffect(tmp8);
+//│     }
+//│     tmp8;
+//│   }
+//│   perform(arg) {
+//│     let Handler$h$perform$here;
+//│     Handler$h$perform$here = runtime.safeCall(Handler$h$perform7(this, arg));
+//│     return runtime.mkEffect(this, Handler$h$perform$here)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
+//│ h7 = new Handler$h$15();
+//│ if (h7 instanceof runtime.EffectSig.class) {
+//│   h7 = runtime.topLevelEffect(h7, false);
+//│ }
+//│ handleBlock$7 = (undefined, function () {
+//│   let tmp8, tmp9, tmp10, tmp11, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, handleBlock$7, null, "Effects.mls:68:3", 4, null, 0)
+//│         }
+//│         pc = 4;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp11 = runtime.resumeValue;
+//│         return runtime.safeCall(h7.perform("5"));
+//│         break;
+//│       case 2:
+//│         tmp10 = runtime.resumeValue;
+//│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, handleBlock$7, null, "Effects.mls:71:3", 1, null, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 3:
+//│         tmp9 = runtime.resumeValue;
+//│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, handleBlock$7, null, "Effects.mls:70:3", 2, null, 0)
+//│         }
+//│         pc = 2;
+//│         continue main;
+//│         break;
+//│       case 4:
+//│         tmp8 = runtime.resumeValue;
+//│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
+//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           return runtime.unwind(runtime.resumeValue, 1, handleBlock$7, null, "Effects.mls:69:3", 3, null, 0)
+//│         }
+//│         pc = 3;
+//│         continue main;
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ });
+//│ tmp7 = runtime.enterHandleBlock(h7, handleBlock$7);
+//│ if (tmp7 instanceof runtime.EffectSig.class) { tmp7 = runtime.topLevelEffect(tmp7, false); }
+//│ result
 //│ = "54321"
 //│ result = "54321"
 
@@ -151,64 +271,11 @@ result
 //│ = "Hello World!"
 
 // Float out definitions
-:sjs
 handle h = Effect with
   fun perform(arg)(k) = arg
 if true do
   fun f() = 3
   f()
-//│ JS (unsanitized):
-//│ let tmp11;
-//│ let f, h11, handleBlock$11, Handler$h$perform11, Handler$h$23, Handler$h$perform$11;
-//│ Handler$h$perform$11 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
-//│   return arg
-//│ };
-//│ Handler$h$perform11 = function Handler$h$perform(Handler$h$$instance, arg) {
-//│   return (k) => {
-//│     return Handler$h$perform$11(Handler$h$$instance, arg, k)
-//│   }
-//│ };
-//│ (class Handler$h$22 extends Effect1 {
-//│   static {
-//│     Handler$h$23 = this
-//│   }
-//│   constructor() {
-//│     let tmp12;
-//│     tmp12 = super();
-//│     if (tmp12 instanceof runtime.EffectSig.class) {
-//│       tmp12 = runtime.ctorEffect(tmp12);
-//│     }
-//│     tmp12;
-//│   }
-//│   perform(arg) {
-//│     let Handler$h$perform$here;
-//│     Handler$h$perform$here = runtime.safeCall(Handler$h$perform11(this, arg));
-//│     return runtime.mkEffect(this, Handler$h$perform$here)
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
-//│ });
-//│ h11 = new Handler$h$23();
-//│ if (h11 instanceof runtime.EffectSig.class) {
-//│   h11 = runtime.topLevelEffect(h11, false);
-//│ }
-//│ f = function f() {
-//│   return 3
-//│ };
-//│ handleBlock$11 = (undefined, function () {
-//│   let scrut;
-//│   scrut = true;
-//│   if (scrut === true) {
-//│     return f()
-//│   } else {
-//│     return runtime.Unit
-//│   }
-//│ });
-//│ tmp11 = runtime.enterHandleBlock(h11, handleBlock$11);
-//│ if (tmp11 instanceof runtime.EffectSig.class) {
-//│   tmp11 = runtime.topLevelEffect(tmp11, false);
-//│ }
-//│ tmp11
 //│ = 3
 
 module A with
@@ -385,16 +452,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.364: 	    module A with
+//│ ║  l.431: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.368: 	    module A with
+//│ ║  l.435: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.372: 	    module A with
+//│ ║  l.439: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.376: 	    module A with
+//│ ║  l.443: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

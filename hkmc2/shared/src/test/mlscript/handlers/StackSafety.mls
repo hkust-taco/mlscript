@@ -27,15 +27,15 @@ hi(0)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafety.mls:15:1", 0, null, 2, tmp1, n)
 //│   }
-//│   if (runtime.isResuming === true) {
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     tmp1 = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
 //│     n = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│     runtime.resumePc = -1;
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -73,15 +73,15 @@ sum(10000)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return runtime.unwind(stackDelayRes, 1, sum, null, "StackSafety.mls:59:1", 0, null, 2, n, tmp2)
 //│   }
-//│   if (runtime.isResuming === true) {
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     n = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
 //│     tmp2 = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
@@ -214,14 +214,16 @@ fun max(a, b) = if a < b then b else a
 //│ let max;
 //│ max = function max(a, b) {
 //│   let scrut, pc;
-//│   if (runtime.isResuming === true) {
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     a = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
 //│     b = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else { pc = 0; }
+//│     runtime.resumePc = -1;
+//│   }
 //│   scrut = a < b;
 //│   if (scrut === true) { return b } else { return a }
 //│ };

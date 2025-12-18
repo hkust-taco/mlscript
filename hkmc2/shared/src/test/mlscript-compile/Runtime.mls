@@ -124,11 +124,10 @@ module TraceLogger with
 // layout:
 // | callCnt | f | debugInfo | pcStr | pc | this | localCnt | locals... |
 
-mut val isResuming = false
 mut val resumeValue = null
 mut val resumeArr = null
 mut val resumeIdx = null
-mut val resumePc = null
+mut val resumePc = -1
 
 object FatalEffect
 object PrintStackEffect
@@ -143,7 +142,6 @@ data class FunctionContFrame(next, saved) with
         f = f()
         saved.[0] -= 1
     set
-      isResuming = true
       resumeValue = value
       resumeArr = saved
       resumeIdx = 7

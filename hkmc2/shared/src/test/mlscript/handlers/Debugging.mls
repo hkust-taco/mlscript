@@ -32,7 +32,9 @@ fun f() =
 //│ ]);
 //│ f = function f() {
 //│   let i, j, k, scrut, tmp1, tmp2, pc;
-//│   if (runtime.isResuming === true) {
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     i = runtime.resumeArr.at(runtime.resumeIdx);
@@ -46,9 +48,7 @@ fun f() =
 //│     tmp1 = runtime.resumeArr.at(saveOffset);
 //│     saveOffset = runtime.resumeIdx + 5;
 //│     tmp2 = runtime.resumeArr.at(saveOffset);
-//│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
+//│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {

@@ -164,12 +164,12 @@ str
 //│ if (scrut === true) {
 //│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
 //│     let tmp13, tmp14, tmp15, pc;
-//│     if (runtime.isResuming === true) {
+//│     if (runtime.resumePc === -1) {
+//│       pc = 0;
+//│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       runtime.isResuming = false;
-//│     } else {
-//│       pc = 0;
+//│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
 //│       switch (pc) {
@@ -224,12 +224,12 @@ str
 //│   }
 //│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
 //│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
-//│     if (runtime.isResuming === true) {
+//│     if (runtime.resumePc === -1) {
+//│       pc = 0;
+//│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       runtime.isResuming = false;
-//│     } else {
-//│       pc = 0;
+//│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
 //│       switch (pc) {
@@ -282,12 +282,12 @@ str
 //│   });
 //│   handleBlock$$2 = function handleBlock$$(h22) {
 //│     let tmp13, pc;
-//│     if (runtime.isResuming === true) {
+//│     if (runtime.resumePc === -1) {
+//│       pc = 0;
+//│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       runtime.isResuming = false;
-//│     } else {
-//│       pc = 0;
+//│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
 //│       switch (pc) {
@@ -315,12 +315,12 @@ str
 //│   handleBlock$10 = (undefined, function () {
 //│     let tmp13, pc;
 //│     let h22, handleBlock$$here;
-//│     if (runtime.isResuming === true) {
+//│     if (runtime.resumePc === -1) {
+//│       pc = 0;
+//│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       runtime.isResuming = false;
-//│     } else {
-//│       pc = 0;
+//│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
 //│       switch (pc) {

@@ -140,7 +140,6 @@ class HandlerPaths(using Elaborator.State):
   val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   val unwindPath: Path = runtimePath.selSN("unwind")
-  val isResuming: Path = runtimePath.selSN("isResuming")
   val resumePc: Path = runtimePath.selSN("resumePc")
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
@@ -512,11 +511,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     Scoped(
       scopedVars ++ Set(pcVar),
       Match(
-        paths.isResuming,
-        Case.Lit(Tree.BoolLit(true)) ->
-          restoreVars
-            .assignFieldN(paths.runtimePath, new Tree.Ident("isResuming"), Value.Lit(Tree.BoolLit(false))).end :: Nil,
-        S(Assign(pcVar, intLit(parts.entry), End())),
+        paths.resumePc,
+        Case.Lit(Tree.IntLit(-1)) ->
+          Assign(pcVar, intLit(parts.entry), End()) :: Nil,
+        S(restoreVars
+            .assignFieldN(paths.runtimePath, new Tree.Ident("resumePc"), Value.Lit(Tree.IntLit(-1))).end),
         mainLoop))
   
   private def translateCtorLike(b: Block, thisPath: Path, isModCtor: Bool)(using h: HandlerCtx): Block =
