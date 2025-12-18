@@ -157,11 +157,12 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, tmp11, tmp12;
-//│ let h11, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
+//│ let str, scrut, h11, tmp11, tmp12;
+//│ let handleBlock$9, Handler$h2$perform1, Handler$h2$3, Handler$h1$perform1, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
+//│   let handleBlock$10, Handler$h1$3;
 //│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
 //│     let tmp13, tmp14, tmp15, pc;
 //│     if (runtime.resumePc === -1) {
@@ -313,13 +314,14 @@ str
 //│     }
 //│   });
 //│   handleBlock$10 = (undefined, function () {
-//│     let tmp13, pc;
-//│     let h22, handleBlock$$here;
+//│     let h22, tmp13, pc;
+//│     let handleBlock$$here;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
+//│       handleBlock$9 = runtime.resumeArr.at(runtime.resumeIdx);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
@@ -327,7 +329,7 @@ str
 //│         case 0:
 //│           runtime.resumeValue = new Handler$h2$3();
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 0)
+//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 2, null, 1, handleBlock$9)
 //│           }
 //│           pc = 2;
 //│           continue main;
@@ -341,7 +343,7 @@ str
 //│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
 //│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 0)
+//│             return runtime.unwind(runtime.resumeValue, 1, handleBlock$10, null, null, 1, null, 1, handleBlock$9)
 //│           }
 //│           pc = 1;
 //│           continue main;

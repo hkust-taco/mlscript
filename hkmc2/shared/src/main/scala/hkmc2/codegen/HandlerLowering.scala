@@ -339,7 +339,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       // ignored cases
       case TryBlock(sub, finallyDo, rest) => ??? // ignore
       case Throw(_) => blk
-      case Scoped(_, body) => go(body)
+      case Scoped(_, body) => go(body) // PreHandlerLowering
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
 
     val initId = allocId()
@@ -563,9 +563,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         S(h.cls),
         handler.sym,
         handler.params,
-        Define(
+        Scoped(Set(sym), Define(
           fDef,
-          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false)))(false)
+          Return(PureCall(paths.mkEffectPath, h.cls.asPath :: Value.Ref(sym, S(fDef.dSym)) :: Nil), false))))(false)
 
     val clsDefn = ClsLikeDefn(
       N, // no owner
@@ -582,6 +582,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     )
 
     blockBuilder
+      .scopedVars(Set(clsDefn.sym, sym))
       .define(clsDefn)
       .assign(h.lhs, Instantiate(mut = true, Value.Ref(clsDefn.sym, S(h.cls)), Nil))
       .define(bodyDefn)
