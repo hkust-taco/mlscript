@@ -128,6 +128,7 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 res.reified.contTrace.next.getLocals
+//│ = [LocalVarInfo("i", 0), LocalVarInfo("j", 100), LocalVarInfo("k", 2000)]
 
 Runtime.debugEff(res.reified)
 //│ > Debug EffectSig:
@@ -187,8 +188,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3) with locals: j=200
+//│ > 	at f (Debugging.mls:183:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:184:3)
+//│ > 	at f (Debugging.mls:185:3)
 //│ > Stack Trace:
 //│ > 	at tail position

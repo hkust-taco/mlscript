@@ -491,7 +491,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       Case.Lit(Tree.IntLit(id)) ->
         postTransform.applyBlock(part.blk)
 
-    val mainLoop = Label(mainLoopLbl, true, Match(Value.Ref(pcVar), arms, N, End()), End())
+    val mainLoop =
+      if parts.states.size <= 1 then
+        postTransform.applyBlock(parts.states.head._2.blk)
+      else
+        Label(mainLoopLbl, true, Match(Value.Ref(pcVar), arms, N, End()), End())
 
     val getSavedTmp = freshTmp("saveOffset")
     def getSaved(off: BigInt): (Block => Block, Path) =

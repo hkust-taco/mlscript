@@ -15,7 +15,7 @@ sum(100)
 //│ = 5050
 
 // preserve tail calls
-// MUST see "return hi1(tmp)" in the output
+// MUST see "return hi(tmp1)" in the output
 :stackSafe 5
 :effectHandlers
 :expect 0
@@ -45,17 +45,12 @@ hi(0)
 //│   } else {
 //│     pc = 0;
 //│   }
-//│   main: while (true) {
-//│     if (pc === 0) {
-//│       scrut = n === 0;
-//│       if (scrut === true) {
-//│         return 0
-//│       } else {
-//│         tmp1 = n - 1;
-//│         return hi(tmp1)
-//│       }
-//│     }
-//│     break;
+//│   scrut = n === 0;
+//│   if (scrut === true) {
+//│     return 0
+//│   } else {
+//│     tmp1 = n - 1;
+//│     return hi(tmp1)
 //│   }
 //│ };
 //│ $_stack$_safe$_body$_ = (undefined, function () {
@@ -85,7 +80,7 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:73:1", 0, null, 2, n, tmp2)
+//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:68:1", 0, null, 2, n, tmp2)
 //│   }
 //│   if (runtime.isResuming === true) {
 //│     let saveOffset;
@@ -109,7 +104,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:76:9", 1, null, 2, n, tmp2)
+//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:71:9", 1, null, 2, n, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -237,13 +232,9 @@ fun max(a, b) = if a < b then b else a
 //│     saveOffset = runtime.resumeIdx + 1;
 //│     b = runtime.resumeArr.at(saveOffset);
 //│     runtime.isResuming = false;
-//│   } else {
-//│     pc = 0;
-//│   }
-//│   main: while (true) {
-//│     if (pc === 0) { scrut = a < b; if (scrut === true) { return b } else { return a } }
-//│     break;
-//│   }
+//│   } else { pc = 0; }
+//│   scrut = a < b;
+//│   if (scrut === true) { return b } else { return a }
 //│ };
 
 

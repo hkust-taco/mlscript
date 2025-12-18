@@ -311,7 +311,7 @@ let Runtime1;
       }
       resume(value) {
         let scrut, f, tmp, tmp1, tmp2;
-        scrut = this.saved.at(0) == 0;
+        scrut = this.saved.at(0) === 0;
         if (scrut === true) {
           tmp = runtime.safeCall(globalThis.console.log("cannot resume getters"));
         } else {
@@ -341,7 +341,7 @@ let Runtime1;
         tmp2 = globalThis.Object.freeze([]);
         return f.apply(this.saved.at(5), tmp2)
       } 
-      get getLocal() {
+      get getLocals() {
         let debugInfo, res, i, tmp;
         debugInfo = this.saved.at(2);
         res = [];
@@ -379,25 +379,6 @@ let Runtime1;
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
-    });
-    this.FunctionContFrameOld = function FunctionContFrameOld(next) {
-      return globalThis.Object.freeze(new FunctionContFrameOld.class(next));
-    };
-    (class FunctionContFrameOld {
-      static {
-        Runtime.FunctionContFrameOld.class = this
-      }
-      constructor(next) {
-        this.next = next;
-      }
-      doUnwind(res1, newPc) {
-        this.pc = newPc;
-        res1.contTrace.last.next = this;
-        res1.contTrace.last = this;
-        return res1
-      }
-      toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "FunctionContFrameOld", ["next"]]; 
     });
     this.HandlerContFrame = function HandlerContFrame(next, nextHandler, handler) {
       return globalThis.Object.freeze(new HandlerContFrame.class(next, nextHandler, handler));
@@ -692,7 +673,7 @@ let Runtime1;
             let scrut2, curLocals, loc, localsMsg, scrut3, lambda, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
             scrut2 = cur !== null;
             if (scrut2 === true) {
-              curLocals = cur.getLocal;
+              curLocals = cur.getLocals;
               loc = cur.getLoc;
               split_root$: {
                 split_1$: {
