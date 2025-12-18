@@ -204,7 +204,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   // blk: the block of code within this state
   case class BlockPartition(blk: Block, resumable: Bool)
-  case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition])
+  case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition], containsCall: Bool)
 
   object EffectfulResult:
     def unapply(r: Result) = r match
@@ -215,6 +215,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def partitionBlock(blk: Block)(using h: FunctionCtx): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
     val allocId = new IdAllocator()
+    var containsCall = false
 
     // * blk: The block to transform
     // * partitioned: whether we are already in a partitioned state
@@ -255,10 +256,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
         override def applyBlock(b: Block) = b match
           // Special handling for tail calls
-          case Return(c @ Call(fun, args), false) => b // Prevents the recursion into applyResult
+          case Return(c @ Call(fun, args), false) =>
+            containsCall = true
+            b // Prevents the recursion into applyResult
           case _ => super.applyBlock(b)
         override def applyResult(r: Result)(k: Result => Block) = r match
           case EffectfulResult(r) =>
+            containsCall = true
             doNewEffectPartition(r, k(paths.resumeValue))
           case _ => super.applyResult(r)(k)
       
@@ -346,7 +350,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // Note: initial part will only be resumed if stack safety is on.
     val initPart = BlockPartition(go(blk)(using Map(), N, false), opt.stackSafety.isDefined)
     result(initId) = initPart
-    PartitionedBlock(initId, Map.from(result))
+    PartitionedBlock(initId, Map.from(result), containsCall)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
     val localSet = ctx.resumeInfo.currentLocals.toSet
@@ -469,6 +473,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     given FunctionCtx = ctx
     val parts = partitionBlock(b)
     if parts.states.size <= 1 && opt.stackSafety.isEmpty then
+      return b
+    if !parts.containsCall then
       return b
     val vars = if opt.debug then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
     ctx.resumeInfo.currentStackSafetySym.foreach: fnOrCls =>
