@@ -1000,7 +1000,7 @@ extends Importer with ucs.SplitElaborator:
       case (m @ PrefixApp(Keywrd(Keyword.`import`), arg)) :: sts =>
         reportUnusedAnnotations
         val (newCtx, newAcc) = arg match
-          case StrLit(path) =>
+          case path: StrLit =>
             val stmt = importPath(path).withLocOf(m)
             (ctx + (stmt.sym.nme -> stmt.sym),
             stmt :: acc)

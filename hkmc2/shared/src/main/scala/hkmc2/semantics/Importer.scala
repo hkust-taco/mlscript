@@ -11,102 +11,70 @@ import hkmc2.io
 import utils.TraceLogger
 
 import Elaborator.*
-import hkmc2.syntax.LetBind
+import hkmc2.syntax.{LetBind, Tree}, Tree.StrLit
 
 
 class Importer:
   self: Elaborator =>
   import tl.*
   
-  import Importer.*
+  def importPath(rawPath: StrLit)(using cfg: Config): Import =
+    cctx.moduleResolver.tryResolveModulePath(rawPath.value) match
+      case S(L(specifier), moduleName) =>
+        // The path resolves to a platform dependent specifier, which is NOT a
+        // path and should be used as-is, e.g., Node.js built-in modules.
+        val id = new syntax.Tree.Ident(moduleName.getOrElse(specifier)) // TODO loc
+        val sym = TermSymbol(LetBind, N, id)
+        Import(sym, specifier, wd / io.RelPath(rawPath.value)) // hmm, the third arg is dummy???
+      case S(R(actualFile), moduleName) =>
+        // The specifier is resolved to a file path.
+        importFile(rawPath, actualFile, moduleName.getOrElse(actualFile.baseName))
+      case N =>
+        // The specifier could not be resolved. We treat it as a file path.
+        val actualFile =
+          if rawPath.value.startsWith("/") then io.Path(rawPath.value)
+          else wd / io.RelPath(rawPath.value)
+        importFile(rawPath, actualFile, actualFile.baseName)
   
-  /**
-    * Resolve an imported module name to a directory (or file) path. This method
-    * should be overridden by subclasses to provide module resolution logic.
-    *
-    * @param orgName the optional organization name of the module
-    * @param moduleName the name of the module being imported
-    * @param noSubPath if the import does not have a sub-path (i.e., only the module name)
-    * @return the resolved path and module identifier, if any.
-    */
-  def resolveModule(orgName: Opt[Str], moduleName: Str, noSubPath: Bool): Opt[(io.Path, Str)] = N
-  
-  /**
-    * Try to resolve path if it refers to a module or a source file in a module.
-    *
-    * @param path the import path
-    * @return the resolved path and module identifier, if any.
-    */
-  private def tryResolveModulePath(path: Str): Opt[(io.Path, Str)] = path match
-    case r(orgName, modName, subPath) =>
-      val orgNameOpt = if orgName is null then N else S(orgName)
-      if subPath is null then
-        resolveModule(orgNameOpt, modName, true)
-      else
-        resolveModule(orgNameOpt, modName, false).map:
-          case (p, id) => (p / io.RelPath(subPath), id)
-    case _ => N
-  
-  def importPath(path: Str)(using cfg: Config): Import =
-    // Here we handle the path of `import`.
-    
-    val (file, nme) = tryResolveModulePath(path).getOrElse:
-      // Fallback local file resolution.
-      val p = if path.startsWith("/") then io.Path(path) else wd / io.RelPath(path)
-      (p, p.baseName)
-    
+  private def importFile(rawPath: StrLit, actualFile: io.Path, nme: Str)(using cfg: Config): Import =
     val id = new syntax.Tree.Ident(nme) // TODO loc
     
     lazy val sym = TermSymbol(LetBind, N, id)
     
-    if path.startsWith(".") || path.startsWith("/") then // leave alone imports like "fs"
-      log(s"importing $file")
+    log(s"importing $actualFile")
+    
+    if cctx.fs.exists(actualFile) then
       
-      file.ext match
+      actualFile.ext match
       
       case "mjs" | "js" =>
-        Import(sym, file.toString, file)
+        Import(sym, actualFile.toString, actualFile)
         
       case "mls" if {
-        !cctx.beingCompiled.contains(file) `||`:
+        !cctx.beingCompiled.contains(actualFile) `||`:
           raise:
             ErrorReport:
                 msg"Circular imports of `mls` files are not yet supported" -> N
-                :: (cctx.allFilesBeingImported :+ file).map(f => msg"  importing ${f.toString}" -> N)
+                :: (cctx.allFilesBeingImported :+ actualFile).map(f => msg"  importing ${f.toString}" -> N)
           false
       } =>
         
-        val sym = tl.trace(s">>> Importing $file"):
+        val sym = tl.trace(s">>> Importing $actualFile"):
           given TL = tl
-          val artifact = cctx.getElaboratedBlock(file, prelude)
+          val artifact = cctx.getElaboratedBlock(actualFile, prelude)
           artifact.tree.definedSymbols.find(_._1 === nme) match
           case Some(nme -> imsym) => imsym
-          case None => lastWords(s"File $file does not define a symbol named $nme")
+          case None => lastWords(s"File $actualFile does not define a symbol named $nme")
         
-        val jsFile = file.up / io.RelPath(file.baseName + ".mjs")
+        val jsFile = actualFile.up / io.RelPath(actualFile.baseName + ".mjs")
         Import(sym, jsFile.toString, jsFile)
         
       case _ =>
-        if file.ext =/= "mls" then raise:
-          ErrorReport(msg"Unsupported file extension: ${file.ext}" -> N :: Nil)
-        Import(sym, path, file)
+        if actualFile.ext =/= "mls" then raise:
+          ErrorReport(msg"Unsupported file type" -> rawPath.toLoc :: Nil)
+        Import(sym, rawPath.value, actualFile)
       
     else
-      Import(sym, path, file)
-    
-
-object Importer:
-  /**
-    * To be compatible with JavaScript ecosystem, we currently use the format of npm.
-    * 
-    * 1. **Group 1:** Scope (no `@`)
-    *      + Example: `@my-org/foo/bar` → `"my-org"`
-    * 2. **Group 2:** Package name
-    *      + Example: `@my-org/foo/bar` → `"foo"`
-    *      + Example: `mypkg/test` → `"mypkg"`
-    * 3. **Group 3:** The remaining text after the first slash
-    *      + Example: `@my-org/foo/bar/baz` → `"bar/baz"`
-    *      + Example: `mypkg/sub/path` → `"sub/path"`
-    *      + Example: `mypkg` → `null`
-    */
-  private val r = """^(?:@([a-z0-9-~][a-z0-9-._~]*)\/)?([a-z0-9-~][a-z0-9-._~]*)(?:\/(.*))?$""".r
+      raise:
+        ErrorReport(msg"Cannot resolve the import path ${actualFile.toString}" -> rawPath.toLoc :: Nil)
+      Import(sym, rawPath.value, actualFile)

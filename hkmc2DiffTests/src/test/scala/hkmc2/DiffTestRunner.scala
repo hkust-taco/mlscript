@@ -22,7 +22,6 @@ object DiffTestRunner:
   
   class State:
     
-    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
     
     val pwd = os.pwd
     
@@ -34,6 +33,9 @@ object DiffTestRunner:
     // val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
     
     val dir = workingDir/"hkmc2"/"shared"/"src"/"test"
+    val nodeModulesPath = workingDir/"node_modules"
+    
+    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalTestModuleResolver(dir/"mlscript-compile", S(nodeModulesPath)))
     
     val validExt = Set("mls")
     

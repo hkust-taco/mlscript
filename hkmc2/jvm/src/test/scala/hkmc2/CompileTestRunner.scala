@@ -8,7 +8,7 @@ import os.up
 import mlscript.utils._, shorthands._
 import io.PlatformPath.given
 
-import CompileTestRunner.given
+import CompileTestRunner.{*, given}
 
 
 class CompileTestRunner
@@ -20,11 +20,6 @@ class CompileTestRunner
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   // val timeLimit = TimeLimit
-  
-  val pwd = os.pwd
-  val workingDir = pwd
-
-  val mainTestDir = workingDir/"hkmc2"/"shared"/"src"/"test"  
   
   // The compilation tests currently include compiling the benchmark instrumentation code.
   val dirs = mainTestDir :: workingDir/"hkmc2Benchmarks"/"src"/"test" :: Nil
@@ -58,10 +53,7 @@ class CompileTestRunner
         val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)
         val report = ReportFormatter(System.out.println, colorize = true, wrap = Some(wrap))
         val compiler = MLsCompiler(
-          paths = new MLsCompiler.Paths:
-            val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
-            val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
-            val termFile = mainTestDir / "mlscript-compile" / "Term.mjs",
+          paths = compilerPaths,
           mkRaise = report.mkRaise
         )
         compiler.compileModule(file)
@@ -77,7 +69,20 @@ end CompileTestRunner
 
 object CompileTestRunner:
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  val pwd = os.pwd
+  val workingDir = pwd
+
+  val mainTestDir = workingDir/"hkmc2"/"shared"/"src"/"test"
+  val stdPath = mainTestDir / "mlscript-compile"
+  
+  val compilerPaths = new MLsCompiler.Paths:
+    val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
+    val runtimeFile = mainTestDir / "mlscript-compile" / "Runtime.mjs"
+    val termFile = mainTestDir / "mlscript-compile" / "Term.mjs"
+  
+  val nodeModulesPath = workingDir / "node_modules"
+  
+  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalTestModuleResolver(stdPath, S(nodeModulesPath)))
   
 end CompileTestRunner
 

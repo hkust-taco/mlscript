@@ -1,0 +1,36 @@
+:js
+
+// Hooray! No need to use relative paths!
+import "std/Stack.mls"
+
+open Stack
+
+1 :: 2 :: 3 :: Nil
+//│ = Cons(1, Cons(2, Cons(3, Nil)))
+
+:silent
+import "fs"
+
+fs.readdirSync
+//│ = fun readdirSync
+
+:silent
+import "node:url"
+
+// Note that the prefix `node:` is removed by the module resolver.
+url.pathToFileURL
+//│ = fun pathToFileURL
+
+// Importing packages in node_modules will be checked.
+
+:silent
+import "typescript"
+
+typescript.version is Str
+//│ = true
+
+// The following will produce the expected error, but it will also display a
+// local path in the error message. So I have to comment it out for now.
+// :e
+// :re
+// import "hooray"

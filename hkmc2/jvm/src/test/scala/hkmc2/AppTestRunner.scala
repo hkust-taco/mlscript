@@ -8,6 +8,7 @@ import mlscript.utils.*, shorthands.*
 import io.PlatformPath.given
 
 import AppTestRunner.given
+import hkmc2.codegen.Local
 
 /**
   * A simple test runner that compiles apps written in MLscript.
@@ -17,19 +18,11 @@ class AppTestRunner
   // with ParallelTestExecution // Can `MLsCompiler` handle parallel compilation?
   // with TimeLimitedTests // TODO
 :
+  import AppTestRunner.*
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
   // val timeLimit = TimeLimit
-  
-  val mainTestDir = os.pwd / "hkmc2" / "shared" / "src" / "test"
-  val appsDir = mainTestDir / "mlscript-apps"
-  val stdlibDir = mainTestDir / "mlscript-compile"
-  
-  val paths = new MLsCompiler.Paths:
-    val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
-    val runtimeFile = stdlibDir / "Runtime.mjs"
-    val termFile = stdlibDir / "Term.mjs"
   
   for app <- os.list(appsDir).filter(os.isDir) do
     val allFiles = os.walk(app).filter(os.isFile).filter(_.ext == "mls").toSeq
@@ -62,6 +55,19 @@ end AppTestRunner
 
 object AppTestRunner:
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
+  val mainTestDir = os.pwd / "hkmc2" / "shared" / "src" / "test"
+  val appsDir = mainTestDir / "mlscript-apps"
+  val stdlibDir = mainTestDir / "mlscript-compile"
+  
+  val paths = new MLsCompiler.Paths:
+    val preludeFile = mainTestDir / "mlscript" / "decls" / "Prelude.mls"
+    val runtimeFile = stdlibDir / "Runtime.mjs"
+    val termFile = stdlibDir / "Term.mjs"
+  
+  val nodeModulesPath = os.pwd / "node_modules"
+  
+  // We may use a different module resolver for URL modules in browsers. For
+  // example, `import "https://esm.sh/nanoid"` should be accepted.
+  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalTestModuleResolver(stdlibDir, S(nodeModulesPath)))
   
 end AppTestRunner

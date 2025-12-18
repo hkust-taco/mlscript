@@ -29,7 +29,18 @@ class Watcher(dirs: Ls[File]):
   val completionTime = mutable.Map.empty[File, LocalDateTime]
   val fileHasher = FileHasher.DEFAULT_FILE_HASHER
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default)
+  val rootPath = os.pwd/os.up
+  val testDir = rootPath/"hkmc2"/"shared"/"src"/"test"
+  val preludePath = testDir/"mlscript"/"decls"/"Prelude.mls"
+  val predefPath = testDir/"mlscript-compile"/"Predef.mls"
+  val stdPath = testDir/"mlscript-compile"
+  val compilerPaths = new MLsCompiler.Paths:
+    val preludeFile = preludePath
+    val runtimeFile = testDir/"mlscript-compile"/"Runtime.mjs"
+    val termFile = testDir/"mlscript-compile"/"Term.mjs"
+  val nodeModulesPath = rootPath/"node_modules"
+  
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default, LocalTestModuleResolver(stdPath, S(nodeModulesPath)))
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
@@ -73,7 +84,7 @@ class Watcher(dirs: Ls[File]):
         completionTime(event.path) = LocalDateTime.now()
       catch ex =>
         // System.err.println("Unexpected error in watcher: " + ex)
-        // ex.printStackTrace()
+        ex.printStackTrace()
         System.err.println("Unexpected error in watcher (" + ex.getClass() + ")")
         watcher.close()
         throw ex
@@ -94,18 +105,12 @@ class Watcher(dirs: Ls[File]):
       val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
-      val rootPath = os.pwd/os.up
-      val preludePath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
-      val predefPath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
         given Config = Config.default
         MLsCompiler(
-          paths = new MLsCompiler.Paths:
-            val preludeFile = preludePath
-            val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
-            val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs",
+          paths = compilerPaths,
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)
       else
