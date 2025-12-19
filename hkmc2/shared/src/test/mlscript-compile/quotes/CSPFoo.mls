@@ -1,4 +1,4 @@
-
+import "./../CSP.mls"
 module CSPFoo with ...
 fun res =
-  ((1, 1))(1, 1)
+  (+)(CSP.test(), 1)

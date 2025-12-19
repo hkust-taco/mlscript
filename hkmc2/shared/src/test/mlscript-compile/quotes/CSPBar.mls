@@ -1,4 +1,4 @@
-
+import "./../Example.mls"
 module CSPBar with ...
 fun res =
-  ((0))(0)
+  Example.inc(0)
