@@ -866,7 +866,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
       if config.qqEnabled then fail:
         ErrorReport(
-            msg"Cross-stage reference to ${sym.nme}.${name.name} is only allowed in compiler test due to the lack of `import.meta` in REPL." ->
+            msg"Cross-stage reference to ${sym.nme}.${name.name} is only allowed in compiled files due to the lack of `import.meta` in REPL mode." ->
             t.toLoc :: Nil,
             source = Diagnostic.Source.Compilation
           )
