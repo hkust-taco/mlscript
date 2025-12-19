@@ -40,7 +40,7 @@ class Watcher(dirs: Ls[File]):
     val termFile = testDir/"mlscript-compile"/"Term.mjs"
   val nodeModulesPath = rootPath/"node_modules"
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default, LocalTestModuleResolver(stdPath, S(nodeModulesPath)))
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default, LocalModuleResolver(stdPath, S(nodeModulesPath)))
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)

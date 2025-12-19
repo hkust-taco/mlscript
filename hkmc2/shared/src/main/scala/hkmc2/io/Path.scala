@@ -52,6 +52,7 @@ abstract class RelPath:
   def toString: String
   def segments: Ls[String]
   def /(other: RelPath): RelPath
+  def baseName: String
 
 object RelPath:
   /** Create relative path from string - delegates to platform-specific implementation */

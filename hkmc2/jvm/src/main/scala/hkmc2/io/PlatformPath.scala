@@ -41,6 +41,10 @@ private[io] class WrappedRelPath(private[io] val underlying: os.RelPath) extends
 
   def /(other: RelPath): RelPath =
     new WrappedRelPath(underlying / other.asInstanceOf[WrappedRelPath].underlying)
+  
+  def last: String = underlying.last
+  
+  def baseName: String = underlying.baseName
 
 /**
  * Platform-specific factory for creating Path instances
@@ -66,3 +70,6 @@ object PlatformPath:
 
   /** Implicit conversion from os.RelPath to io.RelPath (import to use) */
   given Conversion[os.RelPath, RelPath] = fromOsRelPath
+  
+  given getUnderlyingPath: Conversion[io.Path, os.Path] = _ match
+    case WrappedPath(underlying) => underlying

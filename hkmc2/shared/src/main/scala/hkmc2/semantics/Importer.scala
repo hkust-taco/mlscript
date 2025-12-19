@@ -20,15 +20,15 @@ class Importer:
   
   def importPath(rawPath: StrLit)(using cfg: Config): Import =
     cctx.moduleResolver.tryResolveModulePath(rawPath.value) match
-      case S(L(specifier), moduleName) =>
+      case S(ModuleResolver.ResolvedModule.Verbatim(specifier, moduleName)) =>
         // The path resolves to a platform dependent specifier, which is NOT a
         // path and should be used as-is, e.g., Node.js built-in modules.
-        val id = new syntax.Tree.Ident(moduleName.getOrElse(specifier)) // TODO loc
+        val id = new syntax.Tree.Ident(moduleName) // TODO loc
         val sym = TermSymbol(LetBind, N, id)
         Import(sym, specifier, wd / io.RelPath(rawPath.value)) // hmm, the third arg is dummy???
-      case S(R(actualFile), moduleName) =>
+      case S(ModuleResolver.ResolvedModule.File(_, actualFile, moduleName)) =>
         // The specifier is resolved to a file path.
-        importFile(rawPath, actualFile, moduleName.getOrElse(actualFile.baseName))
+        importFile(rawPath, actualFile, moduleName)
       case N =>
         // The specifier could not be resolved. We treat it as a file path.
         val actualFile =

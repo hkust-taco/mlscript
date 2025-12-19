@@ -82,7 +82,7 @@ object CompileTestRunner:
   
   val nodeModulesPath = workingDir / "node_modules"
   
-  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalTestModuleResolver(stdPath, S(nodeModulesPath)))
+  given cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default, LocalModuleResolver(stdPath, S(nodeModulesPath)))
   
 end CompileTestRunner
 

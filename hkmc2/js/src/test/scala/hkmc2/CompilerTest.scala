@@ -36,16 +36,16 @@ class CompilerTest extends AnyFunSuite:
   private def createCompiler(): (InMemoryFileSystem, Compiler) =
     val stdLib = loadStandardLibrary()
     val fs = new InMemoryFileSystem(stdLib)
-    given CompilerCtx = CompilerCtx.fresh(fs, LocalTestModuleResolver(io.Path("/std")))
+    given CompilerCtx = CompilerCtx.fresh(fs, WebModuleResolver())
     (fs, new Compiler(paths))
   
   test("compiler can compile a simple program"):
     val (fs, compiler) = createCompiler()
     
     // Write test program to the file system
-    val code = """|import "std/Option.mls"
-                  |import "std/Stack.mls"
-                  |import "std/Predef.mls"
+    val code = """|import "/std/Option.mls"
+                  |import "/std/Stack.mls"
+                  |import "/std/Predef.mls"
                   |
                   |open Stack
                   |open Option
@@ -67,8 +67,11 @@ class CompilerTest extends AnyFunSuite:
     
     val diagnostics = compiler.compile(inputPath)
     
+    global.console.log(fs.allFiles.keys.mkString("\n"))
+    
     val hasErrors = diagnostics.exists: perFile =>
       val fileDiagnostics = perFile.diagnostics.asInstanceOf[scala.scalajs.js.Array[scala.scalajs.js.Dynamic]]
+      global.console.log(fileDiagnostics)
       fileDiagnostics.exists(_.kind is "error")
     assert(!hasErrors, "Compilation should succeed without errors")
     
