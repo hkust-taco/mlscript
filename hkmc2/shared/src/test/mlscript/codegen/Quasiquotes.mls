@@ -162,16 +162,15 @@ x `=> `if x `=== `0.0 then `1.0 else x
 //│ )
 
 
+// We cannot quote a symbol from another file here due to the lack of `import.meta` in REPL mode.
 :ge
-`1 `== `2
-//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiler test due to the lack of `import.meta` in REPL.
-//│ ║  l.166: 	`1 `== `2
-//│ ╙──       	    ^^
+`id`(`42)
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
+//│ ║  l.167: 	`id`(`42)
+//│ ╙──       	 ^^
 
 
-:ge
-x `=> `if x `== `0.0 then `1.0 else x
-//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiler test due to the lack of `import.meta` in REPL.
-//│ ║  l.173: 	x `=> `if x `== `0.0 then `1.0 else x
-//│ ╙──       	             ^^
+fun id(x) = x
 
+`id`(`42)
+//│ = App(fun id, Tup([Lit(42)]))
