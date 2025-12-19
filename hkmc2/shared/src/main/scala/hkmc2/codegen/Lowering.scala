@@ -864,7 +864,13 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
     case SynthSel(Ref(sym: BlockMemberSymbol), name) => // Multi-file cross-stage references
-      (t.toLoc, sym.toLoc) match
+      if config.qqEnabled then fail:
+        ErrorReport(
+            msg"Cross-stage reference to ${sym.nme}.${name.name} is only allowed in compiler test due to the lack of `import.meta` in REPL." ->
+            t.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation
+          )
+      else (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
           val l1, l2 = new TempSymbol(N)
           loweringCtx.collectScopedSyms(l1, l2)

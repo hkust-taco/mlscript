@@ -162,35 +162,16 @@ x `=> `if x `=== `0.0 then `1.0 else x
 //│ )
 
 
-:fixme // FIXME: weird error
-:elt
+:ge
 `1 `== `2
-//│ Elaborated tree:
-//│ Blk:
-//│   stats = Nil
-//│   res = Quoted of App:
-//│     lhs = SynthSel{sym=member:equals}:
-//│       prefix = Ref{sym=member:Predef} of member:Predef
-//│       nme = Ident of "equals"
-//│     rhs = Tup of Ls of 
-//│       Fld:
-//│         flags = ()
-//│         term = Unquoted of Quoted of Lit of IntLit of 1
-//│         asc = N
-//│       Fld:
-//│         flags = ()
-//│         term = Unquoted of Quoted of Lit of IntLit of 2
-//│         asc = N
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'import'
-//│ > let tmp61, tmp62, tmp63, tmp64, arr10, tmp65, tmp66;try { tmp61 = globalThis.Object.freeze(new Term.Symbol("Predef")); tmp62 = globalThis.Object.freeze(new Term.CSRef(tmp61, import.meta.url, "../../mlscript-compile/Predef.mls")); tmp63 = globalThis.Object.freeze(new Term.Lit(1)); tmp64 = globalThis.Object.freeze(new Term.Lit(2)); arr10 = globalThis.Object.freeze([   tmp63,   tmp64 ]); tmp65 = globalThis.Object.freeze(new Term.Sel(tmp62, "equals")); tmp66 = globalThis.Object.freeze(new Term.Tup(arr10)); block$res16 = globalThis.Object.freeze(new Term.App(tmp65, tmp66)); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                      ^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Cannot use 'import.meta' outside a module
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiler test due to the lack of `import.meta` in REPL.
+//│ ║  l.166: 	`1 `== `2
+//│ ╙──       	    ^^
 
 
-:fixme // FIXME: weird error
+:ge
 x `=> `if x `== `0.0 then `1.0 else x
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'import'
-//│ > let x6, scrut2, tmp67, tmp68, tmp69, tmp70, tmp71, tmp72, arr11, tmp73, tmp74, tmp75, tmp76, tmp77, tmp78, tmp79, tmp80, tmp81, tmp82, tmp83, arr12, tmp84, tmp85;try { tmp67 = globalThis.Object.freeze(new Term.Symbol("x")); x6 = globalThis.Object.freeze(new Term.Ref(tmp67)); tmp68 = globalThis.Object.freeze(new Term.Symbol("scrut")); scrut2 = globalThis.Object.freeze(new Term.Ref(tmp68)); tmp80 = globalThis.Object.freeze(new Term.Symbol("Predef")); tmp81 = globalThis.Object.freeze(new Term.CSRef(tmp80, import.meta.url, "../../mlscript-compile/Predef.mls")); tmp82 = x6; tmp83 = globalThis.Object.freeze(new Term.Lit(0.0)); arr12 = globalThis.Object.freeze([   tmp82,   tmp83 ]); tmp84 = globalThis.Object.freeze(new Term.Sel(tmp81, "equals")); tmp85 = globalThis.Object.freeze(new Term.Tup(arr12)); tmp69 = globalThis.Object.freeze(new Term.App(tmp84, tmp85)); tmp73 = scrut2; tmp74 = globalThis.Object.freeze(new Term.LitPattern(true)); tmp79 = globalThis.Object.freeze(new Term.Lit(1.0)); tmp75 = globalThis.Object.freeze(new Term.Else(tmp79)); tmp76 = globalThis.Object.freeze(new Term.Branch(tmp73, tmp74, tmp75)); tmp78 = x6; tmp77 = globalThis.Object.freeze(new Term.Else(tmp78)); tmp70 = globalThis.Object.freeze(new Term.Cons(tmp76, tmp77)); tmp71 = globalThis.Object.freeze(new Term.Let(tmp68, tmp69, tmp70)); arr11 = globalThis.Object.freeze([   tmp67 ]); tmp72 = globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp71)); block$res17 = globalThis.Object.freeze(new Term.Lam(arr11, tmp72)); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Cannot use 'import.meta' outside a module
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiler test due to the lack of `import.meta` in REPL.
+//│ ║  l.173: 	x `=> `if x `== `0.0 then `1.0 else x
+//│ ╙──       	             ^^
 

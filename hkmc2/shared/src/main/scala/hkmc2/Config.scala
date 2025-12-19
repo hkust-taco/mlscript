@@ -24,6 +24,7 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
+  qqEnabled: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -52,6 +53,7 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
+    qqEnabled = false,
   )
   
   case class SanityChecks(light: Bool)
