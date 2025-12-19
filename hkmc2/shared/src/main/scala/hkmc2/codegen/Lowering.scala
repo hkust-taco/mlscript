@@ -819,6 +819,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def quoteSplit(split: Split)(k: Result => Block)(using LoweringCtx): Block = split match
     case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => quote(scrutinee): r1 =>
       val l1, l2, l3, l4, l5 = new TempSymbol(N)
+      loweringCtx.collectScopedSyms(l1, l2, l3, l4, l5)
       blockBuilder.assign(l1, r1)
         .chain(b => quotePattern(pattern)(r2 => Assign(l2, r2, b)))
         .chain(b => quoteSplit(continuation)(r3 => Assign(l3, r3, b)))
@@ -827,6 +828,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         .rest(setupTerm("Cons", (l4 :: l5 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Let(sym, term, tail) => setupSymbol(sym): r1 =>
       val l1, l2, l3 = new TempSymbol(N)
+      loweringCtx.collectScopedSyms(sym, l1, l2, l3)
       blockBuilder.assign(l1, r1)
         .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
         .chain(b => quote(term)(r2 => Assign(l2, r2, b)))
@@ -834,6 +836,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         .rest(setupTerm("Let", (l1 :: l2 :: l3 :: Nil).map(s => Value.Ref(s)))(k))
     case Split.Else(default) => quote(default): r =>
       val l = new TempSymbol(N)
+      loweringCtx.collectScopedSym(l)
       Assign(l, r, setupTerm("Else", Value.Ref(l) :: Nil)(k))
     case Split.End => setupTerm("End", Nil)(k)
 
@@ -846,6 +849,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       setupTerm("Lit", Value.Lit(lit) :: Nil)(k)
     case Ref(sym) if Elaborator.binaryOps.contains(sym.nme) => // builtin symbols
       val l = new TempSymbol(N)
+      loweringCtx.collectScopedSym(l)
       setupTerm("Builtin", Value.Lit(Tree.StrLit(sym.nme)) :: Nil)(k)
     case Resolved(Ref(sym), disamb) =>
       k(Value.Ref(sym, S(disamb)))
@@ -854,6 +858,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case SynthSel(Ref(sym: ModuleOrObjectSymbol), name) => // Local cross-stage references
       setupSymbol(sym): r1 =>
         val l1, l2 = new TempSymbol(N)
+        loweringCtx.collectScopedSyms(l1, l2)
         Assign(l1, r1, setupTerm("CSRef", Value.Ref(l1) :: setupFilename :: Value.Lit(syntax.Tree.UnitLit(false)) :: Nil)(r2 =>
           Assign(l2, r2, setupTerm("Sel", Value.Ref(l2) :: Value.Lit(syntax.Tree.StrLit(name.name)) :: Nil)(k))
         ))
@@ -861,6 +866,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       (t.toLoc, sym.toLoc) match
         case (S(Loc(_, _, Origin(base, _, _))), S(Loc(_, _, Origin(filename, _, _)))) => setupSymbol(sym): r1 =>
           val l1, l2 = new TempSymbol(N)
+          loweringCtx.collectScopedSyms(l1, l2)
           val basePath = base.up
           val targetPath = filename
           val relPath = targetPath.relativeTo(basePath).map(_.toString).getOrElse(targetPath.toString)
@@ -878,13 +884,16 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         case Nil => quote(body): r =>
           val l = new TempSymbol(N)
           val arr = new TempSymbol(N, "arr")
+          loweringCtx.collectScopedSyms(l, arr)
           Assign(
             arr,
             Tuple(mut = false, ds.reverse.map(_.asArg)),
             Assign(l, r, setupTerm("Lam", Value.Ref(arr) :: Value.Ref(l) :: Nil)(k)))
         case sym :: rest =>
+          loweringCtx.collectScopedSym(sym)
           setupSymbol(sym): r =>
             val l = new TempSymbol(N)
+            loweringCtx.collectScopedSym(l)
             Assign(l, r, setupTerm("Ref", Value.Ref(l) :: Nil): r1 =>
               Assign(sym, r1, rec(rest, Value.Ref(l) :: ds)(k)))
       rec(params.params.map(_.sym), Nil)(k) // TODO: restParam?
@@ -892,16 +901,19 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       def rec(es: Ls[Elem], xs: Ls[Path])(k: Result => Block): Block = es match
         case Nil =>
           val arrSym = new TempSymbol(N, "arr")
+          loweringCtx.collectScopedSym(arrSym)
           Assign(
             arrSym,
             Tuple(mut = false, xs.reverse.map(_.asArg)),
             setupTerm("Tup", Value.Ref(arrSym) :: Nil): r2 =>
               val l1 = new TempSymbol(N)
               val l2 = new TempSymbol(N)
+              loweringCtx.collectScopedSyms(l1, l2)
               Assign(l1, r1, Assign(l2, r2, setupTerm("App", Value.Ref(l1) :: Value.Ref(l2) :: Nil)(k)))
           )
         case Fld(_, t, _) :: rest => quote(t): r2 =>
           val l = new TempSymbol(N)
+          loweringCtx.collectScopedSyms(l)
           Assign(l, r2, rec(rest, Value.Ref(l) :: xs)(k))
         case Spd(eager, term) :: rest =>
           fail:
@@ -916,6 +928,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       setupSymbol(sym){r1 =>
         val l1, l2, l3, l4, l5 = new TempSymbol(N)
         val arrSym = new TempSymbol(N, "arr")
+        loweringCtx.collectScopedSyms(sym, l1, l2, l3, l4, l5, arrSym)
         blockBuilder.assign(l1, r1)
           .chain(b => setupTerm("Ref", Value.Ref(l1) :: Nil)(r => Assign(sym, r, b)))
           .chain(b => quote(rhs)(r2 => Assign(l2, r2, b)))
@@ -927,6 +940,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       }
     case IfLike(syntax.Keyword.`if`, split) => quoteSplit(split.getExpandedSplit): r =>
       val l = new TempSymbol(N)
+      loweringCtx.collectScopedSym(l)
       Assign(l, r, setupTerm("IfLike", setupQuotedKeyword("If") :: Value.Ref(l) :: Nil)(k))
     case Unquoted(body) => term(body)(k)
     case _ => fail:
