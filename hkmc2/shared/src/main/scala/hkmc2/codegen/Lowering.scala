@@ -758,6 +758,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case Resolved(sp @ SelProj(prefix, _, proj), sym) =>
       setupSelection(prefix, proj, S(sym))(k)
     case Region(reg, body) =>
+      loweringCtx.collectScopedSym(reg)
       Assign(reg, Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Region"))(N), Nil),
         term_nonTail(body)(k))
     case RegRef(reg, value) =>
