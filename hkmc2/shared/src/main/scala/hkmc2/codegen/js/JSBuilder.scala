@@ -488,7 +488,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
         } # break; #} "
       val e = els match
       case S(el) =>
-        doc" # default: #{ ${ returningTerm(el, endSemi = true) } # break; #} "
+        doc" # default: #{ ${ nonNestedScoped(el)(bd => returningTerm(bd, endSemi = true)) } # break; #} "
       case N => doc""
       doc" # switch (${result(scrut)}) { #{ ${l :: e} #}  # }" :: returningTerm(rest, endSemi)
     case Match(scrut, hd :: tl, els, rest) =>
