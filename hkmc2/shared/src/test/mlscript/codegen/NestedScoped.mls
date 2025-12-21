@@ -30,7 +30,7 @@ scope.locally of
 //│ Program:
 //│   imports = Nil
 //│   main = Scoped:
-//│     syms = HashSet(x)
+//│     syms = Set(x)
 //│     body = Assign:
 //│       lhs = x
 //│       rhs = Lit of IntLit of 42
@@ -246,27 +246,13 @@ scope.locally of scope.locally of (
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
 //│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1, $block$res -> block$res19, $block$res -> block$res6, member:h -> h, $block$res -> block$res7, member:f -> f, $block$res -> block$res13)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
 //│     _1 = member:f
 //│     _2 = class hkmc2.semantics.BlockMemberSymbol
 //│   _2 = Scope:
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1, $block$res -> block$res19, $block$res -> block$res6, member:h -> h, $block$res -> block$res7, member:f -> f, $block$res -> block$res13)
+//│       bindings = HashMap($block$res -> block$res19, $block$res -> block$res6, member:h -> h, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res7, $Block -> Block, member:f -> f, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res13, $block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $block$res -> block$res14, member:f_g -> f_g, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
@@ -279,30 +265,13 @@ scope.locally of scope.locally of (
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
 //│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1, $block$res -> block$res19, $block$res -> block$res6, member:h -> h, $block$res -> block$res7, member:f -> f, $block$res -> block$res13)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
 //│     _1 = member:g
 //│     _2 = class hkmc2.semantics.BlockMemberSymbol
 //│   _2 = Scope:
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1, $block$res -> block$res19, $block$res -> block$res6, member:h -> h, $block$res -> block$res7, member:f -> f, $block$res -> block$res13)
+//│       bindings = HashMap($block$res -> block$res19, $block$res -> block$res6, member:h -> h, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res7, $Block -> Block, member:f -> f, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res13, $block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $block$res -> block$res14, member:f_g -> f_g, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
@@ -311,23 +280,6 @@ scope.locally of scope.locally of (
 //│ ╟── which references the symbol introduced here
 //│ ║  l.241: 	    fun g() = f()
 //│ ╙──       	    ^^^^^^^^^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res20, $block$res -> block$res8, $block$res -> block$res9, member:f -> f1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res14, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res15, $block$res -> block$res10, $block$res -> block$res, $block$res -> block$res11, member:g -> g, $block$res -> block$res16, z -> z, $block$res -> block$res1, y -> y, x -> x, $block$res -> block$res17, $block$res -> block$res2, z -> z1, x -> x1, y -> y1, $block$res -> block$res3, $block$res -> block$res18, member:y -> y2, x -> x2, member:f -> f2, $block$res -> block$res12, $block$res -> block$res4, $block$res -> block$res5, member:foo -> foo, member:foo -> foo1, $block$res -> block$res19, $block$res -> block$res6, member:h -> h, $block$res -> block$res7, member:f -> f, $block$res -> block$res13)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
 //│ = 3
 
 // :sjs

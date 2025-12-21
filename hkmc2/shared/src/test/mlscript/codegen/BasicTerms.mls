@@ -44,7 +44,7 @@ print("Hi")
 //│ Program:
 //│   imports = Nil
 //│   main = Scoped:
-//│     syms = HashSet($tmp)
+//│     syms = Set($tmp)
 //│     body = Assign:
 //│       lhs = $tmp
 //│       rhs = Call:
