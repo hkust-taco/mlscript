@@ -9,8 +9,9 @@ import hkmc2.semantics.Elaborator.State
 
 import hkmc2.syntax.Tree
 import hkmc2.codegen.llir.FreshInt
+import java.util.IdentityHashMap
 
-class ScopeData(using State):
+class ScopeData(b: Block)(using State):
   
   opaque type UID = BigInt
   
@@ -52,35 +53,27 @@ class ScopeData(using State):
     lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
   
   private val fresh = FreshInt()
-  
-  private val scopedWithIdSym = TempSymbol(N, "scopedWithIdSym")
 
   // Used to associate IDs with scoped blocks.
-  object ScopedWithId:
-    def apply(id: UID, b: Scoped): Block = Begin(
-      Assign(scopedWithIdSym, Value.Lit(Tree.IntLit(id)), End()),
-      b)
-    def unapply(b: Block): Opt[(UID, Scoped)] = b match
-      case Begin(
-        Assign(`scopedWithIdSym`, Value.Lit(Tree.IntLit(id)), End(_)),
-        b: Scoped) => S((id, b))
-      case _ => N
-  
-  // Add UIDs to scopes.
-  object ScopeUidAdder extends BlockTransformer(SymbolSubst()):
-    override def applyScopedBlock(b: Block): Block = b match
-      case s: Scoped => ScopedWithId(fresh.make, s)
+  object ScopeUidAdder extends BlockTraverser:
+    var mp: IdentityHashMap[Scoped, UID] = new IdentityHashMap()
+    applyBlock(b)
+    override def applyBlock(b: Block): Unit = b match
+      case s: Scoped => mp.put(s, fresh.make)
       case _ => super.applyBlock(b)
+  val scopedUids = ScopeUidAdder.mp
   
-  def makeScopeTree(b: Block) =
-    makeScopeTreeRec(ScopedObject.Top(ScopeUidAdder.applyBlock(b)))
+  extension (s: Scoped)
+    def uid = scopedUids.get(s)
+  
+  val scopeTree = makeScopeTreeRec(ScopedObject.Top(b))
   
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
   class ScopeFinder extends BlockTraverser:
     var objs: List[ScopedObject] = Nil
     override def applyBlock(b: Block): Unit = b match
-      case ScopedWithId(id, b) =>
-        objs ::= ScopedObject.ScopedBlock(id, b)
+      case s: Scoped =>
+        objs ::= ScopedObject.ScopedBlock(s.uid, s)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn): Unit =
       objs ::= ScopedObject.Func(fun)
