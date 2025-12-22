@@ -1041,12 +1041,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if lift then Lifter().transform(withHandlers1)
       else withHandlers1
     
-    val (withHandlers2, doUnwindPaths) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+    val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
       HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
       
     val stackSafe = config.stackSafety match
       case N => withHandlers2
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers2)
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
     
     val flattened = stackSafe.flattened
     

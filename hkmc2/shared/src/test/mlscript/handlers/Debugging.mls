@@ -31,12 +31,14 @@ fun f() =
 //│   "k"
 //│ ]);
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp1, tmp2, pc;
+//│   let i, j, k, scrut, tmp1, tmp2, argListEntry, argList, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
+//│     saveOffset = runtime.resumeIdx + -2;
+//│     argList = runtime.resumeArr.at(saveOffset);
 //│     i = runtime.resumeArr.at(runtime.resumeIdx);
 //│     saveOffset = runtime.resumeIdx + 1;
 //│     j = runtime.resumeArr.at(saveOffset);
@@ -58,7 +60,11 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, "Debugging.mls:18:6", 5, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│           argListEntry = globalThis.Object.freeze([]);
+//│           argList = globalThis.Object.freeze([
+//│             argListEntry
+//│           ]);
+//│           return runtime.unwind(runtime.resumeValue, f, 5, "Debugging.mls:18:6", f$debugInfo, null, argList, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -68,7 +74,11 @@ fun f() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, "Debugging.mls:19:14", 4, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│             argListEntry = globalThis.Object.freeze([]);
+//│             argList = globalThis.Object.freeze([
+//│               argListEntry
+//│             ]);
+//│             return runtime.unwind(runtime.resumeValue, f, 4, "Debugging.mls:19:14", f$debugInfo, null, argList, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -90,7 +100,11 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(runtime.resumeValue, 1, f, f$debugInfo, "Debugging.mls:19:5", 2, null, 6, i, j, k, scrut, tmp1, tmp2)
+//│           argListEntry = globalThis.Object.freeze([]);
+//│           argList = globalThis.Object.freeze([
+//│             argListEntry
+//│           ]);
+//│           return runtime.unwind(runtime.resumeValue, f, 2, "Debugging.mls:19:5", f$debugInfo, null, argList, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -118,8 +132,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:118:3)
-//│ 	at lambda_test (Debugging.mls:115:3)
+//│ 	at lambda (Debugging.mls:132:3)
+//│ 	at lambda_test (Debugging.mls:129:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -188,8 +202,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:183:3) with locals: j=200
+//│ > 	at f (Debugging.mls:197:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:185:3)
+//│ > 	at f (Debugging.mls:199:3)
 //│ > Stack Trace:
 //│ > 	at tail position

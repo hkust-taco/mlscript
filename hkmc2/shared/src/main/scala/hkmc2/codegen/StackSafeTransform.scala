@@ -9,7 +9,7 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: collection.Map[FnOrCls, Path => Return])(using State):
+class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
@@ -130,29 +130,34 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: coll
       usedDepth = true
       TempSymbol(None, "curDepth")
       
-    val doUnwind = doUnwindMap.get(fnOrCls)
+    val stackSafeInfo = stackSafetyMap.get(fnOrCls)
     val newBody = transform(blk, curDepth)
     
     if isTrivial(blk) then
       newBody
-    else if doUnwind.isEmpty then
-      // The current function is not instrumented and we cannot provide stack safety.
-      // TODO: shouldn't we just return the old blk?
-      blockBuilder
-        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
-        .rest(newBody)
     else
-      val resSym = TempSymbol(None, "stackDelayRes")
-      blockBuilder
-        .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
-        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
-        .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
-        .ifthen(
-          resSym.asPath,
-          Case.Cls(paths.effectSigSym, paths.effectSigPath),
-          doUnwind.get(resSym.asPath)
-        )
-        .rest(newBody)
+      stackSafeInfo match
+      case N =>
+        // The current function is not instrumented and we cannot provide stack safety.
+        // TODO: shouldn't we just return the old blk?
+        blockBuilder
+          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+          .rest(newBody)
+      case S(info) =>
+        val resSym = TempSymbol(None, "stackDelayRes")
+        val addStackSafeEffect = blk => blockBuilder
+          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+          .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
+          .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
+          .ifthen(
+            resSym.asPath,
+            Case.Cls(paths.effectSigSym, paths.effectSigPath),
+            info(resSym.asPath)
+          )
+          .rest(blk)
+        addStackSafeEffect(newBody)
+
+
 
   def rewriteFn(defn: FunDefn) = 
     FunDefn(defn.owner, defn.sym, defn.dSym, defn.params, rewriteBlk(defn.body, L(defn.sym), 1))(defn.forceTailRec)

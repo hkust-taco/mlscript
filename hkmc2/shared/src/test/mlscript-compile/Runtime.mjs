@@ -308,39 +308,40 @@ let Runtime1;
         this.saved = saved;
       }
       resume(value) {
-        let scrut, f, tmp1, tmp2, tmp3;
-        scrut = this.saved.at(0) === 0;
+        let i, f, argListLength, scrut, tmp1, tmp2;
+        i = 0;
+        f = this.saved.at(0);
+        argListLength = this.saved.at(5).length;
+        Runtime.resumeValue = value;
+        Runtime.resumeArr = this.saved;
+        Runtime.resumeIdx = 7;
+        Runtime.resumePc = this.saved.at(1);
+        scrut = argListLength === 0;
         if (scrut === true) {
           tmp1 = runtime.safeCall(globalThis.console.log("cannot resume getters"));
         } else {
           tmp1 = runtime.Unit;
         }
-        f = this.saved.at(1);
-        tmp4: while (true) {
-          let scrut1, tmp5, tmp6;
-          scrut1 = this.saved.at(0) > 1;
+        tmp3: while (true) {
+          let scrut1, tmp4, tmp5;
+          scrut1 = i < argListLength;
           if (scrut1 === true) {
-            tmp5 = runtime.safeCall(f());
-            f = tmp5;
-            tmp6 = this.saved.at(0) - 1;
-            this.saved[0] = tmp6;
+            tmp4 = f.apply(this.saved.at(4), this.saved.at(5).at(i));
+            f = tmp4;
+            tmp5 = i + 1;
+            i = tmp5;
             tmp2 = runtime.Unit;
-            continue tmp4
+            continue tmp3
           } else {
             tmp2 = runtime.Unit;
           }
           break;
         }
-        Runtime.resumeValue = value;
-        Runtime.resumeArr = this.saved;
-        Runtime.resumeIdx = 7;
-        Runtime.resumePc = this.saved.at(4);
-        tmp3 = globalThis.Object.freeze([]);
-        return f.apply(this.saved.at(5), tmp3)
+        return f
       } 
       get getLocals() {
         let debugInfo, res, i, tmp1;
-        debugInfo = this.saved.at(2);
+        debugInfo = this.saved.at(3);
         res = [];
         i = 1;
         tmp2: while (true) {
@@ -363,13 +364,13 @@ let Runtime1;
         return res;
       } 
       get getNme() {
-        return this.saved.at(2).at(0);
+        return this.saved.at(3).at(0);
       } 
       get getLoc() {
         let loc;
-        loc = this.saved.at(3);
+        loc = this.saved.at(2);
         if (loc === null) {
-          return "pc=" + this.saved.at(4)
+          return "pc=" + this.saved.at(1)
         } else {
           return loc
         }

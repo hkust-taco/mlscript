@@ -122,7 +122,8 @@ module TraceLogger with
 // Private definitions for algebraic effects
 
 // layout:
-// | callCnt | f | debugInfo | pcStr | pc | this | localCnt | locals... |
+// Note: argLists assumed to be at (locals - 2)
+// | f | pc | pcStr | debugInfo | this | argLists | localCnt | locals... |
 
 mut val resumeValue = null
 mut val resumeArr = null
@@ -134,32 +135,35 @@ object PrintStackEffect
 
 data class FunctionContFrame(next, saved) with
   fun resume(value) =
-    if saved.[0] === 0 do
-      console.log("cannot resume getters")
-    let f = saved.[1]
-    while saved.[0] > 1 do
-      set
-        f = f()
-        saved.[0] -= 1
+    let
+      i = 0
+      f = saved.[0]
+      argListLength = saved.[5].length
     set
       resumeValue = value
       resumeArr = saved
       resumeIdx = 7
-      resumePc = saved.[4]
-    f.apply(saved.[5], [])
+      resumePc = saved.[1]
+    if argListLength === 0 do
+      console.log("cannot resume getters")
+    while i < argListLength do
+      set
+        f = f.apply(saved.[4], saved.[5].[i])
+        i += 1
+    f
   fun getLocals =
-    let debugInfo = saved.[2]
+    let debugInfo = saved.[3]
     let res = mut []
     let i = 1
     while i < debugInfo.length do
       res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[7 + debugInfo.[i]]))
       set i += 2
     res
-  fun getNme = saved.[2].[0]
+  fun getNme = saved.[3].[0]
   fun getLoc =
-    let loc = saved.[3]
+    let loc = saved.[2]
     if
-      loc is null then "pc=" + saved.[4]
+      loc is null then "pc=" + saved.[1]
       else loc
 
 data class HandlerContFrame(next, nextHandler, handler)

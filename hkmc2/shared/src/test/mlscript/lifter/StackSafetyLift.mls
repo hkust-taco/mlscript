@@ -28,22 +28,19 @@ hi(0)
 //│ let hi, tmp;
 //│ let $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp1, pc;
+//│   let scrut, tmp1;
 //│   let stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, hi, null, "StackSafetyLift.mls:23:1", 0, null, 2, tmp1, n)
-//│   }
-//│   if (runtime.resumePc === -1) {
-//│     pc = 0;
-//│   } else {
-//│     let saveOffset;
-//│     pc = runtime.resumePc;
-//│     tmp1 = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     n = runtime.resumeArr.at(saveOffset);
-//│     runtime.resumePc = -1;
+//│     let argListEntry, argList;
+//│     argListEntry = globalThis.Object.freeze([
+//│       n
+//│     ]);
+//│     argList = globalThis.Object.freeze([
+//│       argListEntry
+//│     ]);
+//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafetyLift.mls:23:1", null, null, argList, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -74,22 +71,28 @@ sum(10000)
 //│ let sum1, tmp1;
 //│ let $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc;
+//│   let scrut, tmp2, tmp3, argListEntry, argList, pc;
 //│   let tmp4, curDepth, stackDelayRes;
 //│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, 1, sum1, null, "StackSafetyLift.mls:68:1", 0, null, 2, n, tmp2)
+//│     argListEntry = globalThis.Object.freeze([
+//│       n
+//│     ]);
+//│     argList = globalThis.Object.freeze([
+//│       argListEntry
+//│     ]);
+//│     return runtime.unwind(stackDelayRes, sum1, 0, "StackSafetyLift.mls:65:1", null, null, argList, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     n = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
-//│     tmp2 = runtime.resumeArr.at(saveOffset);
+//│     saveOffset = runtime.resumeIdx + -2;
+//│     argList = runtime.resumeArr.at(saveOffset);
+//│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
@@ -104,7 +107,13 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, 1, sum1, null, "StackSafetyLift.mls:71:9", 1, null, 2, n, tmp2)
+//│             argListEntry = globalThis.Object.freeze([
+//│               n
+//│             ]);
+//│             argList = globalThis.Object.freeze([
+//│               argListEntry
+//│             ]);
+//│             return runtime.unwind(runtime.resumeValue, sum1, 1, "StackSafetyLift.mls:68:9", null, null, argList, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
