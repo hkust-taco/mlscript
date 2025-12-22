@@ -69,7 +69,12 @@ object Elaborator:
   // TODO later: use TempSymbol instead of VarSymbol? (currently, trying that creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
   
-  case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], mode: Mode):
+  case class Ctx(
+      outer: OuterCtx,
+      parent: Opt[Ctx],
+      env: Map[Str, Ctx.Elem],
+      mode: Mode,
+  ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
