@@ -9,9 +9,28 @@ import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
+import hkmc2.ScopeData.*
+import hkmc2.Lifter.*
 
 import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
+import scala.jdk.CollectionConverters.*
+import java.util.IdentityHashMap
+import java.util.Collections
 
+object UsedVarAnalyzer:
+  case class MutAccessInfo(
+    accessed: MutSet[Local], 
+    mutated: MutSet[Local], 
+    refdDefns: MutSet[ScopedInfo]
+  ):
+    def toIMut = AccessInfo(accessed.toSet, mutated.toSet, refdDefns.toSet)
+  object MutAccessInfo:
+    def empty = MutAccessInfo(
+      MutSet.empty,
+      MutSet.empty,
+      MutSet.empty
+    )
 /**
   * Analyzes which variables have been used and mutated by which functions.
   * Also finds which variables can be passed to a capture class without a heap
@@ -19,206 +38,76 @@ import scala.collection.mutable.Map as MutMap
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
-  import Lifter.*
-
-  private case class DefnMetadata(
-    definedLocals: Map[BlockMemberSymbol, Set[Local]], // locals defined explicitly by that function
-    defnsMap: Map[BlockMemberSymbol, Defn], // map bms to defn
-    existingVars: Map[BlockMemberSymbol, Set[Local]], // variables already existing when that defn is defined
-    inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions that are in scope and not nested within this defn, and not including itself
-    nestedDefns: Map[BlockMemberSymbol, List[Defn]], // definitions that are a successor of the current defn
-    nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions nested within another defn, including that defn (deep)
-    nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol], // the definition that a definition is directly nested in
-    companionMap: Map[InnerSymbol, InnerSymbol], // a (bijective) map between companion object symbols and class symbols
-  )
-  private def createMetadata: DefnMetadata =
-    var defnsMap: Map[BlockMemberSymbol, Defn] = Map.empty
-    var definedLocals: Map[BlockMemberSymbol, Set[Local]] = Map.empty
-    var existingVars: Map[BlockMemberSymbol, Set[Local]] = Map.empty
-    var inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
-    var nestedDefns: Map[BlockMemberSymbol, List[Defn]] = Map.empty
-    var nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
-    var nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol] = Map.empty
-    var companionMap: Map[InnerSymbol, InnerSymbol] = Map.empty
-
-    def createMetadataFn(f: FunDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      var nested: Set[BlockMemberSymbol] = Set.empty
-      
-      existingVars += (f.sym -> existing)
-      val thisVars = Lifter.getVars(f) -- existing
-      val newExisting = existing ++ thisVars
-      
-      val thisScopeDefns: List[Defn] = f.body.gatherDefns()
-      
-      nestedDefns += f.sym -> thisScopeDefns
-
-      val newInScope = inScope ++ thisScopeDefns.map(_.sym)
-      for s <- thisScopeDefns do
-        inScopeDefns += s.sym -> (newInScope - s.sym)
-        nested += s.sym
-
-      defnsMap += (f.sym -> f)
-      definedLocals += (f.sym -> thisVars)
-
-      for d <- thisScopeDefns do
-        nestedIn += (d.sym -> f.sym)
-        createMetadataDefn(d, newExisting, newInScope)
-        nested ++= nestedDeep(d.sym)
-      
-      nestedDeep += f.sym -> nested
-
-    def createMetadataDefn(d: Defn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      d match
-      case f: FunDefn =>
-        createMetadataFn(f, existing, inScope)
-      case c: ClsLikeDefn =>
-        createMetadataCls(c, existing, inScope)
-      case d => Map.empty
-    
-    def createMetadataCls(c: ClsLikeDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      var nested: Set[BlockMemberSymbol] = Set.empty
-      
-      existingVars += (c.sym -> existing)
-      val thisVars = Lifter.getVars(c) -- existing
-      val newExisting = existing ++ thisVars
-      
-      val thisScopeDefns: List[Defn] = c.methods ++ c.preCtor.gatherDefns()
-        ++ c.ctor.gatherDefns() ++ c.companion.fold(Nil)(comp => comp.ctor.gatherDefns() ++ comp.methods)
-      
-      nestedDefns += c.sym -> thisScopeDefns
-      
-      val newInScope = inScope ++ thisScopeDefns.map(_.sym)
-      for s <- thisScopeDefns do
-        inScopeDefns += s.sym -> (newInScope - s.sym)
-        nested += s.sym
-      
-      defnsMap += (c.sym -> c)
-      definedLocals += (c.sym -> thisVars)
-      
-      for d <- thisScopeDefns do
-        nestedIn += (d.sym -> c.sym)
-        createMetadataDefn(d, newExisting, newInScope)
-        nested ++= nestedDeep(d.sym)
-      
-      nestedDeep += c.sym -> nested
-      
-      c.companion match
-        case None => 
-        case Some(value) => companionMap += (value.isym -> c.isym)
-    
-    new BlockTraverserShallow:
-      // If there's any variables available at the top-level we need to explicitly ignore,
-      // then we add them here
-      val ignoredVars = b.definedVars
-      applyBlock(b)
-      override def applyDefn(defn: Defn): Unit =
-        inScopeDefns += defn.sym -> Set.empty
-        createMetadataDefn(defn, ignoredVars, Set.empty)
-    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap)
-
-  val DefnMetadata(definedLocals, defnsMap, existingVars, 
-    inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap) = createMetadata
+class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerPaths])(using State):
+  import UsedVarAnalyzer.*
   
   def isHandlerClsPath(p: Path) = handlerPaths match
     case None => false
     case Some(paths) => paths.isHandlerClsPath(p)
   
-  private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
-  private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo =
-    cacheId.flatMap(blkMutCache.get) match
-    case Some(value) => value
-    case None => 
-      var accessed: AccessInfo = AccessInfo.empty
-      new BlockTraverserShallow:
-        applyBlock(b)
-        
-        override def applyBlock(b: Block): Unit = b match
-          case Assign(lhs, rhs, rest) =>
-            accessed = accessed.addMutated(lhs)
-            applyResult(rhs)
-            applyBlock(rest)
-          case Label(label, loop, body, rest) =>
-            accessed ++= blkAccessesShallow(body, S(label))
-            applyBlock(rest)
-          case _ => super.applyBlock(b)
-        
-        override def applyValue(v: Value): Unit = v match
-          case Value.Ref(_: BuiltinSymbol, _) => super.applyValue(v)
-          case RefOfBms(l, _) =>
-            accessed = accessed.addRefdDefn(l)
-          case Value.Ref(l, _) =>
-            accessed = accessed.addAccess(l)
-          case _ => super.applyValue(v)
-
-      cacheId match
-        case None => ()
-        case Some(value) => blkMutCache.addOne(value -> accessed)
+  // Finds the locals that this block accesses/mutates, and the definitions which it could use.
+  private def blkAccessesShallow(b: Block): AccessInfo =
+    var accessed: MutAccessInfo = MutAccessInfo.empty
+    new BlockTraverserShallow:
+      applyBlock(b)
       
-      accessed
+      override def applyBlock(b: Block): Unit = b match
+        case s: Scoped =>
+          accessed.refdDefns.add(scopeData.getUID(s))
+        case Assign(lhs, rhs, rest) =>
+          accessed.mutated.add(lhs)
+          applyResult(rhs)
+          applyBlock(rest)
+        case _ => super.applyBlock(b)
+      
+      override def applyValue(v: Value): Unit = v match
+        case Value.Ref(_: BuiltinSymbol, _) => super.applyValue(v)
+        case RefOfBms(_, S(dSym)) =>
+          accessed.refdDefns.add(scopeData.getNode(dSym).obj.toInfo)
+        case Value.Ref(l, _) =>
+          accessed.accessed.add(l)
+        case _ => super.applyValue(v)
+    accessed.toIMut
 
-  private val accessedCache: MutMap[BlockMemberSymbol, AccessInfo] = MutMap.empty
+  private val accessedCache: IdentityHashMap[ScopedInfo, AccessInfo] = new IdentityHashMap()
+  
+  for obj <- scopeData.scopeTree.root.allChildren do
+    accessedCache.put(obj.toInfo, findAccessesShallow(obj))
   
   /**
-    * Finds the variables which this definition could possibly mutate, excluding mutations through
-    * calls to other functions and, in the case of functions, mutations of its own variables.
+    * Finds the variables which this scoped object could possibly access or mutate, 
+    * excluding mutations through calls to other functions and mutations of their own variables.
+    * 
     *
-    * @param defn The definition to search through.
+    * @param obj The scoped object to search through.
     * @return The variables which this definition could possibly mutate.
     */
-  private def findAccessesShallow(defn: Defn): AccessInfo = 
-    def create = defn match
-      case f: FunDefn =>
-        val fVars = definedLocals(f.sym)
-        blkAccessesShallow(f.body).withoutLocals(fVars)
-      case c: ClsLikeDefn =>
-        val methodSyms = c.methods.map(_.sym).toSet
-        val ret = c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
-          case (acc, fDefn) =>
-            // class methods do not need to be lifted, so we don't count calls to their methods.
-            // a previous reference to this class's block member symbol is enough to assume any
-            // of the class's methods could be called.
-            //
-            // however, we must keep references to the class itself!
-            val defnAccess = findAccessesShallow(fDefn)
-            acc ++ defnAccess.withoutBms(methodSyms)
-        if c.parentPath.isDefined && isHandlerClsPath(c.parentPath.get) then
-          // for continuation classes, treat them like they only read variables
-          AccessInfo(ret.accessed ++ ret.mutated, Set.empty, ret.refdDefns)
-        else
-          ret
-      case _: ValDefn => AccessInfo.empty
+  private def findAccessesShallow(obj: ScopedObject): AccessInfo =
+    val accessed = obj match
+      case ScopedObject.Func(f) =>
+        blkAccessesShallow(f.body)
+      case ScopedObject.Class(c) =>
+        (blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor))
+      case ScopedObject.ScopedBlock(uid, b) =>
+        blkAccessesShallow(b)
+      case ScopedObject.Companion(c, _) =>
+        blkAccessesShallow(c.ctor)
+    accessed.withoutLocals(obj.definedLocals)
+  
+  // For a given scoped object, find the set of:
+  // - Variables belonging to this object that have been accessed by a nested scoped object.
+  // - Variables belonging to this object that have been mutated by a nested scoped object.
+  // - Scoped objects that this object acceses, either through itself or by executing a nested scoped object.
+  private def findAccesses(s: ScopeNode): AccessInfo =
+    val children = s.allChildren
+    val childInfo = children.map(_.toInfo).toSet
     
-    accessedCache.getOrElseUpdate(defn.sym, create)
-
-  // MUST be called from a top-level defn
-  private def findAccesses(d: Defn): Map[BlockMemberSymbol, AccessInfo] =
-    var defns: mutable.Buffer[Defn] = mutable.Buffer.empty
-    var definedVarsDeep: Set[Local] = Set.empty
-
-    new BlockTraverser:
-      applyDefn(d)
-      
-      override def applyFunDefn(f: FunDefn): Unit =
-        defns += f
-        definedVarsDeep ++= definedLocals(f.sym)
-        super.applyFunDefn(f)
-      
-      override def applyDefn(defn: Defn): Unit =
-        defn match
-          case c: ClsLikeDefn =>
-            defns += c
-            definedVarsDeep ++= definedLocals(c.sym)
-          case _ =>
-        super.applyDefn(defn)
-    
-    val defnSyms = defns.iterator.map(_.sym).toSet
-    val accessInfo = defns.map: d =>
-      val AccessInfo(accessed, mutated, refdDefns) = findAccessesShallow(d)
-      d.sym -> AccessInfo(
-        accessed.intersect(definedVarsDeep),
-        mutated.intersect(definedVarsDeep),
-        refdDefns.intersect(defnSyms) // only care about definitions nested in this top-level definition
+    val accessInfo = children.map: obj =>
+      val AccessInfo(accessed, mutated, refdDefns) = findAccessesShallow(obj)
+      obj.toInfo -> AccessInfo(
+        accessed.intersect(obj.definedLocals),
+        mutated.intersect(obj.definedLocals),
+        refdDefns.intersect(childInfo) // only care about scopes nested within this
       )
     
     val accessInfoMap = accessInfo.toMap
@@ -254,7 +143,8 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       sym <- scc
     yield sym -> (sccAccessInfo(id).intersectLocals(existingVars(sym)))
   
-  private def findAccessesTop =
+  private def findAccessesTop: Map[BlockMemberSymbol, AccessInfo] = ???
+    /*
     var accessMap: Map[BlockMemberSymbol, AccessInfo] = Map.empty
     new BlockTraverserShallow:
       applyBlock(b)
@@ -264,13 +154,12 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         case _ => super.applyDefn(defn)
     
     accessMap
+    */
   
   val accessMap = findAccessesTop
   
-  // TODO: let declarations inside loops (also broken without class lifting)
-  // I'll fix it once it's fixed in the IR since we will have more tools to determine
-  // what locals belong to what block.
-  private def reqdCaptureLocals(f: FunDefn) =
+  private def reqdCaptureLocals(f: FunDefn): (Set[Local], Set[Local]) = ???
+    /*
     var defns = f.body.gatherDefns()
     val defnSyms = defns.collect:
         case f: FunDefn => f.sym -> f
@@ -417,10 +306,12 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
     val reqCapture = go(f.body, Set.empty, Set.empty, Set.empty).reqCapture
     val usedVars = defns.flatMap(_.freeVars.intersect(thisVars)).toSet
     (usedVars, reqCapture)
+    */
 
   // the current problem is that we need extra code to find which variables were really defined by a function
   // this may be resolved in the future when the IR gets explicit variable declarations
-  private def findUsedLocalsFn(f: FunDefn): Map[BlockMemberSymbol, FreeVars] =
+  private def findUsedLocalsFn(f: FunDefn): Map[BlockMemberSymbol, FreeVars] = ???
+    /*
     val thisVars = definedLocals(f.sym)
 
     val (vars, cap) = reqdCaptureLocals(f)
@@ -457,3 +348,4 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         usedMap ++= findUsedLocalsDefn(defn)
 
     Lifter.UsedLocalsMap(usedMap)
+  */

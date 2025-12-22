@@ -1061,7 +1061,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val flattened = stackSafe.flattened
     
     val lifted = 
-      if lift then Lifter(S(handlerPaths)).transform(flattened)
+      if lift then Lifter(flattened, S(handlerPaths)).transform
       else flattened
     
     val bufferable = BufferableTransform().transform(lifted)

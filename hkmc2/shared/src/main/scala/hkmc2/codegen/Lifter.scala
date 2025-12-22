@@ -8,6 +8,7 @@ import utils.*
 import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
+import hkmc2.ScopeData.*
 import hkmc2.semantics.Elaborator.State
 import hkmc2.syntax.Tree
 import hkmc2.codegen.llir.FreshInt
@@ -49,7 +50,7 @@ object Lifter:
   case class AccessInfo(
       accessed: Set[Local], 
       mutated: Set[Local], 
-      refdDefns: Set[BlockMemberSymbol]
+      refdDefns: Set[ScopedInfo]
     ):
     def ++(that: AccessInfo) = AccessInfo(
         accessed ++ that.accessed,
@@ -66,19 +67,9 @@ object Lifter:
         mutated.intersect(locals),
         refdDefns
       )
-    def withoutBms(locals: Set[BlockMemberSymbol]) = AccessInfo(
-        accessed,
-        mutated,
-        refdDefns -- locals
-      )
-    def intersectBms(locals: Set[BlockMemberSymbol]) = AccessInfo(
-        accessed,
-        mutated,
-        refdDefns.intersect(locals)
-      )
     def addAccess(l: Local) = copy(accessed = accessed + l)
     def addMutated(l: Local) = copy(accessed = accessed + l, mutated = mutated + l)
-    def addRefdDefn(l: BlockMemberSymbol) = copy(refdDefns = refdDefns + l)
+    def addRefdScopedObj(l: ScopedInfo) = copy(refdDefns = refdDefns + l)
     
   object AccessInfo:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
@@ -123,8 +114,10 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
+class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
   import Lifter.*
+  
+  val scopeData = ScopeData(blk)
 
   /**
     * The context of the class lifter. One can create an empty context using `LifterCtx.empty`.
@@ -552,6 +545,8 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   
   
   def createLiftInfoCont(d: Defn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
+    ???
+    /*
     val AccessInfo(accessed, _, refdDefns) = ctx.getAccesses(d.sym)
     
     val inScopeRefs = refdDefns.intersect(ctx.inScopeDefns(d.sym))
@@ -596,6 +591,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case c: ClsLikeDefn =>
           createLiftInfoCls(c, ctx) + (d.sym -> info)
         case _ => Map.empty
+    */
   
   def createLiftInfoFn(f: FunDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     val defns = ctx.nestedDefns(f.sym)
@@ -1269,12 +1265,13 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   end liftDefnsInFn
 
   // top-level
-  def transform(_blk: Block) =
+  def transform =
+    /*
     // this is already done once in the lowering, but the handler lowering adds lambdas currently
     // so we need to desugar them again
-    val blk = LambdaRewriter.desugar(_blk)
+    val blk_ = LambdaRewriter.desugar(blk)
 
-    val analyzer = UsedVarAnalyzer(blk, handlerPaths)
+    val analyzer = UsedVarAnalyzer(blk_, scopeData, handlerPaths)
     val ctx = LifterCtx
       .withLocals(analyzer.findUsedLocals)
       .withDefns(analyzer.defnsMap)
@@ -1320,4 +1317,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             case _ => return super.applyBlock(b)
           (lifted :: extra).foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
         case _ => super.applyBlock(b)
-    walker1.applyBlock(blk)
+    walker1.applyBlock(blk_)
+    */
+    ???

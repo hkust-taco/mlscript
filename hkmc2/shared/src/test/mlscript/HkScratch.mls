@@ -9,4 +9,74 @@
 // :todo
 
 
-
+:lot
+let x = 2
+val y = 4
+fun f(z) = x + y + z
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = HashSet(member:f, member:y, x)
+//│     body = Define:
+//│       defn = FunDefn:
+//│         owner = N
+//│         sym = member:f
+//│         dSym = term:f
+//│         params = Ls of 
+//│           ParamList:
+//│             flags = ()
+//│             params = Ls of 
+//│               Param:
+//│                 flags = ()
+//│                 sym = z
+//│                 sign = N
+//│                 modulefulness = Modulefulness of N
+//│             restParam = N
+//│         body = Scoped:
+//│           syms = HashSet($tmp)
+//│           body = Assign:
+//│             lhs = $tmp
+//│             rhs = Call:
+//│               fun = Ref:
+//│                 l = builtin:+
+//│                 disamb = N
+//│               args = Ls of 
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref:
+//│                     l = x
+//│                     disamb = N
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref{disamb=term:y}:
+//│                     l = member:y
+//│                     disamb = S of term:y
+//│             rest = Return: \
+//│             res = Call:
+//│               fun = Ref:
+//│                 l = builtin:+
+//│                 disamb = N
+//│               args = Ls of 
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref:
+//│                     l = $tmp
+//│                     disamb = N
+//│                 Arg:
+//│                   spread = N
+//│                   value = Ref:
+//│                     l = z
+//│                     disamb = N
+//│             implct = false
+//│       rest = Assign: \
+//│       lhs = x
+//│       rhs = Lit of IntLit of 2
+//│       rest = Define: \
+//│       defn = ValDefn:
+//│         tsym = term:y
+//│         sym = member:y
+//│         rhs = Lit of IntLit of 4
+//│       rest = End of ""
+//│ x = 2
+//│ y = 4
