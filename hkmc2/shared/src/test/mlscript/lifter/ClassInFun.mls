@@ -1,9 +1,7 @@
 :lift
 :js
 
-// make sure class fields are discriminated properly for immutable captures when supported
 :effectHandlers
-:noSanityCheck
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -223,7 +221,6 @@ a.getX()
 
 :stackSafe 10
 :effectHandlers
-:noSanityCheck
 fun sum(n) =
   if n == 0 then 0
   else

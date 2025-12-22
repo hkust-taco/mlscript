@@ -149,7 +149,7 @@ Runtime.debugEff(res.reified)
 //│ > handlerFun:  null
 //│ > resumed:  false
 //│ > <lastHandler is self>
-//│ > FunctionContFrame(pc=undefined, last) -> (null)
+//│ > FunctionContFrame(pc=4, last) -> (null)
 //│ > 
 
 res.resumeWith(42)

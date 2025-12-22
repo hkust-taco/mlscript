@@ -2,7 +2,6 @@
 :effectHandlers
 :lift
 
-
 class Logger with
   fun info(s: Str): ()
 

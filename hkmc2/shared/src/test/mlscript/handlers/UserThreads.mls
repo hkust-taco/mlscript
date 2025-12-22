@@ -3,7 +3,6 @@
 :lift
 
 
-
 abstract class ThreadEffect with
   val tasks = mut []
   fun start(thread: () -> ()): ()

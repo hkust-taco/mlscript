@@ -190,7 +190,6 @@ in
   foo(h)
 //│ = 50005000
 
-
 :stackSafe 100
 :expect 50005000
 module A with

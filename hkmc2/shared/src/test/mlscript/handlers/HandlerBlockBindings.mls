@@ -3,7 +3,6 @@
 :lift
 
 
-
 abstract class Effect with
   fun perform(arg: Str): Str
 
@@ -19,7 +18,7 @@ let x = 123
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.20: 	x
+//│ ║  l.19: 	x
 //│ ╙──      	^
 
 
@@ -33,7 +32,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.34: 	x
+//│ ║  l.33: 	x
 //│ ╙──      	^
 
 
@@ -45,7 +44,7 @@ val y = 123
 :e
 y
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.46: 	y
+//│ ║  l.45: 	y
 //│ ╙──      	^
 
 

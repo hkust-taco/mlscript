@@ -4,14 +4,12 @@
 fun f() = 3
 
 :effectHandlers
-:noSanityCheck
 module A with
   data class Test with
     f()
     val a = 1
 
 :effectHandlers
-:noSanityCheck
 class Test with
   f()
   val a = 1
@@ -19,7 +17,6 @@ class Test with
 class Eff
 
 :effectHandlers
-:noSanityCheck
 :expect 7
 handle h = Eff with
   fun perform(x)(k) = k(x) + 1

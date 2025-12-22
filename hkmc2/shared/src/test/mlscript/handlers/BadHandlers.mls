@@ -25,9 +25,13 @@ x
 
 
 // Getter
+:expect 3
+:fixme
 handle h = Object with
-  fun lol(k) = k(())
-h.lol
+  fun lol(k) = k(1)
+h.lol + 2
+//│ ═══[RUNTIME ERROR] Expected: '3', got: '"EffectSig(ContTrace(null, ref'1, null, ref'1, false) as ref'1, Handler$h$, fun)2"'
+//│ = "EffectSig(ContTrace(null, ref'1, null, ref'1, false) as ref'1, Handler$h$, fun)2"
 
 handle h = Object with
   fun lol()(k) = k(42)
@@ -44,7 +48,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.45: 	Foo.x
+//│ ║  l.49: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

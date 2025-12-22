@@ -750,7 +750,7 @@ let Runtime1;
     let result, scrut, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
     if (cont instanceof Runtime.FunctionContFrame.class) {
       tmp = cont.constructor.name + "(pc=";
-      result = tmp + cont.pc;
+      result = tmp + cont.saved.at(1);
       lambda = (undefined, function (m, marker) {
         let scrut3, tmp8, tmp9;
         scrut3 = runtime.safeCall(m.has(cont));

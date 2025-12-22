@@ -1,6 +1,5 @@
 :js
 :lift
-:noSanityCheck
 :noTailRec
 
 // * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
@@ -40,7 +39,7 @@ hi(0)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafetyLift.mls:23:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafetyLift.mls:22:1", null, null, argList, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -83,7 +82,7 @@ sum(10000)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, sum1, 0, "StackSafetyLift.mls:65:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, sum1, 0, "StackSafetyLift.mls:64:1", null, null, argList, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -113,7 +112,7 @@ sum(10000)
 //│             argList = globalThis.Object.freeze([
 //│               argListEntry
 //│             ]);
-//│             return runtime.unwind(runtime.resumeValue, sum1, 1, "StackSafetyLift.mls:68:9", null, null, argList, 1, tmp2)
+//│             return runtime.unwind(runtime.resumeValue, sum1, 1, "StackSafetyLift.mls:67:9", null, null, argList, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main

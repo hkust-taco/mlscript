@@ -74,6 +74,7 @@ module A with
 :w
 :effectHandlers
 :lift
+// TODO: lifter sanity check superclass
 :noSanityCheck
 handle h = Object with
   @tailcall
@@ -85,5 +86,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.85: 	  @tailcall 1 + 2
+//│ ║  l.86: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^

@@ -229,7 +229,7 @@ fun showStackTrace(header, tr, debug, showLocals) =
 
 fun showFunctionContChain(cont, hl, vis, reps) =
   if cont is FunctionContFrame then
-    let result = cont.constructor.name + "(pc=" + cont.pc
+    let result = cont.constructor.name + "(pc=" + cont.saved.[1]
     hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
     if vis.has(cont) then
       set reps = reps + 1
