@@ -146,8 +146,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       case S(info) =>
         val resSym = TempSymbol(None, "stackDelayRes")
         val addStackSafeEffect = blk => blockBuilder
-          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
           .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
+          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
           .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
           .ifthen(
             resSym.asPath,
