@@ -43,8 +43,7 @@ print("Hi")
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped:
-//│     syms = HashSet($tmp)
+//│   main = Scoped(syms = {$tmp}): 
 //│     body = Assign:
 //│       lhs = $tmp
 //│       rhs = Call:

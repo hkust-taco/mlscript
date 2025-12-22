@@ -25,54 +25,6 @@ fun g(x) = f(x); f(x)
 //│ ╟── It could self-recurse through this call, which is not a tail call.
 //│ ║  l.21: 	fun g(x) = f(x); f(x)
 //│ ╙──      	           ^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res1, $block$res -> block$res3)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res1, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res1, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
 
 :e
 @tailrec fun f(x) =
@@ -88,71 +40,6 @@ fun h(x) =
 //│ ╟── It could self-recurse through this call, which is not a tail call.
 //│ ║  l.33: 	  f(x)
 //│ ╙──      	  ^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:f -> f1, member:g -> g, member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, $block$res -> block$res3)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f1, member:g -> g, member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f1, member:g -> g, member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, x -> x)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f1, member:g -> g, member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, member:f -> f2, member:g -> g1, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
 
 :e
 @tailrec fun f(x) =
@@ -168,71 +55,6 @@ fun h(x) =
 //│ ╟── It could self-recurse through this call, which is not a tail call.
 //│ ║  l.48: 	  h(x)
 //│ ╙──      	  ^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, member:f -> f1, member:g -> g, member:f -> f4, member:g -> g3, member:h -> h1, $block$res -> block$res2, member:f -> f2, member:g -> g1, $block$res -> block$res5, $block$res -> block$res3)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, member:f -> f1, member:g -> g, member:f -> f4, member:g -> g3, member:h -> h1, $block$res -> block$res2, member:f -> f2, member:g -> g1, $block$res -> block$res5, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, member:f -> f1, member:g -> g, member:f -> f4, member:g -> g3, member:h -> h1, $block$res -> block$res2, member:f -> f2, member:g -> g1, $block$res -> block$res5, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, x -> x)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g_h
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:f -> f3, $runtime -> runtime, member:g -> g2, $definitionMetadata -> definitionMetadata, member:h -> h, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res4, $block$res -> block$res1, member:f -> f1, member:g -> g, member:f -> f4, member:g -> g3, member:h -> h1, $block$res -> block$res2, member:f -> f2, member:g -> g1, $block$res -> block$res5, $block$res -> block$res3)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g_h'
 
 :e
 module A with
