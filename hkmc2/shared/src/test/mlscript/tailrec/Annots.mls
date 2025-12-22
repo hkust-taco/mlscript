@@ -21,54 +21,6 @@ class A
 @tailrec
 fun f = g
 fun g = f
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res3, member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res4, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res1, member:A -> A1, class:A -> A, $block$res -> block$res2)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res4, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res1, member:A -> A1, class:A -> A, $block$res -> block$res2)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f_g
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, member:f -> f1, member:g -> g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res4, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res1, member:A -> A1, class:A -> A, $block$res -> block$res2)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f_g'
 
 :w
 @tailcall
@@ -84,7 +36,7 @@ fun test =
   @tailcall f
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.36: 	  @tailcall f
+//│ ║  l.84: 	  @tailcall f
 //│ ╙──      	            ^
 //│ f = 0
 
@@ -94,7 +46,7 @@ class A with
   fun f() = g()
   fun g() = f()
 //│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.46: 	  fun f() = g()
+//│ ║  l.94: 	  fun f() = g()
 //│ ╙──      	      ^
 
 :w
@@ -109,8 +61,8 @@ module A with
   @tailrec
   fun f = 2
 //│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
-//│ ║  l.62: 	  fun f = 2
-//│ ╙──      	      ^
+//│ ║  l.110: 	  fun f = 2
+//│ ╙──       	      ^
 
 :w
 class A
@@ -134,7 +86,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -145,7 +97,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -156,7 +108,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -167,7 +119,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -178,7 +130,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -190,7 +142,7 @@ handle h = Object with
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│       bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -207,7 +159,7 @@ handle h = Object with
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│             bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -229,7 +181,7 @@ handle h = Object with
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│           bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -251,7 +203,7 @@ handle h = Object with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│               bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -276,7 +228,7 @@ handle h = Object with
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│             bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -297,17 +249,17 @@ handle h = Object with
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│         bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.76: 	handle h = Object with
-//│ ║        	       ^
+//│ ║  l.124: 	handle h = Object with
+//│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.76: 	handle h = Object with
-//│ ╙──      	       ^
+//│ ║  l.124: 	handle h = Object with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -319,7 +271,7 @@ handle h = Object with
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│         bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -334,7 +286,7 @@ handle h = Object with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:A -> A3, $Term -> Term, class:A -> A2, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4, member:A -> A9, class:A -> A8, module:A -> A8, member:g -> g1, $block$res -> block$res11, $block$res -> block$res5, member:test -> test, class:Handler$h$ -> Handler$h$, $block$res -> block$res6)
+//│     bindings = HashMap(member:A -> A9, class:A -> A8, member:f_g -> f_g, module:A -> A8, member:g -> g1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res11, $Term -> Term, $Block -> Block, $block$res -> block$res5, $Shape -> Shape, member:test -> test, class:Handler$h$ -> Handler$h$, member:Predef -> Predef, $block$res -> block$res6, member:test -> test1, $block$res -> block$res12, f -> f2, $tmp -> tmp, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res7, member:A -> A3, class:A -> A2, $block$res -> block$res, member:f -> f, $block$res -> block$res8, member:A -> A5, $block$res -> block$res1, class:A -> A4, member:A -> A1, class:A -> A, $block$res -> block$res2, $block$res -> block$res9, $block$res -> block$res3, member:A -> A7, member:f -> f1, class:A -> A6, member:g -> g, module:A -> A6, $block$res -> block$res10, $block$res -> block$res4)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -343,10 +295,10 @@ handle h = Object with
 //│     at handleBlock$ (REPL44:1:905)
 //│     at REPL44:1:1032
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at REPLServer.defaultEval (node:repl:593:22)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.onLine (node:repl:922:10)
 //│     at REPLServer.emit (node:events:518:28)
 //│     at REPLServer.emit (node:domain:489:12)
 
@@ -355,5 +307,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.83: 	  @tailcall 1 + 2
-//│ ╙──      	            ^^^^^
+//│ ║  l.355: 	  @tailcall 1 + 2
+//│ ╙──       	            ^^^^^
