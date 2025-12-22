@@ -38,16 +38,17 @@ fun f() =
 //│     pc = runtime.resumePc;
 //│     saveOffset = runtime.resumeIdx + -2;
 //│     argList = runtime.resumeArr.at(saveOffset);
-//│     i = runtime.resumeArr.at(runtime.resumeIdx);
-//│     saveOffset = runtime.resumeIdx + 1;
+//│     saveOffset = saveOffset + 2;
+//│     i = runtime.resumeArr.at(saveOffset);
+//│     saveOffset = saveOffset + 1;
 //│     j = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 2;
+//│     saveOffset = saveOffset + 1;
 //│     k = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 3;
+//│     saveOffset = saveOffset + 1;
 //│     scrut = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 4;
+//│     saveOffset = saveOffset + 1;
 //│     tmp1 = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = runtime.resumeIdx + 5;
+//│     saveOffset = saveOffset + 1;
 //│     tmp2 = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
@@ -131,8 +132,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:131:3)
-//│ 	at lambda_test (Debugging.mls:128:3)
+//│ 	at lambda (Debugging.mls:132:3)
+//│ 	at lambda_test (Debugging.mls:129:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -201,8 +202,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:196:3) with locals: j=200
+//│ > 	at f (Debugging.mls:197:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:198:3)
+//│ > 	at f (Debugging.mls:199:3)
 //│ > Stack Trace:
 //│ > 	at tail position

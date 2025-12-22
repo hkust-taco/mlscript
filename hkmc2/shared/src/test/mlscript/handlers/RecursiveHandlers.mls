@@ -356,7 +356,8 @@ str
 //│       pc = runtime.resumePc;
 //│       saveOffset = runtime.resumeIdx + -2;
 //│       argList = runtime.resumeArr.at(saveOffset);
-//│       handleBlock$9 = runtime.resumeArr.at(runtime.resumeIdx);
+//│       saveOffset = saveOffset + 2;
+//│       handleBlock$9 = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {

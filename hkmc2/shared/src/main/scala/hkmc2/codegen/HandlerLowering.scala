@@ -524,20 +524,21 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     def getSaved(off: BigInt): (Block => Block, Path) =
       if off == 0 then
         return (id, DynSelect(paths.runtimePath.selSN("resumeArr"), paths.runtimePath.selSN("resumeIdx"), true))
-      val computeOff = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false, false), _)
-      (computeOff, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
+      val addOne = Assign(getSavedTmp, Call(State.builtinOpsMap("+").asPath, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(off).asArg :: Nil)(false, false, false), _)
+      (addOne, DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true))
 
-    val (computeArgOff, argSavePath) = getSaved(-2)
+    val resumeArrIndexed = DynSelect(paths.runtimePath.selSN("resumeArr"), getSavedTmp.asPath, true)
+    val plus = State.builtinOpsMap("+").asPath
     val preRestore = blockBuilder
         .assign(pcVar, paths.resumePc)
-        .chain(Scoped(Set(getSavedTmp), _))
-        .chain(computeArgOff)
-        .assign(ctx.resumeInfo.argLists, argSavePath)
+        .scopedVars(Set(getSavedTmp))
+        .assign(getSavedTmp, Call(plus, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(-2).asArg :: Nil)(false, false, false))
+        .assign(ctx.resumeInfo.argLists, resumeArrIndexed)
     val restoreVars = vars.zipWithIndex.foldLeft(preRestore):
-      case (builder, (local, idx)) =>
-        val (computeOff, savePath) = getSaved(idx)
-        builder.chain(computeOff).assign(local, savePath)
-    
+      case (builder, (local, idx)) => builder
+        .assign(getSavedTmp, Call(plus, getSavedTmp.asPath.asArg :: intLit(if idx == 0 then 2 else 1).asArg :: Nil)(false, false, false))
+        .assign(local, resumeArrIndexed)
+
     Scoped(
       scopedVars ++ Set(pcVar) ++ ctx.resumeInfo.argListsSyms,
       Match(

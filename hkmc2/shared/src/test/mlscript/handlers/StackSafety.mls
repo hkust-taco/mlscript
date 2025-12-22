@@ -80,7 +80,8 @@ sum(10000)
 //│     pc = runtime.resumePc;
 //│     saveOffset = runtime.resumeIdx + -2;
 //│     argList = runtime.resumeArr.at(saveOffset);
-//│     tmp2 = runtime.resumeArr.at(runtime.resumeIdx);
+//│     saveOffset = saveOffset + 2;
+//│     tmp2 = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
