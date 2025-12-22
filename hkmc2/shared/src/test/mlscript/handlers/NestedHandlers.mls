@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 let id = 0
 //│ id = 0

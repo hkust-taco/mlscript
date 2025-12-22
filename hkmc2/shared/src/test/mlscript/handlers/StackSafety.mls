@@ -1,10 +1,7 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 :noTailRec
-
-// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 
 
 // preserve tail calls
@@ -32,7 +29,7 @@ hi(0)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafety.mls:15:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafety.mls:12:1", null, null, argList, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -74,7 +71,7 @@ sum(10000)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, sum, 0, "StackSafety.mls:56:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, sum, 0, "StackSafety.mls:53:1", null, null, argList, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -104,7 +101,7 @@ sum(10000)
 //│             argList = globalThis.Object.freeze([
 //│               argListEntry
 //│             ]);
-//│             return runtime.unwind(runtime.resumeValue, sum, 1, "StackSafety.mls:59:9", null, null, argList, 1, tmp2)
+//│             return runtime.unwind(runtime.resumeValue, sum, 1, "StackSafety.mls:56:9", null, null, argList, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -241,6 +238,8 @@ bad()
 
 :stackSafe 100
 :expect 0
+// TODO: lifter sanity check superclass
+:noSanityCheck
 let depth = 0
 handle h = Object with
   fun whoops()(k) =
@@ -256,6 +255,8 @@ h.whoops()
 // for now this works, but it's not very safe
 :stackSafe
 :expect 10000
+// TODO: lifter sanity check superclass
+:noSanityCheck
 fun dummy = ()
 fun f(h) =
   let n = 0

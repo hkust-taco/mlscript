@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 
 abstract class Effect with
@@ -99,7 +98,7 @@ result
 //│           argList = globalThis.Object.freeze([
 //│             argListEntry
 //│           ]);
-//│           return runtime.unwind(runtime.resumeValue, Handler$h$perform$7, 1, "Effects.mls:64:13", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, argList, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -162,7 +161,7 @@ result
 //│           argList = globalThis.Object.freeze([
 //│             argListEntry
 //│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 4, "Effects.mls:68:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 4, "Effects.mls:67:3", null, null, argList, 0)
 //│         }
 //│         pc = 4;
 //│         continue main;
@@ -179,7 +178,7 @@ result
 //│           argList = globalThis.Object.freeze([
 //│             argListEntry
 //│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 1, "Effects.mls:71:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 1, "Effects.mls:70:3", null, null, argList, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -192,7 +191,7 @@ result
 //│           argList = globalThis.Object.freeze([
 //│             argListEntry
 //│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 2, "Effects.mls:70:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 2, "Effects.mls:69:3", null, null, argList, 0)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -205,7 +204,7 @@ result
 //│           argList = globalThis.Object.freeze([
 //│             argListEntry
 //│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 3, "Effects.mls:69:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 3, "Effects.mls:68:3", null, null, argList, 0)
 //│         }
 //│         pc = 3;
 //│         continue main;
@@ -310,6 +309,8 @@ module A with
     fun test() = x
     fun perform(arg)
 
+// TODO: lifter cannot handle sanity check moving the class extension clause to a variable
+:noSanityCheck
 handle h = A.Effect(3) with
   fun perform()(k) = 0
 h.perform()
@@ -479,20 +480,22 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.458: 	    module A with
+//│ ║  l.459: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.462: 	    module A with
+//│ ║  l.463: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.466: 	    module A with
+//│ ║  l.467: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.470: 	    module A with
+//│ ║  l.471: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 
 // Access superclass fields
+// TODO: lifter sanity check superclass
+:noSanityCheck
 handle h1 = Object with
   fun perf()(k) = k(2)
 class A with

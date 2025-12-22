@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 abstract class StackDelay with
   fun perform(): ()

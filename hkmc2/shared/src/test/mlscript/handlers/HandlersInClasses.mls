@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 
 abstract class Effect with
@@ -22,10 +21,12 @@ object Lol with
 //│ > A
 
 :e
+:re
 Lol.x
 //│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
 //│ ║  l.25: 	Lol.x
 //│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
 object Lol with
@@ -39,10 +40,12 @@ object Lol with
 //│ > B
 
 :e
+:re
 Lol.x
 //│ ╔══[ERROR] Object 'Lol' does not contain member 'x'
-//│ ║  l.42: 	Lol.x
+//│ ║  l.44: 	Lol.x
 //│ ╙──      	   ^^
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 
 data class Lol() with
@@ -58,6 +61,8 @@ let oops = Lol()
 //│ > A
 //│ oops = Lol()
 
+:re
 oops.x
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 

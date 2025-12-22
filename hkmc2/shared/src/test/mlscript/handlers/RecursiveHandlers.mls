@@ -1,7 +1,7 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
+
 
 
 abstract class Effect[A] with
@@ -30,6 +30,8 @@ h1.perform("oops")
 //│ ║  l.28: 	h1.perform("oops")
 //│ ╙──      	^^
 
+// TODO: lifter sanity check superclass
+:noSanityCheck
 :re
 handle h = Object with
   fun write(x)(k) =
@@ -39,6 +41,8 @@ h.write(1)
 h.write(2)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 
+// TODO: lifter sanity check superclass
+:noSanityCheck
 handle h = Object with
   fun write(x)(k) =
     if x < 10 do
@@ -50,6 +54,8 @@ h.write(2)
 //│ > [10, ()]
 //│ = [1, [2, ()]]
 
+// TODO: lifter sanity check superclass
+:noSanityCheck
 handle h = Object with
   fun write(x)(k) = enterHandleBlock of this, () =>
     if x < 10 do write(10)
@@ -73,10 +79,10 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[ERROR] Name not found: h2
-//│ ║  l.67: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.73: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.68: 	      else "0"
+//│ ║  l.74: 	      else "0"
 //│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2
@@ -189,7 +195,7 @@ str
 //│             argList = globalThis.Object.freeze([
 //│               argListEntry
 //│             ]);
-//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:149:7", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:155:7", null, null, argList, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -260,7 +266,7 @@ str
 //│             argList = globalThis.Object.freeze([
 //│               argListEntry
 //│             ]);
-//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:154:7", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:160:7", null, null, argList, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -323,7 +329,7 @@ str
 //│             argList = globalThis.Object.freeze([
 //│               argListEntry
 //│             ]);
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:156:5", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:162:5", null, null, argList, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;

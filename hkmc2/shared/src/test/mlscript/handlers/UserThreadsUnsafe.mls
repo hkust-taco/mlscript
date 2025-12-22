@@ -1,7 +1,7 @@
 :js
 :effectHandlers debug
 :lift
-:noSanityCheck
+
 
 
 class ThreadEffect with

@@ -1,6 +1,9 @@
 :js
 :effectHandlers
 :lift
+
+// TODO: lifter sanity check superclass
+:global
 :noSanityCheck
 
 
@@ -41,7 +44,7 @@ let l = () =>
   return 3
   4
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.41: 	  return 3
+//│ ║  l.44: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 //│ l = fun l
 
@@ -58,7 +61,7 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.57: 	  return 3
+//│ ║  l.60: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 
 

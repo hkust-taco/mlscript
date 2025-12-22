@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 import "../../mlscript-compile/Stack.mls"
 open Stack

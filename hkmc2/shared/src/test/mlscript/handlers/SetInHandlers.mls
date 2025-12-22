@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 
 // * This feature relies on `finally`
@@ -31,6 +30,8 @@ x
 // * But `finally` is not yet supported by effect handlers
 
 :todo
+// TODO: lifter sanity check superclass
+:noSanityCheck
 let x = 1
 handle h = Object with
   fun test()(k) =

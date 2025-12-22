@@ -1,7 +1,6 @@
 :js
 :effectHandlers
 :lift
-:noSanityCheck
 
 module M
 
@@ -18,10 +17,10 @@ fun foo(h): module M =
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.13: 	    module A
+//│ ║  l.12: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.16: 	    module A
+//│ ║  l.15: 	    module A
 //│ ╙──      	           ^
 //│ JS (unsanitized):
 //│ let foo;
@@ -57,10 +56,10 @@ fun foo(h): module M =
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.13: 	    module A
+//│ ║  l.12: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.16: 	    module A
+//│ ║  l.15: 	    module A
 //│ ╙──      	           ^
 
 
