@@ -23,13 +23,13 @@ declare class String
 declare val String
 declare class RegExp
 declare val RegExp
-declare class Set
+declare class Set[V]
 declare val Set
-declare class Map
+declare class Map[K, V]
 declare val Map
-declare class WeakSet
+declare class WeakSet[V]
 declare val WeakSet
-declare class WeakMap
+declare class WeakMap[K, V]
 declare val WeakMap
 declare class Error(info)
 declare class TypeError(info)
