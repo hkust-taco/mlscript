@@ -39,7 +39,7 @@ hi(0)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafetyLift.mls:22:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, hi, -1, "StackSafetyLift.mls:22:1", null, null, argList, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -72,8 +72,8 @@ sum(10000)
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp2, tmp3, argListEntry, argList, pc;
 //│   let tmp4, curDepth, stackDelayRes;
-//│   curDepth = runtime.stackDepth;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     argListEntry = globalThis.Object.freeze([
@@ -82,7 +82,7 @@ sum(10000)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, sum1, 0, "StackSafetyLift.mls:64:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, sum1, -1, "StackSafetyLift.mls:64:1", null, null, argList, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;

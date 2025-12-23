@@ -489,7 +489,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
       (
         res =>
-          val doUnwind = ctx.doUnwind(res, ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), parts.entry, Nil)(using paths)
+          val doUnwind = ctx.doUnwind(res, ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
           if parts.states.size <= 1 then
             Scoped(ctx.resumeInfo.argListsSyms, doUnwind)
           else

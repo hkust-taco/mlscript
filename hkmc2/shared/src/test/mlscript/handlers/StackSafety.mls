@@ -29,7 +29,7 @@ hi(0)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, hi, 0, "StackSafety.mls:12:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, hi, -1, "StackSafety.mls:12:1", null, null, argList, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -71,7 +71,7 @@ sum(10000)
 //│     argList = globalThis.Object.freeze([
 //│       argListEntry
 //│     ]);
-//│     return runtime.unwind(stackDelayRes, sum, 0, "StackSafety.mls:53:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, sum, -1, "StackSafety.mls:53:1", null, null, argList, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -314,16 +314,4 @@ fun handler_stack(n) =
     handler_stack(n - 1)
   "ok"
 handler_stack(100)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Handler$h$13 is not a constructor
-//│     at handler_stack (REPL65:1:8584)
-//│     at FunctionContFrame.resume (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:329:22)
-//│     at Runtime.resumeContTrace (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1055:38)
-//│     at file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1043:22
-//│     at Runtime.runStackSafe (file:///home/attempt0/mlscript/head/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1122:33)
-//│     at REPL65:1:10123
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│ = "ok"
