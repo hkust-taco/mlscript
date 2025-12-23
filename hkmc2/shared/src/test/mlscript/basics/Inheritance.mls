@@ -116,3 +116,24 @@ new Barr(40)(2) with
 //│ = fun
 
 
+
+module M with
+  class A
+
+// * Check that the access to `M.A` is not sanity-checked, as it is resolved.
+:sjs
+class B extends M.A
+//│ JS (unsanitized):
+//│ let B1;
+//│ (class B extends M1.A {
+//│   static {
+//│     B1 = this
+//│   }
+//│   constructor() {
+//│     super();
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B"]; 
+//│ });
+
+
