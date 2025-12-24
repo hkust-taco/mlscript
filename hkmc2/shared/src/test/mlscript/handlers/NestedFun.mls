@@ -13,8 +13,9 @@ fun foo(f) =
   set y += 1
   lam()
 
-// TODO: lifter sanity check superclass
-:noSanityCheck
+
+class Object
+
 :expect 3
 handle h = Object with
   fun f()(k) = k(())

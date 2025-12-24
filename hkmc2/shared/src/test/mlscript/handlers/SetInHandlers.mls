@@ -29,9 +29,9 @@ x
 
 // * But `finally` is not yet supported by effect handlers
 
+class Object
+
 :todo
-// TODO: lifter sanity check superclass
-:noSanityCheck
 let x = 1
 handle h = Object with
   fun test()(k) =

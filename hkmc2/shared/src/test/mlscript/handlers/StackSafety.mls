@@ -215,10 +215,11 @@ bad()
 //│ = 100010000
 
 
+class Object
+
+
 :stackSafe 100
 :expect 0
-// TODO: lifter sanity check superclass
-:noSanityCheck
 let depth = 0
 handle h = Object with
   fun whoops()(k) =
@@ -234,8 +235,6 @@ h.whoops()
 // for now this works, but it's not very safe
 :stackSafe
 :expect 10000
-// TODO: lifter sanity check superclass
-:noSanityCheck
 fun dummy = ()
 fun f(h) =
   let n = 0

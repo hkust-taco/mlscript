@@ -116,8 +116,8 @@ module A with
   f()
   () // defeats tail call optimization
 
-// TODO: lifter sanity check superclass
-:noSanityCheck
+class Object
+
 let obj = new Object with
   fun foo() = print("Hello")
   foo()
