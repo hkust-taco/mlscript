@@ -75,14 +75,12 @@ result
 //│ let Handler$h$perform7, Handler$h$perform$7;
 //│ result = "";
 //│ Handler$h$perform$7 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
-//│   let v, argListEntry, argList, pc;
+//│   let v, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx + -2;
-//│     argList = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
@@ -90,15 +88,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           argListEntry = globalThis.Object.freeze([
-//│             Handler$h$$instance,
-//│             arg,
-//│             k
-//│           ]);
-//│           argList = globalThis.Object.freeze([
-//│             argListEntry
-//│           ]);
-//│           return runtime.unwind(runtime.resumeValue, Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, 1, 3, Handler$h$$instance, arg, k, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -142,14 +132,12 @@ result
 //│   h7 = runtime.topLevelEffect(h7, false);
 //│ }
 //│ handleBlock$7 = (undefined, function () {
-//│   let tmp8, tmp9, tmp10, tmp11, argListEntry, argList, pc;
+//│   let tmp8, tmp9, tmp10, tmp11, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx + -2;
-//│     argList = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
@@ -157,11 +145,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           argListEntry = globalThis.Object.freeze([]);
-//│           argList = globalThis.Object.freeze([
-//│             argListEntry
-//│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 4, "Effects.mls:67:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 4;
 //│         continue main;
@@ -174,11 +158,7 @@ result
 //│         tmp10 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           argListEntry = globalThis.Object.freeze([]);
-//│           argList = globalThis.Object.freeze([
-//│             argListEntry
-//│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 1, "Effects.mls:70:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -187,11 +167,7 @@ result
 //│         tmp9 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           argListEntry = globalThis.Object.freeze([]);
-//│           argList = globalThis.Object.freeze([
-//│             argListEntry
-//│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 2, "Effects.mls:69:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -200,11 +176,7 @@ result
 //│         tmp8 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           argListEntry = globalThis.Object.freeze([]);
-//│           argList = globalThis.Object.freeze([
-//│             argListEntry
-//│           ]);
-//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 3, "Effects.mls:68:3", null, null, argList, 0)
+//│           return runtime.unwind(runtime.resumeValue, handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 3;
 //│         continue main;
@@ -309,8 +281,6 @@ module A with
     fun test() = x
     fun perform(arg)
 
-// TODO: lifter cannot handle sanity check moving the class extension clause to a variable
-:noSanityCheck
 handle h = A.Effect(3) with
   fun perform()(k) = 0
 h.perform()
@@ -480,16 +450,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.459: 	    module A with
+//│ ║  l.429: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.463: 	    module A with
+//│ ║  l.433: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.467: 	    module A with
+//│ ║  l.437: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.471: 	    module A with
+//│ ║  l.441: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

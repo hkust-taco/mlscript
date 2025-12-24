@@ -97,22 +97,20 @@ object HandlerLowering:
   
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo):
     def doUnwind(path: Path, loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
-      resumeInfo.bindArgLists(Return(Call(paths.unwindPath, (
+      Return(Call(paths.unwindPath, (
         path ::
         currentFun ::
         intLit(stateId) ::
         loc ::
         debugInfo.debugInfoPath ::
         thisPath.getOrElse(unit) ::
-        resumeInfo.argLists.asPath ::
-        intLit(restoreList.length) ::
-        restoreList.map(_.asPath)
-      ).map(_.asArg))(true, true, false), false))
+        resumeInfo.argLists ++:
+        (intLit(restoreList.length) ::
+        restoreList.map(_.asPath))
+      ).map(_.asArg))(true, true, false), false)
   
   private case class ResumeInfo(
-    argLists: Local,
-    argListsSyms: Set[Local],
-    bindArgLists: Block => Block,
+    argLists: List[Path],
     currentLocals: List[Local],
     currentStackSafetySym: FnOrCls,
   )
@@ -143,6 +141,7 @@ class HandlerPaths(using Elaborator.State):
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   val unwindPath: Path = runtimePath.selSN("unwind")
   val resumePc: Path = runtimePath.selSN("resumePc")
+  val resumeIdx: Path = runtimePath.selSN("resumeIdx")
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
@@ -423,18 +422,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
         .map(_.asArg)
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
-      val rtArgList = fun.params.map: pl =>
-        val tmp: Local = freshTmp("argListEntry")
-        val rstArg = pl.restParam.fold(Nil)(rstParam => Arg(S(false), rstParam.sym.asPath) :: Nil)
-        val rtList = Tuple(false, pl.params.foldRight(rstArg)((param, acc) => Arg(N, param.sym.asPath) :: acc))
-        (tmp, rtList)
-      val argListSym = freshTmp("argList")
-      val syms = (argListSym :: rtArgList.map(_._1)).toSet
-      val bindArgList = blockBuilder
-        .foldLeft(rtArgList): (builder, argList) =>
-          builder.assign(argList._1, argList._2)
-        .assign(argListSym, Tuple(false, rtArgList.map(_._1.asPath.asArg)))
-      val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(argListSym, syms, bindArgList, varList, L(fun.sym)),
+      val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
+        intLit(pl.params.length) :: pl.params.map(_.sym.asPath)
+      val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, varList, L(fun.sym)),
         DebugInfo(debugNme, if opt.debug then debugInfoSym.asPath else unit)))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
@@ -489,11 +479,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
       (
         res =>
-          val doUnwind = ctx.doUnwind(res, ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
-          if parts.states.size <= 1 then
-            Scoped(ctx.resumeInfo.argListsSyms, doUnwind)
-          else
-            doUnwind
+          ctx.doUnwind(res, ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
       )
     if parts.states.size <= 1 then
       return b
@@ -532,15 +518,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val preRestore = blockBuilder
         .assign(pcVar, paths.resumePc)
         .scopedVars(Set(getSavedTmp))
-        .assign(getSavedTmp, Call(plus, paths.runtimePath.selSN("resumeIdx").asArg :: intLit(-2).asArg :: Nil)(false, false, false))
-        .assign(ctx.resumeInfo.argLists, resumeArrIndexed)
     val restoreVars = vars.zipWithIndex.foldLeft(preRestore):
       case (builder, (local, idx)) => builder
-        .assign(getSavedTmp, Call(plus, getSavedTmp.asPath.asArg :: intLit(if idx == 0 then 2 else 1).asArg :: Nil)(false, false, false))
+        .assign(getSavedTmp, if idx == 0 then paths.resumeIdx else Call(plus, getSavedTmp.asPath.asArg :: intLit(1).asArg :: Nil)(false, false, false))
         .assign(local, resumeArrIndexed)
 
     Scoped(
-      scopedVars ++ Set(pcVar) ++ ctx.resumeInfo.argListsSyms,
+      scopedVars ++ Set(pcVar),
       Match(
         paths.resumePc,
         Case.Lit(Tree.IntLit(-1)) ->

@@ -308,56 +308,92 @@ let Runtime1;
         this.saved = saved;
       }
       resume(value) {
-        let i, f, argListLength, scrut, tmp1, tmp2;
+        let i, f, argListsLength, currentArgList, scrut, argListLength, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
         i = 0;
         f = this.saved.at(0);
-        argListLength = this.saved.at(5).length;
+        argListsLength = this.saved.at(5);
+        currentArgList = 6;
         Runtime.resumeValue = value;
         Runtime.resumeArr = this.saved;
-        Runtime.resumeIdx = 7;
         Runtime.resumePc = this.saved.at(1);
-        scrut = argListLength === 0;
+        scrut = argListsLength === 0;
         if (scrut === true) {
           tmp1 = runtime.safeCall(globalThis.console.log("cannot resume getters"));
         } else {
           tmp1 = runtime.Unit;
         }
-        tmp3: while (true) {
-          let scrut1, tmp4, tmp5;
-          scrut1 = i < argListLength;
+        tmp9: while (true) {
+          let scrut1, argListLength1, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18;
+          tmp10 = argListsLength - 1;
+          scrut1 = i < tmp10;
           if (scrut1 === true) {
-            tmp4 = f.apply(this.saved.at(4), this.saved.at(5).at(i));
-            f = tmp4;
-            tmp5 = i + 1;
-            i = tmp5;
+            argListLength1 = this.saved.at(currentArgList);
+            tmp11 = currentArgList + 1;
+            tmp12 = currentArgList + 1;
+            tmp13 = tmp12 + argListLength1;
+            tmp14 = this.saved.slice(tmp11, tmp13);
+            tmp15 = f.apply(this.saved.at(4), tmp14);
+            f = tmp15;
+            tmp16 = argListLength1 + 1;
+            tmp17 = currentArgList + tmp16;
+            currentArgList = tmp17;
+            tmp18 = i + 1;
+            i = tmp18;
             tmp2 = runtime.Unit;
-            continue tmp3
+            continue tmp9
           } else {
             tmp2 = runtime.Unit;
           }
           break;
         }
-        return f
+        argListLength = this.saved.at(currentArgList);
+        tmp3 = currentArgList + argListLength;
+        tmp4 = tmp3 + 2;
+        Runtime.resumeIdx = tmp4;
+        tmp5 = currentArgList + 1;
+        tmp6 = currentArgList + 1;
+        tmp7 = tmp6 + argListLength;
+        tmp8 = this.saved.slice(tmp5, tmp7);
+        return f.apply(this.saved.at(4), tmp8)
       } 
       get getLocals() {
-        let debugInfo, res, i, tmp1;
+        let debugInfo, i, cur, res, i1, tmp1, tmp2;
         debugInfo = this.saved.at(3);
-        res = [];
-        i = 1;
-        tmp2: while (true) {
-          let scrut, tmp3, tmp4, tmp5, tmp6, tmp7;
-          scrut = i < debugInfo.length;
+        i = 0;
+        cur = 6;
+        tmp3: while (true) {
+          let scrut, tmp4, tmp5, tmp6;
+          scrut = i < this.saved.at(5);
           if (scrut === true) {
-            tmp3 = i + 1;
-            tmp4 = 7 + debugInfo.at(i);
-            tmp5 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp3), this.saved.at(tmp4)));
-            tmp6 = runtime.safeCall(res.push(tmp5));
-            tmp7 = i + 2;
-            i = tmp7;
+            tmp4 = this.saved.at(cur) + 1;
+            tmp5 = cur + tmp4;
+            cur = tmp5;
+            tmp6 = i + 1;
+            i = tmp6;
             tmp1 = runtime.Unit;
-            continue tmp2
+            continue tmp3
           } else {
             tmp1 = runtime.Unit;
+          }
+          break;
+        }
+        res = [];
+        i1 = 1;
+        tmp7: while (true) {
+          let scrut1, tmp8, tmp9, tmp10, tmp11, tmp12, tmp13;
+          scrut1 = i1 < debugInfo.length;
+          if (scrut1 === true) {
+            tmp8 = i1 + 1;
+            tmp9 = cur + 1;
+            tmp10 = tmp9 + debugInfo.at(i1);
+            tmp11 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp8), this.saved.at(tmp10)));
+            tmp12 = runtime.safeCall(res.push(tmp11));
+            tmp13 = i1 + 2;
+            i1 = tmp13;
+            tmp2 = runtime.Unit;
+            continue tmp7
+          } else {
+            tmp2 = runtime.Unit;
           }
           break;
         }
@@ -461,12 +497,12 @@ let Runtime1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "LocalVarInfo", ["localName", "value"]]; 
     });
-    this.FakeError = function FakeError(stack) {
-      return globalThis.Object.freeze(new FakeError.class(stack));
+    this.CustomStackError = function CustomStackError(stack) {
+      return globalThis.Object.freeze(new CustomStackError.class(stack));
     };
-    (class FakeError {
+    (class CustomStackError {
       static {
-        Runtime.FakeError.class = this
+        Runtime.CustomStackError.class = this
       }
       constructor(stack) {
         this.stack = stack;
@@ -475,7 +511,7 @@ let Runtime1;
         return this.stack
       }
       [prettyPrint]() { return this.toString(); }
-      static [definitionMetadata] = ["class", "FakeError", ["stack"]]; 
+      static [definitionMetadata] = ["class", "CustomStackError", ["stack"]]; 
     });
     this.stackLimit = 0;
     this.stackDepth = 0;
@@ -640,7 +676,7 @@ let Runtime1;
     if (tr instanceof Runtime.EffectSig.class) {
       tmp1 = "Error: Unhandled effect " + tr.handler.constructor.name;
       tmp2 = Runtime.showStackTrace(tmp1, tr, debug, false);
-      throw Runtime.FakeError(tmp2)
+      throw Runtime.CustomStackError(tmp2)
     } else {
       return tr
     }
@@ -651,7 +687,7 @@ let Runtime1;
       tmp = "Error: Effect " + tr.handler.constructor.name;
       tmp1 = tmp + " is raised inside a constructor";
       tmp2 = Runtime.showStackTrace(tmp1, tr, false, false);
-      throw Runtime.FakeError(tmp2)
+      throw Runtime.CustomStackError(tmp2)
     } else {
       return tr
     }

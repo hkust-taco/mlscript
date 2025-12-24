@@ -169,14 +169,12 @@ str
 //│ if (scrut === true) {
 //│   let handleBlock$10, Handler$h1$3;
 //│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
-//│     let tmp13, tmp14, tmp15, argListEntry, argList, pc;
+//│     let tmp13, tmp14, tmp15, pc;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       saveOffset = runtime.resumeIdx + -2;
-//│       argList = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
@@ -186,15 +184,7 @@ str
 //│           str = tmp13;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([
-//│               Handler$h1$$instance,
-//│               arg,
-//│               k
-//│             ]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:154:7", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:154:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -239,14 +229,12 @@ str
 //│     h11 = runtime.topLevelEffect(h11, false);
 //│   }
 //│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
-//│     let tmp13, tmp14, tmp15, tmp16, tmp17, argListEntry, argList, pc;
+//│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       saveOffset = runtime.resumeIdx + -2;
-//│       argList = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
@@ -257,15 +245,7 @@ str
 //│           str = tmp14;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([
-//│               Handler$h2$$instance,
-//│               arg,
-//│               k
-//│             ]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:159:7", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:159:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -307,14 +287,12 @@ str
 //│     static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│   });
 //│   handleBlock$$2 = function handleBlock$$(h22) {
-//│     let tmp13, argListEntry, argList, pc;
+//│     let tmp13, pc;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       saveOffset = runtime.resumeIdx + -2;
-//│       argList = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
@@ -322,13 +300,7 @@ str
 //│         case 0:
 //│           runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([
-//│               h22
-//│             ]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:161:5", null, null, argList, 0)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:161:5", null, null, 1, 1, h22, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -347,16 +319,14 @@ str
 //│     }
 //│   });
 //│   handleBlock$10 = (undefined, function () {
-//│     let h22, tmp13, argListEntry, argList, pc;
+//│     let h22, tmp13, pc;
 //│     let handleBlock$$here;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       saveOffset = runtime.resumeIdx + -2;
-//│       argList = runtime.resumeArr.at(saveOffset);
-//│       saveOffset = saveOffset + 2;
+//│       saveOffset = runtime.resumeIdx;
 //│       handleBlock$9 = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
@@ -365,11 +335,7 @@ str
 //│         case 0:
 //│           runtime.resumeValue = new Handler$h2$3();
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 2, null, null, null, argList, 1, handleBlock$9)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 2, null, null, null, 1, 0, 1, handleBlock$9)
 //│           }
 //│           pc = 2;
 //│           continue main;
@@ -383,11 +349,7 @@ str
 //│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
 //│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 1, null, null, null, argList, 1, handleBlock$9)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 1, null, null, null, 1, 0, 1, handleBlock$9)
 //│           }
 //│           pc = 1;
 //│           continue main;

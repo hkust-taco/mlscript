@@ -22,14 +22,7 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     let argListEntry, argList;
-//│     argListEntry = globalThis.Object.freeze([
-//│       n
-//│     ]);
-//│     argList = globalThis.Object.freeze([
-//│       argListEntry
-//│     ]);
-//│     return runtime.unwind(stackDelayRes, hi, -1, "StackSafety.mls:12:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -59,28 +52,20 @@ sum(10000)
 //│ let sum, tmp1;
 //│ let $_stack$_safe$_body$_1;
 //│ sum = function sum(n) {
-//│   let scrut, tmp2, tmp3, argListEntry, argList, pc;
+//│   let scrut, tmp2, tmp3, pc;
 //│   let tmp4, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     argListEntry = globalThis.Object.freeze([
-//│       n
-//│     ]);
-//│     argList = globalThis.Object.freeze([
-//│       argListEntry
-//│     ]);
-//│     return runtime.unwind(stackDelayRes, sum, -1, "StackSafety.mls:53:1", null, null, argList, 0)
+//│     return runtime.unwind(stackDelayRes, sum, -1, "StackSafety.mls:46:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx + -2;
-//│     argList = runtime.resumeArr.at(saveOffset);
-//│     saveOffset = saveOffset + 2;
+//│     saveOffset = runtime.resumeIdx;
 //│     tmp2 = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
@@ -96,13 +81,7 @@ sum(10000)
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = tmp4;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             argListEntry = globalThis.Object.freeze([
-//│               n
-//│             ]);
-//│             argList = globalThis.Object.freeze([
-//│               argListEntry
-//│             ]);
-//│             return runtime.unwind(runtime.resumeValue, sum, 1, "StackSafety.mls:56:9", null, null, argList, 1, tmp2)
+//│             return runtime.unwind(runtime.resumeValue, sum, 1, "StackSafety.mls:49:9", null, null, 1, 1, n, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main

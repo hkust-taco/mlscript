@@ -122,8 +122,8 @@ module TraceLogger with
 // Private definitions for algebraic effects
 
 // layout:
-// Note: argLists assumed to be at (locals - 2)
-// | f | pc | pcStr | debugInfo | this | argLists | localCnt | locals... |
+// | f | pc | pcStr | debugInfo | this | argLists... (*) | localCnt | locals... |
+// (*) argLists is length encoded nested array
 
 mut val resumeValue = null
 mut val resumeArr = null
@@ -138,25 +138,36 @@ data class FunctionContFrame(next, saved) with
     let
       i = 0
       f = saved.[0]
-      argListLength = saved.[5].length
+      argListsLength = saved.[5]
+      currentArgList = 6
     set
       resumeValue = value
       resumeArr = saved
-      resumeIdx = 7
       resumePc = saved.[1]
-    if argListLength === 0 do
+    if argListsLength === 0 do
       console.log("cannot resume getters")
-    while i < argListLength do
+    while i < argListsLength - 1 do
+      let argListLength = saved.[currentArgList]
       set
-        f = f.apply(saved.[4], saved.[5].[i])
+        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+        currentArgList += argListLength + 1
         i += 1
-    f
+    let argListLength = saved.[currentArgList]
+    set
+      resumeIdx = currentArgList + argListLength + 2
+    f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
   fun getLocals =
     let debugInfo = saved.[3]
+    let i = 0
+    let cur = 6
+    while i < saved.[5] do
+      set
+        cur += saved.[cur] + 1
+        i += 1
     let res = mut []
     let i = 1
     while i < debugInfo.length do
-      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[7 + debugInfo.[i]]))
+      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
       set i += 2
     res
   fun getNme = saved.[3].[0]
@@ -176,7 +187,7 @@ class NonLocalReturn with
 
 data class FnLocalsInfo(fnName, locals)
 data class LocalVarInfo(localName, value)
-data class FakeError(stack) with
+data class CustomStackError(stack) with
   fun toString() = stack
 
 
@@ -188,13 +199,13 @@ fun topLevelEffect(tr, debug) =
     console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
     set tr = resume(tr.contTrace)(())
   if tr is EffectSig then
-    throw FakeError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
+    throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
   else
     tr
 
 fun ctorEffect(tr) =
   if tr is EffectSig then
-    throw FakeError(showStackTrace("Error: Effect " + tr.handler.constructor.name + " is raised inside a constructor", tr, false, false))
+    throw CustomStackError(showStackTrace("Error: Effect " + tr.handler.constructor.name + " is raised inside a constructor", tr, false, false))
   else
     tr
 

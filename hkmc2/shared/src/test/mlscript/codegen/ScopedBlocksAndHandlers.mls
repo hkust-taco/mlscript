@@ -1,6 +1,5 @@
 :js
 :lift
-:noSanityCheck
 :effectHandlers
 
 

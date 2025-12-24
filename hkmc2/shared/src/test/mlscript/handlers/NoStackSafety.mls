@@ -1,5 +1,6 @@
 :js
 
+
 // sanity check
 :expect 5050
 fun sum(n) =
@@ -8,7 +9,6 @@ fun sum(n) =
     n + sum(n - 1)
 sum(100)
 //│ = 5050
-
 
 // stack-overflows without :stackSafe
 :re
@@ -29,6 +29,7 @@ fun foo() =
   f(10000)
 foo()
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
 
 :sjs
 :stackSafe 42
