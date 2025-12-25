@@ -2,10 +2,6 @@
 :effectHandlers
 :lift
 
-// TODO: lifter sanity check superclass
-:global
-:noSanityCheck
-
 
 abstract class Effect with
   fun f(): ()
@@ -44,7 +40,7 @@ let l = () =>
   return 3
   4
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.44: 	  return 3
+//│ ║  l.40: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 //│ l = fun l
 
@@ -62,7 +58,7 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.61: 	  return 3
+//│ ║  l.57: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 
 

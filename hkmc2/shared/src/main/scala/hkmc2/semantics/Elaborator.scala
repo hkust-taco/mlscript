@@ -265,7 +265,7 @@ object Elaborator:
       val bsym = BlockMemberSymbol("ret", Nil, true)
       val defn = ClassDef(N, syntax.Cls, sym, bsym, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N)
       sym.defn = S(defn)
-      Term.Sel(runtimeSymbol.ref(), id)(S(sym), N)
+      Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), N)
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
