@@ -4,6 +4,7 @@ import scala.util.chaining._
 import sourcecode.{Name, Line, FileName}
 
 import mlscript.utils._, shorthands._
+import hkmc2.io
 
 import Diagnostic._
 
@@ -93,6 +94,6 @@ object Loc:
   def apply(xs: IterableOnce[Located]): Opt[Loc] =
     xs.iterator.foldLeft(none[Loc])((acc, l) => acc.fold(l.toLoc)(_ ++ l.toLoc |> some))
 
-final case class Origin(fileName: os.Path, startLineNum: Int, fph: FastParseHelpers):
+final case class Origin(fileName: io.Path, startLineNum: Int, fph: FastParseHelpers):
   override def toString = s"${fileName.last}:+$startLineNum"
 

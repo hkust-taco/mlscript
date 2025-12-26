@@ -19,7 +19,8 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp, res, Cont$ctor$Lol$1, doUnwind;
+//│     let tmp;
+//│     let res, Cont$ctor$Lol$1, doUnwind;
 //│     const this$Lol = this;
 //│     (class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
 //│       static {

@@ -7,6 +7,7 @@
 fun f(x, y) = x + y
 f(2, 3)
 //│ JS:
+//│ let f;
 //│ f = function f(...args) {
 //│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
@@ -24,6 +25,7 @@ f(2, 3)
 fun f2(x, y) = x + y
 id(f2)(2)
 //│ JS:
+//│ let f2, tmp;
 //│ f2 = function f2(x, y) {
 //│   return x + y
 //│ };
@@ -36,6 +38,7 @@ id(f2)(2)
 :re
 id(f)(2)
 //│ JS:
+//│ let tmp1;
 //│ tmp1 = runtime.checkCall(Predef.id(f)); block$res3 = runtime.safeCall(tmp1(2)); undefined
 //│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
 
@@ -45,6 +48,7 @@ id(f)(2)
 fun f(x)(y, z) = x + y + z
 id(f)(3)(4)
 //│ JS:
+//│ let f1, tmp2, tmp3;
 //│ f1 = function f(...args) {
 //│   runtime.checkArgs("f", 1, true, args.length);
 //│   let x = args[0];
@@ -69,6 +73,7 @@ id(f)(3)(4)
 :noSanityCheck
 let f = (x, y) => x + y in f(2)
 //│ JS:
+//│ let f3, f4;
 //│ f4 = function f(x, y) { return x + y }; f3 = f4; block$res5 = runtime.safeCall(f3(2)); undefined
 //│ = NaN
 
@@ -77,6 +82,7 @@ let f = (x, y) => x + y in f(2)
 let f = (x, y) => x + y
 f(2)
 //│ JS:
+//│ let f5, f6;
 //│ f6 = function f(...args) {
 //│   runtime.checkArgs("f", 2, true, args.length);
 //│   let x = args[0];
@@ -97,6 +103,7 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 id(Cls(1, 2)).f(3)
 //│ JS:
+//│ let Cls1, tmp4, tmp5;
 //│ Cls1 = function Cls(x, y) {
 //│   return globalThis.Object.freeze(new Cls.class(x, y));
 //│ };
@@ -129,6 +136,7 @@ data class Cls(x, y) with
   fun f(z, p) = x + y + z + p
 id(Cls(1, 2)).f(3)
 //│ JS:
+//│ let Cls3, tmp6, tmp7;
 //│ Cls3 = function Cls(...args) {
 //│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
@@ -166,6 +174,7 @@ data class Cls(x, y) with
   fun f(z, p)(q, s) = x + y + z + p + q + s
 id(Cls(1, 2)).f(3, 4)(5)
 //│ JS:
+//│ let Cls5, tmp8, tmp9, tmp10;
 //│ Cls5 = function Cls(...args) {
 //│   return globalThis.Object.freeze(new Cls.class(...args));
 //│ };
@@ -208,6 +217,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 :ssjs
 console.log(1)
 //│ JS:
+//│ let selRes, discarded;
 //│ selRes = globalThis.console;
 //│ discarded = globalThis.console$__checkNotMethod;
 //│ if (selRes === undefined) {
@@ -222,6 +232,7 @@ console.log(1)
 :ssjs
 globalThis.x
 //│ JS:
+//│ let selRes1, discarded1;
 //│ selRes1 = globalThis.x;
 //│ discarded1 = globalThis.x$__checkNotMethod;
 //│ if (selRes1 === undefined) {
@@ -250,6 +261,7 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
+//│ let M1, scrut, x, scrut1, tmp11, selRes2, discarded2;
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -300,6 +312,7 @@ if M.A(1).y is
 M.A(1).y
   console.log()
 //│ JS:
+//│ let selRes3, discarded3, tmp12, selRes4, discarded4;
 //│ selRes3 = globalThis.console;
 //│ discarded3 = globalThis.console$__checkNotMethod;
 //│ if (selRes3 === undefined) {
@@ -322,6 +335,7 @@ M.A(1).y
 M.A(1).y
   console.log()
 //│ JS:
+//│ let tmp13;
 //│ tmp13 = M1.A(1); block$res15 = runtime.safeCall(globalThis.console.log(tmp13.y)); undefined
 //│ > undefined
 
@@ -338,6 +352,7 @@ M.A(2).y > 1
 :ssjs
 M.A(1).g(0)
 //│ JS:
+//│ let tmp16;
 //│ tmp16 = runtime.checkCall(M1.A(1)); block$res18 = runtime.safeCall(tmp16.g(0)); undefined
 //│ ═══[RUNTIME ERROR] TypeError: tmp16.g is not a function
 
@@ -346,6 +361,7 @@ M.A(1).g(0)
 :ssjs
 M.A(1).f(0)
 //│ JS:
+//│ let tmp17;
 //│ tmp17 = runtime.checkCall(M1.A(1)); block$res19 = runtime.checkCall(tmp17.f(0)); undefined
 //│ = 1
 

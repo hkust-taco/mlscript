@@ -80,6 +80,7 @@ module Test with
 //│ ║  l.74: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
+//│ let Test4;
 //│ globalThis.Object.freeze(class Test3 {
 //│   static {
 //│     Test4 = this
@@ -228,7 +229,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.229: 	Runtime
+//│ ║  l.230: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

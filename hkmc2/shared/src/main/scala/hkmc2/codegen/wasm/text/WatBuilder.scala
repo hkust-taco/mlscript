@@ -706,6 +706,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       `return`(S(resWat))
 
+    case Scoped(_, body) => returningTerm(body)
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
@@ -832,7 +833,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
   end returningTerm
 
-  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: os.Path)(using
+  def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using
       Raise,
       Scope
   ): (Document, Str) =

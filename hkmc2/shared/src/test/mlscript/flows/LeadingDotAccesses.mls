@@ -68,14 +68,13 @@ module C with
   fun a = new C
 
 :sf
-:ge
 :e
 fun g(x : C) = x
 let d = .a
 f(d)
 g(d)
 //│ ╔══[ERROR] Ambiguous selection with multiple apparent targets:
-//│ ║  l.74: 	let d = .a
+//│ ║  l.73: 	let d = .a
 //│ ║        	        ^^
 //│ ╟── companion member a
 //│ ║  l.68: 	  fun a = new C
@@ -98,11 +97,7 @@ g(d)
 //│     app¹⁰  <~  type C
 //│     flow:g⁰  <~  ((type C) -> x⁰)
 //│     flow:g⁰  ~>  ((d⁰) -> app¹⁰)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'd'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.74: 	let d = .a
-//│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] ReferenceError: d is not defined
+//│ d = undefined
 
 :sf
 f(.a)
@@ -120,7 +115,7 @@ g(.a)
 :e
 f(.w)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.121: 	f(.w)
+//│ ║  l.116: 	f(.w)
 //│ ╙──       	  ^^
 //│ Flowed:
 //│   f⁰{ ~> f⁰ }(_?_.w{ ~> ‹error› })‹app¹³›
@@ -132,7 +127,7 @@ f(.w)
 :e
 .b(new A)
 //│ ╔══[ERROR] Cannot resolve leading dot selection
-//│ ║  l.133: 	.b(new A)
+//│ ║  l.128: 	.b(new A)
 //│ ╙──       	^^
 //│ Flowed:
 //│   _?_.b{ ~> ‹error› }(new A⁰)‹app¹⁴›

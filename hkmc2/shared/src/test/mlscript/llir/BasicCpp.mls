@@ -3,7 +3,7 @@
 :cpp
 
 fun foo(a) =
-  let x
+  let x = undefined
   if a > 0 do
     x = 1
   x + 1

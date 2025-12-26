@@ -1,4 +1,5 @@
 import Wart._
+import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
@@ -42,7 +43,8 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
-    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.4.0",
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.5.0", // Scala.js or Scala-Native
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.4.2", // Scala.js / Scala Native
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
     
     libraryDependencies += "org.scalactic" %%% "scalactic" % scalaTestVersion,
@@ -56,6 +58,13 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.cmd", NothingFilter),
   )
   .jvmSettings(
+  )
+  .jsSettings(
+    scalaJSLinkerConfig ~= {
+      _.withModuleKind(ModuleKind.ESModule)
+        .withOutputPatterns(OutputPatterns.fromJSFile("MLscript.mjs"))
+    },
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.2.0",
   )
   .dependsOn(core)
 
@@ -73,9 +82,21 @@ lazy val hkmc2DiffTests = project.in(file("hkmc2DiffTests"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
 
+lazy val hkmc2MostTests = project.in(file("hkmc2MostTests"))
+  .settings(
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+    ).value
+  )
+
 lazy val hkmc2AllTests = project.in(file("hkmc2AllTests"))
   .settings(
-    Test / test := ((hkmc2DiffTests / Test / test) dependsOn (hkmc2JVM / Test / test)).value
+    Test / test := (
+      (hkmc2DiffTests / Test / test)
+        .dependsOn(hkmc2JVM / Test / test)
+        .dependsOn(hkmc2JS / Test / test)
+    ).value
   )
 
 lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))

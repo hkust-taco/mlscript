@@ -546,8 +546,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
   
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =
-      b.floatOutDefns(preserve = defn => ctx.isModOrObj(defn.sym) || ctx.ignored(defn.sym))
-      
+      b.extractDefns(preserve = defn => ctx.isModOrObj(defn.sym) || ctx.ignored(defn.sym))
+    private def gather(ctx: LifterCtx) =
+      b.gatherDefns(preserve = defn => ctx.isModOrObj(defn.sym) || ctx.ignored(defn.sym))
+  
   
   def createLiftInfoCont(d: Defn, parentCls: Opt[ClsLikeDefn], ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
     val AccessInfo(accessed, _, refdDefns) = ctx.getAccesses(d.sym)
@@ -600,7 +602,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     defns.flatMap(createLiftInfoCont(_, N, ctx.addFnLocals(ctx.usedLocals(f.sym)))).toMap
 
   def createLiftInfoCls(c: ClsLikeDefn, ctx: LifterCtx): Map[BlockMemberSymbol, LiftedInfo] =
-    val defns = c.preCtor.floatOut(ctx)._2 ++ c.ctor.floatOut(ctx)._2 ++ c.companion.fold(Nil)(_.ctor.floatOut(ctx)._2)
+    val defns = c.preCtor.gather(ctx) ++ c.ctor.gather(ctx) ++ c.companion.fold(Nil)(_.ctor.gather(ctx))
     val newCtx = if (c.companion.isDefined) && !ctx.ignored(c.sym) then ctx else ctx.addClsDefn(c)
     val staticMtdInfo = c.companion.fold(Map.empty):
       case value => value.methods.flatMap(f => createLiftInfoFn(f, newCtx))

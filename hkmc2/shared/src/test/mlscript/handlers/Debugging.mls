@@ -17,7 +17,8 @@ fun f() =
     print of raiseUnhandledEffect()
   j / i
 //│ JS (unsanitized):
-//│ let f, getLocals2;
+//│ let f;
+//│ let getLocals2;
 //│ getLocals2 = function getLocals() {
 //│   let prev, thisInfo, arr, tmp;
 //│   prev = [];
@@ -27,7 +28,8 @@ fun f() =
 //│   return prev
 //│ };
 //│ f = function f() {
-//│   let i, j, k, scrut, tmp, tmp1, getLocals3, Cont$func$f$1, doUnwind;
+//│   let i, j, k, scrut, tmp, tmp1;
+//│   let getLocals3, Cont$func$f$1, doUnwind;
 //│   getLocals3 = function getLocals() {
 //│     let i1, j1, k1, prev, thisInfo, arr, tmp2;
 //│     prev = getLocals2();
@@ -161,8 +163,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:161:3)
-//│ 	at lambda_test (Debugging.mls:158:3)
+//│ 	at lambda (Debugging.mls:163:3)
+//│ 	at lambda_test (Debugging.mls:160:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -241,9 +243,9 @@ fun f() =
 f()
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 200)])]
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:234:3) with locals: j=200
+//│ > 	at f (Debugging.mls:236:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:236:3)
+//│ > 	at f (Debugging.mls:238:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:237:3) with locals: j=300
+//│ > 	at f (Debugging.mls:239:3) with locals: j=300
 //│ > [FnLocalsInfo("‹top level›", [LocalVarInfo("i", 100)]), FnLocalsInfo("f", [LocalVarInfo("j", 300)])]

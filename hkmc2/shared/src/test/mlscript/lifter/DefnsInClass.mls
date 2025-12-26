@@ -7,7 +7,8 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
-//│ let B1, A1, B$;
+//│ let A1;
+//│ let B1, B$;
 //│ B$ = function B$(isMut, A$instance, y) {
 //│   let tmp, tmp1;
 //│   if (isMut === true) {
@@ -73,7 +74,8 @@ class A with
     g
 (new A).x()
 //│ JS (unsanitized):
-//│ let g, A3, tmp1, g$;
+//│ let A3, tmp1;
+//│ let g, g$;
 //│ g$ = function g$(A$instance) {
 //│   return 2
 //│ };

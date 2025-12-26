@@ -1,12 +1,9 @@
 :js
 :flow
-:sf
 // :df
 
-//│ Flowed:
-//│   import ".../Predef.mjs" as Predef⁰
-//│ where
-//│     
+:global
+:sf
 
 
 class Foo with
@@ -44,10 +41,10 @@ f.a
 :re
 f.a.b
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.45: 	f.a.b
+//│ ║  l.42: 	f.a.b
 //│ ║        	^^^^^
 //│ ╟── Type `123` does not contain member 'b'
-//│ ║  l.13: 	  val a = 123
+//│ ║  l.10: 	  val a = 123
 //│ ╙──      	          ^^^
 //│ Flowed:
 //│   f⁰.a⁰.b‹?›
@@ -124,10 +121,10 @@ id(0)
 :e
 id(f).foo
 //│ ╔══[ERROR] Unresolved selection:
-//│ ║  l.125: 	id(f).foo
+//│ ║  l.122: 	id(f).foo
 //│ ║         	^^^^^^^^^
 //│ ╟── Type `0` does not contain member 'foo'
-//│ ║  l.116: 	id(0)
+//│ ║  l.113: 	id(0)
 //│ ╙──       	   ^
 //│ Flowed:
 //│   id²{ ~> id² }(f⁰)‹app⁶›.foo‹?›{ ~> Foo⁰.foo⁰(id²(f⁰)‹app⁶›)‹app⁷› }
@@ -143,7 +140,7 @@ id(f).foo
 :e
 fun test(g) = g.foo
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.144: 	fun test(g) = g.foo
+//│ ║  l.141: 	fun test(g) = g.foo
 //│ ╙──       	              ^^^^^
 //│ Flowed:
 //│   fun test⁰(g⁰) ‹flow:test⁰› = g⁰.foo‹?›
@@ -245,7 +242,7 @@ let foo =
 :re
 foo.test
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.246: 	foo.test
+//│ ║  l.243: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ Flowed:
 //│   foo¹.test‹?›
@@ -282,7 +279,7 @@ let foo =
 :re
 foo.test
 //│ ╔══[ERROR] Cannot access companion A from the context of this selection
-//│ ║  l.283: 	foo.test
+//│ ║  l.280: 	foo.test
 //│ ╙──       	^^^^^^^^
 //│ Flowed:
 //│   foo².test‹?›

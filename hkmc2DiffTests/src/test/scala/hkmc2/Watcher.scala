@@ -6,11 +6,13 @@ import scala.jdk.CollectionConverters.*
 import mlscript.utils.*, shorthands.*
 
 import better.files.*
-import io.methvin.better.files.*
-import io.methvin.watcher.{DirectoryWatcher, PathUtils}
-import io.methvin.watcher.hashing.{FileHash, FileHasher}
+import _root_.io.methvin
+import methvin.better.files.*
+import methvin.watcher.{DirectoryWatcher, PathUtils, DirectoryChangeEvent, DirectoryChangeListener}
+import methvin.watcher.hashing.{FileHash, FileHasher}
 import java.time.LocalDateTime
 import java.time.temporal._
+import io.FileSystem, io.PlatformPath.given
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
 // * Only the first path can contain tests. The other paths are only watched for source changes.
@@ -27,12 +29,14 @@ class Watcher(dirs: Ls[File]):
   val completionTime = mutable.Map.empty[File, LocalDateTime]
   val fileHasher = FileHasher.DEFAULT_FILE_HASHER
   
+  given cctx: CompilerCtx = CompilerCtx.fresh(FileSystem.default)
+  
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
     .paths(dirs.map(_.toJava.toPath).asJava)
     .fileHashing(false) // so that simple save events trigger processing eve if there's no file change
-    .listener(new io.methvin.watcher.DirectoryChangeListener {
-      def onEvent(event: io.methvin.watcher.DirectoryChangeEvent): Unit = try
+    .listener(new DirectoryChangeListener {
+      def onEvent(event: DirectoryChangeEvent): Unit = try
         // println(event)
         val hash = PathUtils.hash(fileHasher, event.path)
         val file = File(event.path)
@@ -60,7 +64,7 @@ class Watcher(dirs: Ls[File]):
         val et = event.eventType
         val count = event.count
         et match
-          case io.methvin.watcher.DirectoryChangeEvent.EventType.OVERFLOW => ???
+          case DirectoryChangeEvent.EventType.OVERFLOW => ???
           case _ =>
             et.getWatchEventKind.asInstanceOf[WatchEvent.Kind[Path]] match
               case StandardWatchEventKinds.ENTRY_CREATE => onCreate(file, count)
@@ -68,8 +72,9 @@ class Watcher(dirs: Ls[File]):
               case StandardWatchEventKinds.ENTRY_DELETE => onDelete(file, count)
         completionTime(event.path) = LocalDateTime.now()
       catch ex =>
-        System.err.println("Unexpected error in watcher: " + ex)
-        ex.printStackTrace()
+        // System.err.println("Unexpected error in watcher: " + ex)
+        // ex.printStackTrace()
+        System.err.println("Unexpected error in watcher (" + ex.getClass() + ")")
         watcher.close()
         throw ex
     })
@@ -96,9 +101,16 @@ class Watcher(dirs: Ls[File]):
       if isModuleFile
       then
         given Config = Config.default
-        MLsCompiler(preludePath, outputConsumer => outputConsumer(System.out.println)).compileModule(path)
+        MLsCompiler(
+          paths = new MLsCompiler.Paths:
+            val preludeFile = preludePath
+            val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
+            val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs",
+          mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
+        ).compileModule(path)
       else
         val dm = new MainDiffMaker(rootPath.toString, path, preludePath, predefPath, relativeName):
+          def cctx = Watcher.this.cctx
           override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
             exc.printStackTrace()
             super.unhandled(blockLineNum, exc)

@@ -16,14 +16,14 @@ abstract class MLsDiffMaker extends DiffMaker:
   val bbmlOpt: Command[?]
   
   val rootPath: Str // * Absolute path to the root of the project
-  val preludeFile: os.Path // * Contains declarations of JS builtins
-  val predefFile: os.Path // * Contains MLscript standard library definitions
-  val runtimeFile: os.Path = predefFile/os.up/"Runtime.mjs" // * Contains MLscript runtime definitions
-  val termFile: os.Path = predefFile/os.up/"Term.mjs" // * Contains MLscript runtime term definitions
-  val blockFile: os.Path = predefFile/os.up/"Block.mjs" // * Contains MLscript runtime block definitions
-  val shapeFile: os.Path = predefFile/os.up/"Shape.mjs" // * Contains MLscript runtime shape definitions
+  val preludeFile: io.Path // * Contains declarations of JS builtins
+  val predefFile: io.Path // * Contains MLscript standard library definitions
+  val runtimeFile: io.Path = predefFile.up / "Runtime.mjs" // * Contains MLscript runtime definitions
+  val termFile: io.Path = predefFile.up / "Term.mjs" // * Contains MLscript runtime term definitions
+  val blockFile: io.Path = predefFile.up / "Block.mjs" // * Contains MLscript runtime block definitions
+  val shapeFile: io.Path = predefFile.up / "Shape.mjs" // * Contains MLscript runtime shape definitions
   
-  val wd = file / os.up
+  val wd = file.up
   
   class DebugTreeCommand(name: Str) extends Command[Product => Str](name)(
     line => if line.contains("loc") then
@@ -79,7 +79,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val liftDefns = NullaryCommand("lift")
   val importQQ = NullaryCommand("qq")
   val stageCode = NullaryCommand("staging")
-  val dontRewriteWhile = NullaryCommand("dontRewriteWhile")
+  val rewriteWhile = NullaryCommand("rewriteWhile")
   val noTailRecOpt = NullaryCommand("noTailRec")
   
   def mkConfig: Config =
@@ -108,14 +108,14 @@ abstract class MLsDiffMaker extends DiffMaker:
       liftDefns = Opt.when(liftDefns.isSet)(LiftDefns()),
       stageCode = stageCode.isSet,
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
-      rewriteWhileLoops = !dontRewriteWhile.isSet,
+      rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
     )
   
   
   val importCmd = Command("import"): ln =>
     given Config = mkConfig
-    importFile(file / os.up / os.RelPath(ln.trim), verbose = silent.isUnset)
+    importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset)
   
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
@@ -185,14 +185,14 @@ abstract class MLsDiffMaker extends DiffMaker:
     super.init()
   
   
-  def importFile(file: os.Path, verbose: Bool)(using Config): Unit =
+  def importFile(file: io.Path, verbose: Bool)(using Config): Unit =
     
     // val raise: Raise = throw _
     given raise: Raise = d =>
       output(s"Error: $d")
       ()
     
-    val block = os.read(file)
+    val block = cctx.fs.read(file)
     val fph = new FastParseHelpers(block)
     val origin = Origin(file, 0, fph)
     
@@ -267,7 +267,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   private var blockNum = 0
   
   def processTrees(trees: Ls[syntax.Tree])(using Config, Raise): Unit =
-    val elab = Elaborator(etl, file / os.up, prelude)
+    val elab = Elaborator(etl, file.up, prelude)
     // val blockSymbol =
     //   semantics.TopLevelSymbol("block#"+blockNum)
     blockNum += 1

@@ -237,6 +237,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       topLevel: Bool
   )(using labels: Labels)(using LoweringCtx): Block = split match
     case Split.Let(sym, trm, tl) =>
+      LoweringCtx.loweringCtx.collectScopedSym(sym)
       term_nonTail(trm): r =>
         Assign(sym, r, lowerSplit(tl, cont, topLevel))
     case Split.Cons(Branch(scrut, pat, tail), restSplit) =>
@@ -249,6 +250,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         pat match
           case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
+            for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
             def k(ctorSym: ClassLikeSymbol, clsParams: Ls[TermSymbol])(st: Path): Block =
               val args = argsOpt.map(_.map(_._1)).getOrElse(Nil)
@@ -277,6 +279,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                 subTerm_nonTail(ctor)(k(mod, Nil))
           case FlatPattern.Tuple(len, inf) => mkMatch(Case.Tup(len, inf) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.Record(entries) =>
+            for (_, s) <- entries do LoweringCtx.loweringCtx.collectScopedSym(s)
             val objectSym = ctx.builtins.Object
             mkMatch( // checking that we have an object
               Case.Cls(objectSym, Value.Ref(BuiltinSymbol(objectSym.nme, false, false, true, false))),
@@ -315,112 +318,129 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
   def apply(split: Split)(k: Result => Block)(using Config, LoweringCtx): Block =
     this(split, `if`, N, k)
   
-  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using Config, LoweringCtx) =
-    var usesResTmp = false
-    // The symbol of the temporary variable for the result of the `if`-like term.
-    // It will be created in one of the following situations.
-    // 1. The continuation `k` is not a tail operation.
-    // 2. There are shared consequents in the `if`-like term.
-    // 3. The term is a `while` and the result is used.
-    lazy val l =
-      usesResTmp = true
-      new TempSymbol(t)
-    // The symbol for the loop label if the term is a `while`.
-    lazy val loopLabel = new TempSymbol(t)
-    lazy val f = new BlockMemberSymbol("while", Nil, false)
-    lazy val tSym = TermSymbol.fromFunBms(f, N)
-    val normalized = tl.scoped("ucs:normalize"):
-      normalize(inputSplit)(using VarSet())
-    tl.scoped("ucs:normalized"):
-      tl.log(s"Normalized:\n${normalized.prettyPrint}")
-    // Collect consequents that are shared in more than one branch.
-    given labels: Labels = createLabelsForDuplicatedBranches(normalized)
-    lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
-    lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
-    lazy val assignResult = (r: Result) => Assign(l, r, End())
-    val loopCont = if config.rewriteWhileLoops
-      then Return(Call(Value.Ref(f, S(tSym)), Nil)(true, true, false), false)
-      else Continue(loopLabel)
-    val cont =
-      if kw === `while` then
-        // If the term is a `while`, the action of `else` branches depends on
-        // whether the the enclosing split is at the top level or not.
-        R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else loopCont))
-      else if labels.isEmpty then
-        if k.isInstanceOf[TailOp] then
-          // If there are no shared consequents and the continuation is a tail
-          // operation, we can call it directly.
-          L(k)
-        else
-          // Otherwise, if the continuation is not a tail operation, we should
-          // save the result in a temporary variable and call the continuation
-          // in the end.
-          L(assignResult)
-      else
-        // When there are shared consequents, we are forced to save the result
-        // in the temporary variable nevertheless. Note that `cont` only gets
-        // called for non-shared consequents, so we should break to the end of
-        // the entire split after the assignment.
-        L(breakRoot)
-    // The main block contains the lowered split, where each shared consequent
-    // is replaced with a `Break` to the corresponding label.
-    val mainBlock =
-      val innermostBlock = lowerSplit(normalized, cont, topLevel = true)
-      // Wrap the main block in a labelled block for each shared consequent. The
-      // `rest` of each `Label` is the lowered consequent plus a `Break` to the
-      // end of the entire `if` term. Otherwise, it will fall through to the outer
-      // consequent, which is the wrong semantics.
-      val innerBlock: Block = labels.consequents match
-        case Nil => innermostBlock
-        case all @ (head :: tail) =>
-          def wrap(consequents: Ls[(Term, TempSymbol)]): Block =
-            consequents.foldRight(innermostBlock):
-              case ((term, label), innerBlock) =>
-                Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
-          // There is no need to generate `break` for the outermost split.
-          if labels.default.isEmpty then
-            Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
-          else wrap(all)
-      labels.default match
-        case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
-        case N => innerBlock
-    // If there are shared consequents, we need a wrap the entire block in a
-    // `Label` so that `Break`s in the shared consequents can jump to the end.
-    val body = if labels.isEmpty then mainBlock else
-      Label(rootBreakLabel, false, mainBlock, End())
-    // Embed the `body` into `Label` if the term is a `while`.
-    lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
-    val block =
-      if kw === `while` then
-        if config.rewriteWhileLoops then
-          val loopResult = TempSymbol(N)
-          val isReturned = TempSymbol(N)
-          val loopEnd: Path =
-            Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
-          val blk = blockBuilder
-            .assign(l, Value.Lit(Tree.UnitLit(false)))
-            .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false))
-            .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil)(true, true, false))
-          if summon[LoweringCtx].mayRet then
-            blk
-              .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
-                loopResult.asPath.asArg :: loopEnd.asArg :: Nil)(true, false, false))
-              .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
-                Return(Value.Ref(loopResult), false),
-                S(rest)
-              )
-              .end
+  private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
+    // if it's `while`, we always make sure that loop bodies are properly scoped nestedly
+    // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2588412258
+    val useNestedScoped = kw === `while`
+    (if useNestedScoped then LoweringCtx.nestScoped else outerCtx).givenIn:
+      var usesResTmp = false
+      // The symbol of the temporary variable for the result of the `if`-like term.
+      // It will be created in one of the following situations.
+      // 1. The continuation `k` is not a tail operation.
+      // 2. There are shared consequents in the `if`-like term.
+      // 3. The term is a `while` and the result is used.
+      lazy val l =
+        usesResTmp = true
+        val res = new TempSymbol(t)
+        outerCtx.collectScopedSym(res)
+        res
+      // The symbol for the loop label if the term is a `while`.
+      lazy val loopLabel = new TempSymbol(t)
+      lazy val f =
+        val res = new BlockMemberSymbol("while", Nil, false)
+        outerCtx.collectScopedSym(res)
+        res
+      lazy val tSym = TermSymbol.fromFunBms(f, N)
+      val normalized = tl.scoped("ucs:normalize"):
+        normalize(inputSplit)(using VarSet())
+      tl.scoped("ucs:normalized"):
+        tl.log(s"Normalized:\n${normalized.prettyPrint}")
+      // Collect consequents that are shared in more than one branch.
+      given labels: Labels = createLabelsForDuplicatedBranches(normalized)
+      lazy val rootBreakLabel = new TempSymbol(N, "split_root$")
+      lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
+      lazy val assignResult = (r: Result) => Assign(l, r, End())
+      // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
+      // as shouldRewriteWhile is always true when effect handler lowering is on
+      lazy val loopCont = if config.shouldRewriteWhile
+        then Return(Call(Value.Ref(f, S(tSym)), Nil)(true, true, false), false)
+        else Continue(loopLabel)
+      val cont =
+        if kw === `while` then
+          // If the term is a `while`, the action of `else` branches depends on
+          // whether the the enclosing split is at the top level or not.
+          R((topLevel: Bool) => (r: Result) => Assign(l, r, if topLevel then End() else loopCont))
+        else if labels.isEmpty then
+          if k.isInstanceOf[TailOp] then
+            // If there are no shared consequents and the continuation is a tail
+            // operation, we can call it directly.
+            L(k)
           else
-            blk.rest(rest)
+            // Otherwise, if the continuation is not a tail operation, we should
+            // save the result in a temporary variable and call the continuation
+            // in the end.
+            L(assignResult)
         else
-          Begin(Label(loopLabel, true, body, End()), rest)
-      else if labels.isEmpty && k.isInstanceOf[TailOp] then
-        body
-      else
-        Begin(body, rest)
-    scoped("ucs:lowered"):
-      log(s"Lowered:\n${block.showAsTree}")
-    block
+          // When there are shared consequents, we are forced to save the result
+          // in the temporary variable nevertheless. Note that `cont` only gets
+          // called for non-shared consequents, so we should break to the end of
+          // the entire split after the assignment.
+          L(breakRoot)
+      // The main block contains the lowered split, where each shared consequent
+      // is replaced with a `Break` to the corresponding label.
+      val mainBlock =
+        val innermostBlock = lowerSplit(normalized, cont, topLevel = true)
+        // Wrap the main block in a labelled block for each shared consequent. The
+        // `rest` of each `Label` is the lowered consequent plus a `Break` to the
+        // end of the entire `if` term. Otherwise, it will fall through to the outer
+        // consequent, which is the wrong semantics.
+        val innerBlock: Block = labels.consequents match
+          case Nil => innermostBlock
+          case all @ (head :: tail) =>
+            def wrap(consequents: Ls[(Term, TempSymbol)]): Block =
+              consequents.foldRight(innermostBlock):
+                case ((term, label), innerBlock) =>
+                  Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
+            // There is no need to generate `break` for the outermost split.
+            if labels.default.isEmpty then
+              Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
+            else wrap(all)
+        labels.default match
+          case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
+          case N => innerBlock
+      // If there are shared consequents, we need a wrap the entire block in a
+      // `Label` so that `Break`s in the shared consequents can jump to the end.
+      val body =
+        Scoped(
+          if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,
+          if labels.isEmpty then mainBlock else Label(rootBreakLabel, false, mainBlock, End()))
+      // Embed the `body` into `Label` if the term is a `while`.
+      lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
+      val block =
+        if kw === `while` then
+          // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
+          // as shouldRewriteWhile is always true when effect handler lowering is on
+          if config.shouldRewriteWhile then
+            val loopResult = TempSymbol(N)
+            val isReturned = TempSymbol(N)
+            outerCtx.collectScopedSym(loopResult)
+            outerCtx.collectScopedSym(isReturned)
+            val loopEnd: Path =
+              Select(Value.Ref(State.runtimeSymbol), Tree.Ident("LoopEnd"))(S(State.loopEndSymbol))
+            val blk = blockBuilder
+              .assign(l, Value.Lit(Tree.UnitLit(false)))
+              .define(FunDefn(N, f, tSym, PlainParamList(Nil) :: Nil, Begin(body, Return(loopEnd, false)))(forceTailRec = false))
+              .assign(loopResult, Call(Value.Ref(f, S(tSym)), Nil)(true, true, false))
+            if summon[LoweringCtx].mayRet then
+              blk
+                .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
+                  loopResult.asPath.asArg :: loopEnd.asArg :: Nil)(true, false, false))
+                .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
+                  Return(Value.Ref(loopResult), false),
+                  S(rest)
+                )
+                .end
+            else
+              blk.rest(rest)
+          else
+            Begin(Label(loopLabel, true, body, End()), rest)
+        else if labels.isEmpty && k.isInstanceOf[TailOp] then
+          body
+        else
+          Begin(body, rest)
+      scoped("ucs:lowered"):
+        log(s"Lowered:\n${block.showAsTree}")
+      block
 end Normalization
 
 object Normalization:

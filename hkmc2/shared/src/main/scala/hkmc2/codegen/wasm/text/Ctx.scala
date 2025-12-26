@@ -78,29 +78,16 @@ class FuncInfo(
   )
 
   def toWat: Document =
-    import Document.*
-
-    text("(func ") :: id.fold(empty)(_.toWat) :: text(" (type ") :: typeIdx.toWat :: text(")") ::
-      getSignatureType.toWat.surroundUnlessEmpty(text(" "))
-      ::
-      Document.nest(
+    doc"""(func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})${
+        getSignatureType.toWat.surroundUnlessEmpty(doc" ")
+      } #{ ${
         locals.map: p =>
-          text(s"(local $$${p._2} ") :: RefType.anyref.toWat :: text(")")
-        .mkDocument(break).surroundUnlessEmpty(break)
-          :: break
-          :: body.toWat
-          :: text(")")
-      )
-      ::
-      id.fold(empty): id =>
-        break
-          :: text(s"""(export "${id.id}" (func """)
-          :: id.toWat
-          :: text("))")
-          :: break
-          :: text("(elem declare func ")
-          :: id.toWat
-          :: text(")")
+          doc"(local $$${p._2} ${RefType.anyref.toWat})"
+        .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+      } # ${body.toWat} #} )${
+        id.fold(doc""): id =>
+          doc""" # (export "${id.id}" (func ${id.toWat})) # (elem declare func ${id.toWat})"""
+      }"""
 end FuncInfo
 
 /**
@@ -129,26 +116,16 @@ class TypeInfo(
     compType
   )
 
-  private def idDoc: Document =
-    import Document.*
-    id.fold(empty)(id => id.toWat :: text(" "))
+  private def idDoc: Document = id.fold(doc"")(_.toWat)
 
-  def toWat: Document =
-    import Document.*
-    compType match
-      case struct: StructType if struct.isSubtype =>
-        val parentsDoc = struct.parents.map(_.toWat).mkDocument(text(" "))
-        val parentsSuffix = if parentsDoc.isEmpty then empty else text(" ") :: parentsDoc
-        val structDoc = struct.copy(isSubtype = false).toWat
-        text("(type ")
-          :: idDoc
-          :: text("(sub")
-          :: parentsSuffix
-          :: text(" ")
-          :: structDoc
-          :: text("))")
-      case _ =>
-        text("(type ") :: idDoc :: compType.toWat :: text(")")
+  def toWat: Document = compType match
+    case struct: StructType if struct.isSubtype =>
+      val parentsDoc = struct.parents.optionIf(_.nonEmpty).fold(doc""): parents =>
+        parents.map(_.toWat).mkDocument(doc" ")
+      val structDoc = struct.copy(isSubtype = false).toWat
+      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} (sub${parentsDoc.surroundUnlessEmpty(doc" ")} ${structDoc}))"
+    case _ =>
+      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
 object Ctx:
@@ -348,9 +325,6 @@ class Ctx(
     wasmIntrinsicFuncs.getOrElseUpdate(name, createIntrinsic)
 
   def toWat: Document =
-    import Document.*
-    text("(module") :: nest(
-      break :: (types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(break) :: text(")")
-    )
+    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
 
 end Ctx

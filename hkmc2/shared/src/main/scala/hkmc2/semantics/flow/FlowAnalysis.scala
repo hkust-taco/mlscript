@@ -62,7 +62,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     t match
     
     case Resolved(trm, sym) =>
-      val _ = typeProd(trm)
+      val _ = typeProd(trm) // * Discard the base producer because it's already resolved and `sym` is the real one
       sym match
       case cls: ClassSymbol => P.Ctor(cls, Nil)(t)
       case cls: ModuleOrObjectSymbol => P.Ctor(cls, Nil)(t)
@@ -71,7 +71,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           constrainContextualCall(t).foreach: c =>
             collectedConstraints += ((src = t, c = c))
         P.Flow(ts.bms.get.flow)
-      // typeProd(trm)
       
     case Ref(sym) =>
       sym match
@@ -82,9 +81,9 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case bs: BuiltinSymbol =>
         bs.signature
       case bms: BlockMemberSymbol =>
-        
-        // TODO: what if this is not resolved yet?
-        
+        if bms.asTrm.isEmpty then raise:
+          ErrorReport:
+            msg"Cannot use non-term member ${bms.nme} in term position" -> t.toLoc :: Nil
         P.Flow(bms.flow)
       case _: Symbol =>
         log(s"/!\\ Unhandled symbol type: ${sym} (${sym.getClass.getSimpleName}) /!\\")
@@ -99,7 +98,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
           case sym: FlowSymbol =>
             constrain(rhs, C.Flow(sym))
         case t: TermDefinition =>
-          val sign_ty = t.sign.map(typeProd(_, insideSelAppChain = insideSelAppChain)) // TODO use sign_ty
+          val sign_ty = t.sign.map(typeType(_)) // TODO use sign_ty
           val ps = t.params.map(typeParamList)
           t.body.foreach: bod =>
             val bod_ty = typeProd(bod)
@@ -157,7 +156,6 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       P.Flow(sym)
     
     case sel @ Sel(pre, nme) =>
-      // selsToExpand += sel
       t.asResolvable.foreach: t =>
         constrainContextualCall(t).foreach: c =>
           collectedConstraints += ((src = t, c = c))
@@ -206,8 +204,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       val bod_t = typeProd(bod)
       P.Fun(pl_t, bod_t, Nil)
     
-    case FunTy(lhs, rhs, _) =>
-      P.Fun(typeCons(lhs), typeProd(rhs), Nil)
+    case ft: FunTy =>
+      P.Typ(typeType(ft))
     
     case Tup(fields) =>
       P.Tup(fields.map:
@@ -218,13 +216,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     
     // case _ => P.Flow(FlowSymbol("TODO"))
   
-  
-  def typeType(t: Term): Type =
+  /* 
+  def getType(t: Term): Type =
     t.resolvedTyp.getOrElse:
       raise:
         ErrorReport:
           msg"Cannot use this ${t.describe} as a type, as it could not be resolved" -> t.toLoc :: Nil
       Type.Error
+  */
   
   def typeParam(p: Param): C =
   trace[C](s"Typing param: ${p.showDbg}", post = res => s": ${res.showDbg}"):
@@ -241,17 +240,20 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     ps.params.map(typeParam)
     // ps.restParam.map(typeParam)
   
-  def typeCons(t: Term): Consumer =
-  trace[C](s"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
+  def typeType(t: Term): Type =
+  trace[Type](s"Typing consumer: ${t.showDbg}", post = res => s": ${res.showDbg}"):
     t match
-    case Ref(sym: VarSymbol) => C.Flow(sym)
-    case Ref(cls: ClassSymbol) => C.Ctor(cls, Nil)
-    case Ref(ts: TermSymbol) => ???
+    case Ref(sym: VarSymbol) => Type.Ref(sym, Nil) // unparameterized type variable
+    case Ref(cls: ClassSymbol) => Type.Ref(cls, Nil)
+    case Ref(ts: BlockMemberSymbol) =>
+      Type.Ref(ts.asTpe.getOrElse(TODO(t)), Nil)
     case Tup(fields) =>
-      C.Tup(
+      Type.Tup:
         fields.map:
-          case f: Fld => typeCons(f.term)
-        , N)
+          case f: Fld => typeType(f.term)
+          case Spd(eager, term) => (???, typeType(term))
+    case FunTy(lhs, rhs, _) =>
+      Type.Fun(typeType(lhs), typeType(rhs), N)
     case _ => TODO(t)
   
   val collectedConstraints: mutable.Stack[(src: Term, c: Constraint)] = mutable.Stack.empty

@@ -6,7 +6,7 @@ import utils.TraceLogger
 
 import syntax.Tree
 import syntax.Tree.{DummyTup, DummyApp}
-import syntax.{Fun, Ins, Mod, ImmutVal, MutVal}
+import syntax.{Fun, Ins, Mod, ImmutVal, MutVal, SpreadKind}
 import syntax.Keyword.{`if`}
 import Elaborator.State
 import Resolvable.*
@@ -76,13 +76,10 @@ object Resolver:
         
         case (lhs: Type.Ref, rhs: Type.Ref) =>
           lhs.sym === rhs.sym // TODO: subtyping for Ref
-          && (lhs.args.length == rhs.args.length)
+          && (lhs.args.sizeCompare(rhs.args.length) === 0)
           && (lhs.args zip rhs.args).forall((a, b) => a.lb =:= b.lb && a.ub =:= b.ub) // suppose invariant
         case (lhs: Type.Fun, rhs: Type.Fun) =>
-          (lhs.args.length == rhs.args.length)
-          && (lhs.args zip rhs.args).forall((a, b) => b <:< a) // contravariant
-          && (lhs.ret <:< rhs.ret) // covariant
-          && (lhs.eff, rhs.eff).match
+          rhs.args <:< lhs.args && lhs.ret <:< rhs.ret && (lhs.eff, rhs.eff).match
             case (N, N) => true
             case (S(le), S(re)) => le <:< re // covariant
             case _ => false
@@ -721,7 +718,7 @@ class Resolver(tl: TraceLogger)
               val args = as match
                 case Term.Tup(args) => args
                 case Term.CtxTup(args) => args
-                case spd => Spd(true, spd) :: Nil
+                case spd => Spd(SpreadKind.Eager, spd) :: Nil
               
               // The lhs of the App is already traversed by the recursive
               // `traverse` or `resolve` at the beginning.

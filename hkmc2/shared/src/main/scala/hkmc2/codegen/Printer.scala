@@ -55,6 +55,7 @@ object Printer:
       doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
     case Define(defn, rest) =>
       doc"define ${mkDocument(defn)} in # ${mkDocument(rest)}"
+    case Scoped(_, body) => mkDocument(body)
     case End("") => doc"end"
     case End(msg) => doc"end ${msg}"
     case _ => TODO(blk)

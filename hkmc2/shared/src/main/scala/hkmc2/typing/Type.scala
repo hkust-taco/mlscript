@@ -2,7 +2,9 @@ package hkmc2
 package typing
 
 import mlscript.utils.*, shorthands.*
+import syntax.SpreadKind
 import semantics.{TypeSymbol, VarSymbol}
+
 
 sealed trait TypeArg:
   def subst(f: PartialFunction[Type.Ref, Type]): this.type
@@ -17,12 +19,20 @@ sealed trait TypeArg:
     case ty: Type => ty
 end TypeArg
 
+
+object Type:
+  
+  object Tup:
+    def mk(xs: (Type | (SpreadKind, Type))*): Type =
+      Type.Tup(xs.toList)
+  
 enum Type extends TypeArg:
   case Error
   case Top
   case Bot
   case Ref(sym: TypeSymbol | VarSymbol, args: Ls[TypeArg])
-  case Fun(args: Ls[Type], ret: Type, eff: Opt[Type])
+  case Fun(args: Type, ret: Type, eff: Opt[Type])
+  case Tup(fields: Ls[Type | (SpreadKind, Type)])
   case Neg(t: Type)
   case Union(lhs: Type, rhs: Type)
   case Inter(lhs: Type, rhs: Type)
@@ -39,7 +49,7 @@ enum Type extends TypeArg:
       s"${sym.nme}[${args.map(_.show).mkString(", ")}]"
     case Fun(args, ret, eff) =>
       val effStr = eff.map(e => s" ! ${e.show}").getOrElse("")
-      s"(${args.map(_.show).mkString(", ")}) -> ${ret.show}$effStr"
+      s"(${args.show}) -> ${ret.show}$effStr" // TODO improve
     case Neg(t) =>
       s"¬${t.show}"
     case Union(l, r) =>
@@ -57,7 +67,7 @@ enum Type extends TypeArg:
       s"${sym}[${args.map(_.showDbg).mkString(", ")}]"
     case Fun(args, ret, eff) =>
       val effStr = eff.map(e => s" ! ${e.showDbg}").getOrElse("")
-      s"(${args.map(_.showDbg).mkString(", ")}) -> ${ret.showDbg}$effStr"
+      s"(${args.showDbg}) -> ${ret.showDbg}$effStr" // TODO improve
     case Neg(t) =>
       s"¬${t.showDbg}"
     case Union(l, r) =>
@@ -76,7 +86,7 @@ enum Type extends TypeArg:
       case ref: Ref =>
         Ref(ref.sym, ref.args.map(_.subst(f)))
       case Fun(args, ret, eff) =>
-        Fun(args.map(_.subst(f)), ret.subst(f), eff.map(_.subst(f)))
+        Fun(args.subst(f), ret.subst(f), eff.map(_.subst(f)))
       case Neg(t) =>
         Neg(t.subst(f))
       case Union(l, r) =>

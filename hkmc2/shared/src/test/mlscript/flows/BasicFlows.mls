@@ -1,14 +1,12 @@
 :js
 :flow
-:sf
 // :df
 // :todo
 // :d
 
-//│ Flowed:
-//│   import ".../Predef.mjs" as Predef⁰
-//│ where
-//│     
+:global
+:sf
+
 
 2
 //│ Flowed:
@@ -45,7 +43,7 @@ class Foo with
 :e
 fun test(x) = x.m
 //│ ╔══[ERROR] Cannot resolve selection
-//│ ║  l.46: 	fun test(x) = x.m
+//│ ║  l.44: 	fun test(x) = x.m
 //│ ╙──      	              ^^^
 //│ Flowed:
 //│   fun test⁰(x¹) ‹flow:test⁰› = x¹.m‹?›
@@ -102,7 +100,7 @@ f(1, 2)
 
 :fixme
 f(...a)
-//│ /!!!\ Uncaught error: scala.MatchError: Spd(true,Ref(a)) (of class hkmc2.semantics.Spd)
+//│ /!!!\ Uncaught error: scala.MatchError: Spd(Eager,Ref(a)) (of class hkmc2.semantics.Spd)
 
 
 fun przd[A, B](x: A) = x

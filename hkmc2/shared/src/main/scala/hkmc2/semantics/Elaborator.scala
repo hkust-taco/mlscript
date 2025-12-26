@@ -109,6 +109,24 @@ object Elaborator:
       case _: OuterCtx.LocalScope =>
         parent.fold(ReturnHandler.NotInFunction)(_.getRetHandler)
     
+    /** Computes the outermost context from which the current context can still be accessed.
+      * For instance, from [ctx2] here, [ctx1] is the outermost accessible base:
+      *     [ctx0]
+      *     fun foo =
+      *       [ctx1]
+      *       module Foo with
+      *         module Bar with
+      *           [ctx2]
+      * and the path is Foo :: Bar :: Nil.
+      * [ctx0] cannot access [ctx2] because there is a function (Function outer) on the way.
+      * The same would happen for:
+      *     [ctx0]
+      *     if ... then // LocalScope also blocks access to [ctx1] and [ctx2]
+      *       [ctx1]
+      *       module Foo with
+      *         module Bar with
+      *           [ctx2]
+     */
     lazy val outermostAcessibleBase: (Ctx, Ls[InnerSymbol]) =
       import OuterCtx.*
       outer match
@@ -213,6 +231,8 @@ object Elaborator:
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
+      object scope extends VirtualModule(assumeBuiltinMod("scope")):
+        val locally = assumeObject("locally")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
@@ -327,8 +347,8 @@ end Elaborator
 import Elaborator.*
 
 
-class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
-(using val raise: Raise, val state: State)
+class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
+(using val raise: Raise, val state: State, val cctx: CompilerCtx)
 extends Importer with ucs.SplitElaborator:
   import tl.*
   
@@ -840,9 +860,9 @@ extends Importer with ucs.SplitElaborator:
     case InfixApp(lhs, Keywrd(Keyword.`:`), rhs) =>
       Fld(FldFlags.empty, term(lhs), S(arg(rhs)))
     case Spread(Keywrd(Keyword.`..`), S(trm)) =>
-      Spd(false, arg(trm))
+      Spd(SpreadKind.Lazy, arg(trm))
     case Spread(Keywrd(Keyword.`...`), S(trm)) =>
-      Spd(true, arg(trm))
+      Spd(SpreadKind.Eager, arg(trm))
     case _ =>
       val t = arg(tree)
       var flags = FldFlags.empty

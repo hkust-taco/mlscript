@@ -48,19 +48,19 @@ sealed abstract class Pattern[+K <: Kind.Complete] extends AutoLocated:
       case _ => Or[L](this :: that :: Nil)
   
   // TODO: Associate with locations.
-  protected def children: List[Located] = this match
-    case Literal(lit) => lit :: Nil
-    case ClassLike(sym, arguments) => arguments.fold(Nil):
-      _.map((id, p) => p).toList
-    case Record(entries) => entries.values.toList
-    case Tuple(leading, spread) => leading ::: spread.fold(Nil):
-      case (_, middle, trailing) => middle :: trailing
-    case And(patterns) => patterns
-    case Or(patterns) => patterns
-    case Not(pattern) => pattern :: Nil
-    case Rename(pattern, name) => pattern :: Nil
-    case Extract(pattern, _, term) => pattern :: term :: Nil
-    case Synonym(pattern) => pattern.symbol :: pattern.arguments
+  protected def children: Vector[Located] = this match
+    case Literal(lit) => Vector.single(lit)
+    case ClassLike(sym, arguments) => arguments.fold(Vector.empty):
+      _.map((id, p) => p).toVector
+    case Record(entries) => entries.values.toVector
+    case Tuple(leading, spread) => leading.toVector ++ spread.fold(Vector.empty):
+      case (_, middle, trailing) => middle +: trailing.toVector
+    case And(patterns) => patterns.toVector
+    case Or(patterns) => patterns.toVector
+    case Not(pattern) => Vector.single(pattern)
+    case Rename(pattern, name) => Vector.single(pattern)
+    case Extract(pattern, _, term) => Vector.double(pattern, term)
+    case Synonym(pattern) => pattern.symbol +: pattern.arguments.toVector
   
   lazy val symbols: Ls[VarSymbol] = this match
     case Literal(lit) => Nil

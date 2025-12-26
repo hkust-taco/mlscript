@@ -88,16 +88,17 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f5, tmp5, Bad$, Good$, f$capture3;
+//│ let f6, tmp9;
+//│ let Bad1, Good1, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
-//│   let tmp6, tmp7;
+//│   let tmp10, tmp11;
 //│   if (isMut === true) {
-//│     tmp6 = new Good1.class();
+//│     tmp10 = new Good1.class();
 //│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Good1.class());
+//│     tmp10 = globalThis.Object.freeze(new Good1.class());
 //│   }
-//│   tmp7 = tmp6(x, y, z, f$capture4);
-//│   return tmp7
+//│   tmp11 = tmp10(x, y, z, f$capture4);
+//│   return tmp11
 //│ };
 //│ Good1 = function Good() {
 //│   return (x, y, z, f$capture4) => {
@@ -130,24 +131,24 @@ f().foo()
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   foo() {
-//│     let tmp6, tmp7;
+//│     let tmp10, tmp11;
 //│     this.z = 100;
-//│     tmp6 = this.x + this.y;
-//│     tmp7 = tmp6 + this.z;
-//│     return tmp7 + this.f$capture.w$capture$0
+//│     tmp10 = this.x + this.y;
+//│     tmp11 = tmp10 + this.z;
+//│     return tmp11 + this.f$capture.w$capture$0
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Good", []]; 
 //│ });
 //│ Bad$ = function Bad$(isMut, f$capture4) {
-//│   let tmp6, tmp7;
+//│   let tmp10, tmp11;
 //│   if (isMut === true) {
-//│     tmp6 = new Bad1.class();
+//│     tmp10 = new Bad1.class();
 //│   } else {
-//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│     tmp10 = globalThis.Object.freeze(new Bad1.class());
 //│   }
-//│   tmp7 = tmp6(f$capture4);
-//│   return tmp7
+//│   tmp11 = tmp10(f$capture4);
+//│   return tmp11
 //│ };
 //│ Bad1 = function Bad() {
 //│   return (f$capture4) => {
@@ -184,19 +185,20 @@ f().foo()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
-//│ f5 = function f() {
-//│   let x, y, z, tmp6, tmp7, capture;
+//│ f6 = function f() {
+//│   let x, y, z, w, tmp10, tmp11;
+//│   let capture;
 //│   capture = new f$capture3(null);
 //│   x = 1;
 //│   y = 10;
 //│   z = 10;
 //│   capture.w$capture$0 = 1000;
-//│   tmp6 = Bad$(false, capture);
-//│   tmp7 = tmp6.foo();
+//│   tmp10 = Bad$(false, capture);
+//│   tmp11 = tmp10.foo();
 //│   return Good$(false, x, y, z, capture)
 //│ };
-//│ tmp5 = f5();
-//│ runtime.safeCall(tmp5.foo())
+//│ tmp9 = f6();
+//│ runtime.safeCall(tmp9.foo())
 //│ = 10111
 
 :expect 2

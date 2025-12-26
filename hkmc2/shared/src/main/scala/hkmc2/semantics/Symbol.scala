@@ -137,9 +137,7 @@ abstract class Symbol(using State) extends Located:
     case (sym, S(_)) =>
       lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
   
-  override def equals(x: Any): Bool = x match
-    case that: Symbol => uid === that.uid
-    case _ => false
+  override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
   def subst(using SymbolSubst): Symbol
@@ -222,8 +220,8 @@ class BuiltinSymbol
   lazy val signature : semantics.flow.Producer =
     import typing.Type
     import typing.Type.*
-    val binaryType : Type = Fun(args = Ls(Top, Top), ret = Top, eff = N)
-    val unaryType : Type = Fun(args = Ls(Top), ret = Top, eff = N)
+    val binaryType : Type = Fun(args = Tup.mk(Top, Top), ret = Top, eff = N)
+    val unaryType : Type = Fun(args = Tup.mk(Top), ret = Top, eff = N)
     val nullaryType : Type = Top
     val typ = (binary, unary, nullary) match
       case (true, true, true) => Union(binaryType, Union(unaryType, nullaryType))
@@ -285,8 +283,6 @@ end BlockMemberSymbol
 
 sealed abstract class MemberSymbol(using State) extends Symbol:
   def nme: Str
-  // var defn: Opt[Defn] = N // FIXME still needed?
-  // def bms: Opt[BlockMemberSymbol] = defn.map(_.bsym) // FIXME still needed?
   def subst(using SymbolSubst): MemberSymbol
 
 
@@ -381,7 +377,6 @@ sealed trait InnerSymbol(using State) extends Symbol:
   val privatesScope: Scope = Scope.empty(Scope.Cfg.default) // * Scope for private members of this symbol
   val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
-  // def bms: Opt[BlockMemberSymbol]
 
 trait IdentifiedSymbol extends Symbol:
   val id: Tree.Ident
