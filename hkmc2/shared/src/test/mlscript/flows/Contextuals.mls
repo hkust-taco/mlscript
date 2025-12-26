@@ -9,18 +9,11 @@
 
 
 fun f(using x: Int) = x + 1
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: mlscript.utils.package$.die(package.scala:229)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$10(FlowAnalysis.scala:195)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ 	at: scala.Option.foreach(Option.scala:437)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:194)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+//│ Flowed:
+//│   fun f⁰ctx (x⁰: Int⁰{ ~> Int⁰ }) ‹flow:f⁰› = +(x⁰, 1)‹app⁰›
+//│ where
+//│     x⁰  <~  type Int
+//│     flow:f⁰  <~  ((type Int) -> app⁰)
 
 using Int = 42
 //│ Flowed:
@@ -34,103 +27,110 @@ f
 //│ Typing producer: { member:f }
 //│ | Typing producer: member:f‹term:f›
 //│ | | Typing producer: member:f
-//│ | | : flow:f‹729›
+//│ | | : flow:f‹555›
+//│ | | Attempting to constrain contextual call: member:f‹term:f›
 //│ | | Constraining contextual call member:f‹term:f›
-//│ | : flow:f‹729›
-//│ : flow:f‹729›
-//│ Handling constraint: using-x-flow‹730› <: type class:Int (from member:f‹term:f›)
-//│ | Solving: using-x-flow‹730› <: type class:Int   (Flow, Typ)
+//│ | : flow:f‹555›
+//│ : flow:f‹555›
+//│ Handling constraint: using-x-flow‹566› <: type class:Int (from member:f‹term:f›)
+//│ | Solving: using-x-flow‹566› <: type class:Int   (Flow, Typ)
 //│ | New flow using-x-flow ~> Typ(Ref(class:Int,List()))
 //│ Flowed:
-//│   f⁰{ ~> f⁰(instance$Ident(Int)⁰)‹app⁰› }
+//│   f⁰{ ~> f⁰(instance$Ident(Int)⁰)‹app¹› }
 //│ where
 //│     
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:120)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parentOrCfg = Left of Cfg:
-//│       escapeChars = true
-//│       useSuperscripts = false
-//│       includeZero = false
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:instance$Ident(Int) -> instance$Ident$_Int$_, member:Predef -> Predef, $runtime -> runtime, $block$res -> block$res1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
-//│ ║  l.33: 	f
-//│ ║        	^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.11: 	fun f(using x: Int) = x + 1
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:159)
-//│ ═══[RUNTIME ERROR] ReferenceError: f is not defined
-//│     at REPL13:1:28
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:593:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:922:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:419:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:613:22)
+//│ = 43
 
 fun id(x) = x
 //│ Flowed:
-//│   fun id⁰(x⁰) ‹flow:id⁰› = x⁰
+//│   fun id⁰(x¹) ‹flow:id⁰› = x¹
 //│ where
-//│     flow:id⁰  <~  ((x⁰) -> x⁰)
+//│     flow:id⁰  <~  ((x¹) -> x¹)
 
 class Foo with
   fun f(using x: Int) = x + 1
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: mlscript.utils.package$.die(package.scala:229)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$10(FlowAnalysis.scala:195)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ 	at: scala.Option.foreach(Option.scala:437)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:194)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+//│ Flowed:
+//│   class Foo {
+//│     fun f¹ctx (x²: Int⁰{ ~> Int⁰ }) ‹flow:f¹› = +(x², 1)‹app²›
+//│   }
+//│ where
+//│     x²  <~  type Int
+//│     flow:f¹  <~  ((type Int) -> app²)
 
 :df
 (new Foo).f
 //│ Typing producer: { new member:Foo.f }
 //│ | Typing producer: new member:Foo.f‹term:class:Foo.f›
 //│ | | Typing producer: new member:Foo.f‹member:f›
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: mlscript.utils.package$.die(package.scala:229)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$5(FlowAnalysis.scala:162)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ 	at: scala.Option.foreach(Option.scala:437)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:161)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+//│ | | | Attempting to constrain contextual call: new member:Foo.f‹member:f›
+//│ | | | Selection new member:Foo.f‹member:f› None
+//│ | | | Typing producer: new member:Foo
+//│ | | | : Foo
+//│ | | | RES f in new member:Foo.f‹member:f›
+//│ | | : flow:f‹587›
+//│ | | Attempting to constrain contextual call: new member:Foo.f‹term:class:Foo.f›
+//│ | | Constraining contextual call new member:Foo.f‹term:class:Foo.f›
+//│ | : flow:f‹587›
+//│ : flow:f‹587›
+//│ Handling constraint: using-x-flow‹594› <: type class:Int (from new member:Foo.f‹term:class:Foo.f›)
+//│ | Solving: using-x-flow‹594› <: type class:Int   (Flow, Typ)
+//│ | New flow using-x-flow ~> Typ(Ref(class:Int,List()))
+//│ Flowed:
+//│   new Foo⁰.f‹?›{ ~> new Foo⁰.f¹(instance$Ident(Int)⁰)‹app³› }
+//│ where
+//│     
+//│ = 43
 
 
 :df
 id(new Foo).f
 //│ Typing producer: { member:id(new member:Foo).f }
 //│ | Typing producer: member:id(new member:Foo).f
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached an unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:230)
-//│ 	at: mlscript.utils.package$.die(package.scala:229)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.constrainContextualCall(FlowAnalysis.scala:337)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3$$anonfun$5(FlowAnalysis.scala:162)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ 	at: scala.Option.foreach(Option.scala:437)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl$$anonfun$3(FlowAnalysis.scala:161)
-//│ 	at: hkmc2.utils.TraceLogger.trace(TraceLogger.scala:17)
-//│ 	at: hkmc2.semantics.flow.FlowAnalysis.typeProdImpl(FlowAnalysis.scala:217)
+//│ | | Attempting to constrain contextual call: member:id(new member:Foo).f
+//│ | | Unresolved contextual call resolution for member:id(new member:Foo).f due to insufficient targets
+//│ | | Selection member:id(new member:Foo).f None
+//│ | | Typing producer: member:id(new member:Foo)
+//│ | | | Attempting to constrain contextual call: member:id(new member:Foo)
+//│ | | | Typing producer: member:id‹term:id›
+//│ | | | | Typing producer: member:id
+//│ | | | | : flow:id‹575›
+//│ | | | | Attempting to constrain contextual call: member:id‹term:id›
+//│ | | | : flow:id‹575›
+//│ | | | Typing producer: [new member:Foo]
+//│ | | | | Typing producer: new member:Foo
+//│ | | | | : Foo
+//│ | | | : [Foo]
+//│ | | : app‹599›
+//│ | : ⋅f‹600›
+//│ : ⋅f‹600›
+//│ Handling constraint: flow:id‹575› <: ((Foo) -> app‹599›) (from member:id(new member:Foo))
+//│ | Solving: flow:id‹575› <: ((Foo) -> app‹599›)   (Flow, Fun)
+//│ | New flow flow:id ~> Fun(Tup(List((None,Ctor(class:Foo,List())))),Flow(app))
+//│ | Solving: ((x‹571›) -> x‹571›) <: ((Foo) -> app‹599›)   (Fun, Fun)
+//│ | Solving: [Foo] <: [x‹571›]   (Tup, Tup)
+//│ | Solving: Foo <: x‹571›   (Ctor, Flow)
+//│ | New flow Ctor(class:Foo,List()) ~> x
+//│ | Solving: x‹571› <: app‹599›   (Flow, Flow)
+//│ | New flow x ~> app
+//│ | Solving: Foo <: app‹599›   (Ctor, Flow)
+//│ | New flow Ctor(class:Foo,List()) ~> app
+//│ Handling constraint: app‹599› <: {f: ⋅f‹600›} (from member:id(new member:Foo).f)
+//│ | Solving: app‹599› <: {f: ⋅f‹600›}   (Flow, Sel)
+//│ | New flow app ~> Sel(Ident(f),Flow(⋅f))
+//│ | Solving: Foo <: {f: ⋅f‹600›}   (Ctor, Sel)
+//│ | Found immediate member member:f
+//│ | Attempting to constrain contextual call: member:id(new member:Foo).f
+//│ | Resolved contextual call resolution for member:id(new member:Foo).f to target ObjectMember(member:f)
+//│ | Constraining contextual call member:id(new member:Foo).f
+//│ | Solving: using-x-flow‹601› <: type class:Int   (Flow, Typ)
+//│ | New flow using-x-flow ~> Typ(Ref(class:Int,List()))
+//│ | Solving: flow:f‹587› <: ⋅f‹600›   (Flow, Flow)
+//│ | New flow flow:f ~> ⋅f
+//│ | Solving: ((type class:Int) -> app‹584›) <: ⋅f‹600›   (Fun, Flow)
+//│ | New flow Fun(Tup(List(Typ(Ref(class:Int,List()))),None),Flow(app),List(),false) ~> ⋅f
+//│ Resolved targets for member:id(new member:Foo).f: ObjectMember(member:f)
+//│ Flowed:
+//│   id⁰(new Foo⁰)‹app⁴›.f¹(instance$Ident(Int)⁰)‹app⁵›
+//│ where
+//│     
+//│ = 43

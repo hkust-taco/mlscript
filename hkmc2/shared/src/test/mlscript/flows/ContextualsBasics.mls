@@ -1,0 +1,154 @@
+:js
+:flow
+
+
+fun id(x) = x
+
+
+using Int = 42
+
+
+fun f(using x: Int) = x + 1
+
+:expect 43
+:sf
+f
+//│ Flowed:
+//│   f⁰{ ~> f⁰(instance$Ident(Int)⁰)‹app⁰› }
+//│ where
+//│     
+//│ = 43
+
+
+
+class Foo with
+  fun f(using x: Int) = x + 1
+module Foo with
+  fun g(foo: Foo)(using x: Int) = x + 2
+
+
+
+:expect 43
+:sf
+(new Foo).f
+//│ Flowed:
+//│   new Foo⁰.f‹?›{ ~> new Foo⁰.f¹(instance$Ident(Int)⁰)‹app¹› }
+//│ where
+//│     
+//│ = 43
+
+
+:todo
+:expect 44
+:sf
+(new Foo).g
+//│ Flowed:
+//│   new Foo⁰.g‹?›{ ~> Foo⁰.g⁰(new Foo⁰)‹app²› }
+//│ where
+//│     
+//│ ═══[RUNTIME ERROR] Expected: '44', got: 'fun'
+//│ = fun
+
+
+:expect 43
+:sf
+id(new Foo).f
+//│ Flowed:
+//│   id⁰(new Foo⁰)‹app³›.f¹(instance$Ident(Int)⁰)‹app⁴›
+//│ where
+//│     
+//│ = 43
+
+
+:todo
+:expect 44
+:sf
+id(new Foo).g
+//│ ╔══[ERROR] Ambiguous selection with multiple apparent targets
+//│ ║  l.66: 	id(new Foo).g
+//│ ║        	^^^^^^^^^^^^^
+//│ ╟── companion member g
+//│ ║  l.27: 	  fun g(foo: Foo)(using x: Int) = x + 2
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── companion member g
+//│ ║  l.27: 	  fun g(foo: Foo)(using x: Int) = x + 2
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ Flowed:
+//│   id⁰{ ~> id⁰ }(new Foo⁰)‹app⁵›.g‹?›
+//│ where
+//│     app⁵  <~  Foo  Foo
+//│     app⁵  ~>  {g: ⋅g⁰}
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'g' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] Expected: '44', got: 'undefined'
+
+
+:expect 43
+:sf
+let foo = new Foo
+foo.f
+//│ Flowed:
+//│   let foo⁰,
+//│   foo⁰ = new Foo⁰,
+//│   foo⁰.f¹(instance$Ident(Int)⁰)‹app⁶›
+//│ where
+//│     foo⁰  <~  Foo
+//│     foo⁰  ~>  {f: ⋅f⁰}
+//│ = 43
+//│ foo = Foo
+
+
+:todo
+:expect 44
+:sf
+let foo = new Foo
+foo.g
+//│ Flowed:
+//│   let foo¹,
+//│   foo¹ = new Foo⁰,
+//│   foo¹.g‹?›{ ~> Foo⁰.g⁰(foo¹)‹app⁷› }
+//│ where
+//│     foo¹  <~  Foo
+//│     foo¹  ~>  {g: ⋅g¹}
+//│ ═══[RUNTIME ERROR] Expected: '44', got: 'fun'
+//│ = fun
+//│ foo = Foo
+
+
+:expect 43
+:sf
+fun bar(foo) =
+  foo.f
+bar(foo)
+//│ Flowed:
+//│   fun bar⁰(foo²) ‹flow:bar⁰› = foo².f¹(instance$Ident(Int)⁰)‹app⁸›,
+//│   bar⁰{ ~> bar⁰ }(foo¹)‹app⁹›
+//│ where
+//│     foo¹  <~  Foo
+//│     foo¹  ~>  {g: ⋅g¹}
+//│     foo¹  ->  foo²
+//│     foo²  <~  Foo
+//│     foo²  ~>  {f: ⋅f¹}
+//│     flow:bar⁰  <~  ((foo²) -> ⋅f¹)
+//│     flow:bar⁰  ~>  ((foo¹) -> app⁹)
+//│ = 43
+
+
+:todo
+:expect 44
+:sf
+fun bar(foo) =
+  foo.g
+bar(foo)
+//│ Flowed:
+//│   fun bar¹(foo³) ‹flow:bar¹› = foo³.g‹?›{ ~> Foo⁰.g⁰(foo³)‹app¹⁰› },
+//│   bar¹{ ~> bar¹ }(foo¹)‹app¹¹›
+//│ where
+//│     foo¹  <~  Foo
+//│     foo¹  ~>  {g: ⋅g¹}
+//│     foo¹  ->  foo²  foo³
+//│     foo³  <~  Foo
+//│     foo³  ~>  {g: ⋅g²}
+//│     flow:bar¹  <~  ((foo³) -> ⋅g²)
+//│     flow:bar¹  ~>  ((foo¹) -> app¹¹)
+//│ ═══[RUNTIME ERROR] Expected: '44', got: 'fun'
+//│ = fun

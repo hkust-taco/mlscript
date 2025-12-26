@@ -156,9 +156,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       P.Flow(sym)
     
     case sel @ Sel(pre, nme) =>
-      t.asResolvable.foreach: t =>
-        constrainContextualCall(t).foreach: c =>
-          collectedConstraints += ((src = t, c = c))
+      constrainContextualCall(sel).foreach: c =>
+        collectedConstraints += ((src = sel, c = c))
       log(s"Selection ${sel.showDbg} ${sel.typ}")
       checkLDS(pre): pre_t =>
         sel.resolvedSym match
@@ -189,9 +188,8 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
             P.Ctor(sym, args_t)(t)
     
     case app @ App(lhs, rhs) =>
-      t.asResolvable.foreach: t =>
-        constrainContextualCall(t).foreach: c =>
-          collectedConstraints += ((src = t, c = c))
+      constrainContextualCall(app).foreach: c =>
+        collectedConstraints += ((src = app, c = c))
       checkLDS(lhs): pre_t =>
         val sym = app.resSym
         val c = C.Fun(typeProd(rhs), C.Flow(sym))
@@ -275,12 +273,12 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       sel.resolvedTargets match
         case ObjectMember(sym) :: Nil =>
           assert(sel.sym.isEmpty)
-          sel.expansion = S(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
+          sel.expand(S(sel.copy()(sym = S(sym), sel.typ, sel.originalCtx)))
         case CompanionMember(comp, sym) :: Nil =>
           val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
           val app = App(base, Tup(sel.prefix :: Nil)(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())
           log(s"Expansion: ${app.showDbg}")
-          sel.expansion = S(S(app))
+          sel.expand(S(app))
         case Nil =>
           // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
           if !sel.isErroneous then raise:
@@ -300,14 +298,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
       case CompanionMember(comp, sym) :: Nil =>
         val base = Sel(comp, Tree.Ident(sym.nme))(S(sym), N, N)
         log(s"Leading dot expansion: ${base.showDbg}")
-        sel.expansion = S(S(base))
+        sel.expand(S(base))
       case Nil =>
         // FIXME: actually allow that in dead code (use floodfill constraints from exported members to detect)
-        sel.expansion = S(S(Error))
+        sel.expand(S(Error))
         raise:
           ErrorReport:
             msg"Cannot resolve leading dot selection" -> sel.toLoc :: Nil
-      case targets => sel.expansion = S(S(Error)); raise:
+      case targets => sel.expand(S(Error)); raise:
         ErrorReport:
           msg"Ambiguous selection with multiple apparent targets:" -> sel.toLoc
           :: targets.map:
@@ -315,9 +313,14 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
     contextualCallsToExpand.foreach: t =>
       expandContextualCall(t.expanded.asResolvable.getOrElse(die))
   
-  def constrainContextualCall(t: Resolvable): Ls[Constraint] = t.resolvedSym match
-    case S(sym: TermSymbol) =>
+  /**
+   * For a possibly call to a contextual function, create a list of constraints to ensure that the
+   * contextual parameters are properly supplied.
+  */
+  def constrainContextualCall(t: Resolvable): Ls[Constraint] =
+    def constrain(sym: TermSymbol): Ls[Constraint] =
       val defn = sym.defn.getOrElse(die)
+      // TODO: This checks only the head param list. Check all param lists.
       defn.params.headOption match
         case S(ps) if ps.flags.ctx =>
           log(s"Constraining contextual call ${t.showDbg}")
@@ -334,9 +337,43 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
               val cons = C.Typ(typ)
               Constraint(prod, cons)
           constraints
-        case _ =>
+        case _ => Nil
+    
+    log(s"Attempting to constrain contextual call: ${t.showDbg}")
+    // If t is already resolved by the basic resolution phase, 
+    // simply use the resolved symbol; otherwise, use the flow information.
+    t.resolvedSym match
+      case S(sym: TermSymbol) => constrain(sym)
+      case S(sym) => Nil
+      
+      case N => t match // use flow info
+        
+        case t: Sel => t.resolvedTargets match
+          case target :: Nil => 
+            log(s"Resolved contextual call resolution for ${t.showDbg} to target ${target}")
+            // TODO: It is really odd that SelectionTarget carries a MemberSymbol instead of a DefinitionSymbol...
+            target match
+            case SelectionTarget.ObjectMember(sym: TermSymbol) =>
+              constrain(sym)
+            case SelectionTarget.ObjectMember(sym: BlockMemberSymbol) =>
+              sym.asTrm.map(constrain(_)).getOrElse(Nil)
+            case SelectionTarget.ObjectMember(sym) =>
+              Nil
+            case SelectionTarget.CompanionMember(t, sym: TermSymbol) =>
+              constrain(sym)
+            case SelectionTarget.CompanionMember(t, sym: BlockMemberSymbol) =>
+              sym.asTrm.map(constrain(_)).getOrElse(Nil)
+            case SelectionTarget.CompanionMember(t, sym) =>
+              Nil
+          case target :: targets => // ambiguous targets? but does it raise error?
+            log(s"Unresolved contextual call resolution for ${t.showDbg} due to ambiguous targets ${targets.mkString(", ")}")
+            Nil // TODO
+          case Nil => // insufficient targets
+            log(s"Unresolved contextual call resolution for ${t.showDbg} due to insufficient targets")
+            Nil
+        
+        case t => // unsupported form
           Nil
-    case _ => die
   
   def expandContextualCall(t: Resolvable): Unit = t.resolvedContextuals match
     case S(cs) => 
@@ -349,7 +386,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
         cs.map: 
           case (typ, placeholder) => PlainFld(placeholder.solution.get)
       )(Tree.DummyTup))(Tree.DummyApp, N, FlowSymbol.app())))
-    case N => ()
+    case N => die
   
   def getCompanionMember(name: Str, oc: Opt[Ctx], sym: Symbol): Opt[(Term, BlockMemberSymbol)] = sym match
     case ms: ModuleOrObjectSymbol => ms.defn.flatMap: d =>
@@ -452,6 +489,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   sel.trm.resolvedTargets ::= SelectionTarget.CompanionMember(path, memb)
                   log(s"Found member ${memb}")
                   toSolve.push(Constraint(P.Flow(memb.flow), C.Flow(trm.resSym)))
+                  constrainContextualCall(sel.trm).foreach(toSolve.push(_))
                 case _ =>
                   log(s"Could not find member ${trm.nme.name} in ${sym}")
               case _ => log("Unhandled RHS for leading dot selections")
@@ -467,6 +505,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                   sel.trm.resolvedTargets ::= SelectionTarget.ObjectMember(memb)
                   log(s"Found immediate member ${memb}")
                   toSolve.push(Constraint(P.Flow(memb.flow), sel.res))
+                  constrainContextualCall(sel.trm).foreach(toSolve.push(_))
                 case S(memb) => TODO(memb)
                 case N =>
                   d.moduleCompanion match
@@ -486,6 +525,7 @@ class FlowAnalysis(using tl: TraceLogger)(using Raise, State, Ctx):
                             case memb: BlockMemberSymbol => P.Flow(memb.flow)
                             case _ => TODO(memb)
                           toSolve.push(Constraint(newlhs, C.Fun(P.Tup((N, lhs) :: Nil), sel.res)))
+                          constrainContextualCall(sel.trm).foreach(toSolve.push(_))
                         case N => raise:
                           sel.trm.isErroneous = true
                           ErrorReport:

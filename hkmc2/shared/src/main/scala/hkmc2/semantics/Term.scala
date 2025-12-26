@@ -138,6 +138,8 @@ sealed trait ResolvableImpl:
    * `duplicate` method if it appears in its own expansion.
    *
    * This method is only supposed to be called by Resolver. 
+   * 
+   * The expansion term inherits all flow-resolved information from this term.
    */
   private[semantics] def expand(expansion: Opt[Term]): this.type =
     // `expansion.isDefined`: Ideally, if a term is already expanded,
@@ -151,6 +153,14 @@ sealed trait ResolvableImpl:
       lastWords(s"Cannot expand the term ${this.showDbg} multiple times (to different expansions ${expansion.get.showDbg}).")
     
     this.expansion = S(expansion)
+    
+    expansion match
+    case S(r: Resolvable) =>
+      // Propagate flow-resolved information to the expansion
+      r.ictx = this.ictx
+      r.resolvedContextuals = this.resolvedContextuals
+    case _ => ()
+    
     this
     
   def resolve: this.type = expand(N)
