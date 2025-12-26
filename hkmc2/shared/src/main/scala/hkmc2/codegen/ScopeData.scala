@@ -12,6 +12,8 @@ import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
+import hkmc2.ScopeData.ScopedInfo
+import hkmc2.ScopeData.LifterMetadata
 
 object ScopeData:
   opaque type ScopeUID = BigInt
@@ -20,20 +22,22 @@ object ScopeData:
     def make: ScopeUID = underlying.make
   
   type ScopedInfo = DefinitionSymbol[?] | ScopeUID | Unit
+
+  case class LifterMetadata(ignored: Set[ScopedInfo])
   
   // These cannot be hashed
   enum ScopedObject:
     case Top(b: Block) // b may be a scoped block, in which case, its variables represent the top-level variables.
     case Class(cls: ClsLikeDefn)
     case Companion(comp: ClsLikeBody, par: ClsLikeDefn)
-    case Func(fun: FunDefn)
+    case Func(fun: FunDefn, isMethod: Bool)
     case ScopedBlock(uid: ScopeUID, block: Scoped)
     
     def toInfo: ScopedInfo = this match
       case Top(_) => ()
       case Class(cls) => cls.isym
       case Companion(comp, par) => comp.isym
-      case Func(fun) => fun.dSym
+      case Func(fun, _) => fun.dSym
       case ScopedBlock(uid, block) => uid
     
     // Locals defined by a scoped object.
@@ -53,7 +57,7 @@ object ScopeData:
         paramsSet ++ auxSet ++ cls.privateFields + cls.isym
       case Companion(comp, par) =>
         comp.privateFields.toSet + comp.isym
-      case Func(fun) => fun.params.flatMap: p =>
+      case Func(fun, _) => fun.params.flatMap: p =>
           p.params.map(_.sym)
         .toSet
       case ScopedBlock(_, block) => block.syms.toSet
@@ -63,14 +67,36 @@ object ScopeData:
   class NestedScopeTree(val root: ScopeNode):
     val nodesMap: Map[ScopedInfo, ScopeNode] = root.allChildNodes.map(n => n.obj.toInfo -> n).toMap
   
-  case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode]):
+  case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode])(using metadata: LifterMetadata):
+    
     lazy val allParents: List[ScopedObject] = parent match
       case Some(value) => this.obj :: value.allParents
       case None => this.obj :: Nil
+    
     // note: includes itself
-    lazy val allChildNodes : List[ScopeNode] = this :: children.flatMap(_.allChildNodes)
+    lazy val allChildNodes: List[ScopeNode] = this :: children.flatMap(_.allChildNodes)
     lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
-class ScopeData(b: Block)(using State):
+    
+    // does not include variables introduced by itself
+    lazy val existingVars: Set[Local] = parent match
+      case Some(value) => value.existingVars ++ value.obj.definedLocals
+      case None => Set.empty
+    
+    def isLifted: Bool = obj match
+      case _: ScopedObject.ScopedBlock => false
+      case ScopedObject.Func(_, true) => false
+      case _ if metadata.ignored.contains(obj.toInfo) => false
+      case _ => true
+
+    // finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
+    lazy val firstLiftedParent: ScopedObject =
+      if !isLifted then
+        parent match
+        case Some(value) => value.firstLiftedParent
+        case None => obj // unreachable
+      else obj
+    
+class ScopeData(b: Block)(using State, LifterMetadata):
   import ScopeData.*
   
   private val fresh = FreshUID()
@@ -96,7 +122,7 @@ class ScopeData(b: Block)(using State):
         objs ::= ScopedObject.ScopedBlock(fresh.make, s)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn): Unit =
-      objs ::= ScopedObject.Func(fun)
+      objs ::= ScopedObject.Func(fun, false)
     override def applyDefn(defn: Defn): Unit = defn match
       case f: FunDefn => applyFunDefn(f)
       case c: ClsLikeDefn =>
@@ -119,13 +145,13 @@ class ScopeData(b: Block)(using State):
         finder.applyBlock(cls.ctor)
       case ScopedObject.Companion(comp, par) =>
         finder.applyBlock(comp.ctor)
-      case ScopedObject.Func(fun) =>
+      case ScopedObject.Func(fun, _) =>
         finder.applyBlock(fun.body)
       case ScopedObject.ScopedBlock(_, block) =>
         finder.applyBlock(block)
     val mtdObjs = obj match
-      case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_))
-      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_))
+      case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_, true))
+      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, true))
       case _ => Nil
     val children = (mtdObjs ::: finder.objs).map(makeScopeTreeRec)
     val retNode = ScopeNode(obj, N, children)

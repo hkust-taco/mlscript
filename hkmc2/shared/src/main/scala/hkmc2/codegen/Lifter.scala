@@ -116,8 +116,6 @@ object Lifter:
   */
 class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
   import Lifter.*
-  
-  val scopeData = ScopeData(blk)
 
   /**
     * The context of the class lifter. One can create an empty context using `LifterCtx.empty`.
