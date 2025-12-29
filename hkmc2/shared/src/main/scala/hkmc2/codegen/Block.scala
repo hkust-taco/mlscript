@@ -465,7 +465,7 @@ sealed abstract class Defn:
   lazy val freeVars: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVars
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVars
         ++ ctor.freeVars ++ methods.flatMap(_.freeVars) ++ stat.iterator.flatMap(_.freeVars)
@@ -474,7 +474,7 @@ sealed abstract class Defn:
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym
     case ValDefn(tsym, sym, rhs) => rhs.freeVarsLLIR
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, 
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVarsLLIR
         ++ ctor.freeVarsLLIR ++ methods.flatMap(_.freeVarsLLIR) ++ stat.iterator.flatMap(_.freeVarsLLIR)
@@ -556,6 +556,7 @@ final case class ClsLikeDefn(
     owner: Opt[InnerSymbol],
     isym: DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol,
     sym: BlockMemberSymbol,
+    ctorSym: Opt[TermSymbol],
     k: syntax.ClsLikeKind,
     paramsOpt: Opt[ParamList],
     auxParams: List[ParamList],

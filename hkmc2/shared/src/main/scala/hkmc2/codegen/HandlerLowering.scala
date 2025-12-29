@@ -724,6 +724,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N, // no owner
       h.cls,
       BlockMemberSymbol(h.cls.id.name, Nil),
+      N,
       syntax.Cls,
       N, Nil,
       S(h.par), handlerMtds, Nil, Nil,
@@ -949,6 +950,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       N, // no owner
       clsSym,
       BlockMemberSymbol(clsSym.nme, Nil),
+      N,
       syntax.Cls,
       N,
       PlainParamList({
