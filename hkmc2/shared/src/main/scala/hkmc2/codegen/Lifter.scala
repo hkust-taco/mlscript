@@ -371,82 +371,59 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val liftedDefn: T,
     val extraDefns: List[Defn],
   )
-
-  private case class LifterMetadata(
-    unliftable: Set[BlockMemberSymbol],
-    modules: List[ClsLikeDefn],
-    objects: List[ClsLikeDefn],
-    firstClsFns: Set[BlockMemberSymbol]
-  )
+  
+  type ClsLikeSym = DefinitionSymbol[? <: ClassDef | ModuleOrObjectDef]
+  type ClsSym = DefinitionSymbol[? <: ClassLikeDef]
+  type ModuleOrObjSym = DefinitionSymbol[? <: ModuleOrObjectDef]
+  
+  case class LifterMetadata(
+    unliftable: Set[ClsSym | ModuleOrObjSym],
+    modules: Set[ModuleOrObjSym],
+    firstClsFns: Set[TermSymbol]
+  ):
+    def ++(that: LifterMetadata) =
+      LifterMetadata(unliftable ++ that.unliftable, modules ++ that.modules, firstClsFns ++ that.firstClsFns)
+  object LifterMetadata:
+    def empty = LifterMetadata(Set.empty, Set.empty, Set.empty)
   
   // d is a top-level definition
   // returns (ignored classes, modules, objects)
-  private def createMetadata(d: Defn, ctx: LifterCtx): LifterMetadata =
-    var ignored: Set[BlockMemberSymbol] = Set.empty
-    var firstClsFns: Set[BlockMemberSymbol] = Set.empty
-    var unliftable: Set[BlockMemberSymbol] = Set.empty
-    var clsSymToBms: Map[Local, BlockMemberSymbol] = Map.empty
-    var modules: List[ClsLikeDefn] = Nil
-    var objects: List[ClsLikeDefn] = Nil
-    var extendsGraph: Set[(BlockMemberSymbol, BlockMemberSymbol)] = Set.empty
+  private def createMetadata(s: ScopeNode): LifterMetadata =
+    var ignored: Set[ClsSym | ModuleOrObjSym] = Set.empty
+    var firstClsFns: Set[TermSymbol] = Set.empty
+    val nestedScopeNodes: List[ScopeNode] = s.allChildNodes
+    val nestedScopes: Set[ScopedInfo] = nestedScopeNodes.map(_.obj.toInfo).toSet - s.obj.toInfo
     
-    d match
-      case c @ ClsLikeDefn(k = syntax.Mod) => modules ::= c
-      case c @ ClsLikeDefn(k = syntax.Obj) => objects ::= c
-      case _ => ()
+    // hack: ClassLikeSymbol does not extend DefinitionSymbol directly, so we must
+    // use a map to convert 
     
-    // search for modules
-    new BlockTraverser:
-      applyDefn(d)
-      override def applyDefn(defn: Defn): Unit =
-        if defn === d then 
-          super.applyDefn(defn)
-        else 
-          defn match
-            case c: ClsLikeDefn =>
-              clsSymToBms += c.isym -> c.sym
-              
-              if c.companion.isDefined then // TODO: refine handling of companions
-                raise(WarningReport(
-                  msg"Modules are not yet lifted." -> N :: Nil,
-                  N, Diagnostic.Source.Compilation
-                ))
-                modules ::= c
-                ignored += c.sym
-              else if c.k is syntax.Obj then
-                objects ::= c
-            case _ => ()
-          super.applyDefn(defn)
+    val moduleObjs = nestedScopeNodes.collect:
+      case ScopeNode(obj = o: ScopedObject.Companion) => o
     
-    // search for defns nested within a top-level module, which are unnecessary to lift
-    def inModuleDefns(d: Defn): Set[BlockMemberSymbol] =
-      val nested = ctx.nestedDefns(d.sym)
-      nested.map(_.sym).toSet ++ nested.flatMap: nested =>
-        if modules.contains(nested.sym) then inModuleDefns(nested) else Set.empty
+    // TODO: refine handling of companions
+    for m <- moduleObjs do
+      ignored += m.par.isym
+      ignored += m.comp.isym
+      raise(WarningReport(
+        msg"Modules are not yet lifted." -> m.comp.isym.toLoc :: Nil,
+        N, Diagnostic.Source.Compilation
+      ))
     
-    val isMod = d match
-      case c: ClsLikeDefn => c.companion.isDefined // TODO: refine handling of companions
-      case _ => false
-    
-    val inModTopLevel = if isMod then inModuleDefns(d) else Set.empty
-    ignored ++= inModTopLevel
+    val modules: Set[ModuleOrObjSym] = moduleObjs.map(_.comp.isym).toSet
+    var extendsGraph: Set[(ClsSym, ClsSym)] = Set.empty
     
     // search for unliftable classes and build the extends graph
-    val clsSyms = clsSymToBms.values.toSet
     new BlockTraverser:
-      applyDefn(d)
+      this.applyScopedObject(s.obj)
       override def applyCase(cse: Case): Unit =
         cse match
-          case Case.Cls(cls, path) =>
-            clsSymToBms.get(cls) match
-            case Some(value) if !ignored.contains(value) => // don't generate a warning if it's already ignored
+          case Case.Cls(cls: (ClassSymbol | ModuleOrObjectSymbol), _) =>
+            if nestedScopes.contains(cls) && !ignored.contains(cls) then // don't generate a warning if it's already ignored
               raise(WarningReport(
-                msg"Cannot yet lift class/module `${value.nme}` as it is used in an instance check." -> N :: Nil,
+                msg"Cannot yet lift class/module `${cls.nme}` as it is used in an instance check." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
-              ignored += value
-              unliftable += value
-            case _ => ()
+              ignored += cls
           case _ => ()
       
       override def applyResult(r: Result): Unit = r match
@@ -474,17 +451,14 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
           parentPath match
             case None => ()
             case Some(path) if isHandlerClsPath(path) => ()
-            case Some(Select(RefOfBms(s, _), Tree.Ident("class"))) =>
-              if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
-            case Some(RefOfBms(s, _)) =>
-              if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
-            case _ if !ignored.contains(defn.sym) =>
+            case Some(RefOfBms(_, S(s: ClassSymbol))) =>
+              if nestedScopes.contains(s) then extendsGraph += (s -> isym)
+            case _ if !ignored.contains(isym) =>
               raise(WarningReport(
                 msg"Cannot yet lift definition `${sym.nme}` as it extends an expression." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
               ))
-              ignored += defn.sym
-              unliftable += defn.sym
+              ignored += isym
             case _ => ()
           paramsOpt.foreach(applyParamList)
           auxParams.foreach(applyParamList)
@@ -501,25 +475,24 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case _ => false
       
       override def applyValue(v: Value): Unit = v match
-        case RefOfBms(l, _) if clsSyms.contains(l) && !modOrObj(ctx.defns(l)) =>
+        case RefOfBms(_, S(l: ClassSymbol)) if nestedScopes.contains(l) =>
           raise(WarningReport(
             msg"Cannot yet lift class `${l.nme}` as it is used as a first-class class." -> N :: Nil,
             N, Diagnostic.Source.Compilation
           ))
           ignored += l
-          unliftable += l
-        case RefOfBms(l, _) if ctx.defns.contains(l) && isFun(ctx.defns(l)) =>
+        case RefOfBms(_, S(t: TermSymbol)) =>
           // naked reference to a function definition
-          firstClsFns += l
+          firstClsFns += t
         case _ => super.applyValue(v)
     
     // analyze the extends graph
     val extendsEdges = extendsGraph.groupBy(_._1).map:
         case (a, bs) => a -> bs.map(_._2)
       .toMap
-    var newUnliftable: Set[BlockMemberSymbol] = Set.empty
+    var newUnliftable: Set[ClsSym] = Set.empty
     // dfs starting from unliftable classes
-    def dfs(s: BlockMemberSymbol): Unit =
+    def dfs(s: ClsSym): Unit =
       for 
         edges <- extendsEdges.get(s)
         b <- edges if !newUnliftable.contains(b) && !ignored.contains(b) 
@@ -530,10 +503,10 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
         ))
         newUnliftable += b
         dfs(b)
-    for s <- ignored do
+    for case s: ClsLikeSym <- ignored do
       dfs(s)
     
-    LifterMetadata(ignored ++ newUnliftable, modules.toList, objects.toList, firstClsFns)
+    LifterMetadata(ignored ++ newUnliftable, modules, firstClsFns)
   
   extension (b: Block)
     private def floatOut(ctx: LifterCtx) =
@@ -1261,9 +1234,32 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
       Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(forceTailRec = f.forceTailRec), captureCls :: newDefns)
 
   end liftDefnsInFn
+  
+  given ignoredScopes: IgnoredScopes = IgnoredScopes(N)
+  val data = ScopeData(blk)
+  val metadata = data.root.children.foldLeft(LifterMetadata.empty)(_ ++ createMetadata(_))
+  
+  def asDSym(s: ClsSym | ModuleOrObjSym): DefinitionSymbol[?] = s
+  ignoredScopes.ignored = S(metadata.unliftable.map(asDSym))
+  
+  val usedVars = UsedVarAnalyzer(blk, data, handlerPaths)
+  
+  def printMap[T, V](m: Map[T, V]) =
+    println("Map(")
+    for case k -> v <- m do
+      print("  ")
+      print(k)
+      print(" -> ")
+      println(v)
+    println(")")
+  
+  println("accesses")
+  printMap(usedVars.accessMap)
+  println("usedVars")
+  printMap(usedVars.reqdCaptures)
 
   // top-level
-  def transform =
+  def transform = blk
     /*
     // this is already done once in the lowering, but the handler lowering adds lambdas currently
     // so we need to desugar them again
@@ -1317,4 +1313,3 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
         case _ => super.applyBlock(b)
     walker1.applyBlock(blk_)
     */
-    ???

@@ -5,6 +5,7 @@ import utils.*
 
 import hkmc2.codegen.*
 import hkmc2.semantics.*
+import hkmc2.ScopeData.*
 import hkmc2.semantics.Elaborator.State
 
 import hkmc2.syntax.Tree
@@ -12,8 +13,6 @@ import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
-import hkmc2.ScopeData.ScopedInfo
-import hkmc2.ScopeData.LifterMetadata
 
 object ScopeData:
   opaque type ScopeUID = BigInt
@@ -23,7 +22,10 @@ object ScopeData:
   
   type ScopedInfo = DefinitionSymbol[?] | ScopeUID | Unit
 
-  case class LifterMetadata(ignored: Set[ScopedInfo])
+  // ScopeData requires the set of ignored scopes to compute certain things, but
+  // the lifter requires the scope tree to generate the metadata. To solve this,
+  // we generate the scope tree then populate the metadata later.
+  case class IgnoredScopes(var ignored: Opt[Set[ScopedInfo]])
   
   // These cannot be hashed
   enum ScopedObject:
@@ -62,12 +64,37 @@ object ScopeData:
         .toSet
       case ScopedBlock(_, block) => block.syms.toSet
     
-  
+  extension (traverser: BlockTraverser)
+    def applyScopedObject(obj: ScopedObject) = 
+      extension (s: Symbol) def traverse =
+        traverser.applySymbol(s)
+      obj match
+      case ScopedObject.Top(b) => traverser.applyBlock(b)
+      case ScopedObject.Class(ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+          privateFields, publicFields, preCtor, ctor, mod, bufferable))
+      =>
+        // do not traverse the companion
+        own.foreach(_.traverse)
+        isym.traverse
+        sym.traverse
+        paramsOpt.foreach(traverser.applyParamList)
+        auxParams.foreach(traverser.applyParamList)
+        parentPath.foreach(traverser.applyPath)
+        methods.foreach(traverser.applyFunDefn)
+        privateFields.foreach(_.traverse)
+        publicFields.foreach: f =>
+          f._1.traverse; f._2.traverse
+        traverser.applySubBlock(preCtor)
+        traverser.applySubBlock(ctor)
+      case ScopedObject.Companion(comp, par) => traverser.applyClsLikeBody(comp)
+      case ScopedObject.Func(fun, isMethod) => traverser.applyFunDefn(fun)
+      case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
+    
   // A simple tree data structure representing the nesting relation of definitions and scopes.
   class NestedScopeTree(val root: ScopeNode):
     val nodesMap: Map[ScopedInfo, ScopeNode] = root.allChildNodes.map(n => n.obj.toInfo -> n).toMap
   
-  case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode])(using metadata: LifterMetadata):
+  case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode])(using ignoredScopes: IgnoredScopes):
     
     lazy val allParents: List[ScopedObject] = parent match
       case Some(value) => this.obj :: value.allParents
@@ -82,11 +109,21 @@ object ScopeData:
       case Some(value) => value.existingVars ++ value.obj.definedLocals
       case None => Set.empty
     
-    def isLifted: Bool = obj match
-      case _: ScopedObject.ScopedBlock => false
-      case ScopedObject.Func(_, true) => false
-      case _ if metadata.ignored.contains(obj.toInfo) => false
-      case _ => true
+    def isLifted: Bool =
+      val ignored = ignoredScopes.ignored match
+        case Some(value) => value
+        case None => lastWords("isLifted accessed before the set of ignored scopes was set")
+      
+      parent.map(_.obj) match
+      case Some(_: ScopedObject.Companion) => false // there is no need to lift objects nested inside a module
+      case _ =>
+        obj match
+        case _: ScopedObject.ScopedBlock => false
+        // case _: ScopedObject.Companion => false
+        // case c: ScopedObject.Class if c.cls.companion.isDefined => false
+        case ScopedObject.Func(isMethod = true) => false
+        case _ if ignored.contains(obj.toInfo) => false
+        case _ => true
 
     // finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
     lazy val firstLiftedParent: ScopedObject =
@@ -96,12 +133,13 @@ object ScopeData:
         case None => obj // unreachable
       else obj
     
-class ScopeData(b: Block)(using State, LifterMetadata):
+class ScopeData(b: Block)(using State, IgnoredScopes):
   import ScopeData.*
   
   private val fresh = FreshUID()
   
   val scopeTree = NestedScopeTree(makeScopeTreeRec(ScopedObject.Top(b)))
+  val root = scopeTree.root
   
   private val scopedMap: IdentityHashMap[Scoped, ScopeUID] = new IdentityHashMap
   for
@@ -112,8 +150,10 @@ class ScopeData(b: Block)(using State, LifterMetadata):
   def getNode(defn: ClsLikeDefn): ScopeNode = getNode(defn.isym)
   def getNode(companion: ClsLikeBody): ScopeNode = getNode(companion.isym)
   def getNode(defn: FunDefn): ScopeNode = getNode(defn.dSym)
-  def getNode(blk: Scoped): ScopeNode = getNode(scopedMap.get(blk))
-  def getUID(blk: Scoped): ScopeUID = scopedMap.get(blk)
+  def getUID(blk: Scoped): ScopeUID =
+    if scopedMap.containsKey(blk) then scopedMap.get(blk)
+    else lastWords("getUID: key not found")
+  def getNode(blk: Scoped): ScopeNode = getNode(getUID(blk))
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
   class ScopeFinder extends BlockTraverser:
     var objs: List[ScopedObject] = Nil
@@ -148,7 +188,7 @@ class ScopeData(b: Block)(using State, LifterMetadata):
       case ScopedObject.Func(fun, _) =>
         finder.applyBlock(fun.body)
       case ScopedObject.ScopedBlock(_, block) =>
-        finder.applyBlock(block)
+        finder.applyBlock(block.body)
     val mtdObjs = obj match
       case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_, true))
       case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, true))

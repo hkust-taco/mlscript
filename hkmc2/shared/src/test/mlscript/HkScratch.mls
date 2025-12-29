@@ -5,78 +5,49 @@
 // :elt
 
 :global
+:d
 // :d
 // :todo
 
-
-:lot
-let x = 2
-val y = 4
-fun f(z) = x + y + z
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped:
-//│     syms = HashSet(member:f, member:y, x)
-//│     body = Define:
-//│       defn = FunDefn:
-//│         owner = N
-//│         sym = member:f
-//│         dSym = term:f
-//│         params = Ls of 
-//│           ParamList:
-//│             flags = ()
-//│             params = Ls of 
-//│               Param:
-//│                 flags = ()
-//│                 sym = z
-//│                 sign = N
-//│                 modulefulness = Modulefulness of N
-//│             restParam = N
-//│         body = Scoped:
-//│           syms = HashSet($tmp)
-//│           body = Assign:
-//│             lhs = $tmp
-//│             rhs = Call:
-//│               fun = Ref:
-//│                 l = builtin:+
-//│                 disamb = N
-//│               args = Ls of 
-//│                 Arg:
-//│                   spread = N
-//│                   value = Ref:
-//│                     l = x
-//│                     disamb = N
-//│                 Arg:
-//│                   spread = N
-//│                   value = Ref{disamb=term:y}:
-//│                     l = member:y
-//│                     disamb = S of term:y
-//│             rest = Return: \
-//│             res = Call:
-//│               fun = Ref:
-//│                 l = builtin:+
-//│                 disamb = N
-//│               args = Ls of 
-//│                 Arg:
-//│                   spread = N
-//│                   value = Ref:
-//│                     l = $tmp
-//│                     disamb = N
-//│                 Arg:
-//│                   spread = N
-//│                   value = Ref:
-//│                     l = z
-//│                     disamb = N
-//│             implct = false
-//│       rest = Assign: \
-//│       lhs = x
-//│       rhs = Lit of IntLit of 2
-//│       rest = Define: \
-//│       defn = ValDefn:
-//│         tsym = term:y
-//│         sym = member:y
-//│         rhs = Lit of IntLit of 4
-//│       rest = End of ""
-//│ x = 2
-//│ y = 4
+:lift
+class Bruh()
+fun f() = Bruh()
+//│ Elab: { Cls BruhParamList(‹›,List(),None) { }; fun member:f‹553›() = member:Bruh‹554›#666(); }
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Bruh‹555›.Bruh‹557›
+//│ 	at: scala.collection.immutable.Map$Map3.apply(Map.scala:417)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:149)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:69)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
+//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:161)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
+//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:72)
+//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:89)
+//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:115)
+//│ 	at: scala.collection.immutable.List.map(List.scala:240)
+//│ 	at: hkmc2.UsedVarAnalyzer.<init>(UsedVarAnalyzer.scala:115)
+//│ 	at: hkmc2.Lifter.<init>(Lifter.scala:1245)
+//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1064)
+//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
+//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
+//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
+//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ 	at: hkmc2.MLsDiffMaker.processTrees(MLsDiffMaker.scala:275)
+//│ 	at: hkmc2.MLsDiffMaker.processOrigin(MLsDiffMaker.scala:247)
+//│ 	at: hkmc2.DiffMaker.processBlock(DiffMaker.scala:217)
+//│ 	at: hkmc2.DiffMaker.rec(DiffMaker.scala:320)
+//│ 	at: hkmc2.DiffMaker.run(DiffMaker.scala:344)
+//│ 	at: hkmc2.MLsDiffMaker.run(MLsDiffMaker.scala:148)
+//│ 	at: hkmc2.JSBackendDiffMaker.run(JSBackendDiffMaker.scala:69)
+//│ 	at: hkmc2.Watcher.go(Watcher.scala:117)
+//│ 	at: hkmc2.Watcher.onModify(Watcher.scala:132)
+//│ 	at: hkmc2.Watcher$$anon$1.onEvent(Watcher.scala:71)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.onEvent(DirectoryWatcher.java:425)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.runEventLoop(DirectoryWatcher.java:356)
+//│ 	at: io.methvin.watcher.DirectoryWatcher.watch(DirectoryWatcher.java:250)
+//│ 	at: hkmc2.Watcher.run(Watcher.scala:84)
+//│ 	at: hkmc2.MainWatcher$.main(Watcher.scala:20)
+//│ 	at: hkmc2.MainWatcher.main(Watcher.scala)

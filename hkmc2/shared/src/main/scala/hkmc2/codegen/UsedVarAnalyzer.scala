@@ -39,7 +39,7 @@ object UsedVarAnalyzer:
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerPaths])(using State, LifterMetadata):
+class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerPaths])(using State, IgnoredScopes):
   import UsedVarAnalyzer.*
 
   
@@ -81,8 +81,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
     */
   private def findAccessesShallow(obj: ScopedObject): AccessInfo =
     val accessed = obj match
-      case ScopedObject.Top(b) =>
-        blkAccessesShallow(b)
+      case ScopedObject.Top(b) => b match
+        case s: Scoped => blkAccessesShallow(s.body)
+        case _ => blkAccessesShallow(b)
       case ScopedObject.Func(f, _) =>
         blkAccessesShallow(f.body)
       case ScopedObject.Class(c) =>
@@ -92,7 +93,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
         val res = blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)
         res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
       case ScopedObject.ScopedBlock(uid, b) =>
-        blkAccessesShallow(b)
+        blkAccessesShallow(b.body)
       case ScopedObject.Companion(c, _) =>
         // There likely won't be nested companion classes in the future, but for now,
         // just assume they may access all their methods
@@ -109,20 +110,22 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
         case Some(value) => acc + (info -> (accesses ++ value))
         case None => acc + (info -> accesses)
   
-  private val shallowAccesses: Map[ScopedInfo, AccessInfo] =
+  val shallowAccesses: Map[ScopedInfo, AccessInfo] =
     scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
   
-  // Optimization: Find all nodes which accessed by their children
+  // Optimization: Find all nodes which are accessed by their children
   // See the comment for findAccesses
   private val allEdges =
     for 
       (src, accesses) <- shallowAccesses
       refd <- accesses.refdDefns
       if src =/= refd
-    yield (src, refd)
+    yield
+      (src, refd)
   private val accessedByChild = allEdges
     .groupBy(_._2) // group by edge destination
     .map:
+      case (_: Unit) -> _ => () -> false
       case d -> edges =>
         val par = scopeData.getNode(d).parent.get.obj.toInfo
         d -> edges.exists:
@@ -224,17 +227,17 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
       for
         (id, scc) <- sccs
         sym <- scc
-      yield sym -> sccAccessInfo(id)
+      yield sym -> sccAccessInfo(id).withoutLocals(scopeData.getNode(sym).obj.definedLocals)
     
     val (m1, m2) = (go(true), go(false))
-    val subCases = nodes.map(findAccesses)
+    val subCases = nexts.map(findAccesses)
     subCases.foldLeft((m1, m2)):
       case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
   
   // Searching from the root makes no sense. We instead start searching from each scope nested in the top-level
   private val (m1, m2) = scopeData.scopeTree.root.children.map(findAccesses).unzip
-  private val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
-  private val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+  val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+  val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
 
   private def reqdCaptureLocals(s: ScopeNode): (Set[Local], Set[Local]) =
     def withMtds(b: Block, mtds: List[FunDefn]) =
@@ -246,7 +249,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
         .foldLeft(AccessInfo.empty):
           case (acc, value) => acc ++ value
       (ctorRead ++ additional.accessed, ctorCap ++ additional.mutated)
-    
     s.obj match
     case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
     case ScopedObject.Class(cls) => withMtds(Begin(cls.preCtor, cls.ctor), cls.methods)
@@ -334,7 +336,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
               reqCapture += l
               hasMutator += l
 
-        override def applyResult(r: Result): Unit = r match
+        override def applyResult(r: Result): Unit = 
+          r match
           case Call(RefOfBms(_, S(d)), args) =>
             args.map(super.applyArg(_))
             handleCalledScope(d)
@@ -394,3 +397,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
     val reqCapture = go(b, Set.empty, Set.empty, Set.empty).reqCapture.intersect(mutatedVars)
 
     (usedVars, reqCapture)
+  
+  val reqdCaptures: Map[ScopedInfo, (Set[Local], Set[Local])] = scopeData.root.allChildNodes
+    .filter(node => !node.obj.isInstanceOf[ScopedObject.Top])
+    .map: node =>
+      node.obj.toInfo -> reqdCaptureLocals(node)
+    .toMap
