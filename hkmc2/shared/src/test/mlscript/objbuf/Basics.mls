@@ -37,15 +37,15 @@ class B2(x)
 @bufferable
 module B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.249: 	@bufferable
-//│ ╙──       	 ^^^^^^^^^^
+//│ ║  l.37: 	@bufferable
+//│ ╙──      	 ^^^^^^^^^^
 
 :w
 @bufferable
 object B3
 //│ ╔══[WARNING] This annotation has no effect.
-//│ ║  l.256: 	@bufferable
-//│ ╙──       	 ^^^^^^^^^^
+//│ ║  l.44: 	@bufferable
+//│ ╙──      	 ^^^^^^^^^^
 
 
 let buf = new DefaultObjectBuffer(10)
