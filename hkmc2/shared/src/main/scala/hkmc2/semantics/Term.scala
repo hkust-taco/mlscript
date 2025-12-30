@@ -888,7 +888,7 @@ object ClassDef:
   ): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
-        , bsym, ctorSym
+        , bsym, S(ctorSym.get)
         , tparams, ps, pss, ext, body, comp, annotations)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
@@ -902,7 +902,7 @@ object ClassDef:
       kind: ClsLikeKind,
       sym: ClassSymbol,
       bsym: BlockMemberSymbol,
-      ctorSym: Opt[TermSymbol],
+      ctorSym: S[TermSymbol],
       tparams: Ls[TyParam],
       params: ParamList,
       auxParams: Ls[ParamList],

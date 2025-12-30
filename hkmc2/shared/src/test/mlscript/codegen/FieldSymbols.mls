@@ -102,7 +102,7 @@ case
 //│                 modulefulness = Modulefulness of N
 //│             restParam = N
 //│         body = Scoped:
-//│           syms = HashSet($argument0$, a)
+//│           syms = HashSet(a, $argument0$)
 //│           body = Match:
 //│             scrut = Ref:
 //│               l = caseScrut
