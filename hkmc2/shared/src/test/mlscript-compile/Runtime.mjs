@@ -159,14 +159,14 @@ let Runtime1;
         let scrut, scrut1, tmp1, tmp2, tmp3;
         scrut = i >= xs.length;
         if (scrut === true) {
-          throw globalThis.RangeError("Tuple.get: index out of bounds")
+          throw runtime.safeCall(globalThis.RangeError("Tuple.get: index out of bounds"))
         } else {
           tmp1 = runtime.Unit;
         }
         tmp2 = - xs.length;
         scrut1 = i < tmp2;
         if (scrut1 === true) {
-          throw globalThis.RangeError("Tuple.get: negative index out of bounds")
+          throw runtime.safeCall(globalThis.RangeError("Tuple.get: negative index out of bounds"))
         } else {
           tmp3 = runtime.Unit;
         }
@@ -192,7 +192,7 @@ let Runtime1;
         let scrut;
         scrut = i >= string.length;
         if (scrut === true) {
-          throw globalThis.RangeError("Str.get: index out of bounds")
+          throw runtime.safeCall(globalThis.RangeError("Str.get: index out of bounds"))
         } else {
           return runtime.safeCall(string.at(i))
         }
@@ -566,7 +566,7 @@ let Runtime1;
     });
   }
   static get unreachable() {
-    throw globalThis.Error("unreachable");
+    throw runtime.safeCall(globalThis.Error("unreachable"));
   } 
   static checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
@@ -607,7 +607,7 @@ let Runtime1;
       tmp10 = tmp8 + tmp9;
       tmp11 = tmp10 + " but got ";
       tmp12 = tmp11 + got;
-      throw globalThis.Error(tmp12)
+      throw runtime.safeCall(globalThis.Error(tmp12))
     } else {
       return runtime.Unit
     }
@@ -621,7 +621,7 @@ let Runtime1;
   } 
   static checkCall(x) {
     if (x === undefined) {
-      throw globalThis.Error("MLscript call unexpectedly returned `undefined`, the forbidden value.")
+      throw runtime.safeCall(globalThis.Error("MLscript call unexpectedly returned `undefined`, the forbidden value."))
     } else {
       return x
     }
@@ -632,7 +632,7 @@ let Runtime1;
     tmp1 = tmp + "' of class '";
     tmp2 = tmp1 + clsName;
     tmp3 = tmp2 + "' was accessed without being called.";
-    throw globalThis.Error(tmp3)
+    throw runtime.safeCall(globalThis.Error(tmp3))
   } 
   static try(f) {
     let res;
@@ -806,7 +806,7 @@ let Runtime1;
         reps = tmp2;
         scrut1 = reps > 10;
         if (scrut1 === true) {
-          throw globalThis.Error("10 repeated continuation frame (loop?)")
+          throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         } else {
           tmp3 = runtime.Unit;
         }
@@ -851,7 +851,7 @@ let Runtime1;
         reps = tmp1;
         scrut1 = reps > 10;
         if (scrut1 === true) {
-          throw globalThis.Error("10 repeated continuation frame (loop?)")
+          throw runtime.safeCall(globalThis.Error("10 repeated continuation frame (loop?)"))
         } else {
           tmp2 = runtime.Unit;
         }
@@ -1071,7 +1071,7 @@ let Runtime1;
       let scrut, tmp, tmp1;
       scrut = contTrace.resumed;
       if (scrut === true) {
-        throw globalThis.Error("Multiple resumption")
+        throw runtime.safeCall(globalThis.Error("Multiple resumption"))
       } else {
         tmp = runtime.Unit;
       }

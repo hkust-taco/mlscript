@@ -250,10 +250,10 @@ let Predef1;
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp)
+    throw runtime.safeCall(globalThis.Error(tmp))
   } 
   static get notImplementedError() {
-    throw globalThis.Error("Not implemented");
+    throw runtime.safeCall(globalThis.Error("Not implemented"));
   } 
   static tuple(...xs) {
     return xs
