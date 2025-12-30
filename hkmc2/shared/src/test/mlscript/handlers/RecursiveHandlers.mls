@@ -2,8 +2,6 @@
 :effectHandlers
 :lift
 
-class Object
-
 abstract class Effect[A] with
   fun perform(arg: A): A
 

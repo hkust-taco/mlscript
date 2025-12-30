@@ -116,8 +116,6 @@ module A with
   f()
   () // defeats tail call optimization
 
-class Object
-
 let obj = new Object with
   fun foo() = print("Hello")
   foo()

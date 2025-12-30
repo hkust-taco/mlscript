@@ -14,8 +14,6 @@ fun foo(f) =
   lam()
 
 
-class Object
-
 :expect 3
 handle h = Object with
   fun f()(k) = k(())

@@ -2,8 +2,6 @@
 :effectHandlers
 :lift
 
-class Object
-
 :re
 handle h = Object with {}
 h.oops

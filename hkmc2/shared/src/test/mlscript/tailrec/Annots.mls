@@ -72,8 +72,6 @@ module A with
 //│ ═══[WARNING] This annotation has no effect.
 
 
-class Object
-
 :w
 :effectHandlers
 :lift

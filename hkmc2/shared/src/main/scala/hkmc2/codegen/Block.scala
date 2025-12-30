@@ -768,7 +768,7 @@ extension (k: Block => Block)
   def transform(f: (Block => Block) => (Block => Block)) = f(k)
   
   def assign(l: Local, r: Result) = k.chain(Assign(l, r, _))
-  def assignScoped(l: Local, r: Result) = k.scopedVars(Set(l)).assign(l, r)
+  def assignScoped(l: Local, r: Result) = k.scopedVars(Set.single(l)).assign(l, r)
   def assignFieldN(lhs: Path, nme: Tree.Ident, rhs: Result) = k.chain(AssignField(lhs, nme, rhs, _)(N))
   def break(l: Local): Block = k.rest(Break(l))
   def continue(l: Local): Block = k.rest(Continue(l))

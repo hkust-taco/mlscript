@@ -215,8 +215,6 @@ bad()
 //│ = 100010000
 
 
-class Object
-
 
 :stackSafe 100
 :expect 0

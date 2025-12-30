@@ -463,8 +463,6 @@ foo(h)
 //│ ╙──       	           ^
 //│ = 123
 
-class Object
-
 // Access superclass fields
 handle h1 = Object with
   fun perf()(k) = k(2)

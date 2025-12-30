@@ -29,8 +29,6 @@ x
 
 // * But `finally` is not yet supported by effect handlers
 
-class Object
-
 :todo
 let x = 1
 handle h = Object with
