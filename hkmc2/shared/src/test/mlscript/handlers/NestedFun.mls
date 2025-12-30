@@ -24,11 +24,11 @@ fun foo(f) =
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args, f -> f)
 //│         curThis = N
-//│         bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│         bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│       curThis = S of S of class:Cont$func$foo$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -46,11 +46,11 @@ fun foo(f) =
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│           bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args, f -> f)
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│       bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│     curThis = S of S of class:Cont$func$foo$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$foo$'
@@ -66,11 +66,11 @@ fun foo(f) =
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│           bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args, f -> f)
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│       bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -87,13 +87,13 @@ fun foo(f) =
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args, f -> f)
 //│         curThis = N
-//│         bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│         bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│       curThis = S of N
-//│       bindings = HashMap(res -> res, $args -> args1, pc -> pc)
+//│       bindings = HashMap($args -> args1, pc -> pc, res -> res)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$foo$'
@@ -112,15 +112,15 @@ fun foo(f) =
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│                 bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args, f -> f)
 //│             curThis = N
-//│             bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│             bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
+//│         bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
 //│       curThis = S of S of class:Cont$func$bar$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -140,15 +140,15 @@ fun foo(f) =
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│               bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args, f -> f)
 //│           curThis = N
-//│           bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│           bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args1)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
+//│       bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
 //│     curThis = S of S of class:Cont$func$bar$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$bar$'
@@ -166,15 +166,15 @@ fun foo(f) =
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│               bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args, f -> f)
 //│           curThis = N
-//│           bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│           bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args1)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
+//│       bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -193,17 +193,17 @@ fun foo(f) =
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│                 bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args, f -> f)
 //│             curThis = N
-//│             bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│             bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
+//│         bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
 //│       curThis = S of N
-//│       bindings = HashMap(res -> res, $args -> args2, pc -> pc)
+//│       bindings = HashMap($args -> args2, pc -> pc, res -> res)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$bar$'
@@ -220,15 +220,15 @@ fun foo(f) =
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│             bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args, f -> f)
 //│         curThis = N
-//│         bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│         bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
+//│     bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -241,11 +241,11 @@ fun foo(f) =
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:foo -> foo)
+//│         bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res, member:Predef -> Predef, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, f -> f)
 //│     curThis = N
-//│     bindings = HashMap(y -> y, $tmp -> tmp, $tmp -> tmp1, member:lam -> lam1, lam -> lam, member:bar -> bar)
+//│     bindings = HashMap(member:lam -> lam1, lam -> lam, member:bar -> bar, y -> y, $tmp -> tmp, $tmp -> tmp1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 
 :expect 3
@@ -261,7 +261,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -272,7 +272,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -283,7 +283,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -294,7 +294,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -305,7 +305,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -317,7 +317,7 @@ foo(() => h.f())
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│       bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -334,7 +334,7 @@ foo(() => h.f())
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -356,7 +356,7 @@ foo(() => h.f())
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -379,7 +379,7 @@ foo(() => h.f())
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│                 bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -407,7 +407,7 @@ foo(() => h.f())
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -430,17 +430,17 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.16: 	handle h = Object with
-//│ ║        	       ^
+//│ ║  l.252: 	handle h = Object with
+//│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.16: 	handle h = Object with
-//│ ╙──      	       ^
+//│ ║  l.252: 	handle h = Object with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -452,7 +452,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -471,7 +471,7 @@ foo(() => h.f())
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -493,7 +493,7 @@ foo(() => h.f())
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -515,7 +515,7 @@ foo(() => h.f())
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -523,7 +523,7 @@ foo(() => h.f())
 //│         curThis = S of S of class:Cont$handleBlock$h$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap($args -> args1, value$ -> value$)
+//│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -541,7 +541,7 @@ foo(() => h.f())
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -549,7 +549,7 @@ foo(() => h.f())
 //│         curThis = S of S of class:Cont$handleBlock$h$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap($args -> args1, value$ -> value$)
+//│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -565,7 +565,7 @@ foo(() => h.f())
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -586,13 +586,13 @@ foo(() => h.f())
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = S of N
-//│       bindings = HashMap($args -> args1, pc -> pc, res -> res)
+//│       bindings = HashMap(pc -> pc, res -> res, $args -> args1)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handleBlock$h$'
@@ -609,19 +609,19 @@ foo(() => h.f())
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = S of N
-//│       bindings = HashMap($args -> args1, pc -> pc, res -> res)
+//│       bindings = HashMap(pc -> pc, res -> res, $args -> args1)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.16: 	handle h = Object with
-//│ ╙──      	       ^
+//│ ║  l.252: 	handle h = Object with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -635,7 +635,7 @@ foo(() => h.f())
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -645,11 +645,11 @@ foo(() => h.f())
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.18: 	foo(() => h.f())
-//│ ║        	          ^
+//│ ║  l.254: 	foo(() => h.f())
+//│ ║         	          ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.16: 	handle h = Object with
-//│ ╙──      	       ^
+//│ ║  l.252: 	handle h = Object with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -661,7 +661,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -678,7 +678,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -695,7 +695,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -712,7 +712,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -729,7 +729,7 @@ foo(() => h.f())
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -744,7 +744,7 @@ foo(() => h.f())
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$func$bar$ -> Cont$func$bar$, member:Predef -> Predef, $block$res -> block$res1, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, class:Cont$func$bar$ -> Cont$func$bar$, $Term -> Term, $Block -> Block, $block$res -> block$res1, $Shape -> Shape, class:Cont$func$foo$ -> Cont$func$foo$, $block$res -> block$res2, $tmp -> tmp, $block$res -> block$res, $selRes -> selRes, $discarded -> discarded, member:lambda -> lambda, member:Predef -> Predef, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:foo -> foo)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -753,11 +753,11 @@ foo(() => h.f())
 //│     at handleBlock$ (REPL13:1:1076)
 //│     at REPL13:1:2448
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
 //│     at REPLServer.emit (node:domain:489:12)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)

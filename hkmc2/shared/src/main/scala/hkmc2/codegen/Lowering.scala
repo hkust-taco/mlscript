@@ -1049,10 +1049,17 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val desug = LambdaRewriter.desugar(blk)
     
+    // TODO: Refactor the lifter so it does not require flattened scopes
+    val shouldFlattenScopes = config.effectHandlers.isDefined || config.liftDefns.isDefined
+    
+    val scopeFlattened =
+      if shouldFlattenScopes then ScopeFlattener().applyBlock(desug)
+      else desug
+    
     val handlerPaths = new HandlerPaths
     
-    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((scopeFlattened, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(scopeFlattened)
       
     val stackSafe = config.stackSafety match
       case N => withHandlers
