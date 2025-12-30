@@ -102,6 +102,7 @@ A.sum(20000)
 
 :silent
 :lift
+:rewriteWhile
 :expect 200010000
 val x = mut []
 let n = 20000
@@ -147,42 +148,14 @@ fun f(x) =
     @tailcall f(x)
   @tailcall g()
 //│ ╔══[ERROR] This call is not in tail position.
-//│ ║  l.146: 	    @tailcall f(x)
+//│ ║  l.147: 	    @tailcall f(x)
 //│ ╙──       	              ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:g$
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:f -> f, member:f_g -> f_g, member:g -> g, $block$res -> block$res8, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f2, member:Predef -> Predef, $block$res -> block$res4, member:A -> A1, module:A -> A, $tmp -> tmp, member:lambda -> lambda, $tmp -> tmp4, member:f_g$ -> f_g$, $tmp -> tmp5, $block$res -> block$res6, $tmp -> tmp1, $tmp -> tmp3, $tmp -> tmp2, member:f -> f3, member:g -> g2, member:f -> f1, $block$res -> block$res, member:g -> g1, member:sum_impl -> sum_impl, member:sum -> sum, $block$res -> block$res3, class:A -> A, $block$res -> block$res7, member:f_g -> f_g1, member:x -> x, $block$res -> block$res2, member:sumOf -> sumOf, n -> n, i -> i, member:f -> f4, $block$res -> block$res1, $scrut -> scrut, member:g_f -> g_f, $block$res -> block$res5)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
 
 :lift
 fun f(x) =
   fun g() =
     @tailcall f(x)
   @tailcall g()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:g$
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:f_g -> f_g, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f2, member:A -> A1, module:A -> A, $block$res -> block$res6, member:f -> f3, member:g -> g2, $block$res -> block$res, member:sum_impl -> sum_impl, member:sum -> sum, $block$res -> block$res3, class:A -> A, $block$res -> block$res7, member:f_g -> f_g1, member:x -> x, member:sumOf -> sumOf, n -> n, i -> i, member:f -> f4, $block$res -> block$res1, $scrut -> scrut, member:f -> f, member:g -> g, $block$res -> block$res8, member:Predef -> Predef, $block$res -> block$res4, $tmp -> tmp, member:lambda -> lambda, $tmp -> tmp4, member:f_g$ -> f_g$, $tmp -> tmp5, $tmp -> tmp1, $tmp -> tmp3, $tmp -> tmp2, member:f -> f5, member:f -> f1, $block$res -> block$res9, member:g -> g1, $block$res -> block$res2, member:f_g$ -> f_g$1, member:g_f -> g_f, $block$res -> block$res5)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
 
 // Functions inside module definitions are lifted to the top level. This means they cannot yet be optimized.
 :lift
@@ -193,18 +166,12 @@ module A with
     @tailcall g(x - 1)
 A.f(10000)
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.192: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
+//│ ║  l.165: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
 //│ ╙──       	                                              ^^^
 //│ ╔══[ERROR] This tail call exits the current scope is not optimized.
-//│ ║  l.193: 	    @tailcall g(x - 1)
+//│ ║  l.166: 	    @tailcall g(x - 1)
 //│ ╙──       	              ^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.192: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
-//│ ║         	        ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.192: 	    fun g(x) = if x < 0 then 0 else @tailcall f(x)
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: g3 is not a function
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 // These calls are represented as field selections and don't yet have the explicitTailCall parameter.
 :breakme
@@ -229,12 +196,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.228: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.228: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.195: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.229: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.196: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0

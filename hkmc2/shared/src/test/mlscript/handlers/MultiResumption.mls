@@ -21,7 +21,7 @@ h.info("a")
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -38,7 +38,7 @@ h.info("a")
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -60,7 +60,7 @@ h.info("a")
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -83,7 +83,7 @@ h.info("a")
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -115,7 +115,7 @@ h.info("a")
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -152,7 +152,7 @@ h.info("a")
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -187,7 +187,7 @@ h.info("a")
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -223,7 +223,7 @@ h.info("a")
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -239,7 +239,7 @@ h.info("a")
 //│         curThis = N
 //│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2)
 //│       curThis = S of N
-//│       bindings = HashMap(pc -> pc, res -> res, $args -> args3)
+//│       bindings = HashMap($args -> args3, pc -> pc, res -> res)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handler$h$info$'
@@ -259,7 +259,7 @@ h.info("a")
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -291,7 +291,7 @@ h.info("a")
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -321,7 +321,7 @@ h.info("a")
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -344,7 +344,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -366,7 +366,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -385,7 +385,7 @@ h.info("a")
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -407,7 +407,7 @@ h.info("a")
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -429,7 +429,7 @@ h.info("a")
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -455,7 +455,7 @@ h.info("a")
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -479,7 +479,7 @@ h.info("a")
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -500,7 +500,7 @@ h.info("a")
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -523,7 +523,7 @@ h.info("a")
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -547,7 +547,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -564,7 +564,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -586,7 +586,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -603,7 +603,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -620,7 +620,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -637,7 +637,7 @@ h.info("a")
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -652,7 +652,7 @@ h.info("a")
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ ═══[RUNTIME ERROR] TypeError: Assignment to constant variable.
 
@@ -673,7 +673,7 @@ handle h = Logger with
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -690,7 +690,7 @@ handle h = Logger with
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -712,7 +712,7 @@ handle h = Logger with
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -735,7 +735,7 @@ handle h = Logger with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -743,7 +743,7 @@ handle h = Logger with
 //│           curThis = S of S of class:Handler$h$
 //│           bindings = HashMap()
 //│         curThis = N
-//│         bindings = HashMap($args -> args1, s -> s)
+//│         bindings = HashMap(s -> s, $args -> args1)
 //│       curThis = N
 //│       bindings = HashMap()
 //│     curThis = S of N
@@ -767,7 +767,7 @@ handle h = Logger with
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -775,13 +775,13 @@ handle h = Logger with
 //│                 curThis = S of S of class:Handler$h$
 //│                 bindings = HashMap()
 //│               curThis = N
-//│               bindings = HashMap($args -> args1, s -> s)
+//│               bindings = HashMap(s -> s, $args -> args1)
 //│             curThis = N
 //│             bindings = HashMap()
 //│           curThis = S of N
-//│           bindings = HashMap($args -> args2, k -> k)
+//│           bindings = HashMap(k -> k, $args -> args2)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│         bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│       curThis = S of S of class:Cont$handler$h$info$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -804,7 +804,7 @@ handle h = Logger with
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -812,13 +812,13 @@ handle h = Logger with
 //│               curThis = S of S of class:Handler$h$
 //│               bindings = HashMap()
 //│             curThis = N
-//│             bindings = HashMap($args -> args1, s -> s)
+//│             bindings = HashMap(s -> s, $args -> args1)
 //│           curThis = N
 //│           bindings = HashMap()
 //│         curThis = S of N
-//│         bindings = HashMap($args -> args2, k -> k)
+//│         bindings = HashMap(k -> k, $args -> args2)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│       bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│     curThis = S of S of class:Cont$handler$h$info$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handler$h$info$'
@@ -839,7 +839,7 @@ handle h = Logger with
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -847,13 +847,13 @@ handle h = Logger with
 //│               curThis = S of S of class:Handler$h$
 //│               bindings = HashMap()
 //│             curThis = N
-//│             bindings = HashMap($args -> args1, s -> s)
+//│             bindings = HashMap(s -> s, $args -> args1)
 //│           curThis = N
 //│           bindings = HashMap()
 //│         curThis = S of N
-//│         bindings = HashMap($args -> args2, k -> k)
+//│         bindings = HashMap(k -> k, $args -> args2)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│       bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -875,7 +875,7 @@ handle h = Logger with
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -883,15 +883,15 @@ handle h = Logger with
 //│                 curThis = S of S of class:Handler$h$
 //│                 bindings = HashMap()
 //│               curThis = N
-//│               bindings = HashMap($args -> args1, s -> s)
+//│               bindings = HashMap(s -> s, $args -> args1)
 //│             curThis = N
 //│             bindings = HashMap()
 //│           curThis = S of N
-//│           bindings = HashMap($args -> args2, k -> k)
+//│           bindings = HashMap(k -> k, $args -> args2)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│         bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│       curThis = S of N
-//│       bindings = HashMap($args -> args3, pc -> pc, res -> res)
+//│       bindings = HashMap(pc -> pc, res -> res, $args -> args3)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handler$h$info$'
@@ -911,7 +911,7 @@ handle h = Logger with
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -919,13 +919,13 @@ handle h = Logger with
 //│             curThis = S of S of class:Handler$h$
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap($args -> args1, s -> s)
+//│           bindings = HashMap(s -> s, $args -> args1)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = S of N
-//│       bindings = HashMap($args -> args2, k -> k)
+//│       bindings = HashMap(k -> k, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│     bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -943,7 +943,7 @@ handle h = Logger with
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -951,13 +951,13 @@ handle h = Logger with
 //│             curThis = S of S of class:Handler$h$
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap($args -> args1, s -> s)
+//│           bindings = HashMap(s -> s, $args -> args1)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = S of N
-//│       bindings = HashMap($args -> args2, k -> k)
+//│       bindings = HashMap(k -> k, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp2, $tmp -> tmp3)
+//│     bindings = HashMap($tmp -> tmp3, $tmp -> tmp2)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -973,7 +973,7 @@ handle h = Logger with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -981,7 +981,7 @@ handle h = Logger with
 //│         curThis = S of S of class:Handler$h$
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap($args -> args1, s -> s)
+//│       bindings = HashMap(s -> s, $args -> args1)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
@@ -996,17 +996,17 @@ handle h = Logger with
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.18: 	handle h = Logger with
-//│ ║        	       ^
+//│ ║  l.660: 	handle h = Logger with
+//│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.18: 	handle h = Logger with
-//│ ╙──      	       ^
+//│ ║  l.660: 	handle h = Logger with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1018,7 +1018,7 @@ handle h = Logger with
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -1033,7 +1033,7 @@ handle h = Logger with
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, $runtime -> runtime, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:Predef -> Predef, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$)
+//│     bindings = HashMap(class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $tmp -> tmp1, $block$res -> block$res1, class:Cont$handler$h$info$ -> Cont$handler$h$info$1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res2, $Block -> Block, $Shape -> Shape, $tmp -> tmp, $block$res -> block$res, class:Handler$h$ -> Handler$h$1, member:Predef -> Predef, member:Logger -> Logger1, class:Logger -> Logger, class:Handler$h$ -> Handler$h$, $block$res -> block$res3, class:Cont$handler$h$info$ -> Cont$handler$h$info$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -1042,9 +1042,9 @@ handle h = Logger with
 //│     at handleBlock$ (REPL16:1:2793)
 //│     at REPL16:1:2912
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
 //│     at REPLServer.emit (node:domain:489:12)

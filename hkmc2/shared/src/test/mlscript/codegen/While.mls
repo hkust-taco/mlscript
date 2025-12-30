@@ -344,6 +344,7 @@ class Lazy[out A](f: () -> A) with
 
 :expect [1, 2, 3]
 :lift
+:rewriteWhile // TODO: remove
 let arr = [1, 2, 3]
 let output = mut []
 let i = 0
