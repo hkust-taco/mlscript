@@ -19,13 +19,13 @@ h1.perform("hello")
 :e
 h1
 //│ ╔══[ERROR] Name not found: h1
-//│ ║  l.22: 	h1
+//│ ║  l.20: 	h1
 //│ ╙──      	^^
 
 :e
 h1.perform("oops")
 //│ ╔══[ERROR] Name not found: h1
-//│ ║  l.28: 	h1.perform("oops")
+//│ ║  l.26: 	h1.perform("oops")
 //│ ╙──      	^^
 
 :re
@@ -71,10 +71,10 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[ERROR] Name not found: h2
-//│ ║  l.67: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.65: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.68: 	      else "0"
+//│ ║  l.66: 	      else "0"
 //│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2
@@ -177,7 +177,7 @@ str
 //│           str = tmp13;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:149:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h1$perform$1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -238,7 +238,7 @@ str
 //│           str = tmp14;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:154:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
+//│             return runtime.unwind(runtime.resumeValue, Handler$h2$perform$1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -293,7 +293,7 @@ str
 //│         case 0:
 //│           runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:156:5", null, null, 1, 1, h22, 0)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$$2, 1, "RecursiveHandlers.mls:154:5", null, null, 1, 1, h22, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
