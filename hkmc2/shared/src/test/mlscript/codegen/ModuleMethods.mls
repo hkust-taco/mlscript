@@ -14,13 +14,8 @@ Example.f(123)
 :ssjs
 let s = Example.f
 //│ JS:
-//│ let s, selRes;
-//│ selRes = Example1.f;
-//│ if (selRes === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'f' yielded 'undefined'"))
-//│ }
-//│ s = selRes;
-//│ block$res3 = undefined;
+//│ let s;
+//│ s = Example1.f; block$res3 = undefined;
 //│ s = fun f
 
 s(123)
@@ -29,7 +24,7 @@ s(123)
 :e
 Example |>. s(123)
 //│ ╔══[ERROR] Unexpected moduleful reference of type Example.
-//│ ║  l.30: 	Example |>. s(123)
+//│ ║  l.25: 	Example |>. s(123)
 //│ ║        	^^^^^^^
 //│ ╙── Module argument passed to a non-module parameter.
 //│ = [123, 456]
