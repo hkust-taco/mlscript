@@ -888,7 +888,7 @@ object ClassDef:
   ): ClassDef =
     params match
       case ps :: pss => Parameterized(owner, kind, sym.asInstanceOf// TODO: improve
-        , bsym, S(ctorSym.get)
+        , bsym, ctorSym.getOrElse(lastWords("Parameterized classes should have a ctor symbol."))
         , tparams, ps, pss, ext, body, comp, annotations)
       case Nil => Plain(owner, kind, sym.asInstanceOf// TODO: improve
         , bsym
