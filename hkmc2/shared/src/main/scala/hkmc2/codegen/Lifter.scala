@@ -627,8 +627,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     
     def rewrite(b: Block) =
       val ret = applyBlock(b)
-      if extraLocals.isEmpty then ret
-      else Scoped(extraLocals, ret)
+      Scoped(extraLocals, ret)
     
     // Replaces references to BlockMemberSymbols as needed with fresh variables, and
     // returns the mapping from the symbol to the required variable. When possible,
@@ -1341,6 +1340,6 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val newDefns = lifted :: extra
           val newBms = newDefns.map(_.sym)
           val newBlk = newDefns.foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
-          if newBms.isEmpty then newBlk else Scoped(newBms.toSet, newBlk)
+          Scoped(newBms.toSet, newBlk)
         case _ => super.applyBlock(b)
     walker1.applyBlock(blk)
