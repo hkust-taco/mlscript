@@ -295,6 +295,7 @@ class Lifter()(using State, Raise):
     
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
+      S(TermSymbol(syntax.Fun, S(clsSym), clsSym.id)),
       syntax.Cls,
       N,
       PlainParamList(sortedVars.iterator.map(_._2).toList) :: Nil, None, Nil, Nil, 
@@ -472,7 +473,7 @@ class Lifter()(using State, Raise):
           tsym.owner.foreach(_.traverse)
           sym.traverse
           applyPath(rhs)
-        case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+        case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
             privateFields, publicFields, preCtor, ctor, mod, bufferable)
         =>
           own.foreach(_.traverse)

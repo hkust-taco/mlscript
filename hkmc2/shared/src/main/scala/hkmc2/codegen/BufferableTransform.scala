@@ -87,6 +87,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                 cls.owner,
                 cls.isym,
                 cls.sym,
+                cls.ctorSym,
                 cls.k,
                 if bufferable then cls.paramsOpt else N,
                 if bufferable then cls.auxParams else Nil,
