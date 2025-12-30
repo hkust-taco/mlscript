@@ -1,7 +1,10 @@
 :lift
 :js
 
+// This test was previously used to demonstrate immutable captures names are not properly discriminated,
+// but handler no longer occur before lifting so this now yield the correct result.
 :effectHandlers
+:expect 3
 abstract class Effect with
   fun perform()
 handle h = Effect with
