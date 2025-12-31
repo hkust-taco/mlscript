@@ -18,8 +18,7 @@ fun f() =
     print of raiseUnhandledEffect()
   j / i
 //│ JS (unsanitized):
-//│ let f;
-//│ let f$debugInfo;
+//│ let f, f$debugInfo;
 //│ f$debugInfo = globalThis.Object.freeze([
 //│   "f",
 //│   0,
