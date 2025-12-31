@@ -117,8 +117,8 @@ lambda_test(() =>
   raiseUnhandledEffect()
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:118:3)
-//│ 	at lambda_test (Debugging.mls:115:3)
+//│ 	at lambda (Debugging.mls:117:3)
+//│ 	at lambda_test (Debugging.mls:114:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -187,8 +187,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:183:3) with locals: j=200
+//│ > 	at f (Debugging.mls:182:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:185:3)
+//│ > 	at f (Debugging.mls:184:3)
 //│ > Stack Trace:
 //│ > 	at tail position

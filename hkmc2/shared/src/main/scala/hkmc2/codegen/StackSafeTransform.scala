@@ -24,22 +24,23 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
   // Increases the stack depth, assigns the call to a value, then decreases the stack depth
   // then binds that value to a desired block
-  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol): Block =
+  def extractRes(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol): Block =
     if isTailCall then Return(res, false)
     else
-      val tmp = sym getOrElse TempSymbol(None, "tmp")
       blockBuilder
-        .assign(tmp, res)
+        .assign(sym, res)
         .assignFieldN(runtimePath, STACK_DEPTH_IDENT, curDepth.asPath)
-        .rest(f(tmp.asPath))
+        .rest(f(sym.asPath))
   
   def wrapStackSafe(body: Block, resSym: Local, rest: Block) =
     val bodSym = BlockMemberSymbol("‹stack safe body›", Nil, false)
     val bodFun = FunDefn.withFreshSymbol(N, bodSym, ParamList(ParamListFlags.empty, Nil, N) :: Nil, body)(forceTailRec = false)
-    Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true, false), rest))
+    Scoped(Set.single(bodSym),
+      Define(bodFun, Assign(resSym, Call(runStackSafePath, intLit(depthLimit).asArg :: bodSym.asPath.asArg :: Nil)(true, true, false), rest))
+    )
 
-  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Option[Symbol], curDepth: => Symbol) =
-    val resSym = sym getOrElse TempSymbol(None, "res")
+  def extractResTopLevel(res: Result, isTailCall: Bool, f: Result => Block, sym: Symbol, curDepth: => Symbol) =
+    val resSym = sym
     wrapStackSafe(Ret(res), resSym, f(resSym.asPath))
 
   // Rewrites anything that can contain a Call to increase the stack depth
@@ -62,13 +63,14 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
       override def applyBlock(b: Block): Block = b match
         case Return(res, implct) if usesStack(res) =>
+          val tmp = TempSymbol(N, "res")
           super.applyResult(res): res =>
-            extract(res, true, Return(_, implct), N, curDepth)
+            Scoped(Set.single(tmp), extract(res, true, Return(_, implct), tmp, curDepth))
         // Optimization to avoid generation of unnecessary variables
         case Assign(lhs, r, rest) =>
           if usesStack(r) then
             super.applyResult(r): r =>
-              extract(r, false, _ => applyBlock(rest), S(lhs), curDepth)
+              extract(r, false, _ => applyBlock(rest), lhs, curDepth)
           else
             super.applyBlock(b)
         
@@ -80,7 +82,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
       
       override def applyResult(r: Result)(k: Result => Block): Block =
         if usesStack(r) then
-          extract(r, false, k, N, curDepth)
+          val tmp = TempSymbol(N, "res")
+          Scoped(Set.single(tmp), extract(r, false, k, tmp, curDepth))
         else
           super.applyResult(r)(k)
       
@@ -141,14 +144,14 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         // The current function is not instrumented and we cannot provide stack safety.
         // TODO: shouldn't we just return the old blk?
         blockBuilder
-          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
+          .staticif(usedDepth, _.assignScoped(curDepth, stackDepthPath))
           .rest(newBody)
       case S(info) =>
         val resSym = TempSymbol(None, "stackDelayRes")
         val addStackSafeEffect = blk => blockBuilder
           .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
-          .staticif(usedDepth, _.assign(curDepth, stackDepthPath))
-          .assign(resSym, Call(checkDepthPath, Nil)(true, true, false))
+          .staticif(usedDepth, _.assignScoped(curDepth, stackDepthPath))
+          .assignScoped(resSym, Call(checkDepthPath, Nil)(true, true, false))
           .ifthen(
             resSym.asPath,
             Case.Cls(paths.effectSigSym, paths.effectSigPath),

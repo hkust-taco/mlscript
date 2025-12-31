@@ -24,11 +24,9 @@ fun hi(n) =
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, tmp;
-//│ let $_stack$_safe$_body$_;
+//│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp1;
-//│   let stackDelayRes;
+//│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
@@ -38,6 +36,7 @@ hi(0)
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
+//│     let res;
 //│     tmp1 = n - 1;
 //│     return hi(tmp1)
 //│   }
@@ -60,16 +59,14 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, tmp1;
-//│ let $_stack$_safe$_body$_1;
+//│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp2, tmp3, pc;
-//│   let tmp4, curDepth, stackDelayRes;
+//│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, sum1, -1, "StackSafetyLift.mls:57:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(stackDelayRes, sum1, -1, "StackSafetyLift.mls:56:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -87,12 +84,14 @@ sum(10000)
 //│         if (scrut === true) {
 //│           return 0
 //│         } else {
+//│           let res;
 //│           tmp2 = n - 1;
-//│           tmp4 = sum1(tmp2);
+//│           res = sum1(tmp2);
 //│           runtime.stackDepth = curDepth;
-//│           runtime.resumeValue = tmp4;
+//│           runtime.resumeValue = res;
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, sum1, 1, "StackSafetyLift.mls:60:9", null, null, 1, 1, n, 1, tmp2)
+//│             let res1;
+//│             return runtime.unwind(runtime.resumeValue, sum1, 1, "StackSafetyLift.mls:59:9", null, null, 1, 1, n, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
