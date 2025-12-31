@@ -360,17 +360,14 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val result = mutable.HashSet.empty[Local]
 
     def traverseEntry(stateId: StateId) =
-      val traversed = mutable.HashSet.empty[StateId]
       var initialized = Set.empty[Local]
 
       new BlockTraverserShallow():
-        traversed += stateId
         applyBlock(parts.states(stateId).blk)
         override def applyBlock(blk: Block): Unit = blk match
           case Unwind(uid, loc) => ()
           case StateTransition(uid) =>
-            if !traversed.contains(uid) && !parts.states(uid).resumable then
-              traversed += stateId
+            if !parts.states(uid).resumable then
               applyBlock(parts.states(uid).blk)
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
