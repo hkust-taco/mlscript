@@ -55,7 +55,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
 //│ };
-//│ globalThis.Object.freeze(class Baz extends Bar3.class {
+//│ (class Baz extends Bar3.class {
 //│   static {
 //│     Baz1.class = this
 //│   }

@@ -88,6 +88,9 @@ declare module annotations with
   object buffered
   object bufferable
 
+declare module scope with
+  fun locally
+
 
 declare fun run: [T] -> CodeBase[out T, out Nothing, out Any] -> T
 declare fun log: Str -> Any

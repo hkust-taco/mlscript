@@ -6,6 +6,7 @@ import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
 import os.up
 
 import mlscript.utils._, shorthands._
+import io.PlatformPath.given, io.FileSystem
 
 
 // * Note: we used to use:
@@ -20,6 +21,8 @@ import mlscript.utils._, shorthands._
 object DiffTestRunner:
   
   class State:
+    
+    val cctx: CompilerCtx = CompilerCtx.fresh(io.FileSystem.default)
     
     val pwd = os.pwd
     
@@ -118,7 +121,8 @@ class DiffTestRunnerBase(state: DiffTestRunner.State)
     predefPath: os.Path,
     relativeName: String
   ): DiffMaker =
-    new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName)
+    new MainDiffMaker(workingDir.toString, file, preludePath, predefPath, relativeName):
+      def cctx = state.cctx
   
   diffTestFiles.foreach: file =>
     

@@ -47,7 +47,7 @@ class BlockTransformer(subst: SymbolSubst):
               then b else Match(scrut2, arms2, dflt2, rst2)
     case Label(lbl, loop, bod, rst) =>
       val lbl2 = applyLocal(lbl)
-      val bod2 = applySubBlock(bod)
+      val bod2 = if loop then applyScopedBlock(bod) else applySubBlock(bod)
       val rst2 = applySubBlock(rst)
       if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)
     case Begin(sub, rst) =>
@@ -95,6 +95,23 @@ class BlockTransformer(subst: SymbolSubst):
             if (lhs2 is lhs) && (fld2 is fld) && (rhs2 is rhs) && (rest2 is rest)
             then b
             else AssignDynField(lhs2, fld2, arrayIdx, rhs2, rest2)
+    case _: Scoped => applyScopedBlock(b)
+  
+  // FunDefn body, Lambda body, Handler body, ctor and pCtor are considered "funBodyLike"
+  def applyFunBodyLikeBlock(b: Block): Block = applyScopedBlock(b)
+  
+  // Apply to Blocks that are conceptually "scoped", which includes:
+  // - "funBodyLike" blocks
+  // - loop body blocks
+  // - manually nested `Scoped` blocks
+  // These blocks are usually instances of `Scoped`, but "funBodyLike" and loop bodies
+  // may not be `Scoped` in practice, because empty `Scoped` blocks may be ignored
+  def applyScopedBlock(b: Block): Block = b match
+    case Scoped(s, bd) =>
+      val nb = applySubBlock(bd)
+      if nb is bd then b else Scoped(s, nb)
+    case _ => applySubBlock(b)
+  
   
   def applyRcdArg(rcdArg: RcdArg)(k: RcdArg => Block): Block =
     val RcdArg(idx, p) = rcdArg
@@ -159,7 +176,7 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = fun.sym.subst
     val dSym2 = fun.dSym.subst
     val params2 = fun.params.mapConserve(applyParamList)
-    val body2 = applySubBlock(fun.body)
+    val body2 = applyFunBodyLikeBlock(fun.body)
     if (own2 is fun.owner) && (sym2 is fun.sym) && (dSym2 is fun.dSym) && (params2 is fun.params) && (body2 is fun.body)
       then fun else FunDefn(own2, sym2, dSym2, params2, body2)(fun.forceTailRec)
   
@@ -176,7 +193,7 @@ class BlockTransformer(subst: SymbolSubst):
     val methods2 = defn.methods.mapConserve(applyFunDefn)
     val privateFields2 = defn.privateFields.mapConserve(_.subst)
     val publicFields2 = defn.publicFields.mapConserve(f => f._1.subst -> f._2.subst)
-    val ctor2 = applySubBlock(defn.ctor)
+    val ctor2 = applyFunBodyLikeBlock(defn.ctor)
     if (methods2 is defn.methods) &&
         (privateFields2 is defn.privateFields) &&
         (publicFields2 is defn.publicFields) &&
@@ -198,8 +215,8 @@ class BlockTransformer(subst: SymbolSubst):
         val methods2 = methods.mapConserve(applyFunDefn)
         val privateFields2 = privateFields.mapConserve(_.subst)
         val publicFields2 = publicFields.mapConserve(f => f._1.subst -> f._2.subst)
-        val preCtor2 = applySubBlock(preCtor)
-        val ctor2 = applySubBlock(ctor)
+        val preCtor2 = applyFunBodyLikeBlock(preCtor)
+        val ctor2 = applyFunBodyLikeBlock(ctor)
         val mod2 = mod.mapConserve(applyObjBody)
         k:
           if (own2 is own) && (isym2 is isym) && (sym2 is sym) &&
@@ -246,14 +263,14 @@ class BlockTransformer(subst: SymbolSubst):
     val sym2 = hdr.sym.subst
     val resumeSym2 = hdr.resumeSym.subst
     val params2 = hdr.params.mapConserve(applyParamList)
-    val body2 = applySubBlock(hdr.body)
+    val body2 = applyFunBodyLikeBlock(hdr.body)
     if (sym2 is hdr.sym) && (resumeSym2 is hdr.resumeSym) &&
         (params2 is hdr.params) && (body2 is hdr.body)
       then hdr else Handler(sym2, resumeSym2, params2, body2)
   
   def applyLam(lam: Lambda): Lambda =
     val params2 = applyParamList(lam.params)
-    val body2 = applySubBlock(lam.body)
+    val body2 = applyFunBodyLikeBlock(lam.body)
     if (params2 is lam.params) && (body2 is lam.body) then lam else Lambda(params2, body2)
   
   def applyListOf[A](ls: List[A], f: (A, (A => Block)) => Block)(k: List[A] => Block): Block =

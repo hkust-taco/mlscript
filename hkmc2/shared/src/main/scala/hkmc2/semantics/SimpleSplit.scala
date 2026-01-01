@@ -29,17 +29,17 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
       case els: Else => els
       case End => this
   
-  protected def children: List[Located] = this match
-    case Cons(branch, tail) => List(branch, tail)
+  protected def children: Vector[Located] = this match
+    case Cons(branch, tail) => Vector.double(branch, tail)
     case els @ Else(default) => els.kw match
-      case N => default :: Nil
-      case S(kw) => kw :: default :: Nil
-    case End => Nil
+      case N => Vector.single(default)
+      case S(kw) => Vector.double(kw, default)
+    case End => Vector.empty
   
-  def subTerms: Ls[Term] = this match
-    case Cons(branch, tail) => branch.subTerms ::: tail.subTerms
-    case Else(default) => default :: Nil
-    case End => Nil
+  def subTerms: Vector[Term] = this match
+    case Cons(branch, tail) => branch.subTerms.toVector ++ tail.subTerms
+    case Else(default) => Vector.single(default)
+    case End => Vector.empty
   
   def showDbg: Str = this match
     case Cons(branch, tail) => s"${branch.showDbg}; ${tail.showDbg}"
@@ -84,10 +84,10 @@ object SimpleSplit:
     case Match(scrutinee: Term.Ref, pattern: Pattern, consequent: SimpleSplit)
     case Let(binding: BlockLocalSymbol, term: Term)
     
-    def subTerms: Ls[Term] = this match
+    def subTerms: Vector[Term] = this match
       case Match(scrutinee, pattern, consequent) =>
-        scrutinee :: pattern.subTerms ::: consequent.subTerms
-      case Let(_, term) => term :: Nil
+        scrutinee +: (pattern.subTerms ++ consequent.subTerms)
+      case Let(_, term) => Vector.single(term)
     
     def showDbg: Str = this match
       case Match(scrutinee, pattern, consequent) =>
@@ -98,10 +98,10 @@ object SimpleSplit:
         s"${scrutinee.showDbg} is ${pattern.showDbg} ${consequentStr}"
       case Let(binding, term) => s"let ${binding.nme} = ${term.showDbg}"
     
-    protected def children: List[Located] = this match
+    protected def children: Vector[Located] = this match
       case Match(scrutinee, pattern, consequent) =>
-        List(scrutinee, pattern, consequent)
-      case Let(binding, term) => List(binding, term)
+        Vector.triple(scrutinee, pattern, consequent)
+      case Let(binding, term) => Vector.double(binding, term)
   
   private[semantics] object prettyPrint:
     /** Represents lines with indentations. */

@@ -6,8 +6,8 @@ fun foo() = if false do foo()
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo() {
-//│   let scrut;
 //│   loopLabel: while (true) {
+//│     let scrut;
 //│     scrut = false;
 //│     if (scrut === true) { continue loopLabel } else { return runtime.Unit }
 //│     break;
@@ -29,14 +29,14 @@ data class Foo(x) with
 //│ Foo1 = function Foo(x) {
 //│   return globalThis.Object.freeze(new Foo.class(x));
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
 //│   constructor(x) {
 //│     this.x = x;
 //│     const this$Foo = this;
-//│     globalThis.Object.freeze(class Bar {
+//│     (class Bar {
 //│       static {
 //│         this$Foo.Bar = this
 //│       }
@@ -68,7 +68,7 @@ do
 //│ JS (unsanitized):
 //│ let f, f1;
 //│ f1 = 1;
-//│ f = function f() { loopLabel: while (true) { continue loopLabel; break; } };
+//│ f = function f() { loopLabel: while (true) { let tmp; continue loopLabel; break; } };
 //│ runtime.Unit
 //│ f = 1
 

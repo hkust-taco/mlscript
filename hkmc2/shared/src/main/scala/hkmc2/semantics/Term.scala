@@ -25,13 +25,13 @@ enum Annot extends AutoLocated:
     case Trm(trm) => trm.symbol
     case _ => N
   
-  def subTerms: Ls[Term] = this match
-    case Trm(trm) => trm :: Nil
-    case _: Modifier | Untyped | TailRec | TailCall => Nil
+  def subTerms: Vector[Term] = this match
+    case Trm(trm) => Vector.single(trm)
+    case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
   
-  def children: Ls[Located] = this match
-    case Trm(trm) => trm :: Nil
-    case _: Modifier | Untyped | TailRec | TailCall => Nil
+  def children: Vector[Located] = this match
+    case Trm(trm) => Vector.single(trm)
+    case _: Modifier | Untyped | TailRec | TailCall => Vector.empty
   
   def mkClone(using State): Annot = this match
     case Untyped => Untyped
@@ -454,79 +454,79 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case r: SelProj => r.symbol.mkString
     case _ => ""
   
-  def subStatements: Ls[Statement] = this match
-    case Blk(stats, res) => stats ::: res :: Nil
+  def subStatements: Vector[Statement] = this match
+    case Blk(stats, res) => stats.toVector :+ res
     case _ => subTerms
-  def subTerms: Ls[Term] = this match
-    case Error | Missing | _: Lit | _: Ref | _: UnitVal => Nil
-    case Resolved(t, sym) => t :: Nil
-    case App(lhs, rhs) => lhs :: rhs :: Nil
-    case RcdField(lhs, rhs) => lhs :: rhs :: Nil
-    case RcdSpread(bod) => bod :: Nil
-    case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
-    case TyApp(pre, tarsg) => pre :: tarsg
-    case Sel(pre, _) => pre :: Nil
-    case SynthSel(pre, _) => pre :: Nil
-    case DynSel(o, f, _) => o :: f :: Nil
-    case Tup(fields) => fields.flatMap(_.subTerms)
-    case Mut(und) => und :: Nil
-    case CtxTup(fields) => fields.flatMap(_.subTerms)
+  def subTerms: Vector[Term] = this match
+    case Error | Missing | _: Lit | _: Ref | _: UnitVal => Vector.empty
+    case Resolved(t, sym) => Vector.single(t)
+    case App(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdField(lhs, rhs) => Vector.double(lhs, rhs)
+    case RcdSpread(bod) => Vector.single(bod)
+    case FunTy(lhs, rhs, eff) => Vector.double(lhs, rhs) ++ eff.toVector
+    case TyApp(pre, tarsg) => pre +: tarsg.toVector
+    case Sel(pre, _) => Vector.single(pre)
+    case SynthSel(pre, _) => Vector.single(pre)
+    case DynSel(o, f, _) => Vector.double(o, f)
+    case Tup(fields) => fields.flatMap(_.subTerms).toVector
+    case Mut(und) => Vector.single(und)
+    case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
     case IfLike(_, split) => split.subTerms
     case SynthIf(split) => split.subTerms
-    case Lam(params, body) => body :: Nil
-    case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
-    case Rcd(mut, stats) => stats.flatMap(_.subTerms)
-    case Quoted(term) => term :: Nil
-    case Unquoted(term) => term :: Nil
-    case New(cls, args, rft) => cls :: args ::: rft.toList.flatMap(_._2.blk.subTerms)
-    case DynNew(cls, args) => cls :: args
-    case SelProj(pre, cls, _) => pre :: cls :: Nil
-    case Asc(term, ty) => term :: ty :: Nil
-    case Ret(res) => res :: Nil
-    case Throw(res) => res :: Nil
-    case Forall(_, _, body) => body :: Nil
-    case WildcardTy(in, out) => in.toList ++ out.toList
-    case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
-    case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms)
-    case DefineVar(sym, rhs) => rhs :: Nil
-    case Region(_, body) => body :: Nil
-    case RegRef(reg, value) => reg :: value :: Nil
-    case Assgn(lhs, rhs) => lhs :: rhs :: Nil
-    case SetRef(lhs, rhs) => lhs :: rhs :: Nil
-    case Drop(term) => term :: Nil
-    case Deref(term) => term :: Nil
+    case Lam(params, body) => Vector.single(body)
+    case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
+    case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
+    case Quoted(term) => Vector.single(term)
+    case Unquoted(term) => Vector.single(term)
+    case New(cls, args, rft) => (cls +: args.toVector) ++ rft.toVector.flatMap(_._2.blk.subTerms)
+    case DynNew(cls, args) => cls +: args.toVector
+    case SelProj(pre, cls, _) => Vector.double(pre, cls)
+    case Asc(term, ty) => Vector.double(term, ty)
+    case Ret(res) => Vector.single(res)
+    case Throw(res) => Vector.single(res)
+    case Forall(_, _, body) => Vector.single(body)
+    case WildcardTy(in, out) => in.toVector ++ out.toVector
+    case CompType(lhs, rhs, _) => Vector.double(lhs, rhs)
+    case LetDecl(sym, annotations) => annotations.flatMap(_.subTerms).toVector
+    case DefineVar(sym, rhs) => Vector.single(rhs)
+    case Region(_, body) => Vector.single(body)
+    case RegRef(reg, value) => Vector.double(reg, value)
+    case Assgn(lhs, rhs) => Vector.double(lhs, rhs)
+    case SetRef(lhs, rhs) => Vector.double(lhs, rhs)
+    case Drop(term) => Vector.single(term)
+    case Deref(term) => Vector.single(term)
     case TermDefinition(_, _, _, pss, tps, sign, body, res, _, _, annotations, _) =>
-      pss.toList.flatMap(_.subTerms) ::: tps.getOrElse(Nil).flatMap(_.subTerms) ::: sign.toList ::: body.toList ::: annotations.flatMap(_.subTerms)
+      pss.toVector.flatMap(_.subTerms) ++ tps.getOrElse(Nil).flatMap(_.subTerms).toVector ++ sign.toVector ++ body.toVector ++ annotations.flatMap(_.subTerms).toVector
     case cls: ClassDef =>
-      cls.paramsOpt.toList.flatMap(_.subTerms) ::: cls.body.blk :: cls.annotations.flatMap(_.subTerms)
+      (cls.paramsOpt.toVector.flatMap(_.subTerms) :+ cls.body.blk) ++ cls.annotations.flatMap(_.subTerms).toVector
     case mod: ModuleOrObjectDef =>
-      mod.paramsOpt.toList.flatMap(_.subTerms) ::: mod.body.blk :: mod.annotations.flatMap(_.subTerms)
+      ( mod.paramsOpt.toVector.flatMap(_.subTerms) :+ mod.body.blk) ++ mod.annotations.flatMap(_.subTerms).toVector
     case td: TypeDef =>
-      td.rhs.toList ::: td.annotations.flatMap(_.subTerms)
+      td.rhs.toVector ++ td.annotations.flatMap(_.subTerms).toVector
     case pat: PatternDef =>
-      pat.paramsOpt.toList.flatMap(_.subTerms) ::: pat.body.blk :: pat.annotations.flatMap(_.subTerms)
-    case Import(sym, str, pth) => Nil
-    case Try(body, finallyDo) => body :: finallyDo :: Nil
-    case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => rhs :: args ::: defs.flatMap(_.td.subTerms) ::: bod :: Nil
-    case Neg(e) => e :: Nil
-    case Annotated(ann, target) => ann.subTerms ::: target :: Nil
+      (pat.paramsOpt.toVector.flatMap(_.subTerms) :+ pat.body.blk) ++ pat.annotations.flatMap(_.subTerms).toVector
+    case Import(sym, str, pth) => Vector.empty
+    case Try(body, finallyDo) => Vector.single(body) ++ Vector.single(finallyDo)
+    case Handle(lhs, rhs, args, derivedClsSym, defs, bod) => (rhs +: args.toVector) ++ defs.flatMap(_.td.subTerms).toVector :+ bod
+    case Neg(e) => Vector.single(e)
+    case Annotated(ann, target) => ann.subTerms ++ Vector.single(target)
   
   // private def treeOrSubterms(t: Tree, t: Term): Ls[Located] = t match
-  private def treeOrSubterms(t: Tree): Ls[Located] = t match
+  private def treeOrSubterms(t: Tree): Vector[Located] = t match
     case Tree.DummyApp | Tree.DummyTup => subTerms
-    case _ => t :: Nil
+    case _ => Vector.single(t)
   
-  protected def children: Ls[Located] = this match
-    case t: Lit => t.lit.asTree :: Nil
+  protected def children: Vector[Located] = this match
+    case t: Lit => Vector.single(t.lit.asTree)
     case t: Ref => treeOrSubterms(t.tree)
     case t: Tup => treeOrSubterms(t.tree)
-    case l: Lam => l.params.paramSyms.map(_.id) ::: l.body :: Nil
+    case l: Lam => l.params.paramSyms.map(_.id).toVector :+ l.body
     case t: App => treeOrSubterms(t.tree)
-    case IfLike(_, split) => split :: Nil
-    case SynthIf(split) => split :: Nil
-    case SynthSel(pre, nme) => pre :: nme :: Nil
-    case Sel(pre, nme) => pre :: nme :: Nil
-    case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
+    case IfLike(_, split) => Vector.single(split)
+    case SynthIf(split) => Vector.single(split)
+    case SynthSel(pre, nme) => Vector.double(pre, nme)
+    case Sel(pre, nme) => Vector.double(pre, nme)
+    case SelProj(prefix, cls, proj) => Vector.triple(prefix, cls, proj)
     case _ =>
       subTerms // TODO more precise (include located things that aren't terms)
   
@@ -743,8 +743,11 @@ case class ObjBody(blk: Term.Blk):
   override def toString: String = blk.showDbg
 
 
-/** Note that the `file` Path may not represent a real file; eg when importing "fs". */
-case class Import(sym: Symbol, str: Str, file: os.Path) extends Statement
+/** `sym` is a `MemberSymbol` when the import is made by the user and can be referred to by name,
+  * in which case it is a `BlockMemberSymbol` when importing files explicitly
+  * and a `TermSymbol` when the import is made implicitly by the compiler (eg, importing "Predef").
+  * Note that the `file` Path may not represent a real file; eg when importing "fs". */
+case class Import(sym: TempSymbol | MemberSymbol, str: Str, file: io.Path) extends Statement
 
 
 sealed abstract class Declaration:
@@ -986,12 +989,12 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term], modulef
 extends Declaration, AutoLocated:
   var fldSym: Opt[MemberSymbol] = N
   def subTerms: Ls[Term] = sign.toList
-  override protected def children: List[Located] = sym :: sign.toList
+  override protected def children: Vector[Located] = sym +: sign.toVector
   def showDbg: Str = flags.show + sym + sign.fold("")(": " + _.showDbg)
 
 final case class ParamList(flags: ParamListFlags, params: Ls[Param], restParam: Opt[Param])
 extends AutoLocated:
-  override protected def children: List[Located] = params ::: restParam.toList
+  override protected def children: Vector[Located] = params.toVector ++ restParam.toVector
   def foreach(f: Param => Unit): Unit =
     (params ++ restParam).foreach(f)
   def paramCountLB: Int = params.length
@@ -1018,7 +1021,7 @@ object ParamListFlags:
 
 trait FldImpl extends AutoLocated:
   self: Fld =>
-  def children: Ls[Located] = self.term :: self.asc.toList ::: Nil
+  def children: Vector[Located] = self.term +: self.asc.toVector
   def showDbg: Str = flags.show + self.term.showDbg
   def describe: Str =
     (if self.flags.spec then "specialized " else "") +

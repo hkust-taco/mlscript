@@ -10,7 +10,7 @@ data class Foo(arguments)
 //│ Foo1 = function Foo(arguments1) {
 //│   return globalThis.Object.freeze(new Foo.class(arguments1));
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }
@@ -28,7 +28,7 @@ data class Foo(eval)
 //│ Foo3 = function Foo(eval1) {
 //│   return globalThis.Object.freeze(new Foo.class(eval1));
 //│ };
-//│ globalThis.Object.freeze(class Foo2 {
+//│ (class Foo2 {
 //│   static {
 //│     Foo3.class = this
 //│   }
@@ -46,7 +46,7 @@ data class Foo(static)
 //│ Foo5 = function Foo(static1) {
 //│   return globalThis.Object.freeze(new Foo.class(static1));
 //│ };
-//│ globalThis.Object.freeze(class Foo4 {
+//│ (class Foo4 {
 //│   static {
 //│     Foo5.class = this
 //│   }
@@ -64,7 +64,7 @@ data class Foo(v')
 //│ Foo7 = function Foo(v$_) {
 //│   return globalThis.Object.freeze(new Foo.class(v$_));
 //│ };
-//│ globalThis.Object.freeze(class Foo6 {
+//│ (class Foo6 {
 //│   static {
 //│     Foo7.class = this
 //│   }

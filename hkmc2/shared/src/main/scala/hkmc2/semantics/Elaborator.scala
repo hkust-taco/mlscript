@@ -69,7 +69,12 @@ object Elaborator:
   // TODO later: use TempSymbol instead of VarSymbol? (currently, trying that creates lot of problems)
   class UnderCtx(val unders: Opt[mutable.ArrayBuffer[VarSymbol]])
   
-  case class Ctx(outer: OuterCtx, parent: Opt[Ctx], env: Map[Str, Ctx.Elem], mode: Mode):
+  case class Ctx(
+      outer: OuterCtx,
+      parent: Opt[Ctx],
+      env: Map[Str, Ctx.Elem],
+      mode: Mode,
+  ):
     
     override def toString: Str = s"${parent.fold("")(_.toString+"/")}${outer.showDbg}"
     
@@ -201,6 +206,8 @@ object Elaborator:
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
         val bufferable = assumeObject("bufferable")
+      object scope extends VirtualModule(assumeBuiltinMod("scope")):
+        val locally = assumeObject("locally")
       def getBuiltinOp(op: Str): Opt[Str] =
         if getBuiltin(op).isDefined then builtinBinOps.get(op) else N
       /** Classes that do not use `instanceof` in pattern matching. */
@@ -315,10 +322,14 @@ end Elaborator
 import Elaborator.*
 
 
-class Elaborator(val tl: TraceLogger, val wd: os.Path, val prelude: Ctx)
-(using val raise: Raise, val state: State)
+class Elaborator(val tl: TraceLogger, val wd: io.Path, val prelude: Ctx)
+(using val raise: Raise, val state: State, val cctx: CompilerCtx)
 extends Importer with ucs.SplitElaborator:
   import tl.*
+  
+  lazy val illegalMemberNameTail =
+    msg"Member names must start with a letter or underscore, followed by letters, digits, or underscores." -> N
+    :: Nil
   
   def mkLetBinding(kw: Tree.Keywrd[?], sym: LocalSymbol, rhs: Term, annotations: Ls[Annot]): Ls[Statement] =
     LetDecl(sym, annotations).mkLocWith(kw, sym) :: DefineVar(sym, rhs) :: Nil
@@ -1088,6 +1099,12 @@ extends Importer with ucs.SplitElaborator:
           case R(id) =>
             val sym = members.getOrElse(id.name, die)
             val owner = ctx.outer.inner
+            if owner.isDefined && !identifierPattern.matches(id.name) then
+              raise:
+                ErrorReport:
+                  msg"Illegal member ${k.desc} name: '${id.name}'" -> nme.toLoc
+                  :: illegalMemberNameTail
+              return go(sts, Nil, acc)
             val isMethod = owner.exists(_.isInstanceOf[ClassSymbol])
             val tdf = ctx.nest(OuterCtx.NonReturnContext).givenIn: newCtx ?=>
               // * Add type parameters to context
@@ -1154,6 +1171,7 @@ extends Importer with ucs.SplitElaborator:
             raise(d)
             go(sts, Nil, acc)
       case (td @ TypeDef(k, head, rhs)) :: sts =>
+        val owner = ctx.outer.inner
         
         assert((k is Als) || (k is Cls) || (k is Mod) || (k is Obj) || (k is Pat), k)
         val body = td.withPart
@@ -1166,6 +1184,14 @@ extends Importer with ucs.SplitElaborator:
           case L(d) =>
             raise(d)
             return go(sts, Nil, acc)
+        
+        if owner.isDefined && !identifierPattern.matches(nme.name) then
+          raise:
+            ErrorReport:
+              msg"Illegal member ${k.desc} name: '${nme.name}'" -> nme.toLoc
+              :: illegalMemberNameTail
+          return go(sts, Nil, acc)
+        
         val sym = members.getOrElse(nme.name, lastWords(s"Symbol not found: ${nme.name}"))
         
         var newCtx = S(td.symbol).collectFirst:
@@ -1282,7 +1308,6 @@ extends Importer with ucs.SplitElaborator:
             d
         case Pat =>
           val patSym = td.symbol.asInstanceOf[PatternSymbol] // TODO improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             if pss.length > 1 then raise:
                 ErrorReport:
@@ -1333,7 +1358,6 @@ extends Importer with ucs.SplitElaborator:
             pd
         case k: (Mod.type | Obj.type) =>
           val modSym = td.symbol.asInstanceOf[ModuleOrObjectSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             trace(s"Processing module/object definition $nme"):
               val comp = sym.asCls match
@@ -1350,7 +1374,6 @@ extends Importer with ucs.SplitElaborator:
               md
         case Cls =>
           val clsSym = td.symbol.asInstanceOf[ClassSymbol] // TODO: improve `asInstanceOf`
-          val owner = ctx.outer.inner
           newCtx.givenIn:
             trace(s"Processing class definition $nme"):
               val comp = sym.asMod

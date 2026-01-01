@@ -1,12 +1,11 @@
 const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
 const prettyPrint = globalThis.Symbol.for("mlscript.prettyPrint");
 import runtime from "./Runtime.mjs";
-import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
 let Predef1;
-globalThis.Object.freeze(class Predef {
+(class Predef {
   static {
     Predef1 = this
   }
@@ -14,16 +13,18 @@ globalThis.Object.freeze(class Predef {
     runtime.Unit;
   }
   static {
-    globalThis.Object.freeze(class Symbols {
+    (class Symbols {
       static {
-        Predef.Symbols = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Predef.Symbols = this;
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
         this.definitionMetadata = RuntimeJS.symbols.definitionMetadata;
         Object.defineProperty(this, "class", {
           value: Symbols
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Symbols"]; 
@@ -259,7 +260,7 @@ globalThis.Object.freeze(class Predef {
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
+      let len, scrut, i, init, tmp;
       len = rest.length;
       scrut = len === 0;
       if (scrut === true) {
@@ -267,18 +268,19 @@ globalThis.Object.freeze(class Predef {
       } else {
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
-        tmp4: while (true) {
+        tmp1: while (true) {
+          let scrut1, tmp2, tmp3, tmp4;
           scrut1 = i > 0;
           if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            tmp3 = runtime.Unit;
-            continue tmp4
+            tmp2 = i - 1;
+            i = tmp2;
+            tmp3 = runtime.safeCall(rest.at(i));
+            tmp4 = runtime.safeCall(f(tmp3, init));
+            init = tmp4;
+            tmp = runtime.Unit;
+            continue tmp1
           } else {
-            tmp3 = runtime.Unit;
+            tmp = runtime.Unit;
           }
           break;
         }

@@ -101,7 +101,7 @@ module Foo with
 //│ Foo1 = function Foo() {
 //│   return globalThis.Object.freeze(new Foo.class());
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }

@@ -12,8 +12,7 @@ object Instructions:
       children: Seq[Expr],
       resultTypes: Seq[Result]
   ): FoldedInstr =
-    import Document.*
-    val labelWat = label.map(lbl => text(s"$$$lbl"))
+    val labelWat = label.map(lbl => doc"$$$lbl")
 
     FoldedInstr(
       mnemonic = "block",
@@ -102,10 +101,9 @@ object Instructions:
 
   /** Creates a `br` (branch) instruction. */
   def br(label: Str): FoldedInstr =
-    import Document.*
     FoldedInstr(
       mnemonic = "br",
-      instrargs = Seq(text(s"$$$label")),
+      instrargs = Seq(doc"$$$label"),
       stackargs = Seq.empty,
       resultType = S(UnreachableType)
     )
@@ -113,10 +111,9 @@ object Instructions:
   object i32:
     /** Creates an `i32.const` instruction. */
     def const(value: Int): FoldedInstr =
-      import Document.*
       FoldedInstr(
         mnemonic = "i32.const",
-        instrargs = Seq(text(s"$value")),
+        instrargs = Seq(doc"$value"),
         stackargs = Seq.empty,
         resultType = S(I32Type)
       )

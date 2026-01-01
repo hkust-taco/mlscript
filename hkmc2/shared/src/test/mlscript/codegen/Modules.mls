@@ -5,7 +5,7 @@
 module None
 //│ JS (unsanitized):
 //│ let None1;
-//│ globalThis.Object.freeze(class None {
+//│ (class None {
 //│   static {
 //│     None1 = this
 //│   }
@@ -56,7 +56,7 @@ module M with
   val y = x + 1
 //│ JS (unsanitized):
 //│ let M1;
-//│ globalThis.Object.freeze(class M {
+//│ (class M {
 //│   static {
 //│     M1 = this
 //│   }
@@ -65,7 +65,7 @@ module M with
 //│   }
 //│   static {
 //│     let tmp;
-//│     globalThis.Object.freeze(class C {
+//│     (class C {
 //│       static {
 //│         M.C = this
 //│       }
@@ -76,7 +76,7 @@ module M with
 //│     this.D = function D() {
 //│       return globalThis.Object.freeze(new D.class());
 //│     };
-//│     globalThis.Object.freeze(class D {
+//│     (class D {
 //│       static {
 //│         M.D.class = this
 //│       }
@@ -124,7 +124,7 @@ module M with
   val m: module M = M
 //│ JS (unsanitized):
 //│ let M3;
-//│ globalThis.Object.freeze(class M2 {
+//│ (class M2 {
 //│   static {
 //│     M3 = this
 //│   }
@@ -157,7 +157,7 @@ module AA with
     [x, y]
 //│ JS (unsanitized):
 //│ let AA1;
-//│ globalThis.Object.freeze(class AA {
+//│ (class AA {
 //│   static {
 //│     AA1 = this
 //│   }
@@ -166,7 +166,7 @@ module AA with
 //│   }
 //│   static {
 //│     this.x = 1;
-//│     globalThis.Object.freeze(class BB {
+//│     (class BB {
 //│       static {
 //│         AA.BB = this
 //│       }

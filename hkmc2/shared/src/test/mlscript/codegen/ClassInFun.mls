@@ -9,7 +9,7 @@ fun test(a) =
 //│ let test;
 //│ test = function test(a) {
 //│   let C1;
-//│   globalThis.Object.freeze(class C {
+//│   (class C {
 //│     static {
 //│       C1 = this
 //│     }
@@ -43,7 +43,7 @@ fun test(x) =
 //│   Foo2 = function Foo(a, b) {
 //│     return globalThis.Object.freeze(new Foo.class(a, b));
 //│   };
-//│   globalThis.Object.freeze(class Foo1 {
+//│   (class Foo1 {
 //│     static {
 //│       Foo2.class = this
 //│     }

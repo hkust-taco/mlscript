@@ -11,15 +11,17 @@ object Test with
     Test.x
 //│ JS (unsanitized):
 //│ let Test1;
-//│ globalThis.Object.freeze(class Test {
+//│ (class Test {
 //│   static {
-//│     Test1 = globalThis.Object.freeze(new this)
+//│     new this
 //│   }
 //│   constructor() {
+//│     Test1 = this;
 //│     this.x = 12;
 //│     Object.defineProperty(this, "class", {
 //│       value: Test
-//│     })
+//│     });
+//│     globalThis.Object.freeze(this);
 //│   }
 //│   foo() {
 //│     let tmp;
@@ -72,12 +74,13 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.73: 	  let x = 2
+//│ ║  l.75: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.72: 	  val x = 1
+//│ ║  l.74: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
+//│ let Test4;
 //│ globalThis.Object.freeze(class Test3 {
 //│   static {
 //│     Test4 = this
@@ -119,7 +122,7 @@ data class Cls(x) with
 //│ Cls1 = function Cls(x2) {
 //│   return globalThis.Object.freeze(new Cls.class(x2));
 //│ };
-//│ globalThis.Object.freeze(class Cls {
+//│ (class Cls {
 //│   static {
 //│     Cls1.class = this
 //│   }
@@ -180,7 +183,7 @@ module Whoops with
     fun g() = f()
 //│ JS (unsanitized):
 //│ let Whoops2;
-//│ globalThis.Object.freeze(class Whoops {
+//│ (class Whoops {
 //│   static {
 //│     Whoops2 = this
 //│   }
@@ -189,7 +192,7 @@ module Whoops with
 //│   }
 //│   static {
 //│     this.v = Whoops;
-//│     globalThis.Object.freeze(class Whoops1 {
+//│     (class Whoops1 {
 //│       static {
 //│         Whoops.Whoops = this
 //│       }
@@ -226,7 +229,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.227: 	Runtime
+//│ ║  l.230: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

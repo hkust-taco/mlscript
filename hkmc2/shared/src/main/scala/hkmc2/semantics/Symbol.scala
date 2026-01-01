@@ -125,9 +125,7 @@ abstract class Symbol(using State) extends Located:
     case (sym, S(_)) =>
       lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
   
-  override def equals(x: Any): Bool = x match
-    case that: Symbol => uid === that.uid
-    case _ => false
+  override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
   def subst(using SymbolSubst): Symbol

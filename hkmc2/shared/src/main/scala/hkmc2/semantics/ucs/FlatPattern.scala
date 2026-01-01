@@ -44,15 +44,18 @@ enum FlatPattern extends AutoLocated:
     case Tuple(size, inf) => Tuple(size, inf)
     case Record(entries) => Record(entries)
   
-  def subTerms: Ls[Term] = this match
-    case p: ClassLike => p.constructor :: Nil
-    case _: (Lit | Tuple | Record) => Nil
+  def subTerms: Vector[Term] = this match
+    case p: ClassLike => Vector(p.constructor)
+    case _: (Lit | Tuple | Record) => Vector.empty
   
-  def children: Ls[Located] = this match
-    case Lit(literal) => literal :: Nil
-    case ClassLike(ctor, symbol, scruts, _) => ctor :: scruts.fold(Nil)(_.map(_._1))
-    case Tuple(fields, _) => Nil
-    case Record(entries) => entries.flatMap { case (nme, als) => nme :: als :: Nil }
+  def children: Vector[Located] = this match
+    case Lit(literal) => Vector(literal)
+    case ClassLike(ctor, symbol, scruts, _) => Vector(ctor) ++ scruts.fold(Vector.empty)(_.map(_._1))
+    case Tuple(fields, _) => Vector.empty
+    case Record(entries) =>
+      entries.iterator.flatMap:
+        case (nme, als) => Vector(nme, als)
+      .toVector
   
   def showDbg: Str =
     (this match

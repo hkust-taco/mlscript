@@ -18,7 +18,7 @@ class A(x) with
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
 //│ };
-//│ globalThis.Object.freeze(class A {
+//│ (class A {
 //│   static {
 //│     A1.class = this
 //│   }
@@ -42,7 +42,8 @@ class A(x) with
 //│   } 
 //│   static f(buf, idx) {
 //│     return (y) => {
-//│       let tmp, tmp1, idx1, idx2, idx3, idx4, idx5;
+//│       let tmp, tmp1;
+//│       let idx1, idx2, idx3, idx4, idx5;
 //│       idx1 = idx + 0;
 //│       tmp = buf.buf.at(idx1) + 1;
 //│       idx5 = idx + 0;
