@@ -10,61 +10,85 @@ declare type tailrec
 declare type tailcall
 
 declare class Object
-declare val Object
+declare module Object with
+  fun
+    create
+    freeze
+    assign
+    entries
+    prototype
+    fromEntries
+    getPrototypeOf
+    defineProperty
+    getOwnPropertyDescriptor
+    getOwnPropertyDescriptors
 declare class JSON
-declare val JSON
+declare module JSON with
+  fun
+    stringify
 declare class Number
-declare val Number
+declare module Number with
+  val
+    MIN_VALUE
+    MAX_VALUE
+    MIN_SAFE_INTEGER
+    MAX_SAFE_INTEGER
+    NEGATIVE_INFINITY
+    POSITIVE_INFINITY
 declare class BigInt
-declare val BigInt
+declare module BigInt
 declare class Function
-declare val Function
+declare module Function
 declare class String
-declare val String
+declare module String with
+  fun
+    fromCharCode
+    fromCodePoint
+    raw
 declare class RegExp
-declare val RegExp
+declare module RegExp
 declare class Set[V]
-declare val Set
+declare module Set
 declare class Map[K, V]
-declare val Map
+declare module Map
 declare class WeakSet[V]
-declare val WeakSet
+declare module WeakSet
 declare class WeakMap[K, V]
-declare val WeakMap
-declare class Error(info)
-declare class TypeError(info)
-declare class RangeError(info)
+declare module WeakMap
+declare class Error//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
+declare class TypeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
+declare class RangeError//(info) // TODO: handle JS classes that can be instantiated without `new` specially in codegen.
 declare class Date
-declare val Date
+declare module Date
 
 declare class ArrayBuffer
-declare val ArrayBuffer
+declare module ArrayBuffer
 declare class TypedArray
-declare val TypedArray
+declare module TypedArray
 declare class Int8Array
-declare val Int8Array
+declare module Int8Array
 declare class Uint8Array
-declare val Uint8Array
+declare module Uint8Array
 declare class Uint8ClampedArray
-declare val Uint8ClampedArray
+declare module Uint8ClampedArray
 declare class Int16Array
-declare val Int16Array
+declare module Int16Array
 declare class Uint16Array
-declare val Uint16Array
+declare module Uint16Array
 declare class Int32Array
-declare val Int32Array
+declare module Int32Array
 declare class Uint32Array
-declare val Uint32Array
+declare module Uint32Array
 declare class Float16Array
-declare val Float16Array
+declare module Float16Array
 declare class Float32Array
-declare val Float32Array
+declare module Float32Array
 declare class Float64Array
-declare val Float64Array
+declare module Float64Array
 declare class BigInt64Array
-declare val BigInt64Array
+declare module BigInt64Array
 declare class BigUint64Array
-declare val BigUint64Array
+declare module BigUint64Array
 
 // MLscript-specific types
 declare class Bool
@@ -79,8 +103,17 @@ declare class Str
 //    [ <1 empty item> ]
 //    > Array(1, 2)
 //    [ 1, 2 ]
-// We declare it as a function of exactly one argument here to avoid that footgun.
-declare class Array[T](val length: Int): Array[T]
+// We used to declare it as a class taking exactly one argument here to avoid that footgun:
+//    declare class Array[T](val length: Int): Array[T]
+// but this made instance checks wrongly use `Array.class`;
+// TODO: handle Array and other JS classes that can be instantiated without `new` specially in codegen.
+declare class Array[T]
+declare module Array with
+  fun
+    from
+    concat
+    isArray
+    prototype
 
 declare object Symbol with
   // The `TermDef` needs `rhs` to be defined to be recognized as `isMLsFun`.
@@ -142,10 +175,40 @@ declare module Math with
       tanh: Num -> Num
       trunc: Num -> Num
 
-declare val Reflect
-declare val console
-declare val process
-declare val fs
+declare module Reflect with
+  fun
+    get
+    // set // TODO: handle keyword-named members
+    has
+    ownKeys
+    getPrototypeOf
+    apply
+    construct
+declare module console with
+  declare
+    fun
+      log
+      debug
+      info
+      warn
+      error
+      assert
+      clear
+      count
+      countReset
+      dir
+      dirxml
+      group
+      groupCollapsed
+      groupEnd
+      table
+      time
+      timeEnd
+      trace
+
+declare val process // TODO make `module`
+declare val fs // TODO make `module`
+
 declare val Infinity
 
 // Wasm support

@@ -200,10 +200,10 @@ str
 //│             toString() { return runtime.render(this); }
 //│             static [definitionMetadata] = ["class", "Cont$handler$h1$perform$"]; 
 //│           });
-//│           doUnwind1 = function doUnwind(res7, pc) {
-//│             res7.contTrace.last.next = new Cont$handler$h1$perform$2(pc);
-//│             res7.contTrace.last = res7.contTrace.last.next;
-//│             return res7
+//│           doUnwind1 = function doUnwind(res4, pc) {
+//│             res4.contTrace.last.next = new Cont$handler$h1$perform$2(pc);
+//│             res4.contTrace.last = res4.contTrace.last.next;
+//│             return res4
 //│           };
 //│           tmp28 = str + "A";
 //│           str = tmp28;
@@ -244,12 +244,12 @@ str
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Cont$handleBlock$h1$"]; 
 //│     });
-//│     doUnwind = function doUnwind(res7, pc) {
-//│       res7.contTrace.last.next = new Cont$handleBlock$h1$2(pc);
-//│       return runtime.handleBlockImpl(res7, h1)
+//│     doUnwind = function doUnwind(res4, pc) {
+//│       res4.contTrace.last.next = new Cont$handleBlock$h1$2(pc);
+//│       return runtime.handleBlockImpl(res4, h1)
 //│     };
 //│     handleBlock$8 = function handleBlock$() {
-//│       let h2, res7, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
+//│       let h2, res4, Cont$handleBlock$h2$2, doUnwind1, Handler$h2$2;
 //│       (class Handler$h2$1 extends Effect1 {
 //│         static {
 //│           Handler$h2$2 = this
@@ -289,10 +289,10 @@ str
 //│               toString() { return runtime.render(this); }
 //│               static [definitionMetadata] = ["class", "Cont$handler$h2$perform$"]; 
 //│             });
-//│             doUnwind2 = function doUnwind(res8, pc) {
-//│               res8.contTrace.last.next = new Cont$handler$h2$perform$2(pc);
-//│               res8.contTrace.last = res8.contTrace.last.next;
-//│               return res8
+//│             doUnwind2 = function doUnwind(res5, pc) {
+//│               res5.contTrace.last.next = new Cont$handler$h2$perform$2(pc);
+//│               res5.contTrace.last = res5.contTrace.last.next;
+//│               return res5
 //│             };
 //│             tmp28 = str + "B";
 //│             tmp29 = str + tmp28;
@@ -327,21 +327,21 @@ str
 //│               tmp26 = value$;
 //│               break;
 //│             case 2:
-//│               res7 = value$;
+//│               res4 = value$;
 //│               break;
 //│           }
 //│           contLoop: while (true) {
 //│             switch (this.pc) {
 //│               case 1:
-//│                 res7 = runtime.safeCall(h1.perform(runtime.Unit));
-//│                 if (res7 instanceof runtime.EffectSig.class) {
-//│                   return this.doUnwind(res7, 2)
+//│                 res4 = runtime.safeCall(h1.perform(runtime.Unit));
+//│                 if (res4 instanceof runtime.EffectSig.class) {
+//│                   return this.doUnwind(res4, 2)
 //│                 }
 //│                 this.pc = 2;
 //│                 continue contLoop;
 //│                 break;
 //│               case 2:
-//│                 return res7;
+//│                 return res4;
 //│                 break;
 //│             }
 //│             break;
@@ -350,19 +350,19 @@ str
 //│         toString() { return runtime.render(this); }
 //│         static [definitionMetadata] = ["class", "Cont$handleBlock$h2$"]; 
 //│       });
-//│       doUnwind1 = function doUnwind(res8, pc) {
-//│         res8.contTrace.last.next = new Cont$handleBlock$h2$2(pc);
-//│         return runtime.handleBlockImpl(res8, h2)
+//│       doUnwind1 = function doUnwind(res5, pc) {
+//│         res5.contTrace.last.next = new Cont$handleBlock$h2$2(pc);
+//│         return runtime.handleBlockImpl(res5, h2)
 //│       };
 //│       tmp26 = runtime.safeCall(h2.perform(runtime.Unit));
 //│       if (tmp26 instanceof runtime.EffectSig.class) {
 //│         return doUnwind1(tmp26, 1)
 //│       }
-//│       res7 = runtime.safeCall(h1.perform(runtime.Unit));
-//│       if (res7 instanceof runtime.EffectSig.class) {
-//│         return doUnwind1(res7, 2)
+//│       res4 = runtime.safeCall(h1.perform(runtime.Unit));
+//│       if (res4 instanceof runtime.EffectSig.class) {
+//│         return doUnwind1(res4, 2)
 //│       }
-//│       return res7
+//│       return res4
 //│     };
 //│     tmp25 = handleBlock$8();
 //│     if (tmp25 instanceof runtime.EffectSig.class) {

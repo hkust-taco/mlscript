@@ -120,13 +120,14 @@ Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
-:fixme
-Cls.huh
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'huh' yielded 'undefined'
+// * Note: the access is not checked because the selection is resolved
+// * (to an MLscript definition, which is not supposed to return `undefined`).
+print(Cls.huh)
+//│ > undefined
 
 let c = new Cls(123)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Cls.
-//│ ║  l.127: 	let c = new Cls(123)
+//│ ║  l.128: 	let c = new Cls(123)
 //│ ║         	            ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Cls1 is not a constructor
@@ -141,22 +142,22 @@ module Example with
 // whoops
   val a = this
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.140: 	module Example with
+//│ ║  l.141: 	module Example with
 //│ ║         	                   ^
-//│ ║  l.141: 	// whoops
+//│ ║  l.142: 	// whoops
 //│ ╙──       	
 //│ ╔══[PARSE ERROR] Expected an expression; found block instead
-//│ ║  l.142: 	  val a = this
+//│ ║  l.143: 	  val a = this
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.142: 	  val a = this
+//│ ║  l.143: 	  val a = this
 //│ ╙──       	^^
 
 // ——— ——— ———
 
 let xs = new Oopsie
 //│ ╔══[ERROR] Name not found: Oopsie
-//│ ║  l.157: 	let xs = new Oopsie
+//│ ║  l.158: 	let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Expected a statically known class; found ‹error›.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
@@ -179,7 +180,7 @@ class C
 :sjs
 class D extends id(C)
 //│ ╔══[ERROR] Expected a statically known class; found selection.
-//│ ║  l.180: 	class D extends id(C)
+//│ ║  l.181: 	class D extends id(C)
 //│ ║         	                ^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
@@ -207,13 +208,13 @@ let x = 0
 :fixme
 set x += 1; ()
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.208: 	set x += 1; ()
+//│ ║  l.209: 	set x += 1; ()
 //│ ╙──       	    ^^^^^^^^^^
 
 :e
 set (x += 1; ())
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.214: 	set (x += 1; ())
+//│ ║  l.215: 	set (x += 1; ())
 //│ ╙──       	    ^^^^^^^^^^^^
 
 (set x += 1); ()
@@ -221,7 +222,7 @@ set (x += 1; ())
 :fixme
 [x, set x += 1; x]
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.222: 	[x, set x += 1; x]
+//│ ║  l.223: 	[x, set x += 1; x]
 //│ ╙──       	        ^^^^^^^^^
 //│ = [1]
 
@@ -243,13 +244,13 @@ import "../../mlscript-compile/Stack.mls"
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
-//│ ║  l.244: 	open Stack { ::, Nil }
+//│ ║  l.245: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
-//│ ║  l.250: 	open Stack { (::), Nil }
+//│ ║  l.251: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
 
 open Stack { Nil, :: }
@@ -257,7 +258,7 @@ open Stack { Nil, :: }
 :sjs
 1 :: Nil
 //│ ╔══[ERROR] Module 'Stack' does not contain member '::'
-//│ ║  l.258: 	1 :: Nil
+//│ ║  l.259: 	1 :: Nil
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
@@ -268,9 +269,9 @@ open Stack { Nil, :: }
 mkStr of ... // hello
 "oops"
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.268: 	mkStr of ... // hello
+//│ ║  l.269: 	mkStr of ... // hello
 //│ ║         	                     ^
-//│ ║  l.269: 	"oops"
+//│ ║  l.270: 	"oops"
 //│ ╙──       	
 //│ = "oops"
 
@@ -293,25 +294,25 @@ Foo(1, 2, 3).args
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] Unrecognized pattern (spread).
-//│ ║  l.294: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.295: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                       ^^^^^^^
 //│ ╔══[ERROR] Name not found: args
-//│ ║  l.294: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.295: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                                     ^^^^
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.294: 	if Foo(1, 2, 3) is Foo(...args) then args
+//│ ║  l.295: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
-//│ ║  l.306: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
+//│ ║  l.307: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
-//│ ║  l.312: 	if Foo(1, 2, 3) is Foo(arg) then arg
+//│ ║  l.313: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
 //│ ═══[RUNTIME ERROR] Error: match error
 
@@ -345,10 +346,10 @@ fun foo() =
   let bar(x: Str): Str = x + x
   bar("test")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.345: 	  let bar(x: Str): Str = x + x
+//│ ║  l.346: 	  let bar(x: Str): Str = x + x
 //│ ╙──       	      ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Expected 0 arguments, got 1
-//│ ║  l.346: 	  bar("test")
+//│ ║  l.347: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
 
 // ——— ——— ———
@@ -358,7 +359,7 @@ fun foo() =
 module Foo(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.358: 	module Foo(x)
+//│ ║  l.359: 	module Foo(x)
 //│ ╙──       	           ^
 //│ JS (unsanitized):
 //│ let Foo5;
@@ -382,7 +383,7 @@ module Foo(x)
 module Foo(val x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.382: 	module Foo(val x)
+//│ ║  l.383: 	module Foo(val x)
 //│ ╙──       	               ^
 //│ JS (unsanitized):
 //│ let Foo7;
@@ -405,7 +406,7 @@ module Foo(val x)
 // TODO support syntax?
 data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
-//│ ║  l.406: 	data class Foo(mut x)
+//│ ║  l.407: 	data class Foo(mut x)
 //│ ╙──       	                   ^
 
 // ——— ——— ———
@@ -422,10 +423,10 @@ set this.pc = 0
 set
   (this).pc = 0
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.421: 	set this.pc = 0
+//│ ║  l.422: 	set this.pc = 0
 //│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.423: 	  (this).pc = 0
+//│ ║  l.424: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
 
 // But this doesn't...
@@ -434,10 +435,10 @@ set
 set
   this.pc = 0
 //│ ╔══[PARSE ERROR] Unexpected static selector here
-//│ ║  l.435: 	  this.pc = 0
+//│ ║  l.436: 	  this.pc = 0
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
-//│ ║  l.435: 	  this.pc = 0
+//│ ║  l.436: 	  this.pc = 0
 //│ ╙──       	  ^^^^
 
 // ——— ——— ———
@@ -449,7 +450,7 @@ pattern A(pattern B) = B
 
 fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
-//│ ║  l.450: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
+//│ ║  l.451: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
 
 // ——— ——— ———
