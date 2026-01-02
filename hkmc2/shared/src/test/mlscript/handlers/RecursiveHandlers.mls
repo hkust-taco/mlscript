@@ -218,9 +218,6 @@ str
 //│     static [definitionMetadata] = ["class", "Handler$h1$"]; 
 //│   });
 //│   h11 = new Handler$h1$3();
-//│   if (h11 instanceof runtime.EffectSig.class) {
-//│     h11 = runtime.topLevelEffect(h11, false);
-//│   }
 //│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
 //│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
 //│     if (runtime.resumePc === -1) {
@@ -319,33 +316,23 @@ str
 //│     } else {
 //│       let saveOffset;
 //│       pc = runtime.resumePc;
-//│       saveOffset = runtime.resumeIdx;
-//│       handleBlock$9 = runtime.resumeArr.at(saveOffset);
 //│       runtime.resumePc = -1;
 //│     }
 //│     main: while (true) {
 //│       switch (pc) {
 //│         case 0:
-//│           runtime.resumeValue = new Handler$h2$3();
+//│           h22 = new Handler$h2$3();
+//│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
+//│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
 //│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 2, null, null, null, 1, 0, 1, handleBlock$9)
+//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 1, null, null, null, 1, 0, 0)
 //│           }
-//│           pc = 2;
+//│           pc = 1;
 //│           continue main;
 //│           break;
 //│         case 1:
 //│           tmp13 = runtime.resumeValue;
 //│           return tmp13;
-//│           break;
-//│         case 2:
-//│           h22 = runtime.resumeValue;
-//│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
-//│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
-//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, handleBlock$10, 1, null, null, null, 1, 0, 1, handleBlock$9)
-//│           }
-//│           pc = 1;
-//│           continue main;
 //│           break;
 //│       }
 //│       break;

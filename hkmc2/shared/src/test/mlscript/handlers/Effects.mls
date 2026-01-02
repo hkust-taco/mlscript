@@ -128,9 +128,6 @@ result
 //│   static [definitionMetadata] = ["class", "Handler$h$"]; 
 //│ });
 //│ h7 = new Handler$h$15();
-//│ if (h7 instanceof runtime.EffectSig.class) {
-//│   h7 = runtime.topLevelEffect(h7, false);
-//│ }
 //│ handleBlock$7 = (undefined, function () {
 //│   let tmp8, tmp9, tmp10, tmp11, pc;
 //│   if (runtime.resumePc === -1) {
@@ -450,16 +447,16 @@ foo(h)
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.429: 	    module A with
+//│ ║  l.426: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.433: 	    module A with
+//│ ║  l.430: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.437: 	    module A with
+//│ ║  l.434: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.441: 	    module A with
+//│ ║  l.438: 	    module A with
 //│ ╙──       	           ^
 //│ = 123
 

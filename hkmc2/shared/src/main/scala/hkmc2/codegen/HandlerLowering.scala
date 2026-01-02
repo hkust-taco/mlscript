@@ -58,6 +58,8 @@ class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
     
 
 object HandlerLowering:
+  val checkInstantiateEffect = false
+
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
   private val nextIdent: Tree.Ident = Tree.Ident("next")
   private val lastIdent: Tree.Ident = Tree.Ident("last")
@@ -81,11 +83,6 @@ object HandlerLowering:
   type FnOrCls = Either[BlockMemberSymbol, DefinitionSymbol[? <: ClassLikeDef] & InnerSymbol]
 
   private enum HandlerCtx:
-    // currentFun: path to the current function for resumption
-    // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
-    // plCnt: how many times to call this function for resumption, as we have arbitrary number of parameter lists
-    // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
-    // currentStackSafetySym: The symbol to be used for stack safety
     case FunctionLike(ctx: FunctionCtx)
     case Ctor
     case ModCtor
@@ -95,6 +92,8 @@ object HandlerLowering:
     def isTopLevel = this === TopLevel
     def allowDefn = isTopLevel || this === ModCtor
   
+  // currentFun: path to the current function for resumption
+  // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo):
     def doUnwind(path: Path, loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
@@ -109,6 +108,9 @@ object HandlerLowering:
         restoreList.map(_.asPath))
       ).map(_.asArg))(true, true, false), false)
   
+  // argLists: length-encoded argument list used for resumption.
+  // currentLocals: All locals to be saved and reloaded, this cannot include any variables in outer scopes
+  // currentStackSafetySym: The symbol to be used for stack safety
   private case class ResumeInfo(
     argLists: List[Path],
     currentLocals: List[Local],
@@ -212,10 +214,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   object EffectfulResult:
     def unapply(r: Result) = r match
       case c: Call if c.mayRaiseEffects => S(r)
-      case _: Instantiate => S(r)
+      case _: Instantiate if checkInstantiateEffect => S(r)
       case _ => N
   
-  private def partitionBlock(blk: Block)(using h: FunctionCtx): PartitionedBlock =
+  private def partitionBlock(blk: Block): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
     val allocId = new IdAllocator()
     var containsCall = false
@@ -240,7 +242,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           result(id) = BlockPartition(blk, resumable)
           id
 
-      // sym: the local that stores the result
       def doNewEffectPartition(res: Result, rst: Block) =
         val stateId = forceId(go(rst)(using partitioned = true), true)
         val newBlock = blockBuilder
