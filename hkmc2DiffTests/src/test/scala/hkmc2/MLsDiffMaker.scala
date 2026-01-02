@@ -160,10 +160,6 @@ abstract class MLsDiffMaker extends DiffMaker:
         PrefixApp(Keywrd(`import`), StrLit(predefFile.toString))
         :: Open(Ident("Predef"))
         :: Nil)
-    if importQQ.isSet then
-      given Config = mkConfig
-      processTrees(
-        PrefixApp(Keywrd(`import`), StrLit(termFile.toString)) :: Nil)
     if stageCode.isSet then
       given Config = mkConfig
       processTrees(
