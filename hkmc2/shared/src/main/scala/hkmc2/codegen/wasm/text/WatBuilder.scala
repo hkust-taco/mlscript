@@ -338,19 +338,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
           )
         case N =>
-          id.name.toIntOption.filter(_ >= 0)
-            .map: idx =>
-              tupleArrayGet(
-                tupleExpr = qualRes,
-                idxBuilder = _ => i32.const(idx)
-              )
-            .getOrElse:
-              errExpr(
-                Ls(
-                  msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${id.name}`)" -> sel.toLoc
-                ),
-                extraInfo = S(sel.toString)
-              )
+          errExpr(
+            Ls(
+              msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${id.name}`). Use `_.[_]` for index-based accesses." -> sel.toLoc
+            ),
+            extraInfo = S(sel)
+          )
 
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
@@ -365,7 +358,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       else
         errExpr(
           Ls(msg"WatBuilder::result for dynamic field selections is not implemented yet" -> dyn.toLoc),
-          extraInfo = S(dyn.toString)
+          extraInfo = S(dyn)
         )
 
     case Instantiate(_, cls, as) =>
@@ -574,17 +567,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
           )
         case N =>
-          nme.name.toIntOption.filter(_ >= 0).map: idx =>
-              val tupleInfo = tupleArray(mut = true)
-              val tupleRef = ref.cast(lhsExpr, RefType(tupleInfo.arrayType, nullable = false))
-              array.set(tupleInfo.arrayType, tupleRef, i32.const(idx), rhsExpr)
-            .getOrElse:
-              errExpr(
-                Ls(
-                  msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${nme.name}`)" -> nme.toLoc
-                ),
-                extraInfo = S(assign.toString)
-              )
+          errExpr(
+            Ls(
+              msg"WatBuilder::returningTerm for AssignField(...) without a resolved symbol is not implemented (field `${nme.name}`). Use `_.[_]` for index-based accesses." -> nme.toLoc
+            ),
+            extraInfo = S(assign)
+          )
 
       val rstBlk = returningTerm(rst)
       Instructions.block(
@@ -612,7 +600,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         else
           errExpr(
             Ls(msg"WatBuilder::returningTerm for AssignDynField(...) where `arrayIdx = false` is not implemented yet" -> lhs.toLoc),
-            extraInfo = S(assign.toString)
+            extraInfo = S(assign)
           )
 
       val rstBlk = returningTerm(rst)
