@@ -95,9 +95,8 @@ object HandlerLowering:
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
   private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo):
-    def doUnwind(path: Path, loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
+    def doUnwind(loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
-        path ::
         currentFun ::
         intLit(stateId) ::
         loc ::
@@ -142,12 +141,13 @@ class HandlerPaths(using Elaborator.State):
   val fnLocalsPath: Path = runtimePath.selSN("FnLocalsInfo").selSN("class")
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   val unwindPath: Path = runtimePath.selSN("unwind")
+  val curEffect: Path = runtimePath.selSN("curEffect")
   val resumePc: Path = runtimePath.selSN("resumePc")
   val resumeIdx: Path = runtimePath.selSN("resumeIdx")
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
-type StackSafetyMap = collection.Map[FnOrCls, (Path => Block)]
+type StackSafetyMap = collection.Map[FnOrCls, Block]
 
 class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   
@@ -247,9 +247,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val newBlock = blockBuilder
           .assignFieldN(paths.runtimePath, paths.resumeValueIdent, res)
           .ifthen(
-            paths.resumeValue,
-            Case.Cls(paths.effectSigSym, paths.effectSigPath),
-            Unwind(stateId, res.toLoc.fold(unit)(locToStr(_)))
+            paths.curEffect,
+            Case.Lit(Tree.UnitLit(true)),
+            End(),
+            S(Unwind(stateId, res.toLoc.fold(unit)(locToStr(_))))
           )
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
@@ -397,7 +398,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     result.toList
 
-  val stackSafetyMap: mutable.Map[FnOrCls, (Path => Block)] = mutable.HashMap.empty
+  val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
     
   /**
    * The actual translation:
@@ -468,16 +469,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyDefn(defn)(k)
     val b = subblockTransform.applyBlock(blk)
     if h.isCtor then
-      return translateTopLevelOrCtor(b, res => Call(paths.ctorEffectPath, res.asArg :: Nil)(true, true, false))
+      return translateTopLevelOrCtor(b, Call(paths.ctorEffectPath, Nil)(true, true, false))
     if h.isTopLevel then
-      return translateTopLevelOrCtor(b, res => Call(paths.topLevelEffectPath, res.asArg :: Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
+      return translateTopLevelOrCtor(b, Call(paths.topLevelEffectPath, Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
     val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx
     given FunctionCtx = ctx
     val parts = partitionBlock(b)
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
       (
-        res =>
-          ctx.doUnwind(res, ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
+        ctx.doUnwind(ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
       )
     if parts.states.size <= 1 then
       return b
@@ -491,7 +491,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case StateTransition(uid) =>
           Assign(pcVar, Value.Lit(Tree.IntLit(uid)), Continue(mainLoopLbl))
         case Unwind(uid, loc) =>
-          ctx.doUnwind(paths.resumeValue, loc, uid, vars)(using paths)
+          ctx.doUnwind(loc, uid, vars)(using paths)
         case _ => super.applyBlock(b)
 
     val arms = parts.states.toList.map: (id, part) =>
@@ -534,15 +534,15 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def translateCtorLike(b: Block, thisPath: Path, isModCtor: Bool)(using h: HandlerCtx): Block =
     translateBlock(b, if isModCtor then HandlerCtx.ModCtor else HandlerCtx.Ctor, Set.empty)
 
-  private def translateTopLevelOrCtor(b: Block, onEffect: Path => Call)(using HandlerCtx): Block =
+  private def translateTopLevelOrCtor(b: Block, onEffect: Call)(using HandlerCtx): Block =
     def topLevelCheck(l: Local, r: Result, rst: Block): Block =
       blockBuilder
         .assign(l, r)
         .ifthen(
-          l.asPath,
-          Case.Cls(paths.effectSigSym, paths.effectSigPath),
-          Assign(l, onEffect(l.asPath), End()),
-          N)
+          paths.curEffect,
+          Case.Lit(Tree.UnitLit(true)),
+          End(),
+          S(Assign(l, onEffect, End())))
         .rest(rst)
     val topLevelTransform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block) = b match

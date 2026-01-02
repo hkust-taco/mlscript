@@ -19,8 +19,8 @@ hi(0)
 //│   let scrut, tmp1, stackDelayRes;
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
+//│   if (runtime.curEffect === null) {} else {
+//│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -35,7 +35,7 @@ hi(0)
 //│   return hi(0)
 //│ });
 //│ tmp = runtime.runStackSafe(5, $_stack$_safe$_body$_);
-//│ if (tmp instanceof runtime.EffectSig.class) { tmp = runtime.topLevelEffect(tmp, false); }
+//│ if (runtime.curEffect === null) {} else { tmp = runtime.topLevelEffect(false); }
 //│ tmp
 //│ = 0
 
@@ -54,8 +54,8 @@ sum(10000)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
-//│   if (stackDelayRes instanceof runtime.EffectSig.class) {
-//│     return runtime.unwind(stackDelayRes, sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
+//│   if (runtime.curEffect === null) {} else {
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -78,9 +78,9 @@ sum(10000)
 //│           res = sum(tmp2);
 //│           runtime.stackDepth = curDepth;
 //│           runtime.resumeValue = res;
-//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
+//│           if (runtime.curEffect === null) {} else {
 //│             let res1;
-//│             return runtime.unwind(runtime.resumeValue, sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 1, tmp2)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 1, tmp2)
 //│           }
 //│           pc = 1;
 //│           continue main
@@ -98,7 +98,7 @@ sum(10000)
 //│   return sum(10000)
 //│ });
 //│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
-//│ if (tmp1 instanceof runtime.EffectSig.class) { tmp1 = runtime.topLevelEffect(tmp1, false); }
+//│ if (runtime.curEffect === null) {} else { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
 //│ = 50005000
 

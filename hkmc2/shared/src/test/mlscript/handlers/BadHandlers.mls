@@ -29,8 +29,8 @@ x
 handle h = Object with
   fun lol(k) = k(1)
 h.lol + 2
-//│ ═══[RUNTIME ERROR] Expected: '3', got: '"EffectSig(ContTrace(null, ref'1, null, ref'1, false) as ref'1, Handler$h$, fun)2"'
-//│ = "EffectSig(ContTrace(null, ref'1, null, ref'1, false) as ref'1, Handler$h$, fun)2"
+//│ ═══[RUNTIME ERROR] Expected: '3', got: '1'
+//│ = 1
 
 handle h = Object with
   fun lol()(k) = k(42)

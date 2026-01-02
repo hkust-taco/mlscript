@@ -56,8 +56,8 @@ fun f() =
 //│         j = 100;
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
-//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(runtime.resumeValue, f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│         if (runtime.curEffect === null) {} else {
+//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -66,8 +66,8 @@ fun f() =
 //│         scrut = runtime.resumeValue;
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
-//│           if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│             return runtime.unwind(runtime.resumeValue, f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           if (runtime.curEffect === null) {} else {
+//│             return runtime.unwind(f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -88,8 +88,8 @@ fun f() =
 //│         break;
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
-//│         if (runtime.resumeValue instanceof runtime.EffectSig.class) {
-//│           return runtime.unwind(runtime.resumeValue, f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│         if (runtime.curEffect === null) {} else {
+//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -166,12 +166,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:155:15)
+//│ 	at Test.main (Debugging.mls:158:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:155:15)
+//│ 	at Test.main (Debugging.mls:158:21)
 
 res.resumeWith(666)
 //│ = 0.33676533676533676
@@ -187,8 +191,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:182:3) with locals: j=200
+//│ > 	at f (Debugging.mls:186:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:184:3)
+//│ > 	at f (Debugging.mls:188:3)
 //│ > Stack Trace:
 //│ > 	at tail position

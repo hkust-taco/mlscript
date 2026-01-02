@@ -54,11 +54,15 @@ class EffectHandle(_reified) with
   fun resumeWith(value) =
     Runtime.try(() => resume(reified.contTrace)(value))
   fun raise() =
-    topLevelEffect(reified, false)
+    set curEffect = reified
 
 fun try(f) =
   let res = f()
-  if res is EffectSig then EffectHandle(res) else res
+  if curEffect !== null then
+    let tmp = curEffect
+    set curEffect = null
+    EffectHandle(tmp)
+  else res
 
 
 // For `pattern` definitions
@@ -125,6 +129,7 @@ module TraceLogger with
 // | f | pc | pcStr | debugInfo | this | argLists... (*) | localCnt | locals... |
 // (*) argLists is length encoded nested array
 
+mut val curEffect = null
 mut val resumeValue = null
 mut val resumeArr = null
 mut val resumeIdx = null
@@ -194,20 +199,25 @@ data class CustomStackError(stack) with
 fun raisePrintStackEffect(showLocals) =
   mkEffect(PrintStackEffect, showLocals)
 
-fun topLevelEffect(tr, debug) =
-  while tr.handler === PrintStackEffect do
+fun topLevelEffect(debug) =
+  let tr = curEffect
+  let v = null
+  while tr is EffectSig and tr.handler === PrintStackEffect do
     console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
-    set tr = resume(tr.contTrace)(())
+    set
+      curEffect = null
+      v = resume(tr.contTrace)(())
+      tr = curEffect
   if tr is EffectSig then
+    set curEffect = null
     throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
   else
-    tr
+    v
 
-fun ctorEffect(tr) =
-  if tr is EffectSig then
-    throw CustomStackError(showStackTrace("Error: Effect " + tr.handler.constructor.name + " is raised inside a constructor", tr, false, false))
-  else
-    tr
+fun ctorEffect() =
+  let tmp = curEffect
+  set curEffect = null
+  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised inside a constructor", tmp, false, false))
 
 fun showStackTrace(header, tr, debug, showLocals) =
   let
@@ -307,18 +317,17 @@ fun debugEff(eff) =
     console.log(eff)
 
 // runtime implementations
-fun unwind(cur, ...saved) =
+fun unwind(...saved) =
   set
-    cur.contTrace.last.next = new mut FunctionContFrame(null, saved)
-    cur.contTrace.last = cur.contTrace.last.next
-  cur
+    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    curEffect.contTrace.last = curEffect.contTrace.last.next
 
 fun mkEffect(handler, handlerFun) =
   let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
   set
     res.contTrace.last = res.contTrace
     res.contTrace.lastHandler = res.contTrace
-  res
+    curEffect = res
 
 fun handleBlockImpl(cur, handler) =
   let handlerFrame = new mut HandlerContFrame(null, null, handler)
@@ -329,18 +338,19 @@ fun handleBlockImpl(cur, handler) =
   handleEffects(cur)
 
 fun enterHandleBlock(handler, body) =
-  let cur = body()
-  if cur is EffectSig then
-    handleBlockImpl(cur, handler)
+  let tmp = body()
+  if curEffect === null then
+    tmp
   else
-    cur
+    handleBlockImpl(curEffect, handler)
 
 fun handleEffects(cur) =
   while cur is
     EffectSig then
       let nxt = handleEffect(cur)
       if cur === nxt then
-        return cur
+        set curEffect = cur
+        return null
       else
         set cur = nxt
     else
@@ -376,8 +386,10 @@ fun handleEffect(cur) =
     handlerFrame.nextHandler = null
 
   // handle the effect
-  set cur = cur.handlerFun(resume(cur.contTrace))
-  if cur is EffectSig then
+  set curEffect = null
+  let tmp = cur.handlerFun(resume(cur.contTrace))
+  if curEffect !== null then
+    set cur = curEffect
     // relink the saved frames
     if saved.next !== null do
       set
@@ -390,7 +402,7 @@ fun handleEffect(cur) =
     cur
   else
     // resume the unlinked handle blocks
-    resumeContTrace(saved, cur)
+    resumeContTrace(saved, tmp)
 
 fun resume(contTrace)(value) =
   if contTrace.resumed do
@@ -402,10 +414,13 @@ fun resumeContTrace(contTrace, value) =
   // TODO: increment stackDepth by some constant amount
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
-  let curDepth = stackDepth 
+  let curDepth = stackDepth
   while
     cont is FunctionContFrame then
+      set curEffect = null
       set value = cont.resume(value)
+      if curEffect !== null do
+        set value = curEffect
       set stackDepth = curDepth
       if value is EffectSig then
         set

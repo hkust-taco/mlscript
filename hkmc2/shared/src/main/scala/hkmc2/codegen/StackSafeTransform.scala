@@ -128,37 +128,27 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
 
   // fnOrCls points us to the doUnwind function
   def rewriteBlk(blk: Block, fnOrCls: FnOrCls, increment: Int) =
-    var usedDepth = false
-    lazy val curDepth =
-      usedDepth = true
-      TempSymbol(None, "curDepth")
-      
-    val stackSafeInfo = stackSafetyMap.get(fnOrCls)
-    val newBody = transform(blk, curDepth)
-    
-    if isTrivial(blk) then
-      newBody
-    else
-      stackSafeInfo match
-      case N =>
-        // The current function is not instrumented and we cannot provide stack safety.
-        // TODO: shouldn't we just return the old blk?
-        blockBuilder
-          .staticif(usedDepth, _.assignScoped(curDepth, stackDepthPath))
-          .rest(newBody)
-      case S(info) =>
-        val resSym = TempSymbol(None, "stackDelayRes")
-        val addStackSafeEffect = blk => blockBuilder
-          .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
-          .staticif(usedDepth, _.assignScoped(curDepth, stackDepthPath))
-          .assignScoped(resSym, Call(checkDepthPath, Nil)(true, true, false))
-          .ifthen(
-            resSym.asPath,
-            Case.Cls(paths.effectSigSym, paths.effectSigPath),
-            info(resSym.asPath)
-          )
-          .rest(blk)
-        addStackSafeEffect(newBody)
+    (stackSafetyMap.get(fnOrCls), isTrivial(blk)) match
+    case (S(doUnwindBlk), false) =>
+      var usedDepth = false
+      lazy val curDepth =
+        usedDepth = true
+        TempSymbol(None, "curDepth")
+      val newBody = transform(blk, curDepth)
+      val resSym = TempSymbol(None, "stackDelayRes")
+      val addStackSafeEffect = blk => blockBuilder
+        .assignFieldN(runtimePath, STACK_DEPTH_IDENT, op("+", stackDepthPath, intLit(increment)))
+        .staticif(usedDepth, _.assignScoped(curDepth, stackDepthPath))
+        .assignScoped(resSym, Call(checkDepthPath, Nil)(true, true, false))
+        .ifthen(
+          paths.curEffect,
+          Case.Lit(Tree.UnitLit(true)),
+          End(),
+          S(doUnwindBlk)
+        )
+        .rest(blk)
+      addStackSafeEffect(newBody)
+    case _ => blk
 
 
 
