@@ -24,6 +24,7 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
+  deforest: Opt[Deforest]
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
@@ -52,6 +53,7 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
+    deforest = N,
   )
   
   case class SanityChecks(light: Bool)
@@ -65,6 +67,16 @@ object Config:
     )
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now
+  
+  case class Deforest(
+    val seethroughModules: Set[os.Path],
+    val seeThroughLazySymbolsNames: Set[String],
+    val seeThroughForceSymbolsNames: Set[String]
+  )
+  
+  object Deforest:
+    val default = Deforest(Set.empty, Set.empty, Set.empty)
+  
   
 end Config
 

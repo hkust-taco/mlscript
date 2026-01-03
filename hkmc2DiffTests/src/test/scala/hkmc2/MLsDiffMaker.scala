@@ -73,6 +73,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val stageCode = NullaryCommand("staging")
   val rewriteWhile = NullaryCommand("rewriteWhile")
   val noTailRecOpt = NullaryCommand("noTailRec")
+  val deforest = Command("deforest")(_.trim)
   
   def mkConfig: Config =
     import Config.*
@@ -102,6 +103,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
+      deforest = Opt.when(deforest.isSet)(Deforest.default),
     )
   
   

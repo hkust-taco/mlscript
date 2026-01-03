@@ -1038,6 +1038,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val desug = LambdaRewriter.desugar(blk)
     
+    // val deforest = Deforest()
+    
     val handlerPaths = new HandlerPaths
     
     val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
