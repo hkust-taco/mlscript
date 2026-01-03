@@ -17,6 +17,9 @@ import hkmc2.Config.EffectHandlers
 import scala.collection.mutable
 import scala.util.boundary
 import hkmc2.codegen.js.JSBuilder
+import sourcecode.Line
+import sourcecode.FileName
+import sourcecode.Name
 
 
 /** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
@@ -59,6 +62,7 @@ class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
 
 object HandlerLowering:
   val checkInstantiateEffect = false
+  val hardLifterError = true
 
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
   private val nextIdent: Tree.Ident = Tree.Ident("next")
@@ -413,14 +417,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     result.toList
 
   val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
-    
+  
+  private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
+    WarningReport(msgs, source = Diagnostic.Source.Compilation)
+
   /**
    * The actual translation:
    * 1. rewrite handler blocks in terms of classes and functions
    * 2. class lifter
    * 3. state machine transformation of all functions
    */
-  
 
   private def translateBlock(blk: Block, h: HandlerCtx, scopedVars: collection.Set[Local]): Block =
     given HandlerCtx = h
@@ -435,6 +441,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
         .map(_.asArg)
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
+      // TODO: properly support spraed argument by calculating the correct length.
       val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
         intLit(pl.params.length) :: pl.params.map(_.sym.asPath)
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, varList, L(fun.sym)),
@@ -448,12 +455,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
         case fun: FunDefn =>
           if !h.allowDefn then
-            raise(WarningReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil, source = Diagnostic.Source.Compilation))
+            raise(lifterReport(msg"Unexpected nested function: lambdas may not function correctly." -> fun.sym.toLoc :: Nil))
           val (debugInfoSym, debugInfo, fun2) = translateFunLike(fun, Value.Ref(fun.sym, S(fun.dSym)), N, fun.sym.nme)
           if opt.debug then Scoped(Set.single(debugInfoSym), Assign(debugInfoSym, Tuple(false, debugInfo), k(fun2))) else k(fun2)
         case ClsLikeDefn(owner, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
           if !h.allowDefn then
-            raise(WarningReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil, source = Diagnostic.Source.Compilation))
+            raise(lifterReport(msg"Unexpected nested class: lambdas may not function correctly." -> isym.toLoc :: Nil))
           val debugInfos = mutable.ArrayBuffer.empty[(Local, List[Arg])]
           val newMtds = methods.map: f =>
             val (debugInfoSym, debugInfo, fun2) = translateFunLike(f, Value.Ref(isym).sel(new Tree.Ident(f.sym.nme), f.sym.asTrm.get),
