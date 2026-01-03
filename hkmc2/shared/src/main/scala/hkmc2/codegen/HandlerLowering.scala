@@ -219,6 +219,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   private def partitionBlock(blk: Block): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
+    val labelIds = mutable.HashMap.empty[Symbol, (LazyId, LazyId)]
     val allocId = new IdAllocator()
     var containsCall = false
 
@@ -228,8 +229,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // *              this is because we are still in the original block, which shares
     // *              the same code path.
     // * labelIds: maps label IDs to the state at the start of the label and the state after the label
-    // * afterEnd: what state End should jump to, if at all
-    def go(blk: Block)(using labelIds: Map[Symbol, (LazyId, LazyId)], afterEnd: Option[LazyId], partitioned: Bool): Block = boundary:
+    // * afterEnd: The block that follows End, None if the function ends.
+    def go(blk: Block)(using afterEnd: Option[LazyId], partitioned: Bool): Block = boundary:
       // First check if the current block contain any non trivial call, if so we need a partition
 
       def forceId(blk: Block, resumable: Bool): StateId = blk match
@@ -286,9 +287,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         val restId = RestLazyId(rest)
         val startId = new LazyId:
           def getImpl = allocId()
-        val newBody = go(body)(using labelIds + (label -> (startId, restId)), S(restId))
+        labelIds(label) = (startId, restId)
+        val newBody = go(body)(using S(restId))
         if startId.isUsed then
-          result(startId.get) = BlockPartition(Begin(newBody, restId.transitionSoft), false)
+          // We break down the label, and force the usage of rest so that all Break will be rewritten later
+          result(startId.get) = BlockPartition(Begin(newBody, StateTransition(restId.get)), false)
           StateTransition(startId.get)
         else
           Label(label, loop, newBody, restId.transitionSoft)
@@ -304,6 +307,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         if partitioned then
           StateTransition(end.get)
         else
+          // We might still need to do a StateTransition if the label is broken down.
+          // This is done afterwards in a replacement pass.
           Break(label)
 
       case Continue(label) =>
@@ -317,6 +322,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         if partitioned then
           StateTransition(start.get)
         else
+          // Same as above.
           Continue(label)
 
       case Begin(sub, rest) =>
@@ -353,9 +359,17 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     val initId = allocId()
     // Note: initial part will only be resumed if stack safety is on.
-    val initPart = BlockPartition(go(blk)(using Map(), N, false), opt.stackSafety.isDefined)
+    val initPart = BlockPartition(go(blk)(using N, false), opt.stackSafety.isDefined)
     result(initId) = initPart
-    PartitionedBlock(initId, Map.from(result), containsCall)
+
+    val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst()):
+      override def applyBlock(b: Block): Block = b match
+        case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.get)
+        case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.get)
+        case _ => super.applyBlock(b)
+    val newMap = Map.from(result.map: (id, part) =>
+      id -> BlockPartition(replaceStaleLabels.applyBlock(part.blk), part.resumable))
+    PartitionedBlock(initId, newMap, containsCall)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
     val localSet = ctx.resumeInfo.currentLocals.toSet
