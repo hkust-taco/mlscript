@@ -33,6 +33,7 @@ object ScopeData:
     case Class(cls: ClsLikeDefn)
     case Companion(comp: ClsLikeBody, par: ClsLikeDefn)
     case Func(fun: FunDefn, isMethod: Bool)
+    case Loop(body: Block)
     case ScopedBlock(uid: ScopeUID, block: Scoped)
     
     def toInfo: ScopedInfo = this match
