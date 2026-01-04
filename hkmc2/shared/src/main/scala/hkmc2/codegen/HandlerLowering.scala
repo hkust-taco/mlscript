@@ -441,7 +441,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
         .map(_.asArg)
       val debugInfoSym = freshTmp(s"$debugNme$$debugInfo")
-      // TODO: properly support spraed argument by calculating the correct length.
+      // TODO: properly support spread argument by calculating the correct length.
       val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
         intLit(pl.params.length) :: pl.params.map(_.sym.asPath)
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, varList, L(fun.sym)),

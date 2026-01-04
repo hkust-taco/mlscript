@@ -1044,8 +1044,10 @@ class Lifter()(using State, Raise):
               blk
             )
             
-            for ps <- newAuxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, HandlerLowering.checkInstantiateEffect, false)
+            val symLen = newAuxSyms.size
+            for (ps, idx) <- newAuxSyms.zipWithIndex do
+              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
+                idx == symLen - 1 && HandlerLowering.checkInstantiateEffect, false)
               curSym = TempSymbol(None, "tmp")
               val thisSym = curSym
               acc = acc.assign(thisSym, call)
