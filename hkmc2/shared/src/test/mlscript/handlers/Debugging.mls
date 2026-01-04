@@ -138,6 +138,7 @@ Runtime.debugEff(res.reified)
 //│ > FunctionContFrame(pc=4, last) -> (null)
 //│ > 
 
+:expect Infinity
 res.resumeWith(42)
 //│ > 42
 //│ = Infinity
@@ -148,37 +149,45 @@ class Debugger() with
   fun break(payload)
 
 module Test with
-  fun test(j, dbg) =
+  fun test(j)(using dbg: Debugger) =
     let i = 0
     let k = 2000
     if i == 0 do
       set i = dbg.break("whoops")
     j / i
-  fun main(dbg) =
-    test(12, dbg) + test(34, dbg)
+  fun main()(using Debugger) =
+    test(12) + test(34)
 
+:fixme
 let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
-  Runtime.try(() => Test.main(h))
-//│ res = EffectHandle(_)
+  using Debugger = h
+  Runtime.try(() => Test.main())
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'instance$Ident(Debugger)'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.165: 	  using Debugger = h
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: instance$Ident is not defined
+//│ res = undefined
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:155:15)
-//│ 	at Test.main (Debugging.mls:158:5)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
 
+:fixme
 set res = res.resumeWith(42)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:155:15)
-//│ 	at Test.main (Debugging.mls:158:21)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
 
+:fixme
+:expect 0.33676533676533676
 res.resumeWith(666)
-//│ = 0.33676533676533676
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
+//│ ═══[RUNTIME ERROR] Expected: '0.33676533676533676', got: 'undefined'
 
 let i = 100
 fun f() =
@@ -191,8 +200,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:186:3) with locals: j=200
+//│ > 	at f (Debugging.mls:195:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:188:3)
+//│ > 	at f (Debugging.mls:197:3)
 //│ > Stack Trace:
 //│ > 	at tail position
