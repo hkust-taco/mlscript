@@ -15,22 +15,7 @@ fun f(x) =
   let a = g
   a(1)
 f(2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.12: 	  fun g(...rest) = 
-//│ ║        	      ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.12: 	  fun g(...rest) = 
-//│ ║        	  ^^^^^^^^^^^^^^^^^
-//│ ║  l.13: 	    print(x)
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.14: 	    rest
-//│ ╙──      	^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$here'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$here'
-//│ ═══[RUNTIME ERROR] TypeError: g is not a function
-//│ ═══[RUNTIME ERROR] Expected: '[1]', got: 'undefined'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: module:Predef
 
 // The following are problems with lifting classes inside other definitions.
 
@@ -59,67 +44,13 @@ data class A(x) with
     let t = this
     t.B(2).getB()
 A(1).getA()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'B$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	       ^^^^^^^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	             ^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	       ^^^^^^^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	             ^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	       ^^^^^^^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	             ^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	       ^^^^^^^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.41: 	  data class B(y) with
-//│ ║        	             ^^^^^^^^^
-//│ ║  l.42: 	    fun getB() = x + y
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: t.B is not a function
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
 
 // This is due to the order of classes after lifting
 class Test
 fun hello() =
   class Test2 extends Test
   2
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Test2'
-//│ ║  l.55: 	  class Test2 extends Test
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.55: 	  class Test2 extends Test
-//│ ╙──      	        ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
 
 // This is due to subclasses not calling `super` with the required locals. The analysis to
 // determine which locals are required is not in place yet.
@@ -130,52 +61,7 @@ fun test(x) =
   class B() extends A
   B().get
 test(2)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'A$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.63: 	  class A with
-//│ ║        	        ^^^^^^
-//│ ║  l.64: 	    fun get = x
-//│ ╙──      	^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.63: 	  class A with
-//│ ║        	        ^^^^^^
-//│ ║  l.64: 	    fun get = x
-//│ ╙──      	^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ║  l.63: 	  class A with
-//│ ║        	  ^^^^^^^^^^^^
-//│ ║  l.64: 	    fun get = x
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.63: 	  class A with
-//│ ║        	        ^^^^^^
-//│ ║  l.64: 	    fun get = x
-//│ ╙──      	^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.65: 	  class B() extends A
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.65: 	  class B() extends A
-//│ ╙──      	        ^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.63: 	  class A with
-//│ ║        	        ^^^^^^
-//│ ║  l.64: 	    fun get = x
-//│ ╙──      	^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'B'
-//│ ║  l.65: 	  class B() extends A
-//│ ║        	  ^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.65: 	  class B() extends A
-//│ ╙──      	        ^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:B.B
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
@@ -192,11 +78,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'h$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'h$'
-//│ = 1
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
 
 
 :todo
@@ -206,26 +88,26 @@ fun foo1(x, n) =
   let res = if x is C then "Y" else "N"
   if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :todo // should return the function that creates C instances
 :w
 fun foo2() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :w
 fun foo3() =
   class C()
   fun f = C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f$'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :todo
 :expect "NN"
 foo1(0, 2)
-//│ = "NN"
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo1
 
 // Since B extends A and A is not lifted, B cannot access A's BlockMemberSymbol. We can't lift B.
 :todo
@@ -238,7 +120,7 @@ fun test(x) =
 test(2)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
-//│ = 2
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:B.B
 
 :expect 2
 class A(a) with
@@ -247,11 +129,7 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
 
 :expect 2
 module M with
@@ -260,15 +138,10 @@ module M with
     fun g() = x
     g
 M.f()()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.145: 	    fun g() = x
-//│ ║         	        ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.145: 	    fun g() = x
-//│ ╙──       	    ^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.257: 	module M with
+//│ ╙──       	       ^
+//│ = 2
 
 /// The following are related to modules and objects. ///
 
@@ -280,11 +153,13 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.277: 	  module M with
+//│ ╙──       	         ^
 
 :expect 14
 foo(10, 0)
-//│ = 14
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
 
 fun foo(x, y) =
   module M with
@@ -293,26 +168,26 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'foo$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'foo$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'M$'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.290: 	  module M with
+//│ ╙──       	         ^
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M$ is not defined
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
 
 
 data class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.308: 	  module M with
+//│ ╙──       	         ^
 
 :expect 2
 A(2).getA()
-//│ = 2
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
 
 // TODO: Foo needs to be put in a mutable capture. Also, we need to pass the Foo instance itself into Foo
 fun foo(x) =
@@ -323,40 +198,11 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.198: 	  class Bar extends Foo
+//│ ║  l.322: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Foo'
-//│ ║  l.195: 	  object Foo with
-//│ ║         	  ^^^^^^^^^^^^^^^
-//│ ║  l.196: 	    fun self1 = this
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.197: 	    fun self2 = Foo
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.195: 	  object Foo with
-//│ ║         	         ^^^^^^^^
-//│ ║  l.196: 	    fun self1 = this
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.197: 	    fun self2 = Foo
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Bar'
-//│ ║  l.198: 	  class Bar extends Foo
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.198: 	  class Bar extends Foo
-//│ ╙──       	        ^^^^^^^^^^^^^^^
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Foo'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.195: 	  object Foo with
-//│ ║         	         ^^^^^^^^
-//│ ║  l.196: 	    fun self1 = this
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.197: 	    fun self2 = Foo
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
-//│ ═══[RUNTIME ERROR] TypeError: Assignment to constant variable.
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
@@ -367,9 +213,8 @@ fun f =
       fun h = M.g
       h
   M.g
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'h$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'h$'
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:M
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.365: 	  module M with
+//│ ╙──       	         ^
 
 

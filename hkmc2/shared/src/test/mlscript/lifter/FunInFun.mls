@@ -123,12 +123,12 @@ x + y
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Tuple.Tuple
 //│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
 //│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:149)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
 //│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:161)
+//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
 //│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
 //│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
 
@@ -145,14 +145,14 @@ fun f(used1) =
   Tuple(g1(10), g22)
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Tuple.Tuple
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:670)
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
 //│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:149)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
 //│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:161)
+//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
 //│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
 //│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
 
@@ -171,7 +171,7 @@ a.toString() + b + c + d
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:f
 //│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:149)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
 //│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
 //│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)

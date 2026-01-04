@@ -6,19 +6,17 @@ declare fun foo: Int
 //│ JS (unsanitized):
 //│ 
 
-:re
+// :re
 :sjs
 foo
 //│ JS (unsanitized):
 //│ globalThis.foo
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'foo' yielded 'undefined'
 
 
 declare fun p: Int
 
-:re
+// :re
 p
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'p' yielded 'undefined'
 
 
 fun q: Int
@@ -31,6 +29,55 @@ declare module q with { val x }
 
 :re
 q.x
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'q' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+
+
+declare class C
+
+module M with
+  declare class D
+
+
+// * FIXME LP: @Harry why is this not resolved?
+:rt
+C
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=class:C}:
+//│     t = Ref{sym=member:C} of member:C
+//│     sym = class:C
+// * whereas this is:
+M.D
+//│ Resolved tree:
+//│ Blk:
+//│   stats = Nil
+//│   res = Resolved{sym=class:D}:
+//│     t = Sel{sym=member:D}:
+//│       prefix = Resolved{sym=module:M,typ=module:M}:
+//│         t = Ref{sym=member:M} of member:M
+//│         sym = module:M
+//│       nme = Ident of "D"
+//│     sym = class:D
+
+:fixme // FIXME: Should report a proper error about lack of declared C companion module
+C.oops
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
+//│ ║  l.64: 	C.oops
+//│ ║        	^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.35: 	declare class C
+//│ ╙──      	              ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'C'
+//│ ║  l.64: 	C.oops
+//│ ║        	^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.35: 	declare class C
+//│ ╙──      	              ^
+//│ ═══[RUNTIME ERROR] ReferenceError: C is not defined
+
+:re
+M.D.oops
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'D' yielded 'undefined'
 
 

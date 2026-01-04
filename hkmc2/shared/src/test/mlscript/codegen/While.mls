@@ -352,10 +352,18 @@ while i < arr.length do
   output.push(new Lazy(() => elem))
   set i += 1
 [output.[0].get, output.[1].get, output.[2].get]
-//│ = [1, 2, 3]
-//│ arr = [1, 2, 3]
-//│ i = 3
-//│ output = [Lazy(_), Lazy(_), Lazy(_)]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: class:Lazy
+//│ 	at: scala.collection.immutable.Map$Map3.apply(Map.scala:417)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:58)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
+//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
+//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
 
 // Returning inside while loop
 :expect 42

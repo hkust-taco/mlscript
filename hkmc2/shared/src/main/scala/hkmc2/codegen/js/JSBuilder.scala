@@ -261,7 +261,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
               // * which is not meaningful, here.
               doc"${getVar(sym, dSym.toLoc)} = (undefined, function ($params) ${ braced(bodyDoc) });"
             
-          case ClsLikeDefn(ownr, isym, sym, kind, paramsOpt, auxParams, par, mtds,
+          case ClsLikeDefn(ownr, isym, sym, ctorSym, kind, paramsOpt, auxParams, par, mtds,
               privFlds, pubFlds, preCtor, ctor, modo, bufferable)
           =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)

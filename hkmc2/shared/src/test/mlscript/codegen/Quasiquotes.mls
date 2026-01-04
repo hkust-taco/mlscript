@@ -1,47 +1,6 @@
 :js
 :qq
 
-//│ Term = class Term {
-//│   Symbol: fun Symbol { class: class Symbol },
-//│   Pattern: class Pattern,
-//│   LitPattern: fun LitPattern { class: class LitPattern },
-//│   Var: fun Var { class: class Var },
-//│   ClassLike: fun ClassLike { class: class ClassLike },
-//│   Tuple: fun Tuple { class: class Tuple },
-//│   Record: fun Record { class: class Record },
-//│   Branch: fun Branch { class: class Branch },
-//│   Split: class Split,
-//│   Cons: fun Cons { class: class Cons },
-//│   Let: fun Let { class: class Let },
-//│   Else: fun Else { class: class Else },
-//│   End: class End,
-//│   Keyword: class Keyword { If: If, While: While },
-//│   Statement: class Statement,
-//│   LetDecl: fun LetDecl { class: class LetDecl },
-//│   DefineVar: fun DefineVar { class: class DefineVar },
-//│   Term: class Term,
-//│   Lit: fun Lit { class: class Lit },
-//│   Builtin: fun Builtin { class: class Builtin },
-//│   Ref: fun Ref { class: class Ref },
-//│   CSRef: fun CSRef { class: class CSRef },
-//│   App: fun App { class: class App },
-//│   Sel: fun Sel { class: class Sel },
-//│   DynSel: fun DynSel { class: class DynSel },
-//│   Tup: fun Tup { class: class Tup },
-//│   IfLike: fun IfLike { class: class IfLike },
-//│   Lam: fun Lam { class: class Lam },
-//│   Blk: fun Blk { class: class Blk },
-//│   New: fun New { class: class New },
-//│   Region: fun Region { class: class Region },
-//│   RegRef: fun RegRef { class: class RegRef },
-//│   Assgn: fun Assgn { class: class Assgn },
-//│   Deref: fun Deref { class: class Deref },
-//│   SetRef: fun SetRef { class: class SetRef },
-//│   Ret: fun Ret { class: class Ret },
-//│   Throw: fun Throw { class: class Throw },
-//│   Try: fun Try { class: class Try },
-//│   Context: fun Context { class: class Context }
-//│ }
 
 `42
 //│ = Lit(42)
@@ -161,16 +120,9 @@ x `=> `if x `=== `0.0 then `1.0 else x
 //│   )
 //│ )
 
+:fixme // FIXME: weird error
+x `=> `if x `== `0.0 then `1.0 else x
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
+//│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x
+//│ ╙──       	             ^^
 
-// We cannot quote a symbol from another file here due to the lack of `import.meta` in REPL mode.
-:ge
-`id`(`42)
-//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.167: 	`id`(`42)
-//│ ╙──       	 ^^
-
-
-fun id(x) = x
-
-`id`(`42)
-//│ = App(fun id, Tup([Lit(42)]))

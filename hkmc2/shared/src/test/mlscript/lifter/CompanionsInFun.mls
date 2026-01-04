@@ -9,31 +9,16 @@ fun f(x) =
     fun get = x
   module A
   fun g = new A
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:g$
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef)
-//│       curThis = N
-//│       bindings = HashMap(member:f -> f, class:A -> A, module:A -> A)
-//│     curThis = S of N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'g$'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.10: 	  module A
+//│ ╙──      	         ^
 //│ JS (unsanitized):
 //│ let f;
-//│ g$ = function g$(A$member, A1, x) {
-//│   return globalThis.Object.freeze(new A$member())
-//│ };
 //│ f = function f(x) {
 //│   let A1, g;
+//│   g = function g() {
+//│     return globalThis.Object.freeze(new A1())
+//│   };
 //│   (class A {
 //│     static {
 //│       A1 = this
@@ -47,6 +32,8 @@ fun f(x) =
 //│   });
 //│   return runtime.Unit
 //│ };
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.10: 	  module A
+//│ ╙──      	         ^
 
 

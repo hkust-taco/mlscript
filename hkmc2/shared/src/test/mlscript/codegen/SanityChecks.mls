@@ -217,14 +217,7 @@ id(Cls(1, 2)).f(3, 4)(5)
 :ssjs
 console.log(1)
 //│ JS:
-//│ let selRes, discarded;
-//│ selRes = globalThis.console;
-//│ discarded = globalThis.console$__checkNotMethod;
-//│ if (selRes === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
-//│ }
-//│ block$res10 = runtime.safeCall(selRes.log(1));
-//│ undefined
+//│ block$res10 = runtime.safeCall(globalThis.console.log(1)); undefined
 //│ > 1
 
 
@@ -232,13 +225,13 @@ console.log(1)
 :ssjs
 globalThis.x
 //│ JS:
-//│ let selRes1, discarded1;
-//│ selRes1 = globalThis.x;
-//│ discarded1 = globalThis.x$__checkNotMethod;
-//│ if (selRes1 === undefined) {
+//│ let selRes, discarded;
+//│ selRes = globalThis.x;
+//│ discarded = globalThis.x$__checkNotMethod;
+//│ if (selRes === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'x' yielded 'undefined'"))
 //│ }
-//│ block$res11 = selRes1;
+//│ block$res11 = selRes;
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
@@ -261,7 +254,7 @@ if M.A(1).y is
   x and x == 1 then x
   else 0
 //│ JS:
-//│ let M1, scrut, x, scrut1, tmp11, selRes2, discarded2;
+//│ let M1, scrut, x, scrut1, tmp11, selRes1, discarded1;
 //│ globalThis.Object.freeze(class M {
 //│   static {
 //│     M1 = this
@@ -294,12 +287,12 @@ if M.A(1).y is
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
 //│ tmp11 = runtime.checkCall(M1.A(1));
-//│ selRes2 = tmp11.y;
-//│ discarded2 = tmp11.y$__checkNotMethod;
-//│ if (selRes2 === undefined) {
+//│ selRes1 = tmp11.y;
+//│ discarded1 = tmp11.y$__checkNotMethod;
+//│ if (selRes1 === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
-//│ scrut = selRes2;
+//│ scrut = selRes1;
 //│ x = scrut;
 //│ scrut1 = Predef.equals(x, 1);
 //│ if (scrut1 === true) { block$res13 = x; undefined } else { block$res13 = 0; undefined }
@@ -312,19 +305,14 @@ if M.A(1).y is
 M.A(1).y
   console.log()
 //│ JS:
-//│ let selRes3, discarded3, tmp12, selRes4, discarded4;
-//│ selRes3 = globalThis.console;
-//│ discarded3 = globalThis.console$__checkNotMethod;
-//│ if (selRes3 === undefined) {
-//│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'console' yielded 'undefined'"))
-//│ }
+//│ let tmp12, selRes2, discarded2;
 //│ tmp12 = runtime.checkCall(M1.A(1));
-//│ selRes4 = tmp12.y;
-//│ discarded4 = tmp12.y$__checkNotMethod;
-//│ if (selRes4 === undefined) {
+//│ selRes2 = tmp12.y;
+//│ discarded2 = tmp12.y$__checkNotMethod;
+//│ if (selRes2 === undefined) {
 //│   throw globalThis.Object.freeze(new globalThis.Error("Access to required field 'y' yielded 'undefined'"))
 //│ }
-//│ block$res14 = runtime.safeCall(selRes3.log(selRes4));
+//│ block$res14 = runtime.safeCall(globalThis.console.log(selRes2));
 //│ undefined
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'y' yielded 'undefined'
 

@@ -106,10 +106,10 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, doUnwindMap: Map[
   def rewriteCls(defn: ClsLikeDefn, isTopLevel: Bool): ClsLikeDefn = defn.parentPath match
     case Some(value) if value eq paths.contClsPath => defn
     case _ =>
-      val ClsLikeDefn(owner, isym, sym, k, paramsOpt, auxParams,
+      val ClsLikeDefn(owner, isym, sym, ctorSym, k, paramsOpt, auxParams,
         parentPath, methods, privateFields, publicFields, preCtor, ctor, mod, bufferable) = defn
       ClsLikeDefn(
-        owner, isym, sym, k, paramsOpt, auxParams, parentPath,
+        owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath,
         methods.map(rewriteFn),
         privateFields,
         publicFields, 

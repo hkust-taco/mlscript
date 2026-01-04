@@ -56,6 +56,6 @@ declare class C
 
 :re
 new C
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'C' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: globalThis.C is not a constructor
 
 

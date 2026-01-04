@@ -9,10 +9,35 @@ fun foo(x) =
   module C with
     val empty = C(123)
   C.empty
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.9: 	  module C with
+//│ ╙──     	         ^
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
+//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
+//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
+//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:96)
 
 foo(10).get
-//│ = [10, 123]
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
+//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
+//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
 
 :w
 fun foo(x) =
@@ -21,9 +46,22 @@ fun foo(x) =
   module C with
     val empty = new C
   C.empty
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.21: 	  module C with
+//│ ╙──      	         ^
 
 foo(10).get
-//│ = 10
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
+//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
+//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
 
 

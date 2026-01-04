@@ -32,7 +32,7 @@ h.aux(3)
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│       bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -49,7 +49,7 @@ h.aux(3)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -71,7 +71,7 @@ h.aux(3)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -94,7 +94,7 @@ h.aux(3)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                 bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -126,7 +126,7 @@ h.aux(3)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                       bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -163,7 +163,7 @@ h.aux(3)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                     bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -198,7 +198,7 @@ h.aux(3)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                     bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -234,7 +234,7 @@ h.aux(3)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                       bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -270,7 +270,7 @@ h.aux(3)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                   bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -300,7 +300,7 @@ h.aux(3)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -327,7 +327,7 @@ h.aux(3)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│                 bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -335,7 +335,7 @@ h.aux(3)
 //│           curThis = S of S of class:Handler$h$
 //│           bindings = HashMap()
 //│         curThis = N
-//│         bindings = HashMap(x -> x, $args -> args1)
+//│         bindings = HashMap($args -> args1, x -> x)
 //│       curThis = N
 //│       bindings = HashMap()
 //│     curThis = S of N
@@ -355,7 +355,7 @@ h.aux(3)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -363,7 +363,7 @@ h.aux(3)
 //│         curThis = S of S of class:Handler$h$
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(x -> x, $args -> args1)
+//│       bindings = HashMap($args -> args1, x -> x)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
@@ -378,7 +378,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -400,7 +400,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -419,7 +419,7 @@ h.aux(3)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -441,7 +441,7 @@ h.aux(3)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -463,7 +463,7 @@ h.aux(3)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -489,7 +489,7 @@ h.aux(3)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│               bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -513,7 +513,7 @@ h.aux(3)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│           bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -534,7 +534,7 @@ h.aux(3)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -557,7 +557,7 @@ h.aux(3)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│             bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -581,7 +581,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -598,7 +598,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -620,7 +620,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -637,7 +637,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -654,7 +654,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -671,7 +671,7 @@ h.aux(3)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -686,7 +686,7 @@ h.aux(3)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:PrintEffect -> PrintEffect, class:Handler$h$ -> Handler$h$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $block$res -> block$res1, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1)
+//│     bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:Cont$handler$h$p$ -> Cont$handler$h$p$, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res, member:Predef -> Predef, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -695,11 +695,11 @@ h.aux(3)
 //│     at handleBlock$ (REPL13:1:2550)
 //│     at REPL13:1:3782
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
 //│     at REPLServer.emit (node:domain:489:12)
 
 handle h1 = PrintEffect with
@@ -728,7 +728,7 @@ h1.p(4)
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -745,7 +745,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -767,7 +767,7 @@ h1.p(4)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -790,7 +790,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -822,7 +822,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -859,7 +859,7 @@ h1.p(4)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -894,7 +894,7 @@ h1.p(4)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -930,7 +930,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -966,7 +966,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -996,7 +996,7 @@ h1.p(4)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -1023,7 +1023,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -1031,7 +1031,7 @@ h1.p(4)
 //│           curThis = S of S of class:Handler$h1$
 //│           bindings = HashMap()
 //│         curThis = N
-//│         bindings = HashMap(x -> x, $args -> args1)
+//│         bindings = HashMap($args -> args1, x -> x)
 //│       curThis = N
 //│       bindings = HashMap()
 //│     curThis = S of N
@@ -1051,7 +1051,7 @@ h1.p(4)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -1059,7 +1059,7 @@ h1.p(4)
 //│         curThis = S of S of class:Handler$h1$
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(x -> x, $args -> args1)
+//│       bindings = HashMap($args -> args1, x -> x)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
@@ -1074,17 +1074,17 @@ h1.p(4)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ║        	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ║         	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1096,7 +1096,7 @@ h1.p(4)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -1115,7 +1115,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -1137,7 +1137,7 @@ h1.p(4)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -1157,7 +1157,7 @@ h1.p(4)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -1178,7 +1178,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -1201,7 +1201,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -1212,8 +1212,8 @@ h1.p(4)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1226,7 +1226,7 @@ h1.p(4)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -1249,7 +1249,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -1277,7 +1277,7 @@ h1.p(4)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -1306,7 +1306,7 @@ h1.p(4)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -1344,7 +1344,7 @@ h1.p(4)
 //│                         parent = S of Scope:
 //│                           parent = N
 //│                           curThis = S of S of globalThis:globalThis
-//│                           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                         curThis = S of N
 //│                         bindings = HashMap($args -> args)
 //│                       curThis = N
@@ -1387,7 +1387,7 @@ h1.p(4)
 //│                       parent = S of Scope:
 //│                         parent = N
 //│                         curThis = S of S of globalThis:globalThis
-//│                         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                       curThis = S of N
 //│                       bindings = HashMap($args -> args)
 //│                     curThis = N
@@ -1428,7 +1428,7 @@ h1.p(4)
 //│                       parent = S of Scope:
 //│                         parent = N
 //│                         curThis = S of S of globalThis:globalThis
-//│                         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                       curThis = S of N
 //│                       bindings = HashMap($args -> args)
 //│                     curThis = N
@@ -1470,7 +1470,7 @@ h1.p(4)
 //│                         parent = S of Scope:
 //│                           parent = N
 //│                           curThis = S of S of globalThis:globalThis
-//│                           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                         curThis = S of N
 //│                         bindings = HashMap($args -> args)
 //│                       curThis = N
@@ -1512,7 +1512,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -1548,7 +1548,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -1581,7 +1581,7 @@ h1.p(4)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                     bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -1619,7 +1619,7 @@ h1.p(4)
 //│                         parent = S of Scope:
 //│                           parent = N
 //│                           curThis = S of S of globalThis:globalThis
-//│                           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                         curThis = S of N
 //│                         bindings = HashMap($args -> args)
 //│                       curThis = N
@@ -1662,7 +1662,7 @@ h1.p(4)
 //│                       parent = S of Scope:
 //│                         parent = N
 //│                         curThis = S of S of globalThis:globalThis
-//│                         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                       curThis = S of N
 //│                       bindings = HashMap($args -> args)
 //│                     curThis = N
@@ -1705,7 +1705,7 @@ h1.p(4)
 //│                           parent = S of Scope:
 //│                             parent = N
 //│                             curThis = S of S of globalThis:globalThis
-//│                             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                           curThis = S of N
 //│                           bindings = HashMap($args -> args)
 //│                         curThis = N
@@ -1731,11 +1731,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.38: 	    h1.p(x)
-//│ ║        	    ^^
+//│ ║  l.717: 	    h1.p(x)
+//│ ║         	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1755,7 +1755,7 @@ h1.p(4)
 //│                       parent = S of Scope:
 //│                         parent = N
 //│                         curThis = S of S of globalThis:globalThis
-//│                         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                       curThis = S of N
 //│                       bindings = HashMap($args -> args)
 //│                     curThis = N
@@ -1797,7 +1797,7 @@ h1.p(4)
 //│                         parent = S of Scope:
 //│                           parent = N
 //│                           curThis = S of S of globalThis:globalThis
-//│                           bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                           bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                         curThis = S of N
 //│                         bindings = HashMap($args -> args)
 //│                       curThis = N
@@ -1817,7 +1817,7 @@ h1.p(4)
 //│         curThis = N
 //│         bindings = HashMap($tmp -> tmp5, $tmp -> tmp6)
 //│       curThis = S of N
-//│       bindings = HashMap(res -> res, $args -> args4, pc -> pc)
+//│       bindings = HashMap($args -> args4, pc -> pc, res -> res)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handler$h2$aux$'
@@ -1839,7 +1839,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -1859,11 +1859,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.36: 	    h1.p(x)
-//│ ║        	    ^^
+//│ ║  l.715: 	    h1.p(x)
+//│ ║         	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1882,7 +1882,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -1920,7 +1920,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -1958,7 +1958,7 @@ h1.p(4)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                       bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -1978,11 +1978,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.38: 	    h1.p(x)
-//│ ║        	    ^^
+//│ ║  l.717: 	    h1.p(x)
+//│ ║         	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -1999,7 +1999,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2028,7 +2028,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2038,11 +2038,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.31: 	handle h2 = PrintEffect with
-//│ ║        	       ^^
+//│ ║  l.710: 	handle h2 = PrintEffect with
+//│ ║         	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.31: 	handle h2 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.710: 	handle h2 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2056,7 +2056,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2081,7 +2081,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -2109,7 +2109,7 @@ h1.p(4)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -2137,7 +2137,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2149,7 +2149,7 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -2169,7 +2169,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2181,15 +2181,15 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.40: 	h2.aux(3)
-//│ ║        	^^
+//│ ║  l.719: 	h2.aux(3)
+//│ ║         	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.31: 	handle h2 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.710: 	handle h2 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2206,7 +2206,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2218,7 +2218,7 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -2238,7 +2238,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2250,15 +2250,15 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.41: 	h1.p(4)
-//│ ║        	^^
+//│ ║  l.720: 	h1.p(4)
+//│ ║         	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2275,7 +2275,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2287,7 +2287,7 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -2307,7 +2307,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2319,7 +2319,7 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -2339,7 +2339,7 @@ h1.p(4)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                   bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2351,7 +2351,7 @@ h1.p(4)
 //│         curThis = S of S of class:Cont$handleBlock$h2$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
-//│       bindings = HashMap(value$ -> value$, $args -> args2)
+//│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
 //│     bindings = HashMap($contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -2369,7 +2369,7 @@ h1.p(4)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│               bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -2396,7 +2396,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -2425,7 +2425,7 @@ h1.p(4)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│                 bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -2440,8 +2440,8 @@ h1.p(4)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.31: 	handle h2 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.710: 	handle h2 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2455,7 +2455,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2465,11 +2465,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.39: 	h1.p(4)
-//│ ║        	^^
+//│ ║  l.718: 	h1.p(4)
+//│ ║         	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2483,7 +2483,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2506,7 +2506,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2516,11 +2516,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.40: 	h2.aux(3)
-//│ ║        	^^
+//│ ║  l.719: 	h2.aux(3)
+//│ ║         	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.31: 	handle h2 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.710: 	handle h2 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2534,7 +2534,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2557,7 +2557,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2580,7 +2580,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2590,11 +2590,11 @@ h1.p(4)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.41: 	h1.p(4)
-//│ ║        	^^
+//│ ║  l.720: 	h1.p(4)
+//│ ║         	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	handle h1 = PrintEffect with
-//│ ╙──      	       ^^
+//│ ║  l.705: 	handle h1 = PrintEffect with
+//│ ╙──       	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -2608,7 +2608,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2631,7 +2631,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2654,7 +2654,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2677,7 +2677,7 @@ h1.p(4)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│             bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2698,7 +2698,7 @@ h1.p(4)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2715,7 +2715,7 @@ h1.p(4)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│         bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2730,7 +2730,7 @@ h1.p(4)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $runtime -> runtime, $tmp -> tmp3, $definitionMetadata -> definitionMetadata, $tmp -> tmp4, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$, class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$)
+//│     bindings = HashMap(class:Cont$handleBlock$h2$ -> Cont$handleBlock$h2$, class:Handler$h2$ -> Handler$h2$, $block$res -> block$res1, class:Cont$handler$h1$p$ -> Cont$handler$h1$p$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:Predef -> Predef, $block$res -> block$res3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$, class:Cont$handler$h2$p$ -> Cont$handler$h2$p$, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, class:Cont$handler$h$p$ -> Cont$handler$h$p$, class:Cont$handleBlock$h1$ -> Cont$handleBlock$h1$, $block$res -> block$res, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res2, $tmp -> tmp, member:PrintEffect -> PrintEffect1, class:PrintEffect -> PrintEffect, class:Cont$handler$h2$aux$ -> Cont$handler$h2$aux$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -2739,9 +2739,9 @@ h1.p(4)
 //│     at handleBlock$ (REPL16:1:2607)
 //│     at REPL16:1:11087
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
 //│     at REPLServer.emit (node:domain:489:12)

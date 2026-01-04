@@ -70,13 +70,14 @@ object ScopeData:
         traverser.applySymbol(s)
       obj match
       case ScopedObject.Top(b) => traverser.applyBlock(b)
-      case ScopedObject.Class(ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+      case ScopedObject.Class(ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
           privateFields, publicFields, preCtor, ctor, mod, bufferable))
       =>
         // do not traverse the companion
         own.foreach(_.traverse)
         isym.traverse
         sym.traverse
+        ctorSym.foreach(_.traverse)
         paramsOpt.foreach(traverser.applyParamList)
         auxParams.foreach(traverser.applyParamList)
         parentPath.foreach(traverser.applyPath)

@@ -6,23 +6,21 @@ import "../../mlscript-compile/Option.mls"
 :sjs
 module A with
   fun f(x) = x is Option.Some
-//│ JS (unsanitized):
-//│ let A1;
-//│ (class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static f(x) {
-//│     if (x instanceof Option.Some.class) {
-//│       return true
-//│     } else {
-//│       return false
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.7: 	module A with
+//│ ╙──     	       ^
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: module:Option
+//│ 	at: scala.collection.immutable.Map$Map4.apply(Map.scala:535)
+//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
+//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:69)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyCase(BlockTraverser.scala:130)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock$$anonfun$1(BlockTraverser.scala:31)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
+//│ 	at: scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
+//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
 
