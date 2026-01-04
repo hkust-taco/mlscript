@@ -58,12 +58,12 @@ fun foo() =
 //│   let x, tmp2;
 //│   let lambda$here;
 //│   x = 1;
-//│   tmp3: while (true) {
-//│     let scrut, tmp4;
+//│   lbl: while (true) {
+//│     let scrut, tmp3;
 //│     scrut = true;
 //│     if (scrut === true) {
-//│       tmp4 = x + 1;
-//│       x = tmp4;
+//│       tmp3 = x + 1;
+//│       x = tmp3;
 //│       lambda$here = runtime.safeCall(lambda2(x));
 //│       return lambda$here
 //│     } else { tmp2 = runtime.Unit; }
