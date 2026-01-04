@@ -153,7 +153,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
-  private def freshLabel(nme: Str) = new LabelSymbol(nme)
+  private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),

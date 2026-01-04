@@ -165,10 +165,10 @@ sealed trait NamedSymbol extends Symbol:
   def id: Ident
   def subst(using s: SymbolSubst): NamedSymbol
 
-class LabelSymbol(name: Str = "lbl")(using State) extends LocalSymbol:
+class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends LocalSymbol:
   def nme = name
   def subst(using s: SymbolSubst): LabelSymbol = s.mapLabelSym(this)
-  def toLoc = N
+  def toLoc = trm.flatMap(_.toLoc)
   override def toString: Str = s"label:$nme${State.dbgUid(uid)}"
 
 abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name):

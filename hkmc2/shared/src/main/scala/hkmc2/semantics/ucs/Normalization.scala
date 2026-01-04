@@ -226,9 +226,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     rec(split)
     val consequents =
       counts.iterator.filter(_._2.count > 1).toSeq.sortBy(_._2.order).zipWithIndex.map:
-        case ((term, _), i) => (term, LabelSymbol(s"split_${i + 1}$$"))
+        case ((term, _), i) => (term, LabelSymbol(S(term), s"split_${i + 1}$$"))
       .toList
-    val default = if throwCount > 1 then S(LabelSymbol(s"split_default$$")) else N
+    val default = if throwCount > 1 then S(LabelSymbol(N, s"split_default$$")) else N
     Labels(consequents, default)
   
   private def lowerSplit(
@@ -335,7 +335,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         outerCtx.collectScopedSym(res)
         res
       // The symbol for the loop label if the term is a `while`.
-      lazy val loopLabel = new LabelSymbol()
+      lazy val loopLabel = new LabelSymbol(t)
       lazy val f =
         val res = new BlockMemberSymbol("while", Nil, false)
         outerCtx.collectScopedSym(res)
@@ -347,7 +347,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
         tl.log(s"Normalized:\n${normalized.prettyPrint}")
       // Collect consequents that are shared in more than one branch.
       given labels: Labels = createLabelsForDuplicatedBranches(normalized)
-      lazy val rootBreakLabel = new LabelSymbol("split_root$")
+      lazy val rootBreakLabel = new LabelSymbol(N, "split_root$")
       lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
       lazy val assignResult = (r: Result) => Assign(l, r, End())
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
