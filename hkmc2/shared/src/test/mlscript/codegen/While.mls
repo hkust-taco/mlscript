@@ -202,12 +202,12 @@ fun f(ls) =
 //│ f = function f(ls) {
 //│   let tmp19;
 //│   lbl9: while (true) {
-//│     let tl, h, argument0$, argument1$;
+//│     let tl, h, arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
-//│       argument0$ = ls.hd;
-//│       argument1$ = ls.tl;
-//│       tl = argument1$;
-//│       h = argument0$;
+//│       arg$Cons$0$ = ls.hd;
+//│       arg$Cons$1$ = ls.tl;
+//│       tl = arg$Cons$1$;
+//│       h = arg$Cons$0$;
 //│       ls = tl;
 //│       tmp19 = Predef.print(h);
 //│       continue lbl9
