@@ -159,7 +159,7 @@ module Test with
     test(12) + test(34)
 
 // Currently this test fails due to lifter issue. Commenting out :lift at the top of this file will make this work.
-// The lifter currently do not correctly consider the member variable as a local that could be captured.
+// The lifter currently does not correctly consider the member variable as a local that could be captured.
 :fixme
 let res =
   handle h = Debugger with
@@ -168,7 +168,7 @@ let res =
   Runtime.try(() => Test.main())
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'instance$Ident(Debugger)'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.165: 	  using Debugger = h
+//│ ║  l.167: 	  using Debugger = h
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: instance$Ident is not defined
 //│ res = undefined
@@ -205,8 +205,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:195:3) with locals: j=200
+//│ > 	at f (Debugging.mls:199:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:197:3)
+//│ > 	at f (Debugging.mls:201:3)
 //│ > Stack Trace:
 //│ > 	at tail position

@@ -376,45 +376,89 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     PartitionedBlock(initId, newMap, containsCall)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
-    val localSet = ctx.resumeInfo.currentLocals.toSet
-    val result = mutable.HashSet.empty[Local]
+    val locals = ctx.resumeInfo.currentLocals
 
-    def traverseEntry(stateId: StateId) =
-      var initialized = Set.empty[Local]
+    val localSetMap = locals.zipWithIndex.toMap
+
+    type PartitionVarInfo = (used: mutable.BitSet, assigned: mutable.HashMap[StateId, mutable.BitSet])
+
+    def computeVarInfo(blk: Block): PartitionVarInfo =
+      val assigned = mutable.BitSet.empty
+      val used = mutable.BitSet.empty
+
+      val assignedInfo = mutable.HashMap.empty[StateId, mutable.BitSet]
+
+      def withVarAssigned(l: Symbol, inner: => Unit): Unit =
+        localSetMap.get(l).fold(inner): idx =>
+          if assigned.contains(idx) then
+            inner
+          else
+            assigned += idx
+            inner
+            assigned -= idx
 
       new BlockTraverserShallow():
-        applyBlock(parts.states(stateId).blk)
-        override def applyBlock(blk: Block): Unit = blk match
+        applyBlock(blk)
+        override def applyBlock(b: Block): Unit = b match
           case Unwind(uid, loc) => ()
           case StateTransition(uid) =>
-            if !parts.states(uid).resumable then
-              applyBlock(parts.states(uid).blk)
+            val old = assignedInfo.getOrElse(uid, mutable.BitSet.empty)
+            assignedInfo(uid) = old & assigned
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
-            val saved = initialized
-            initialized += lhs
-            applyBlock(rest)
-            initialized = saved
+            withVarAssigned(lhs, applyBlock(rest))
           case Define(defn: ValDefn, rest) =>
             applyPath(defn.rhs)
-            val saved = initialized
-            initialized += defn.sym
-            applyBlock(rest)
-            initialized = saved
+            withVarAssigned(defn.sym, applyBlock(rest))
           case Define(defn, rest) =>
-            val saved = initialized
-            initialized += defn.sym
-            applyBlock(rest)
-            initialized = saved
-          case _ => super.applyBlock(blk)
-        override def applySymbol(l: Symbol): Unit =
-          if localSet.contains(l) && !initialized.contains(l) then
-            result += l
+            withVarAssigned(defn.sym, applyBlock(rest))
+          case _ => super.applyBlock(b)
+        override def applySymbol(sym: Symbol): Unit =
+          localSetMap.get(sym).fold(()): idx =>
+            if !assigned.contains(idx) then
+              used += idx
 
-    parts.states.foreach: (stateId, part) =>
-      if part.resumable then traverseEntry(stateId)
+      (used, assignedInfo)
 
-    result.toList
+    val worklist = mutable.Queue.empty[StateId]
+    val worklistSet = mutable.Set.empty[StateId]
+    val stateInfo = mutable.HashMap.empty[StateId, (live: mutable.BitSet, varInfo: PartitionVarInfo, incoming: mutable.ArrayBuffer[StateId])]
+
+    def traverse(id: StateId): Unit =
+      if stateInfo.contains(id) then return ()
+      val info = computeVarInfo(parts.states(id).blk)
+      stateInfo(id) = (mutable.BitSet.empty, info, mutable.ArrayBuffer.empty)
+      info.assigned.foreach: entry =>
+        traverse(entry._1)
+        stateInfo(entry._1).incoming += id
+      worklist.enqueue(id)
+      worklistSet += id
+
+    traverse(parts.entry)
+
+    while worklist.nonEmpty do
+      val cur = worklist.dequeue()
+      worklistSet -= cur
+      val info = stateInfo(cur)
+      val newLive = info.varInfo.assigned
+        .map: entry =>
+          stateInfo(entry._1).live.diff(entry._2)
+        .fold(mutable.BitSet.empty)(_ | _) | info.varInfo.used
+      if newLive != info.live then
+        stateInfo(cur).live |= newLive
+        stateInfo(cur).incoming.foreach: id =>
+          if !worklistSet.contains(id) then
+            worklist.enqueue(id)
+            worklistSet += id
+
+    parts.states
+      .flatMap: (id, part) =>
+        if !part.resumable then N
+        else
+          S(stateInfo.get(id).fold(mutable.BitSet.empty)(_.live))
+      .fold(mutable.BitSet.empty)(_ | _)
+      .toList
+      .map(locals(_))
 
   val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
   
