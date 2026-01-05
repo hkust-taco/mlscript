@@ -212,8 +212,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       tmp
   
   // blk: the block of code within this state
-  case class BlockPartition(blk: Block, resumable: Bool)
-  case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition], containsCall: Bool)
+  private case class BlockPartition(blk: Block, resumable: Bool)
+  private case class PartitionedBlock(entry: StateId, states: Map[StateId, BlockPartition], allocId: IdAllocator, containsCall: Bool)
 
   object EffectfulResult:
     def unapply(r: Result) = r match
@@ -373,52 +373,75 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyBlock(b)
     val newMap = Map.from(result.map: (id, part) =>
       id -> BlockPartition(replaceStaleLabels.applyBlock(part.blk), part.resumable))
-    PartitionedBlock(initId, newMap, containsCall)
+    PartitionedBlock(initId, newMap, allocId, containsCall)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
     val locals = ctx.resumeInfo.currentLocals
 
     val localSetMap = locals.zipWithIndex.toMap
+    val allocId = parts.allocId
 
-    type PartitionVarInfo = (used: mutable.BitSet, assigned: mutable.HashMap[StateId, mutable.BitSet])
+    type PartitionVarInfo = (used: mutable.BitSet, assigned: mutable.BitSet, outgoing: List[StateId])
+    val states = mutable.HashMap.from(parts.states)
+    val labelMap = mutable.HashMap.empty[Local, (StateId, StateId)]
+
+    def createState(blk: Block): StateId =
+      val newId = allocId()
+      states(newId) = BlockPartition(blk, false)
+      newId
 
     def computeVarInfo(blk: Block): PartitionVarInfo =
       val assigned = mutable.BitSet.empty
       val used = mutable.BitSet.empty
+      val outgoing = mutable.HashSet.empty[StateId]
 
-      val assignedInfo = mutable.HashMap.empty[StateId, mutable.BitSet]
-
-      def withVarAssigned(l: Symbol, inner: => Unit): Unit =
-        localSetMap.get(l).fold(inner): idx =>
-          if assigned.contains(idx) then
-            inner
-          else
-            assigned += idx
-            inner
-            assigned -= idx
+      def assignToSym(l: Local) =
+        localSetMap.get(l).foreach: idx =>
+          assigned += idx
 
       new BlockTraverserShallow():
         applyBlock(blk)
         override def applyBlock(b: Block): Unit = b match
           case Unwind(uid, loc) => ()
           case StateTransition(uid) =>
-            val old = assignedInfo.getOrElse(uid, assigned)
-            assignedInfo(uid) = old & assigned
+            outgoing += uid
+          case Match(scrut, arms, dflt, rest) =>
+            applyPath(scrut)
+            val restId = createState(rest)
+            arms.foreach: arm =>
+              val newId = createState(Begin(arm._2, StateTransition(restId)))
+              outgoing += newId
+            dflt match
+              case N => outgoing += restId
+              case S(blk) =>
+                outgoing += createState(Begin(blk, StateTransition(restId)))
+          case Label(label, loop, body, rest) =>
+            val restId = createState(rest)
+            val bodyId = createState(Begin(body, StateTransition(restId)))
+            labelMap(label) = (bodyId, restId)
+            outgoing += bodyId
+          case Break(label) =>
+            outgoing += labelMap(label)._2
+          case Continue(label) =>
+            outgoing += labelMap(label)._1
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
-            withVarAssigned(lhs, applyBlock(rest))
+            assignToSym(lhs)
+            applyBlock(rest)
           case Define(defn: ValDefn, rest) =>
             applyPath(defn.rhs)
-            withVarAssigned(defn.sym, applyBlock(rest))
+            assignToSym(defn.sym)
+            applyBlock(rest)
           case Define(defn, rest) =>
-            withVarAssigned(defn.sym, applyBlock(rest))
+            assignToSym(defn.sym)
+            applyBlock(rest)
           case _ => super.applyBlock(b)
         override def applySymbol(sym: Symbol): Unit =
           localSetMap.get(sym).fold(()): idx =>
             if !assigned.contains(idx) then
               used += idx
 
-      (used, assignedInfo)
+      (used, assigned, outgoing.toList)
 
     val worklist = mutable.Queue.empty[StateId]
     val worklistSet = mutable.Set.empty[StateId]
@@ -426,11 +449,11 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     def traverse(id: StateId): Unit =
       if stateInfo.contains(id) then return ()
-      val info = computeVarInfo(parts.states(id).blk)
+      val info = computeVarInfo(states(id).blk)
       stateInfo(id) = (mutable.BitSet.empty, info, mutable.ArrayBuffer.empty)
-      info.assigned.foreach: entry =>
-        traverse(entry._1)
-        stateInfo(entry._1).incoming += id
+      info.outgoing.foreach: entry =>
+        traverse(entry)
+        stateInfo(entry).incoming += id
       worklist.enqueue(id)
       worklistSet += id
 
@@ -440,10 +463,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val cur = worklist.dequeue()
       worklistSet -= cur
       val info = stateInfo(cur)
-      val newLive = info.varInfo.assigned
+      val newLive = info.varInfo.outgoing
         .map: entry =>
-          stateInfo(entry._1).live.diff(entry._2)
-        .fold(mutable.BitSet.empty)(_ | _) | info.varInfo.used
+          stateInfo(entry).live
+        .fold(mutable.BitSet.empty)(_ | _).diff(info.varInfo.assigned) | info.varInfo.used
       if newLive != info.live then
         stateInfo(cur).live |= newLive
         stateInfo(cur).incoming.foreach: id =>

@@ -73,8 +73,6 @@ sum(10000)
 //│   } else {
 //│     let saveOffset;
 //│     pc = runtime.resumePc;
-//│     saveOffset = runtime.resumeIdx;
-//│     tmp2 = runtime.resumeArr.at(saveOffset);
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
@@ -91,7 +89,7 @@ sum(10000)
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect === null) {} else {
 //│             let res1;
-//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:59:9", null, null, 1, 1, n, 1, tmp2)
+//│             return runtime.unwind(sum1, 1, "StackSafetyLift.mls:59:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main
