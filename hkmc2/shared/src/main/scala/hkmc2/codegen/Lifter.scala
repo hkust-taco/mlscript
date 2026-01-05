@@ -1031,30 +1031,25 @@ class Lifter()(using State, Raise):
             
             val isMutSym = VarSymbol(Tree.Ident("isMut"))
             
-            var curSym = TempSymbol(None, "tmp")
             def instInner(isMut: Bool) =
               Instantiate(mut = isMut, Value.Ref(c.sym, S(c.isym)), paramArgs)
             
-            val initSym = curSym
+            val initSym = TempSymbol(None, "tmp")
             
-            var acc: Block => Block = blk => Match(
+            def go(cur: List[List[VarSymbol]], curSym: Symbol, acc: Block => Block): Block = cur match
+              case ps :: rst =>
+                val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
+                  rst === Nil && HandlerLowering.checkInstantiateEffect, false)
+                val thisSym = TempSymbol(None, "tmp")
+                go(rst, thisSym, acc.assign(thisSym, call))
+              case Nil => acc.ret(curSym.asPath)
+            
+            val bod = go(newAuxSyms, initSym, blk => Match(
               isMutSym.asPath,
               Case.Lit(Tree.BoolLit(true)) -> Assign(initSym, instInner(true), End()) :: Nil,
               S(Assign(initSym, instInner(false), End())),
               blk
-            )
-            
-            def go(cur: List[List[VarSymbol]]) = cur match
-              case ps :: rst =>
-                val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
-                  rst === Nil && HandlerLowering.checkInstantiateEffect, false)
-                curSym = TempSymbol(None, "tmp")
-                val thisSym = curSym
-                acc = acc.assign(thisSym, call)
-                // acc = blk => acc(Assign(curSym, call, blk))
-              case Nil =>
-            go(newAuxSyms)
-            val bod = acc.ret(curSym.asPath)
+            ))
             
             inline def toPlist(ls: List[VarSymbol]) =
               PlainParamList(ls.map(s => Param(FldFlags.empty, s, N, Modulefulness.none)))
