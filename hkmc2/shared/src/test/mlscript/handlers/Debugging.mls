@@ -193,11 +193,14 @@ res.resumeWith(666)
 
 let i = 100
 fun f() =
+  // Currently debug.getLocals is not supported.
+  // print(debug.getLocals())
   let j = 200
   debug.printStack(true)
   set j = 300
   debug.printStack(false)
   debug.printStack(true)
+  // print(debug.getLocals())
 //│ i = 100
 
 f()
