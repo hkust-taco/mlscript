@@ -55,20 +55,26 @@ if "+" is Oper(s, p) then [s, p]
 
 pattern Parse =
   (
-    ((Identifier as name) :: rest)                => Expr(Ident(name), 0) :: rest
+    ((Identifier as name) :: rest) =>
+        Expr(Ident(name), 0) :: rest
   ) | (
-    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: rest where p1 < p) => Expr(e1, p) :: op :: rest
+    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: rest where p1 < p) =>
+        Expr(e1, p) :: op :: rest
+  ) | (
+    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
+        Expr(Op(e1, op, e2), p) :: rest
+  ) | (
+    ((Expr as e1) :: (op as AtPrec) :: (Parse as rest)) =>
+        e1 :: op :: rest
   ) | (
     ((Expr as e1) :: (op as AtPrec(p)) :: Expr(e2, p2) :: rest where p2 < p) =>
-      e1 :: op :: Expr(e2, p) :: rest
+        e1 :: op :: Expr(e2, p) :: rest
   ) | (
-    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: Expr(e2, p2) :: rest) => Expr(Op(e1, op, e2), p) :: rest
+    ("(" :: Expr(e, p) :: ")" :: rest) =>
+        Expr(e, 0) :: rest
   ) | (
-    ((Expr as e1) :: (op as AtPrec) :: (Parse as rest))      => e1 :: op :: rest
-  ) | (
-    ("(" :: (Expr as e) :: ")" :: rest)           => e :: rest
-  ) | (
-    ("(" :: (Parse as rest))                      => "(" :: rest
+    ("(" :: (Parse as rest)) =>
+        "(" :: rest
   )
 
 fun parse(tokens) =
@@ -102,7 +108,10 @@ parse("a" :: "*" :: "x" :: "+" :: "y" :: Nil)
 //│ > Success: Expr(Op(Op(Ident("a"), "*", Ident("x")), "+", Ident("y")), 5)
 
 parse("a" :: "+" :: "x" :: "*" :: "y" :: Nil)
-//│ > Success: Expr(Op(Op(Ident("a"), "+", Ident("x")), "*", Ident("y")), 2)
+//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("x"), "*", Ident("y"))), 5)
+
+parse("(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ > Success: Expr(Op(Ident("x"), "+", Ident("y")), 0)
 
 parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("x"), "+", Ident("y"))), 5)
