@@ -9,6 +9,10 @@
 // :todo
 
 
+// * There are currently bugs in tuple matching
+
+
+
 // import "../../../mlscript-compile/Stack.mls"
 // open Stack
 
@@ -204,22 +208,22 @@ parse("x" :: "+" :: "y" :: Nil)
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ║  l.207: 	parse("x" :: "+" :: "y" :: Nil)
 //│ ╙──       	          ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ║  l.207: 	parse("x" :: "+" :: "y" :: Nil)
 //│ ╙──       	                 ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ║  l.207: 	parse("x" :: "+" :: "y" :: Nil)
 //│ ╙──       	                        ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: Nil
-//│ ║  l.203: 	parse("x" :: "+" :: "y" :: Nil)
+//│ ║  l.207: 	parse("x" :: "+" :: "y" :: Nil)
 //│ ╙──       	                           ^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -239,22 +243,22 @@ parse("(" :: "x" :: ")" :: Nil)
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ║  l.242: 	parse("(" :: "x" :: ")" :: Nil)
 //│ ╙──       	          ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ║  l.242: 	parse("(" :: "x" :: ")" :: Nil)
 //│ ╙──       	                 ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ║  l.242: 	parse("(" :: "x" :: ")" :: Nil)
 //│ ╙──       	                        ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: Nil
-//│ ║  l.238: 	parse("(" :: "x" :: ")" :: Nil)
+//│ ║  l.242: 	parse("(" :: "x" :: ")" :: Nil)
 //│ ╙──       	                           ^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -274,42 +278,42 @@ parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	          ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                 ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                        ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                               ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                                      ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                                             ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                                                    ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: Nil
-//│ ║  l.273: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
+//│ ║  l.277: 	parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
 //│ ╙──       	                                                       ^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -329,62 +333,62 @@ parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" 
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	          ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                 ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                        ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                               ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                      ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                             ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                    ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                           ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                                  ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                                         ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: ::
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                                                ^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: Nil
-//│ ║  l.328: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
+//│ ║  l.332: 	parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
 //│ ╙──       	                                                                                   ^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
@@ -405,7 +409,7 @@ parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" 
 :fixme
 if true then Success: 42
 //│ ╔══[ERROR] Unexpected record key shape.
-//│ ║  l.406: 	if true then Success: 42
+//│ ║  l.410: 	if true then Success: 42
 //│ ╙──       	   ^^^^^^^^^^^^^^^^^
 
 // FIXME: printing of
@@ -423,14 +427,14 @@ if "a b c" is Input as chars then chars
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: subterm (Elaborator.scala:481)
 //│ ╔══[ERROR] Name not found: fixme
-//│ ║  l.421: 	:fixme
+//│ ║  l.425: 	:fixme
 //│ ╙──       	 ^^^^^
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: newAcc (Elaborator.scala:1051)
 //│ ╔══[ERROR] Unexpected record key shape.
-//│ ║  l.419: 	pattern Input =
+//│ ║  l.423: 	pattern Input =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.420: 	  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
+//│ ║  l.424: 	  ((Char.Whitespace ~ (Input as inp)) => inp) | ((c ~ (Input as inp)) => [c, ..inp]) | ("" => [])
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
