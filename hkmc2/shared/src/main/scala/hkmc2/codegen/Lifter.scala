@@ -1044,14 +1044,16 @@ class Lifter()(using State, Raise):
               blk
             )
             
-            val symLen = newAuxSyms.size
-            for (ps, idx) <- newAuxSyms.zipWithIndex do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
-                idx == symLen - 1 && HandlerLowering.checkInstantiateEffect, false)
-              curSym = TempSymbol(None, "tmp")
-              val thisSym = curSym
-              acc = acc.assign(thisSym, call)
-              // acc = blk => acc(Assign(curSym, call, blk))
+            def go(cur: List[List[VarSymbol]]) = cur match
+              case ps :: rst =>
+                val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
+                  rst === Nil && HandlerLowering.checkInstantiateEffect, false)
+                curSym = TempSymbol(None, "tmp")
+                val thisSym = curSym
+                acc = acc.assign(thisSym, call)
+                // acc = blk => acc(Assign(curSym, call, blk))
+              case Nil =>
+            go(newAuxSyms)
             val bod = acc.ret(curSym.asPath)
             
             inline def toPlist(ls: List[VarSymbol]) =
