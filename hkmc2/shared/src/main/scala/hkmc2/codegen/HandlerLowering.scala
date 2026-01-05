@@ -402,7 +402,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         override def applyBlock(b: Block): Unit = b match
           case Unwind(uid, loc) => ()
           case StateTransition(uid) =>
-            val old = assignedInfo.getOrElse(uid, mutable.BitSet.empty)
+            val old = assignedInfo.getOrElse(uid, assigned)
             assignedInfo(uid) = old & assigned
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
