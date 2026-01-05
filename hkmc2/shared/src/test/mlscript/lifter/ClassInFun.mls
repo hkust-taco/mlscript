@@ -204,13 +204,13 @@ f().foo()
 
 :expect 2
 fun f(x) =
-  class A() with
-    fun newA() = A()
+  class A()() with
+    fun newA() = A()()
     fun foo() =
       set x += 1
       x
     fun getX() = x
-  A()
+  A()()
 let a = f(0)
 a.foo()
 let b = a.newA()
