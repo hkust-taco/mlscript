@@ -158,6 +158,8 @@ module Test with
   fun main()(using Debugger) =
     test(12) + test(34)
 
+// Currently this test fails due to lifter issue. Commenting out :lift at the top of this file will make this work.
+// The lifter currently do not correctly consider the member variable as a local that could be captured.
 :fixme
 let res =
   handle h = Debugger with
