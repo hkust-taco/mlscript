@@ -1,47 +1,6 @@
 :js
 :qq
 
-//│ Term = class Term {
-//│   Symbol: fun Symbol { class: class Symbol },
-//│   Pattern: class Pattern,
-//│   LitPattern: fun LitPattern { class: class LitPattern },
-//│   Var: fun Var { class: class Var },
-//│   ClassLike: fun ClassLike { class: class ClassLike },
-//│   Tuple: fun Tuple { class: class Tuple },
-//│   Record: fun Record { class: class Record },
-//│   Branch: fun Branch { class: class Branch },
-//│   Split: class Split,
-//│   Cons: fun Cons { class: class Cons },
-//│   Let: fun Let { class: class Let },
-//│   Else: fun Else { class: class Else },
-//│   End: class End,
-//│   Keyword: class Keyword { If: If, While: While },
-//│   Statement: class Statement,
-//│   LetDecl: fun LetDecl { class: class LetDecl },
-//│   DefineVar: fun DefineVar { class: class DefineVar },
-//│   Term: class Term,
-//│   Lit: fun Lit { class: class Lit },
-//│   Builtin: fun Builtin { class: class Builtin },
-//│   Ref: fun Ref { class: class Ref },
-//│   CSRef: fun CSRef { class: class CSRef },
-//│   App: fun App { class: class App },
-//│   Sel: fun Sel { class: class Sel },
-//│   DynSel: fun DynSel { class: class DynSel },
-//│   Tup: fun Tup { class: class Tup },
-//│   IfLike: fun IfLike { class: class IfLike },
-//│   Lam: fun Lam { class: class Lam },
-//│   Blk: fun Blk { class: class Blk },
-//│   New: fun New { class: class New },
-//│   Region: fun Region { class: class Region },
-//│   RegRef: fun RegRef { class: class RegRef },
-//│   Assgn: fun Assgn { class: class Assgn },
-//│   Deref: fun Deref { class: class Deref },
-//│   SetRef: fun SetRef { class: class SetRef },
-//│   Ret: fun Ret { class: class Ret },
-//│   Throw: fun Throw { class: class Throw },
-//│   Try: fun Try { class: class Try },
-//│   Context: fun Context { class: class Context }
-//│ }
 
 `42
 //│ = Lit(42)
@@ -165,7 +124,7 @@ x `=> `if x `=== `0.0 then `1.0 else x
 :fixme // FIXME: weird error
 x `=> `if x `== `0.0 then `1.0 else x
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'import'
-//│ > let x6, scrut2, tmp57, tmp58, tmp59, tmp60, tmp61, tmp62, arr10, tmp63, tmp64, tmp65, tmp66, tmp67, tmp68, tmp69, tmp70, tmp71, tmp72, tmp73, arr11, tmp74, tmp75;try { tmp57 = globalThis.Object.freeze(new Term.Symbol("x")); x6 = globalThis.Object.freeze(new Term.Ref(tmp57)); tmp58 = globalThis.Object.freeze(new Term.Symbol("scrut")); scrut2 = globalThis.Object.freeze(new Term.Ref(tmp58)); tmp70 = globalThis.Object.freeze(new Term.Symbol("Predef")); tmp71 = globalThis.Object.freeze(new Term.CSRef(tmp70, import.meta.url, "../../mlscript-compile/Predef.mls")); tmp72 = x6; tmp73 = globalThis.Object.freeze(new Term.Lit(0.0)); arr11 = globalThis.Object.freeze([   tmp72,   tmp73 ]); tmp74 = globalThis.Object.freeze(new Term.Sel(tmp71, "equals")); tmp75 = globalThis.Object.freeze(new Term.Tup(arr11)); tmp59 = globalThis.Object.freeze(new Term.App(tmp74, tmp75)); tmp63 = scrut2; tmp64 = globalThis.Object.freeze(new Term.LitPattern(true)); tmp69 = globalThis.Object.freeze(new Term.Lit(1.0)); tmp65 = globalThis.Object.freeze(new Term.Else(tmp69)); tmp66 = globalThis.Object.freeze(new Term.Branch(tmp63, tmp64, tmp65)); tmp68 = x6; tmp67 = globalThis.Object.freeze(new Term.Else(tmp68)); tmp60 = globalThis.Object.freeze(new Term.Cons(tmp66, tmp67)); tmp61 = globalThis.Object.freeze(new Term.Let(tmp58, tmp59, tmp60)); arr10 = globalThis.Object.freeze([   tmp57 ]); tmp62 = globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp61)); block$res16 = globalThis.Object.freeze(new Term.Lam(arr10, tmp62)); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
+//│ > let x6, scrut2, tmp57, tmp58, tmp59, tmp60, tmp61, tmp62, arr10, tmp63, tmp64, tmp65, tmp66, tmp67, tmp68, tmp69, tmp70, tmp71, tmp72, tmp73, arr11, tmp74, tmp75;try { tmp57 = globalThis.Object.freeze(new Term.Symbol("x")); x6 = globalThis.Object.freeze(new Term.Ref(tmp57)); tmp58 = globalThis.Object.freeze(new Term.Symbol("scrut")); scrut2 = globalThis.Object.freeze(new Term.Ref(tmp58)); tmp70 = globalThis.Object.freeze(new Term.Symbol("Predef")); tmp71 = globalThis.Object.freeze(new Term.CSRef(tmp70, import.meta.url, "../../mlscript-compile/Predef.mls")); tmp72 = x6; tmp73 = globalThis.Object.freeze(new Term.Lit(0.0)); arr11 = globalThis.Object.freeze([   tmp72,   tmp73 ]); tmp74 = globalThis.Object.freeze(new Term.Sel(tmp71, "equals")); tmp75 = globalThis.Object.freeze(new Term.Tup(arr11)); tmp59 = globalThis.Object.freeze(new Term.App(tmp74, tmp75)); tmp63 = scrut2; tmp64 = globalThis.Object.freeze(new Term.LitPattern(true)); tmp69 = globalThis.Object.freeze(new Term.Lit(1.0)); tmp65 = globalThis.Object.freeze(new Term.Else(tmp69)); tmp66 = globalThis.Object.freeze(new Term.Branch(tmp63, tmp64, tmp65)); tmp68 = x6; tmp67 = globalThis.Object.freeze(new Term.Else(tmp68)); tmp60 = globalThis.Object.freeze(new Term.Cons(tmp66, tmp67)); tmp61 = globalThis.Object.freeze(new Term.Let(tmp58, tmp59, tmp60)); arr10 = globalThis.Object.freeze([   tmp57 ]); tmp62 = globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp61)); block$res15 = globalThis.Object.freeze(new Term.Lam(arr10, tmp62)); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
 //│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^^^^
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Cannot use 'import.meta' outside a module
 

@@ -156,6 +156,7 @@ type StackSafetyMap = collection.Map[FnOrCls, Block]
 class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
+  private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
@@ -223,7 +224,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   
   private def partitionBlock(blk: Block): PartitionedBlock =
     val result = mutable.HashMap.empty[StateId, BlockPartition]
-    val labelIds = mutable.HashMap.empty[Symbol, (LazyId, LazyId)]
+    val labelIds = mutable.HashMap.empty[LabelSymbol, (LazyId, LazyId)]
     val allocId = new IdAllocator()
     var containsCall = false
 
@@ -383,7 +384,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     type PartitionVarInfo = (used: mutable.BitSet, assigned: mutable.BitSet, outgoing: List[StateId])
     val states = mutable.HashMap.from(parts.states)
-    val labelMap = mutable.HashMap.empty[Local, (StateId, StateId)]
+    val labelMap = mutable.HashMap.empty[LabelSymbol, (StateId, StateId)]
 
     def createState(blk: Block): StateId =
       val newId = allocId()
@@ -572,7 +573,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val vars = if opt.debug then ctx.resumeInfo.currentLocals else computeRestoreList(parts)
 
     val pcVar = freshTmp("pc")
-    val mainLoopLbl = freshTmp("main")
+    val mainLoopLbl = freshLabel("main")
 
     val postTransform = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block) = b match
