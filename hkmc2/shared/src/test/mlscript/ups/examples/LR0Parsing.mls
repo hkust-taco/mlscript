@@ -16,18 +16,55 @@ open Stack
 
 pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
 
-data class Expr with
+// data class Expr with
+//   constructor
+//     Ident(name: Str)
+//     Op(lhs: Sub, op: Str, rhs: Sub)
+//     Sub(inner: Expr, prec: Int)
+
+data class Subexpr with
   constructor
     Ident(name: Str)
-    Op(lhs: Expr, op: Str, rhs: Expr)
+    Op(lhs: Subexpr, op: Str, rhs: Subexpr)
+data class Expr(sub: Subexpr, prec: Int)
+
+
+pattern AtPrec =
+  ( "+" => 5 ) |
+  ( "*" => 2 )
+
+
+fun f(x) = if x is str as AtPrec as prec then [str, prec]
+f("+")
+//│ = ["+", 5]
+f("*")
+//│ = ["*", 2]
+
+if "+" is AtPrec(n) then n
+//│ = 5
+
+pattern Oper(str, prec) = str as AtPrec as prec
+
+if "+" is Oper as p then p
+//│ = 5
+
+:fixme
+if "+" is Oper(s, p) then [s, p]
+//│ ═══[RUNTIME ERROR] Error: match error
+
 
 pattern Parse =
   (
-    ((Identifier as name) :: rest)                => Ident(name) :: rest
+    ((Identifier as name) :: rest)                => Expr(Ident(name), 0) :: rest
   ) | (
-    ((Expr as e1) :: "+" :: (Expr as e2) :: rest) => Op(e1, "+", e2) :: rest
+    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: rest where p1 < p) => Expr(e1, p) :: op :: rest
   ) | (
-    ((Expr as e1) :: "+" :: (Parse as rest))      => e1 :: "+" :: rest
+    ((Expr as e1) :: (op as AtPrec(p)) :: Expr(e2, p2) :: rest where p2 < p) =>
+      e1 :: op :: Expr(e2, p) :: rest
+  ) | (
+    ((Expr(e1, p1)) :: (op as AtPrec(p)) :: Expr(e2, p2) :: rest) => Expr(Op(e1, op, e2), p) :: rest
+  ) | (
+    ((Expr as e1) :: (op as AtPrec) :: (Parse as rest))      => e1 :: op :: rest
   ) | (
     ("(" :: (Expr as e) :: ")" :: rest)           => e :: rest
   ) | (
@@ -47,74 +84,34 @@ parse(Nil)
 //│ > Failure: can't parse: Nil
 
 parse("x" :: Nil)
-//│ > Success: Ident("x")
+//│ > Success: Expr(Ident("x"), 0)
 
 let input = "x" :: "+" :: "y" :: Nil
 //│ input = Cons("x", Cons("+", Cons("y", Nil)))
 
 parse(input)
-//│ > Success: Op(Ident("x"), "+", Ident("y"))
+//│ > Success: Expr(Op(Ident("x"), "+", Ident("y")), 5)
 
 if input is Parse as rest then rest
-//│ = Cons(Ident("x"), Cons("+", Cons("y", Nil)))
+//│ = Cons(Expr(Ident("x"), 0), Cons("+", Cons("y", Nil)))
 
 parse("(" :: "x" :: ")" :: Nil)
-//│ > Success: Ident("x")
+//│ > Success: Expr(Ident("x"), 0)
+
+parse("a" :: "*" :: "x" :: "+" :: "y" :: Nil)
+//│ > Success: Expr(Op(Op(Ident("a"), "*", Ident("x")), "+", Ident("y")), 5)
+
+parse("a" :: "+" :: "x" :: "*" :: "y" :: Nil)
+//│ > Success: Expr(Op(Op(Ident("a"), "+", Ident("x")), "*", Ident("y")), 2)
 
 parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
-//│ > Success: Op(Ident("a"), "+", Op(Ident("x"), "+", Ident("y")))
+//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("x"), "+", Ident("y"))), 5)
 
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
-//│ > Success: Op(Ident("a"), "+", Op(Op(Ident("b"), "+", Ident("x")), "+", Ident("y")))
+//│ > Success: Expr(Op(Ident("a"), "+", Op(Op(Ident("b"), "+", Ident("x")), "+", Ident("y"))), 5)
 
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
-//│ > Success: Op(Ident("a"), "+", Op(Ident("b"), "+", Op(Ident("x"), "+", Ident("y"))))
+//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("b"), "+", Op(Ident("x"), "+", Ident("y")))), 5)
 
-
-
-
-
-// * Interesting quirk:
-
-print of ...
-[1, 2]
-//│ > [1, 2]
-
-print of ...
-  [1, 2]
-//│ > 1 2
-
-
-
-:fixme
-fun parse(tokens) =
-  ()
-  ???
-//│ ╔══[PARSE ERROR] Expected start of expression in this position; found end of input instead
-//│ ║  l.92: 	  ???
-//│ ╙──      	     ^
-
-:fixme // weird error
-pattern Parse =
-  (
-    ((Str as name) :: rest) => Ident(name) :: rest
-    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
-  )
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.100: 	    ((Str as name) :: rest) => Ident(name) :: rest
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Unexpected record property pattern.
-//│ ║  l.101: 	    ((Expr as e) :: "+" :: (Expr as e) :: rest) => Op(e, "+", e) :: rest
-//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-:fixme
-class Ident(name: Identifier)
-//│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.111: 	class Ident(name: Identifier)
-//│ ║         	                  ^^^^^^^^^^
-//│ ╙── Non-module parameter must have a non-module type.
-//│ ╔══[ERROR] Expected a non-module type; found reference.
-//│ ║  l.111: 	class Ident(name: Identifier)
-//│ ╙──       	                  ^^^^^^^^^^
 
 
