@@ -113,7 +113,7 @@ module Test with
   fun main(using Int) = test
 //│ JS (unsanitized):
 //│ let Test1;
-//│ globalThis.Object.freeze(class Test {
+//│ (class Test {
 //│   static {
 //│     Test1 = this
 //│   }

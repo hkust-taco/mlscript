@@ -225,17 +225,17 @@ _ - _ of 1, 2
 :sjs
 1 \ (_ - 2)
 //│ JS (unsanitized):
-//│ let lambda38; lambda38 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda38)
+//│ let lambda37; lambda37 = (undefined, function (_0) { return _0 - 2 }); Predef.passTo(1, lambda37)
 //│ = fun
 
 :sjs
 1 \ (_ - 2)()
 //│ JS (unsanitized):
-//│ let lambda39, tmp19;
-//│ lambda39 = (undefined, function (_0) {
+//│ let lambda38, tmp19;
+//│ lambda38 = (undefined, function (_0) {
 //│   return _0 - 2
 //│ });
-//│ tmp19 = Predef.passTo(1, lambda39);
+//│ tmp19 = Predef.passTo(1, lambda38);
 //│ runtime.safeCall(tmp19())
 //│ = -1
 
@@ -266,7 +266,7 @@ fun f(x) =
 //│ let f16;
 //│ f16 = function f(x3) {
 //│   let scrut;
-//│   scrut = x3 == 0;
+//│   scrut = Predef.equals(x3, 0);
 //│   if (scrut === true) { return 1 } else { return 2 }
 //│ };
 

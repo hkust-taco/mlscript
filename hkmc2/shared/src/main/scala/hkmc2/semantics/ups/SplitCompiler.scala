@@ -17,16 +17,18 @@ object SplitCompiler:
    *  the normalization to merge let bindings from different branches.
    */
   sealed abstract class Scrut:
-    private val subScrutinees: Buffer[SymbolScrut[?]] = Buffer.empty
+    private val subScrutinees: HashMap[ClassSymbol | PatternSymbol, Buffer[SymbolScrut[?]]] = HashMap.empty
     private val fields: HashMap[Ident, SymbolScrut[?]] = HashMap.empty
     private val tupleLead: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     private val tupleLast: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     
     def apply(): Term.Ref
-    def getSubScrutinee(index: Int)(using State): SymbolScrut[?] =
-      while subScrutinees.size <= index do
-        subScrutinees += TempSymbol(N, s"argument${subScrutinees.size}$$").toScrut
-      subScrutinees(index)
+
+    def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut[?] =
+      val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
+      while scrutinees.size <= i do
+        scrutinees += TempSymbol(N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
+      scrutinees(i)
     def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut[?] =
       tupleLead.getOrElseUpdate(index, TempSymbol(N, s"element$index$$").toScrut)
     def getTupleLastSubScrutinee(index: Int)(using State): SymbolScrut[?] =
@@ -257,7 +259,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     if successful then (makeConsequent, alternative) =>
       // The pattern arguments for destructing the constructor's arguments.
       val (theArguments, makeConsequentForArguments) = arguments.fold((N, makeConsequent)):
-        _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+        _.folded(makeConsequent)(scrutinee.getSubScrutinee(classSymbol)).mapFirst(S(_))
       val outputSymbol = new LazyScrut()
       val consequent = makeConsequentForArguments(outputSymbol, SeqMap.empty)
       val pattern = FlatPattern.ClassLike(classTerm, classSymbol, theArguments, false)(Tree.Dummy)
@@ -399,7 +401,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val (extractionArguments, makeConsequentForSubPatterns) =
         val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeConsequent)
         extractionMatches.fold(z):
-          _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+          _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
       // First, we need to prepare the objects that performs the naive matching
       // of pattern arguments which will be passed to the pattern.
       val patternBindings = patternArguments.makePatternBindings
@@ -665,7 +667,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val remainingSymbol = TempSymbol(N, "remaining").toScrut
       val (extractionArguments, makeConsequentForArguments) =
         extractionMatches.fold((N, makeConsequent)):
-          _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+          _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
       val consequent = makeConsequentForArguments(outputSymbol, remainingSymbol, SeqMap.empty)
       val patternBindings = patternArguments.makePatternBindings
       val unapplyCall =

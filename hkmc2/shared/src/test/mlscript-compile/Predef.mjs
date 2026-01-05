@@ -1,12 +1,11 @@
 const definitionMetadata = globalThis.Symbol.for("mlscript.definitionMetadata");
 const prettyPrint = globalThis.Symbol.for("mlscript.prettyPrint");
 import runtime from "./Runtime.mjs";
-import Term from "./Term.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
 let Predef1;
-globalThis.Object.freeze(class Predef {
+(class Predef {
   static {
     Predef1 = this
   }
@@ -14,15 +13,18 @@ globalThis.Object.freeze(class Predef {
     runtime.Unit;
   }
   static {
-    globalThis.Object.freeze(class Symbols {
+    (class Symbols {
       static {
-        Predef.Symbols = globalThis.Object.freeze(new this)
+        new this
       }
       constructor() {
+        Predef.Symbols = this;
         this.prettyPrint = RuntimeJS.symbols.prettyPrint;
+        this.definitionMetadata = RuntimeJS.symbols.definitionMetadata;
         Object.defineProperty(this, "class", {
           value: Symbols
-        })
+        });
+        globalThis.Object.freeze(this);
       }
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "Symbols"]; 
@@ -98,6 +100,140 @@ globalThis.Object.freeze(class Predef {
       return f.call(receiver, ...args)
     }
   } 
+  static equals(a, b) {
+    let scrut, scrut1, scrut2, ac, scrut3, md, scrut4, scrut5, scrut6, scrut7, scrut8, scrut9, scrut10, scrut11, tmp, lambda, lambda1, tmp1, tmp2, tmp3;
+    split_root$: {
+      split_1$: {
+        scrut = a === b;
+        if (scrut === true) {
+          tmp = true;
+          break split_root$
+        } else {
+          if (a instanceof globalThis.Array) {
+            if (b instanceof globalThis.Array) {
+              scrut1 = a.length === b.length;
+              if (scrut1 === true) {
+                lambda = (undefined, function (a1, i) {
+                  let tmp4;
+                  tmp4 = runtime.safeCall(b.at(i));
+                  return Predef.equals(a1, tmp4)
+                });
+                tmp = runtime.safeCall(a.every(lambda));
+                break split_root$
+              } else {
+                break split_1$
+              }
+            } else {
+              break split_1$
+            }
+          } else {
+            break split_1$
+          }
+        }
+      }
+      split_root$1: {
+        split_1$1: {
+          scrut2 = a !== undefined;
+          if (scrut2 === true) {
+            scrut11 = a !== null;
+            if (scrut11 === true) {
+              scrut10 = b !== undefined;
+              if (scrut10 === true) {
+                scrut9 = b !== null;
+                if (scrut9 === true) {
+                  ac = a.constructor;
+                  split_root$2: {
+                    split_1$2: {
+                      scrut3 = ac !== undefined;
+                      if (scrut3 === true) {
+                        scrut7 = ac === b.constructor;
+                        if (scrut7 === true) {
+                          md = ac[Predef.Symbols.definitionMetadata];
+                          split_root$3: {
+                            split_1$3: {
+                              scrut4 = md !== undefined;
+                              if (scrut4 === true) {
+                                lambda1 = (undefined, function (field) {
+                                  let scrut12, scrut13, tmp4;
+                                  split_root$4: {
+                                    split_1$4: {
+                                      scrut12 = field !== null;
+                                      if (scrut12 === true) {
+                                        scrut13 = Predef.equals(a[field], b[field]);
+                                        if (scrut13 === true) {
+                                          tmp4 = true;
+                                          break split_root$4
+                                        } else {
+                                          break split_1$4
+                                        }
+                                      } else {
+                                        break split_1$4
+                                      }
+                                    }
+                                    tmp4 = false;
+                                  }
+                                  return tmp4
+                                });
+                                scrut5 = runtime.safeCall(md[2].every(lambda1));
+                                if (scrut5 === true) {
+                                  tmp1 = true;
+                                  break split_root$3
+                                } else {
+                                  break split_1$3
+                                }
+                              } else {
+                                break split_1$3
+                              }
+                            }
+                            tmp1 = false;
+                          }
+                          scrut6 = tmp1;
+                          if (scrut6 === true) {
+                            tmp2 = true;
+                            break split_root$2
+                          } else {
+                            break split_1$2
+                          }
+                        } else {
+                          break split_1$2
+                        }
+                      } else {
+                        break split_1$2
+                      }
+                    }
+                    tmp2 = false;
+                  }
+                  scrut8 = tmp2;
+                  if (scrut8 === true) {
+                    tmp3 = true;
+                    break split_root$1
+                  } else {
+                    break split_1$1
+                  }
+                } else {
+                  break split_1$1
+                }
+              } else {
+                break split_1$1
+              }
+            } else {
+              break split_1$1
+            }
+          } else {
+            break split_1$1
+          }
+        }
+        tmp3 = false;
+      }
+      tmp = tmp3;
+    }
+    return tmp
+  } 
+  static nequals(a, b) {
+    let tmp;
+    tmp = Predef.equals(a, b);
+    return ! tmp
+  } 
   static print(...xs) {
     let tmp, tmp1;
     tmp = runtime.safeCall(Predef.map(Predef.renderAsStr));
@@ -114,36 +250,37 @@ globalThis.Object.freeze(class Predef {
   static notImplemented(msg) {
     let tmp;
     tmp = "Not implemented: " + msg;
-    throw globalThis.Error(tmp)
+    throw runtime.safeCall(globalThis.Error(tmp))
   } 
   static get notImplementedError() {
-    throw globalThis.Error("Not implemented");
+    throw runtime.safeCall(globalThis.Error("Not implemented"));
   } 
   static tuple(...xs) {
     return xs
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, scrut, i, init, scrut1, tmp, tmp1, tmp2, tmp3;
+      let len, scrut, i, init, tmp;
       len = rest.length;
-      scrut = len == 0;
+      scrut = len === 0;
       if (scrut === true) {
         return first
       } else {
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
-        tmp4: while (true) {
+        lbl: while (true) {
+          let scrut1, tmp1, tmp2, tmp3;
           scrut1 = i > 0;
           if (scrut1 === true) {
-            tmp = i - 1;
-            i = tmp;
-            tmp1 = runtime.safeCall(rest.at(i));
-            tmp2 = runtime.safeCall(f(tmp1, init));
-            init = tmp2;
-            tmp3 = runtime.Unit;
-            continue tmp4
+            tmp1 = i - 1;
+            i = tmp1;
+            tmp2 = runtime.safeCall(rest.at(i));
+            tmp3 = runtime.safeCall(f(tmp2, init));
+            init = tmp3;
+            tmp = runtime.Unit;
+            continue lbl
           } else {
-            tmp3 = runtime.Unit;
+            tmp = runtime.Unit;
           }
           break;
         }

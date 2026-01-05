@@ -1,0 +1,228 @@
+:js
+
+
+let x =
+  let y = 1 + 3 * 4
+  y + 4
+//│ x = 17
+
+
+fun f() =
+  if true then
+    let a = 4
+    a + 4
+  else
+    let b = 5
+    b + 9
+
+
+// TODO: improve later: `let a` can be moved to the branch body
+// NOTE: `tmp1` and `tmp2` should indeed be declared in the top level of the function body
+:sjs
+fun g(x, y, z) =
+  3 + 4 * if
+    x then 0
+    y then 0
+    z then
+      let a = 1
+      (_ + a)
+//│ JS (unsanitized):
+//│ let g;
+//│ g = function g(x1, y1, z) {
+//│   let a, tmp1, tmp2;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x1 === true) {
+//│         break split_1$
+//│       } else {
+//│         if (y1 === true) {
+//│           break split_1$
+//│         } else {
+//│           if (z === true) {
+//│             let lambda;
+//│             a = 1;
+//│             lambda = (undefined, function (_0) {
+//│               return _0 + a
+//│             });
+//│             tmp1 = lambda;
+//│             break split_root$
+//│           } else {
+//│             throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│           }
+//│         }
+//│       }
+//│     }
+//│     tmp1 = 0;
+//│   }
+//│   tmp2 = 4 * tmp1;
+//│   return 3 + tmp2
+//│ };
+
+
+module M
+data class A(a, b)
+data class B(a, b)
+data object Nil
+
+
+
+fun f() = if x is
+  A(a, b) and a > b then true
+  B(c, d) then false
+
+
+
+fun f() = if A(1, Nil) is
+  A(1, Nil) then 3
+
+
+
+
+fun f(x) =
+  x = while x is
+    A(a, _) then a()
+    B(a, _) then a()
+  else
+    x()
+  x
+
+
+
+
+fun f() =
+  let y = x + 1
+  while y is
+    A(z, a) and
+      false and true do
+        set y = z + 1
+      else
+        y = a
+
+
+
+fun f(x, y) =
+  while x && y do
+    f(0, 0) + 4
+
+
+
+
+class A with
+  val x = 1 + 2
+
+
+let state = 0
+//│ state = 0
+
+
+class Foo() with // the class definition is moved to the location of its companion
+  fun foo() = state
+set state += 1
+module Foo with
+  val res = Foo().foo()
+
+
+
+:sjs
+type I = Int
+//│ JS (unsanitized):
+//│ 
+
+
+
+
+class A(x) with
+  val y = x
+
+
+
+
+module M with
+  data class A(x, y)
+
+// NOTE: while bodies are not rewritten to functions by default
+// and are `Scoped`
+:sjs
+fun f(x) =
+  while x do
+    let y = x
+    x
+//│ JS (unsanitized):
+//│ let f6;
+//│ f6 = function f(x1) {
+//│   let tmp2;
+//│   lbl: while (true) {
+//│     let y1;
+//│     if (x1 === true) {
+//│       y1 = x1;
+//│       tmp2 = x1;
+//│       continue lbl
+//│     } else { tmp2 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp2
+//│ };
+
+
+// `:rewriteWhile` turns while loop into functions
+:sjs
+:rewriteWhile
+fun f(x) =
+  while x do
+    let y = x
+    x
+//│ JS (unsanitized):
+//│ let f7;
+//│ f7 = function f(x1) {
+//│   let tmp2, while1, tmp3, tmp4;
+//│   tmp2 = undefined;
+//│   while1 = (undefined, function () {
+//│     let y1;
+//│     if (x1 === true) {
+//│       y1 = x1;
+//│       tmp2 = x1;
+//│       return while1()
+//│     } else {
+//│       tmp2 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp3 = while1();
+//│   tmp4 = tmp3 !== runtime.LoopEnd;
+//│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
+//│ };
+
+
+
+data class Bar(x)
+
+// NOTE: `tmp`s in pCtor and ctor shouldn't have name crashes with each other
+:sjs
+data class Baz(z) extends Bar(z * 1) with
+  val k = 1 + 2 + 3
+  fun baz = this.bar * 2
+//│ JS (unsanitized):
+//│ let Baz1;
+//│ Baz1 = function Baz(z) {
+//│   return globalThis.Object.freeze(new Baz.class(z));
+//│ };
+//│ (class Baz extends Bar1.class {
+//│   static {
+//│     Baz1.class = this
+//│   }
+//│   constructor(z) {
+//│     let tmp2;
+//│     tmp2 = z * 1;
+//│     super(tmp2);
+//│     let tmp3, tmp4;
+//│     this.z = z;
+//│     tmp3 = 1 + 2;
+//│     tmp4 = tmp3 + 3;
+//│     this.k = tmp4;
+//│   }
+//│   get baz() {
+//│     return this.bar * 2;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Baz", ["z"]]; 
+//│ });

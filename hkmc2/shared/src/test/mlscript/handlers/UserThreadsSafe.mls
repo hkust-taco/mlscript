@@ -45,7 +45,7 @@ in
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
 //│ 	at f (UserThreadsSafe.mls:17:3)
 //│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=6)
+//│ 	at drain (pc=7)
 //│ 	at fork (UserThreadsSafe.mls:35:5)
 //│ 	at fork (UserThreadsSafe.mls:35:5)
 
@@ -68,7 +68,7 @@ in
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$1
 //│ 	at f (UserThreadsSafe.mls:17:3)
 //│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=6)
+//│ 	at drain (pc=7)
 //│ 	at fork (UserThreadsSafe.mls:58:5)
 //│ 	at fork (UserThreadsSafe.mls:58:5)
 

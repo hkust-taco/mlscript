@@ -12,11 +12,11 @@ import scala.collection.Map
 extension (doc: Document)
   /** Surrounds a document by the given `prefix` and `suffix`, unless the document is empty. */
   private def surroundUnlessEmpty(
-      prefix: Document = Document.empty,
-      postfix: Document = Document.empty
+      prefix: => Document = Document.empty,
+      postfix: => Document = Document.empty
   ): Document =
-    doc.optionUnless(_.isEmpty).fold(doc):
-      prefix :: _ :: postfix
+    doc.optionUnless(_.isEmpty).fold(doc): doc =>
+      doc"$prefix$doc$postfix"
 
 /** Trait indicating a WAT representation is available. */
 trait ToWat:
@@ -125,9 +125,9 @@ case class Field(
 
 /** A type representing a structure type. */
 case class StructType(
-  fields: Map[DefinitionSymbol[?], NumIdx -> Field],
-  parents: Seq[TypeIdx] = Seq.empty,
-  isSubtype: Bool = false
+    fields: Map[DefinitionSymbol[?], NumIdx -> Field],
+    parents: Seq[TypeIdx] = Seq.empty,
+    isSubtype: Bool = false
 ) extends ToWat:
 
   def fieldSeq: Seq[Field] = fields.values.toSeq.sortBy(_._1.index).map(_._2)
@@ -234,10 +234,9 @@ case class FoldedInstr(
           case a: ToWat => a.toWat
           case a: Document => a
       .mkDocument(doc" ").surroundUnlessEmpty(doc" ")
-    }${
-      stackargs.map(_.toWat).optionIf(_.nonEmpty).map(_.mkDocument(doc" # ")).fold(doc""): args =>
-        doc" #{  # $args #} "
-    })"
+    } #{ ${
+      stackargs.map(_.toWat).mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+    } #} )"
 end FoldedInstr
 
 /**

@@ -55,6 +55,7 @@ object Printer:
       doc"set ${mkDocument(lhs)}.${nme.name} = ${mkDocument(rhs)} in # ${mkDocument(rest)}"
     case Define(defn, rest) =>
       doc"define ${mkDocument(defn)} in # ${mkDocument(rest)}"
+    case Scoped(_, body) => mkDocument(body)
     case End("") => doc"end"
     case End(msg) => doc"end ${msg}"
     case _ => TODO(blk)
@@ -66,7 +67,7 @@ object Printer:
       doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${tsym.nme} = ${mkDocument(rhs)}"
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentSym, methods,
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       def optFldBody(t: semantics.TermDefinition) =

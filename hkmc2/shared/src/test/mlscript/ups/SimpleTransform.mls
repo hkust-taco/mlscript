@@ -12,21 +12,24 @@ data class Pair[A, B](first: A, second: B)
 pattern SumPair = Pair(a, b) => a + b
 //│ JS (unsanitized):
 //│ let SumPair1;
-//│ globalThis.Object.freeze(class SumPair {
+//│ (class SumPair {
 //│   static {
-//│     SumPair1 = globalThis.Object.freeze(new this)
+//│     new this
 //│   }
-//│   constructor() {}
+//│   constructor() {
+//│     SumPair1 = this;
+//│     globalThis.Object.freeze(this);
+//│   }
 //│   unapply(input) {
-//│     let transform, argument0$, argument1$, transformResult, tmp, lambda;
+//│     let transform, arg$Pair$0$, arg$Pair$1$, transformResult, tmp, lambda;
 //│     lambda = (undefined, function (a, b) {
 //│       return a + b
 //│     });
 //│     transform = lambda;
 //│     if (input instanceof Pair1.class) {
-//│       argument0$ = input.first;
-//│       argument1$ = input.second;
-//│       transformResult = runtime.safeCall(transform(argument0$, argument1$));
+//│       arg$Pair$0$ = input.first;
+//│       arg$Pair$1$ = input.second;
+//│       transformResult = runtime.safeCall(transform(arg$Pair$0$, arg$Pair$1$));
 //│       tmp = globalThis.Object.freeze({});
 //│       return globalThis.Object.freeze(new runtime.MatchSuccess.class(transformResult, tmp))
 //│     } else {

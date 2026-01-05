@@ -14,7 +14,7 @@ class Test with
   print(foo())
 //│ JS (unsanitized):
 //│ let Test1;
-//│ globalThis.Object.freeze(class Test {
+//│ (class Test {
 //│   static {
 //│     Test1 = this
 //│   }

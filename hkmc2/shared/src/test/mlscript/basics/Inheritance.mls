@@ -55,7 +55,7 @@ data class Baz(z) extends Bar(z * 1) with
 //│ Baz1 = function Baz(z) {
 //│   return globalThis.Object.freeze(new Baz.class(z));
 //│ };
-//│ globalThis.Object.freeze(class Baz extends Bar3.class {
+//│ (class Baz extends Bar3.class {
 //│   static {
 //│     Baz1.class = this
 //│   }
@@ -114,5 +114,26 @@ new Barr(40)(2) with
 //│ ║  l.111: 	new Barr(40)(2) with
 //│ ╙──       	    ^^^^^^^^^^^
 //│ = fun
+
+
+
+module M with
+  class A
+
+// * Check that the access to `M.A` is not sanity-checked, as it is resolved.
+:sjs
+class B extends M.A
+//│ JS (unsanitized):
+//│ let B1;
+//│ (class B extends M1.A {
+//│   static {
+//│     B1 = this
+//│   }
+//│   constructor() {
+//│     super();
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B"]; 
+//│ });
 
 

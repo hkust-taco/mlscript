@@ -18,23 +18,17 @@ class A
 //│ ╙──      	         ^^^^^
 //│ = 4
 
-:todo
 @tailrec
-fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
+fun f = g
+fun g = f
 
 :w
 @tailcall
 fun g = 2
 //│ ═══[WARNING] This annotation has no effect.
 
-:todo
 fun test =
-  @tailcall f
-//│ ╔══[WARNING] This annotation has no effect.
-//│ ╟── Tail call optimization is not yet implemented.
-//│ ║  l.33: 	  @tailcall f
-//│ ╙──      	            ^
+  @tailcall test
 
 :w
 let f = 0
@@ -42,15 +36,18 @@ fun test =
   @tailcall f
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── This annotation is not supported on reference terms.
-//│ ║  l.42: 	  @tailcall f
+//│ ║  l.36: 	  @tailcall f
 //│ ╙──      	            ^
 //│ f = 0
 
 :todo
 class A with
   @tailrec
-  fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
+  fun f() = g()
+  fun g() = f()
+//│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
+//│ ║  l.46: 	  fun f() = g()
+//│ ╙──      	      ^
 
 :w
 class A with
@@ -63,7 +60,9 @@ class A
 module A with
   @tailrec
   fun f = 2
-//│ ═══[WARNING] Tail call optimization is not yet implemented.
+//│ ╔══[WARNING] This function does not directly self-recurse, but is marked @tailrec.
+//│ ║  l.62: 	  fun f = 2
+//│ ╙──      	      ^
 
 :w
 class A
@@ -84,5 +83,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.84: 	  @tailcall 1 + 2
+//│ ║  l.83: 	  @tailcall 1 + 2
 //│ ╙──      	            ^^^^^

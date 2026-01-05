@@ -1,4 +1,7 @@
 :js
+:noTailRec
+
+// * FIXME: Why doesn't the following work when using Predef function `(==) equals`?
 
 // sanity check
 :expect 5050
@@ -10,20 +13,22 @@ sum(100)
 //│ = 5050
 
 // preserve tail calls
-// MUST see "return hi1(tmp)" in the output
+// MUST see "return hi(tmp)" in the output
 :stackSafe 5
 :effectHandlers
 :expect 0
 :sjs
 fun hi(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else hi(n - 1)
 hi(0)
 //│ JS (unsanitized):
-//│ let hi, res, $_stack$_safe$_body$_;
+//│ let hi;
+//│ let res, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
-//│   let scrut, tmp, Cont$func$hi$1, doUnwind, stackDelayRes;
-//│   globalThis.Object.freeze(class Cont$func$hi$ extends runtime.FunctionContFrame.class {
+//│   let scrut, tmp;
+//│   let Cont$func$hi$1, doUnwind, stackDelayRes;
+//│   (class Cont$func$hi$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$hi$1 = this
 //│     }
@@ -48,7 +53,7 @@ hi(0)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind(stackDelayRes, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n === 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
@@ -69,15 +74,17 @@ hi(0)
 :expect 50005000
 :sjs
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 sum(10000)
 //│ JS (unsanitized):
-//│ let sum1, res1, $_stack$_safe$_body$_1;
+//│ let sum1;
+//│ let res1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
-//│   let scrut, tmp, tmp1, Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
-//│   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {
+//│   let scrut, tmp, tmp1;
+//│   let Cont$func$sum$1, doUnwind, curDepth, stackDelayRes;
+//│   (class Cont$func$sum$ extends runtime.FunctionContFrame.class {
 //│     static {
 //│       Cont$func$sum$1 = this
 //│     }
@@ -94,10 +101,13 @@ sum(10000)
 //│       }
 //│       contLoop: while (true) {
 //│         runtime.stackDepth = curDepth1;
-//│         if (this.pc === 0) {
-//│           return sum1(n)
-//│         } else if (this.pc === 1) {
-//│           return n + tmp1
+//│         switch (this.pc) {
+//│           case 0:
+//│             return sum1(n);
+//│             break;
+//│           case 1:
+//│             return n + tmp1;
+//│             break;
 //│         }
 //│         break;
 //│       }
@@ -116,7 +126,7 @@ sum(10000)
 //│   if (stackDelayRes instanceof runtime.EffectSig.class) {
 //│     return doUnwind(stackDelayRes, 0)
 //│   }
-//│   scrut = n == 0;
+//│   scrut = n === 0;
 //│   if (scrut === true) {
 //│     return 0
 //│   } else {
@@ -145,6 +155,8 @@ fun sum(n) =
     n + sum(n - 1)
 sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+
 
 :effectHandlers
 :stackSafe 100
@@ -283,7 +295,7 @@ hi(0)
 :effectHandlers
 :expect 100010000
 fun sum(n) =
-  if n == 0 then 0
+  if n === 0 then 0
   else
     n + sum(n - 1)
 fun bad() = sum(10000) + sum(10000)

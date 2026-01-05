@@ -68,7 +68,7 @@ class Term with
     Try(val body: Term, val finallyDo: Term)
     
 
-class Context(val names: Map, val bindings: Map, val dependencies: Set, val printOnly: Bool) with
+class Context(val names: Map[Str, Int], val bindings: Map[Symbol, Str], val dependencies: Set[Str], val printOnly: Bool) with
   fun get(sym) =
     if bindings.has(sym) then bindings.get(sym)
     else if printOnly then sym.name

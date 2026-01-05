@@ -50,6 +50,7 @@ foo() + foo()
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type (func (result (ref null any))))
+//│   (type (func (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))))
 //│   (type (func (result (ref null any))))
 //│   (func $foo (type 1) (result (ref null any))
 //│     (return
@@ -57,40 +58,41 @@ foo() + foo()
 //│         (i32.const 42))))
 //│   (export "foo" (func $foo))
 //│   (elem declare func $foo)
-//│   (func $entry (type 2) (result (ref null any))
+//│   (func  (type 2) (param $lhs (ref null any)) (param $rhs (ref null any)) (result (ref null any))
+//│     (if (result (ref null any))
+//│       (i32.and
+//│         (ref.test (ref null i31)
+//│           (local.get $lhs))
+//│         (ref.test (ref null i31)
+//│           (local.get $rhs)))
+//│       (then
+//│         (ref.i31
+//│           (i32.add
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $lhs)))
+//│             (i31.get_s
+//│               (ref.cast (ref null i31)
+//│                 (local.get $rhs))))))
+//│       (else
+//│         (unreachable))))
+//│   (func $entry (type 3) (result (ref null any))
 //│     (local $foo (ref null any))
 //│     (local $tmp (ref null any))
 //│     (local $tmp1 (ref null any))
-//│     (block (result (ref null i31))
+//│     (block (result (ref null any))
 //│       (nop)
-//│       (block (result (ref null i31))
+//│       (block (result (ref null any))
 //│         (local.set $tmp
 //│           (call_ref 1
 //│             (ref.func $foo)))
-//│         (block (result (ref null i31))
+//│         (block (result (ref null any))
 //│           (local.set $tmp1
 //│             (call_ref 1
 //│               (ref.func $foo)))
-//│           (ref.i31
-//│             (i32.add
-//│               (if (result i32)
-//│                 (ref.test (ref null i31)
-//│                   (local.get $tmp))
-//│                 (then
-//│                   (i31.get_s
-//│                     (ref.cast (ref null i31)
-//│                       (local.get $tmp))))
-//│                 (else
-//│                   (unreachable)))
-//│               (if (result i32)
-//│                 (ref.test (ref null i31)
-//│                   (local.get $tmp1))
-//│                 (then
-//│                   (i31.get_s
-//│                     (ref.cast (ref null i31)
-//│                       (local.get $tmp1))))
-//│                 (else
-//│                   (unreachable)))))))))
+//│           (call 1
+//│             (local.get $tmp)
+//│             (local.get $tmp1))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
 //│ Wasm result:

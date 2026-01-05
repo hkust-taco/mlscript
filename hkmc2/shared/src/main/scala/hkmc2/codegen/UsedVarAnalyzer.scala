@@ -48,9 +48,9 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       existingVars += (f.sym -> existing)
       val thisVars = Lifter.getVars(f) -- existing
       val newExisting = existing ++ thisVars
-
-      val thisScopeDefns: List[Defn] = f.body.floatOutDefns()._2
-
+      
+      val thisScopeDefns: List[Defn] = f.body.gatherDefns()
+      
       nestedDefns += f.sym -> thisScopeDefns
 
       val newInScope = inScope ++ thisScopeDefns.map(_.sym)
@@ -83,8 +83,8 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
       val thisVars = Lifter.getVars(c) -- existing
       val newExisting = existing ++ thisVars
       
-      val thisScopeDefns: List[Defn] = c.methods ++ c.preCtor.floatOutDefns()._2 
-        ++ c.ctor.floatOutDefns()._2 ++ c.companion.fold(Nil)(comp => comp.ctor.floatOutDefns()._2 ++ comp.methods)
+      val thisScopeDefns: List[Defn] = c.methods ++ c.preCtor.gatherDefns()
+        ++ c.ctor.gatherDefns() ++ c.companion.fold(Nil)(comp => comp.ctor.gatherDefns() ++ comp.methods)
       
       nestedDefns += c.sym -> thisScopeDefns
       
@@ -271,7 +271,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
   // I'll fix it once it's fixed in the IR since we will have more tools to determine
   // what locals belong to what block.
   private def reqdCaptureLocals(f: FunDefn) =
-    var (_, defns) = f.body.floatOutDefns()
+    var defns = f.body.gatherDefns()
     val defnSyms = defns.collect:
         case f: FunDefn => f.sym -> f
         case c: ClsLikeDefn => c.sym -> c
@@ -368,7 +368,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             handleCalledBms(l)
           case Instantiate(mut, InstSel(l), args) =>
             args.map(super.applyArg)
-            handleCalledBms(l)
+            handleCalledBms(l._1)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match

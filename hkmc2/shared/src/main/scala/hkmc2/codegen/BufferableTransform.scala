@@ -68,7 +68,7 @@ class BufferableTransform()(using Ctx, State, Raise):
               val blk = mkFieldReplacer(buf, idx).applyBlock(f.body)
               FunDefn(f.owner, f.sym, f.dSym, PlainParamList(
                 Param(FldFlags.empty, buf, N, Modulefulness.none) :: Param(FldFlags.empty, idx, N, Modulefulness.none) :: Nil) :: f.params,
-                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(isTailRec = f.isTailRec)
+                if isCtor then Begin(blk, Return(idx.asPath, false)) else blk)(forceTailRec = f.forceTailRec)
             val fakeCtor = transformFunDefn(FunDefn.withFreshSymbol(
                 S(companionSym), 
                 BlockMemberSymbol("ctor", Nil, false), 
@@ -87,6 +87,7 @@ class BufferableTransform()(using Ctx, State, Raise):
                 cls.owner,
                 cls.isym,
                 cls.sym,
+                cls.ctorSym,
                 cls.k,
                 if bufferable then cls.paramsOpt else N,
                 if bufferable then cls.auxParams else Nil,

@@ -71,8 +71,8 @@ fun interesting(x) =
 //│ >    x is Box(Bool) then 2
 //│ Expanded split with flattened patterns:
 //│ >  if
-//│ >    x is Box(argument0$) and $argument0$ is Int then 1
-//│ >    x is Box(argument0$) and $argument0$ is Bool then 2
+//│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Int then 1
+//│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Bool then 2
 
 interesting of Box(42)
 //│ = 1

@@ -59,25 +59,28 @@ Array
 Array(1)
 //│ = [<1 empty items>]
 
+:breakme // TODO better report an error, here
 :e
 Array()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
-//│ ║  l.63: 	Array()
-//│ ╙──      	     ^^
 //│ = []
 
+:breakme // TODO better report an error, here
 :e
 Array(1, 2, 3)
-//│ ╔══[ERROR] Expected 1 arguments, got 3
-//│ ║  l.70: 	Array(1, 2, 3)
-//│ ╙──      	     ^^^^^^^^^
 //│ = [1, 2, 3]
 
 
 if arr is Array then "ok"
 //│ = "ok"
 
+:fixme // TODO handle?
 if arr is Array(n) then n
-//│ = 2
+//│ ╔══[ERROR] Class Array does not have a parameter list
+//│ ║  l.77: 	if arr is Array(n) then n
+//│ ║        	          ^^^^^
+//│ ╟── but the pattern has one sub-pattern
+//│ ║  l.77: 	if arr is Array(n) then n
+//│ ╙──      	                ^
+//│ ═══[RUNTIME ERROR] Error: match error
 
 

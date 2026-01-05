@@ -37,7 +37,7 @@ class Foo(x, val y, mut val z)
 //│ Foo1 = function Foo(x, y, z) {
 //│   return globalThis.Object.freeze(new Foo.class(x, y, z));
 //│ };
-//│ globalThis.Object.freeze(class Foo {
+//│ (class Foo {
 //│   static {
 //│     Foo1.class = this
 //│   }

@@ -51,6 +51,7 @@ class BlockTraverser:
       applyResult(rhs)
       applyPath(fld)
       applySubBlock(rest)
+    case Scoped(_, body) => applySubBlock(body)
   
   def applyResult(r: Result): Unit = r match
     case r @ Call(fun, args) => applyPath(fun); args.foreach(applyArg)
@@ -89,12 +90,13 @@ class BlockTraverser:
   def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
-    case ClsLikeDefn(own, isym, sym, k, paramsOpt, auxParams, parentPath, methods,
+    case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
       own.foreach(_.traverse)
       isym.traverse
       sym.traverse
+      ctorSym.foreach(_.traverse)
       paramsOpt.foreach(applyParamList)
       auxParams.foreach(applyParamList)
       parentPath.foreach(applyPath)
@@ -127,6 +129,7 @@ class BlockTraverser:
       cls.traverse
       applyPath(path)
     case Case.Tup(len, inf) => ()
+    case Case.Field(_, _) => ()
   
   def applyHandler(hdr: Handler): Unit =
     hdr.sym.traverse

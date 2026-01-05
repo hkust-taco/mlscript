@@ -10,6 +10,7 @@ import document.*
 import document.Document
 import semantics.*
 import text.Param as WasmParam
+import Instructions.*
 
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 
@@ -82,7 +83,7 @@ class FuncInfo(
       } #{ ${
         locals.map: p =>
           doc"(local $$${p._2} ${RefType.anyref.toWat})"
-        .toSeq.mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
+        .mkDocument(doc" # ").surroundUnlessEmpty(doc" # ")
       } # ${body.toWat} #} )${
         id.fold(doc""): id =>
           doc""" # (export "${id.id}" (func ${id.toWat})) # (elem declare func ${id.toWat})"""
@@ -115,19 +116,41 @@ class TypeInfo(
     compType
   )
 
-  private def idDoc: Document = id.fold(doc"")(id => doc"${id.toWat} ")
+  private def idDoc: Document = id.fold(doc"")(_.toWat)
 
   def toWat: Document = compType match
     case struct: StructType if struct.isSubtype =>
-      val parentsDoc = struct.parents.map(_.toWat).mkDocument(doc" ")
-      val parentsSuffix = if parentsDoc.isEmpty then doc"" else doc" " :: parentsDoc
+      val parentsDoc = struct.parents.optionIf(_.nonEmpty).fold(doc""): parents =>
+        parents.map(_.toWat).mkDocument(doc" ")
       val structDoc = struct.copy(isSubtype = false).toWat
-      doc"(type ${idDoc}(sub$parentsSuffix ${structDoc}))"
+      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} (sub${parentsDoc.surroundUnlessEmpty(doc" ")} ${structDoc}))"
     case _ =>
-      doc"(type ${idDoc}${compType.toWat})"
+      doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
 object Ctx:
+  val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
+    "plus_impl" -> i32.add,
+    "minus_impl" -> i32.sub,
+    "times_impl" -> i32.mul,
+    "div_impl" -> i32.div_s,
+    "mod_impl" -> i32.rem_s,
+    "eq_impl" -> i32.eq,
+    "neq_impl" -> i32.ne,
+    "lt_impl" -> i32.lt_s,
+    "le_impl" -> i32.le_s,
+    "gt_impl" -> i32.gt_s,
+    "ge_impl" -> i32.ge_s
+  )
+  val unaryOps: Map[Str, Expr => Expr] = Map(
+    "neg_impl" -> (value => i32.sub(i32.const(0), value)),
+    "pos_impl" -> identity,
+    "not_impl" -> i32.eqz
+  )
+  val wasmIntrinsicArities: Map[Str, Int] =
+    (binaryOps.keys.map(_ -> 2) ++ unaryOps.keys.map(_ -> 1)).toMap
+  val wasmIntrinsicNameSet: Set[Str] = wasmIntrinsicArities.keySet
+
   def empty: Ctx = Ctx(
     types = ArrayBuf.empty,
     namedTypes = MutMap.empty,
@@ -167,6 +190,8 @@ class Ctx(
 ) extends ToWat:
 
   import Ctx.prettyString
+
+  private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -292,7 +317,14 @@ class Ctx(
   /** Returns all local variable scopes and their variables. */
   def getAllWasmLocals: Ls[Seq[Local]] = locals.map(l => wasmLocalsToSeq(l.toMap))
 
+  /**
+   * Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with
+   * `createIntrinsic` if it does not yet exist in this context.
+   */
+  def getOrCreateWasmIntrinsic(name: Str, createIntrinsic: => FuncIdx): FuncIdx =
+    wasmIntrinsicFuncs.getOrElseUpdate(name, createIntrinsic)
+
   def toWat: Document =
-    doc"""(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} """
+    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
 
 end Ctx

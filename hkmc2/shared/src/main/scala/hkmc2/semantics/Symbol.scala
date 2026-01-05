@@ -125,9 +125,7 @@ abstract class Symbol(using State) extends Located:
     case (sym, S(_)) =>
       lastWords(s"Cannot disambiguate non-BlockMember symbol ${sym.nme}: disambiguation provided")
   
-  override def equals(x: Any): Bool = x match
-    case that: Symbol => uid === that.uid
-    case _ => false
+  override def equals(x: Any): Bool = this is x
   override def hashCode: Int = uid.hashCode
   
   def subst(using SymbolSubst): Symbol
@@ -166,6 +164,12 @@ sealed trait NamedSymbol extends Symbol:
   def name: Str
   def id: Ident
   def subst(using s: SymbolSubst): NamedSymbol
+
+class LabelSymbol(val trm: Opt[Term], name: Str = "lbl")(using State) extends LocalSymbol:
+  def nme = name
+  def subst(using s: SymbolSubst): LabelSymbol = s.mapLabelSym(this)
+  def toLoc = trm.flatMap(_.toLoc)
+  override def toString: Str = s"label:$nme${State.dbgUid(uid)}"
 
 abstract class BlockLocalSymbol(name: Str)(using State) extends FlowSymbol(name):
   self: LocalSymbol => // * using `with LocalSymbol` in the `extends` clause makes Scala think there's a bad override
@@ -265,6 +269,10 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   override def toString: Str = s"term:${owner.map(o => s"${o}.").getOrElse("")}${id.name}${State.dbgUid(uid)}"
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
+
+object TermSymbol:
+  def fromFunBms(b: BlockMemberSymbol, owner: Opt[InnerSymbol])(using State) =
+    TermSymbol(syntax.Fun, owner, Tree.Ident(b.nme))
 
 
 sealed trait CtorSymbol extends Symbol:

@@ -28,7 +28,10 @@ class Outputter(val out: java.io.PrintWriter):
 
 abstract class DiffMaker:
   
-  val file: os.Path
+  def cctx: CompilerCtx
+  given CompilerCtx = cctx
+  
+  val file: io.Path
   val relativeName: Str
   
   def processOrigin(origin: Origin)(using Raise): Unit
@@ -135,13 +138,12 @@ abstract class DiffMaker:
   
   val fileName = file.last
   
-  val fileContents = os.read(file)
+  val fileContents = cctx.fs.read(file)
   val allLines = fileContents.splitSane('\n').toList
   val strw = new java.io.StringWriter
   val out = new java.io.PrintWriter(strw)
   val output = Outputter(out)
-  val report = ReportFormatter: outputConsumer =>
-    outputConsumer(output(_))
+  val report = ReportFormatter(output(_), colorize = false)
   
   val failures = mutable.Buffer.empty[Int]
   val unmergedChanges = mutable.Buffer.empty[Int]
@@ -351,7 +353,7 @@ abstract class DiffMaker:
     val result = strw.toString
     if result =/= fileContents then
       println(s"Updating $file...")
-      os.write.over(file, result)
+      cctx.fs.write(file, result)
   
   // * Called after the very first command block
   // * and every time a further command block with `:init` finishes
