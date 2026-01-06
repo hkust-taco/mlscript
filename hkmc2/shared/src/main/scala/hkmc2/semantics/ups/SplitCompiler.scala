@@ -422,7 +422,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         case N | S(Nil) => identity[Split]
         case S((single, _) :: Nil) => Split.Let(single, outputSymbol(), _)
         case S(extractionArguments) => (split: Split) =>
-          makeTupleBranch(scrutinee(), extractionArguments.map(_._1), split, Split.End)
+          makeTupleBranch(outputSymbol(), extractionArguments.map(_._1), split, Split.End)
       // Finally, the inner split that does the work.
       val consequent = makeConsequentForSubPatterns(outputSymbol, SeqMap.empty)
       // Here we go!
@@ -979,11 +979,27 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     post = (blk: Ls[(BlockMemberSymbol, ParamList, Split)]) =>
       s"compilePattern >>> $blk"
   ):
-    // TODO: Use `pd.extractionParams`.
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)
-        ((output, bindings) => Split.Else(makeMatchSuccess(output())), failure)
+      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)(
+        makeConsequent = (output, bindings) =>
+          def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error)(_())
+          pd.extractionParams match
+            case Nil =>
+              // If the pattern doesn't have any extraction parameters, we take
+              // the entire output as the match result.
+              Split.Else(makeMatchSuccess(output()))
+            case sole :: Nil =>
+              // If there is only one extraction parameter, we don't make a tuple.
+              Split.Else(makeMatchSuccess(getBinding(sole)))
+            case ps =>
+              // Otherwise, `bindings` records which symbol each extraction
+              // parameter is actually represented by. Here, we extract them and
+              // put them into a tuple, then return it.
+              Split.Else(makeMatchSuccess(tup(ps.map(getBinding)))),
+        alternative = failure
+      )
+      pd.extractionParams.map(_.sym)
       log(s"Translated `unapply`: ${topmost.prettyPrint}")
       makeMethod("unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.

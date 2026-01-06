@@ -1,14 +1,18 @@
 :js
 
+import "../../../mlscript-compile/Option.mls"
+
+open Option { Some, None }
+
 class Foo(a: Int, val b: Int)
 
 :e
 fun foo(x) = if x is Foo(p, q) then p + q
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.6: 	fun foo(x) = if x is Foo(p, q) then p + q
-//│ ║       	                         ^
+//│ ║  l.10: 	fun foo(x) = if x is Foo(p, q) then p + q
+//│ ║        	                         ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
-//│ ║  l.3: 	class Foo(a: Int, val b: Int)
+//│ ║  l.7: 	class Foo(a: Int, val b: Int)
 //│ ║       	          ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -29,50 +33,50 @@ fun test(x) = if x is Test then "ok"
 :e
 fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                           ^
 //│ ╟── because the corresponding parameter `a` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	           ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                              ^
 //│ ╟── because the corresponding parameter `b` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	              ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                 ^
 //│ ╟── because the corresponding parameter `c` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	                 ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	                    ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                       ^
 //│ ╟── because the corresponding parameter `e` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	                       ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.30: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
+//│ ║  l.34: 	fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 //│ ║        	                                          ^
 //│ ╟── because the corresponding parameter `f` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	                          ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -80,7 +84,7 @@ fun test(x) = if x is Test(p, q, r, s, t, u) then "ok"
 :e
 fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╔══[ERROR] Expected six arguments, but found only three arguments.
-//│ ║  l.81: 	fun test(x) = if x is Test(_, _, _) then "ok"
+//│ ║  l.85: 	fun test(x) = if x is Test(_, _, _) then "ok"
 //│ ╙──      	                           ^^^^^^^
 
 fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
@@ -88,10 +92,10 @@ fun test(x) = if x is Test(_, _, _, _, _, _) then "ok"
 :e
 fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ╔══[ERROR] This pattern cannot be matched
-//│ ║  l.89: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
+//│ ║  l.93: 	fun test(x) = if x is Test(_, _, _, a, _, _) then "ok"
 //│ ║        	                                    ^
 //│ ╟── because the corresponding parameter `d` is not publicly accessible
-//│ ║  l.25: 	class Test(a, b, c, d, e, f)
+//│ ║  l.29: 	class Test(a, b, c, d, e, f)
 //│ ║        	                    ^
 //│ ╟── Suggestion: use a wildcard pattern `_` in this position
 //│ ╙── Suggestion: mark this parameter with `val` so it becomes accessible
@@ -114,20 +118,92 @@ object A
 :e
 fun foo(x) = if x is A() then 0
 //│ ╔══[ERROR] `A` is an object.
-//│ ║  l.112: 	object A
+//│ ║  l.116: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have an argument list.
-//│ ║  l.115: 	fun foo(x) = if x is A() then 0
+//│ ║  l.119: 	fun foo(x) = if x is A() then 0
 //│ ╙──       	                     ^
 
 :e
 fun foo(x) = if x is A(y) then y
 //│ ╔══[ERROR] `A` is an object.
-//│ ║  l.112: 	object A
+//│ ║  l.116: 	object A
 //│ ║         	       ^
 //│ ╟── Its pattern cannot have arguments.
-//│ ║  l.124: 	fun foo(x) = if x is A(y) then y
+//│ ║  l.128: 	fun foo(x) = if x is A(y) then y
 //│ ╙──       	                     ^^^
 
 0 is Foo
 //│ = false
+
+data class Pair[A, B](a: A, b: B)
+
+pattern PairLike(a, b) = [a, b] | Pair(a, b)
+
+fun foo(x) = if x is PairLike(a, b) then Some(a + b) else None
+
+foo(Pair(1, 2))
+//│ = Some(3)
+
+foo([1, 2])
+//│ = Some(3)
+
+foo([])
+//│ = None
+
+pattern AtPrec =
+  ( "+" => 2 ) |
+  ( "*" => 5 )
+
+fun f(x) = if x is str as AtPrec as prec then [str, prec]
+f("+")
+//│ = ["+", 2]
+f("*")
+//│ = ["*", 5]
+
+pattern Op(str, prec) = str as AtPrec as prec
+
+if "+" is Op as p then p
+//│ = ["+", 2]
+
+if "+" is Op(s, p) then [s, p]
+//│ = ["+", 2]
+
+pattern Crazy(a, b, c, d, e, f, g) = a as b as c as d as e as f as g
+
+if 42 is Crazy(a, b, c, d, e, f, g) then print(a, b, c, d, e, f, g)
+//│ > 42 42 42 42 42 42 42
+
+let p = Pair(42, 42)
+//│ p = Pair(42, 42)
+
+if p is Crazy(a, b, c, d, e, f, g) then
+  p === a and a === b and b === c and c === d and d === e and e === f and f === g
+//│ = true
+
+:e
+:re
+if p is Crazy(a, b, c, d, e, f) then 42
+//│ ╔══[ERROR] Expected seven extraction arguments, but found only six arguments.
+//│ ║  l.186: 	if p is Crazy(a, b, c, d, e, f) then 42
+//│ ╙──       	              ^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+:e
+:re
+if p is Crazy(all) then 42
+//│ ╔══[ERROR] Expected seven extraction arguments, but found only one argument.
+//│ ║  l.194: 	if p is Crazy(all) then 42
+//│ ╙──       	              ^^^
+//│ ═══[RUNTIME ERROR] Error: match error
+
+if p is Crazy as all then all
+//│ = [
+//│   Pair(42, 42),
+//│   Pair(42, 42),
+//│   Pair(42, 42),
+//│   Pair(42, 42),
+//│   Pair(42, 42),
+//│   Pair(42, 42),
+//│   Pair(42, 42)
+//│ ]

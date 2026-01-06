@@ -46,11 +46,10 @@ if "+" is AtPrec(n) then n
 pattern Oper(str, prec) = str as AtPrec as prec
 
 if "+" is Oper as p then p
-//│ = 5
+//│ = ["+", 5]
 
-:fixme
 if "+" is Oper(s, p) then [s, p]
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ = ["+", 5]
 
 
 pattern Parse =
