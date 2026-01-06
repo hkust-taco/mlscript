@@ -1,0 +1,59 @@
+:js
+
+
+import "../../mlscript-compile/Stack.mls"
+open Stack
+
+
+// Note: tail-rec optimized
+:sjs
+fun go(x) = if x is
+  Cons(_, _) then "Z"
+  n then go([])
+//│ JS (unsanitized):
+//│ let go;
+//│ go = function go(x) {
+//│   loopLabel: while (true) {
+//│     let n, arg$Cons$0$, arg$Cons$1$, tmp;
+//│     if (x instanceof Stack.Cons.class) {
+//│       arg$Cons$0$ = x.head;
+//│       arg$Cons$1$ = x.tail;
+//│       return "Z"
+//│     } else { n = x; tmp = globalThis.Object.freeze([]); x = tmp; continue loopLabel }
+//│     break;
+//│   }
+//│ };
+
+// FIXME: not tail-rec optimized
+:sjs
+fun go(x) = if x is
+  Cons(_, Nil) then "Z"
+  n then go([])
+//│ JS (unsanitized):
+//│ let go1;
+//│ go1 = function go(x) {
+//│   let n, arg$Cons$0$, arg$Cons$1$, tmp, tmp1;
+//│   split_root$: {
+//│     split_1$: {
+//│       if (x instanceof Stack.Cons.class) {
+//│         arg$Cons$0$ = x.head;
+//│         arg$Cons$1$ = x.tail;
+//│         if (arg$Cons$1$ instanceof Stack.Nil.class) {
+//│           tmp = "Z";
+//│           break split_root$
+//│         } else {
+//│           n = x;
+//│           break split_1$
+//│         }
+//│       } else {
+//│         n = x;
+//│         break split_1$
+//│       }
+//│     }
+//│     tmp1 = globalThis.Object.freeze([]);
+//│     tmp = go1(tmp1);
+//│   }
+//│   return tmp
+//│ };
+
+

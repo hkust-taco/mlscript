@@ -42,16 +42,16 @@ f("*")
 
 pattern Parse =
   (
-    ((Identifier as name) :: rest) =>
+    (Identifier(name) :: rest) =>
         Expr(Ident(name), 0) :: rest
   ) | (
-    ((Expr(e1, p1)) :: AtPrec(op, p) :: rest where p1 < p) =>
+    (Expr(e1, p1) :: AtPrec(op, p) :: rest where p1 < p) =>
         Expr(e1, p) :: op :: rest
   ) | (
-    ((Expr(e1, p1)) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
+    (Expr(e1, p1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
         Expr(Op(e1, op, e2), p) :: rest
   ) | (
-    ((Expr as e1) :: AtPrec(op , _) :: (Parse as rest)) =>
+    ((Expr as e1) :: AtPrec(op, _) :: Parse(rest)) =>
         e1 :: op :: rest
   ) | (
     ((Expr as e1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p2 < p) =>
@@ -60,7 +60,7 @@ pattern Parse =
     ("(" :: Expr(e, p) :: ")" :: rest) =>
         Expr(e, 0) :: rest
   ) | (
-    ("(" :: (Parse as rest)) =>
+    ("(" :: Parse(rest)) =>
         "(" :: rest
   )
 
