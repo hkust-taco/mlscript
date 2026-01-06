@@ -40,14 +40,14 @@ fun h1(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some(argument0$) and
-//│ >      let x = $argument0$
-//│ >      x is Left(argument0$) and
-//│ >        let y = $argument0$
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = $arg$Some$0$
+//│ >      x is Left(arg$Left$0$) and
+//│ >        let y = $arg$Left$0$
 //│ >        else y
-//│ >      let y = $argument0$
-//│ >      y is Right(argument0$) and
-//│ >        let z = $argument0$
+//│ >      let y = $arg$Some$0$
+//│ >      y is Right(arg$Right$0$) and
+//│ >        let z = $arg$Right$0$
 //│ >        else z
 //│ >    a is Option.None then 0
 
@@ -72,16 +72,16 @@ fun h2(a) =
     a is None then 0
 //│ Normalized:
 //│ >  if
-//│ >    a is Option.Some(argument0$) and
-//│ >      let x = $argument0$
+//│ >    a is Option.Some(arg$Some$0$) and
+//│ >      let x = $arg$Some$0$
 //│ >      let x' = x
-//│ >      x' is Left(argument0$) and
-//│ >        let y = $argument0$
+//│ >      x' is Left(arg$Left$0$) and
+//│ >        let y = $arg$Left$0$
 //│ >        else y
-//│ >      let y = $argument0$
+//│ >      let y = $arg$Some$0$
 //│ >      let y' = y
-//│ >      y' is Right(argument0$) and
-//│ >        let z = $argument0$
+//│ >      y' is Right(arg$Right$0$) and
+//│ >        let z = $arg$Right$0$
 //│ >        else z
 //│ >    a is Option.None then 0
 

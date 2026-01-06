@@ -151,12 +151,12 @@ fun f(x) =
 //│ let f6;
 //│ f6 = function f(x1) {
 //│   let tmp2;
-//│   tmp3: while (true) {
+//│   lbl: while (true) {
 //│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
 //│       tmp2 = x1;
-//│       continue tmp3
+//│       continue lbl
 //│     } else { tmp2 = runtime.Unit; }
 //│     break;
 //│   }

@@ -268,17 +268,17 @@ let Predef1;
       } else {
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
-        tmp1: while (true) {
-          let scrut1, tmp2, tmp3, tmp4;
+        lbl: while (true) {
+          let scrut1, tmp1, tmp2, tmp3;
           scrut1 = i > 0;
           if (scrut1 === true) {
-            tmp2 = i - 1;
-            i = tmp2;
-            tmp3 = runtime.safeCall(rest.at(i));
-            tmp4 = runtime.safeCall(f(tmp3, init));
-            init = tmp4;
+            tmp1 = i - 1;
+            i = tmp1;
+            tmp2 = runtime.safeCall(rest.at(i));
+            tmp3 = runtime.safeCall(f(tmp2, init));
+            init = tmp3;
             tmp = runtime.Unit;
-            continue tmp1
+            continue lbl
           } else {
             tmp = runtime.Unit;
           }

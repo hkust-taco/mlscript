@@ -209,7 +209,7 @@ class TailRecOpt(using State, TL, Raise):
     val dSym =
       if funs.size === 1 then funs.head.dSym
       else TermSymbol(syntax.Fun, owner, Tree.Ident(bms.nme))
-    val loopSym = TempSymbol(N, "loopLabel")
+    val loopSym = LabelSymbol(N, "loopLabel")
     val curIdSym = VarSymbol(Tree.Ident("id"))
     
     class FunRewriter(f: FunDefn) extends BlockTransformerShallow(SymbolSubst()):

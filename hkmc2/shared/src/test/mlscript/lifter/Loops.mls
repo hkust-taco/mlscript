@@ -58,18 +58,15 @@ fun foo() =
 //│ foo2 = function foo() {
 //│   let x, tmp;
 //│   x = 1;
-//│   tmp1: while (true) {
-//│     let scrut, tmp2;
+//│   lbl: while (true) {
+//│     let scrut, tmp3;
 //│     scrut = true;
 //│     if (scrut === true) {
-//│       let lambda;
-//│       tmp2 = x + 1;
-//│       x = tmp2;
-//│       lambda = (undefined, function () {
-//│         return x
-//│       });
-//│       return lambda
-//│     } else { tmp = runtime.Unit; }
+//│       tmp3 = x + 1;
+//│       x = tmp3;
+//│       lambda$here = runtime.safeCall(lambda2(x));
+//│       return lambda$here
+//│     } else { tmp2 = runtime.Unit; }
 //│     break;
 //│   }
 //│   return tmp
