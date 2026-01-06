@@ -87,10 +87,6 @@ object Lifter:
       
     case _ => Set.empty
 
-  def getVarsBlk(b: Block): Set[Local] =
-    b.definedVars.collect:
-      case s: LocalVarSymbol => s
-
   object RefOfBms:
     def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]])] = p match
       case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
@@ -298,59 +294,6 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     )
     
     (defn, sortedVars.iterator.map(_._1).toMap, sortedVars.iterator.map(_._1._1).toList)
-
-  private val innerSymCache: MutMap[Local, Set[Local]] = MutMap.empty
-  
-  /**
-    * Gets the inner symbols referenced within a class (including those within a member symbol).
-    * @param c The class from which to get the inner symbols.
-    * @return The inner symbols reference within a class.
-    */
-  def getInnerSymbols(c: Defn) =
-    val sym = c match
-      case f: FunDefn => f.sym
-      case c: ClsLikeDefn => c.isym
-      case _ => wat("unreachable", c.sym)
-      
-    def create: Set[Local] = c.freeVars.collect:
-      case s: InnerSymbol => s
-      case t: TermSymbol if t.owner.isDefined => t.owner.get
-
-    innerSymCache.getOrElseUpdate(sym, create)
-
-  /**
-    * Determines whether a certain class's `this` needs to be captured by a class being lifted.
-    * @param captureCls The class in question that is considered for capture.
-    * @param liftDefn The class being lifted.
-    * @return Whether the class needs to be captured.
-    */
-  private def needsClsCapture(captureCls: ClsLikeDefn, liftDefn: Defn) =
-    getInnerSymbols(liftDefn).contains(captureCls.isym)
-
-  /**
-    * Determines whether a certain function's mutable closure needs to be captured by a definition being lifted.
-    * @param captureFn The function in question that is considered for capture.
-    * @param liftDefn The definition being lifted.
-    * @return Whether the function needs to be captured.
-    */
-  private def needsCapture(captureFn: FunDefn, liftDefn: Defn, ctx: LifterCtx) =
-    val candVars = liftDefn.freeVars
-    val captureFnVars = ctx.usedLocals(captureFn.sym).reqCapture.toSet
-    !candVars.intersect(captureFnVars).isEmpty
-  
-  /**
-    * Gets the immutable local variables of a function that need to be captured by a definition being lifted.
-    * @param captureFn The function in question whose local variables need to be captured.
-    * @param liftDefn The definition being lifted.
-    * @return The local variables that need to be captured.
-    */
-  private def neededImutLocals(captureFn: FunDefn, liftDefn: Defn, ctx: LifterCtx) =
-    val candVars = liftDefn.freeVars
-    val captureFnVars = ctx.usedLocals(captureFn.sym)
-    val mutVars = captureFnVars.reqCapture.toSet
-    val imutVars = captureFnVars.vars
-    imutVars.filter: s =>
-      !mutVars.contains(s) && candVars.contains(s)
 
   case class FunSyms[T <: DefinitionSymbol[?]](b: BlockMemberSymbol, d: T):
     def asPath = Value.Ref(b, S(d))
@@ -1254,8 +1197,11 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
       println(v)
     println(")")
   
+  println("accessesShallow")
+  printMap(usedVars.shallowAccesses)
   println("accesses")
   printMap(usedVars.accessMap)
+  printMap(usedVars.accessMapWithIgnored)
   println("usedVars")
   printMap(usedVars.reqdCaptures)
 

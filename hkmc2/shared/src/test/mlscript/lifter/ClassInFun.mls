@@ -517,18 +517,7 @@ fun f(x) =
     fun get() = x
   Test()
 f(1).get()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ = 1
 
 :expect 1
 fun f(used1, unused1) =
@@ -541,18 +530,7 @@ fun f(used1, unused1) =
     fun get() = used1
   Test(unused1)
 f(1, 2).get()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ = 1
 
 :expect 1
 fun f(used1, unused1) =
@@ -587,18 +565,7 @@ fun f(x) =
   A().f()
   x
 f(1)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ = 2
 
 // only w should be in a capture
 :expect 10111
@@ -618,18 +585,54 @@ fun f() =
   Bad().foo()
   Good()
 f().foo()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Bad.Bad
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ JS (unsanitized):
+//│ let f6, tmp9;
+//│ f6 = function f() {
+//│   let Bad1, Good1, x, y, z, w, tmp10, tmp11;
+//│   x = 1;
+//│   y = 10;
+//│   z = 10;
+//│   w = 1000;
+//│   Good1 = function Good() {
+//│     return globalThis.Object.freeze(new Good.class());
+//│   };
+//│   (class Good {
+//│     static {
+//│       Good1.class = this
+//│     }
+//│     constructor() {}
+//│     foo() {
+//│       let tmp12, tmp13;
+//│       z = 100;
+//│       tmp12 = x + y;
+//│       tmp13 = tmp12 + z;
+//│       return tmp13 + w
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Good", []]; 
+//│   });
+//│   Bad1 = function Bad() {
+//│     return globalThis.Object.freeze(new Bad.class());
+//│   };
+//│   (class Bad {
+//│     static {
+//│       Bad1.class = this
+//│     }
+//│     constructor() {}
+//│     foo() {
+//│       w = 10000;
+//│       return runtime.Unit
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "Bad", []]; 
+//│   });
+//│   tmp10 = Bad1();
+//│   tmp11 = tmp10.foo();
+//│   return Good1()
+//│ };
+//│ tmp9 = f6();
+//│ runtime.safeCall(tmp9.foo())
+//│ = 10111
 
 :expect 2
 fun f(x) =
@@ -645,18 +648,9 @@ a.foo()
 let b = a.newA()
 b.foo()
 a.getX()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ = 2
+//│ a = A()
+//│ b = A()
 
 // handler
 
@@ -667,18 +661,381 @@ fun sum(n) =
   else
     n + sum(n - 1)
 sum(100)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: module:Predef
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:69)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:33)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $tmp
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = N
+//│             curThis = S of S of globalThis:globalThis
+//│             bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│           curThis = S of N
+//│           bindings = HashMap(n -> n, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│       curThis = S of S of class:Cont$func$sum$
+//│       bindings = HashMap(pc -> pc)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:Cont$func$sum$
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = N
+//│           curThis = S of S of globalThis:globalThis
+//│           bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│         curThis = S of N
+//│         bindings = HashMap(n -> n, $args -> args)
+//│       curThis = N
+//│       bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│     curThis = S of S of class:Cont$func$sum$
+//│     bindings = HashMap(pc -> pc)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$sum$'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $curDepth
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│             curThis = S of N
+//│             bindings = HashMap(n -> n, $args -> args)
+//│           curThis = N
+//│           bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│         curThis = S of S of class:Cont$func$sum$
+//│         bindings = HashMap(pc -> pc)
+//│       curThis = N
+//│       bindings = HashMap(value$ -> value$, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $curDepth
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = S of Scope:
+//│               parent = N
+//│               curThis = S of S of globalThis:globalThis
+//│               bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│             curThis = S of N
+//│             bindings = HashMap(n -> n, $args -> args)
+//│           curThis = N
+//│           bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│         curThis = S of S of class:Cont$func$sum$
+//│         bindings = HashMap(pc -> pc)
+//│       curThis = N
+//│       bindings = HashMap(value$ -> value$, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap(label:contLoop -> contLoop)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = N
+//│           curThis = S of S of globalThis:globalThis
+//│           bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│         curThis = S of N
+//│         bindings = HashMap(n -> n, $args -> args)
+//│       curThis = N
+//│       bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│     curThis = S of N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:Cont$func$sum$
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = N
+//│             curThis = S of S of globalThis:globalThis
+//│             bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│           curThis = S of N
+//│           bindings = HashMap(n -> n, $args -> args)
+//│         curThis = N
+//│         bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│       curThis = S of N
+//│       bindings = HashMap(pc -> pc, res -> res, $args -> args1)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$sum$'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $curDepth
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $stackDelayRes
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'stackDelayRes'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $stackDelayRes
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'stackDelayRes'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $stackDelayRes
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'stackDelayRes'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $curDepth
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $curDepth
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:doUnwind
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│       curThis = S of N
+//│       bindings = HashMap(n -> n, $args -> args)
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp12, $tmp -> tmp13, $scrut -> scrut)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:‹stack safe body›
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = N
+//│       curThis = S of S of globalThis:globalThis
+//│       bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│     curThis = S of N
+//│     bindings = HashMap()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member '‹stack safe body›'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $res
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:‹stack safe body›
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member '‹stack safe body›'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $res
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $res
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $res
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = $res
+//│     _2 = class hkmc2.semantics.TempSymbol
+//│   _2 = Scope:
+//│     parent = N
+//│     curThis = S of S of globalThis:globalThis
+//│     bindings = HashMap($block$res -> block$res3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $tmp -> tmp6, $block$res -> block$res7, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:f -> f3, $tmp -> tmp9, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, member:f -> f7, class:A -> A1, class:Test -> Test2, a -> a, $block$res -> block$res4, b -> b, $tmp -> tmp7, $block$res -> block$res8, $block$res -> block$res, member:f -> f4, $tmp -> tmp10, $tmp -> tmp11, member:f -> f, member:sum -> sum, member:Effect -> Effect1, class:Effect -> Effect, class:Handler$h$ -> Handler$h$, class:Test -> Test3, $block$res -> block$res9, $block$res -> block$res5, $tmp -> tmp8, $block$res -> block$res1, member:f -> f5, $tmp -> tmp, $tmp -> tmp1, class:A -> A, $tmp -> tmp2, member:f -> f1, class:Cont$func$sum$ -> Cont$func$sum$, $tmp -> tmp3, $tmp -> tmp4, class:Test -> Test, member:Predef -> Predef, $block$res -> block$res6, $block$res -> block$res2, $tmp -> tmp5, member:f -> f6, member:f -> f2, class:Good -> Good, class:Bad -> Bad, class:Test -> Test1, class:Cont$func$f$ -> Cont$func$f$)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
+//│ > let sum;try { sum = function sum(...args) {   runtime.checkArgs("sum", 1, true, args.length);   let n = args[0];   let scrut, tmp12, tmp13;   globalThis.Object.freeze(class Cont$func$sum$ extends runtime.FunctionContFrame.class {     static {       Cont$func$sum$ = this     }     constructor(pc) {       tmp = super(null);       this.pc = pc;     }     get resume$__checkNotMethod() { runtime.deboundMethod("resume", "Cont$func$sum$"); }     resume(...args1) {       runtime.checkArgs("resume", 1, true, args1.length);       let value$ = args1[0];       curDepth = runtime.stackDepth;       switch (this.pc) {         case 1:           scrut = value$;           break;         case 2:           tmp13 = value$;           break;       }       contLoop: while (true) {         runtime.stackDepth = curDepth;         switch (this.pc) {           case 0:             return runtime.checkCall(sum(n));             break;           case 1:             if (scrut === true) {               return 0             } else {               tmp12 = n - 1;               this.pc = 4;               continue contLoop             }             /* unreachable */             break;           case 4:             tmp13 = runtime.checkCall(sum(tmp12));             if (tmp13 instanceof runtime.EffectSig.class) {               return this.doUnwind(tmp13, 2)             }             this.pc = 2;             continue contLoop;             break;           case 2:             return n + tmp13;             break;         }         break;       }     }     toString() { return runtime.render(this); }     static [definitionMetadata] = ["class", "Cont$func$sum$"];    });   doUnwind = function doUnwind(...args1) {     runtime.checkArgs("doUnwind", 2, true, args1.length);     let res = args1[0];     let pc = args1[1];     res.contTrace.last.next = new Cont$func$sum$(pc);     res.contTrace.last = res.contTrace.last.next;     return res   };   curDepth = runtime.stackDepth;   runtime.stackDepth = runtime.stackDepth + 1;   stackDelayRes = runtime.checkCall(runtime.checkDepth());   if (stackDelayRes instanceof runtime.EffectSig.class) {     return runtime.checkCall(doUnwind(stackDelayRes, 0))   }   scrut = Predef.equals(n, 0);   runtime.stackDepth = curDepth;   if (scrut instanceof runtime.EffectSig.class) {     return runtime.checkCall(doUnwind(scrut, 1))   }   if (scrut === true) {     return 0   } else {     tmp12 = n - 1;     tmp13 = runtime.checkCall(sum(tmp12));     runtime.stackDepth = curDepth;     if (tmp13 instanceof runtime.EffectSig.class) {       return runtime.checkCall(doUnwind(tmp13, 2))     }     return n + tmp13   } }; ‹stack safe body› = (undefined, function (...args) {   runtime.checkArgs("", 0, true, args.length);   return runtime.checkCall(sum(100)) }); res = runtime.runStackSafe(10, ‹stack safe body›); if (res instanceof runtime.EffectSig.class) {   res = runtime.topLevelEffect(res, false); } block$res9 = res; undefined } catch (e) { console.log('\u200B' + e.stack + '\u200B'); }
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:157)
+//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Invalid or unexpected token
 
 // instance checks
 
@@ -689,18 +1046,8 @@ fun f() =
   fun foo() = Test
   foo()(0)
 f().get()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
+//│ = 0
+//│ FAILURE: Unexpected lack of warnings
 
 :lift
 :w
@@ -712,18 +1059,8 @@ fun f(x) =
   let foo = Test
   foo()
 f(2).get()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:63)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ = 2
+//│ FAILURE: Unexpected lack of warnings
 
 :expect 2
 fun test() =
@@ -732,18 +1069,7 @@ fun test() =
   class B() extends A
   B().get
 test()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:B.B
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ = 2
 
 // Note: semicolon required for auxparam before `return this;`
 // :sjs
@@ -751,16 +1077,4 @@ fun test(f) =
   class A(x) with
     f(x)
   A(1)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
-//│ 	at: scala.collection.immutable.Map$Map4.apply(Map.scala:535)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
 

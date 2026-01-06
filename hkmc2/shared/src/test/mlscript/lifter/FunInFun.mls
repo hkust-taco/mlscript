@@ -119,18 +119,12 @@ let x = f2().toString()
 f1()
 let y = f2().toString()
 x + y
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Tuple.Tuple
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ = "01"
+//│ f1 = fun g
+//│ f2 = fun h
+//│ ret = Tuple(fun g, fun h)
+//│ x = "0"
+//│ y = "1"
 
 
 data class Tuple(a, b)
@@ -143,18 +137,6 @@ fun f(used1) =
     Tuple(h, i)
   fun g22() = used1
   Tuple(g1(10), g22)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Tuple.Tuple
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
 
 :expect "11110110"
 let ret = f(1)
@@ -168,18 +150,16 @@ hFun()
 let c = g2()
 let d = iFun()
 a.toString() + b + c + d
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:f
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = "11110110"
+//│ a = 11
+//│ b = 1
+//│ c = 10
+//│ d = 110
+//│ g2 = fun g22
+//│ gRet = Tuple(fun h, fun i)
+//│ hFun = fun h
+//│ iFun = fun i
+//│ ret = Tuple(Tuple(fun h, fun i), fun g22)
 
 // some variables mutated, some not
 :sjs
@@ -193,9 +173,9 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let f5;
-//│ f5 = function f(unused, immutable, mutated) {
-//│   let g, h, a, tmp1, tmp2;
+//│ let f7;
+//│ f7 = function f(unused, immutable, mutated) {
+//│   let g, h, a1, tmp8, tmp9;
 //│   g = function g() {
 //│     mutated = 2;
 //│     return immutable + mutated
@@ -203,12 +183,12 @@ f(1, 2, 1000)
 //│   h = function h() {
 //│     return mutated
 //│   };
-//│   a = g();
-//│   tmp1 = h();
-//│   tmp2 = a + tmp1;
-//│   return tmp2 + unused
+//│   a1 = g();
+//│   tmp8 = h();
+//│   tmp9 = a1 + tmp8;
+//│   return tmp9 + unused
 //│ };
-//│ f5(1, 2, 1000)
+//│ f7(1, 2, 1000)
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -271,25 +251,25 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let g1, tmp1;
+//│ let g1, tmp8;
 //│ g1 = function g() {
-//│   let f11, y;
-//│   f11 = function f(x) {
+//│   let f14, y1;
+//│   f14 = function f(x1) {
 //│     let h, k;
 //│     h = function h() {
 //│       k = 5;
-//│       x = 4;
-//│       return x + y
+//│       x1 = 4;
+//│       return x1 + y1
 //│     };
 //│     k = 4;
-//│     y = 2;
-//│     return x
+//│     y1 = 2;
+//│     return x1
 //│   };
-//│   y = 0;
-//│   return f11
+//│   y1 = 0;
+//│   return f14
 //│ };
-//│ tmp1 = g1();
-//│ runtime.safeCall(tmp1(1))
+//│ tmp8 = g1();
+//│ runtime.safeCall(tmp8(1))
 //│ = 1
 
 :expect 2
@@ -373,20 +353,20 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ JS (unsanitized):
-//│ let f18;
-//│ f18 = function f(x) {
-//│   let g2, y, scrut;
-//│   g2 = function g() {
-//│     return y
+//│ let f22;
+//│ f22 = function f(x1) {
+//│   let g3, y1, scrut;
+//│   g3 = function g() {
+//│     return y1
 //│   };
-//│   scrut = x < 0;
+//│   scrut = x1 < 0;
 //│   if (scrut === true) {
-//│     y = 1;
+//│     y1 = 1;
 //│     return globalThis.Object.freeze([
-//│       g2,
-//│       g2
+//│       g3,
+//│       g3
 //│     ])
-//│   } else { y = 2; return globalThis.Object.freeze([ g2, g2 ]) }
+//│   } else { y1 = 2; return globalThis.Object.freeze([ g3, g3 ]) }
 //│ };
 
 :sjs
@@ -396,16 +376,16 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ JS (unsanitized):
-//│ let f19;
-//│ f19 = function f(x) {
-//│   let g2, a, tmp4;
-//│   g2 = function g() {
-//│     return x
+//│ let f23;
+//│ f23 = function f(x1) {
+//│   let g3, a1, tmp11;
+//│   g3 = function g() {
+//│     return x1
 //│   };
-//│   a = g2;
-//│   tmp4 = x + 1;
-//│   x = tmp4;
-//│   return globalThis.Object.freeze([ a, g2 ])
+//│   a1 = g3;
+//│   tmp11 = x1 + 1;
+//│   x1 = tmp11;
+//│   return globalThis.Object.freeze([ a1, g3 ])
 //│ };
 
 // Can be avoided in `h` by passing the initialized closure, but this is more complicated

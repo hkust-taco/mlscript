@@ -1,0 +1,61 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+:d
+// :d
+// :todo
+
+:noSanityCheck
+:lift
+:ssjs
+fun f(x) =
+  class A with
+    class B with
+      setX
+      set x += 1
+    let bruh = new B
+    fun setX = set x += 1
+  new A
+//│ Elab: { fun member:f‹692›(x‹693›) = { Cls A { Cls B { (class:A‹695›#666.)setX‹member:setX‹690››; x‹693›#666 := builtin:+‹48›#0(x‹693›#666, 1) }; let term:class:A‹695›.bruh‹700›; term:class:A‹695›.bruh‹700› = new (class:A‹695›#666.)B‹member:B‹689››; method fun member:setX‹690› = x‹693›#666 := builtin:+‹48›#1(x‹693›#666, 1); }; new member:A‹691›#666 }; }
+//│ JS:
+//│ let f;
+//│ f = function f(x) {
+//│   let A1;
+//│   (class A {
+//│     static {
+//│       A1 = this
+//│     }
+//│     constructor() {
+//│       const this$A = this;
+//│       (class B {
+//│         static {
+//│           this$A.B = this
+//│         }
+//│         constructor() {
+//│           let tmp;
+//│           tmp = x + 1;
+//│           x = tmp;
+//│           runtime.Unit;
+//│         }
+//│         toString() { return runtime.render(this); }
+//│         static [definitionMetadata] = ["class", "B"]; 
+//│       });
+//│       this.#bruh = globalThis.Object.freeze(new this.B());
+//│     }
+//│     #bruh;
+//│     get setX() {
+//│       let tmp;
+//│       tmp = x + 1;
+//│       x = tmp;
+//│       return runtime.Unit;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
+//│   return globalThis.Object.freeze(new A1())
+//│ };
+//│ block$res1 = undefined;

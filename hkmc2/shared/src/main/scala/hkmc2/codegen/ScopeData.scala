@@ -20,7 +20,7 @@ object ScopeData:
     private val underlying = FreshInt()
     def make: ScopeUID = underlying.make
   
-  type ScopedInfo = DefinitionSymbol[?] | ScopeUID | Unit
+  type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
   // ScopeData requires the set of ignored scopes to compute certain things, but
   // the lifter requires the scope tree to generate the metadata. To solve this,
@@ -29,19 +29,27 @@ object ScopeData:
   
   // These cannot be hashed
   enum ScopedObject:
+    // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
+    // a scoped block.
+    
     case Top(b: Block) // b may be a scoped block, in which case, its variables represent the top-level variables.
     case Class(cls: ClsLikeDefn)
     case Companion(comp: ClsLikeBody, par: ClsLikeDefn)
+    
+    // we model it like this: the ctor is just another function in the same scope as the class and initializes the corresponding class
+    case ClassCtor(cls: ClsLikeDefn)
     case Func(fun: FunDefn, isMethod: Bool)
-    case Loop(body: Block)
+    case Loop(sym: LabelSymbol, block: Block)
     case ScopedBlock(uid: ScopeUID, block: Scoped)
     
     def toInfo: ScopedInfo = this match
       case Top(_) => ()
       case Class(cls) => cls.isym
       case Companion(comp, par) => comp.isym
+      case ClassCtor(cls) => cls.ctorSym.get
       case Func(fun, _) => fun.dSym
       case ScopedBlock(uid, block) => uid
+      case Loop(sym, _) => sym
     
     // Locals defined by a scoped object.
     def definedLocals: Set[Local] = this match
@@ -60,10 +68,12 @@ object ScopeData:
         paramsSet ++ auxSet ++ cls.privateFields + cls.isym
       case Companion(comp, par) =>
         comp.privateFields.toSet + comp.isym
+      case _: ClassCtor => Set.empty
       case Func(fun, _) => fun.params.flatMap: p =>
           p.params.map(_.sym)
         .toSet
       case ScopedBlock(_, block) => block.syms.toSet
+      case _: Loop => Set.empty
     
   extension (traverser: BlockTraverser)
     def applyScopedObject(obj: ScopedObject) = 
@@ -91,6 +101,8 @@ object ScopeData:
       case ScopedObject.Companion(comp, par) => traverser.applyClsLikeBody(comp)
       case ScopedObject.Func(fun, isMethod) => traverser.applyFunDefn(fun)
       case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
+      case ScopedObject.ClassCtor(c) => ()
+      case ScopedObject.Loop(_, b) => traverser.applyBlock(b)
     
   // A simple tree data structure representing the nesting relation of definitions and scopes.
   class NestedScopeTree(val root: ScopeNode):
@@ -105,6 +117,10 @@ object ScopeData:
     // note: includes itself
     lazy val allChildNodes: List[ScopeNode] = this :: children.flatMap(_.allChildNodes)
     lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
+    
+    lazy val liftedChildNodes: List[ScopeNode] =
+      if isLifted then this :: Nil
+      else children.flatMap(_.liftedChildNodes)
     
     // does not include variables introduced by itself
     lazy val existingVars: Set[Local] = parent match
@@ -134,6 +150,11 @@ object ScopeData:
         case Some(value) => value.firstLiftedParent
         case None => obj // unreachable
       else obj
+  
+  def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
+    case Some(d) if data.contains(d) => S(d)
+    case d: DefinitionSymbol[?] if data.contains(d) => S(d)
+    case _ => None
     
 class ScopeData(b: Block)(using State, IgnoredScopes):
   import ScopeData.*
@@ -143,6 +164,8 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
   val scopeTree = NestedScopeTree(makeScopeTreeRec(ScopedObject.Top(b)))
   val root = scopeTree.root
   
+  def contains(s: ScopedInfo) = scopeTree.nodesMap.contains(s)
+    
   private val scopedMap: IdentityHashMap[Scoped, ScopeUID] = new IdentityHashMap
   for
     case ScopeNode(obj = ScopedObject.ScopedBlock(uid, blk)) <- scopeTree.root.allChildNodes
@@ -162,6 +185,8 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
     override def applyBlock(b: Block): Unit = b match
       case s: Scoped =>
         objs ::= ScopedObject.ScopedBlock(fresh.make, s)
+      case l: Label if l.loop =>
+        objs ::= ScopedObject.Loop(l.label, l.body)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn): Unit =
       objs ::= ScopedObject.Func(fun, false)
@@ -169,6 +194,9 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case f: FunDefn => applyFunDefn(f)
       case c: ClsLikeDefn =>
         objs ::= ScopedObject.Class(c)
+        c.ctorSym match
+          case Some(value) => objs ::= ScopedObject.ClassCtor(c)
+          case None => ()
         c.companion.map: comp =>
           objs ::= ScopedObject.Companion(comp, c)
         
@@ -191,6 +219,8 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         finder.applyBlock(fun.body)
       case ScopedObject.ScopedBlock(_, block) =>
         finder.applyBlock(block.body)
+      case ScopedObject.ClassCtor(c) => ()
+      case ScopedObject.Loop(_, b) => finder.applyBlock(b)
     val mtdObjs = obj match
       case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_, true))
       case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, true))
