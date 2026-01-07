@@ -166,8 +166,11 @@ if Nil is
 //│ = Nil
 
 
-:breakme
+:e
 if "" is
   Parse2 then 1
+//│ ╔══[ERROR] Pattern name not found: Parse2.
+//│ ║  l.171: 	  Parse2 then 1
+//│ ╙──       	  ^^^^^^
 //│ = 1
 

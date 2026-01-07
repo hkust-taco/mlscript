@@ -1,10 +1,16 @@
 :js
 
 
-:re
 class x
 if 0 is
   x then 12
+//│ = 12
+
+
+:re
+class X
+if 0 is
+  X then 12
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

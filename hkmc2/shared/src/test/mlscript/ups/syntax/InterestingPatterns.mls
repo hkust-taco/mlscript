@@ -66,15 +66,17 @@ pattern TreeMin =
 pattern IsBalanced = (Leaf => true) | (Node(_, IsBalanced as left, IsBalanced as right) => Math.abs(TreeDepth(left) - TreeDepth(right)) <= 1)
 
 // Extract the path from root to a target value in a binary tree
-pattern PathToValue(pattern target) = 
+pattern PathToValue(pattern Target) = 
   (Leaf => []) | 
-  (Node(PathToValue(target) as left, target, _) => [0] ::: left) |
-  (Node(_, target, PathToValue(target) as right) => [1] ::: right) |
-  (Node(PathToValue(target) as left, _, _) => [0] ::: left) |
-  (Node(_, _, PathToValue(target) as right) => [1] ::: right)
+  (Node(PathToValue(Target) as left, Target, _) => [0] ::: left) |
+  (Node(_, Target, PathToValue(Target) as right) => [1] ::: right) |
+  (Node(PathToValue(Target) as left, _, _) => [0] ::: left) |
+  (Node(_, _, PathToValue(Target) as right) => [1] ::: right)
 
 // Extract elements at even indices in a list.
 pattern EvenIndicesList = 
   (Nil => Nil) | 
   ((x :: Nil) => x) |
-  ((x :: _ :: EvenIndices as xs) => x :: xs)
+  ((x :: _ :: EvenIndicesList as xs) => x :: xs)
+
+

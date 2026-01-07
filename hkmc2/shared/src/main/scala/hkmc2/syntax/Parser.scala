@@ -585,9 +585,11 @@ abstract class Parser(
           case Nil => id
           case _ =>
             val newPrec =
-              // FIXME?
-              // PrefixOpsPrec
-              opCharPrec(nme.head)
+              if nme === "!" then
+                // Special case: bang operator currently used in BbML
+                PrefixOpsPrec
+              else
+                opCharPrec(nme.head)
             val rhs = expr(newPrec, allowNewlines = allowNewlines)
             // val c = 
             exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)

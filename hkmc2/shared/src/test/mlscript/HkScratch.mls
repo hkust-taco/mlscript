@@ -63,9 +63,15 @@ pattern StatementBased =
   0 => "zero"
   1 => "one"
   _ => "many"
-//│ ╔══[PARSE ERROR] Unexpected literal here
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.63: 	  0 => "zero"
+//│ ╙──      	  ^^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
 //│ ║  l.64: 	  1 => "one"
-//│ ╙──      	  ^
+//│ ╙──      	  ^^^^^^^^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.65: 	  _ => "many"
+//│ ╙──      	  ^^^^^^^^^^^
 
 
 

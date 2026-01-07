@@ -79,9 +79,9 @@ module CBV with
     | (Hole as res) => res
     | Add(Ctx(Hole) as lhs, rhs)          => Add(lhs, rhs)
     | Add(Value as lhs, Ctx(Hole) as rhs) => Add(lhs, rhs)
-    // * or:
-    // | (Add(Ctx(Hole) as lhs, rhs) | Add(Value as lhs, Ctx(Hole) as rhs)) =>
-    //     Add(lhs, rhs)
+      // * or:
+      // | (Add(Ctx(Hole) as lhs, rhs) | Add(Value as lhs, Ctx(Hole) as rhs)) =>
+      //     Add(lhs, rhs)
     | App(Value as lhs, Ctx(Hole) as rhs) => App(lhs, rhs)
     | App(Ctx(Hole) as lhs, rhs)          => App(lhs, rhs)
   
@@ -133,10 +133,10 @@ eval(Add(t, a))
 //│ > Stuck!
 
 
-CBV.SmallStep.unapply(x)
+CBV.Step.unapply(x)
 //│ = MatchFailure(null)
 
-CBV.SmallStep.unapply(t)
+CBV.Step.unapply(t)
 //│ = MatchSuccess(Add(Lit(5), Lit(4)), {})
 
 eval(x)

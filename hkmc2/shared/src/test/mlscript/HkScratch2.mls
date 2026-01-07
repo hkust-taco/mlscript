@@ -17,10 +17,23 @@ open Stack
 + 2
 //│ = 3
 
+// FIXME
++ 1
+// oops
++ 2
+//│ = 2
+
 let res =
   + 1
   + 2
 //│ res = 3
+
+// FIXME
+let res =
+  + 1
+  // oops
+  + 2
+//│ res = 2
 
 0 *
   + 1
@@ -96,10 +109,10 @@ let res =
   | 1
   | 2
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.96: 	  | 1
-//│ ║        	    ^
-//│ ║  l.97: 	  | 2
-//│ ╙──      	^^^^^
+//│ ║  l.109: 	  | 1
+//│ ║         	    ^
+//│ ║  l.110: 	  | 2
+//│ ╙──       	^^^^^
 //│ res = undefined
 
 
@@ -130,6 +143,19 @@ Bin.unapply(1)
 Bin.unapply(2)
 //│ = MatchFailure(null)
 
+
+// FIXME: confusing error!
+:fixme
+pattern Bin =
+  | 0
+  // oops
+  | 1
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.150: 	  | 0
+//│ ╙──       	  ^^^
+//│ ╔══[ERROR] Unexpected record property pattern.
+//│ ║  l.152: 	  | 1
+//│ ╙──       	  ^^^
 
 
 
