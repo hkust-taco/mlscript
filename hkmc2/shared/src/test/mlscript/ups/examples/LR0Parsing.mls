@@ -56,21 +56,31 @@ pattern ParseStep =
   | ("(" :: ParseStep(rest)) =>
       "(" :: rest
 
-pattern Parse = (ParseStep as Parse) | _
+pattern Parse = (ParseStep as Parse) | (
+    | ((Expr as e) :: Nil) => ["Success:", e]
+    | toks => ["Failure: can't parse:", toks]
+  )
 
+fun parse(tokens) = print of ...
+  if tokens is Parse(res) then res
+
+
+/* // Also work:
+// 
+pattern Parse = (ParseStep as Parse) | _
+// 
 fun parse(tokens) = print of ...
   if tokens is Parse(res) and res is
     (Expr as e) :: Nil then ["Success:", e]
     toks then ["Failure: can't parse:", toks]
-
-
-/* // Also works:
+// 
 fun parse(tokens) =
   fun go = case
     ParseStep as stack then go(stack)
     (Expr as e) :: Nil then ["Success:", e]
     toks then ["Failure: can't parse:", toks]
   print of ...go(tokens)
+// 
 */
 
 // fun parse = (case
