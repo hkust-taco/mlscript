@@ -40,36 +40,45 @@ f("+")
 f("*")
 //│ = ["*", 2]
 
-pattern Parse =
-  (
-    (Identifier(name) :: rest) =>
-        Expr(Ident(name), 0) :: rest
-  ) | (
-    (Expr(e1, p1) :: AtPrec(op, p) :: rest where p1 < p) =>
-        Expr(e1, p) :: op :: rest
-  ) | (
-    (Expr(e1, p1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
-        Expr(Op(e1, op, e2), p) :: rest
-  ) | (
-    ((Expr as e1) :: AtPrec(op, _) :: Parse(rest)) =>
-        e1 :: op :: rest
-  ) | (
-    ((Expr as e1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p2 < p) =>
-        e1 :: op :: Expr(e2, p) :: rest
-  ) | (
-    ("(" :: Expr(e, p) :: ")" :: rest) =>
-        Expr(e, 0) :: rest
-  ) | (
-    ("(" :: Parse(rest)) =>
-        "(" :: rest
-  )
+pattern ParseStep =
+  | (Identifier(name) :: rest) =>
+      Expr(Ident(name), 0) :: rest
+  | (Expr(e1, p1) :: AtPrec(op, p) :: rest where p1 < p) =>
+      Expr(e1, p) :: op :: rest
+  | (Expr(e1, p1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
+      Expr(Op(e1, op, e2), p) :: rest
+  | ((Expr as e1) :: AtPrec(op, _) :: ParseStep(rest)) =>
+      e1 :: op :: rest
+  | ((Expr as e1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p2 < p) =>
+      e1 :: op :: Expr(e2, p) :: rest
+  | ("(" :: Expr(e, p) :: ")" :: rest) =>
+      Expr(e, 0) :: rest
+  | ("(" :: ParseStep(rest)) =>
+      "(" :: rest
 
+pattern Parse = (ParseStep as Parse) | _
+
+fun parse(tokens) = print of ...
+  if tokens is Parse(res) and res is
+    (Expr as e) :: Nil then ["Success:", e]
+    toks then ["Failure: can't parse:", toks]
+
+
+/* // Also works:
 fun parse(tokens) =
   fun go = case
-    Parse as stack then go(stack)
+    ParseStep as stack then go(stack)
     (Expr as e) :: Nil then ["Success:", e]
     toks then ["Failure: can't parse:", toks]
   print of ...go(tokens)
+*/
+
+// fun parse = (case
+//   Parse as
+//     (Expr as e) :: Nil then ["Success:", e]
+//     toks then ["Failure: can't parse:", toks]) >> (print of ..._)
+
+// Parse.unapply(Nil)
 
 parse(Nil)
 //│ > Failure: can't parse: Nil
@@ -83,7 +92,7 @@ let input = "x" :: "+" :: "y" :: Nil
 parse(input)
 //│ > Success: Expr(Op(Ident("x"), "+", Ident("y")), 5)
 
-if input is Parse as rest then rest
+if input is ParseStep as rest then rest
 //│ = Cons(Expr(Ident("x"), 0), Cons("+", Cons("y", Nil)))
 
 parse("(" :: "x" :: ")" :: Nil)

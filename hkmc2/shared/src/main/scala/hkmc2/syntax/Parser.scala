@@ -584,7 +584,11 @@ abstract class Parser(
           yeetSpaces match
           case Nil => id
           case _ =>
-            val rhs = expr(PrefixOpsPrec, allowNewlines = allowNewlines)
+            val newPrec =
+              // FIXME?
+              // PrefixOpsPrec
+              opCharPrec(nme.head)
+            val rhs = expr(newPrec, allowNewlines = allowNewlines)
             // val c = 
             exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = allowNewlines)
         else exprCont(id, prec, allowNewlines = allowNewlines)

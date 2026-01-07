@@ -22,194 +22,114 @@ let res =
   + 2
 //│ res = 3
 
+0 *
+  + 1
+  + 2
+//│ = 0
+
+x =>
+  + 1
+  + 2
+//│ = fun
+
 
 let res =
   | 1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.27: 	  | 1
-//│ ╙──      	  ^
-//│ res = undefined
+//│ res = 1
 
+| 2 + 2
+*
+| 3 + 3
+//│ = 24
+
+2 + 2
+*
+3 + 3
+//│ = 24
+
+2 + 2
+  *
+3 + 3
+//│ = 11
+
+| 2 + 2
+  *
+| 3 + 3
+//│ = 14
+
+2 + 2 * | 3 + 3
+//│ = 14
+
+:pt
+1 + | 2 + 3
+//│ Parsed tree:
+//│ OpApp:
+//│   lhs = IntLit of 1
+//│   op = Ident of "+"
+//│   rhss = Ls of 
+//│     App:
+//│       lhs = Ident of "|"
+//│       rhs = Tup of Ls of 
+//│         OpApp:
+//│           lhs = IntLit of 2
+//│           op = Ident of "+"
+//│           rhss = Ls of 
+//│             IntLit of 3
+//│ = 6
+
+
+// :pt
+// :de
+// :s
 pattern Bin =
   | 0
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.36: 	  | 0
-//│ ╙──      	  ^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: makeMatchSplit (SplitCompiler.scala:488)
-//│ ═══[ERROR] Cannot use this ‹error› as a pattern.
+
+0 is Bin
+//│ = true
+
+1 is Bin
+//│ = false
 
 
+:fixme
 let res =
   | 1
   | 2
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.48: 	  | 1
-//│ ╙──      	  ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: term (Lowering.scala:789)
 //│ ╔══[COMPILATION ERROR] Unexpected term form in expression position (composed type)
-//│ ║  l.48: 	  | 1
-//│ ║        	  ^^^
-//│ ║  l.49: 	  | 2
+//│ ║  l.96: 	  | 1
+//│ ║        	    ^
+//│ ║  l.97: 	  | 2
 //│ ╙──      	^^^^^
 //│ res = undefined
 
 
-:dp
-:pt
+// :dp
+// :pt
 pattern Bin =
   | 0
   | 1
-//│ ┊pattern┊ ┊Bin┊ ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊
-//│ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:228]
-//│ │ ? blockOfImpl		inspects ┊pattern┊ ┊Bin┊ ┊=┊...    [at syntax/Parser.scala:307]
-//│ │ ! blockOfImpl		consumes ┊pattern┊    [at syntax/Parser.scala:318]
-//│ │ ? blockOfImpl		inspects ┊ ┊Bin┊ ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:321]
-//│ │ ! blockOfImpl		consumes ┊ ┊    [at syntax/Parser.scala:321]
-//│ │ @ parseRule(1,pattern declaration ::= Expr(pattern head ::= Kw(keyword '=') | End()),allowNewlines = true)    [at syntax/Parser.scala:331]
-//│ │ │ ? parseRuleImpl		inspects ┊Bin┊ ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:401]
-//│ │ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
-//│ │ │ │ ? simpleExprImpl		inspects ┊Bin┊ ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:556]
-//│ │ │ │ ! simpleExprImpl		consumes ┊Bin┊    [at syntax/Parser.scala:580]
-//│ │ │ │ @ exprCont(1,`Ident(Bin)`,true)    [at syntax/Parser.scala:590]
-//│ │ │ │ │ ? exprContImpl		inspects ┊ ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ ! exprContImpl		consumes ┊ ┊    [at syntax/Parser.scala:983]
-//│ │ │ │ │ @ exprCont(1,`Ident(Bin)`,true)    [at syntax/Parser.scala:986]
-//│ │ │ │ │ │ ? exprContImpl		inspects ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ = Ident(Bin)
-//│ │ │ │ = Ident(Bin)
-//│ │ │ = Ident(Bin)
-//│ │ │ @ parseRule(1,pattern head ::= Kw(keyword '=') | End(),allowNewlines = true)    [at syntax/Parser.scala:381]
-//│ │ │ │ ? parseRuleImpl		inspects ┊=┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:401]
-//│ │ │ │ ! parseRuleImpl		consumes ┊=┊    [at syntax/Parser.scala:420]
-//│ │ │ │ ? parseRuleImpl		inspects ┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:421]
-//│ │ │ │ @ parseRule(4,pattern declaration equals sign ::= Expr(pattern declaration right-hand side ::= End()) | Blk(pattern declaration right-hand side ::= End()),allowNewlines = true)    [at syntax/Parser.scala:427]
-//│ │ │ │ │ ? parseRuleImpl		inspects ┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ ! parseRuleImpl		consumes ┊→⟨┊|┊ ┊0┊↵┊|┊ ┊1┊⟩←┊    [at syntax/Parser.scala:468]
-//│ │ │ │ │ > @ concludeWith(())    [at syntax/Parser.scala:470]
-//│ │ │ │ │ > │ @ blockOf(start of expression,allowNewlines = true)    [at syntax/Parser.scala:470]
-//│ │ │ │ │ > │ │ ? blockOfImpl		inspects ┊|┊ ┊0┊↵┊|┊...    [at syntax/Parser.scala:307]
-//│ │ │ │ │ > │ │ @ simpleExpr(1)    [at syntax/Parser.scala:379]
-//│ │ │ │ │ > │ │ │ ? simpleExprImpl		inspects ┊|┊ ┊0┊↵┊|┊...    [at syntax/Parser.scala:556]
-//│ │ │ │ │ > │ │ │ ! simpleExprImpl		consumes ┊|┊    [at syntax/Parser.scala:580]
-//│ │ │ │ │ > │ │ │ ? simpleExprImpl		inspects ┊ ┊0┊↵┊|┊ ┊...    [at syntax/Parser.scala:584]
-//│ │ │ │ │ > │ │ │ ! simpleExprImpl		consumes ┊ ┊    [at syntax/Parser.scala:584]
-//│ │ │ │ │ > │ │ │ @ parseRule(33,start of expression ::= Kw(keyword 'let') | Kw(keyword 'set') | Kw(keyword 'handle') | Kw(keyword 'new') | Kw(keyword 'in') | Kw(keyword 'if') | Kw(keyword 'while') | Kw(keyword 'else') | Kw(keyword 'case') | Kw(keyword 'region') | Kw(keyword 'outer') | Kw(keyword 'constructor') | Kw(keyword 'fun') | Kw(keyword 'val') | Kw(keyword 'using') | Kw(keyword 'type') | Kw(keyword 'pattern') | Kw(keyword 'class') | Kw(keyword 'trait') | Kw(keyword 'module') | Kw(keyword 'object') | Kw(keyword 'open') | Kw(keyword 'abstract') | Kw(keyword 'mut') | Kw(keyword 'do') | Kw(keyword 'return') | Kw(keyword 'drop') | Kw(keyword 'not') | Kw(keyword 'new!') | Kw(keyword 'throw') | Kw(keyword 'import') | Kw(keyword 'virtual') | Kw(keyword 'override') | Kw(keyword 'declare') | Kw(keyword 'data') | Kw(keyword 'public') | Kw(keyword 'private') | Kw(keyword 'out') | Kw(keyword 'staged') | Kw(keyword 'true') | Kw(keyword 'false') | Kw(keyword 'undefined') | Kw(keyword 'null') | Kw(keyword 'this') | Kw(keyword '_') | Expr(expression ::= End()) | Blk(block ::= End()),allowNewlines = true)    [at syntax/Parser.scala:587]
-//│ │ │ │ │ > │ │ │ │ ? parseRuleImpl		inspects ┊0┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ > │ │ │ │ @ simpleExpr(33)    [at syntax/Parser.scala:379]
-//│ │ │ │ │ > │ │ │ │ │ ? simpleExprImpl		inspects ┊0┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:556]
-//│ │ │ │ │ > │ │ │ │ │ ! simpleExprImpl		consumes ┊0┊    [at syntax/Parser.scala:592]
-//│ │ │ │ │ > │ │ │ │ │ @ exprCont(33,`IntLit(0)`,true)    [at syntax/Parser.scala:593]
-//│ │ │ │ │ > │ │ │ │ │ │ ? exprContImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ │ │ @ exprJux(33,`IntLit(0)`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ │ > │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ │ > │ │ │ │ │ │ │ stops at NEWLINE
-//│ │ │ │ │ > │ │ │ │ │ │ = IntLit(0)
-//│ │ │ │ │ > │ │ │ │ │ = IntLit(0)
-//│ │ │ │ │ > │ │ │ │ = IntLit(0)
-//│ │ │ │ │ > │ │ │ │ @ parseRule(33,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:381]
-//│ │ │ │ │ > │ │ │ │ │ ? parseRuleImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ > │ │ │ │ = Some(())
-//│ │ │ │ │ > │ │ │ = Some(IntLit(0))
-//│ │ │ │ │ > │ │ │ @ exprCont(33,`IntLit(0)`,true)    [at syntax/Parser.scala:587]
-//│ │ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ @ exprJux(33,`IntLit(0)`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ │ > │ │ │ │ │ ? exprJuxImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ │ > │ │ │ │ │ stops at NEWLINE
-//│ │ │ │ │ > │ │ │ │ = IntLit(0)
-//│ │ │ │ │ > │ │ │ = IntLit(0)
-//│ │ │ │ │ > │ │ │ @ exprCont(1,`App(Ident(|),Tup(List(IntLit(0))))`,true)    [at syntax/Parser.scala:589]
-//│ │ │ │ │ > │ │ │ │ ? exprContImpl		inspects ┊↵┊|┊ ┊1┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ ! exprContImpl		consumes ┊↵┊    [at syntax/Parser.scala:923]
-//│ │ │ │ │ > │ │ │ │ ! exprContImpl		consumes ┊|┊    [at syntax/Parser.scala:924]
-//│ │ │ │ │ > │ │ │ │ ? rhsPrec		inspects ┊ ┊1┊    [at syntax/Parser.scala:926]
-//│ │ │ │ │ > │ │ │ │ ! rhsPrec		consumes ┊ ┊    [at syntax/Parser.scala:926]
-//│ │ │ │ │ > │ │ │ │ @ parseRule(22,start of expression ::= Kw(keyword 'let') | Kw(keyword 'set') | Kw(keyword 'handle') | Kw(keyword 'new') | Kw(keyword 'in') | Kw(keyword 'if') | Kw(keyword 'while') | Kw(keyword 'else') | Kw(keyword 'case') | Kw(keyword 'region') | Kw(keyword 'outer') | Kw(keyword 'constructor') | Kw(keyword 'fun') | Kw(keyword 'val') | Kw(keyword 'using') | Kw(keyword 'type') | Kw(keyword 'pattern') | Kw(keyword 'class') | Kw(keyword 'trait') | Kw(keyword 'module') | Kw(keyword 'object') | Kw(keyword 'open') | Kw(keyword 'abstract') | Kw(keyword 'mut') | Kw(keyword 'do') | Kw(keyword 'return') | Kw(keyword 'drop') | Kw(keyword 'not') | Kw(keyword 'new!') | Kw(keyword 'throw') | Kw(keyword 'import') | Kw(keyword 'virtual') | Kw(keyword 'override') | Kw(keyword 'declare') | Kw(keyword 'data') | Kw(keyword 'public') | Kw(keyword 'private') | Kw(keyword 'out') | Kw(keyword 'staged') | Kw(keyword 'true') | Kw(keyword 'false') | Kw(keyword 'undefined') | Kw(keyword 'null') | Kw(keyword 'this') | Kw(keyword '_') | Expr(expression ::= End()) | Blk(block ::= End()),allowNewlines = true)    [at syntax/Parser.scala:932]
-//│ │ │ │ │ > │ │ │ │ │ ? parseRuleImpl		inspects ┊1┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ > │ │ │ │ │ @ simpleExpr(22)    [at syntax/Parser.scala:379]
-//│ │ │ │ │ > │ │ │ │ │ │ ? simpleExprImpl		inspects ┊1┊    [at syntax/Parser.scala:556]
-//│ │ │ │ │ > │ │ │ │ │ │ ! simpleExprImpl		consumes ┊1┊    [at syntax/Parser.scala:592]
-//│ │ │ │ │ > │ │ │ │ │ │ @ exprCont(22,`IntLit(1)`,true)    [at syntax/Parser.scala:593]
-//│ │ │ │ │ > │ │ │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ │ │ │ @ exprJux(22,`IntLit(1)`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ │ > │ │ │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ │ > │ │ │ │ │ │ │ │ stops at the end of input
-//│ │ │ │ │ > │ │ │ │ │ │ │ = IntLit(1)
-//│ │ │ │ │ > │ │ │ │ │ │ = IntLit(1)
-//│ │ │ │ │ > │ │ │ │ │ = IntLit(1)
-//│ │ │ │ │ > │ │ │ │ │ @ parseRule(22,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:381]
-//│ │ │ │ │ > │ │ │ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ > │ │ │ │ │ = Some(())
-//│ │ │ │ │ > │ │ │ │ = Some(IntLit(1))
-//│ │ │ │ │ > │ │ │ │ @ exprCont(22,`IntLit(1)`,true)    [at syntax/Parser.scala:932]
-//│ │ │ │ │ > │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ │ @ exprJux(22,`IntLit(1)`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ │ > │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ │ > │ │ │ │ │ │ stops at the end of input
-//│ │ │ │ │ > │ │ │ │ │ = IntLit(1)
-//│ │ │ │ │ > │ │ │ │ = IntLit(1)
-//│ │ │ │ │ > │ │ │ │ @ exprCont(1,`OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))`,true)    [at syntax/Parser.scala:933]
-//│ │ │ │ │ > │ │ │ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:799]
-//│ │ │ │ │ > │ │ │ │ │ @ exprJux(1,`OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ │ > │ │ │ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ │ > │ │ │ │ │ │ stops at the end of input
-//│ │ │ │ │ > │ │ │ │ │ = OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))
-//│ │ │ │ │ > │ │ │ │ = OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))
-//│ │ │ │ │ > │ │ │ = OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))
-//│ │ │ │ │ > │ │ = OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))
-//│ │ │ │ │ > │ │ @ parseRule(1,expression ::= End(),allowNewlines = true)    [at syntax/Parser.scala:381]
-//│ │ │ │ │ > │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ > │ │ = Some(())
-//│ │ │ │ │ > │ │ ? blockOfImpl		inspects ┊┊    [at syntax/Parser.scala:363]
-//│ │ │ │ │ > │ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
-//│ │ │ │ │ > │ = List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1))))
-//│ │ │ │ │ > │ ? concludeWithImpl		inspects ┊┊    [at syntax/Parser.scala:258]
-//│ │ │ │ │ > │ Concluded with List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1))))
-//│ │ │ │ │ > = List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1))))
-//│ │ │ │ │ @ parseRule(4,pattern declaration right-hand side ::= End(),allowNewlines = true)    [at syntax/Parser.scala:472]
-//│ │ │ │ │ │ ? parseRuleImpl		inspects ┊┊    [at syntax/Parser.scala:401]
-//│ │ │ │ │ = Some(())
-//│ │ │ │ = Some(Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))
-//│ │ │ = Some(Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))
-//│ │ = Some(TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1))))))))
-//│ │ @ exprCont(1,`TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))`,true)    [at syntax/Parser.scala:332]
-//│ │ │ ? exprContImpl		inspects ┊┊    [at syntax/Parser.scala:799]
-//│ │ │ @ exprJux(1,`TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))`,false)    [at syntax/Parser.scala:1158]
-//│ │ │ │ ? exprJuxImpl		inspects ┊┊    [at syntax/Parser.scala:1165]
-//│ │ │ │ stops at the end of input
-//│ │ │ = TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))
-//│ │ = TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1)))))))
-//│ │ ? blockContOf		inspects ┊┊    [at syntax/Parser.scala:303]
-//│ = List(TypeDef(Pat,Ident(Bin),Some(Block(List(OpApp(App(Ident(|),Tup(List(IntLit(0)))),Ident(|),List(IntLit(1))))))))
-//│ ? parseAll		inspects ┊┊    [at syntax/Parser.scala:245]
-//│ Parsed tree:
-//│ TypeDef:
-//│   k = Pat
-//│   head = Ident of "Bin"
-//│   rhs = S of Block of Ls of 
-//│     OpApp:
-//│       lhs = App:
-//│         lhs = Ident of "|"
-//│         rhs = Tup of Ls of 
-//│           IntLit of 0
-//│       op = Ident of "|"
-//│       rhss = Ls of 
-//│         IntLit of 1
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
-//│ ╔══[ERROR] Name not found: |
-//│ ║  l.68: 	  | 0
-//│ ╙──      	  ^
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: makeMatchSplit (SplitCompiler.scala:488)
-//│ ═══[ERROR] Cannot use this ‹error› as a pattern.
+
+0 is Bin
+//│ = true
+
+1 is Bin
+//│ = true
+
+2 is Bin
+//│ = false
+
+
+pattern Bin =
+  | 0 => false
+  | 1 => true
+
+Bin.unapply(0)
+//│ = MatchSuccess(false, {})
+Bin.unapply(1)
+//│ = MatchSuccess(true, {})
+Bin.unapply(2)
+//│ = MatchFailure(null)
+
 
 
 

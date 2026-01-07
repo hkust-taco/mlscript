@@ -1,0 +1,33 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+
+
+:breakme
+if 0 is P then P
+//│ = 0
+
+
+:fixme // TODO
+x => if x as
+  0 then false
+  1 then true
+//│ ╔══[ERROR] Unrecognized term split (infix operator 'as')
+//│ ║  l.20: 	x => if x as
+//│ ║        	        ^^^^
+//│ ║  l.21: 	  0 then false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.22: 	  1 then true
+//│ ╙──      	^^^^^^^^^^^^^
+//│ = fun
+
+
+
