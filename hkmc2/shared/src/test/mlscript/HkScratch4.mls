@@ -1,0 +1,63 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+:de
+| 0 => 1
+//│ Elab block List(App(Ident(|),Tup(List(InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1)))))) LocalScope(block:2)
+//│ | Elab term App(Ident(|),Tup(List(InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1)))))
+//│ | | Elab subterm App(Ident(|),Tup(List(InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1)))))
+//│ | | | Elab subterm InfixApp(Tup(List(IntLit(0))),Keywrd(keyword '=>'),IntLit(1))
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: go (Tree.scala:318)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.13: 	| 0 => 1
+//│ ╙──      	  ^
+//│ | | | | Elab term IntLit(1)
+//│ | | | | | Elab subterm IntLit(1)
+//│ | | | | | ~> Lit(IntLit(1))
+//│ | | | | ~> Lit(IntLit(1))
+//│ | | | ~> Lam(ParamList(‹›,List(),None),Lit(IntLit(1)))
+//│ | | ~> Lam(ParamList(‹›,List(),None),Lit(IntLit(1)))
+//│ | ~> Lam(ParamList(‹›,List(),None),Lit(IntLit(1)))
+//│ ~> Blk(List(),Lam(ParamList(‹›,List(),None),Lit(IntLit(1))))
+//│ = fun
+
+
+| x => 1
+//│ = fun
+
+| [x] => 1
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(x))) (of class hkmc2.syntax.Tree$TyTup)
+//│ 	at: hkmc2.semantics.Elaborator.params(Elaborator.scala:1512)
+//│ 	at: hkmc2.semantics.Elaborator.funParams(Elaborator.scala:1473)
+//│ 	at: hkmc2.semantics.Elaborator.subterm$$anonfun$3(Elaborator.scala:530)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:131)
+//│ 	at: hkmc2.semantics.Elaborator.subterm(Elaborator.scala:829)
+//│ 	at: hkmc2.semantics.Elaborator.subterm$$anonfun$3(Elaborator.scala:571)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:131)
+//│ 	at: hkmc2.semantics.Elaborator.subterm(Elaborator.scala:829)
+//│ 	at: hkmc2.semantics.Elaborator.term$$anonfun$3(Elaborator.scala:377)
+//│ 	at: hkmc2.MLsDiffMaker$$anon$1.trace(MLsDiffMaker.scala:131)
+
+| (x, y) => 1
+//│ = fun
+
+| (x, 0) => 1
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: go (Tree.scala:318)
+//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.54: 	| (x, 0) => 1
+//│ ╙──      	      ^
+//│ = fun
+
+
+
