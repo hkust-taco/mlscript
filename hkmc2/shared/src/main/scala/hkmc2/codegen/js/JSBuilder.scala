@@ -480,6 +480,10 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       case S(el) => nonNestedScoped(el)(bod => returningTerm(bod, endSemi = true))
       case N => doc""
       e :: returningTerm(rest, endSemi)
+    case Match(scrut, (Case.Lit(lit), End(msg)) :: Nil, S(el), rest) =>
+      val sd = result(scrut)
+      val e = braced(nonNestedScoped(el)(res => returningTerm(res, endSemi = false)))
+      doc" # if ($sd !== ${lit.idStr}) $e" :: returningTerm(rest, endSemi)
     case Match(scrut, arms, els, rest)
     if arms.sizeCompare(1) > 0 && arms.forall(_._1.isInstanceOf[Case.Lit]) =>
       val l = arms.foldLeft(doc""): (acc, arm) =>

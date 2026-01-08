@@ -23,11 +23,11 @@ data class Lol(h) with
 //│     let tmp, tmp1;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (runtime.curEffect === null) {} else {
+//│     if (runtime.curEffect !== null) {
 //│       tmp = runtime.ctorEffect();
 //│     }
 //│     tmp1 = Predef.print(tmp);
-//│     if (runtime.curEffect === null) {} else {
+//│     if (runtime.curEffect !== null) {
 //│       tmp1 = runtime.ctorEffect();
 //│     }
 //│     tmp1;

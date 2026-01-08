@@ -87,7 +87,7 @@ result
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
-//│         if (runtime.curEffect === null) {} else {
+//│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, 1, 3, Handler$h$$instance, arg, k, 0)
 //│         }
 //│         pc = 1;
@@ -114,7 +114,7 @@ result
 //│   constructor() {
 //│     let tmp8;
 //│     tmp8 = super();
-//│     if (runtime.curEffect === null) {} else {
+//│     if (runtime.curEffect !== null) {
 //│       tmp8 = runtime.ctorEffect();
 //│     }
 //│     tmp8;
@@ -141,7 +141,7 @@ result
 //│     switch (pc) {
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
-//│         if (runtime.curEffect === null) {} else {
+//│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 4;
@@ -154,7 +154,7 @@ result
 //│       case 2:
 //│         tmp10 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
-//│         if (runtime.curEffect === null) {} else {
+//│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 1;
@@ -163,7 +163,7 @@ result
 //│       case 3:
 //│         tmp9 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
-//│         if (runtime.curEffect === null) {} else {
+//│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 2;
@@ -172,7 +172,7 @@ result
 //│       case 4:
 //│         tmp8 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
-//│         if (runtime.curEffect === null) {} else {
+//│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 3;
@@ -183,7 +183,7 @@ result
 //│   }
 //│ });
 //│ tmp7 = runtime.enterHandleBlock(h7, handleBlock$7);
-//│ if (runtime.curEffect === null) {} else { tmp7 = runtime.topLevelEffect(false); }
+//│ if (runtime.curEffect !== null) { tmp7 = runtime.topLevelEffect(false); }
 //│ result
 //│ = "54321"
 //│ result = "54321"

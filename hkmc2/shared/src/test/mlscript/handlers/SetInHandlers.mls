@@ -16,7 +16,7 @@ x
 //│   tmp1 = x + 1;
 //│   x = tmp1;
 //│   tmp2 = Predef.print(x);
-//│   if (runtime.curEffect === null) {} else {
+//│   if (runtime.curEffect !== null) {
 //│     tmp2 = runtime.topLevelEffect(false);
 //│   }
 //│   tmp = tmp2;
