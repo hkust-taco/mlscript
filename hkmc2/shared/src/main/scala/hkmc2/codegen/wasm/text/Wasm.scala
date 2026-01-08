@@ -139,8 +139,6 @@ case class StructType(
 case class ArrayType(
     elemType: Type,
     mutable: Bool,
-    parents: Seq[TypeIdx] = Seq.empty,
-    isSubtype: Bool = false
 ) extends ToWat:
   private def elemDoc: Document =
     if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat

@@ -360,14 +360,6 @@ object Instructions:
       resultType = S(RefType(ty, nullable = false))
     )
 
-    /** Creates a `struct.new` instruction. */
-    def new_(ty: TypeIdx, values: Seq[Expr]): FoldedInstr = FoldedInstr(
-      mnemonic = "struct.new",
-      instrargs = Seq(ty.toWat),
-      stackargs = values,
-      resultType = S(RefType(ty, nullable = false))
-    )
-
     /** Creates a `struct.set` instruction. */
     def set(index: FieldIdx, ref: Expr, value: FoldedInstr): FoldedInstr = FoldedInstr(
       mnemonic = "struct.set",
