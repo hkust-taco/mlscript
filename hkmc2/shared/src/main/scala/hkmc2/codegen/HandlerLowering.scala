@@ -859,7 +859,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         transform.applyBlock(blk)
 
       // match block representing the function body
-      val mainMatchCases = parts.toList.map(b => (Case.Lit(Tree.IntLit(b.id)), transformPart(b.blk)))
+      val mainMatchCases = parts.toList.map(b => (Case.Lit(Tree.IntLit(b.id), false), transformPart(b.blk)))
       val mainMatchBlk = Match(
         pcSymbol.asPath,
         mainMatchCases,
@@ -880,7 +880,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val assignedResumedCases = for 
         b   <- parts
         sym <- b.sym
-      yield Case.Lit(Tree.IntLit(b.id)) -> createAssignment(sym) // NOTE: assume sym is in localsMap
+      yield Case.Lit(Tree.IntLit(b.id), false) -> createAssignment(sym) // NOTE: assume sym is in localsMap
 
       // assigns the resumed value
       val body =
@@ -936,7 +936,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         getLocSym,
         List(),
         Match(pcSymbol.asPath, pcToLoc.toSortedMap.iterator.map: (stateId, loc) =>
-          Case.Lit(Tree.IntLit(stateId)) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
+          Case.Lit(Tree.IntLit(stateId), false) -> Return(Value.Lit(loc.fold(Tree.UnitLit(true)): loc =>
             val (line, _, col) = loc.origin.fph.getLineColAt(loc.spanStart)
             Tree.StrLit(s"${loc.origin.fileName.last}:${line + loc.origin.startLineNum - 1}:$col")
           ), false)

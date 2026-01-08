@@ -281,7 +281,7 @@ class TailRecOpt(using State, TL, Raise):
         applyBlock(symRewriter.applyBlock(b))
     
     val arms = funs.map: f =>
-      Case.Lit(Tree.IntLit(dSymIds(f.dSym))) -> FunRewriter(f).rewrite(f.body)
+      Case.Lit(Tree.IntLit(dSymIds(f.dSym)), false) -> FunRewriter(f).rewrite(f.body)
     
     val switch = 
       if arms.length === 1 then arms.head._2

@@ -175,7 +175,8 @@ class Interpreter(tl: TraceLogger):
           }
         case Value.Literal(lit) => 
           cases.find {
-            case (Pat.Lit(lit2), _) => lit === lit2
+            case (Pat.Lit(lit2, false), _) => lit === lit2
+            case (Pat.Lit(lit2, true), _) => !(lit === lit2)
             case _ => false
           } match {
             case Some((_, x)) => eval(x)

@@ -89,7 +89,7 @@ enum Expr:
   def show = LlirDebugPrinter.mkDocument(this).toString
 
 enum Pat:
-  case Lit(lit: hkmc2.syntax.Literal)
+  case Lit(lit: hkmc2.syntax.Literal, inv: Bool)
   case Class(cls: Local)
 
 enum Node:

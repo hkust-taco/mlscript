@@ -248,7 +248,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             End()
           )
         pat match
-          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit) -> lowerSplit(tail, cont, topLevel = false))
+          case FlatPattern.Lit(lit) => mkMatch(Case.Lit(lit, false) -> lowerSplit(tail, cont, topLevel = false))
           case FlatPattern.ClassLike(ctor, symbol, argsOpt, _refined) =>
             for args <- argsOpt; (arg, _) <- args do LoweringCtx.loweringCtx.collectScopedSym(arg)
             /** Make a continuation that creates the match. */
@@ -425,7 +425,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               blk
                 .assign(isReturned, Call(Value.Ref(State.builtinOpsMap("!==")),
                   loopResult.asPath.asArg :: loopEnd.asArg :: Nil)(true, false, false))
-                .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true)),
+                .ifthen(Value.Ref(isReturned), Case.Lit(Tree.BoolLit(true), false),
                   Return(Value.Ref(loopResult), false),
                   S(rest)
                 )

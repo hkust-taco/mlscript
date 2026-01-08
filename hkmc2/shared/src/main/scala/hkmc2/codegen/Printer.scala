@@ -26,7 +26,7 @@ object Printer:
   def mkDocument(blk: Block)(using Raise, Scope): Document = blk match
     case Match(scrut, arms, dflt, rest) =>
       def case_doc(c: Case) = c match
-        case Case.Lit(lit) => doc"${lit.idStr}"
+        case Case.Lit(lit, false) => doc"${lit.idStr}"
         case Case.Cls(cls, path) => doc"${cls.nme}"
         case Case.Tup(len, inf) => doc"tuple$len"
         case _ => TODO(c)

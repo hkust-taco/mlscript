@@ -467,8 +467,8 @@ final class LlirBuilder(using Elaborator.State)(tl: TraceLogger, uid: FreshInt):
               fvs1.map(x => ctx.findName(x)).map(sr)
             )
             val casesList: Ls[(Pat, Node)] = arms.map:
-              case (Case.Lit(lit), body) =>
-                (Pat.Lit(lit), bBlock(body)(cont)(nextCont)(using ctx))
+              case (Case.Lit(lit, inv), body) =>
+                (Pat.Lit(lit, inv), bBlock(body)(cont)(nextCont)(using ctx))
               case (Case.Cls(cls, _), body) =>
                 (Pat.Class(cls), bBlock(body)(cont)(nextCont)(using ctx))
               case (Case.Tup(len, inf), body) =>

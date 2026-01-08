@@ -1038,7 +1038,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             
             var acc: Block => Block = blk => Match(
               isMutSym.asPath,
-              Case.Lit(Tree.BoolLit(true)) -> Assign(initSym, instInner(true), End()) :: Nil,
+              Case.Lit(Tree.BoolLit(true), false) -> Assign(initSym, instInner(true), End()) :: Nil,
               S(Assign(initSym, instInner(false), End())),
               blk
             )

@@ -126,7 +126,7 @@ object Instructions:
       resultType = S(I32Type)
     )
 
-    /** Creates an `i32.add` instruction. */
+    /** Creates an `i32.eq` instruction. */
     def eq(lhs: Expr, rhs: Expr): FoldedInstr = FoldedInstr(
       mnemonic = "i32.eq",
       instrargs = Seq.empty,

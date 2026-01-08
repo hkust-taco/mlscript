@@ -718,16 +718,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val armExprs = arms.zipWithIndex.flatMap: (caseAndBody, armIdx) =>
           val (cse, body) = caseAndBody
           cse match
-            case Case.Lit(lit) =>
+            case Case.Lit(lit, inv) =>
               val testExpr: FoldedInstr = lit match
                 case BoolLit(value) =>
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
-                  i32.eq(scrutValue, i32.const(if value then 1 else 0))
+                  val patValue = i32.const(if value then 1 else 0)
+                  if !inv then
+                    i32.eq(scrutValue, patValue)
+                  else
+                    i32.ne(scrutValue, patValue)
                 case IntLit(value) =>
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
-                  i32.eq(scrutValue, i32.const(value.toInt))
+                  val patValue = i32.const(value.toInt)
+                  if !inv then
+                    i32.eq(scrutValue, patValue)
+                  else
+                    i32.ne(scrutValue, patValue)
                 case _ =>
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 

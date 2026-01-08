@@ -159,6 +159,9 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
       val init = exprs.map{x => toExpr(x)}
       mlsTupleValue(init)
   
+  def maybeInvert(expr: Expr, inv: Bool) =
+    if inv then Expr.Unary("!", expr) else expr
+  
   def codegenCaseWithIfs(scrut: TrivialExpr, cases: Ls[(Pat, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt])(using Ctx, Raise, Scope): (Ls[Decl], Ls[Stmt]) =
     val scrut2 = toExpr(scrut)
     val init: Stmt = 
@@ -171,13 +174,13 @@ class CppCodeGen(builtinClassSymbols: Set[Local], tl: TraceLogger):
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
         val stmt = Stmt.If(mlsIsValueOf(cls |> mapClsLikeName, scrut2), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
-      case ((Pat.Lit(i @ hkmc2.syntax.Tree.IntLit(_)), arm), nextarm) =>
+      case ((Pat.Lit(i @ hkmc2.syntax.Tree.IntLit(_), inv), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
-        val stmt = Stmt.If(mlsIsIntLit(scrut2, i), Stmt.Block(decls2, stmts2), nextarm)
+        val stmt = Stmt.If(maybeInvert(mlsIsIntLit(scrut2, i), inv), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
-      case ((Pat.Lit(i @ hkmc2.syntax.Tree.BoolLit(_)), arm), nextarm) =>
+      case ((Pat.Lit(i @ hkmc2.syntax.Tree.BoolLit(_), inv), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
-        val stmt = Stmt.If(mlsIsBoolLit(scrut2, i), Stmt.Block(decls2, stmts2), nextarm)
+        val stmt = Stmt.If(maybeInvert(mlsIsBoolLit(scrut2, i), inv), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
       case _ => TODO("codegenCaseWithIfs doesn't support these patterns currently")
     }

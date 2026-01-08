@@ -252,7 +252,7 @@ class BlockTransformer(subst: SymbolSubst):
       then pl else ParamList(pl.flags, params2, rest2)
   
   def applyCase(cse: Case)(k: Case => Block): Block = cse match
-    case Case.Lit(lit) => k(cse)
+    case Case.Lit(lit, inv) => k(cse)
     case Case.Cls(cls, path) =>
       val cls2 = cls.subst
       applyPath(path): path2 =>

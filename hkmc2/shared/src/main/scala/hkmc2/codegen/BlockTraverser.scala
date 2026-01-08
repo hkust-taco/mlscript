@@ -124,7 +124,7 @@ class BlockTraverser:
     pl.restParam.foreach(_.sym.traverse)
   
   def applyCase(cse: Case): Unit = cse match
-    case Case.Lit(lit) => ()
+    case Case.Lit(lit, inv) => ()
     case Case.Cls(cls, path) =>
       cls.traverse
       applyPath(path)

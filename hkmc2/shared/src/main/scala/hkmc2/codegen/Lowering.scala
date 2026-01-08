@@ -1150,7 +1150,7 @@ trait LoweringSelSanityChecks(using Config, TL, Raise, State)
         .assign(selRes, Select(p, nme)(disamb))
         .assign(discardedSym, Select(p, Tree.Ident(nme.name+"$__checkNotMethod"))(N))
           .ifthen(selRes.asPath,
-            Case.Lit(syntax.Tree.UnitLit(false)),
+            Case.Lit(syntax.Tree.UnitLit(false), false),
             Throw(Instantiate(mut = false, Select(Value.Ref(State.globalThisSymbol), Tree.Ident("Error"))(N),
               Value.Lit(syntax.Tree.StrLit(s"Access to required field '${nme.name}' yielded 'undefined'")).asArg :: Nil))
           )
