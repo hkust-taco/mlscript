@@ -494,7 +494,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     case Match(scrut, hd :: tl, els, rest) =>
       val sd = result(scrut)
       def cond(cse: Case) = cse match
-        case Case.Lit(lit, inv) => doc"$sd ${if !inv then "===" else "!=="} ${lit.idStr}"
+        case Case.Lit(lit, inv) => doc"$sd ${if inv then "!==" else "==="} ${lit.idStr}"
         case Case.Cls(cls, pth) => cls match
           // case _: semantics.ModuleSymbol => doc"=== ${result(pth)}"
           // [invariant:0] If the class represented by `cls` does not exist at
