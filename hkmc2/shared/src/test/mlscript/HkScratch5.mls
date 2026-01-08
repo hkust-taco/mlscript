@@ -40,17 +40,14 @@ if [1,1] is
 //│ = "all equal"
 
 
+:fixme
 pattern Sym =
   ([x,y] where (x == y))
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: defn (Elaborator.scala:1356)
 //│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.44: 	  ([x,y] where (x == y))
+//│ ║  l.45: 	  ([x,y] where (x == y))
 //│ ╙──      	    ^
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: defn (Elaborator.scala:1356)
 //│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.44: 	  ([x,y] where (x == y))
+//│ ║  l.45: 	  ([x,y] where (x == y))
 //│ ╙──      	      ^
 
 
@@ -74,30 +71,105 @@ pattern Sym =
 
 
 
+let arr = fromArray of [1,2,3]
+//│ arr = Cons(3, Cons(2, Cons(1, Nil)))
 
 
+pattern Find(pattern P) =
+  | ((P as p) :: t) => [p, t]
+  | (h :: (Find(P) as [res, t])) => [res, h :: t]
 
+if arr is
+  Find(1) as res then res
+//│ = [1, Cons(3, Cons(2, Nil))]
+if arr is
+  Find(2) as res then res
+//│ = [2, Cons(3, Cons(1, Nil))]
 
 
 pattern MultiSet(pattern Head, pattern Rest) =
+  | Find(Head) as [h, Rest as t] => h :: t
+
+arr is
+  MultiSet(1, _)
+//│ = true
+arr is
+  MultiSet(3, _)
+//│ = true
+arr is
+  MultiSet(3, MultiSet(1, MultiSet(2, Nil)))
+//│ = true
+arr is
+  MultiSet(3, MultiSet(0, _))
+//│ = false
+
+
+
+
+
+/////////////////
+
+
+:fixme // ?
+pattern MultiSet(pattern Head, pattern Rest) =
   | ((Head as h) :: (Rest as r)) => h :: r
   | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: subterm (Elaborator.scala:482)
 //│ ╔══[ERROR] Name not found: rst
-//│ ║  l.84: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
-//│ ╙──      	                                                                          ^^^
+//│ ║  l.116: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
+//│ ╙──       	                                                                          ^^^
 
   // | ((h0 :: (Head as h) :: r) and ((h0 :: r) is (Rest as rst))) => h :: rst
 
 
 pattern MultiSet(pattern Head, pattern Rest) =
   | ((Head as h) :: (Rest as r)) => h :: r
-  | (((h0 :: h :: r) => h0 :: h :: r) as MultiSet(Head, Rest) as res) => res
+  | (((h0 :: h :: r) => h :: h0 :: r) as MultiSet(Head, Rest) as res) => res
 
-[1,2,3] is
-  MultiSet(2, MultiSet(1, 3))
-//│ = false
+:re
+arr is
+  MultiSet(1, _)
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+arr is
+  MultiSet(2, MultiSet(1, _))
+//│ = true
+
+:re
+arr is
+  MultiSet(1, MultiSet(_, _))
+//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
+
+:fixme
+if [1,2,3] is
+  MultiSet(2, MultiSet(1, x)) do print(x)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.144: 	  MultiSet(2, MultiSet(1, x)) do print(x)
+//│ ╙──       	                                       ^
+
+pattern Id = _
+
+:fixme
+if [1,2,3] is
+  MultiSet(2, MultiSet(1, Id(x))) do print(x)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
+//│ ║  l.153: 	  MultiSet(2, MultiSet(1, Id(x))) do print(x)
+//│ ╙──       	                                           ^
+
+
+
+// pattern Test(pattern Head, pattern Rest) =
+//   | ((Head as h) :: (Rest as r)) => [h, r]
+//   // | (((h0 :: h :: r) => h :: h0 :: r) as MultiSet(Head, Rest) as res) => res
+
+// [1,2,3] is
+//   MultiSet(_, _)
+// //│ = false
+
+// [1,2,3] is
+//   MultiSet(1, _)
+// //│ = false
 
 
 
