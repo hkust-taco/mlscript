@@ -724,18 +724,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
                   val patValue = i32.const(if value then 1 else 0)
-                  if !inv then
-                    i32.eq(scrutValue, patValue)
-                  else
+                  if inv then
                     i32.ne(scrutValue, patValue)
+                  else
+                    i32.eq(scrutValue, patValue)
                 case IntLit(value) =>
                   val scrutAsI31 = ref.cast(getScrutExpr, RefType.i31ref)
                   val scrutValue = i31.get(scrutAsI31, signed = true)
                   val patValue = i32.const(value.toInt)
-                  if !inv then
-                    i32.eq(scrutValue, patValue)
-                  else
+                  if inv then
                     i32.ne(scrutValue, patValue)
+                  else
+                    i32.eq(scrutValue, patValue)
                 case _ =>
                   break(errExpr(Ls(msg"Pattern matching for unit literals not implemented yet" -> lit.toLoc)))
 
