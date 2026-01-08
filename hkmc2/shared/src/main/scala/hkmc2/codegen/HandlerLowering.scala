@@ -153,6 +153,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def handlerCtx(using HandlerCtx): HandlerCtx = summon
   
   private def freshTmp(dbgNme: Str = "tmp") = new TempSymbol(N, dbgNme)
+  private def freshLabel(nme: Str) = new LabelSymbol(N, nme)
   
   private def rtThrowMsg(msg: Str) = Throw(
     Instantiate(mut = false, State.globalThisSymbol.asPath.selN(Tree.Ident("Error")),
@@ -329,7 +330,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     states.filter(state => visited.contains(state.id))
 
-  def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[Symbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
+  def partitionBlock(blk: Block, inclEntryPoint: Bool, labelIds: Map[LabelSymbol, (StateId, StateId)] = Map.empty): Ls[BlockState] =
     // for readability :)
     case class PartRet(head: Block, states: Ls[BlockState])
     
@@ -341,7 +342,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     // * afterEnd: what state End should jump to, if at all 
     // TODO: don't split within Match, Begin and Labels when not needed, ideally keep it intact.
     // Need careful analysis for this.
-    def go(blk: Block)(implicit labelIds: Map[Symbol, (StateId, StateId)], afterEnd: Option[StateId]): PartRet =
+    def go(blk: Block)(implicit labelIds: Map[LabelSymbol, (StateId, StateId)], afterEnd: Option[StateId]): PartRet =
       blk match
       case ResumptionPoint(result, uid, rest) =>
         resumptionPoints ::= uid
@@ -760,7 +761,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     
     val pcVar = VarSymbol(pcIdent)
     
-    val loopLbl = freshTmp("contLoop")
+    val loopLbl = freshLabel("contLoop")
     val pcSymbol = TermSymbol(ParamBind, S(clsSym), pcIdent)
 
     // This maps each state id to an optional location

@@ -330,10 +330,10 @@ case class Return(res: Result, implct: Bool) extends BlockTail
 
 case class Throw(exc: Result) extends BlockTail
 
-case class Label(label: Local, loop: Bool, body: Block, rest: Block) extends Block
+case class Label(label: LabelSymbol, loop: Bool, body: Block, rest: Block) extends Block
 
-case class Break(label: Local) extends BlockTail
-case class Continue(label: Local) extends BlockTail
+case class Break(label: LabelSymbol) extends BlockTail
+case class Continue(label: LabelSymbol) extends BlockTail
 
 
 case class Scoped(syms: collection.Set[Local], body: Block) extends BlockTail
@@ -356,7 +356,7 @@ inline def whenValidatingIR(inline code: => Unit): Unit =
   () // code // * uncomment to run on-the fly IR validations
   
 object Label:
-  def apply(label: Local, loop: Bool, body: Block, rest: Block): Block = rest match
+  def apply(label: LabelSymbol, loop: Bool, body: Block, rest: Block): Block = rest match
     case Scoped(syms, rest) => Scoped(syms, Label(label, loop, body, rest))
     case _ => new Label(label, loop, body, rest)
 object Scoped:
@@ -769,13 +769,13 @@ extension (k: Block => Block)
   
   def assign(l: Local, r: Result) = k.chain(Assign(l, r, _))
   def assignFieldN(lhs: Path, nme: Tree.Ident, rhs: Result) = k.chain(AssignField(lhs, nme, rhs, _)(N))
-  def break(l: Local): Block = k.rest(Break(l))
-  def continue(l: Local): Block = k.rest(Continue(l))
+  def break(l: LabelSymbol): Block = k.rest(Break(l))
+  def continue(l: LabelSymbol): Block = k.rest(Continue(l))
   def define(defn: Defn) = k.chain(Define(defn, _))
   def end = k.rest(End())
   def ifthen(scrut: Path, cse: Case, trm: Block, els: Opt[Block] = N): Block => Block =
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
-  def label(label: Local, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
+  def label(label: LabelSymbol, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)

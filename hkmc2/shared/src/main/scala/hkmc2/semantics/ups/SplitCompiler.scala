@@ -17,16 +17,18 @@ object SplitCompiler:
    *  the normalization to merge let bindings from different branches.
    */
   sealed abstract class Scrut:
-    private val subScrutinees: Buffer[SymbolScrut[?]] = Buffer.empty
+    private val subScrutinees: HashMap[ClassSymbol | PatternSymbol, Buffer[SymbolScrut[?]]] = HashMap.empty
     private val fields: HashMap[Ident, SymbolScrut[?]] = HashMap.empty
     private val tupleLead: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     private val tupleLast: HashMap[Int, SymbolScrut[?]] = HashMap.empty
     
     def apply(): Term.Ref
-    def getSubScrutinee(index: Int)(using State): SymbolScrut[?] =
-      while subScrutinees.size <= index do
-        subScrutinees += TempSymbol(N, s"argument${subScrutinees.size}$$").toScrut
-      subScrutinees(index)
+
+    def getSubScrutinee(cs: ClassSymbol | PatternSymbol)(i: Int)(using State): SymbolScrut[?] =
+      val scrutinees = subScrutinees.getOrElseUpdate(cs, Buffer.empty)
+      while scrutinees.size <= i do
+        scrutinees += TempSymbol(N, s"arg$$${cs.nme}$$${scrutinees.size}$$").toScrut
+      scrutinees(i)
     def getTupleLeadSubScrutinee(index: Int)(using State): SymbolScrut[?] =
       tupleLead.getOrElseUpdate(index, TempSymbol(N, s"element$index$$").toScrut)
     def getTupleLastSubScrutinee(index: Int)(using State): SymbolScrut[?] =
@@ -257,7 +259,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     if successful then (makeConsequent, alternative) =>
       // The pattern arguments for destructing the constructor's arguments.
       val (theArguments, makeConsequentForArguments) = arguments.fold((N, makeConsequent)):
-        _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+        _.folded(makeConsequent)(scrutinee.getSubScrutinee(classSymbol)).mapFirst(S(_))
       val outputSymbol = new LazyScrut()
       val consequent = makeConsequentForArguments(outputSymbol, SeqMap.empty)
       val pattern = FlatPattern.ClassLike(classTerm, classSymbol, theArguments, false)(Tree.Dummy)
@@ -399,7 +401,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val (extractionArguments, makeConsequentForSubPatterns) =
         val z = (N: Opt[Ls[(BlockLocalSymbol, Opt[Loc])]], makeConsequent)
         extractionMatches.fold(z):
-          _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+          _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
       // First, we need to prepare the objects that performs the naive matching
       // of pattern arguments which will be passed to the pattern.
       val patternBindings = patternArguments.makePatternBindings
@@ -420,7 +422,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
         case N | S(Nil) => identity[Split]
         case S((single, _) :: Nil) => Split.Let(single, outputSymbol(), _)
         case S(extractionArguments) => (split: Split) =>
-          makeTupleBranch(scrutinee(), extractionArguments.map(_._1), split, Split.End)
+          makeTupleBranch(outputSymbol(), extractionArguments.map(_._1), split, Split.End)
       // Finally, the inner split that does the work.
       val consequent = makeConsequentForSubPatterns(outputSymbol, SeqMap.empty)
       // Here we go!
@@ -665,7 +667,7 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
       val remainingSymbol = TempSymbol(N, "remaining").toScrut
       val (extractionArguments, makeConsequentForArguments) =
         extractionMatches.fold((N, makeConsequent)):
-          _.folded(makeConsequent)(scrutinee.getSubScrutinee).mapFirst(S(_))
+          _.folded(makeConsequent)(scrutinee.getSubScrutinee(patternSymbol)).mapFirst(S(_))
       val consequent = makeConsequentForArguments(outputSymbol, remainingSymbol, SeqMap.empty)
       val patternBindings = patternArguments.makePatternBindings
       val unapplyCall =
@@ -977,11 +979,27 @@ class SplitCompiler(using tl: TL)(using State, Ctx, Raise) extends TermSynthesiz
     post = (blk: Ls[(BlockMemberSymbol, ParamList, Split)]) =>
       s"compilePattern >>> $blk"
   ):
-    // TODO: Use `pd.extractionParams`.
     val unapply = scoped("ucs:translation"):
       val inputSymbol = VarSymbol(Ident("input"))
-      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)
-        ((output, bindings) => Split.Else(makeMatchSuccess(output())), failure)
+      val topmost = makeMatchSplit(inputSymbol.toScrut, pd.pattern)(
+        makeConsequent = (output, bindings) =>
+          def getBinding(p: Param) = bindings.get(p.sym).fold(Term.Error)(_())
+          pd.extractionParams match
+            case Nil =>
+              // If the pattern doesn't have any extraction parameters, we take
+              // the entire output as the match result.
+              Split.Else(makeMatchSuccess(output()))
+            case sole :: Nil =>
+              // If there is only one extraction parameter, we don't make a tuple.
+              Split.Else(makeMatchSuccess(getBinding(sole)))
+            case ps =>
+              // Otherwise, `bindings` records which symbol each extraction
+              // parameter is actually represented by. Here, we extract them and
+              // put them into a tuple, then return it.
+              Split.Else(makeMatchSuccess(tup(ps.map(getBinding)))),
+        alternative = failure
+      )
+      pd.extractionParams.map(_.sym)
       log(s"Translated `unapply`: ${topmost.prettyPrint}")
       makeMethod("unapply", pd.patternParams, inputSymbol, topmost)
     // TODO: Use `pd.extractionParams`.
