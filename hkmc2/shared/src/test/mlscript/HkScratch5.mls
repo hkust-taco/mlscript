@@ -1,0 +1,104 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+// :d
+// :todo
+
+
+import "../mlscript-compile/Stack.mls"
+open Stack
+
+
+pattern Bin =
+  (0 => false) | (1 => true) | ([Bin as b] => b)
+
+fun f(x) = if x is
+  Bin as b then b
+  ~Bin as c then [c]
+
+f(0)
+//│ = false
+
+f(1)
+//│ = true
+
+f(2)
+//│ = [2]
+
+f([1])
+//│ = true
+
+f([[[0]]])
+//│ = false
+
+if [1,1] is
+  [x,y] and x == y then "all equal"
+//│ = "all equal"
+
+
+pattern Sym =
+  ([x,y] where (x == y))
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: defn (Elaborator.scala:1356)
+//│ ╔══[WARNING] Useless pattern binding: x.
+//│ ║  l.44: 	  ([x,y] where (x == y))
+//│ ╙──      	    ^
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: defn (Elaborator.scala:1356)
+//│ ╔══[WARNING] Useless pattern binding: y.
+//│ ║  l.44: 	  ([x,y] where (x == y))
+//│ ╙──      	      ^
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+pattern MultiSet(pattern Head, pattern Rest) =
+  | ((Head as h) :: (Rest as r)) => h :: r
+  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:482)
+//│ ╔══[ERROR] Name not found: rst
+//│ ║  l.84: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
+//│ ╙──      	                                                                          ^^^
+
+  // | ((h0 :: (Head as h) :: r) and ((h0 :: r) is (Rest as rst))) => h :: rst
+
+
+pattern MultiSet(pattern Head, pattern Rest) =
+  | ((Head as h) :: (Rest as r)) => h :: r
+  | (((h0 :: h :: r) => h0 :: h :: r) as MultiSet(Head, Rest) as res) => res
+
+[1,2,3] is
+  MultiSet(2, MultiSet(1, 3))
+//│ = false
+
+
+
+

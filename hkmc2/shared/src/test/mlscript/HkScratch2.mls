@@ -168,3 +168,88 @@ x(2, 3)
 
 
 
+1 is 2
+//│ = false
+
+:lot
+:sjs
+fun test(x) = if x is
+  0 then "0"
+  ~2 & ~3 then "not 2 and not 3"
+  ~3 then "not 3"
+  _ then "other"
+//│ JS (unsanitized):
+//│ let test;
+//│ test = function test(x2) {
+//│   switch (x2) {
+//│     case 0:
+//│       return "0";
+//│       break;
+//│     case 2:
+//│       return "not 3";
+//│       break;
+//│     case 3:
+//│       return "other";
+//│       break;
+//│     default:
+//│       return "not 2 and not 3";
+//│       break;
+//│   }
+//│ };
+//│ Lowered:
+//│ Program:
+//│   imports = Nil
+//│   main = Scoped:
+//│     syms = HashSet(member:test)
+//│     body = Define:
+//│       defn = FunDefn:
+//│         owner = N
+//│         sym = member:test
+//│         dSym = term:test
+//│         params = Ls of 
+//│           ParamList:
+//│             flags = ()
+//│             params = Ls of 
+//│               Param:
+//│                 flags = ()
+//│                 sym = x
+//│                 sign = N
+//│                 modulefulness = Modulefulness of N
+//│             restParam = N
+//│         body = Match:
+//│           scrut = Ref:
+//│             l = x
+//│             disamb = N
+//│           arms = Ls of 
+//│             Tuple2:
+//│               _1 = Lit of IntLit of 0
+//│               _2 = Return:
+//│                 res = Lit of StrLit of "0"
+//│                 implct = false
+//│             Tuple2:
+//│               _1 = Lit of IntLit of 2
+//│               _2 = Return:
+//│                 res = Lit of StrLit of "not 3"
+//│                 implct = false
+//│             Tuple2:
+//│               _1 = Lit of IntLit of 3
+//│               _2 = Return:
+//│                 res = Lit of StrLit of "other"
+//│                 implct = false
+//│           dflt = S of Return:
+//│             res = Lit of StrLit of "not 2 and not 3"
+//│             implct = false
+//│           rest = End of ""
+//│       rest = End of ""
+
+test(0)
+//│ = "0"
+test(1)
+//│ = "not 2 and not 3"
+test(2)
+//│ = "not 3"
+test(3)
+//│ = "other"
+
+
+
