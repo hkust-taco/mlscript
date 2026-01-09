@@ -90,7 +90,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       resultTypes = Seq(Result(elemType.asValType_!))
     )
 
-  private def tupleIndexBuilder(
+  private def compileTupleIndex(
       fld: Path,
       loc: Opt[Loc],
       errCtx: Str,
@@ -341,7 +341,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
       if arrayIdx then
-        val idxBuilder = tupleIndexBuilder(
+        val idxBuilder = compileTupleIndex(
           fld = fld,
           loc = fld.toLoc,
           errCtx = "WatBuilder::result for array-style dynamic selections",
@@ -531,13 +531,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           lastWords(
             s"Expected `global.*` or `local.*` when compiling instruction for `$l`, but got ${lExpr.mnemonic}"
           )
-      val rstBlk = returningTerm(rst)
 
+      val rstBlk = returningTerm(rst)
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map: ty =>
-          Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case assign @ AssignField(lhs, nme, rhs, rst) =>
@@ -570,8 +569,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map: ty =>
-          Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
@@ -581,7 +579,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         if arrayIdx then
           val tupleArrayType = this.tupleArrayType(mut = true)
           val tupleRef = ref.cast(lhsExpr, RefType(tupleArrayType, nullable = false))
-          val idxBuilder = tupleIndexBuilder(
+          val idxBuilder = compileTupleIndex(
             fld = fld,
             loc = fld.toLoc,
             errCtx = "WatBuilder::returningTerm for AssignDynField(...)",
@@ -599,8 +597,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map: ty =>
-          Result(if ty is UnreachableType then RefType.anyref else ty.asValType_!)
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
       )
 
     case Define(defn, rst) =>
