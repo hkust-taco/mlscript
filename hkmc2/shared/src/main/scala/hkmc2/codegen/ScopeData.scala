@@ -27,54 +27,86 @@ object ScopeData:
   // we generate the scope tree then populate the metadata later.
   case class IgnoredScopes(var ignored: Opt[Set[ScopedInfo]])
   
+  type ScopedObject = ScopedObject.ScopedObject[?]
+  type TScopedObject[T] = ScopedObject.ScopedObject[T]
+  
+  type LiftedSym = DefinitionSymbol[?]
+  
+  extension (d: DefinitionSymbol[?])
+    def asBmsRef = Value.Ref(d.asBlkMember.get, S(d))
+  
   // These cannot be hashed
-  enum ScopedObject:
-    // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
-    // a scoped block.
-    
-    case Top(b: Block) // b may be a scoped block, in which case, its variables represent the top-level variables.
-    case Class(cls: ClsLikeDefn)
-    case Companion(comp: ClsLikeBody, par: ClsLikeDefn)
-    
-    // we model it like this: the ctor is just another function in the same scope as the class and initializes the corresponding class
-    case ClassCtor(cls: ClsLikeDefn)
-    case Func(fun: FunDefn, isMethod: Bool)
-    case Loop(sym: LabelSymbol, block: Block)
-    case ScopedBlock(uid: ScopeUID, block: Scoped)
-    
-    def toInfo: ScopedInfo = this match
-      case Top(_) => ()
-      case Class(cls) => cls.isym
-      case Companion(comp, par) => comp.isym
-      case ClassCtor(cls) => cls.ctorSym.get
-      case Func(fun, _) => fun.dSym
-      case ScopedBlock(uid, block) => uid
-      case Loop(sym, _) => sym
-    
-    // Locals defined by a scoped object.
-    def definedLocals: Set[Local] = this match
-      case Top(b) => b match
-        case Scoped(syms, _) => syms.toSet
-        case _ => Set.empty
-      case Class(cls) =>
-        // public fields are not included, as they are accessed using
-        // a field selection rather than directly using the BlockMemberSymbol.
-        val paramsSet: Set[Local] = cls.paramsOpt match
-          case Some(value) => value.params.map(_.sym).toSet
-          case None => Set.empty
-        val auxSet: Set[Local] = cls.auxParams.flatMap: p =>
+  object ScopedObject:
+    // T: The actual contents of the scoped object
+    sealed abstract class ScopedObject[T]:
+      def toInfo: ScopedInfo = this match
+        case Top(_) => ()
+        case Class(cls) => cls.isym
+        case Companion(comp, par) => comp.isym
+        case ClassCtor(cls) => cls.ctorSym.get
+        case Func(fun, _) => fun.dSym
+        case ScopedBlock(uid, block) => uid
+        case Loop(sym, _) => sym
+      
+      // note: not unique
+      def nme = this match
+        case Top(b) => "top"
+        case Class(cls) => cls.isym.nme
+        case Companion(comp, par) => comp.isym.nme + "_mod"
+        case ClassCtor(cls) => cls.isym.nme // should be unused
+        case Func(fun, isMethod) => fun.dSym.nme
+        case Loop(sym, block) => "loop$" + sym.uid.toString()
+        case ScopedBlock(uid, block) => "scope$" + uid
+      
+      // Locals defined by a scoped object.
+      def definedLocals: Set[Local] = this match
+        case Top(b) => b match
+          case Scoped(syms, _) => syms.toSet
+          case _ => Set.empty
+        case Class(cls) =>
+          // Public fields are not included, as they are accessed using
+          // a field selection rather than directly using the BlockMemberSymbol.
+          val paramsSet: Set[Local] = cls.paramsOpt match
+            case Some(value) => value.params.map(_.sym).toSet
+            case None => Set.empty
+          val auxSet: Set[Local] = cls.auxParams.flatMap: p =>
+              p.params.map(_.sym)
+            .toSet
+          paramsSet ++ auxSet ++ cls.privateFields + cls.isym
+        case Companion(comp, par) =>
+          comp.privateFields.toSet + comp.isym
+        case _: ClassCtor => Set.empty
+        case Func(fun, _) => fun.params.flatMap: p =>
             p.params.map(_.sym)
           .toSet
-        paramsSet ++ auxSet ++ cls.privateFields + cls.isym
-      case Companion(comp, par) =>
-        comp.privateFields.toSet + comp.isym
-      case _: ClassCtor => Set.empty
-      case Func(fun, _) => fun.params.flatMap: p =>
-          p.params.map(_.sym)
-        .toSet
-      case ScopedBlock(_, block) => block.syms.toSet
-      case _: Loop => Set.empty
+        case ScopedBlock(_, block) => block.syms.toSet
+        case _: Loop => Set.empty
     
+    // Scoped nodes which may be referenced using a symbol.
+    sealed abstract class Referencable[T] extends TScopedObject[T]:
+      def sym: LiftedSym = this match
+        case Class(cls) => cls.isym
+        case Companion(comp, par) => comp.isym
+        case Func(fun, isMethod) => fun.dSym
+    
+    // Scoped nodes which could possibly be lifted to the top level.
+    sealed abstract class Liftable[T <: Defn] extends Referencable[T]:
+      val defn: T
+    
+    // The top-level scope.
+    case class Top(b: Block) extends ScopedObject[Block] // b may be a scoped block, in which case, its variables represent the top-level variables.
+    case class Class(cls: ClsLikeDefn) extends Liftable[ClsLikeDefn]:
+      val defn = cls
+    case class Companion(comp: ClsLikeBody, par: ClsLikeDefn) extends Referencable[ClsLikeBody]
+    // We model it like this: the ctor is just another function in the same scope as the class and initializes the corresponding class
+    case class ClassCtor(cls: ClsLikeDefn) extends ScopedObject[Unit]
+    case class Func(fun: FunDefn, isMethod: Bool) extends Liftable[FunDefn]:
+      val defn = fun
+    // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
+    // a scoped block.
+    case class Loop(sym: LabelSymbol, block: Block) extends ScopedObject[Block]
+    case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Scoped]
+  
   extension (traverser: BlockTraverser)
     def applyScopedObject(obj: ScopedObject) = 
       extension (s: Symbol) def traverse =
@@ -110,24 +142,26 @@ object ScopeData:
   
   case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode])(using ignoredScopes: IgnoredScopes):
     
-    lazy val allParents: List[ScopedObject] = parent match
-      case Some(value) => this.obj :: value.allParents
-      case None => this.obj :: Nil
+    lazy val allParents: List[ScopeNode] = parent match
+      case Some(value) => this :: value.allParents
+      case None => this :: Nil
+    
+    lazy val parentsSet = allParents.map(_.obj.toInfo).toSet
+    
+    def inSubtree(root: ScopedInfo) = parentsSet.contains(root)
     
     // note: includes itself
     lazy val allChildNodes: List[ScopeNode] = this :: children.flatMap(_.allChildNodes)
     lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
-    
-    lazy val liftedChildNodes: List[ScopeNode] =
-      if isLifted then this :: Nil
-      else children.flatMap(_.liftedChildNodes)
     
     // does not include variables introduced by itself
     lazy val existingVars: Set[Local] = parent match
       case Some(value) => value.existingVars ++ value.obj.definedLocals
       case None => Set.empty
     
-    def isLifted: Bool =
+    // The following must not be called until ignoredScopes is populated with the relevant data.
+    
+    lazy val isLifted: Bool =
       val ignored = ignoredScopes.ignored match
         case Some(value) => value
         case None => lastWords("isLifted accessed before the set of ignored scopes was set")
@@ -142,14 +176,34 @@ object ScopeData:
         case ScopedObject.Func(isMethod = true) => false
         case _ if ignored.contains(obj.toInfo) => false
         case _ => true
-
-    // finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
+    
+    lazy val liftedChildNodes: List[ScopeNode] =
+      if isLifted then this :: Nil
+      else children.flatMap(_.liftedChildNodes)
+    
+    // Finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
     lazy val firstLiftedParent: ScopedObject =
       if !isLifted then
         parent match
         case Some(value) => value.firstLiftedParent
         case None => obj // unreachable
       else obj
+    
+    // When a node is lifted, some neighbouring ignored definitions may become out of scope. This computes
+    // the list of these definitions, and they could be passed to this node as a parameter once lifted.
+    private lazy val reqCaptureObjsImpl: List[ScopedObject.Referencable[?]] = obj match
+      case _: ScopedObject.Top => List.empty
+      case _ =>
+        // All unlifted neighbour nodes ::: parent's reqCaptureObjsImpl
+        val initial = parent.get.allChildNodes.collect:
+          case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
+        initial ::: parent.get.reqCaptureObjsImpl
+    
+    lazy val reqCaptureObjs: List[ScopedObject.Referencable[?]] = obj match
+      case _: ScopedObject.Top => List.empty
+      case _ =>
+        if isLifted then reqCaptureObjsImpl
+        else parent.get.reqCaptureObjsImpl
   
   def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
     case Some(d) if data.contains(d) => S(d)

@@ -5,7 +5,6 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
 
 
 // Default implementation: nothing is transformed

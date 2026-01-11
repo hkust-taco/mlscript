@@ -207,12 +207,12 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
       .get
     if rootElems.size != 1 then lastWords("SCC containing root had a degree other than 1.")
     
-    // With respect to the current scoped object, we may "ignore" one of its children if and only if
-    // it is ignored (not lifted), and its first lifted parent is the current scoped object. We "ignore"
-    // it in the sense that it does not need to capture the current scoped object's variables, nor does
+    // With respect to the current scoped object `s`, we may "ignore" one of its children `c` if and only if
+    // it is ignored (not lifted), and `s` is in the subtree rooted at the first lifted parent of `c`. We
+    // "ignore" `c` in the sense that it does not need to capture `s`'s scoped object's variables, nor does
     // it require the current scoped object to create a capture class for its accessed variables.
-    def isIgnored(s1: ScopedInfo) =
-      scopeData.getNode(s1).firstLiftedParent.toInfo === s.obj.toInfo
+    def isIgnored(c: ScopedInfo) =
+      s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo)
 
     // All objects in the same scc must have at least the same accesses as each other
     def go(includeIgnored: Bool) =
@@ -449,3 +449,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData, handlerPaths: Opt[HandlerP
 
   val reqdCaptures: Map[ScopedInfo, (Set[Local], Set[Local])] = scopeData.root.children.foldLeft(Map.empty):
     case (acc, node) => acc ++ reqdCaptureLocals(node)
+  
+  // For local inside a capture, finds the node to which this local belongs.
+  val capturesMap =
+    for
+      case (info -> (_, reqCap)) <- reqdCaptures
+      s <- reqCap
+    yield s -> info

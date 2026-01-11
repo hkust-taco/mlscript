@@ -5,7 +5,6 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
 
 import semantics.*
-import os.write.over
 
 // These all work like BlockTransformer and its derivatives, but do not rewrite the block. See BlockTransformer.scala.
 // Please use this instead of BlockTransformer for static analysis.
