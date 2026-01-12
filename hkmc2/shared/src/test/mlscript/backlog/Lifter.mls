@@ -15,7 +15,8 @@ fun f(x) =
   let a = g
   a(1)
 f(2)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: module:Predef
+//│ > 2
+//│ = [1]
 
 // The following are problems with lifting classes inside other definitions.
 
@@ -44,7 +45,7 @@ data class A(x) with
     let t = this
     t.B(2).getB()
 A(1).getA()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
+//│ = 3
 
 // This is due to the order of classes after lifting
 class Test
@@ -61,7 +62,7 @@ fun test(x) =
   class B() extends A
   B().get
 test(2)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:B.B
+//│ = 2
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
@@ -78,7 +79,7 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:Test.Test
+//│ = 1
 
 
 :todo
@@ -88,26 +89,23 @@ fun foo1(x, n) =
   let res = if x is C then "Y" else "N"
   if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :todo // should return the function that creates C instances
 :w
 fun foo2() =
   class C()
   C
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :w
 fun foo3() =
   class C()
   fun f = C()
   C
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:C.C
 
 :todo
 :expect "NN"
 foo1(0, 2)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo1
+//│ = "NN"
 
 // Since B extends A and A is not lifted, B cannot access A's BlockMemberSymbol. We can't lift B.
 :todo
@@ -120,7 +118,7 @@ fun test(x) =
 test(2)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:B.B
+//│ = 2
 
 :expect 2
 class A(a) with
@@ -129,7 +127,7 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
+//│ = 2
 
 :expect 2
 module M with
@@ -139,7 +137,7 @@ module M with
     g
 M.f()()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.257: 	module M with
+//│ ║  l.133: 	module M with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -154,12 +152,12 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.277: 	  module M with
+//│ ║  l.148: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
 foo(10, 0)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ = 14
 
 fun foo(x, y) =
   module M with
@@ -169,12 +167,12 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.290: 	  module M with
+//│ ║  l.163: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
 foo(10, 0)
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ = 12
 
 
 data class A(x) with
@@ -182,12 +180,12 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.308: 	  module M with
+//│ ║  l.179: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
 A(2).getA()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
+//│ = 2
 
 // TODO: Foo needs to be put in a mutable capture. Also, we need to pass the Foo instance itself into Foo
 fun foo(x) =
@@ -198,7 +196,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.322: 	  class Bar extends Foo
+//│ ║  l.195: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
@@ -214,7 +212,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.365: 	  module M with
+//│ ║  l.209: 	  module M with
 //│ ╙──       	         ^
 
 

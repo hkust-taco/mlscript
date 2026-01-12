@@ -20,7 +20,7 @@ fun f(x) =
     let bruh = new B
     fun setX = set x += 1
   new A
-//│ Elab: { fun member:f‹692›(x‹693›) = { Cls A { Cls B { (class:A‹695›#666.)setX‹member:setX‹690››; x‹693›#666 := builtin:+‹48›#0(x‹693›#666, 1) }; let term:class:A‹695›.bruh‹700›; term:class:A‹695›.bruh‹700› = new (class:A‹695›#666.)B‹member:B‹689››; method fun member:setX‹690› = x‹693›#666 := builtin:+‹48›#1(x‹693›#666, 1); }; new member:A‹691›#666 }; }
+//│ Elab: { fun member:f‹863›(x‹864›) = { Cls A { Cls B { (class:A‹866›#666.)setX‹member:setX‹861››; x‹864›#666 := builtin:+‹48›#0(x‹864›#666, 1) }; let term:class:A‹866›.bruh‹871›; term:class:A‹866›.bruh‹871› = new (class:A‹866›#666.)B‹member:B‹860››; method fun member:setX‹861› = x‹864›#666 := builtin:+‹48›#1(x‹864›#666, 1); }; new member:A‹862›#666 }; }
 //│ JS:
 //│ let f;
 //│ f = function f(x) {

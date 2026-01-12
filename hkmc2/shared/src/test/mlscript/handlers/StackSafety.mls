@@ -465,7 +465,7 @@ sum(10000)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -942,7 +942,7 @@ foo(foo)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1306,7 +1306,7 @@ foo
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1618,7 +1618,7 @@ foo
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1973,7 +1973,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1999,7 +1999,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2455,7 +2455,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2689,7 +2689,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args3, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3360,7 +3360,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3386,7 +3386,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3412,7 +3412,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4036,7 +4036,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4270,7 +4270,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args3, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4941,7 +4941,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4967,7 +4967,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4993,7 +4993,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5213,7 +5213,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5245,7 +5245,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5996,7 +5996,7 @@ A.x
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6785,10 +6785,10 @@ foo(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.6345: 	handle h = Eff with
+//│ ║  l.6265: 	handle h = Eff with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6345: 	handle h = Eff with
+//│ ║  l.6265: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6900,7 +6900,7 @@ foo(h)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6969,7 +6969,7 @@ foo(h)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6345: 	handle h = Eff with
+//│ ║  l.6265: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7005,10 +7005,10 @@ foo(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.6352: 	foo(h)
+//│ ║  l.6272: 	foo(h)
 //│ ║          	    ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6345: 	handle h = Eff with
+//│ ║  l.6265: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7221,7 +7221,7 @@ bad()
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7478,7 +7478,7 @@ bad()
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8090,7 +8090,7 @@ f(h)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8252,7 +8252,7 @@ f(h)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9094,7 +9094,7 @@ f(h)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9120,7 +9120,7 @@ f(h)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9146,7 +9146,7 @@ f(h)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9215,7 +9215,7 @@ f(h)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.8156: 	handle h = Object with
+//│ ║  l.7996: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9319,10 +9319,10 @@ f(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.8156: 	handle h = Object with
+//│ ║  l.7996: 	handle h = Object with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.8156: 	handle h = Object with
+//│ ║  l.7996: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9392,10 +9392,10 @@ f(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.8159: 	f(h)
+//│ ║  l.7999: 	f(h)
 //│ ║          	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.8156: 	handle h = Object with
+//│ ║  l.7996: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9802,10 +9802,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.9786: 	  handle h = Eff with
+//│ ║  l.9546: 	  handle h = Eff with
 //│ ║          	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9786: 	  handle h = Eff with
+//│ ║  l.9546: 	  handle h = Eff with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9970,7 +9970,7 @@ handler_stack(100)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9786: 	  handle h = Eff with
+//│ ║  l.9546: 	  handle h = Eff with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9995,10 +9995,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.9789: 	  h.raise()
+//│ ║  l.9549: 	  h.raise()
 //│ ║          	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9786: 	  handle h = Eff with
+//│ ║  l.9546: 	  handle h = Eff with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -10400,7 +10400,7 @@ handler_stack(100)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11026,7 +11026,7 @@ handler_stack(100)
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'curDepth'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11058,7 +11058,7 @@ handler_stack(100)
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11145,7 +11145,7 @@ handler_stack(100)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10388: 	  handle h = Eff with
+//│ ║  l.10148: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11285,10 +11285,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.10388: 	  handle h = Eff with
+//│ ║  l.10148: 	  handle h = Eff with
 //│ ║           	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10388: 	  handle h = Eff with
+//│ ║  l.10148: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11359,10 +11359,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.10391: 	  h.raise()
+//│ ║  l.10151: 	  h.raise()
 //│ ║           	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10388: 	  handle h = Eff with
+//│ ║  l.10148: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

@@ -39,7 +39,7 @@ object ScopeData:
   object ScopedObject:
     // T: The actual contents of the scoped object
     sealed abstract class ScopedObject[T]:
-      def toInfo: ScopedInfo = this match
+      lazy val toInfo: ScopedInfo = this match
         case Top(_) => ()
         case Class(cls) => cls.isym
         case Companion(comp, par) => comp.isym
@@ -49,7 +49,7 @@ object ScopeData:
         case Loop(sym, _) => sym
       
       // note: not unique
-      def nme = this match
+      lazy val nme = this match
         case Top(b) => "top"
         case Class(cls) => cls.isym.nme
         case Companion(comp, par) => comp.isym.nme + "_mod"
@@ -59,7 +59,7 @@ object ScopeData:
         case ScopedBlock(uid, block) => "scope$" + uid
       
       // Locals defined by a scoped object.
-      def definedLocals: Set[Local] = this match
+      lazy val definedLocals: Set[Local] = this match
         case Top(b) => b match
           case Scoped(syms, _) => syms.toSet
           case _ => Set.empty
@@ -105,7 +105,7 @@ object ScopeData:
     // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
     // a scoped block.
     case class Loop(sym: LabelSymbol, block: Block) extends ScopedObject[Block]
-    case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Scoped]
+    case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Block]
   
   extension (traverser: BlockTraverser)
     def applyScopedObject(obj: ScopedObject) = 
@@ -204,6 +204,15 @@ object ScopeData:
       case _ =>
         if isLifted then reqCaptureObjsImpl
         else parent.get.reqCaptureObjsImpl
+    
+    // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes the ones
+    // belonging to objects that are lifted.
+    lazy val localsWithoutLifted: Set[Local] = obj match
+      case s: ScopedObject.ScopedBlock =>
+        val rmv = children.collect:
+          case c @ ScopeNode(obj = s: ScopedObject.Liftable[?]) if c.isLifted => s.defn.sym
+        obj.definedLocals -- rmv
+      case _ => obj.definedLocals
   
   def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
     case Some(d) if data.contains(d) => S(d)

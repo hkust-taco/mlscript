@@ -194,7 +194,7 @@ h.oops
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -483,10 +483,10 @@ val x = 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.465: 	handle h = Object with {}
+//│ ║  l.410: 	handle h = Object with {}
 //│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.465: 	handle h = Object with {}
+//│ ║  l.410: 	handle h = Object with {}
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -607,10 +607,10 @@ x + 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.643: 	handle h = Object with {}
+//│ ║  l.533: 	handle h = Object with {}
 //│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.643: 	handle h = Object with {}
+//│ ║  l.533: 	handle h = Object with {}
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -657,7 +657,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.823: 	x
+//│ ║  l.658: 	x
 //│ ╙──       	^
 
 
@@ -672,10 +672,10 @@ h.lol
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.831: 	handle h = Object with
+//│ ║  l.666: 	handle h = Object with
 //│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.831: 	handle h = Object with
+//│ ║  l.666: 	handle h = Object with
 //│ ╙──       	       ^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Handler$h$'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
@@ -686,19 +686,19 @@ h.lol
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handleBlock$h$'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.831: 	handle h = Object with
+//│ ║  l.666: 	handle h = Object with
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.833: 	h.lol
+//│ ║  l.668: 	h.lol
 //│ ║         	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.831: 	handle h = Object with
+//│ ║  l.666: 	handle h = Object with
 //│ ╙──       	       ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.833: 	h.lol
+//│ ║  l.668: 	h.lol
 //│ ║         	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.831: 	handle h = Object with
+//│ ║  l.666: 	handle h = Object with
 //│ ╙──       	       ^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
@@ -841,10 +841,10 @@ val x = 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.881: 	handle h = Object with
+//│ ║  l.711: 	handle h = Object with
 //│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.881: 	handle h = Object with
+//│ ║  l.711: 	handle h = Object with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -973,7 +973,7 @@ val x = 1
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.881: 	handle h = Object with
+//│ ║  l.711: 	handle h = Object with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -992,10 +992,10 @@ val x = 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.883: 	h.lol()
+//│ ║  l.713: 	h.lol()
 //│ ║         	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.881: 	handle h = Object with
+//│ ║  l.711: 	handle h = Object with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1295,10 +1295,10 @@ object Foo with
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1268: 	  handle h = Object with
+//│ ║  l.1043: 	  handle h = Object with
 //│ ║          	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1268: 	  handle h = Object with
+//│ ║  l.1043: 	  handle h = Object with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1463,7 +1463,7 @@ object Foo with
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1268: 	  handle h = Object with
+//│ ║  l.1043: 	  handle h = Object with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1488,10 +1488,10 @@ object Foo with
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1270: 	  val x = h.lol()
+//│ ║  l.1045: 	  val x = h.lol()
 //│ ║          	          ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1268: 	  handle h = Object with
+//│ ║  l.1043: 	  handle h = Object with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1568,7 +1568,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.1931: 	Foo.x
+//│ ║  l.1569: 	Foo.x
 //│ ╙──        	   ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

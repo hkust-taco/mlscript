@@ -859,7 +859,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args3)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1334,7 +1334,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args3, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1586,7 +1586,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2301,7 +2301,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args3)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2600,7 +2600,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2647,7 +2647,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2935,7 +2935,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args5)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4136,7 +4136,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4594,7 +4594,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args3)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5069,7 +5069,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args3, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5321,7 +5321,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6036,7 +6036,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args3)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6335,7 +6335,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6382,7 +6382,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6670,7 +6670,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args5, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7871,7 +7871,7 @@ in
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8601,7 +8601,7 @@ fun dequeue() =
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9656,7 +9656,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -10101,7 +10101,7 @@ fun dequeue() =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11074,7 +11074,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args3, k -> k)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│         bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│       curThis = S of S of class:Cont$handler$h$xchg$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -11117,7 +11117,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args3, k -> k)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│       bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│     curThis = S of S of class:Cont$handler$h$xchg$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handler$h$xchg$'
@@ -11160,7 +11160,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args3, k -> k)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│           bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│         curThis = S of S of class:Cont$handler$h$xchg$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
@@ -11207,13 +11207,13 @@ fun start(thread: ThreadEffect -> ()) =
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args3, k -> k)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│           bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│         curThis = S of S of class:Cont$handler$h$xchg$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args4)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11252,7 +11252,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args3, k -> k)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│       bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -11294,7 +11294,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args3, k -> k)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
+//│         bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args4, pc -> pc, res -> res)
 //│     curThis = N
@@ -11336,7 +11336,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11374,7 +11374,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11412,7 +11412,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11450,7 +11450,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11488,7 +11488,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11526,7 +11526,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11564,7 +11564,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11602,7 +11602,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11640,7 +11640,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11678,7 +11678,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11716,7 +11716,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args3, k -> k)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, $split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $argument0$ -> argument0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, $split_default$ -> split_default$)
+//│     bindings = HashMap($tmp -> tmp5, $tmp -> tmp6, label:split_root$ -> split_root$, $tmp -> tmp7, $tmp -> tmp8, y -> y, $arg$Some$0$ -> arg$Some$0$, k1 -> k1, $element1$ -> element1$, $element0$ -> element0$, label:split_default$ -> split_default$)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11918,7 +11918,7 @@ fun start(thread: ThreadEffect -> ()) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

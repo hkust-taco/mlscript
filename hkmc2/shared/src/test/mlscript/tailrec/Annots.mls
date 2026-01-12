@@ -252,5 +252,5 @@ fun test =
   @tailcall 1 + 2
 //│ ╔══[WARNING] This annotation has no effect.
 //│ ╟── The @tailcall annotation has no effect on calls to built-in symbols.
-//│ ║  l.307: 	  @tailcall 1 + 2
+//│ ║  l.252: 	  @tailcall 1 + 2
 //│ ╙──       	            ^^^^^

@@ -28,7 +28,7 @@ fun (++) concat(l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│         curThis = N
-//│         bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│         bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│       curThis = S of S of class:Cont$func$concat$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -50,7 +50,7 @@ fun (++) concat(l1, l2) =
 //│         curThis = S of N
 //│         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│       curThis = N
-//│       bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│       bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│     curThis = S of S of class:Cont$func$concat$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$concat$'
@@ -72,7 +72,7 @@ fun (++) concat(l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│           curThis = N
-//│           bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│           bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│         curThis = S of S of class:Cont$func$concat$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
@@ -98,13 +98,13 @@ fun (++) concat(l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│           curThis = N
-//│           bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│           bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│         curThis = S of S of class:Cont$func$concat$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -122,7 +122,7 @@ fun (++) concat(l1, l2) =
 //│         curThis = S of N
 //│         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│       curThis = N
-//│       bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│       bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -143,7 +143,7 @@ fun (++) concat(l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│         curThis = N
-//│         bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│         bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│       curThis = S of N
 //│       bindings = HashMap(pc -> pc, res -> res, $args -> args1)
 //│     curThis = N
@@ -164,7 +164,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -181,7 +181,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -198,7 +198,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -215,7 +215,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -232,7 +232,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -249,7 +249,7 @@ fun (++) concat(l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t, h -> h)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t, h -> h)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 
 fun (:+) append(l, e) =
@@ -273,7 +273,7 @@ fun (:+) append(l, e) =
 //│           curThis = S of N
 //│           bindings = HashMap(e -> e, $args -> args, l -> l)
 //│         curThis = N
-//│         bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of S of class:Cont$func$append$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -295,7 +295,7 @@ fun (:+) append(l, e) =
 //│         curThis = S of N
 //│         bindings = HashMap(e -> e, $args -> args, l -> l)
 //│       curThis = N
-//│       bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│       bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│     curThis = S of S of class:Cont$func$append$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$append$'
@@ -317,7 +317,7 @@ fun (:+) append(l, e) =
 //│             curThis = S of N
 //│             bindings = HashMap(e -> e, $args -> args, l -> l)
 //│           curThis = N
-//│           bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of S of class:Cont$func$append$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
@@ -343,13 +343,13 @@ fun (:+) append(l, e) =
 //│             curThis = S of N
 //│             bindings = HashMap(e -> e, $args -> args, l -> l)
 //│           curThis = N
-//│           bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of S of class:Cont$func$append$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -367,7 +367,7 @@ fun (:+) append(l, e) =
 //│         curThis = S of N
 //│         bindings = HashMap(e -> e, $args -> args, l -> l)
 //│       curThis = N
-//│       bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│       bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -388,7 +388,7 @@ fun (:+) append(l, e) =
 //│           curThis = S of N
 //│           bindings = HashMap(e -> e, $args -> args, l -> l)
 //│         curThis = N
-//│         bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap(pc -> pc, res -> res, $args -> args1)
 //│     curThis = N
@@ -409,7 +409,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -426,7 +426,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -443,7 +443,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -460,7 +460,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -477,7 +477,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -494,7 +494,7 @@ fun (:+) append(l, e) =
 //│       curThis = S of N
 //│       bindings = HashMap(e -> e, $args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap(t -> t, h -> h, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap(t -> t, h -> h, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 
 fun length(l) =
@@ -518,7 +518,7 @@ fun length(l) =
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args, l -> l)
 //│         curThis = N
-//│         bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│         bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│       curThis = S of S of class:Cont$func$length$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -540,7 +540,7 @@ fun length(l) =
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args, l -> l)
 //│       curThis = N
-//│       bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│       bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│     curThis = S of S of class:Cont$func$length$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$length$'
@@ -562,7 +562,7 @@ fun length(l) =
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args, l -> l)
 //│           curThis = N
-//│           bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│           bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│         curThis = S of S of class:Cont$func$length$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
@@ -588,13 +588,13 @@ fun length(l) =
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args, l -> l)
 //│           curThis = N
-//│           bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│           bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│         curThis = S of S of class:Cont$func$length$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -612,7 +612,7 @@ fun length(l) =
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args, l -> l)
 //│       curThis = N
-//│       bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│       bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -633,7 +633,7 @@ fun length(l) =
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args, l -> l)
 //│         curThis = N
-//│         bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│         bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1, pc -> pc, res -> res)
 //│     curThis = N
@@ -654,7 +654,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -671,7 +671,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -688,7 +688,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -705,7 +705,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -722,7 +722,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -739,7 +739,7 @@ fun length(l) =
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args, l -> l)
 //│     curThis = N
-//│     bindings = HashMap($argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp, t -> t)
+//│     bindings = HashMap($arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp, t -> t)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 
 fun permutations_impl(gen, l1, l2) =
@@ -771,7 +771,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of S of class:Cont$func$permutations_impl$
 //│       bindings = HashMap(pc -> pc)
 //│     curThis = N
@@ -793,7 +793,7 @@ fun permutations_impl(gen, l1, l2) =
 //│         curThis = S of N
 //│         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│     curThis = S of S of class:Cont$func$permutations_impl$
 //│     bindings = HashMap(pc -> pc)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$func$permutations_impl$'
@@ -815,7 +815,7 @@ fun permutations_impl(gen, l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of S of class:Cont$func$permutations_impl$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
@@ -841,13 +841,13 @@ fun permutations_impl(gen, l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of S of class:Cont$func$permutations_impl$
 //│         bindings = HashMap(pc -> pc)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -865,7 +865,7 @@ fun permutations_impl(gen, l1, l2) =
 //│         curThis = S of N
 //│         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
@@ -886,7 +886,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1, pc -> pc, res -> res)
 //│     curThis = N
@@ -908,7 +908,7 @@ fun permutations_impl(gen, l1, l2) =
 //│         curThis = S of N
 //│         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│       curThis = N
-//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -931,7 +931,7 @@ fun permutations_impl(gen, l1, l2) =
 //│               curThis = S of N
 //│               bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│             curThis = N
-//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
@@ -959,7 +959,7 @@ fun permutations_impl(gen, l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args1)
 //│       curThis = N
@@ -988,7 +988,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                   curThis = S of N
 //│                   bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                 curThis = N
-//│                 bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                 bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args1)
 //│             curThis = N
@@ -1026,7 +1026,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                         curThis = S of N
 //│                         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                       curThis = N
-//│                       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args1)
 //│                   curThis = N
@@ -1069,7 +1069,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                       curThis = S of N
 //│                       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                     curThis = N
-//│                     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args1)
 //│                 curThis = N
@@ -1110,7 +1110,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                       curThis = S of N
 //│                       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                     curThis = N
-//│                     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args1)
 //│                 curThis = N
@@ -1152,7 +1152,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                         curThis = S of N
 //│                         bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                       curThis = N
-//│                       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                       bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args1)
 //│                   curThis = N
@@ -1194,7 +1194,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                     curThis = S of N
 //│                     bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                   curThis = N
-//│                   bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                   bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args1)
 //│               curThis = N
@@ -1232,7 +1232,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                     curThis = S of N
 //│                     bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│                   curThis = N
-//│                   bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│                   bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args1)
 //│               curThis = N
@@ -1268,7 +1268,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1297,7 +1297,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1325,7 +1325,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1350,7 +1350,7 @@ fun permutations_impl(gen, l1, l2) =
 //│               curThis = S of N
 //│               bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│             curThis = N
-//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
@@ -1378,7 +1378,7 @@ fun permutations_impl(gen, l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args1)
 //│       curThis = N
@@ -1406,7 +1406,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1438,7 +1438,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1448,7 +1448,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen2'
 //│ ║  l.755: 	      permutations_impl(gen2, Nil, l1 ++ t)
 //│ ║         	                        ^^^^
@@ -1475,7 +1475,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1485,7 +1485,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1507,7 +1507,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1517,7 +1517,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1539,7 +1539,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1549,7 +1549,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1571,7 +1571,7 @@ fun permutations_impl(gen, l1, l2) =
 //│                 curThis = S of N
 //│                 bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│               curThis = N
-//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│               bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args1)
 //│           curThis = N
@@ -1581,7 +1581,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = N
 //│       bindings = HashMap($args -> args2, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1601,7 +1601,7 @@ fun permutations_impl(gen, l1, l2) =
 //│             curThis = S of N
 //│             bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│           curThis = N
-//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│           bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args1)
 //│       curThis = N
@@ -1628,7 +1628,7 @@ fun permutations_impl(gen, l1, l2) =
 //│               curThis = S of N
 //│               bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│             curThis = N
-//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
@@ -1657,7 +1657,7 @@ fun permutations_impl(gen, l1, l2) =
 //│               curThis = S of N
 //│               bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│             curThis = N
-//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│             bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args1)
 //│         curThis = N
@@ -1687,7 +1687,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1710,7 +1710,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1738,7 +1738,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1761,7 +1761,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1784,7 +1784,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1807,7 +1807,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1830,7 +1830,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1853,7 +1853,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1876,7 +1876,7 @@ fun permutations_impl(gen, l1, l2) =
 //│           curThis = S of N
 //│           bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│         curThis = N
-//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│         bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args1)
 //│     curThis = N
@@ -1897,7 +1897,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1914,7 +1914,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1931,7 +1931,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1948,7 +1948,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1965,7 +1965,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1982,7 +1982,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1999,7 +1999,7 @@ fun permutations_impl(gen, l1, l2) =
 //│       curThis = S of N
 //│       bindings = HashMap(l1 -> l1, l2 -> l2, $args -> args, gen -> gen)
 //│     curThis = N
-//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $argument0$ -> argument0$, $argument1$ -> argument1$, $tmp -> tmp)
+//│     bindings = HashMap($tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, t -> t, f -> f, $arg$Cons$0$ -> arg$Cons$0$, $arg$Cons$1$ -> arg$Cons$1$, $tmp -> tmp)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 
 fun permutations(gen, l) =
@@ -2023,7 +2023,7 @@ in length(result)
 //│     parent = S of Scope:
 //│       parent = N
 //│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│     curThis = S of N
 //│     bindings = HashMap()
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -2040,7 +2040,7 @@ in length(result)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2062,7 +2062,7 @@ in length(result)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -2085,7 +2085,7 @@ in length(result)
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                 bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│               curThis = S of N
 //│               bindings = HashMap($args -> args)
 //│             curThis = N
@@ -2117,7 +2117,7 @@ in length(result)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -2154,7 +2154,7 @@ in length(result)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -2189,7 +2189,7 @@ in length(result)
 //│                   parent = S of Scope:
 //│                     parent = N
 //│                     curThis = S of S of globalThis:globalThis
-//│                     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                   curThis = S of N
 //│                   bindings = HashMap($args -> args)
 //│                 curThis = N
@@ -2225,7 +2225,7 @@ in length(result)
 //│                     parent = S of Scope:
 //│                       parent = N
 //│                       curThis = S of S of globalThis:globalThis
-//│                       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                       bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                     curThis = S of N
 //│                     bindings = HashMap($args -> args)
 //│                   curThis = N
@@ -2261,7 +2261,7 @@ in length(result)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                   bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2293,7 +2293,7 @@ in length(result)
 //│                 parent = S of Scope:
 //│                   parent = N
 //│                   curThis = S of S of globalThis:globalThis
-//│                   bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│                   bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│                 curThis = S of N
 //│                 bindings = HashMap($args -> args)
 //│               curThis = N
@@ -2323,7 +2323,7 @@ in length(result)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│               bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -2346,7 +2346,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2368,7 +2368,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2387,7 +2387,7 @@ in length(result)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2409,7 +2409,7 @@ in length(result)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -2431,7 +2431,7 @@ in length(result)
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│               bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│             curThis = S of N
 //│             bindings = HashMap($args -> args)
 //│           curThis = N
@@ -2441,7 +2441,7 @@ in length(result)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
 //│ ║  l.2014: 	  permutations(gen, 1 :: 2 :: 3 :: 4 :: Nil), Nil
 //│ ║          	               ^^^
@@ -2460,7 +2460,7 @@ in length(result)
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│           bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│         curThis = S of N
 //│         bindings = HashMap($args -> args)
 //│       curThis = N
@@ -2481,7 +2481,7 @@ in length(result)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2504,7 +2504,7 @@ in length(result)
 //│           parent = S of Scope:
 //│             parent = N
 //│             curThis = S of S of globalThis:globalThis
-//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│             bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│           curThis = S of N
 //│           bindings = HashMap($args -> args)
 //│         curThis = N
@@ -2528,7 +2528,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2545,7 +2545,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2562,7 +2562,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2579,7 +2579,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2596,7 +2596,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2618,7 +2618,7 @@ in length(result)
 //│       parent = S of Scope:
 //│         parent = N
 //│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│         bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│       curThis = S of N
 //│       bindings = HashMap($args -> args)
 //│     curThis = N
@@ -2633,7 +2633,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2644,7 +2644,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2655,7 +2655,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2666,7 +2666,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2677,7 +2677,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2688,7 +2688,7 @@ in length(result)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, member:Stack -> Stack, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
+//│     bindings = HashMap(class:Cont$func$append$ -> Cont$func$append$, member:Generator -> Generator1, $runtime -> runtime, class:Generator -> Generator, class:Cont$func$concat$ -> Cont$func$concat$, class:Cont$handleBlock$gen$ -> Cont$handleBlock$gen$, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res2, member:permutations_impl -> permutations_impl, class:Cont$handleBlock$gen2$ -> Cont$handleBlock$gen2$, result -> result, member:Predef -> Predef, class:Handler$gen2$ -> Handler$gen2$, class:Handler$gen$ -> Handler$gen$, member:length -> length, member:append -> append, class:Cont$func$permutations_impl$ -> Cont$func$permutations_impl$, $block$res -> block$res5, member:concat -> concat, class:Cont$handler$gen$produce$ -> Cont$handler$gen$produce$, $block$res -> block$res4, $block$res -> block$res6, $block$res -> block$res8, $tmp -> tmp, $tmp -> tmp1, class:Cont$handler$gen2$produce$ -> Cont$handler$gen2$produce$, $tmp -> tmp2, $block$res -> block$res, $block$res -> block$res3, member:Stack -> Stack, $tmp -> tmp3, $tmp -> tmp4, member:permutations -> permutations, $tmp -> tmp5, class:Cont$func$length$ -> Cont$func$length$, $block$res -> block$res7, $block$res -> block$res1)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)

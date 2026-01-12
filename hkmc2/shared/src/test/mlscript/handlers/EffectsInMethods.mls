@@ -551,7 +551,7 @@ handle h = Effect with
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ║  l.157: 	[t.p(h, 2), t.p(h, 3)]
 //│ ║         	                ^

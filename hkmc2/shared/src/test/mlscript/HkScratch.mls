@@ -9,113 +9,31 @@
 // :d
 // :todo
 
-:lot
-:lift
-fun f(x) =
-  class A with
-    class B() with
-      set x += 1
-    B()
-  new A
-//│ Elab: { fun member:f‹691›(x‹692›) = { Cls A { Cls BParamList(‹›,List(),None) { x‹692›#666 := builtin:+‹48›#0(x‹692›#666, 1) }; (class:A‹694›#666.)B‹member:B‹689››() }; new member:A‹690›#666 }; }
-//│ Lowered:
-//│ Program:
-//│   imports = Nil
-//│   main = Scoped(syms = {member:f‹691›}): 
-//│     body = Define:
-//│       defn = FunDefn:
-//│         owner = N
-//│         sym = member:f‹691›
-//│         dSym = term:f‹703›
-//│         params = Ls of 
-//│           ParamList:
-//│             flags = ()
-//│             params = Ls of 
-//│               Param:
-//│                 flags = ()
-//│                 sym = x‹692›
-//│                 sign = N
-//│                 modulefulness = Modulefulness of N
-//│             restParam = N
-//│         body = Scoped(syms = {member:A‹690›}): 
-//│           body = Define:
-//│             defn = ClsLikeDefn:
-//│               owner = N
-//│               isym = class:A‹694›
-//│               sym = member:A‹690›
-//│               ctorSym = N
-//│               k = Cls
-//│               paramsOpt = N
-//│               auxParams = Nil
-//│               parentPath = N
-//│               methods = Nil
-//│               privateFields = Nil
-//│               publicFields = Nil
-//│               preCtor = End of ""
-//│               ctor = Define:
-//│                 defn = ClsLikeDefn:
-//│                   owner = S of class:A‹694›
-//│                   isym = class:B‹696›
-//│                   sym = member:B‹689›
-//│                   ctorSym = S of term:class:B‹696›.B‹698›
-//│                   k = Cls
-//│                   paramsOpt = S of ParamList:
-//│                     flags = ()
-//│                     params = Nil
-//│                     restParam = N
-//│                   auxParams = Nil
-//│                   parentPath = N
-//│                   methods = Nil
-//│                   privateFields = Nil
-//│                   publicFields = Nil
-//│                   preCtor = End of ""
-//│                   ctor = Scoped(syms = {$tmp‹706›}): 
-//│                     body = Assign:
-//│                       lhs = $tmp‹706›
-//│                       rhs = Call:
-//│                         fun = Ref:
-//│                           l = builtin:+‹48›
-//│                           disamb = N
-//│                         args = Ls of 
-//│                           Arg:
-//│                             spread = N
-//│                             value = Ref:
-//│                               l = x‹692›
-//│                               disamb = N
-//│                           Arg:
-//│                             spread = N
-//│                             value = Lit of IntLit of 1
-//│                       rest = Assign: \
-//│                       lhs = x‹692›
-//│                       rhs = Ref:
-//│                         l = $tmp‹706›
-//│                         disamb = N
-//│                       rest = Return: \
-//│                       res = Select{sym=object:Unit‹2›}:
-//│                         qual = Ref:
-//│                           l = $runtime‹7›
-//│                           disamb = N
-//│                         name = Ident of "Unit"
-//│                       implct = true
-//│                   companion = N
-//│                   bufferable = N
-//│                 rest = Return: \
-//│                 res = Call:
-//│                   fun = Select{sym=term:class:B‹696›.B‹698›}:
-//│                     qual = Ref:
-//│                       l = class:A‹694›
-//│                       disamb = N
-//│                     name = Ident of "B"
-//│                   args = Nil
-//│                 implct = true
-//│               companion = N
-//│               bufferable = N
-//│             rest = Return: \
-//│             res = Instantiate:
-//│               mut = false
-//│               cls = Ref{disamb=class:A‹694›}:
-//│                 l = member:A‹690›
-//│                 disamb = S of class:A‹694›
-//│               args = Nil
-//│             implct = false
-//│       rest = End of ""
+:sjs
+class A
+if 0 is A and true do 2
+//│ Elab: { Cls A { }; if { let scrut = 0; $scrut‹692›#0 is A and let scrut = true; $scrut‹693›#0 is true then 2; ; else () } }
+//│ JS (unsanitized):
+//│ let A1, scrut, scrut1, tmp;
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   constructor() {}
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ split_root$: {
+//│   split_1$: {
+//│     scrut = 0;
+//│     if (scrut instanceof A1) {
+//│       scrut1 = true;
+//│       if (scrut1 === true) {
+//│         tmp = 2;
+//│         break split_root$
+//│       } else { break split_1$ }
+//│     } else { break split_1$ }
+//│   }
+//│   tmp = runtime.Unit;
+//│ }
+//│ tmp

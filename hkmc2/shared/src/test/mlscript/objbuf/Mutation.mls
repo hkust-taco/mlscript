@@ -28,7 +28,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -57,7 +57,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -86,7 +86,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -115,7 +115,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -144,7 +144,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -173,7 +173,7 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
@@ -202,13 +202,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -231,13 +231,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -260,13 +260,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -289,13 +289,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -318,13 +318,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -347,13 +347,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -376,13 +376,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -405,13 +405,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -434,13 +434,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -463,13 +463,13 @@ class A(x) with
 //│               parent = S of Scope:
 //│                 parent = N
 //│                 curThis = S of S of globalThis:globalThis
-//│                 bindings = HashMap($block$res -> block$res, $block$res -> block$res1, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape)
+//│                 bindings = HashMap($block$res -> block$res, member:ObjectBuffer -> ObjectBuffer, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res1)
 //│               curThis = N
 //│               bindings = HashMap(member:A -> A1, class:A -> A, module:A -> A)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
-//│           bindings = HashMap(buf -> buf, idx -> idx)
+//│           bindings = HashMap(idx -> idx, buf -> buf)
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
@@ -586,7 +586,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -612,7 +612,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -638,7 +638,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -664,7 +664,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -690,7 +690,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -716,7 +716,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -742,7 +742,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -750,7 +750,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
@@ -768,7 +768,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -776,7 +776,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
@@ -794,7 +794,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -802,7 +802,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
@@ -820,7 +820,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -828,7 +828,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
@@ -846,7 +846,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -854,7 +854,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'
@@ -872,7 +872,7 @@ class A(x) with
 //│             parent = S of Scope:
 //│               parent = N
 //│               curThis = S of S of globalThis:globalThis
-//│               bindings = HashMap($block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $runtime -> runtime, $block$res -> block$res6, $definitionMetadata -> definitionMetadata, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $tmp -> tmp2, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10, $selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $selRes -> selRes7, $discarded -> discarded7, $tmp -> tmp6, $block$res -> block$res, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, member:ObjectBuffer -> ObjectBuffer, $block$res -> block$res13, module:A -> A2, member:Predef -> Predef, $block$res -> block$res2, module:A -> A, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2)
+//│               bindings = HashMap($selRes -> selRes6, $discarded -> discarded6, $tmp -> tmp5, $block$res -> block$res11, $runtime -> runtime, $selRes -> selRes7, $definitionMetadata -> definitionMetadata, $discarded -> discarded7, $prettyPrint -> prettyPrint, $tmp -> tmp6, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res12, $selRes -> selRes8, $block$res -> block$res1, $discarded -> discarded8, $tmp -> tmp7, member:A -> A1, class:A -> A, member:A -> A3, class:A -> A2, $block$res -> block$res13, module:A -> A2, $block$res -> block$res, $block$res -> block$res2, module:A -> A, member:ObjectBuffer -> ObjectBuffer, buf -> buf, $block$res -> block$res3, obj1 -> obj1, $block$res -> block$res4, member:Predef -> Predef, $selRes -> selRes, $discarded -> discarded, $tmp -> tmp, obj2 -> obj2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, $tmp -> tmp1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $tmp -> tmp2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $tmp -> tmp3, $block$res -> block$res8, $selRes -> selRes4, $discarded -> discarded4, $tmp -> tmp4, $block$res -> block$res9, $selRes -> selRes5, $discarded -> discarded5, obj3 -> obj3, $block$res -> block$res10)
 //│             curThis = S of S of module:A
 //│             bindings = HashMap()
 //│           curThis = N
@@ -880,7 +880,7 @@ class A(x) with
 //│         curThis = N
 //│         bindings = HashMap()
 //│       curThis = N
-//│       bindings = HashMap(y -> y, $args -> args1)
+//│       bindings = HashMap($args -> args1, y -> y)
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp8)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'idx'

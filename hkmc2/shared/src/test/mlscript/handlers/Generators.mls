@@ -86,7 +86,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -687,7 +687,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
 //│ ║  l.15: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
 //│ ║        	                        ^^^^^^^^^^^^^
@@ -724,7 +724,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -756,7 +756,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -788,7 +788,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -820,7 +820,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1136,7 +1136,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
+//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, label:split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1153,7 +1153,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
+//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, label:split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1170,7 +1170,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
+//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, label:split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1187,7 +1187,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
+//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, label:split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1204,7 +1204,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
+//│     bindings = HashMap($element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, label:split_root$ -> split_root$, $tmp -> tmp6, $middleElements -> middleElements)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 
 let res = mut []
@@ -1635,7 +1635,7 @@ in permutations(gen, [1, 2, 3, 4])
 //│       curThis = N
 //│       bindings = HashMap($args -> args1, value$ -> value$)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2450,7 +2450,7 @@ permutations_foreach([1, 2, 3], print)
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2868,7 +2868,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3469,7 +3469,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
 //│ ║  l.2797: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
 //│ ║          	                        ^^^^^^^^^^^^^
@@ -3506,7 +3506,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3538,7 +3538,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3570,7 +3570,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3602,7 +3602,7 @@ fun permutations(gen, l) =
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3918,7 +3918,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $split_root$ -> split_root$, $tmp -> tmp9)
+//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, label:split_root$ -> split_root$, $tmp -> tmp9)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3935,7 +3935,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $split_root$ -> split_root$, $tmp -> tmp9)
+//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, label:split_root$ -> split_root$, $tmp -> tmp9)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3952,7 +3952,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $split_root$ -> split_root$, $tmp -> tmp9)
+//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, label:split_root$ -> split_root$, $tmp -> tmp9)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3969,7 +3969,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $split_root$ -> split_root$, $tmp -> tmp9)
+//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, label:split_root$ -> split_root$, $tmp -> tmp9)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3986,7 +3986,7 @@ fun permutations(gen, l) =
 //│       curThis = S of N
 //│       bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
 //│     curThis = N
-//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, $split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $split_root$ -> split_root$, $tmp -> tmp9)
+//│     bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, label:split_1$ -> split_1$, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, label:split_root$ -> split_root$, $tmp -> tmp9)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 
 let res = mut []
@@ -4450,7 +4450,7 @@ in permutations(gen, [1, 2, 3])
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args1)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'res'
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

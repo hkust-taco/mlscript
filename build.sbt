@@ -38,7 +38,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     scalacOptions -= "-Wconf:any:error",
     
     // scalacOptions ++= Seq("-indent", "-rewrite"),
-    scalacOptions ++= Seq("-new-syntax", "-rewrite"),
+    scalacOptions ++= Seq("-new-syntax", "-rewrite", "-Wsafe-init"),
     // scalacOptions ++= Seq("-language:experimental.modularity"), // https://docs.scala-lang.org/scala3/reference/experimental/modularity.html
     
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,

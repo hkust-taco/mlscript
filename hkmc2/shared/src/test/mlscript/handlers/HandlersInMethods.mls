@@ -643,7 +643,7 @@ let t = new Test
 //│       curThis = N
 //│       bindings = HashMap(value$ -> value$, $args -> args2)
 //│     curThis = N
-//│     bindings = HashMap($contLoop -> contLoop)
+//│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ║  l.15: 	    h.perform("A", x) + h.perform("B", x + 1)
 //│ ║        	                        ^

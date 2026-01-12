@@ -14,18 +14,7 @@ fun foo() =
 :expect 5
 foo()
 fs.0()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 5
 
 
 let fs = mut []
@@ -44,7 +33,8 @@ fun foo() =
 :expect 1
 foo()
 fs.0()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ = 1
+//│ FAILURE: Unexpected lack of error to fix
 
 
 :sjs
@@ -56,35 +46,27 @@ fun foo() =
 //│ JS (unsanitized):
 //│ let foo2;
 //│ foo2 = function foo() {
-//│   let x, tmp;
+//│   let x, tmp2;
 //│   x = 1;
 //│   lbl: while (true) {
 //│     let scrut, tmp3;
 //│     scrut = true;
 //│     if (scrut === true) {
+//│       let lambda;
 //│       tmp3 = x + 1;
 //│       x = tmp3;
-//│       lambda$here = runtime.safeCall(lambda2(x));
-//│       return lambda$here
+//│       lambda = (undefined, function () {
+//│         return x
+//│       });
+//│       return lambda
 //│     } else { tmp2 = runtime.Unit; }
 //│     break;
 //│   }
-//│   return tmp
+//│   return tmp2
 //│ };
 
 :expect 2
 foo()()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 2
 
 

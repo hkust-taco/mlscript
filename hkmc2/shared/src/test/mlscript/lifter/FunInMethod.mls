@@ -9,15 +9,4 @@ data class A(a) with
       a + b + c
     g
 A(1).f(1)(3)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
-//│ 	at: scala.collection.immutable.BitmapIndexedMapNode.apply(HashMap.scala:674)
-//│ 	at: scala.collection.immutable.HashMap.apply(HashMap.scala:132)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:40)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
+//│ = 6

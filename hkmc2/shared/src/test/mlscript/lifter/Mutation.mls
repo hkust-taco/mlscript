@@ -27,18 +27,7 @@ fun foo() =
 :expect 2
 foo()
 xs.0()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 2
 
 
 let xs = mut []
@@ -54,18 +43,7 @@ fun foo() =
 :expect 2
 foo()
 xs.0()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 2
 
 
 :fixme
@@ -81,7 +59,9 @@ fun foo() =
 let b_x = foo()
 b_x.0()
 b_x.1()
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
+//│ = 2
+//│ b_x = [fun bar, fun]
+//│ FAILURE: Unexpected lack of error to fix
 
 
 fun foo() =
@@ -94,18 +74,8 @@ fun foo() =
 let b_x = foo()
 b_x.0()
 b_x.1()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 2
+//│ b_x = [fun bar, fun]
 
 
 :sjs

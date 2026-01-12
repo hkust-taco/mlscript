@@ -14,18 +14,7 @@ fun foo(x, y) =
 
 :expect 14
 foo(10, 0)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ = 14
 
 // * This works the same with classes.
 // * Note that we currently generate accessors, which is not ideal;
@@ -71,135 +60,18 @@ let
   cc = foo(10)
   c0 = cc.0
   c1 = cc.1
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ c0 = C
+//│ c1 = C
+//│ cc = [C, C]
 
 :re
 set c0.x = 1
 c0.x
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c0
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c0'
-//│ ║  l.650: 	set c0.x = 1
-//│ ║         	    ^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.630: 	  c0 = cc.0
-//│ ╙──       	  ^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c0
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c0'
-//│ ║  l.651: 	c0.x
-//│ ║         	^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.630: 	  c0 = cc.0
-//│ ╙──       	  ^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c0
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c0'
-//│ ║  l.651: 	c0.x
-//│ ║         	^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.630: 	  c0 = cc.0
-//│ ╙──       	  ^^
-//│ ═══[RUNTIME ERROR] ReferenceError: c0 is not defined
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 set c1.x = 1
 c1.x
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c1
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c1'
-//│ ║  l.654: 	set c1.x = 1
-//│ ║         	    ^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.631: 	  c1 = cc.1
-//│ ╙──       	  ^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c1
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c1'
-//│ ║  l.655: 	c1.x
-//│ ║         	^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.631: 	  c1 = cc.1
-//│ ╙──       	  ^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = c1
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(class:C -> C, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res3, $Block -> Block, $Shape -> Shape, member:foo -> foo1, $block$res -> block$res, class:M -> M1, member:foo -> foo, member:Predef -> Predef, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res2, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1, member:foo -> foo2)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'c1'
-//│ ║  l.655: 	c1.x
-//│ ║         	^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.631: 	  c1 = cc.1
-//│ ╙──       	  ^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: c1 is not defined
-//│     at REPL22:1:31
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = 1
 
 
 // * Objects should remain non-`new mut`
@@ -211,71 +83,12 @@ fun foo(y) =
   O
 
 let o = foo(10)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ o = O
 
 :re
 set o.x = 1
 o.x
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = o
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:foo -> foo3, object:O -> O, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res6, member:foo -> foo1, class:M -> M1, $block$res -> block$res7, $selRes -> selRes2, $discarded -> discarded2, member:Predef -> Predef, $block$res -> block$res2, member:foo -> foo2, class:C -> C, $block$res -> block$res3, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'o'
-//│ ║  l.770: 	set o.x = 1
-//│ ║         	    ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.753: 	let o = foo(10)
-//│ ╙──       	    ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = o
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:foo -> foo3, object:O -> O, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res6, member:foo -> foo1, class:M -> M1, $block$res -> block$res7, $selRes -> selRes2, $discarded -> discarded2, member:Predef -> Predef, $block$res -> block$res2, member:foo -> foo2, class:C -> C, $block$res -> block$res3, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'o'
-//│ ║  l.771: 	o.x
-//│ ║         	^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.753: 	let o = foo(10)
-//│ ╙──       	    ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = o
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:foo -> foo3, object:O -> O, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res6, member:foo -> foo1, class:M -> M1, $block$res -> block$res7, $selRes -> selRes2, $discarded -> discarded2, member:Predef -> Predef, $block$res -> block$res2, member:foo -> foo2, class:C -> C, $block$res -> block$res3, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res4, $selRes -> selRes, $discarded -> discarded, $block$res -> block$res5, $selRes -> selRes1, $discarded -> discarded1)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'o'
-//│ ║  l.771: 	o.x
-//│ ║         	^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.753: 	let o = foo(10)
-//│ ╙──       	    ^
-//│ ═══[RUNTIME ERROR] ReferenceError: o is not defined
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 :sjs
 fun foo(x, y) =
@@ -316,18 +129,7 @@ fun foo(x, y) =
 
 :expect 12
 foo(10, 0)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ = 12
 
 
 data class A(x) with
@@ -337,18 +139,7 @@ data class A(x) with
 
 :expect 2
 A(2).getA()
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:class:A.A
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:61)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
-//│ 	at: hkmc2.UsedVarAnalyzer.findAccessesShallow(UsedVarAnalyzer.scala:85)
-//│ 	at: hkmc2.UsedVarAnalyzer.$init$$$anonfun$1(UsedVarAnalyzer.scala:114)
+//│ = 2
 
 // Classes and functions in modules //
 
@@ -360,10 +151,10 @@ module M with
   val hi = A()
 M.hi.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1152: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.147: 	module M with
+//│ ╙──       	       ^
 //│ = 2
 
 :expect 2
@@ -374,10 +165,10 @@ module M with
     g
 M.f()()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1161: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.161: 	module M with
+//│ ╙──       	       ^
 //│ = 2
 
 :expect 2
@@ -405,15 +196,15 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1547: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.193: 	module M with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:423)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ JS (unsanitized):
-//│ let M13, tmp2;
+//│ let M13, tmp3;
 //│ (class M12 {
 //│   static {
 //│     M13 = this
@@ -422,7 +213,7 @@ M.A().get
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let scrut, tmp3;
+//│     let scrut, tmp4;
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
@@ -439,24 +230,24 @@ M.A().get
 //│     });
 //│     scrut = M12.A();
 //│     if (scrut instanceof M12.A.class) {
-//│       tmp3 = 2;
+//│       tmp4 = 2;
 //│     } else {
-//│       tmp3 = 3;
+//│       tmp4 = 3;
 //│     }
-//│     this.x = tmp3;
+//│     this.x = tmp4;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp2 = M13.A();
-//│ tmp2.get
+//│ tmp3 = M13.A();
+//│ tmp3.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1547: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.193: 	module M with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:423)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ = 4
 
@@ -467,10 +258,10 @@ module M with
   class B() extends A
 M.B().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1592: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.254: 	module M with
+//│ ╙──       	       ^
 //│ = 2
 
 /// Top Level Modules ///
@@ -489,12 +280,12 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1606: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.273: 	module M with
+//│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:423)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ = 3
 
@@ -502,10 +293,10 @@ module M with
   class A
   object B extends A
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.1853: 	module M with
-//│ ╙──        	       ^
+//│ ║  l.292: 	module M with
+//│ ╙──       	       ^
 
 
 :lift
@@ -516,36 +307,25 @@ fun foo(x) =
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
 
 foo(123)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: term:foo
-//│ 	at: scala.collection.immutable.Map$Map1.apply(Map.scala:263)
-//│ 	at: hkmc2.ScopeData.getNode(ScopeData.scala:150)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyValue(UsedVarAnalyzer.scala:68)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyPath(BlockTraverser.scala:70)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyResult(BlockTraverser.scala:57)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:26)
-//│ 	at: hkmc2.codegen.BlockTraverserShallow.applyBlock(BlockTraverser.scala:162)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.applyBlock(UsedVarAnalyzer.scala:63)
-//│ 	at: hkmc2.UsedVarAnalyzer$$anon$2.<init>(UsedVarAnalyzer.scala:54)
-//│ 	at: hkmc2.UsedVarAnalyzer.blkAccessesShallow(UsedVarAnalyzer.scala:71)
+//│ = [true, [true, false], true]
 
 module A with
   fun g = 1
   fun f = () => g
   f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.2206: 	module A with
-//│ ╙──        	       ^
+//│ ║  l.312: 	module A with
+//│ ╙──       	       ^
 
 module A with
   val a = (() => 1)()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.2238: 	module A with
-//│ ╙──        	       ^
+//│ ║  l.322: 	module A with
+//│ ╙──       	       ^
 
 // This is related to the above, but it will look into the ignored bms map
 module A with
@@ -553,10 +333,10 @@ module A with
     fun f() = 1
     f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.2242: 	module A with
-//│ ╙──        	       ^
+//│ ║  l.331: 	module A with
+//│ ╙──       	       ^
 
 module A with
   val x =
@@ -567,10 +347,10 @@ module A with
     f() + g()
 A.x
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:408)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.2247: 	module A with
-//│ ╙──        	       ^
+//│ ║  l.341: 	module A with
+//│ ╙──       	       ^
 //│ = 2
 
 // private fields in modules
@@ -582,8 +362,8 @@ module A with
     nested()
 A.mtd
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.2273: 	module A with
-//│ ╙──        	       ^
+//│ ║  l.358: 	module A with
+//│ ╙──       	       ^
 //│ = 1
 
 

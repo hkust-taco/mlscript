@@ -100,8 +100,7 @@ case
 //│                 sign = N
 //│                 modulefulness = Modulefulness of N
 //│             restParam = N
-//│         body = Scoped:
-//│           syms = HashSet(a, $arg$Foo$0$)
+//│         body = Scoped(syms = {a, $arg$Foo$0$}): 
 //│           body = Match:
 //│             scrut = Ref:
 //│               l = caseScrut
