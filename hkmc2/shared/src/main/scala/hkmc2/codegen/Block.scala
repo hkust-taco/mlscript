@@ -94,7 +94,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars
+    case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1

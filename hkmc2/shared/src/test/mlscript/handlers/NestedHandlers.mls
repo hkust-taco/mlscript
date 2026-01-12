@@ -3519,10 +3519,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ║          	           ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3698,10 +3698,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.2772: 	    f(h2, box, n - 1)
+//│ ║  l.6633: 	    f(h2, box, n - 1)
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3884,7 +3884,7 @@ box.n
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3909,10 +3909,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.2771: 	    f(h2, box, n - 1)
+//│ ║  l.6632: 	    f(h2, box, n - 1)
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3983,10 +3983,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.2772: 	    f(h2, box, n - 1)
+//│ ║  l.6633: 	    f(h2, box, n - 1)
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2766: 	    handle h2 = Eff with
+//│ ║  l.6627: 	    handle h2 = Eff with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4631,10 +4631,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2773: 	handle h = Eff with
+//│ ║  l.6634: 	handle h = Eff with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2773: 	handle h = Eff with
+//│ ║  l.6634: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4893,7 +4893,7 @@ box.n
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2773: 	handle h = Eff with
+//│ ║  l.6634: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4912,10 +4912,10 @@ box.n
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2777: 	f(h, box, 10)
+//│ ║  l.6638: 	f(h, box, 10)
 //│ ║          	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2773: 	handle h = Eff with
+//│ ║  l.6634: 	handle h = Eff with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5434,10 +5434,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.5050: 	handle h1 = Eff with
+//│ ║  l.9400: 	handle h1 = Eff with
 //│ ║          	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5050: 	handle h1 = Eff with
+//│ ║  l.9400: 	handle h1 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5566,7 +5566,7 @@ h2.perform()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5050: 	handle h1 = Eff with
+//│ ║  l.9400: 	handle h1 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5810,10 +5810,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.5059: 	    h1.perform()
+//│ ║  l.9409: 	    h1.perform()
 //│ ║          	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5050: 	handle h1 = Eff with
+//│ ║  l.9400: 	handle h1 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5976,10 +5976,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap(x -> x, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.5059: 	    h1.perform()
+//│ ║  l.9409: 	    h1.perform()
 //│ ║          	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5050: 	handle h1 = Eff with
+//│ ║  l.9400: 	handle h1 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6150,10 +6150,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ║          	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6297,10 +6297,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5064: 	h2.perform()
+//│ ║  l.9414: 	h2.perform()
 //│ ║          	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6366,10 +6366,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5065: 	h2.perform()
+//│ ║  l.9415: 	h2.perform()
 //│ ║          	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6552,7 +6552,7 @@ h2.perform()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6577,10 +6577,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5063: 	h2.perform()
+//│ ║  l.9413: 	h2.perform()
 //│ ║          	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6628,10 +6628,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5064: 	h2.perform()
+//│ ║  l.9414: 	h2.perform()
 //│ ║          	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6702,10 +6702,10 @@ h2.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.5065: 	h2.perform()
+//│ ║  l.9415: 	h2.perform()
 //│ ║          	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5056: 	handle h2 = Eff with
+//│ ║  l.9406: 	handle h2 = Eff with
 //│ ╙──        	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7182,11 +7182,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ║          	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -7314,8 +7314,8 @@ h3.perform()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -7558,11 +7558,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.6869: 	    h1.perform()
-//│ ║          	    ^^
+//│ ║  l.11644: 	    h1.perform()
+//│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -7724,11 +7724,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp10, $tmp -> tmp11)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.6869: 	    h1.perform()
-//│ ║          	    ^^
+//│ ║  l.11644: 	    h1.perform()
+//│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -7822,11 +7822,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.6866: 	handle h2 = Eff with
-//│ ║          	       ^^
+//│ ║  l.11641: 	handle h2 = Eff with
+//│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6866: 	handle h2 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11641: 	handle h2 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -7990,8 +7990,8 @@ h3.perform()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6866: 	handle h2 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11641: 	handle h2 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -8276,11 +8276,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.6874: 	    h2.perform()
-//│ ║          	    ^^
+//│ ║  l.11649: 	    h2.perform()
+//│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6866: 	handle h2 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11641: 	handle h2 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -8466,11 +8466,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp10, $tmp -> tmp11)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.6874: 	    h2.perform()
-//│ ║          	    ^^
+//│ ║  l.11649: 	    h2.perform()
+//│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6866: 	handle h2 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11641: 	handle h2 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -8582,11 +8582,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h3'
-//│ ║  l.6871: 	handle h3 = Eff with
-//│ ║          	       ^^
+//│ ║  l.11646: 	handle h3 = Eff with
+//│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6871: 	handle h3 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11646: 	handle h3 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -8797,11 +8797,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h3'
-//│ ║  l.6877: 	h3.perform()
-//│ ║          	^^
+//│ ║  l.11652: 	h3.perform()
+//│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6871: 	handle h3 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11646: 	handle h3 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9019,8 +9019,8 @@ h3.perform()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h3'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6871: 	handle h3 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11646: 	handle h3 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9050,11 +9050,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.6876: 	h1.perform()
-//│ ║          	^^
+//│ ║  l.11651: 	h1.perform()
+//│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6862: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11637: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9142,11 +9142,11 @@ h3.perform()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h3'
-//│ ║  l.6877: 	h3.perform()
-//│ ║          	^^
+//│ ║  l.11652: 	h3.perform()
+//│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.6871: 	handle h3 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.11646: 	handle h3 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9517,11 +9517,11 @@ d
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.9377: 	handle h1 = Eff with
-//│ ║          	       ^^
+//│ ║  l.14670: 	handle h1 = Eff with
+//│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9377: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.14670: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9649,8 +9649,8 @@ d
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9377: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.14670: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9962,11 +9962,11 @@ d
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.9384: 	  handle h2 = Eff with
-//│ ║          	         ^^
+//│ ║  l.14677: 	  handle h2 = Eff with
+//│ ║           	         ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9384: 	  handle h2 = Eff with
-//│ ╙──        	         ^^
+//│ ║  l.14677: 	  handle h2 = Eff with
+//│ ╙──         	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -10166,8 +10166,8 @@ d
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9384: 	  handle h2 = Eff with
-//│ ╙──        	         ^^
+//│ ║  l.14677: 	  handle h2 = Eff with
+//│ ╙──         	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -10197,11 +10197,11 @@ d
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.9388: 	  h2.perform()
-//│ ║          	  ^^
+//│ ║  l.14681: 	  h2.perform()
+//│ ║           	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9384: 	  handle h2 = Eff with
-//│ ╙──        	         ^^
+//│ ║  l.14677: 	  handle h2 = Eff with
+//│ ╙──         	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -10294,11 +10294,11 @@ d
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.9382: 	h1.perform()
-//│ ║          	^^
+//│ ║  l.14675: 	h1.perform()
+//│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9377: 	handle h1 = Eff with
-//│ ╙──        	       ^^
+//│ ║  l.14670: 	handle h1 = Eff with
+//│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -10778,10 +10778,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.10370: 	handle h1 = Eff2 with
+//│ ║  l.16013: 	handle h1 = Eff2 with
 //│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10370: 	handle h1 = Eff2 with
+//│ ║  l.16013: 	handle h1 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -10910,7 +10910,7 @@ h2.f1()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10370: 	handle h1 = Eff2 with
+//│ ║  l.16013: 	handle h1 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11429,10 +11429,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.10384: 	    h1.f1()
+//│ ║  l.16027: 	    h1.f1()
 //│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10370: 	handle h1 = Eff2 with
+//│ ║  l.16013: 	handle h1 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11671,10 +11671,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.10384: 	    h1.f1()
+//│ ║  l.16027: 	    h1.f1()
 //│ ║           	    ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10370: 	handle h1 = Eff2 with
+//│ ║  l.16013: 	handle h1 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11731,10 +11731,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ║           	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11910,10 +11910,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.10386: 	h2.f1()
+//│ ║  l.16029: 	h2.f1()
 //│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -12096,7 +12096,7 @@ h2.f1()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -12121,10 +12121,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.10385: 	h2.f2()
+//│ ║  l.16028: 	h2.f2()
 //│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -12195,10 +12195,10 @@ h2.f1()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.10386: 	h2.f1()
+//│ ║  l.16029: 	h2.f1()
 //│ ║           	^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10376: 	handle h2 = Eff2 with
+//│ ║  l.16019: 	handle h2 = Eff2 with
 //│ ╙──         	       ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

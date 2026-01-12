@@ -151,9 +151,9 @@ module M with
   val hi = A()
 M.hi.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.147: 	module M with
+//│ ║  l.290: 	module M with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -165,9 +165,9 @@ module M with
     g
 M.f()()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.161: 	module M with
+//│ ║  l.304: 	module M with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -196,12 +196,12 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.193: 	module M with
+//│ ║  l.374: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:311)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ JS (unsanitized):
 //│ let M13, tmp3;
@@ -242,12 +242,12 @@ M.A().get
 //│ tmp3 = M13.A();
 //│ tmp3.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.193: 	module M with
+//│ ║  l.374: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:311)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ = 4
 
@@ -258,9 +258,9 @@ module M with
   class B() extends A
 M.B().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.254: 	module M with
+//│ ║  l.435: 	module M with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -280,12 +280,12 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.273: 	module M with
+//│ ║  l.454: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:309)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:311)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ = 3
 
@@ -293,9 +293,9 @@ module M with
   class A
   object B extends A
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.292: 	module M with
+//│ ║  l.712: 	module M with
 //│ ╙──       	       ^
 
 
@@ -314,17 +314,17 @@ module A with
   fun f = () => g
   f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.312: 	module A with
+//│ ║  l.732: 	module A with
 //│ ╙──       	       ^
 
 module A with
   val a = (() => 1)()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.322: 	module A with
+//│ ║  l.772: 	module A with
 //│ ╙──       	       ^
 
 // This is related to the above, but it will look into the ignored bms map
@@ -333,9 +333,9 @@ module A with
     fun f() = 1
     f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.331: 	module A with
+//│ ║  l.781: 	module A with
 //│ ╙──       	       ^
 
 module A with
@@ -347,9 +347,9 @@ module A with
     f() + g()
 A.x
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.341: 	module A with
+//│ ║  l.791: 	module A with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -362,7 +362,7 @@ module A with
     nested()
 A.mtd
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.358: 	module A with
+//│ ║  l.825: 	module A with
 //│ ╙──       	       ^
 //│ = 1
 

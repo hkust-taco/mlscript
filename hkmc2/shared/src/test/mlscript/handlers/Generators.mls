@@ -1520,10 +1520,10 @@ in permutations(gen, [1, 2, 3, 4])
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.1211: 	handle gen = Generator with
+//│ ║  l.1236: 	handle gen = Generator with
 //│ ║          	       ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1211: 	handle gen = Generator with
+//│ ║  l.1236: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1704,7 +1704,7 @@ in permutations(gen, [1, 2, 3, 4])
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1211: 	handle gen = Generator with
+//│ ║  l.1236: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1740,10 +1740,10 @@ in permutations(gen, [1, 2, 3, 4])
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.1215: 	in permutations(gen, [1, 2, 3, 4])
+//│ ║  l.1240: 	in permutations(gen, [1, 2, 3, 4])
 //│ ║          	                ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1211: 	handle gen = Generator with
+//│ ║  l.1236: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2305,10 +2305,10 @@ permutations_foreach([1, 2, 3], print)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.1843: 	  handle gen = Generator with
+//│ ║  l.1868: 	  handle gen = Generator with
 //│ ║          	         ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1843: 	  handle gen = Generator with
+//│ ║  l.1868: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2537,7 +2537,7 @@ permutations_foreach([1, 2, 3], print)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1843: 	  handle gen = Generator with
+//│ ║  l.1868: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2585,10 +2585,10 @@ permutations_foreach([1, 2, 3], print)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.1847: 	  permutations(gen, l)
+//│ ║  l.1872: 	  permutations(gen, l)
 //│ ║          	               ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1843: 	  handle gen = Generator with
+//│ ║  l.1868: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3324,10 +3324,10 @@ fun permutations(gen, l) =
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
-//│ ║  l.2792: 	      handle genWithPrefix = Generator with
+//│ ║  l.2817: 	      handle genWithPrefix = Generator with
 //│ ║          	             ^^^^^^^^^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2792: 	      handle genWithPrefix = Generator with
+//│ ║  l.2817: 	      handle genWithPrefix = Generator with
 //│ ╙──        	             ^^^^^^^^^^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3471,10 +3471,10 @@ fun permutations(gen, l) =
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
-//│ ║  l.2797: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
+//│ ║  l.2822: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
 //│ ║          	                        ^^^^^^^^^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2792: 	      handle genWithPrefix = Generator with
+//│ ║  l.2817: 	      handle genWithPrefix = Generator with
 //│ ╙──        	             ^^^^^^^^^^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3689,7 +3689,7 @@ fun permutations(gen, l) =
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2792: 	      handle genWithPrefix = Generator with
+//│ ║  l.2817: 	      handle genWithPrefix = Generator with
 //│ ╙──        	             ^^^^^^^^^^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3737,10 +3737,10 @@ fun permutations(gen, l) =
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'genWithPrefix'
-//│ ║  l.2797: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
+//│ ║  l.2822: 	      permutations_impl(genWithPrefix, mut [], l1.concat(t))
 //│ ║          	                        ^^^^^^^^^^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2792: 	      handle genWithPrefix = Generator with
+//│ ║  l.2817: 	      handle genWithPrefix = Generator with
 //│ ╙──        	             ^^^^^^^^^^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4335,10 +4335,10 @@ in permutations(gen, [1, 2, 3])
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.3993: 	handle gen = Generator with
+//│ ║  l.4018: 	handle gen = Generator with
 //│ ║          	       ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3993: 	handle gen = Generator with
+//│ ║  l.4018: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4519,7 +4519,7 @@ in permutations(gen, [1, 2, 3])
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3993: 	handle gen = Generator with
+//│ ║  l.4018: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4555,10 +4555,10 @@ in permutations(gen, [1, 2, 3])
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.3998: 	in permutations(gen, [1, 2, 3])
+//│ ║  l.4023: 	in permutations(gen, [1, 2, 3])
 //│ ║          	                ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3993: 	handle gen = Generator with
+//│ ║  l.4018: 	handle gen = Generator with
 //│ ╙──        	       ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

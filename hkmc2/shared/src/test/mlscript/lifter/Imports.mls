@@ -7,7 +7,7 @@ import "../../mlscript-compile/Option.mls"
 module A with
   fun f(x) = x is Option.Some
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.7: 	module A with
 //│ ╙──     	       ^
@@ -31,7 +31,7 @@ module A with
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.7: 	module A with
 //│ ╙──     	       ^

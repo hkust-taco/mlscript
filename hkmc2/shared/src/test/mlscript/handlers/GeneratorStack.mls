@@ -1303,10 +1303,10 @@ fun permutations_impl(gen, l1, l2) =
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen2'
-//│ ║  l.751: 	      handle gen2 = Generator with
+//│ ║  l.811: 	      handle gen2 = Generator with
 //│ ║         	             ^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.751: 	      handle gen2 = Generator with
+//│ ║  l.811: 	      handle gen2 = Generator with
 //│ ╙──       	             ^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1450,10 +1450,10 @@ fun permutations_impl(gen, l1, l2) =
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen2'
-//│ ║  l.755: 	      permutations_impl(gen2, Nil, l1 ++ t)
+//│ ║  l.815: 	      permutations_impl(gen2, Nil, l1 ++ t)
 //│ ║         	                        ^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.751: 	      handle gen2 = Generator with
+//│ ║  l.811: 	      handle gen2 = Generator with
 //│ ╙──       	             ^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1668,7 +1668,7 @@ fun permutations_impl(gen, l1, l2) =
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.751: 	      handle gen2 = Generator with
+//│ ║  l.811: 	      handle gen2 = Generator with
 //│ ╙──       	             ^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -1716,10 +1716,10 @@ fun permutations_impl(gen, l1, l2) =
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen2'
-//│ ║  l.755: 	      permutations_impl(gen2, Nil, l1 ++ t)
+//│ ║  l.815: 	      permutations_impl(gen2, Nil, l1 ++ t)
 //│ ║         	                        ^^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.751: 	      handle gen2 = Generator with
+//│ ║  l.811: 	      handle gen2 = Generator with
 //│ ╙──       	             ^^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2352,10 +2352,10 @@ in length(result)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.2009: 	  handle gen = Generator with
+//│ ║  l.2299: 	  handle gen = Generator with
 //│ ║          	         ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2009: 	  handle gen = Generator with
+//│ ║  l.2299: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2443,10 +2443,10 @@ in length(result)
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.2014: 	  permutations(gen, 1 :: 2 :: 3 :: 4 :: Nil), Nil
+//│ ║  l.2304: 	  permutations(gen, 1 :: 2 :: 3 :: 4 :: Nil), Nil
 //│ ║          	               ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2009: 	  handle gen = Generator with
+//│ ║  l.2299: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2515,7 +2515,7 @@ in length(result)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2009: 	  handle gen = Generator with
+//│ ║  l.2299: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2602,10 +2602,10 @@ in length(result)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'gen'
-//│ ║  l.2014: 	  permutations(gen, 1 :: 2 :: 3 :: 4 :: Nil), Nil
+//│ ║  l.2304: 	  permutations(gen, 1 :: 2 :: 3 :: 4 :: Nil), Nil
 //│ ║          	               ^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2009: 	  handle gen = Generator with
+//│ ║  l.2299: 	  handle gen = Generator with
 //│ ╙──        	         ^^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

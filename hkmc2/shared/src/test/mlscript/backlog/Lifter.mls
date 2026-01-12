@@ -137,7 +137,7 @@ module M with
     g
 M.f()()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.133: 	module M with
+//│ ║  l.294: 	module M with
 //│ ╙──       	       ^
 //│ = 2
 
@@ -152,7 +152,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.148: 	  module M with
+//│ ║  l.323: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
@@ -167,7 +167,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.163: 	  module M with
+//│ ║  l.338: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
@@ -180,7 +180,7 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.179: 	  module M with
+//│ ║  l.363: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -196,7 +196,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.195: 	  class Bar extends Foo
+//│ ║  l.379: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
@@ -212,7 +212,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.209: 	  module M with
+//│ ║  l.429: 	  module M with
 //│ ╙──       	         ^
 
 

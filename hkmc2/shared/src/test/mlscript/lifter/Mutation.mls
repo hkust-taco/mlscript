@@ -46,22 +46,19 @@ xs.0()
 //│ = 2
 
 
-:fixme
 fun foo() =
   let x
   fun bar() =
-    x = 2
+    set x = 2
   [bar, () => x]
-//│ FAILURE: Unexpected lack of error to fix
 
-:fixme
+
 :expect 2
 let b_x = foo()
 b_x.0()
 b_x.1()
 //│ = 2
 //│ b_x = [fun bar, fun]
-//│ FAILURE: Unexpected lack of error to fix
 
 
 fun foo() =

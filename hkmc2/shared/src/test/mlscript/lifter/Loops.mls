@@ -1,5 +1,6 @@
 :js
 :lift
+:rewriteWhile // TODO: remove
 
 
 let fs = mut []
@@ -29,12 +30,11 @@ fun foo() =
 
 // * Note that this works with while loop rewriting
 // * See [fixme:0] for cause of the issue
-:fixme
+:todo
 :expect 1
 foo()
 fs.0()
 //│ = 1
-//│ FAILURE: Unexpected lack of error to fix
 
 
 :sjs
@@ -46,23 +46,27 @@ fun foo() =
 //│ JS (unsanitized):
 //│ let foo2;
 //│ foo2 = function foo() {
-//│   let x, tmp2;
+//│   let x, tmp2, tmp3, tmp4, while1;
 //│   x = 1;
-//│   lbl: while (true) {
-//│     let scrut, tmp3;
+//│   tmp2 = undefined;
+//│   while1 = (undefined, function () {
+//│     let scrut, tmp5, lambda;
 //│     scrut = true;
 //│     if (scrut === true) {
-//│       let lambda;
-//│       tmp3 = x + 1;
-//│       x = tmp3;
+//│       tmp5 = x + 1;
+//│       x = tmp5;
 //│       lambda = (undefined, function () {
 //│         return x
 //│       });
 //│       return lambda
-//│     } else { tmp2 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp2
+//│     } else {
+//│       tmp2 = runtime.Unit;
+//│     }
+//│     return runtime.LoopEnd
+//│   });
+//│   tmp3 = while1();
+//│   tmp4 = tmp3 !== runtime.LoopEnd;
+//│   if (tmp4 === true) { return tmp3 } else { return tmp2 }
 //│ };
 
 :expect 2

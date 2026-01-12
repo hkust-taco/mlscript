@@ -9,7 +9,7 @@ module A with
     f()
     val a = 1
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:294)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.7: 	module A with
 //│ ╙──     	       ^
@@ -570,10 +570,10 @@ h.perform(x) + 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.262: 	handle h = Eff with
+//│ ║  l.706: 	handle h = Eff with
 //│ ║         	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.262: 	handle h = Eff with
+//│ ║  l.706: 	handle h = Eff with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -702,7 +702,7 @@ h.perform(x) + 1
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.262: 	handle h = Eff with
+//│ ║  l.706: 	handle h = Eff with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -721,10 +721,10 @@ h.perform(x) + 1
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.265: 	h.perform(x) + 1
+//│ ║  l.709: 	h.perform(x) + 1
 //│ ║         	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.262: 	handle h = Eff with
+//│ ║  l.706: 	handle h = Eff with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

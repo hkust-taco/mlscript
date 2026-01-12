@@ -9215,7 +9215,7 @@ f(h)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7996: 	handle h = Object with
+//│ ║  l.8194: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9319,10 +9319,10 @@ f(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.7996: 	handle h = Object with
+//│ ║  l.8194: 	handle h = Object with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7996: 	handle h = Object with
+//│ ║  l.8194: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9392,10 +9392,10 @@ f(h)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.7999: 	f(h)
+//│ ║  l.8197: 	f(h)
 //│ ║          	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7996: 	handle h = Object with
+//│ ║  l.8194: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -9802,11 +9802,11 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.9546: 	  handle h = Eff with
-//│ ║          	         ^
+//│ ║  l.10412: 	  handle h = Eff with
+//│ ║           	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9546: 	  handle h = Eff with
-//│ ╙──        	         ^
+//│ ║  l.10412: 	  handle h = Eff with
+//│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9970,8 +9970,8 @@ handler_stack(100)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9546: 	  handle h = Eff with
-//│ ╙──        	         ^
+//│ ║  l.10412: 	  handle h = Eff with
+//│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -9995,11 +9995,11 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.9549: 	  h.raise()
-//│ ║          	  ^
+//│ ║  l.10415: 	  h.raise()
+//│ ║           	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.9546: 	  handle h = Eff with
-//│ ╙──        	         ^
+//│ ║  l.10412: 	  handle h = Eff with
+//│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
 //│ FAILURE INFO: Tuple2:
@@ -11145,7 +11145,7 @@ handler_stack(100)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10148: 	  handle h = Eff with
+//│ ║  l.11279: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11285,10 +11285,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.10148: 	  handle h = Eff with
+//│ ║  l.11279: 	  handle h = Eff with
 //│ ║           	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10148: 	  handle h = Eff with
+//│ ║  l.11279: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -11359,10 +11359,10 @@ handler_stack(100)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.10151: 	  h.raise()
+//│ ║  l.11282: 	  h.raise()
 //│ ║           	  ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.10148: 	  handle h = Eff with
+//│ ║  l.11279: 	  handle h = Eff with
 //│ ╙──         	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

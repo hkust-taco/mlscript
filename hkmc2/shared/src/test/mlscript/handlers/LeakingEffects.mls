@@ -2275,10 +2275,10 @@ print(g.perform("c"))
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.1449: 	    handle g = Effect with
+//│ ║  l.1484: 	    handle g = Effect with
 //│ ║          	           ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1449: 	    handle g = Effect with
+//│ ║  l.1484: 	    handle g = Effect with
 //│ ╙──        	           ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2533,7 +2533,7 @@ print(g.perform("c"))
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1449: 	    handle g = Effect with
+//│ ║  l.1484: 	    handle g = Effect with
 //│ ╙──        	           ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2855,10 +2855,10 @@ print(g.perform("c"))
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.1453: 	    k(g)
+//│ ║  l.1488: 	    k(g)
 //│ ║          	      ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1449: 	    handle g = Effect with
+//│ ║  l.1484: 	    handle g = Effect with
 //│ ╙──        	           ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3075,10 +3075,10 @@ print(g.perform("c"))
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1443: 	handle h = Effect with
+//│ ║  l.1478: 	handle h = Effect with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1443: 	handle h = Effect with
+//│ ║  l.1478: 	handle h = Effect with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3337,7 +3337,7 @@ print(g.perform("c"))
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1443: 	handle h = Effect with
+//│ ║  l.1478: 	handle h = Effect with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3356,10 +3356,10 @@ print(g.perform("c"))
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1459: 	let g = h.perform("hi")
+//│ ║  l.1494: 	let g = h.perform("hi")
 //│ ║          	        ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1443: 	handle h = Effect with
+//│ ║  l.1478: 	handle h = Effect with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)

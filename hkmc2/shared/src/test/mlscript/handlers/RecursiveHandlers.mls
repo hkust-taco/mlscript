@@ -2007,10 +2007,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2150,10 +2150,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1638: 	h.write(2)
+//│ ║  l.1916: 	h.write(2)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2300,7 +2300,7 @@ h.write(2)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2319,10 +2319,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1637: 	h.write(1)
+//│ ║  l.1915: 	h.write(1)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2375,10 +2375,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.1638: 	h.write(2)
+//│ ║  l.1916: 	h.write(2)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.1632: 	handle h = Object with
+//│ ║  l.1910: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2854,10 +2854,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ║          	       ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -2997,10 +2997,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2481: 	h.write(2)
+//│ ║  l.3096: 	h.write(2)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3147,7 +3147,7 @@ h.write(2)
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3166,10 +3166,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2480: 	h.write(1)
+//│ ║  l.3095: 	h.write(1)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3222,10 +3222,10 @@ h.write(2)
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.2481: 	h.write(2)
+//│ ║  l.3096: 	h.write(2)
 //│ ║          	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.2476: 	handle h = Object with
+//│ ║  l.3091: 	handle h = Object with
 //│ ╙──        	       ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -3335,10 +3335,10 @@ handle h2 = Effect with
   h2.perform(3)
 ]
 //│ ╔══[ERROR] Name not found: h2
-//│ ║  l.3329: 	      then h2.perform(arg - 1) + " " + arg
+//│ ║  l.4276: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──        	           ^^
 //│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.3330: 	      else "0"
+//│ ║  l.4277: 	      else "0"
 //│ ╙──        	      ^^^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
@@ -3362,46 +3362,46 @@ handle h2 = Effect with
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'hdlrFun'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ║          	       ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Handler$h2$'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handleBlock$h2$'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.3333: 	  h2.perform(2)
+//│ ║  l.4280: 	  h2.perform(2)
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.3335: 	  h2.perform(3)
+//│ ║  l.4282: 	  h2.perform(3)
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Cont$handleBlock$h2$'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.3333: 	  h2.perform(2)
+//│ ║  l.4280: 	  h2.perform(2)
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.3335: 	  h2.perform(3)
+//│ ║  l.4282: 	  h2.perform(3)
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3325: 	handle h2 = Effect with
+//│ ║  l.4272: 	handle h2 = Effect with
 //│ ╙──        	       ^^
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'doUnwind'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'handleBlock$'
@@ -4289,10 +4289,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.3416: 	      handle g = Effect with
+//│ ║  l.4441: 	      handle g = Effect with
 //│ ║          	             ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3416: 	      handle g = Effect with
+//│ ║  l.4441: 	      handle g = Effect with
 //│ ╙──        	             ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4547,7 +4547,7 @@ in res.toString()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3416: 	      handle g = Effect with
+//│ ║  l.4441: 	      handle g = Effect with
 //│ ╙──        	             ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4587,10 +4587,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.3420: 	      [k(g)]
+//│ ║  l.4445: 	      [k(g)]
 //│ ║          	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3416: 	      handle g = Effect with
+//│ ║  l.4441: 	      handle g = Effect with
 //│ ╙──        	             ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4769,10 +4769,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ║          	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -4886,10 +4886,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.3424: 	  set g = h.perform("hola")
+//│ ║  l.4449: 	  set g = h.perform("hola")
 //│ ║          	          ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5062,7 +5062,7 @@ in res.toString()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5081,10 +5081,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.3421: 	  let g = h.perform("hi")
+//│ ║  l.4446: 	  let g = h.perform("hi")
 //│ ║          	          ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5154,10 +5154,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.3424: 	  set g = h.perform("hola")
+//│ ║  l.4449: 	  set g = h.perform("hola")
 //│ ║          	          ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.3413: 	  handle h = Effect with
+//│ ║  l.4438: 	  handle h = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5719,10 +5719,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ║          	         ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5851,7 +5851,7 @@ in res.toString()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -5940,10 +5940,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.5371: 	    g.perform("friend")
+//│ ║  l.6800: 	    g.perform("friend")
 //│ ║          	    ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6515,10 +6515,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g2'
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ║          	           ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6719,7 +6719,7 @@ in res.toString()
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6844,10 +6844,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g2'
-//│ ║  l.5379: 	      g2.perform("amigos")
+//│ ║  l.6808: 	      g2.perform("amigos")
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -6963,10 +6963,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp30)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g2'
-//│ ║  l.5378: 	      g2.perform("adios")
+//│ ║  l.6807: 	      g2.perform("adios")
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7038,10 +7038,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp30)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g2'
-//│ ║  l.5379: 	      g2.perform("amigos")
+//│ ║  l.6808: 	      g2.perform("amigos")
 //│ ║          	      ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5373: 	    handle g2 = Effect with
+//│ ║  l.6802: 	    handle g2 = Effect with
 //│ ╙──        	           ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7095,10 +7095,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp24, $tmp -> tmp25, $tmp -> tmp26, $tmp -> tmp27, $tmp -> tmp28, member:lambda -> lambda1, $tmp -> tmp29)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.5370: 	    g.perform("bye")
+//│ ║  l.6799: 	    g.perform("bye")
 //│ ║          	    ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7146,10 +7146,10 @@ in res.toString()
 //│     curThis = N
 //│     bindings = HashMap($tmp -> tmp24, $tmp -> tmp25, $tmp -> tmp26, $tmp -> tmp27, $tmp -> tmp28, member:lambda -> lambda1, $tmp -> tmp29)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'g'
-//│ ║  l.5371: 	    g.perform("friend")
+//│ ║  l.6800: 	    g.perform("friend")
 //│ ║          	    ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.5365: 	  handle g = Effect with
+//│ ║  l.6794: 	  handle g = Effect with
 //│ ╙──        	         ^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7697,10 +7697,10 @@ str
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.7347: 	  handle h1 = Effect with
+//│ ║  l.9409: 	  handle h1 = Effect with
 //│ ║          	         ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7347: 	  handle h1 = Effect with
+//│ ║  l.9409: 	  handle h1 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -7847,7 +7847,7 @@ str
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7347: 	  handle h1 = Effect with
+//│ ║  l.9409: 	  handle h1 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8255,10 +8255,10 @@ str
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.7352: 	  handle h2 = Effect with
+//│ ║  l.9414: 	  handle h2 = Effect with
 //│ ║          	         ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7352: 	  handle h2 = Effect with
+//│ ║  l.9414: 	  handle h2 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8452,10 +8452,10 @@ str
 //│     curThis = N
 //│     bindings = HashMap(label:contLoop -> contLoop)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.7358: 	  h1.perform(())
+//│ ║  l.9420: 	  h1.perform(())
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7347: 	  handle h1 = Effect with
+//│ ║  l.9409: 	  handle h1 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8656,7 +8656,7 @@ str
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7352: 	  handle h2 = Effect with
+//│ ║  l.9414: 	  handle h2 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8684,10 +8684,10 @@ str
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h2'
-//│ ║  l.7357: 	  h2.perform(())
+//│ ║  l.9419: 	  h2.perform(())
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7352: 	  handle h2 = Effect with
+//│ ║  l.9414: 	  handle h2 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
@@ -8767,10 +8767,10 @@ str
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h1'
-//│ ║  l.7358: 	  h1.perform(())
+//│ ║  l.9420: 	  h1.perform(())
 //│ ║          	  ^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.7347: 	  handle h1 = Effect with
+//│ ║  l.9409: 	  handle h1 = Effect with
 //│ ╙──        	         ^^
 //│ FAILURE: Unexpected compilation error
 //│ FAILURE LOCATION: lookup_! (Scope.scala:114)
