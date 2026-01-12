@@ -116,7 +116,8 @@ object ScopeData:
       case ScopedObject.Class(ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
           privateFields, publicFields, preCtor, ctor, mod, bufferable))
       =>
-        // do not traverse the companion
+        // do not traverse the companion -- it is a separate kind of scoped object
+        // and will therefore be traversed separately
         own.foreach(_.traverse)
         isym.traverse
         sym.traverse
@@ -140,80 +141,83 @@ object ScopeData:
   class NestedScopeTree(val root: ScopeNode):
     val nodesMap: Map[ScopedInfo, ScopeNode] = root.allChildNodes.map(n => n.obj.toInfo -> n).toMap
   
-  case class ScopeNode(obj: ScopedObject, var parent: Opt[ScopeNode], children: List[ScopeNode])(using ignoredScopes: IgnoredScopes):
-    
-    lazy val allParents: List[ScopeNode] = parent match
-      case Some(value) => this :: value.allParents
-      case None => this :: Nil
-    
-    lazy val parentsSet = allParents.map(_.obj.toInfo).toSet
-    
-    def inSubtree(root: ScopedInfo) = parentsSet.contains(root)
-    
-    // note: includes itself
-    lazy val allChildNodes: List[ScopeNode] = this :: children.flatMap(_.allChildNodes)
-    lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
-    
-    // does not include variables introduced by itself
-    lazy val existingVars: Set[Local] = parent match
-      case Some(value) => value.existingVars ++ value.obj.definedLocals
-      case None => Set.empty
-    
-    // The following must not be called until ignoredScopes is populated with the relevant data.
-    
-    lazy val isLifted: Bool =
-      val ignored = ignoredScopes.ignored match
-        case Some(value) => value
-        case None => lastWords("isLifted accessed before the set of ignored scopes was set")
+  type ScopeNode = ScopeNode.ScopeNode[?]
+  type TScopeNode[T] = ScopeNode.ScopeNode[T]
+  object ScopeNode:
+    case class ScopeNode[T](obj: TScopedObject[T], var parent: Opt[ScopeNode[?]], children: List[ScopeNode[?]])(using ignoredScopes: IgnoredScopes):
       
-      parent.map(_.obj) match
-      case Some(_: ScopedObject.Companion) => false // there is no need to lift objects nested inside a module
-      case _ =>
-        obj match
-        case _: ScopedObject.ScopedBlock => false
-        // case _: ScopedObject.Companion => false
-        // case c: ScopedObject.Class if c.cls.companion.isDefined => false
-        case ScopedObject.Func(isMethod = true) => false
-        case _ if ignored.contains(obj.toInfo) => false
-        case _ => true
+      lazy val allParents: List[ScopeNode[?]] = parent match
+        case Some(value) => this :: value.allParents
+        case None => this :: Nil
+      
+      lazy val parentsSet = allParents.map(_.obj.toInfo).toSet
+      
+      def inSubtree(root: ScopedInfo) = parentsSet.contains(root)
+      
+      // note: includes itself
+      lazy val allChildNodes: List[ScopeNode[?]] = this :: children.flatMap(_.allChildNodes)
+      lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
+      
+      // does not include variables introduced by itself
+      lazy val existingVars: Set[Local] = parent match
+        case Some(value) => value.existingVars ++ value.obj.definedLocals
+        case None => Set.empty
+      
+      // The following must not be called until ignoredScopes is populated with the relevant data.
+      
+      lazy val isLifted: Bool =
+        val ignored = ignoredScopes.ignored match
+          case Some(value) => value
+          case None => lastWords("isLifted accessed before the set of ignored scopes was set")
+        
+        parent.map(_.obj) match
+        case Some(_: ScopedObject.Companion) => false // there is no need to lift objects nested inside a module
+        case _ =>
+          obj match
+          case _: ScopedObject.ScopedBlock => false
+          // case _: ScopedObject.Companion => false
+          // case c: ScopedObject.Class if c.cls.companion.isDefined => false
+          case ScopedObject.Func(isMethod = true) => false
+          case _ if ignored.contains(obj.toInfo) => false
+          case _ => true
+      
+      lazy val liftedChildNodes: List[ScopeNode[?]] =
+        if isLifted then this :: Nil
+        else children.flatMap(_.liftedChildNodes)
+      
+      // Finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
+      lazy val firstLiftedParent: ScopedObject =
+        if !isLifted then
+          parent match
+          case Some(value) => value.firstLiftedParent
+          case None => obj // unreachable
+        else obj
+      
+      // When a node is lifted, some neighbouring ignored definitions may become out of scope. This computes
+      // the list of these definitions, and they could be passed to this node as a parameter once lifted.
+      private lazy val reqCaptureObjsImpl: List[ScopedObject.Referencable[?]] = obj match
+        case _: ScopedObject.Top => List.empty
+        case _ =>
+          // All unlifted neighbour nodes ::: parent's reqCaptureObjsImpl
+          val initial = parent.get.allChildNodes.collect:
+            case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
+          initial ::: parent.get.reqCaptureObjsImpl
+      
+      lazy val reqCaptureObjs: List[ScopedObject.Referencable[?]] = obj match
+        case _: ScopedObject.Top => List.empty
+        case _ =>
+          if isLifted then reqCaptureObjsImpl
+          else parent.get.reqCaptureObjsImpl
+      
+      // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes the ones
+      // belonging to objects that are lifted.
+      lazy val localsWithoutLifted: Set[Local] = obj match
+        case s: ScopedObject.ScopedBlock =>
+          val rmv = children.collect:
+            case c @ ScopeNode(obj = s: ScopedObject.Liftable[?]) if c.isLifted => s.defn.sym
+          obj.definedLocals -- rmv
+        case _ => obj.definedLocals
     
-    lazy val liftedChildNodes: List[ScopeNode] =
-      if isLifted then this :: Nil
-      else children.flatMap(_.liftedChildNodes)
-    
-    // Finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
-    lazy val firstLiftedParent: ScopedObject =
-      if !isLifted then
-        parent match
-        case Some(value) => value.firstLiftedParent
-        case None => obj // unreachable
-      else obj
-    
-    // When a node is lifted, some neighbouring ignored definitions may become out of scope. This computes
-    // the list of these definitions, and they could be passed to this node as a parameter once lifted.
-    private lazy val reqCaptureObjsImpl: List[ScopedObject.Referencable[?]] = obj match
-      case _: ScopedObject.Top => List.empty
-      case _ =>
-        // All unlifted neighbour nodes ::: parent's reqCaptureObjsImpl
-        val initial = parent.get.allChildNodes.collect:
-          case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
-        initial ::: parent.get.reqCaptureObjsImpl
-    
-    lazy val reqCaptureObjs: List[ScopedObject.Referencable[?]] = obj match
-      case _: ScopedObject.Top => List.empty
-      case _ =>
-        if isLifted then reqCaptureObjsImpl
-        else parent.get.reqCaptureObjsImpl
-    
-    // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes the ones
-    // belonging to objects that are lifted.
-    lazy val localsWithoutLifted: Set[Local] = obj match
-      case s: ScopedObject.ScopedBlock =>
-        val rmv = children.collect:
-          case c @ ScopeNode(obj = s: ScopedObject.Liftable[?]) if c.isLifted => s.defn.sym
-        obj.definedLocals -- rmv
-      case _ => obj.definedLocals
-  
   def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
     case Some(d) if data.contains(d) => S(d)
     case d: DefinitionSymbol[?] if data.contains(d) => S(d)
@@ -268,7 +272,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
   
   def scopeFinder = new ScopeFinder()
   
-  def makeScopeTreeRec(obj: ScopedObject): ScopeNode =
+  def makeScopeTreeRec[T](obj: TScopedObject[T]): TScopeNode[T] =
     val finder = scopeFinder
     obj match
       case ScopedObject.Top(s: Scoped) => finder.applyBlock(s.body)
@@ -289,6 +293,6 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, true))
       case _ => Nil
     val children = (mtdObjs ::: finder.objs).map(makeScopeTreeRec)
-    val retNode = ScopeNode(obj, N, children)
+    val retNode = ScopeNode.ScopeNode(obj, N, children)
     for c <- children do c.parent = S(retNode)
     retNode

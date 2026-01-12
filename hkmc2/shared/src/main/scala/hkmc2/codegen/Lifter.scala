@@ -1262,7 +1262,7 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
       val bms = defns.map(_.sym)
       block.copy(block.syms.toSet -- bms, blkNew)
   
-  case class LifterResult(liftedDefn: Opt[Defn], extraDefns: List[Defn])
+  case class LifterResult[T](liftedDefn: Opt[Defn], extraDefns: List[Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]],
     rewrittenScopes: MutMap[ScopedInfo, RewrittenScope[?]],
@@ -1515,7 +1515,7 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
       RewrittenScopedBlock(o)
   
   
-  private def liftNestedScopesImpl(s: ScopeNode)(using ctx: LifterCtxNew): LifterResult =
+  private def liftNestedScopesImpl[T](s: TScopeNode[T])(using ctx: LifterCtxNew): LifterResult[T] =
     // Already created in a previous recursive call
     val curRewritten = ctx.rewrittenScopes(s.obj.toInfo)
     // Add the symbols map of the current scope
@@ -1536,7 +1536,7 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     ???
     
   
-  def liftNestedScopes(s: ScopeNode)(using ctx: LifterCtxNew): LifterResult =
+  def liftNestedScopes[T](s: TScopeNode[T])(using ctx: LifterCtxNew): LifterResult[T] =
     val curSyms = ctx.symbolsMap
     val ret = liftNestedScopesImpl(s)
     ctx.symbolsMap = curSyms
