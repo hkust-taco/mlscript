@@ -10,7 +10,7 @@ class Outputter(val out: java.io.PrintWriter):
   val outputMarker = "//│ "
   // val oldOutputMarker = "/// "
 
-  val diffBegMarker = "//│ "
+  val diffBegMarker = "<<<<<<<"
   val diffMidMarker = "======="
   val diff3MidMarker = "|||||||" // * Appears under `git config merge.conflictstyle diff3` (https://stackoverflow.com/a/18131595/1518588)
   val diffEndMarker = ">>>>>>>"
