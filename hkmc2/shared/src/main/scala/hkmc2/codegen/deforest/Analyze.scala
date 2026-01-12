@@ -128,33 +128,22 @@ class DeforestPreAnalyzer(
         case InCtx.Mtch(m, cse) => m.rest
         case InCtx.Begn(b) => b.rest
       .foldLeft(matchScrutToMatchBlock(scrut).rest)(Begin.apply)
-  
-  // private object tmps:
-  //   // TODO:
-  //   val symToToplvlFunsOrBlocksThatReferIt = MutMap.empty[Symbol, Set[FunDefn | Block]]
-  //   val symToAssignedTimes = MutMap.empty[Symbol, Int].withDefaultValue(0)
-  
+
   enum InCtx:
     case TopLvl()
     case Mod(mod: ClsLikeBody)
     case Fn(f: FunDefn)
     case Lbl(l: Label)
-    case Mtch(m: Match, cse: Opt[ClassLikeSymbol])
+    case Mtch(m: Match, cse: Opt[ClassLikeSymbol | Int])
     case Begn(b: Begin)
     case Scped(s: Scoped)
     // non-handleable cases:
-    // - TODO: mutable reassignment
-    //   now we may miscompile programs containing mutable reassignment,
-    //   or I can write a very conservative approximation: as long as
-    //   some symbol is assigned twice in IR, that symbol is considered
-    //   as being mutably reassigned and everything related to it will be non-handleable
-    //   NOTE: the above method still cannot work, because we cannot track
-    //   the mutable assignments of object fields
+    // - TODO: detect mutable reassignment and its affected variables and objects
     // - while loop
     // - nested defined class/module in functions
     // - handler and other unsupported forms
     // - `this`
-    // - array with spread
+    // - tuple with spread
     // - vararg
     var handleable: Boolean = true
     
@@ -174,13 +163,13 @@ class DeforestPreAnalyzer(
       case InCtx.TopLvl() :: Nil => true
     
     inline def inCtxOf(
-      c: (FunDefn | Label | (Match, Opt[ClassLikeSymbol]) | ClsLikeBody | Begin | Scoped)
+      c: (FunDefn | Label | (Match, Opt[ClassLikeSymbol | Int]) | ClsLikeBody | Begin | Scoped)
     )(inline body: => Any) =
       val newCtx = c match
         case c: ClsLikeBody => InCtx.Mod(c)
         case f: FunDefn => InCtx.Fn(f)
         case l: Label => InCtx.Lbl(l)
-        case m: (Match, Opt[_]) => InCtx.Mtch(m._1, m._2)
+        case m: (Match, Opt[(ClassLikeSymbol | Int)]) => InCtx.Mtch(m._1, m._2)
         case b: Begin => InCtx.Begn(b)
         case s: Scoped => InCtx.Scped(s)
       
@@ -229,19 +218,6 @@ class DeforestPreAnalyzer(
   
   override def applyBlock(b: Block): Unit = b match
     case scpd@Scoped(syms, body) =>
-      // val nonClsLikeSyms = syms.filter:
-      //   // no need to have fusion strategy for clslikesymbols
-      //   case bms: BlockMemberSymbol => bms.asClsLike.isEmpty
-      //   case _ => true
-      // ctxTracker.getTopLvlFn match
-      //   case None => nonClsLikeSyms.foreach: s =>
-      //     res.symToProdVar.updateWith(s):
-      //       case N => S(freshVar(s.toString()).asProdStrat)
-      //       case S(_) => lastWords(s"$s twice")
-      //   case Some(forFun) => nonClsLikeSyms.foreach: s =>
-      //     res.symToProdVar.updateWith(s):
-      //       case N => S(freshVar(s.toString(), forFun.sym).asProdStrat)
-      //       case S(_) => lastWords(s"$s twice")
       ctxTracker.inCtxOf(scpd):
         applyBlock(body)
     case m@Match(scrut, arms, dflt, rest) =>
@@ -249,6 +225,7 @@ class DeforestPreAnalyzer(
       for (cse, body) <- arms do
         val cseCls = cse match
           case Case.Cls(cls, _) => S(cls)
+          case Case.Tup(n, false) => S(n)
           case _ => N
         ctxTracker.inCtxOf(m -> cseCls):
           applyBlock(body)
@@ -266,12 +243,11 @@ class DeforestPreAnalyzer(
         applyBlock(sub)
       applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
-      // tmps.symToAssignedTimes(lhs) += 1
       applyResult(rhs)
       applyBlock(rest)
     case Define(defn, rest) =>
       applyDefn(defn)
-      applySubBlock(rest)
+      applyBlock(rest)
     case Throw(exc) => applyResult(exc)
     case Break(label) => ()
     case End(msg) => ()
@@ -298,29 +274,15 @@ class DeforestPreAnalyzer(
         case RcdArg(idx, value) => idx.foreach(applyPath); applyPath(value)
     case p: Path => applyPath(p)
   
-  // TODO:
   override def applyPath(p: Path): Unit = p match
     case DynSelect(qual, fld, arrayIdx) =>
       ctxTracker.markAsNonHandleable()
       applyPath(qual); applyPath(fld)
-    case p@Select(qual, name) =>
-      p.symbol match
-        case S(s) if s.asTrm.isDefined =>
-          val tSym = s.asTrm.get
-          tSym.k match
-            case (Ins | HandlerBind | MutVal) =>
-              ctxTracker.markAsNonHandleable()
-              super.applyPath(p)
-            // TODO: update symToToplvlFunsOrBlocksThatReferIt
-            case (ImmutVal | LetBind | Fun | ParamBind) => () // TODO:
-        case _ =>
-          ctxTracker.markAsNonHandleable()
-          super.applyPath(p)
-      // TODO: handle the following cases
-      // - pattern matching branch field access (kind is parambind)
-      // - referring to a function/class/object defined in a module
-      // - others: just mark as non-handleable?
-      // applyPath(qual); p.symbol.foreach(_.traverse)
+    case p@Select(qual, name) => p match
+      case DeforestableSelect(_) => ()
+      case _ =>
+        ctxTracker.markAsNonHandleable()
+        super.applyPath(p)
     case v: Value => applyValue(v)
   
   override def applyValue(v: Value): Unit = v match
@@ -329,15 +291,15 @@ class DeforestPreAnalyzer(
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
-    // TODO: what are the prodvars that are generated by this function?
-    // generating prodvars are deferred to later steps, where we know
+    // TODO: generating prodvars are deferred to later steps, when we know
     // all the handleable top lvl fundefns and blocks
-    // fun.owner.foreach(_.traverse)
-    // fun.sym.traverse
-    // fun.dSym.traverse
-    // fun.params.foreach(applyParamList)
     ctxTracker.inCtxOf(fun):
+      fun.params.foreach(applyParamList)
       applyBlock(fun.body)
+  
+  override def applyParamList(pl: ParamList): Unit =
+    if pl.restParam.isDefined then
+      ctxTracker.markAsNonHandleable()
   
   override def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
@@ -367,11 +329,7 @@ class DeforestPreAnalyzer(
   
   override def applyClsLikeBody(b: ClsLikeBody): Unit =
     ctxTracker.inCtxOf(b):
-      // b.isym.traverse
       b.methods.foreach(applyFunDefn)
-      // b.privateFields.foreach(_.traverse)
-      // b.publicFields.foreach: f =>
-      //   f._1.traverse; f._2.traverse
       applyBlock(b.ctor)
 
 
@@ -381,6 +339,9 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   given DeforestPreAnalyzer = preAnalyzer
   given dState: Deforest.State = preAnalyzer.dState
   import StratVarState.freshVar
+  
+  // private object generateProdVars:
+  //   val 
   
   object res:
     val constraints = ???
