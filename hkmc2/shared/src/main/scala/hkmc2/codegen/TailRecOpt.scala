@@ -23,9 +23,7 @@ space. If such an optimization is not possible, then the compiler will throw an 
 
 @tailrec: Used to annotate functions. When this annotation is used on a function, say
 @tailrec fun foo(), the compiler will ensure no sequence of direct recursive calls back 
-to foo() consumes stack space, i.e. they are all tail calls. Note that a call to foo() 
-may consume an arbitrary amount of stack space as long as foo() is only consuming finite
-stack space. For example,
+to foo() consumes stack space, i.e. they are all tail calls. For example,
 
 @tailrec 
 fun foo() =
