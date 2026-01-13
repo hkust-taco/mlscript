@@ -2,6 +2,11 @@ package hkmc2
 package codegen
 
 import scala.annotation.tailrec
+import sourcecode.Line
+import sourcecode.FileName
+import sourcecode.Name
+import scala.collection.mutable
+import scala.util.boundary
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
@@ -13,13 +18,6 @@ import semantics.*
 import semantics.Elaborator.ctx
 import semantics.Elaborator.State
 import hkmc2.Config.EffectHandlers
-
-import scala.collection.mutable
-import scala.util.boundary
-import hkmc2.codegen.js.JSBuilder
-import sourcecode.Line
-import sourcecode.FileName
-import sourcecode.Name
 
 
 /** - For function bodies, fuse all shallowly-nested scopes into one top-level one,
@@ -61,7 +59,9 @@ class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
     
 
 object HandlerLowering:
+  // Whether we check instantiate for effect, currently no effect can be raised in a constructor.
   val checkInstantiateEffect = false
+  // A debug option that allow codegen to continue even if a unlifted definition is encountered.
   val hardLifterError = true
 
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
