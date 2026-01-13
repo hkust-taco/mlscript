@@ -258,7 +258,6 @@ object Elaborator:
     val blockSymbol = TempSymbol(N, "Block")
     val shapeSymbol = TempSymbol(N, "Shape")
     val wasmSymbol = TempSymbol(N, "wasm")
-    val effectSigSymbol = ClassSymbol(DummyTypeDef(syntax.Cls), Ident("EffectSig"))
     val nonLocalRetHandlerTrm =
       val id = new Ident("NonLocalReturn")
       val sym = ClassSymbol(DummyTypeDef(syntax.Cls), id)

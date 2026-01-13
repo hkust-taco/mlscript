@@ -56,12 +56,12 @@ f()
 :re
 fun f() = () => return 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_12
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_14
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 
 :e
@@ -120,7 +120,7 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -142,5 +142,5 @@ fun f() =
   new A
   4
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

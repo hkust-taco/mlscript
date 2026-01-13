@@ -125,8 +125,6 @@ import HandlerLowering.*
 
 class HandlerPaths(using Elaborator.State):
   val runtimePath: Path = State.runtimeSymbol.asPath
-  val effectSigPath: Path = runtimePath.selSN("EffectSig").selSN("class")
-  val effectSigSym: ClassSymbol = State.effectSigSymbol
   val contClsPath: Path = runtimePath.selSN("FunctionContFrame").selSN("class")
   val mkEffectPath: Path = runtimePath.selSN("mkEffect")
   val handleBlockImplPath: Path = runtimePath.selSN("handleBlockImpl")

@@ -6,8 +6,7 @@
 
 :re
 raiseUnhandledEffect()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at tail position
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 :sjs
 fun f() =
@@ -57,7 +56,7 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(f, 5, "Debugging.mls:16:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -67,7 +66,7 @@ fun f() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│             return runtime.unwind(f, 4, "Debugging.mls:17:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -89,7 +88,7 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(f, 2, "Debugging.mls:17:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -106,8 +105,7 @@ fun f() =
 
 :re
 f()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at f (Debugging.mls:18:14)
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 :re
 fun lambda_test(f) =
@@ -116,9 +114,7 @@ fun lambda_test(f) =
 lambda_test(() =>
   raiseUnhandledEffect()
   100)
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
-//│ 	at lambda (Debugging.mls:117:3)
-//│ 	at lambda_test (Debugging.mls:114:3)
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -127,16 +123,39 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 res.reified.contTrace.next.getLocals
-//│ = [LocalVarInfo("i", 0), LocalVarInfo("j", 100), LocalVarInfo("k", 2000)]
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+//│     at REPL27:1:651
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
 
 Runtime.debugEff(res.reified)
-//│ > Debug EffectSig:
-//│ > handler:  FatalEffect
-//│ > handlerFun:  null
-//│ > resumed:  false
-//│ > <lastHandler is self>
-//│ > FunctionContFrame(pc=4, last) -> (null)
-//│ > 
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: resolveField (Elaborator.scala:345)
+//│ ╔══[ERROR] Module 'Runtime' does not contain member 'debugEff'
+//│ ║  l.140: 	Runtime.debugEff(res.reified)
+//│ ╙──       	       ^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Runtime.debugEff is not a function
+//│     at REPL30:1:279
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:598:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:927:10)
+//│     at REPLServer.emit (node:events:518:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
 
 :expect Infinity
 res.resumeWith(42)
@@ -168,7 +187,7 @@ let res =
   Runtime.try(() => Test.main())
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'instance$Ident(Debugger)'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.167: 	  using Debugger = h
+//│ ║  l.186: 	  using Debugger = h
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: instance$Ident is not defined
 //│ res = undefined
@@ -204,9 +223,6 @@ fun f() =
 //│ i = 100
 
 f()
-//│ > Stack Trace:
-//│ > 	at f (Debugging.mls:199:3) with locals: j=200
-//│ > Stack Trace:
-//│ > 	at f (Debugging.mls:201:3)
-//│ > Stack Trace:
-//│ > 	at tail position
+//│ > Stack Trace not impl
+//│ > Stack Trace not impl
+//│ > Stack Trace not impl

@@ -45,7 +45,7 @@ class A with
   fun f =
     h.lol()
 new A().f + 2
-//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$8 is raised in a getter
+//│ ═══[RUNTIME ERROR] Stack Trace not impl
 
 handle h = Object with
   fun lol()(k) = k(42)
