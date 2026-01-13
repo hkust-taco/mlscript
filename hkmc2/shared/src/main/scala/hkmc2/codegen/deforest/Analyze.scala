@@ -160,7 +160,10 @@ class DeforestPreAnalyzer(
     def getAllMod: Ls[InCtx.Mod] = ctx.collect:
       case c: InCtx.Mod => c
     def isToplvl = ctx.matches:
-      case InCtx.TopLvl() :: Nil => true
+      case init :+ InCtx.TopLvl() =>
+        init.forall: i =>
+          i.matches:
+            case _: (InCtx.Begn | InCtx.Scped) => true
     
     inline def inCtxOf(
       c: (FunDefn | Label | (Match, Opt[ClassLikeSymbol | Int]) | ClsLikeBody | Begin | Scoped)
@@ -320,10 +323,11 @@ class DeforestPreAnalyzer(
           || !preCtor.matches:
             case End("") => true
           || !ctor.matches:
-            case Return(Select(q, Tree.Ident("Unit")), true) =>
-              q is elabState.runtimeSymbol
+            case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
+              runtimeSym is elabState.runtimeSymbol
         then () // only handle simple modules
-        else mod.foreach(applyClsLikeBody)
+        else
+          mod.foreach(applyClsLikeBody)
       else
         ctxTracker.markAsNonHandleable()
   
