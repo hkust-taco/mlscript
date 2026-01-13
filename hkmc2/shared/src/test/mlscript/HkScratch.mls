@@ -10,12 +10,11 @@
 // :todo
 
 :noSanityCheck
-:ssjs
+:sjs
 :lift
 fun f(x) =
   fun g(y) = y
   2
 //│ Elab: { fun member:f‹690›(x‹691›) = { fun member:g‹689›(y‹693›) = y‹693›#666; 2 }; }
-//│ JS:
-//│ let f;
-//│ f = function f(x) { let g; g = function g(y) { return y }; return 2 }; block$res1 = undefined;
+//│ JS (unsanitized):
+//│ let g, f; g = function g(y) { return y }; f = function f(x) { return 2 };

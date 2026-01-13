@@ -1173,65 +1173,6 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
   printMap(usedVars.reqdCaptures)
   */
   
-  // top-level
-  // def transform = blk
-    /*
-    // this is already done once in the lowering, but the handler lowering adds lambdas currently
-    // so we need to desugar them again
-    val blk_ = LambdaRewriter.desugar(blk)
-
-    val analyzer = UsedVarAnalyzer(blk_, scopeData, handlerPaths)
-    val ctx = LifterCtx
-      .withLocals(analyzer.findUsedLocals)
-      .withDefns(analyzer.defnsMap)
-      .withNestedDefns(analyzer.nestedDefns)
-      .withAccesses(analyzer.accessMap)
-      .withInScopes(analyzer.inScopeDefns)
-      .withCompanionMap(analyzer.companionMap)
-
-    val walker1 = new BlockTransformerShallow(SymbolSubst()):
-      override def applyBlock(b: Block): Block =
-        b match
-        case Define(d, rest) =>
-          val LifterMetadata(unliftable, modules, objects, firstClsFns) = createMetadata(d, ctx)
-
-          val modObjLocals = (modules ++ objects).map: c =>
-              analyzer.nestedIn.get(c.sym) match
-                case Some(bms) =>
-                  val nestedIn = analyzer.defnsMap(bms)
-                  nestedIn match
-                    // These will be the names of the objects/modules after being lifted
-                    // We should use the nested object/module's **original name** if nested inside a class,
-                    // so they can be accesed directly by name from the outside.
-                    // For example, if a class C has an object M, (new C).M as a dynamic selection works
-                    case cls: ClsLikeDefn => S(c.sym -> TermSymbol(syntax.ImmutVal, S(cls.isym), Tree.Ident(c.sym.nme)))
-                    case _ => S(c.sym -> VarSymbol(Tree.Ident(c.sym.nme + "$")))
-                case _ => N
-            .collect:
-              case S(v) => v
-            .toMap
-
-          val ctxx = ctx
-            .addIgnored(unliftable)
-            .withModObjLocals(modObjLocals)
-            .withFirstClsFns(firstClsFns)
-          
-          val Lifted(lifted, extra) = d match
-            case f: FunDefn => 
-              val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
-              liftDefnsInFn(f, ctxxx.addBmsReqdInfo(createLiftInfoFn(f, ctxxx)))
-            case c: ClsLikeDefn => 
-              val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
-              liftDefnsInCls(c, ctxxx.addBmsReqdInfo(createLiftInfoCls(c, ctxxx)))
-            case _ => return super.applyBlock(b)
-          val newDefns = lifted :: extra
-          val newBms = newDefns.map(_.sym)
-          val newBlk = newDefns.foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
-          Scoped(newBms.toSet, newBlk)
-        case _ => super.applyBlock(b)
-    walker1.applyBlock(blk_)
-    */
-  
   def isIgnored(d: Defn) = d match
     case f: FunDefn => ignored.contains(f.dSym)
     case v: ValDefn => true
@@ -1457,7 +1398,16 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
       LifterResult(Scoped(syms, rewritten), extraDefns.toList)
   
   class RewrittenFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends RewrittenScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
-    override def rewrite: LifterResult[FunDefn] = LifterResult(obj.fun, List.empty) // stub
+    override def rewrite: LifterResult[FunDefn] =
+      val extraDefns: ListBuffer[Defn] = ListBuffer.empty
+      val rewriter = new ScopeRewriter:
+        override def applyRewrittenScope[T](r: RewrittenScope[T]): T =
+          val LifterResult(rewritten, defns) = liftNestedScopes(r)
+          extraDefns ++= defns
+          rewritten
+      
+      val rewritten = rewriter.applyBlock(obj.fun.body)
+      LifterResult(obj.fun.copy(body = rewritten)(obj.fun.forceTailRec), extraDefns.toList)
    
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     private val passedSymsMap_ : Map[Local, VarSymbol] = passedSyms.map: s =>
@@ -1589,8 +1539,6 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val (lifted, ignored) = rewrittenScopes.partitionMap:
       case s: LiftedScope[?] => L(s)
       case s => R(s)
-    println(lifted)
-    println(ignored)
     for r <- rewrittenScopes do
       ctx.rewrittenScopes.put(r.obj.toInfo, r)
     for l <- lifted do
@@ -1628,8 +1576,9 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
         (syms.toSet, body)
       case b => (Set.empty, b)
     
-    val newSyms = syms ++ extraDefns.map(_.sym)
     val transformed = topLevelRewriter.applyBlock(top)
+    val newSyms = syms ++ extraDefns.map(_.sym)
+    println(extraDefns.map(_.sym))
     val withDefns = extraDefns.foldLeft(transformed):
       case (acc, d) => Define(d, acc)
     Scoped(newSyms, withDefns)
