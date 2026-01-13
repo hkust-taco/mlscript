@@ -92,8 +92,8 @@ object HandlerLowering:
     case ModCtor
     case TopLevel
 
-    def isCtor = this === Ctor || this === ModCtor
-    def isTopLevel = this === TopLevel
+    def inCtor = this === Ctor || this === ModCtor
+    def inTopLevel = this === TopLevel
     def allowDefn = isTopLevel || this === ModCtor
   
   // currentFun: path to the current function for resumption
