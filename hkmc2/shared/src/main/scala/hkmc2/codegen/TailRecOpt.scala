@@ -19,7 +19,7 @@ DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
 
 @tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
 must be tail calls. These calls must be optimized to not consume additional stack
-space. If such an optimization is not possible, then the compiler will throw an error.
+space. If such an optimization is not possible, then the compiler will report an error.
 
 @tailrec: Used to annotate functions. When this annotation is used on a function, say
 @tailrec fun foo(), the compiler will ensure no sequence of direct recursive calls back 
