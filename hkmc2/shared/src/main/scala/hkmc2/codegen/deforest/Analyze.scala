@@ -79,8 +79,8 @@ class DeforestPreAnalyzer(
   val importedInfo: ImportedInfo,
   val b: Block
 )(using
-  val elabState: Elaborator.State,
   val tl: TraceLogger,
+  val elabState: Elaborator.State,
   val dState: Deforest.State
 ) extends BlockTraverser:
   given stratVarUidState: Uid.StratVar.State = new Uid.StratVar.State
@@ -318,7 +318,7 @@ class DeforestPreAnalyzer(
           || privateFields.nonEmpty
           || publicFields.nonEmpty
           || !preCtor.matches:
-              case End("") => true
+            case End("") => true
           || !ctor.matches:
             case Return(Select(q, Tree.Ident("Unit")), true) =>
               q is elabState.runtimeSymbol
@@ -336,14 +336,19 @@ class DeforestPreAnalyzer(
 class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   given stratVarUidState: Uid.StratVar.State = preAnalyzer.stratVarUidState
   given elabState: Elaborator.State = preAnalyzer.elabState
-  given DeforestPreAnalyzer = preAnalyzer
   given dState: Deforest.State = preAnalyzer.dState
+  given tl: TraceLogger = preAnalyzer.tl
+  given DeforestPreAnalyzer = preAnalyzer
   import StratVarState.freshVar
   
-  // private object generateProdVars:
-  //   val 
+
+  object generateProdVars:
+    val symsToProdStrat = MutMap.empty[Symbol, ProdStrat].withDefaultValue(NoProd)
+    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
+      preAnalyzer.res.toplvlFunAndBlkToAnalyze.foreach(x => tl.log(x.toString()))
   
-  object res:
-    val constraints = ???
+  generateProdVars.symsToProdStrat
+  // object res:
+  //   val constraints = ???
 
 

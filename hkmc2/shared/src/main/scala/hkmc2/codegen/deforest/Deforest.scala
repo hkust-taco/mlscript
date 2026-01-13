@@ -52,10 +52,13 @@ object Deforest:
     cfg: Config,
     tl: TL,
     raise: Raise,
-    elabSt: Elaborator.State,
+    elabState: Elaborator.State,
   ): Program =
-    val state = new State
+    val dState = new State
     // TODO: handle see through imported modules
+    val importInfo = ImportedInfo(Nil)
+    val pre = new DeforestPreAnalyzer(importInfo, p.main)(using tl, elabState, dState)
+    val constrCol = new DeforestConstraintsCollector(pre)
     p
     // val defns = p.main.gatherDefns()
     // val (funs, clses) = defns.partitionMap:

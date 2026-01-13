@@ -71,7 +71,8 @@ object Config:
   case class Deforest(
     val seethroughModules: Set[os.Path],
     val seeThroughLazySymbolsNames: Set[String],
-    val seeThroughForceSymbolsNames: Set[String]
+    val seeThroughForceSymbolsNames: Set[String],
+    val debug: Boolean = true
   )
   
   object Deforest:

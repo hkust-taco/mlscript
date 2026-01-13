@@ -1038,7 +1038,15 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val desug = LambdaRewriter.desugar(blk)
     
-    // val deforest = Deforest()
+    val deforested =
+      val outterTl = tl
+      config.deforest match
+        case None => desug
+        case Some(dCfg) =>
+          given TraceLogger with
+            override def doTrace: Bool = dCfg.debug
+            override def emitDbg(str: Str): Unit = outterTl.emitDbg(s"deforest > $str")
+          deforest.Deforest(Program(imps.map(imp => imp.sym -> imp.str), desug)).main
     
     val handlerPaths = new HandlerPaths
     
