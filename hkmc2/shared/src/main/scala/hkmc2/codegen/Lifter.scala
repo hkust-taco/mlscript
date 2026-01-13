@@ -1235,34 +1235,7 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     case v: ValDefn => true
     case c: ClsLikeDefn => ignored.contains(c.isym)
   
-  /**
-    * Removes nested scopes that are to be lifted.
-    *
-    * @param s The scoped object whose nested scopes are to be removed.
-    * @return The scoped object's contents with its nested scopes removed.
-    */
-  def removeLiftedScopes[T](s: TScopedObject[T]): T = s match
-    case ScopedObject.Top(b) => lastWords("Tried to remove nested scopes from the top level scope.")
-    case ScopedObject.Class(cls) =>
-      val (preCtorNew, defns1) = cls.preCtor.extractDefns(isIgnored)
-      val (ctorNew, defns2) = cls.ctor.extractDefns(isIgnored)
-      cls.copy(ctor = ctorNew, preCtor = preCtorNew)
-    case ScopedObject.Companion(comp, par) =>
-      val (ctorNew, defns) = comp.ctor.extractDefns(isIgnored)
-      comp.copy(ctor = ctorNew)
-    case ScopedObject.ClassCtor(cls) => ()
-    case ScopedObject.Func(fun, isMethod) =>
-      val (bodyNew, defns) = fun.body.extractDefns(isIgnored)
-      fun.copy(body = bodyNew)(fun.forceTailRec)
-    case ScopedObject.Loop(sym, block) =>
-      val (blkNew, defns) = block.extractDefns(isIgnored)
-      blkNew
-    case ScopedObject.ScopedBlock(uid, block) =>
-      val (blkNew, defns) = block.body.extractDefns(isIgnored)
-      val bms = defns.map(_.sym)
-      block.copy(block.syms.toSet -- bms, blkNew)
-  
-  case class LifterResult[T](liftedDefn: Opt[Defn], extraDefns: List[Defn])
+  case class LifterResult[+T](liftedDefn: T, extraDefns: List[Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]],
     rewrittenScopes: MutMap[ScopedInfo, RewrittenScope[?]],
@@ -1329,7 +1302,7 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     * Represents a scoped object that will be rewritten to reference the lifted version of objects and variables.
     */
   sealed abstract class RewrittenScope[T](val obj: TScopedObject[T]):
-    val node = data.getNode(obj.toInfo)
+    val node = obj.node.get
     
     protected val (_, thisCapturedLocals) = usedVars.reqdCaptures(obj.toInfo)
     
@@ -1432,7 +1405,6 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
   
   class RewrittenFunc(override val obj: ScopedObject.Func) extends RewrittenScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     override def rewrite: FunDefn = ???
-
   
   class LiftedFunc(override val obj: ScopedObject.Func) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     private val passedSymsMap_ : Map[Local, VarSymbol] = passedSyms.map: s =>
@@ -1497,47 +1469,86 @@ class Lifter(blk: Block, handlerPaths: Opt[HandlerPaths])(using State, Raise):
     val auxDefn = Lazy(mkAuxDefn)
     
     def rewrite: FunDefn = ???
+
+  /**
+    * Removes nested scopes that are to be lifted.
+    *
+    * @param s The scoped object whose nested scopes are to be removed.
+    * @return The scoped object's contents with its nested scopes removed.
+    */
+  def removeLiftedScopes[T](s: TScopedObject[T]): T = s match
+    case ScopedObject.Top(b) => lastWords("Tried to remove nested scopes from the top level scope.")
+    case ScopedObject.Class(cls) =>
+      val (preCtorNew, defns1) = cls.preCtor.extractDefns(isIgnored)
+      val (ctorNew, defns2) = cls.ctor.extractDefns(isIgnored)
+      cls.copy(ctor = ctorNew, preCtor = preCtorNew)
+    case ScopedObject.Companion(comp, par) =>
+      val (ctorNew, defns) = comp.ctor.extractDefns(isIgnored)
+      comp.copy(ctor = ctorNew)
+    case ScopedObject.ClassCtor(cls) => ()
+    case ScopedObject.Func(fun, isMethod) =>
+      val (bodyNew, defns) = fun.body.extractDefns(isIgnored)
+      fun.copy(body = bodyNew)(fun.forceTailRec)
+    case ScopedObject.Loop(sym, block) =>
+      val (blkNew, defns) = block.extractDefns(isIgnored)
+      blkNew
+    case ScopedObject.ScopedBlock(uid, block) =>
+      val (blkNew, defns) = block.body.extractDefns(isIgnored)
+      val bms = defns.map(_.sym)
+      block.copy(block.syms.toSet -- bms, blkNew)
   
-  def isTopLevel(s: ScopeNode) = s.parent match
-    case Some(ScopeNode(obj = _: ScopedObject.Top)) => true
-    case _ => false
-  
-  private def createRewritten(s: ScopeNode): RewrittenScope[?] = s.obj match
+  private def createRewritten[T](s: TScopeNode[T]): RewrittenScope[T] = s.obj match
     case _: ScopedObject.Top => lastWords("tried to rewrite the top-level scope")
     case o: ScopedObject.Class => ???
     case o: ScopedObject.Companion => ???
     case o: ScopedObject.ClassCtor => ???
     case o: ScopedObject.Func =>
-      if s.isLifted && !isTopLevel(s) then LiftedFunc(o)
+      if s.isLifted && !s.isTopLevel then LiftedFunc(o)
       else RewrittenFunc(o)
     case o: ScopedObject.Loop => ???
     case o: ScopedObject.ScopedBlock =>
       RewrittenScopedBlock(o)
   
-  
-  private def liftNestedScopesImpl[T](s: TScopeNode[T])(using ctx: LifterCtxNew): LifterResult[T] =
-    // Already created in a previous recursive call
-    val curRewritten = ctx.rewrittenScopes(s.obj.toInfo)
+  /**
+    * Lifts scopes nested within `s`, and then rewrites `s`.
+    *
+    * @param s The scope to be rewritten.
+    * @param r The rewritten scope associated with `s`.
+    * @param ctx The lifter context.
+    * @return The rewritten scope with the additional definitions.
+    */
+  private def liftNestedScopesImpl[T](scope: RewrittenScope[T])(using ctx: LifterCtxNew): LifterResult[T] =
+    val node = scope.node
+    
     // Add the symbols map of the current scope
     // Note: this will be reset to the original value in liftNestedScopes
-    ctx.symbolsMap ++= curRewritten.symbolsMap
+    ctx.symbolsMap ++= scope.symbolsMap
     
     
-    val rewritten = s.children.map(createRewritten)
+    val rewrittenScopes = node.children.map(createRewritten)
     // The scopes in `lifted` will be rewritten right now
     // The scopes in `ignored` will be rewritten in-place when traversing the block
-    val (lifted, ignored) = rewritten.partitionMap:
+    val (lifted, ignored) = rewrittenScopes.partitionMap:
       case s: LiftedScope[?] => L(s)
       case s => R(s)
-    for r <- rewritten do
+    for r <- rewrittenScopes do
       ctx.rewrittenScopes.put(r.obj.toInfo, r)
     for l <- lifted do
       ctx.liftedScopes.put(l.obj.sym, l)
-    ???
+    
+    // Note: we must write this as a definition here to have tighter types
+    def rewriteScope[T <: Defn](l: LiftedScope[T])(using ctx: LifterCtxNew) =
+      val LifterResult[T](d1, d2) = liftNestedScopes[T](l)
+      (d1, d2)
+    
+    val rewrittenObj = scope.rewrite
+    val (res1, res2) = lifted.map(rewriteScope).unzip
+    val defns = res1 ++ res2.flatten
+    LifterResult(rewrittenObj, defns)
     
   
-  def liftNestedScopes[T](s: TScopeNode[T])(using ctx: LifterCtxNew): LifterResult[T] =
+  def liftNestedScopes[T](r: RewrittenScope[T])(using ctx: LifterCtxNew): LifterResult[T] =
     val curSyms = ctx.symbolsMap
-    val ret = liftNestedScopesImpl(s)
+    val ret = liftNestedScopesImpl(r)
     ctx.symbolsMap = curSyms
     ret

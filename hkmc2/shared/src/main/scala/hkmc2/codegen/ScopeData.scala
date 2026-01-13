@@ -39,6 +39,7 @@ object ScopeData:
   object ScopedObject:
     // T: The actual contents of the scoped object
     sealed abstract class ScopedObject[T]:
+      var node: Opt[TScopeNode[T]] = N
       lazy val toInfo: ScopedInfo = this match
         case Top(_) => ()
         case Class(cls) => cls.isym
@@ -181,6 +182,10 @@ object ScopeData:
           case _ if ignored.contains(obj.toInfo) => false
           case _ => true
       
+      lazy val isTopLevel: Bool = parent match
+        case Some(ScopeNode(obj = _: ScopedObject.Top)) => true
+        case _ => false
+      
       lazy val liftedChildNodes: List[ScopeNode[?]] =
         if isLifted then this :: Nil
         else children.flatMap(_.liftedChildNodes)
@@ -294,5 +299,6 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case _ => Nil
     val children = (mtdObjs ::: finder.objs).map(makeScopeTreeRec)
     val retNode = ScopeNode.ScopeNode(obj, N, children)
+    obj.node = S(retNode)
     for c <- children do c.parent = S(retNode)
     retNode
