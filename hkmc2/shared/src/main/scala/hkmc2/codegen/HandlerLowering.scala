@@ -2,11 +2,11 @@ package hkmc2
 package codegen
 
 import scala.annotation.tailrec
+import scala.collection.mutable
+import scala.util.boundary
 import sourcecode.Line
 import sourcecode.FileName
 import sourcecode.Name
-import scala.collection.mutable
-import scala.util.boundary
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
