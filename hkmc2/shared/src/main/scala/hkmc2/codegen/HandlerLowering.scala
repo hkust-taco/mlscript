@@ -59,10 +59,6 @@ class PreHandlerLowering extends BlockTransformer(new SymbolSubst):
     
 
 object HandlerLowering:
-  // Whether we check instantiate for effect, currently no effect can be raised in a constructor.
-  val checkInstantiateEffect = false
-  // A debug option that allow codegen to continue even if a unlifted definition is encountered.
-  val hardLifterError = true
 
   private val pcIdent: Tree.Ident = Tree.Ident("pc")
   private val nextIdent: Tree.Ident = Tree.Ident("next")
@@ -219,7 +215,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   object EffectfulResult:
     def unapply(r: Result) = r match
       case c: Call if c.mayRaiseEffects => S(r)
-      case _: Instantiate if checkInstantiateEffect => S(r)
+      case _: Instantiate if opt.checkInstantiateEffect => S(r)
       case _ => N
   
   private def partitionBlock(blk: Block): PartitionedBlock =
@@ -487,7 +483,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
   
   private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
-    WarningReport(msgs, source = Diagnostic.Source.Compilation)
+    if opt.hardLifterError then
+      InternalError(msgs, source = Diagnostic.Source.Compilation)
+    else
+      WarningReport(msgs, source = Diagnostic.Source.Compilation)
 
   /**
    * The actual translation:

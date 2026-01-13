@@ -123,7 +123,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter()(using State, Raise):
+class Lifter()(using State, Raise, Config):
   import Lifter.*
 
   /**
@@ -656,7 +656,7 @@ class Lifter()(using State, Raise):
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(FunSyms(l, d), ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, HandlerLowering.checkInstantiateEffect, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, config.checkInstantiateEffect, false))
             case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
           // variable here. But, since this closure may be re-used later, this doesn't work
@@ -1039,7 +1039,7 @@ class Lifter()(using State, Raise):
             def go(cur: List[List[VarSymbol]], curSym: Symbol, acc: Block => Block): Block = cur match
               case ps :: rst =>
                 val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
-                  rst === Nil && HandlerLowering.checkInstantiateEffect, false)
+                  rst === Nil && config.checkInstantiateEffect, false)
                 val thisSym = TempSymbol(None, "tmp")
                 go(rst, thisSym, acc.assign(thisSym, call))
               case Nil => acc.ret(curSym.asPath)
