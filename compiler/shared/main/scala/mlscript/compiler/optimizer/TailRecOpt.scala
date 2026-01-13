@@ -13,8 +13,6 @@ import compiler.ir.Node._
 
 DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
 
-FIXME: This doc is a bit outdated, as we have not ported the "modulo-cons" optimization yet.
-
 @tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
 must be tail calls or tail modulo-cons calls. These calls must be optimized to not
 consume additional stack space. If such an optimization is not possible, then the
