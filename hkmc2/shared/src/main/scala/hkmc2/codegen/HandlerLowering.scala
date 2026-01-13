@@ -94,7 +94,7 @@ object HandlerLowering:
 
     def inCtor = this === Ctor || this === ModCtor
     def inTopLevel = this === TopLevel
-    def allowDefn = isTopLevel || this === ModCtor
+    def allowDefn = inTopLevel || this === ModCtor
   
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
@@ -557,9 +557,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           else k(c2)
         case _ => super.applyDefn(defn)(k)
     val b = subblockTransform.applyBlock(blk)
-    if h.isCtor then
+    if h.inCtor then
       return translateTopLevelOrCtor(b, Call(paths.ctorEffectPath, Nil)(true, true, false))
-    if h.isTopLevel then
+    if h.inTopLevel then
       return translateTopLevelOrCtor(b, Call(paths.topLevelEffectPath, Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
     val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx
     given FunctionCtx = ctx
