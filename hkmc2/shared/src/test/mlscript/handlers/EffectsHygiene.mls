@@ -16,50 +16,6 @@ fun foo(h): module M =
     A
 //│ ═══[WARNING] Modules are not yet lifted.
 //│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.12: 	    module A
-//│ ╙──      	           ^
-//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.15: 	    module A
-//│ ╙──      	           ^
-//│ JS (unsanitized):
-//│ let foo;
-//│ foo = function foo(h) {
-//│   let A2, A3, scrut;
-//│   scrut = false;
-//│   if (scrut === true) {
-//│     (class A {
-//│       static {
-//│         A2 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
-//│     });
-//│     return A2
-//│   } else {
-//│     (class A1 {
-//│       static {
-//│         A3 = this
-//│       }
-//│       constructor() {
-//│         runtime.Unit;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "A"]; 
-//│     });
-//│     return A3
-//│   }
-//│ };
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.12: 	    module A
-//│ ╙──      	           ^
-//│ ╔══[WARNING] Unexpected nested class: lambdas may not function correctly.
-//│ ║  l.15: 	    module A
-//│ ╙──      	           ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 
