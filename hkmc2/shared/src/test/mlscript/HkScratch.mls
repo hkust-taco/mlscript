@@ -9,31 +9,13 @@
 // :d
 // :todo
 
-:sjs
-class A
-if 0 is A and true do 2
-//│ Elab: { Cls A { }; if { let scrut = 0; $scrut‹692›#0 is A and let scrut = true; $scrut‹693›#0 is true then 2; ; else () } }
-//│ JS (unsanitized):
-//│ let A1, scrut, scrut1, tmp;
-//│ (class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {}
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ split_root$: {
-//│   split_1$: {
-//│     scrut = 0;
-//│     if (scrut instanceof A1) {
-//│       scrut1 = true;
-//│       if (scrut1 === true) {
-//│         tmp = 2;
-//│         break split_root$
-//│       } else { break split_1$ }
-//│     } else { break split_1$ }
-//│   }
-//│   tmp = runtime.Unit;
-//│ }
-//│ tmp
+:noSanityCheck
+:ssjs
+:lift
+fun f(x) =
+  fun g(y) = y
+  2
+//│ Elab: { fun member:f‹690›(x‹691›) = { fun member:g‹689›(y‹693›) = y‹693›#666; 2 }; }
+//│ JS:
+//│ let f;
+//│ f = function f(x) { let g; g = function g(y) { return y }; return 2 }; block$res1 = undefined;

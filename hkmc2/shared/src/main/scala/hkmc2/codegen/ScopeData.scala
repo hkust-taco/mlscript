@@ -16,6 +16,7 @@ import scala.collection.mutable.Set as MutSet
 
 object ScopeData:
   opaque type ScopeUID = BigInt
+  val dummyUID: ScopeUID = 0
   class FreshUID:
     private val underlying = FreshInt()
     def make: ScopeUID = underlying.make
@@ -83,6 +84,15 @@ object ScopeData:
         case ScopedBlock(_, block) => block.syms.toSet
         case _: Loop => Set.empty
     
+      def contents: T = this match
+        case Top(b) => b
+        case Class(cls) => cls
+        case Companion(comp, par) => comp
+        case ClassCtor(cls) => ()
+        case Func(fun, _) => fun
+        case ScopedBlock(_, block) => block
+        case Loop(_, blk) => blk
+    
     // Scoped nodes which may be referenced using a symbol.
     sealed abstract class Referencable[T] extends TScopedObject[T]:
       def sym: LiftedSym = this match
@@ -105,7 +115,7 @@ object ScopeData:
       val defn = fun
     // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
     // a scoped block.
-    case class Loop(sym: LabelSymbol, block: Block) extends ScopedObject[Block]
+    case class Loop(sym: LabelSymbol, body: Block) extends ScopedObject[Block]
     case class ScopedBlock(uid: ScopeUID, block: Scoped) extends ScopedObject[Block]
   
   extension (traverser: BlockTraverser)
@@ -139,7 +149,7 @@ object ScopeData:
       case ScopedObject.Loop(_, b) => traverser.applyBlock(b)
     
   // A simple tree data structure representing the nesting relation of definitions and scopes.
-  class NestedScopeTree(val root: ScopeNode):
+  class NestedScopeTree(val root: TScopeNode[Block]):
     val nodesMap: Map[ScopedInfo, ScopeNode] = root.allChildNodes.map(n => n.obj.toInfo -> n).toMap
   
   type ScopeNode = ScopeNode.ScopeNode[?]
@@ -252,7 +262,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
     else lastWords("getUID: key not found")
   def getNode(blk: Scoped): ScopeNode = getNode(getUID(blk))
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
-  class ScopeFinder extends BlockTraverser:
+  class ScopeFinder extends BlockTraverserShallow:
     var objs: List[ScopedObject] = Nil
     override def applyBlock(b: Block): Unit = b match
       case s: Scoped =>
