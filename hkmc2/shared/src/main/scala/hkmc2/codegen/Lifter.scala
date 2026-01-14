@@ -248,7 +248,7 @@ class Lifter()(using State, Raise, Config):
   
   
 
-  val ignoredSet = Set(State.globalThisSymbol.asPath.selSN("Object"), State.runtimeSymbol.asPath.selSN("NonLocalReturn"))
+  val ignoredSet = Set(State.runtimeSymbol.asPath.selSN("NonLocalReturn"))
   
   def isIgnoredPath(p: Path) = ignoredSet.contains(p)
   
