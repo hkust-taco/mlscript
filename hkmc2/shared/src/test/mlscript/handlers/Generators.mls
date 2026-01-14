@@ -20,78 +20,6 @@ fun permutations_impl(gen, l1, l2) =
       gen.produce(mut [])
 fun permutations(gen, l) =
   permutations_impl(gen, mut [], l)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, member:Generator -> Generator1, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:permutations_impl$capture -> permutations_impl$capture1, member:handleBlock$$ -> handleBlock$$, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Predef -> Predef, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:permutations_impl -> permutations_impl, class:permutations_impl$capture -> permutations_impl$capture, $block$res -> block$res2)
-//│       curThis = S of N
-//│       bindings = HashMap(permutations_impl$capture -> permutations_impl$capture2, $args -> args, isMut -> isMut, gen -> gen)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, member:Generator -> Generator1, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:permutations_impl$capture -> permutations_impl$capture1, member:handleBlock$$ -> handleBlock$$, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Predef -> Predef, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:permutations_impl -> permutations_impl, class:permutations_impl$capture -> permutations_impl$capture, $block$res -> block$res2)
-//│       curThis = S of N
-//│       bindings = HashMap(permutations_impl$capture -> permutations_impl$capture2, $args -> args, isMut -> isMut, gen -> gen)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, member:Generator -> Generator1, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:permutations_impl$capture -> permutations_impl$capture1, member:handleBlock$$ -> handleBlock$$, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Predef -> Predef, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:permutations_impl -> permutations_impl, class:permutations_impl$capture -> permutations_impl$capture, $block$res -> block$res2)
-//│       curThis = S of N
-//│       bindings = HashMap(permutations_impl$capture -> permutations_impl$capture2, $args -> args, isMut -> isMut, gen -> gen)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: member:handleBlock$ is already in Scope:
-//│   parent = S of Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:handleBlock$ -> handleBlock$, $block$res -> block$res, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, member:Generator -> Generator1, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:permutations_impl$capture -> permutations_impl$capture1, member:handleBlock$$ -> handleBlock$$, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Predef -> Predef, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:permutations_impl -> permutations_impl, class:permutations_impl$capture -> permutations_impl$capture, $block$res -> block$res2)
-//│     curThis = S of N
-//│     bindings = HashMap(gen -> gen, $args -> args, l1 -> l1, l2 -> l2)
-//│   curThis = N
-//│   bindings = HashMap(genWithPrefix -> genWithPrefix, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f)
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.utils.Scope.allocateName(Scope.scala:144)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$47(JSBuilder.scala:663)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:156)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1469)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1469)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1313)
 
 let res = mut []
 handle gen = Generator with
@@ -99,20 +27,32 @@ handle gen = Generator with
     res.push(result)
     resume(())
 in permutations(gen, [1, 2, 3, 4])
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: permutations is not defined
-//│     at handleBlock$1 (REPL13:1:2389)
-//│     at Runtime.enterHandleBlock (file:///Users/parreaux/work/Research/experiments/hkmc2/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1000:28)
-//│     at REPL13:1:2442
-//│     at ContextifyScript.runInThisContext (node:vm:136:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:432:15)
-//│     at REPLServer.runBound [as eval] (node:domain:443:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:520:28)
-//│     at REPLServer.emit (node:domain:488:12)
-//│ res = []
+//│ res = [
+//│   [1, 2, 3, 4],
+//│   [1, 2, 4, 3],
+//│   [1, 3, 2, 4],
+//│   [1, 3, 4, 2],
+//│   [1, 4, 2, 3],
+//│   [1, 4, 3, 2],
+//│   [2, 1, 3, 4],
+//│   [2, 1, 4, 3],
+//│   [2, 3, 1, 4],
+//│   [2, 3, 4, 1],
+//│   [2, 4, 1, 3],
+//│   [2, 4, 3, 1],
+//│   [3, 1, 2, 4],
+//│   [3, 1, 4, 2],
+//│   [3, 2, 1, 4],
+//│   [3, 2, 4, 1],
+//│   [3, 4, 1, 2],
+//│   [3, 4, 2, 1],
+//│   [4, 1, 2, 3],
+//│   [4, 1, 3, 2],
+//│   [4, 2, 1, 3],
+//│   [4, 2, 3, 1],
+//│   [4, 3, 1, 2],
+//│   [4, 3, 2, 1]
+//│ ]
 
 fun permutations_foreach(l, f) =
   handle gen = Generator with
@@ -121,70 +61,12 @@ fun permutations_foreach(l, f) =
       resume(())
   permutations(gen, l)
 permutations_foreach([1, 2, 3], print)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:Predef -> Predef, member:permutations_foreach -> permutations_foreach, $block$res -> block$res2, res -> res, class:Handler$gen$ -> Handler$gen$2, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $block$res -> block$res4, member:Generator -> Generator1, $tmp -> tmp, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, $tmp -> tmp1, member:handleBlock$$ -> handleBlock$$, member:handleBlock$ -> handleBlock$2, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:Handler$gen$$ -> Handler$gen$$, member:Handler$gen$produce$ -> Handler$gen$produce$1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, f -> f, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:Predef -> Predef, member:permutations_foreach -> permutations_foreach, $block$res -> block$res2, res -> res, class:Handler$gen$ -> Handler$gen$2, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $block$res -> block$res4, member:Generator -> Generator1, $tmp -> tmp, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, $tmp -> tmp1, member:handleBlock$$ -> handleBlock$$, member:handleBlock$ -> handleBlock$2, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:Handler$gen$$ -> Handler$gen$$, member:Handler$gen$produce$ -> Handler$gen$produce$1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, f -> f, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:Predef -> Predef, member:permutations_foreach -> permutations_foreach, $block$res -> block$res2, res -> res, class:Handler$gen$ -> Handler$gen$2, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $block$res -> block$res4, member:Generator -> Generator1, $tmp -> tmp, class:Generator -> Generator, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, $tmp -> tmp1, member:handleBlock$$ -> handleBlock$$, member:handleBlock$ -> handleBlock$2, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, $block$res -> block$res1, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:Handler$gen$$ -> Handler$gen$$, member:Handler$gen$produce$ -> Handler$gen$produce$1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, f -> f, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: permutations is not defined
-//│     at handleBlock$$ (REPL17:1:2799)
-//│     at REPL17:1:3076
-//│     at Runtime.enterHandleBlock (file:///Users/parreaux/work/Research/experiments/hkmc2/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1000:28)
-//│     at permutations_foreach (REPL17:1:3674)
-//│     at REPL17:1:4119
-//│     at ContextifyScript.runInThisContext (node:vm:136:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:432:15)
-//│     at REPLServer.runBound [as eval] (node:domain:443:12)
-//│     at REPLServer.onLine (node:repl:927:10)
+//│ > [1, 2, 3]
+//│ > [1, 3, 2]
+//│ > [2, 1, 3]
+//│ > [2, 3, 1]
+//│ > [3, 1, 2]
+//│ > [3, 2, 1]
 
 
 fun permutations_impl(gen, l1, l2) =
@@ -202,78 +84,6 @@ fun permutations_impl(gen, l1, l2) =
       gen.produce([])
 fun permutations(gen, l) =
   permutations_impl(gen, mut [], l)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$2, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:permutations_foreach -> permutations_foreach, class:Handler$gen$ -> Handler$gen$2, $block$res -> block$res5, $block$res -> block$res, $block$res -> block$res4, member:Generator -> Generator1, class:Generator -> Generator, member:handleBlock$ -> handleBlock$3, $tmp -> tmp1, member:handleBlock$ -> handleBlock$2, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce1, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$3, $block$res -> block$res1, member:handleBlock$$ -> handleBlock$$2, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$1, member:Handler$gen$$ -> Handler$gen$$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$1, member:Handler$gen$produce$ -> Handler$gen$produce$1, class:permutations_impl$capture -> permutations_impl$capture2, class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, member:permutations_impl$capture -> permutations_impl$capture3, member:Predef -> Predef, $block$res -> block$res2, res -> res, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $tmp -> tmp, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, member:handleBlock$$ -> handleBlock$$, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:permutations -> permutations1, member:permutations_impl -> permutations_impl1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, gen -> gen1, permutations_impl$capture -> permutations_impl$capture4, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$2, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:permutations_foreach -> permutations_foreach, class:Handler$gen$ -> Handler$gen$2, $block$res -> block$res5, $block$res -> block$res, $block$res -> block$res4, member:Generator -> Generator1, class:Generator -> Generator, member:handleBlock$ -> handleBlock$3, $tmp -> tmp1, member:handleBlock$ -> handleBlock$2, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce1, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$3, $block$res -> block$res1, member:handleBlock$$ -> handleBlock$$2, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$1, member:Handler$gen$$ -> Handler$gen$$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$1, member:Handler$gen$produce$ -> Handler$gen$produce$1, class:permutations_impl$capture -> permutations_impl$capture2, class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, member:permutations_impl$capture -> permutations_impl$capture3, member:Predef -> Predef, $block$res -> block$res2, res -> res, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $tmp -> tmp, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, member:handleBlock$$ -> handleBlock$$, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:permutations -> permutations1, member:permutations_impl -> permutations_impl1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, gen -> gen1, permutations_impl$capture -> permutations_impl$capture4, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$2, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:permutations_foreach -> permutations_foreach, class:Handler$gen$ -> Handler$gen$2, $block$res -> block$res5, $block$res -> block$res, $block$res -> block$res4, member:Generator -> Generator1, class:Generator -> Generator, member:handleBlock$ -> handleBlock$3, $tmp -> tmp1, member:handleBlock$ -> handleBlock$2, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce1, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$3, $block$res -> block$res1, member:handleBlock$$ -> handleBlock$$2, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$1, member:Handler$gen$$ -> Handler$gen$$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$1, member:Handler$gen$produce$ -> Handler$gen$produce$1, class:permutations_impl$capture -> permutations_impl$capture2, class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, member:permutations_impl$capture -> permutations_impl$capture3, member:Predef -> Predef, $block$res -> block$res2, res -> res, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $tmp -> tmp, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, member:handleBlock$$ -> handleBlock$$, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:permutations -> permutations1, member:permutations_impl -> permutations_impl1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, gen -> gen1, permutations_impl$capture -> permutations_impl$capture4, $args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: member:handleBlock$ is already in Scope:
-//│   parent = S of Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(class:Handler$genWithPrefix$ -> Handler$genWithPrefix$2, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, member:permutations_impl$capture -> permutations_impl$capture1, member:permutations_foreach -> permutations_foreach, class:Handler$gen$ -> Handler$gen$2, $block$res -> block$res5, $block$res -> block$res, $block$res -> block$res4, member:Generator -> Generator1, class:Generator -> Generator, member:handleBlock$ -> handleBlock$3, $tmp -> tmp1, member:handleBlock$ -> handleBlock$2, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce1, member:Handler$gen$produce -> Handler$gen$produce1, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$3, $block$res -> block$res1, member:handleBlock$$ -> handleBlock$$2, member:Handler$gen$ -> Handler$gen$3, member:permutations -> permutations, member:handleBlock$$ -> handleBlock$$1, member:permutations_impl -> permutations_impl, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$1, member:Handler$gen$$ -> Handler$gen$$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$1, member:Handler$gen$produce$ -> Handler$gen$produce$1, class:permutations_impl$capture -> permutations_impl$capture2, class:Handler$genWithPrefix$ -> Handler$genWithPrefix$, member:permutations_impl$capture -> permutations_impl$capture3, member:Predef -> Predef, $block$res -> block$res2, res -> res, gen -> gen, class:Handler$gen$ -> Handler$gen$, member:handleBlock$ -> handleBlock$, $block$res -> block$res3, member:Handler$genWithPrefix$produce -> Handler$genWithPrefix$produce, $tmp -> tmp, member:Handler$genWithPrefix$ -> Handler$genWithPrefix$1, member:handleBlock$ -> handleBlock$1, member:handleBlock$$ -> handleBlock$$, member:Handler$gen$produce -> Handler$gen$produce, member:Handler$genWithPrefix$$ -> Handler$genWithPrefix$$, member:Handler$gen$ -> Handler$gen$1, member:Handler$gen$produce$ -> Handler$gen$produce$, member:Handler$genWithPrefix$produce$ -> Handler$genWithPrefix$produce$, $tmp -> tmp2, class:permutations_impl$capture -> permutations_impl$capture, member:permutations -> permutations1, member:permutations_impl -> permutations_impl1)
-//│     curThis = S of N
-//│     bindings = HashMap(l2 -> l2, gen -> gen1, $args -> args, l1 -> l1)
-//│   curThis = N
-//│   bindings = HashMap($middleElements -> middleElements, $element0$ -> element0$, t -> t, f -> f, genWithPrefix -> genWithPrefix, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9)
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.utils.Scope.allocateName(Scope.scala:144)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$47(JSBuilder.scala:663)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:156)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1469)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1469)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1313)
 
 let res = mut []
 handle gen = Generator with
@@ -282,17 +92,4 @@ handle gen = Generator with
     let x = resume(())
     x
 in permutations(gen, [1, 2, 3])
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: permutations1 is not defined
-//│     at handleBlock$4 (REPL20:1:2748)
-//│     at Runtime.enterHandleBlock (file:///Users/parreaux/work/Research/experiments/hkmc2/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:1000:28)
-//│     at REPL20:1:2804
-//│     at ContextifyScript.runInThisContext (node:vm:136:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:432:15)
-//│     at REPLServer.runBound [as eval] (node:domain:443:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:520:28)
-//│     at REPLServer.emit (node:domain:488:12)
-//│ res = []
+//│ res = [[1, 2, 3], [1, 3, 2], [2, 1, 3], [2, 3, 1], [3, 1, 2], [3, 2, 1]]

@@ -6,116 +6,17 @@ data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│         curThis = N
-//│         bindings = HashMap(member:A -> A1, class:A -> A, class:B -> B, member:B$ -> B$, member:B -> B1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, y -> y, A$instance -> A$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│         curThis = N
-//│         bindings = HashMap(member:A -> A1, class:A -> A, class:B -> B, member:B$ -> B$, member:B -> B1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, y -> y, A$instance -> A$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│         curThis = N
-//│         bindings = HashMap(member:A -> A1, class:A -> A, class:B -> B, member:B$ -> B$, member:B -> B1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, y -> y, A$instance -> A$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│         curThis = N
-//│         bindings = HashMap(member:A -> A1, class:A -> A, class:B -> B, member:B$ -> B$, member:B -> B1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, y -> y, A$instance -> A$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│         curThis = N
-//│         bindings = HashMap(member:A -> A1, class:A -> A, class:B -> B, member:B$ -> B$, member:B -> B1)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, y -> y, A$instance -> A$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ JS (unsanitized):
 //│ let B1, A1, B$;
 //│ B$ = function B$(isMut, A$instance, y) {
+//│   let tmp, tmp1;
 //│   if (isMut === true) {
 //│     tmp = new B1.class(y);
 //│   } else {
 //│     tmp = globalThis.Object.freeze(new B1.class(y));
 //│   }
-//│   tmp = tmp(A$instance);
-//│   return tmp
+//│   tmp1 = tmp(A$instance);
+//│   return tmp1
 //│ };
 //│ B1 = function B(y) {
 //│   return (A$instance) => {

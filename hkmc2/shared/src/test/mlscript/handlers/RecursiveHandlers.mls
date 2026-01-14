@@ -100,57 +100,6 @@ let res =
   g.perform("adios")
   g.perform("amigos")
 in res.toString()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res8, member:Handler$g$perform$ -> Handler$g$perform$, $tmp -> tmp4, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, member:handleBlock$ -> handleBlock$4, $Shape -> Shape, class:Handler$h$perform$capture -> Handler$h$perform$capture, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$1, member:Handler$h2$perform$ -> Handler$h2$perform$, member:Handler$h$perform$capture -> Handler$h$perform$capture1, h -> h3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$4, member:handleBlock$ -> handleBlock$1, member:Handler$h$write -> Handler$h$write, member:Handler$h$ -> Handler$h$1, member:Handler$h$write$ -> Handler$h$write$, $block$res -> block$res7, member:lambda -> lambda1, $tmp -> tmp3, member:handleBlock$ -> handleBlock$3, $block$res -> block$res, member:Handler$h$write -> Handler$h$write2, member:Effect -> Effect1, class:Effect -> Effect, member:Handler$h$ -> Handler$h$5, member:Handler$h$write$ -> Handler$h$write$2, member:lambda$ -> lambda$1, $block$res -> block$res1, res -> res, h -> h4, h1 -> h1, class:Handler$h$ -> Handler$h$6, class:Handler$h1$ -> Handler$h1$, h -> h2, class:Handler$h$ -> Handler$h$2, class:Handler$g$ -> Handler$g$, $block$res -> block$res2, $tmp -> tmp, member:handleBlock$ -> handleBlock$, member:Handler$h1$perform -> Handler$h1$perform, $block$res -> block$res6, member:Handler$h1$ -> Handler$h1$1, member:lambda -> lambda, member:Handler$h1$perform$ -> Handler$h1$perform$, member:Predef -> Predef, $tmp -> tmp2, member:handleBlock$ -> handleBlock$2, member:Handler$h$write -> Handler$h$write1, $block$res -> block$res9, member:Handler$h$ -> Handler$h$3, member:Handler$h$write$ -> Handler$h$write$1, member:lambda$ -> lambda$, $tmp -> tmp6, h2 -> h21, class:Handler$h2$ -> Handler$h2$, $tmp -> tmp5, member:handleBlock$ -> handleBlock$5, member:Handler$g$perform -> Handler$g$perform, member:Handler$g$ -> Handler$g$1, member:handleBlock$ -> handleBlock$6, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$7, member:Handler$h$perform$ -> Handler$h$perform$, $block$res -> block$res3, member:handleBlock$$ -> handleBlock$$, $block$res -> block$res4, member:Handler$g$$ -> Handler$g$$, h -> h)
-//│       curThis = S of N
-//│       bindings = HashMap(Handler$h$$instance -> Handler$h$$instance, arg -> arg, $args -> args, isMut -> isMut)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res8, member:Handler$g$perform$ -> Handler$g$perform$, $tmp -> tmp4, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, member:handleBlock$ -> handleBlock$4, $Shape -> Shape, class:Handler$h$perform$capture -> Handler$h$perform$capture, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$1, member:Handler$h2$perform$ -> Handler$h2$perform$, member:Handler$h$perform$capture -> Handler$h$perform$capture1, h -> h3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$4, member:handleBlock$ -> handleBlock$1, member:Handler$h$write -> Handler$h$write, member:Handler$h$ -> Handler$h$1, member:Handler$h$write$ -> Handler$h$write$, $block$res -> block$res7, member:lambda -> lambda1, $tmp -> tmp3, member:handleBlock$ -> handleBlock$3, $block$res -> block$res, member:Handler$h$write -> Handler$h$write2, member:Effect -> Effect1, class:Effect -> Effect, member:Handler$h$ -> Handler$h$5, member:Handler$h$write$ -> Handler$h$write$2, member:lambda$ -> lambda$1, $block$res -> block$res1, res -> res, h -> h4, h1 -> h1, class:Handler$h$ -> Handler$h$6, class:Handler$h1$ -> Handler$h1$, h -> h2, class:Handler$h$ -> Handler$h$2, class:Handler$g$ -> Handler$g$, $block$res -> block$res2, $tmp -> tmp, member:handleBlock$ -> handleBlock$, member:Handler$h1$perform -> Handler$h1$perform, $block$res -> block$res6, member:Handler$h1$ -> Handler$h1$1, member:lambda -> lambda, member:Handler$h1$perform$ -> Handler$h1$perform$, member:Predef -> Predef, $tmp -> tmp2, member:handleBlock$ -> handleBlock$2, member:Handler$h$write -> Handler$h$write1, $block$res -> block$res9, member:Handler$h$ -> Handler$h$3, member:Handler$h$write$ -> Handler$h$write$1, member:lambda$ -> lambda$, $tmp -> tmp6, h2 -> h21, class:Handler$h2$ -> Handler$h2$, $tmp -> tmp5, member:handleBlock$ -> handleBlock$5, member:Handler$g$perform -> Handler$g$perform, member:Handler$g$ -> Handler$g$1, member:handleBlock$ -> handleBlock$6, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$7, member:Handler$h$perform$ -> Handler$h$perform$, $block$res -> block$res3, member:handleBlock$$ -> handleBlock$$, $block$res -> block$res4, member:Handler$g$$ -> Handler$g$$, h -> h)
-//│       curThis = S of N
-//│       bindings = HashMap(Handler$h$$instance -> Handler$h$$instance, arg -> arg, $args -> args, isMut -> isMut)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Handler$h$ -> Handler$h$, $block$res -> block$res8, member:Handler$g$perform$ -> Handler$g$perform$, $tmp -> tmp4, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, member:handleBlock$ -> handleBlock$4, $Shape -> Shape, class:Handler$h$perform$capture -> Handler$h$perform$capture, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$1, member:Handler$h2$perform$ -> Handler$h2$perform$, member:Handler$h$perform$capture -> Handler$h$perform$capture1, h -> h3, $tmp -> tmp1, class:Handler$h$ -> Handler$h$4, member:handleBlock$ -> handleBlock$1, member:Handler$h$write -> Handler$h$write, member:Handler$h$ -> Handler$h$1, member:Handler$h$write$ -> Handler$h$write$, $block$res -> block$res7, member:lambda -> lambda1, $tmp -> tmp3, member:handleBlock$ -> handleBlock$3, $block$res -> block$res, member:Handler$h$write -> Handler$h$write2, member:Effect -> Effect1, class:Effect -> Effect, member:Handler$h$ -> Handler$h$5, member:Handler$h$write$ -> Handler$h$write$2, member:lambda$ -> lambda$1, $block$res -> block$res1, res -> res, h -> h4, h1 -> h1, class:Handler$h$ -> Handler$h$6, class:Handler$h1$ -> Handler$h1$, h -> h2, class:Handler$h$ -> Handler$h$2, class:Handler$g$ -> Handler$g$, $block$res -> block$res2, $tmp -> tmp, member:handleBlock$ -> handleBlock$, member:Handler$h1$perform -> Handler$h1$perform, $block$res -> block$res6, member:Handler$h1$ -> Handler$h1$1, member:lambda -> lambda, member:Handler$h1$perform$ -> Handler$h1$perform$, member:Predef -> Predef, $tmp -> tmp2, member:handleBlock$ -> handleBlock$2, member:Handler$h$write -> Handler$h$write1, $block$res -> block$res9, member:Handler$h$ -> Handler$h$3, member:Handler$h$write$ -> Handler$h$write$1, member:lambda$ -> lambda$, $tmp -> tmp6, h2 -> h21, class:Handler$h2$ -> Handler$h2$, $tmp -> tmp5, member:handleBlock$ -> handleBlock$5, member:Handler$g$perform -> Handler$g$perform, member:Handler$g$ -> Handler$g$1, member:handleBlock$ -> handleBlock$6, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$7, member:Handler$h$perform$ -> Handler$h$perform$, $block$res -> block$res3, member:handleBlock$$ -> handleBlock$$, $block$res -> block$res4, member:Handler$g$$ -> Handler$g$$, h -> h)
-//│       curThis = S of N
-//│       bindings = HashMap(Handler$h$$instance -> Handler$h$$instance, arg -> arg, $args -> args, isMut -> isMut)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ > A hi
 //│ > B hi bye
 //│ > B hi friend
@@ -227,7 +176,7 @@ str
 //│           str = tmp13;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(Handler$h1$perform$1, 1, "RecursiveHandlers.mls:198:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
+//│             return runtime.unwind(Handler$h1$perform$1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -285,7 +234,7 @@ str
 //│           str = tmp14;
 //│           runtime.resumeValue = runtime.safeCall(k(arg));
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(Handler$h2$perform$1, 1, "RecursiveHandlers.mls:203:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
+//│             return runtime.unwind(Handler$h2$perform$1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;
@@ -340,7 +289,7 @@ str
 //│         case 0:
 //│           runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(handleBlock$$2, 1, "RecursiveHandlers.mls:205:5", null, null, 1, 1, h22, 0)
+//│             return runtime.unwind(handleBlock$$2, 1, "RecursiveHandlers.mls:154:5", null, null, 1, 1, h22, 0)
 //│           }
 //│           pc = 1;
 //│           continue main;

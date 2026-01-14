@@ -130,7 +130,7 @@ x `=> `if x `== `0.0 then `1.0 else x
 :ge
 `id`(`42)
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
-//│ ║  l.132: 	`id`(`42)
+//│ ║  l.131: 	`id`(`42)
 //│ ╙──       	 ^^
 
 
