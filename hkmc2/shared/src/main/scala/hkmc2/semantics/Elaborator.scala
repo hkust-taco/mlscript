@@ -445,7 +445,7 @@ extends Importer with ucs.SplitElaborator:
           case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, annotations, comp) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
-                if newParams === Nil then
+                if newParams.isEmpty
                   raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
                 val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations, comp)
                 S(HandlerTermDefinition(value.sym, newTd))
