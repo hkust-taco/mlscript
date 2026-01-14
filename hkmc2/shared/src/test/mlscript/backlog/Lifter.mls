@@ -46,6 +46,11 @@ data class A(x) with
     let t = this
     t.B(2).getB()
 A(1).getA()
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ ═══[RUNTIME ERROR] TypeError: t.B is not a function
 //│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
 
@@ -65,6 +70,9 @@ fun test(x) =
   class B() extends A
   B().get
 test(2)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
@@ -199,7 +207,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.198: 	  class Bar extends Foo
+//│ ║  l.206: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'

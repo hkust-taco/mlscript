@@ -8,45 +8,11 @@ module A with
   data class Test with
     f()
     val a = 1
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Test -> Test, member:doUnwind$ -> doUnwind$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, $Term -> Term, $Block -> Block, $Shape -> Shape, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:f -> f, $block$res -> block$res1, member:Predef -> Predef, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of S of class:Cont$ctor$Test$
-//│       bindings = HashMap(pc -> pc, tmp -> tmp, Test$instance -> Test$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 
 :effectHandlers
 class Test with
   f()
   val a = 1
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(class:Test -> Test, member:doUnwind$ -> doUnwind$, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, $Term -> Term, $Block -> Block, $Shape -> Shape, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, member:doUnwind$ -> doUnwind$1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of S of class:Cont$ctor$Test$
-//│       bindings = HashMap(tmp -> tmp, Test$instance -> Test$instance, pc -> pc)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 
 class Eff
 
@@ -56,117 +22,4 @@ handle h = Eff with
   fun perform(x)(k) = k(x) + 1
 let x = 5
 h.perform(x) + 1
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of S of class:Cont$handler$h$perform$
-//│       bindings = HashMap(pc -> pc, tmp -> tmp2, Handler$h$$instance -> Handler$h$$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of S of class:Handler$h$
-//│       bindings = HashMap()
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of S of class:Cont$handleBlock$h$
-//│       bindings = HashMap(pc -> pc)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = h
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ║  l.55: 	handle h = Eff with
-//│ ║        	       ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.55: 	handle h = Eff with
-//│ ╙──      	       ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = h
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.55: 	handle h = Eff with
-//│ ╙──      	       ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = h
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h$ -> Handler$h$1, class:Test -> Test, member:doUnwind$ -> doUnwind$2, member:Cont$handleBlock$h$ -> Cont$handleBlock$h$1, member:hdlrFun$ -> hdlrFun$, member:doUnwind$ -> doUnwind$, $runtime -> runtime, member:doUnwind$ -> doUnwind$3, $definitionMetadata -> definitionMetadata, $block$res -> block$res2, class:Cont$ctor$Test$ -> Cont$ctor$Test$2, member:Eff -> Eff1, $prettyPrint -> prettyPrint, class:A -> A, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$, class:Eff -> Eff, $Term -> Term, member:Cont$handler$h$perform$$ -> Cont$handler$h$perform$$, $Block -> Block, member:hdlrFun -> hdlrFun, $Shape -> Shape, $block$res -> block$res4, class:Handler$h$ -> Handler$h$, class:Cont$handler$h$perform$ -> Cont$handler$h$perform$, member:Predef -> Predef, member:Cont$ctor$Test$ -> Cont$ctor$Test$3, x -> x, $block$res -> block$res5, member:doUnwind$ -> doUnwind$1, member:Cont$handler$h$perform$ -> Cont$handler$h$perform$1, $tmp -> tmp, $tmp -> tmp1, member:Cont$ctor$Test$$ -> Cont$ctor$Test$$1, member:handleBlock$ -> handleBlock$, class:Cont$ctor$Test$ -> Cont$ctor$Test$, $block$res -> block$res, member:Test -> Test2, member:f -> f, class:Test -> Test1, class:Cont$handleBlock$h$ -> Cont$handleBlock$h$, $block$res -> block$res1, $block$res -> block$res3, member:A -> A1, member:Cont$ctor$Test$ -> Cont$ctor$Test$1, module:A -> A)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'h'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.55: 	handle h = Eff with
-//│ ╙──      	       ^
 //│ = 7

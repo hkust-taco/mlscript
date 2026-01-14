@@ -81,7 +81,6 @@ declare module wasm with
 
 declare module debug with
   fun printStack
-  fun getLocals
 
 declare module annotations with
   object compile

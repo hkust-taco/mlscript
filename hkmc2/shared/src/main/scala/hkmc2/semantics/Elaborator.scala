@@ -201,7 +201,6 @@ object Elaborator:
         val not_impl = assumeObject("not_impl")
       object debug extends VirtualModule(assumeBuiltinMod("debug")):
         val printStack = assumeObject("printStack")
-        val getLocals = assumeObject("getLocals")
       object annotations extends VirtualModule(assumeBuiltinMod("annotations")):
         val compile = assumeObject("compile")
         val buffered = assumeObject("buffered")
@@ -266,7 +265,7 @@ object Elaborator:
       val bsym = BlockMemberSymbol("ret", Nil, true)
       val defn = ClassDef(N, syntax.Cls, sym, bsym, N, Nil, Nil, N, ObjBody(Blk(Nil, Term.Lit(UnitLit(false)))), Nil, N)
       sym.defn = S(defn)
-      Term.Sel(runtimeSymbol.ref(), id)(S(sym), N)
+      Term.SynthSel(runtimeSymbol.ref(), id)(S(sym), N)
     val nonLocalRet =
       val id = new Ident("ret")
       BlockMemberSymbol(id.name, Nil, true)
@@ -446,6 +445,8 @@ extends Importer with ucs.SplitElaborator:
           case td @ TermDefinition(Fun, sym, tsym, params, tparams, sign, body, resSym, flags, mf, annotations, comp) =>
             params.reverse match
               case ParamList(_, value :: Nil, _) :: newParams =>
+                if newParams.isEmpty then
+                  raise(ErrorReport(msg"Handler function cannot be a getter" -> td.toLoc :: Nil))
                 val newTd = TermDefinition(Fun, sym, tsym, newParams.reverse, tparams, sign, body, resSym, flags, mf, annotations, comp)
                 S(HandlerTermDefinition(value.sym, newTd))
               case _ => 

@@ -7,12 +7,12 @@
 //│ let lambda;
 //│ lambda = (undefined, function () {
 //│   let tmp;
-//│   tmp1: while (true) {
+//│   lbl: while (true) {
 //│     let scrut;
 //│     scrut = true;
 //│     if (scrut === true) {
 //│       tmp = 0;
-//│       continue tmp1
+//│       continue lbl
 //│     } else {
 //│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│     }
@@ -54,18 +54,18 @@ while x
     set x = false
   else 42
 //│ JS (unsanitized):
-//│ let tmp4;
-//│ tmp5: while (true) {
-//│   let tmp6;
+//│ let tmp2;
+//│ lbl2: while (true) {
+//│   let tmp3;
 //│   if (x2 === true) {
-//│     tmp6 = Predef.print("Hello World");
+//│     tmp3 = Predef.print("Hello World");
 //│     x2 = false;
-//│     tmp4 = runtime.Unit;
-//│     continue tmp5
-//│   } else { tmp4 = 42; }
+//│     tmp2 = runtime.Unit;
+//│     continue lbl2
+//│   } else { tmp2 = 42; }
 //│   break;
 //│ }
-//│ tmp4
+//│ tmp2
 //│ > Hello World
 //│ = 42
 
@@ -107,20 +107,20 @@ while
 //│ JS (unsanitized):
 //│ let lambda2;
 //│ lambda2 = (undefined, function () {
-//│   let tmp19;
-//│   tmp20: while (true) {
-//│     let i2, scrut3, tmp21;
+//│   let tmp13;
+//│   lbl6: while (true) {
+//│     let i2, scrut3, tmp14;
 //│     i2 = 0;
 //│     scrut3 = i2 < 10;
 //│     if (scrut3 === true) {
-//│       tmp21 = i2 + 1;
-//│       i2 = tmp21;
-//│       tmp19 = runtime.Unit;
-//│       continue tmp20
-//│     } else { tmp19 = runtime.Unit; }
+//│       tmp14 = i2 + 1;
+//│       i2 = tmp14;
+//│       tmp13 = runtime.Unit;
+//│       continue lbl6
+//│     } else { tmp13 = runtime.Unit; }
 //│     break;
 //│   }
-//│   return tmp19
+//│   return tmp13
 //│ });
 //│ lambda2
 //│ = fun
@@ -200,21 +200,21 @@ fun f(ls) =
 //│ JS (unsanitized):
 //│ let f;
 //│ f = function f(ls) {
-//│   let tmp28;
-//│   tmp29: while (true) {
-//│     let tl, h, argument0$, argument1$;
+//│   let tmp19;
+//│   lbl9: while (true) {
+//│     let tl, h, arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
-//│       argument0$ = ls.hd;
-//│       argument1$ = ls.tl;
-//│       tl = argument1$;
-//│       h = argument0$;
+//│       arg$Cons$0$ = ls.hd;
+//│       arg$Cons$1$ = ls.tl;
+//│       tl = arg$Cons$1$;
+//│       h = arg$Cons$0$;
 //│       ls = tl;
-//│       tmp28 = Predef.print(h);
-//│       continue tmp29
-//│     } else { tmp28 = Predef.print("Done!"); }
+//│       tmp19 = Predef.print(h);
+//│       continue lbl9
+//│     } else { tmp19 = Predef.print("Done!"); }
 //│     break;
 //│   }
-//│   return tmp28
+//│   return tmp19
 //│ };
 
 f(0)
@@ -252,19 +252,19 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp37;
-//│ tmp38: while (true) {
+//│ let tmp27;
+//│ lbl10: while (true) {
 //│   split_root$: {
 //│     split_1$: {
 //│       if (x3 instanceof Object) {
 //│         break split_1$
 //│       } else { break split_1$ }
 //│     }
-//│     tmp37 = runtime.Unit;
+//│     tmp27 = runtime.Unit;
 //│   }
 //│   break;
 //│ }
-//│ tmp37
+//│ tmp27
 
 
 // ——— FIXME: ———

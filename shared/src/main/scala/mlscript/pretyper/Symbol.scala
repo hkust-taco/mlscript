@@ -71,7 +71,7 @@ package object symbol {
   trait ClassLikeSymbol extends TypeSymbol {
     val parentTypeNames: Ls[Var]
 
-    private val _baseClassLikeSymbols: Lazy[SortedSet[ClassLikeSymbol]] = new mlscript.utils.Lazy({
+    private val _baseClassLikeSymbols: Lazy[SortedSet[ClassLikeSymbol]] = mlscript.utils.Lazy({
       implicit val ord: Ordering[ClassLikeSymbol] = new Ordering[ClassLikeSymbol] {
         override def compare(x: ClassLikeSymbol, y: ClassLikeSymbol): Int =
           x.name.compareTo(y.name)
