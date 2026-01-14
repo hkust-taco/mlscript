@@ -1335,7 +1335,7 @@ class Lifter()(using State, Raise, Config):
               liftDefnsInCls(c, ctxxx.addBmsReqdInfo(createLiftInfoCls(c, ctxxx)))
             case _ => return super.applyBlock(b)
           val newDefns = lifted :: extra
-          val newBms = newDefns.map(_.sym)
+          val newBms = extra.map(_.sym)
           val newBlk = newDefns.foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
           Scoped(newBms.toSet, newBlk)
         case _ => super.applyBlock(b)
