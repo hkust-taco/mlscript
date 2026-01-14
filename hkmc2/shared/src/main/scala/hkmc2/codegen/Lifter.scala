@@ -1050,7 +1050,7 @@ class Lifter()(using State, Raise, Config):
                 val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
                   rst === Nil && config.checkInstantiateEffect, false)
                 val thisSym = TempSymbol(None, "tmp")
-                go(rst, thisSym, acc.assign(thisSym, call))
+                go(rst, thisSym, acc.assignScoped(thisSym, call))
               case Nil => acc.ret(curSym.asPath)
             
             val bod = go(newAuxSyms, initSym, blk => Match(
@@ -1096,7 +1096,7 @@ class Lifter()(using State, Raise, Config):
               
               case Some(value) => (ParamList(value.flags, extraPlist.params ++ value.params, value.restParam), auxPlist)
             
-            val auxCtorDefn_ = FunDefn(None, singleCallBms.b, singleCallBms.d, headParams :: newAuxPlist, bod)(false)
+            val auxCtorDefn_ = FunDefn(None, singleCallBms.b, singleCallBms.d, headParams :: newAuxPlist, Scoped(Set.single(initSym), bod))(false)
             val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
             // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))

@@ -114,78 +114,7 @@ handle h = Eff with
     k()
 f(h, box, 10)
 box.n
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, $tmp -> tmp, member:Handler$h1$f$ -> Handler$h1$f$, member:f -> f1, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, $block$res -> block$res, member:Handler$h2$perform$ -> Handler$h2$perform$, id -> id, $tmp -> tmp1, class:f$capture -> f$capture, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:f$capture -> f$capture1, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $tmp -> tmp2, member:Eff -> Eff1, member:Box -> Box1, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Predef -> Predef, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$ -> handleBlock$, $block$res -> block$res4, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, $args -> args, h -> h1, box -> box1)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, $tmp -> tmp, member:Handler$h1$f$ -> Handler$h1$f$, member:f -> f1, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, $block$res -> block$res, member:Handler$h2$perform$ -> Handler$h2$perform$, id -> id, $tmp -> tmp1, class:f$capture -> f$capture, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:f$capture -> f$capture1, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $tmp -> tmp2, member:Eff -> Eff1, member:Box -> Box1, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Predef -> Predef, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$ -> handleBlock$, $block$res -> block$res4, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, $args -> args, h -> h1, box -> box1)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, $tmp -> tmp, member:Handler$h1$f$ -> Handler$h1$f$, member:f -> f1, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, $block$res -> block$res, member:Handler$h2$perform$ -> Handler$h2$perform$, id -> id, $tmp -> tmp1, class:f$capture -> f$capture, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:f$capture -> f$capture1, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $tmp -> tmp2, member:Eff -> Eff1, member:Box -> Box1, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Predef -> Predef, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$ -> handleBlock$, $block$res -> block$res4, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap(isMut -> isMut, $args -> args, h -> h1, box -> box1)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: member:handleBlock$ is already in Scope:
-//│   parent = S of Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, $tmp -> tmp, member:Handler$h1$f$ -> Handler$h1$f$, member:f -> f1, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, $block$res -> block$res5, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, $block$res -> block$res, member:Handler$h2$perform$ -> Handler$h2$perform$, id -> id, $tmp -> tmp1, class:f$capture -> f$capture, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:f$capture -> f$capture1, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $tmp -> tmp2, member:Eff -> Eff1, member:Box -> Box1, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Predef -> Predef, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$ -> handleBlock$, $block$res -> block$res4, h -> h, class:Handler$h$ -> Handler$h$)
-//│     curThis = S of N
-//│     bindings = HashMap(h -> h1, box -> box1, n -> n, $args -> args)
-//│   curThis = N
-//│   bindings = HashMap($tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $scrut -> scrut, h2 -> h2)
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.utils.Scope.allocateName(Scope.scala:144)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$47(JSBuilder.scala:663)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:156)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1469)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1469)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1313)
+//│ = 5120
 
 handle h1 = Eff with
   fun perform()(k) =
@@ -233,57 +162,6 @@ handle h3 = Eff with
     k()
 h1.perform()
 h3.perform()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, member:Handler$h1$f$ -> Handler$h1$f$, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, h1 -> h11, class:Handler$h1$ -> Handler$h1$4, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, member:Handler$h2$perform$ -> Handler$h2$perform$, class:Handler$h2$ -> Handler$h2$6, class:f$capture -> f$capture, class:Handler$h3$ -> Handler$h3$, member:f$capture -> f$capture1, $block$res -> block$res10, $tmp -> tmp5, member:handleBlock$ -> handleBlock$6, member:Handler$h3$perform -> Handler$h3$perform, member:Handler$h3$ -> Handler$h3$1, member:handleBlock$ -> handleBlock$7, member:Handler$h2$perform -> Handler$h2$perform2, member:Handler$h2$ -> Handler$h2$7, member:handleBlock$ -> handleBlock$8, member:Handler$h1$perform -> Handler$h1$perform1, member:Handler$h1$ -> Handler$h1$5, member:Handler$h1$perform$ -> Handler$h1$perform$1, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$$ -> handleBlock$$4, member:handleBlock$$ -> handleBlock$$5, member:Handler$h3$$ -> Handler$h3$$, member:Handler$h3$perform$ -> Handler$h3$perform$, member:Handler$h2$perform$ -> Handler$h2$perform$2, $block$res -> block$res4, $tmp -> tmp, member:f -> f1, $block$res -> block$res5, h1 -> h1, class:Handler$h1$ -> Handler$h1$2, $block$res -> block$res, id -> id, $tmp -> tmp1, class:Handler$h2$ -> Handler$h2$4, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res9, $tmp -> tmp4, member:handleBlock$ -> handleBlock$4, member:Handler$h2$perform -> Handler$h2$perform1, $tmp -> tmp2, member:Handler$h2$ -> Handler$h2$5, member:handleBlock$ -> handleBlock$5, member:Eff -> Eff1, member:Box -> Box1, member:Handler$h1$perform -> Handler$h1$perform, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Handler$h1$ -> Handler$h1$3, member:Predef -> Predef, member:Handler$h1$perform$ -> Handler$h1$perform$, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, member:handleBlock$$ -> handleBlock$$3, member:Handler$h2$perform$ -> Handler$h2$perform$1, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:handleBlock$ -> handleBlock$, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, h2 -> h2)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, member:Handler$h1$f$ -> Handler$h1$f$, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, h1 -> h11, class:Handler$h1$ -> Handler$h1$4, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, member:Handler$h2$perform$ -> Handler$h2$perform$, class:Handler$h2$ -> Handler$h2$6, class:f$capture -> f$capture, class:Handler$h3$ -> Handler$h3$, member:f$capture -> f$capture1, $block$res -> block$res10, $tmp -> tmp5, member:handleBlock$ -> handleBlock$6, member:Handler$h3$perform -> Handler$h3$perform, member:Handler$h3$ -> Handler$h3$1, member:handleBlock$ -> handleBlock$7, member:Handler$h2$perform -> Handler$h2$perform2, member:Handler$h2$ -> Handler$h2$7, member:handleBlock$ -> handleBlock$8, member:Handler$h1$perform -> Handler$h1$perform1, member:Handler$h1$ -> Handler$h1$5, member:Handler$h1$perform$ -> Handler$h1$perform$1, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$$ -> handleBlock$$4, member:handleBlock$$ -> handleBlock$$5, member:Handler$h3$$ -> Handler$h3$$, member:Handler$h3$perform$ -> Handler$h3$perform$, member:Handler$h2$perform$ -> Handler$h2$perform$2, $block$res -> block$res4, $tmp -> tmp, member:f -> f1, $block$res -> block$res5, h1 -> h1, class:Handler$h1$ -> Handler$h1$2, $block$res -> block$res, id -> id, $tmp -> tmp1, class:Handler$h2$ -> Handler$h2$4, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res9, $tmp -> tmp4, member:handleBlock$ -> handleBlock$4, member:Handler$h2$perform -> Handler$h2$perform1, $tmp -> tmp2, member:Handler$h2$ -> Handler$h2$5, member:handleBlock$ -> handleBlock$5, member:Eff -> Eff1, member:Box -> Box1, member:Handler$h1$perform -> Handler$h1$perform, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Handler$h1$ -> Handler$h1$3, member:Predef -> Predef, member:Handler$h1$perform$ -> Handler$h1$perform$, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, member:handleBlock$$ -> handleBlock$$3, member:Handler$h2$perform$ -> Handler$h2$perform$1, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:handleBlock$ -> handleBlock$, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, h2 -> h2)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, member:handleBlock$ -> handleBlock$1, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, member:Handler$h1$f$ -> Handler$h1$f$, class:handleEffects$capture -> handleEffects$capture, $tmp -> tmp3, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h2$perform -> Handler$h2$perform, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, h1 -> h11, class:Handler$h1$ -> Handler$h1$4, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, member:Handler$h2$perform$ -> Handler$h2$perform$, class:Handler$h2$ -> Handler$h2$6, class:f$capture -> f$capture, class:Handler$h3$ -> Handler$h3$, member:f$capture -> f$capture1, $block$res -> block$res10, $tmp -> tmp5, member:handleBlock$ -> handleBlock$6, member:Handler$h3$perform -> Handler$h3$perform, member:Handler$h3$ -> Handler$h3$1, member:handleBlock$ -> handleBlock$7, member:Handler$h2$perform -> Handler$h2$perform2, member:Handler$h2$ -> Handler$h2$7, member:handleBlock$ -> handleBlock$8, member:Handler$h1$perform -> Handler$h1$perform1, member:Handler$h1$ -> Handler$h1$5, member:Handler$h1$perform$ -> Handler$h1$perform$1, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$$ -> handleBlock$$4, member:handleBlock$$ -> handleBlock$$5, member:Handler$h3$$ -> Handler$h3$$, member:Handler$h3$perform$ -> Handler$h3$perform$, member:Handler$h2$perform$ -> Handler$h2$perform$2, $block$res -> block$res4, $tmp -> tmp, member:f -> f1, $block$res -> block$res5, h1 -> h1, class:Handler$h1$ -> Handler$h1$2, $block$res -> block$res, id -> id, $tmp -> tmp1, class:Handler$h2$ -> Handler$h2$4, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res9, $tmp -> tmp4, member:handleBlock$ -> handleBlock$4, member:Handler$h2$perform -> Handler$h2$perform1, $tmp -> tmp2, member:Handler$h2$ -> Handler$h2$5, member:handleBlock$ -> handleBlock$5, member:Eff -> Eff1, member:Box -> Box1, member:Handler$h1$perform -> Handler$h1$perform, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Handler$h1$ -> Handler$h1$3, member:Predef -> Predef, member:Handler$h1$perform$ -> Handler$h1$perform$, class:Box -> Box, box -> box, $block$res -> block$res7, member:f -> f3, member:handleBlock$$ -> handleBlock$$3, member:Handler$h2$perform$ -> Handler$h2$perform$1, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, member:handleBlock$ -> handleBlock$, h -> h, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, h2 -> h2)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ > h1
 //│ > h3
 //│ > h2
@@ -309,27 +187,7 @@ while i < 10 do
   h2.perform()
   set i = i + 1
 d
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: member:handleBlock$ is already in Scope:
-//│   parent = S of Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap(member:Handler$h2$f -> Handler$h2$f, member:Handler$h2$ -> Handler$h2$1, $block$res -> block$res12, member:handleBlock$ -> handleBlock$1, $tmp -> tmp6, member:Handler$h1$f -> Handler$h1$f, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:Handler$h1$ -> Handler$h1$1, $Term -> Term, member:handleBlock$$ -> handleBlock$$, $Block -> Block, $block$res -> block$res8, $Shape -> Shape, member:handleBlock$$ -> handleBlock$$1, member:Handler$h2$f$ -> Handler$h2$f$, member:Handler$h1$f$ -> Handler$h1$f$, member:handleBlock$ -> handleBlock$9, class:handleEffects$capture -> handleEffects$capture, member:Handler$h2$perform -> Handler$h2$perform3, member:Handler$h2$ -> Handler$h2$9, member:handleBlock$ -> handleBlock$10, $tmp -> tmp3, member:Handler$h1$perform -> Handler$h1$perform2, member:handleEffects$capture -> handleEffects$capture1, member:handleBlock$ -> handleBlock$2, member:Handler$h1$ -> Handler$h1$7, member:Handler$h1$perform$ -> Handler$h1$perform$2, member:Handler$h2$perform -> Handler$h2$perform, member:Handler$h2$ -> Handler$h2$3, member:handleBlock$ -> handleBlock$3, h1 -> h11, class:Handler$h1$ -> Handler$h1$4, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$2, member:Handler$h2$$ -> Handler$h2$$, member:while$ -> while$, member:Handler$h2$perform$ -> Handler$h2$perform$, class:Handler$h2$ -> Handler$h2$6, member:handleBlock$$ -> handleBlock$$6, class:f$capture -> f$capture, member:Handler$h2$perform$ -> Handler$h2$perform$3, class:handleBlock$$capture -> handleBlock$$capture, class:Handler$h3$ -> Handler$h3$, member:f$capture -> f$capture1, member:handleBlock$$capture -> handleBlock$$capture1, class:while$capture -> while$capture, $block$res -> block$res10, member:while$capture -> while$capture1, $tmp -> tmp5, member:handleBlock$ -> handleBlock$6, member:Handler$h3$perform -> Handler$h3$perform, member:Handler$h3$ -> Handler$h3$1, member:handleBlock$ -> handleBlock$7, member:Handler$h2$perform -> Handler$h2$perform2, member:Handler$h2$ -> Handler$h2$7, member:handleBlock$ -> handleBlock$8, member:Handler$h1$perform -> Handler$h1$perform1, member:Handler$h1$ -> Handler$h1$5, member:Handler$h1$perform$ -> Handler$h1$perform$1, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, member:handleBlock$$ -> handleBlock$$4, member:handleBlock$$ -> handleBlock$$5, member:Handler$h3$$ -> Handler$h3$$, member:Handler$h3$perform$ -> Handler$h3$perform$, member:Handler$h2$perform$ -> Handler$h2$perform$2, $block$res -> block$res4, $tmp -> tmp, member:f -> f1, $block$res -> block$res5, h1 -> h1, class:Handler$h1$ -> Handler$h1$2, $block$res -> block$res, id -> id, $tmp -> tmp1, class:Handler$h2$ -> Handler$h2$4, $block$res -> block$res1, member:f -> f2, member:MaybeStop -> MaybeStop1, class:MaybeStop -> MaybeStop, $block$res -> block$res2, member:handleEffects -> handleEffects, $block$res -> block$res6, class:Handler$h1$ -> Handler$h1$, $block$res -> block$res9, $tmp -> tmp4, member:handleBlock$ -> handleBlock$4, member:Handler$h2$perform -> Handler$h2$perform1, $tmp -> tmp2, member:Handler$h2$ -> Handler$h2$5, member:handleBlock$ -> handleBlock$5, member:Eff -> Eff1, member:Box -> Box1, member:Handler$h1$perform -> Handler$h1$perform, class:Eff -> Eff, class:Handler$h2$ -> Handler$h2$, member:Handler$h1$ -> Handler$h1$3, member:Predef -> Predef, member:Handler$h1$perform$ -> Handler$h1$perform$, class:Box -> Box, box -> box, $block$res -> block$res7, d -> d, $block$res -> block$res11, member:f -> f3, member:handleBlock$$ -> handleBlock$$3, h1 -> h12, class:Handler$h1$ -> Handler$h1$6, member:Handler$h2$perform$ -> Handler$h2$perform$1, $block$res -> block$res3, class:Handler$h2$ -> Handler$h2$2, class:Handler$h2$ -> Handler$h2$8, member:handleBlock$ -> handleBlock$, h -> h, class:Handler$h$ -> Handler$h$)
-//│     curThis = S of N
-//│     bindings = HashMap($args -> args, handleBlock$$capture -> handleBlock$$capture2)
-//│   curThis = N
-//│   bindings = HashMap($scrut -> scrut, h2 -> h2, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, label:loopLabel -> loopLabel)
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.utils.Scope.allocateName(Scope.scala:144)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$47(JSBuilder.scala:663)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:156)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1469)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1469)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1313)
+//│ = 11
 
 abstract class Eff2 with
   fun f1(): ()

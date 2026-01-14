@@ -15,57 +15,6 @@ class Test with
         k(x * 2)
     h.perform("A", x) + h.perform("B", x + 1)
 let t = new Test
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, t -> t, $block$res -> block$res2, member:Predef -> Predef, member:handleBlock$ -> handleBlock$, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$, member:Handler$h$$ -> Handler$h$$, member:Handler$h$perform$ -> Handler$h$perform$, class:p$capture -> p$capture, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, member:p$capture -> p$capture1, $block$res -> block$res1, member:Test -> Test1, class:Test -> Test, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, Test$instance -> Test$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, t -> t, $block$res -> block$res2, member:Predef -> Predef, member:handleBlock$ -> handleBlock$, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$, member:Handler$h$$ -> Handler$h$$, member:Handler$h$perform$ -> Handler$h$perform$, class:p$capture -> p$capture, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, member:p$capture -> p$capture1, $block$res -> block$res1, member:Test -> Test1, class:Test -> Test, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, Test$instance -> Test$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = $tmp
-//│     _2 = class hkmc2.semantics.TempSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, t -> t, $block$res -> block$res2, member:Predef -> Predef, member:handleBlock$ -> handleBlock$, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:handleBlock$$ -> handleBlock$$, member:Handler$h$$ -> Handler$h$$, member:Handler$h$perform$ -> Handler$h$perform$, class:p$capture -> p$capture, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, member:p$capture -> p$capture1, $block$res -> block$res1, member:Test -> Test1, class:Test -> Test, class:Handler$h$ -> Handler$h$)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args, isMut -> isMut, Test$instance -> Test$instance)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'tmp'
 //│ t = Test
 
 [t.p(2), t.p(3)]
@@ -73,6 +22,6 @@ let t = new Test
 //│ > B
 //│ > A
 //│ > B
-//│ = [Handler$h$, 14]
+//│ = [10, 14]
 
 

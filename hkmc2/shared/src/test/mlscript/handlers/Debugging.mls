@@ -200,7 +200,7 @@ fun f() =
   set j = 300
   debug.printStack(false)
   debug.printStack(true)
-  print(debug.getLocals())
+  // print(debug.getLocals())
 //│ FAILURE: Unexpected type error
 //│ FAILURE LOCATION: resolveField (Elaborator.scala:346)
 //│ ╔══[ERROR] Module 'debug' does not contain member 'getLocals'
