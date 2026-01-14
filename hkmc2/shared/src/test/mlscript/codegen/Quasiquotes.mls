@@ -120,7 +120,7 @@ x `=> `if x `=== `0.0 then `1.0 else x
 //│   )
 //│ )
 
-:fixme // FIXME: weird error
+:fixme // TODO: error doesn't make much sense (see https://github.com/hkust-taco/mlscript/pull/368#discussion_r2635074722)
 x `=> `if x `== `0.0 then `1.0 else x
 //│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
 //│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x

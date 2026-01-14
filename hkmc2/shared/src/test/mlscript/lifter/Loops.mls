@@ -1,6 +1,6 @@
 :js
 :lift
-:todo // FIXME: Lifting should not require scope flattening
+:todo // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
 
 
 let fs = mut []
