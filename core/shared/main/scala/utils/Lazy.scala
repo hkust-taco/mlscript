@@ -29,7 +29,7 @@ abstract class Lazy[A] extends Box[A] {
   def get = if (_isComputing) N else S(get_!)
   def get_! = {
     assert(!_isComputing)
-    _value.fold(_compute)(identity)
+    _value.getOrElse(_compute)
   }
   private def _compute = {
     _isComputing = true
