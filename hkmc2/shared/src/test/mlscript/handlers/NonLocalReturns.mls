@@ -77,27 +77,12 @@ if true do
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.76: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: member:while is already in Scope:
-//│   parent = N
-//│   curThis = S of S of globalThis:globalThis
-//│   bindings = HashMap($tmp -> tmp, member:foo -> foo, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, class:‹non-local return effect› -> $_non$_local$_return$_effect$_2, $Shape -> Shape, $block$res -> block$res2, $tmp -> tmp2, member:lambda -> lambda, member:f -> f2, member:handleBlock$ -> handleBlock$1, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret1, member:‹non-local return effect› -> $_non$_local$_return$_effect$_3, member:handleBlock$$ -> handleBlock$$1, class:‹non-local return effect› -> $_non$_local$_return$_effect$_9, member:lambda$ -> lambda$1, $tmp -> tmp5, member:f -> f4, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$1, class:‹non-local return effect› -> $_non$_local$_return$_effect$_14, class:‹non-local return effect› -> $_non$_local$_return$_effect$_8, $block$res -> block$res7, member:lambda -> lambda2, $tmp -> tmp6, member:lambda -> lambda3, $block$res -> block$res5, member:handleBlock$ -> handleBlock$7, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret7, member:‹non-local return effect› -> $_non$_local$_return$_effect$_15, member:handleBlock$$ -> handleBlock$$7, member:lambda$ -> lambda$3, member:lam2 -> lam21, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$7, member:lam -> lam1, member:handleBlock$ -> handleBlock$4, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret4, member:‹non-local return effect› -> $_non$_local$_return$_effect$_10, member:handleBlock$ -> handleBlock$5, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret5, member:‹non-local return effect› -> $_non$_local$_return$_effect$_11, member:handleBlock$$ -> handleBlock$$4, member:lam$ -> lam$1, member:g$ -> g$1, member:handleBlock$$ -> handleBlock$$5, member:lam2$ -> lam2$1, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$4, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$5, $block$res -> block$res3, $tmp -> tmp1, member:f -> f1, class:‹non-local return effect› -> $_non$_local$_return$_effect$_5, class:‹non-local return effect› -> $_non$_local$_return$_effect$_4, $tmp -> tmp7, $block$res -> block$res8, $scrut -> scrut, $block$res -> block$res4, $block$res -> block$res9, $tmp -> tmp8, member:while -> while1, $tmp -> tmp9, member:lam2 -> lam2, $tmp -> tmp10, member:lam -> lam, member:handleBlock$ -> handleBlock$2, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret2, member:‹non-local return effect› -> $_non$_local$_return$_effect$_6, member:handleBlock$ -> handleBlock$3, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret3, member:‹non-local return effect› -> $_non$_local$_return$_effect$_7, member:handleBlock$$ -> handleBlock$$2, member:lam$ -> lam$, member:g$ -> g$, member:handleBlock$$ -> handleBlock$$3, member:lam2$ -> lam2$, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$2, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$3, $block$res -> block$res, member:f -> f, class:‹non-local return effect› -> $_non$_local$_return$_effect$_, $block$res -> block$res1, member:handleBlock$ -> handleBlock$, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret, member:‹non-local return effect› -> $_non$_local$_return$_effect$_1, member:handleBlock$$ -> handleBlock$$, member:lambda$ -> lambda$, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$, $tmp -> tmp3, member:f -> f3, class:‹non-local return effect› -> $_non$_local$_return$_effect$_12, member:Predef -> Predef, $block$res -> block$res6, $tmp -> tmp4, member:lambda -> lambda1, member:handleBlock$ -> handleBlock$6, member:‹non-local return effect›ret -> $_non$_local$_return$_effect$_ret6, member:‹non-local return effect› -> $_non$_local$_return$_effect$_13, member:handleBlock$$ -> handleBlock$$6, member:lambda$ -> lambda$2, member:‹non-local return effect›ret$ -> $_non$_local$_return$_effect$_ret$6)
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.utils.Scope.addToBindings(Scope.scala:50)
-//│ 	at: hkmc2.utils.Scope.allocateName(Scope.scala:144)
-//│ 	at: hkmc2.codegen.js.JSBuilder.$anonfun$47(JSBuilder.scala:663)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.Iterator$$anon$9.next(Iterator.scala:594)
-//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
-//│ 	at: scala.collection.IterableOnceOps.toList(IterableOnce.scala:1469)
-//│ 	at: scala.collection.IterableOnceOps.toList$(IterableOnce.scala:1469)
-//│ 	at: scala.collection.AbstractIterator.toList(Iterator.scala:1313)
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.98: 	  type A = return "lol"
+//│ ║  l.83: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 

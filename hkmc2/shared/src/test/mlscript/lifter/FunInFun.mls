@@ -2,11 +2,9 @@
 :js
 
 
-:fixme
 fun foo =
   let x
   fun bar = x
-//│ FAILURE: Unexpected lack of error to fix
 
 :expect 12
 fun foo =

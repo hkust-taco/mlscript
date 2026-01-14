@@ -66,7 +66,7 @@ xs.0()
 fun foo() =
   let x
   fun bar() =
-    set x = 2
+    x = 2
   [bar, () => x]
 
 

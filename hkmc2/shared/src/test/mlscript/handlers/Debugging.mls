@@ -201,6 +201,7 @@ fun f() =
   debug.printStack(false)
   debug.printStack(true)
   // print(debug.getLocals())
+//│ i = 100
 
 f()
 //│ > Stack Trace:
