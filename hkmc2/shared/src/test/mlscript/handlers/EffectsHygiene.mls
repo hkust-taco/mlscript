@@ -1,10 +1,12 @@
 :js
 :effectHandlers
+:lift
 
 module M
 
 // * Notice that the two module definitions are lifted to the top of the block.
 :sjs
+:fixme
 fun foo(h): module M =
   if false then
     module A
@@ -12,32 +14,8 @@ fun foo(h): module M =
   else
     module A
     A
-//│ JS (unsanitized):
-//│ let foo;
-//│ foo = function foo(h) {
-//│   let A2, A3, scrut;
-//│   (class A {
-//│     static {
-//│       A2 = this
-//│     }
-//│     constructor() {
-//│       runtime.Unit;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A"]; 
-//│   });
-//│   (class A1 {
-//│     static {
-//│       A3 = this
-//│     }
-//│     constructor() {
-//│       runtime.Unit;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A"]; 
-//│   });
-//│   scrut = false;
-//│   if (scrut === true) { return A2 } else { return A3 }
-//│ };
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ ═══[WARNING] Modules are not yet lifted.
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 

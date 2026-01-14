@@ -123,7 +123,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
+class Lifter()(using State, Raise, Config):
   import Lifter.*
 
   /**
@@ -247,9 +247,10 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
       case PubField(isym, sym) => Select(isym.asPath, Tree.Ident(sym.nme))(d)
   
   
-  def isHandlerClsPath(p: Path) = handlerPaths match
-    case None => false
-    case Some(paths) => paths.isHandlerClsPath(p)
+
+  val ignoredSet = Set(State.runtimeSymbol.asPath.selSN("NonLocalReturn"))
+  
+  def isIgnoredPath(p: Path) = ignoredSet.contains(p)
   
   /**
     * Creates a capture class for a function consisting of its mutable (and possibly immutable) local variables.
@@ -483,7 +484,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
-            case Some(path) if isHandlerClsPath(path) => ()
+            case Some(path) if isIgnoredPath(path) => ()
             case Some(Select(RefOfBms(s, _), Tree.Ident("class"))) =>
               if clsSyms.contains(s) then extendsGraph += (s -> defn.sym)
             case Some(RefOfBms(s, _)) =>
@@ -648,14 +649,14 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
                 case Some(c: ClsLikeDefn) => Value.Lit(Tree.BoolLit(false)).asArg :: getCallArgs(FunSyms(l, d), ctx)
                 case _ => getCallArgs(FunSyms(l, d), ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, false, c.explicitTailCall))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
             case _ => super.applyResult(r)(k)
           case c @ Instantiate(mut, InstSel(l, S(d)), args) =>
             ctx.bmsReqdInfo.get(l) match
             case Some(info) if !ctx.isModOrObj(l) =>
               val extraArgs = Value.Lit(Tree.BoolLit(mut)).asArg :: getCallArgs(FunSyms(l, d), ctx)
               applyListOf(args, applyArg(_)(_)): newArgs =>
-                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, false, false))
+                k(Call(info.singleCallBms.asPath, extraArgs ++ newArgs)(true, config.checkInstantiateEffect, false))
             case _ => super.applyResult(r)(k)
           // LEGACY CODE: We previously directly created the closure and assigned it to the
           // variable here. But, since this closure may be re-used later, this doesn't work
@@ -953,7 +954,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
           val args2 = headPlistCopy.params.map(p => p.sym.asPath.asArg)
 
           val bdy = blockBuilder
-            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, false, false)) // TODO: restParams not considered
+            .ret(Call(singleCallBms.asPath, args1 ++ args2)(true, true, false)) // TODO: restParams not considered
 
           val mainDefn = FunDefn(f.owner, f.sym, f.dSym, PlainParamList(extraParamsCpy) :: headPlistCopy :: Nil, bdy)(false)
           val auxDefn = FunDefn(N, singleCallBms.b, singleCallBms.d, flatPlist, lifted.body)(forceTailRec = f.forceTailRec)
@@ -1030,26 +1031,25 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
             
             val isMutSym = VarSymbol(Tree.Ident("isMut"))
             
-            var curSym = TempSymbol(None, "tmp")
             def instInner(isMut: Bool) =
               Instantiate(mut = isMut, Value.Ref(c.sym, S(c.isym)), paramArgs)
             
-            val initSym = curSym
+            val initSym = TempSymbol(None, "tmp")
             
-            var acc: Block => Block = blk => Match(
+            def go(cur: List[List[VarSymbol]], curSym: Symbol, acc: Block => Block): Block = cur match
+              case ps :: rst =>
+                val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
+                  rst === Nil && config.checkInstantiateEffect, false)
+                val thisSym = TempSymbol(None, "tmp")
+                go(rst, thisSym, acc.assign(thisSym, call))
+              case Nil => acc.ret(curSym.asPath)
+            
+            val bod = go(newAuxSyms, initSym, blk => Match(
               isMutSym.asPath,
               Case.Lit(Tree.BoolLit(true)) -> Assign(initSym, instInner(true), End()) :: Nil,
               S(Assign(initSym, instInner(false), End())),
               blk
-            )
-            
-            for ps <- newAuxSyms do
-              val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true, false, false)
-              curSym = TempSymbol(None, "tmp")
-              val thisSym = curSym
-              acc = acc.assign(thisSym, call)
-              // acc = blk => acc(Assign(curSym, call, blk))
-            val bod = acc.ret(curSym.asPath)
+            ))
             
             inline def toPlist(ls: List[VarSymbol]) =
               PlainParamList(ls.map(s => Param(FldFlags.empty, s, N, Modulefulness.none)))
@@ -1262,7 +1262,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
         (if paramsSet.contains(s) then s.asPath else Value.Lit(Tree.UnitLit(true))).asArg
       // moved when the capture is instantiated
       val bod = blockBuilder
-        .assign(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
+        .assignScoped(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
         .rest(transformed)
       Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(forceTailRec = f.forceTailRec), captureCls :: newDefns)
@@ -1275,7 +1275,7 @@ class Lifter(handlerPaths: Opt[HandlerPaths])(using State, Raise):
     // so we need to desugar them again
     val blk = LambdaRewriter.desugar(_blk)
 
-    val analyzer = UsedVarAnalyzer(blk, handlerPaths)
+    val analyzer = UsedVarAnalyzer(blk)
     val ctx = LifterCtx
       .withLocals(analyzer.findUsedLocals)
       .withDefns(analyzer.defnsMap)

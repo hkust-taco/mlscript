@@ -19,7 +19,7 @@ import scala.collection.mutable.Map as MutMap
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
+class UsedVarAnalyzer(b: Block)(using State):
   import Lifter.*
 
   private case class DefnMetadata(
@@ -120,10 +120,6 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
   val DefnMetadata(definedLocals, defnsMap, existingVars, 
     inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap) = createMetadata
   
-  def isHandlerClsPath(p: Path) = handlerPaths match
-    case None => false
-    case Some(paths) => paths.isHandlerClsPath(p)
-  
   private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
   private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo =
     cacheId.flatMap(blkMutCache.get) match
@@ -173,7 +169,7 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
         blkAccessesShallow(f.body).withoutLocals(fVars)
       case c: ClsLikeDefn =>
         val methodSyms = c.methods.map(_.sym).toSet
-        val ret = c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
+        c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
           case (acc, fDefn) =>
             // class methods do not need to be lifted, so we don't count calls to their methods.
             // a previous reference to this class's block member symbol is enough to assume any
@@ -182,11 +178,6 @@ class UsedVarAnalyzer(b: Block, handlerPaths: Opt[HandlerPaths])(using State):
             // however, we must keep references to the class itself!
             val defnAccess = findAccessesShallow(fDefn)
             acc ++ defnAccess.withoutBms(methodSyms)
-        if c.parentPath.isDefined && isHandlerClsPath(c.parentPath.get) then
-          // for continuation classes, treat them like they only read variables
-          AccessInfo(ret.accessed ++ ret.mutated, Set.empty, ret.refdDefns)
-        else
-          ret
       case _: ValDefn => AccessInfo.empty
     
     accessedCache.getOrElseUpdate(defn.sym, create)

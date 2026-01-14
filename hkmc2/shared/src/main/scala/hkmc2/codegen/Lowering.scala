@@ -587,14 +587,6 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               t.toLoc :: Nil,
               source = Diagnostic.Source.Compilation)
         conclude(Value.Ref(State.runtimeSymbol).selSN("raisePrintStackEffect").withLocOf(f))
-      case t if instantiatedResolvedBms.exists(_ is ctx.builtins.debug.getLocals) =>
-        if !config.effectHandlers.exists(_.debug) then
-          return fail:
-            ErrorReport(
-              msg"Debugging functions are not enabled" ->
-              t.toLoc :: Nil,
-              source = Diagnostic.Source.Compilation)
-        conclude(Value.Ref(ctx.builtins.debug.getLocals, N).withLocOf(f))
       case t if instantiatedResolvedBms.exists(_ is ctx.builtins.scope.locally) =>
         arg match
         case Tup(Fld(FldFlags.benign(), body, N) :: Nil) =>
@@ -640,11 +632,12 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
             val (paramLists, bodyBlock) = setupFunctionDef(td.params, bod, S(td.sym.nme))      
             S(Handler(td.sym, resumeSym, paramLists, bodyBlock))
       }.collect{ case Some(v) => v }
+      loweringCtx.collectScopedSym(lhs)
       val resSym = loweringCtx.registerTempSymbol(S(t))
       subTerm(rhs): par =>
         subTerms(as): asr =>
           HandleBlock(lhs, resSym, par, asr, cls, handlers,
-            term_nonTail(bod)(Ret),
+            inScopedBlock(returnedTerm(bod)),
             k(Value.Ref(resSym)))
     case st.Blk(sts, res) => block(sts, R(res))(k)
     case Assgn(lhs, rhs) =>
@@ -1039,21 +1032,24 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val desug = LambdaRewriter.desugar(blk)
     
     val handlerPaths = new HandlerPaths
+
+    val withHandlers1 = config.effectHandlers.fold(desug): opt =>
+      HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
-    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
-      HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
+    val lifted =
+      if lift then Lifter().transform(withHandlers1)
+      else withHandlers1
+    
+    val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
+      HandlerLowering(handlerPaths, opt).translateTopLevel(lifted)
       
     val stackSafe = config.stackSafety match
-      case N => withHandlers
-      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, doUnwindPaths).transformTopLevel(withHandlers)
+      case N => withHandlers2
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
     
     val flattened = stackSafe.flattened
     
-    val lifted = 
-      if lift then Lifter(S(handlerPaths)).transform(flattened)
-      else flattened
-    
-    val bufferable = BufferableTransform().transform(lifted)
+    val bufferable = BufferableTransform().transform(flattened)
     
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 

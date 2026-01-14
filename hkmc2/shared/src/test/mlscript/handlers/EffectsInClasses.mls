@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 abstract class Effect with
@@ -19,70 +20,17 @@ data class Lol(h) with
 //│     Lol1.class = this
 //│   }
 //│   constructor(h) {
-//│     let tmp;
-//│     let res, Cont$ctor$Lol$1, doUnwind;
-//│     const this$Lol = this;
-//│     (class Cont$ctor$Lol$ extends runtime.FunctionContFrame.class {
-//│       static {
-//│         Cont$ctor$Lol$1 = this
-//│       }
-//│       constructor(pc) {
-//│         let tmp1;
-//│         tmp1 = super(null);
-//│         this.pc = pc;
-//│       }
-//│       resume(value$) {
-//│         switch (this.pc) {
-//│           case 1:
-//│             tmp = value$;
-//│             break;
-//│           case 2:
-//│             res = value$;
-//│             break;
-//│         }
-//│         contLoop: while (true) {
-//│           switch (this.pc) {
-//│             case 3:
-//│               return this$Lol;
-//│               break;
-//│             case 4:
-//│               res = Predef.print(tmp);
-//│               if (res instanceof runtime.EffectSig.class) {
-//│                 return this.doUnwind(res, 2)
-//│               }
-//│               this.pc = 2;
-//│               continue contLoop;
-//│               break;
-//│             case 1:
-//│               this.pc = 4;
-//│               continue contLoop;
-//│               break;
-//│             case 2:
-//│               this.pc = 3;
-//│               continue contLoop;
-//│               break;
-//│           }
-//│           break;
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cont$ctor$Lol$"]; 
-//│     });
-//│     doUnwind = function doUnwind(res1, pc) {
-//│       res1.contTrace.last.next = new Cont$ctor$Lol$1(pc);
-//│       res1.contTrace.last = res1.contTrace.last.next;
-//│       return res1
-//│     };
+//│     let tmp, tmp1;
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
-//│     if (tmp instanceof runtime.EffectSig.class) {
-//│       return doUnwind(tmp, 1)
+//│     if (runtime.curEffect !== null) {
+//│       tmp = runtime.illegalEffect("in a constructor");
 //│     }
-//│     res = Predef.print(tmp);
-//│     if (res instanceof runtime.EffectSig.class) {
-//│       return doUnwind(res, 2)
+//│     tmp1 = Predef.print(tmp);
+//│     if (runtime.curEffect !== null) {
+//│       tmp1 = runtime.illegalEffect("in a constructor");
 //│     }
-//│     res;
+//│     tmp1;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
@@ -105,48 +53,52 @@ handle k = Eff with
   fun test()(k) = k()
 k.test()
 print("test")
-//│ ═══[RUNTIME ERROR] TypeError: k.test is not a function
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$ is raised in a constructor
 
-
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$2 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       "b"
   new Lol(h)
-//│ > k
-//│ oops = "b"
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$4 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 :expect "b"
 oops
-//│ = "b"
+//│ ═══[RUNTIME ERROR] Expected: '"b"', got: 'undefined'
 
 
+:fixme
 let oops = 
   handle h = Effect with
     fun perform(arg)(k) =
       print(arg)
       k("b")
   Lol(h)
-//│ > k
-//│ > b
-//│ oops = Lol(Handler$h$)
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
+//│ oops = undefined
 
+:fixme
 oops.h
-//│ = Handler$h$
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'h')
 
 let obj = mut {s: undefined}
 //│ obj = {s: undefined}

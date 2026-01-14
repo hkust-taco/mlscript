@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 abstract class ThreadEffect with
@@ -8,7 +9,7 @@ abstract class ThreadEffect with
   fun fork(thread: () -> ()): ()
   fun yld(): ()
 
-class Lock(locked) with
+class Lock(val locked) with
   fun lock(th: ThreadEffect) =
     while locked do
       th.yld()
