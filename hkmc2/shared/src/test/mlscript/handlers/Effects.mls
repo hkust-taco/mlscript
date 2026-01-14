@@ -87,7 +87,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, 1, 3, Handler$h$$instance, arg, k, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, 1, 3, Handler$h$$instance, arg, k, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -141,7 +141,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 4;
 //│         continue main;
@@ -154,7 +154,7 @@ result
 //│         tmp10 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -163,7 +163,7 @@ result
 //│         tmp9 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -172,7 +172,7 @@ result
 //│         tmp8 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 3;
 //│         continue main;

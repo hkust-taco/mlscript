@@ -320,8 +320,6 @@ fun showStackTrace(header, tr, debug, showLocals) =
 //     console.log(eff)
 
 // runtime implementations
-fun unwind(...saved) =
-  curEffect.lastSegmentBuf.push(...saved)
 
 fun mkEffect(handler, handlerFun) =
   let buf = mut []

@@ -56,7 +56,7 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(f, 5, "Debugging.mls:16:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.curEffect.lastSegmentBuf.push(f, 5, "Debugging.mls:16:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -66,7 +66,7 @@ fun f() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(f, 4, "Debugging.mls:17:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│             return runtime.curEffect.lastSegmentBuf.push(f, 4, "Debugging.mls:17:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -88,7 +88,7 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(f, 2, "Debugging.mls:17:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.curEffect.lastSegmentBuf.push(f, 2, "Debugging.mls:17:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;

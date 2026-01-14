@@ -762,9 +762,6 @@ let Runtime1;
   static showStackTrace(header, tr, debug, showLocals) {
     return "Stack Trace not impl"
   } 
-  static unwind(...saved) {
-    return runtime.safeCall(Runtime.curEffect.lastSegmentBuf.push(...saved))
-  } 
   static mkEffect(handler, handlerFun) {
     let buf, seg, stack, cont, tmp;
     buf = [];

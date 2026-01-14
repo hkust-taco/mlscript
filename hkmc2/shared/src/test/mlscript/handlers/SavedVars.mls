@@ -36,7 +36,7 @@ fun g() =
 //│       case 0:
 //│         runtime.resumeValue = always_true();
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0)
+//│           return runtime.curEffect.lastSegmentBuf.push(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0)
 //│         }
 //│         pc = 3;
 //│         continue main;
@@ -56,7 +56,7 @@ fun g() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = f();
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0)
+//│             return runtime.curEffect.lastSegmentBuf.push(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0)
 //│           }
 //│           pc = 2;
 //│           continue main
