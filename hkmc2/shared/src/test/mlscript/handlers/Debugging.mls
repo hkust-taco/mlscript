@@ -201,19 +201,6 @@ fun f() =
   debug.printStack(false)
   debug.printStack(true)
   // print(debug.getLocals())
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: resolveField (Elaborator.scala:346)
-//│ ╔══[ERROR] Module 'debug' does not contain member 'getLocals'
-//│ ║  l.203: 	  print(debug.getLocals())
-//│ ╙──       	             ^^^^^^^^^^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: ref (Lowering.scala:394)
-//│ FAILURE INFO: Ref{sym=member:debug} of member:debug
-//│ ╔══[COMPILATION ERROR] Module 'debug' is virtual (i.e., "compiler fiction"); cannot be used directly
-//│ ║  l.203: 	  print(debug.getLocals())
-//│ ╙──       	        ^^^^^
-//│ i = 100
-  // print(debug.getLocals())
 
 f()
 //│ > Stack Trace:
@@ -221,5 +208,4 @@ f()
 //│ > Stack Trace:
 //│ > 	at f (Debugging.mls:201:3)
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:202:3) with locals: j=300
-//│ > 
+//│ > 	at tail position
