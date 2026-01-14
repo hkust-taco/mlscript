@@ -24,9 +24,12 @@ case class Config(
   target: CompilationTarget,
   rewriteWhileLoops: Bool,
   tailRecOpt: Bool,
+  qqEnabled: Bool,
 ):
   
   def stackSafety: Opt[StackSafety] = effectHandlers.flatMap(_.stackSafety)
+
+  def checkInstantiateEffect: Bool = effectHandlers.exists(_.checkInstantiateEffect)
   
   // NOTE: We force the rewriting of while loops to functions when handler lowering is on
   // to prevent the "floating out" of definitions done by handler lowering,
@@ -52,11 +55,19 @@ object Config:
     rewriteWhileLoops = false,
     stageCode = false,
     tailRecOpt = true,
+    qqEnabled = false,
   )
   
   case class SanityChecks(light: Bool)
   
-  case class EffectHandlers(debug: Bool, stackSafety: Opt[StackSafety])
+  case class EffectHandlers(
+    debug: Bool,
+    stackSafety: Opt[StackSafety],
+    // Whether we check `Instantiate` nodes for effects, currently no effect can be raised in a constructor.
+    checkInstantiateEffect: Bool = false,
+    // A debug option that allow codegen to continue even if a unlifted definition is encountered.
+    softLifterError: Bool = false
+  )
   
   case class StackSafety(stackLimit: Int)
   object StackSafety:

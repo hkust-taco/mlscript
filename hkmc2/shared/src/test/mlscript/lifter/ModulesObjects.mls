@@ -27,8 +27,7 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let foo1;
-//│ let M3, M$;
+//│ let M3, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
 //│   if (isMut === true) {
@@ -110,8 +109,7 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let foo4;
-//│ let M5, foo3$, foo$capture3;
+//│ let M5, foo4, foo3$, foo$capture3;
 //│ foo3$ = function foo3$(M6, x, foo$capture4) {
 //│   return M6.foo2()
 //│ };
@@ -147,8 +145,7 @@ fun foo(x, y) =
 //│   static [definitionMetadata] = ["class", "foo$capture"]; 
 //│ });
 //│ foo4 = function foo(x, y) {
-//│   let foo31, tmp;
-//│   let M$1, capture;
+//│   let tmp, M$1, capture;
 //│   capture = new foo$capture3(y);
 //│   M$1 = globalThis.Object.freeze(new M5(x, capture));
 //│   tmp = foo3$(M$1, x, capture);

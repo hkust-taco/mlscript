@@ -86,7 +86,7 @@ class DiffTestRunner
   extends DiffTestRunnerBase(DiffTestRunner.State)
   with ParallelTestExecution
 
-class DiffTestRunnerBase(state: DiffTestRunner.State)
+class DiffTestRunnerBase(val state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
   with TimeLimitedTests
 :

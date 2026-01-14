@@ -84,8 +84,7 @@ case
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped:
-//│     syms = Set(member:lambda)
+//│   main = Scoped(syms = {member:lambda}): 
 //│     body = Define:
 //│       defn = FunDefn:
 //│         owner = N
@@ -101,8 +100,7 @@ case
 //│                 sign = N
 //│                 modulefulness = Modulefulness of N
 //│             restParam = N
-//│         body = Scoped:
-//│           syms = HashSet(a, $arg$Foo$0$)
+//│         body = Scoped(syms = {a, $arg$Foo$0$}): 
 //│           body = Match:
 //│             scrut = Ref:
 //│               l = caseScrut

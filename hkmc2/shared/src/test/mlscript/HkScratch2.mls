@@ -199,8 +199,7 @@ fun test(x) = if x is
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped:
-//│     syms = HashSet(member:test)
+//│   main = Scoped(syms = {member:test}): 
 //│     body = Define:
 //│       defn = FunDefn:
 //│         owner = N

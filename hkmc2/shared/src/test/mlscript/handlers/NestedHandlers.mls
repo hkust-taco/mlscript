@@ -1,12 +1,14 @@
 :js
 :effectHandlers
+:lift
 
 let id = 0
 //│ id = 0
 
-
+// FIXME: if the following 2 blocks are together, lifter causes class ordering issue
 class MaybeStop with
   fun f(x: Bool): ()
+
 fun handleEffects(g) =
   handle h1 = MaybeStop with
     fun f(x)(k) =

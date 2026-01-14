@@ -4,6 +4,7 @@ import runtime from "./Runtime.mjs";
 import RuntimeJS from "./RuntimeJS.mjs";
 import Runtime from "./Runtime.mjs";
 import Rendering from "./Rendering.mjs";
+import Term from "./Term.mjs";
 let Predef1;
 (class Predef {
   static {
@@ -39,6 +40,22 @@ let Predef1;
     this.render = Rendering.render;
     this.assert = globalThis.console.assert;
     this.foldl = Predef.fold;
+    (class meta {
+      static {
+        Predef.meta = this
+      }
+      constructor() {
+        runtime.Unit;
+      }
+      static codegen(t, file) {
+        return Term.codegen(t, file)
+      } 
+      static print(t) {
+        return runtime.safeCall(Term.print(t))
+      }
+      toString() { return runtime.render(this); }
+      static [definitionMetadata] = ["class", "meta"]; 
+    });
   }
   static id(x) {
     return x

@@ -29,35 +29,6 @@ sealed abstract class Block extends Product:
     case _: End => true
     case _ => false
   
-  /** This variation of `definedVars` excludes the `syms` in `Scoped` blocks.
-    * It is used in JSBuilder now: names are allocated in JSBuilder for these `definedVarsNoScoped` symbols.
-    * This is needed now because
-    *   - there are symbols that are not collected in the `Scoped` blocks (due to some passes that have not yet been adapted to Scoped),
-    *     and they still need to be allocated a name in JSBuilder
-    *   - if we don't exlude the `Scoped` symbols, they may be allocated a name
-    *     prematurely and decalred in wrong places, e.g. symbols inside while bodies
-    *     may be declared in an outer level
-    */
-  lazy val definedVarsNoScoped: Set[Local] = this match
-    case _: Return | _: Throw => Set.empty
-    case Begin(sub, rst) => sub.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Assign(l: TermSymbol, r, rst) => rst.definedVarsNoScoped
-    case Assign(l, r, rst) => rst.definedVarsNoScoped + l
-    case AssignField(l, n, r, rst) => rst.definedVarsNoScoped
-    case AssignDynField(l, n, ai, r, rst) => rst.definedVarsNoScoped
-    case Match(scrut, arms, dflt, rst) =>
-      arms.flatMap(_._2.definedVarsNoScoped).toSet ++ dflt.toList.flatMap(_.definedVarsNoScoped) ++ rst.definedVarsNoScoped
-    case End(_) => Set.empty
-    case Break(_) => Set.empty
-    case Continue(_) => Set.empty
-    case Define(defn, rst) =>
-      val rest = rst.definedVarsNoScoped
-      if defn.isOwned then rest else rest + defn.sym
-    // Note that the handler's LHS and body are not part of the current block, so we do not consider them here.
-    case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVarsNoScoped + res
-    case TryBlock(sub, fin, rst) => sub.definedVarsNoScoped ++ fin.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Label(lbl, _, bod, rst) => bod.definedVarsNoScoped ++ rst.definedVarsNoScoped
-    case Scoped(syms, body) => body.definedVarsNoScoped -- syms
   lazy val isAbortive: Bool = this match
     case _: End => false
     case _: Throw | _: Break | _: Continue => true
@@ -73,8 +44,9 @@ sealed abstract class Block extends Product:
     case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
-  // * Note: there is a good chance that historical users of `definedVars` do not properly respect Scoped blocks
-  // * and should adapt their logic to use `definedVarsNoScoped` instead.
+  // * Note: it seems most historical uses of `definedVars` would be better removed,
+  // * now that we properly put everything in proper Scoped blocks;
+  // * and `definedVars` itself should be removed.
   lazy val definedVars: Set[Local] = this match
     case _: Return | _: Throw => Set.empty
     case Begin(sub, rst) => sub.definedVars ++ rst.definedVars
@@ -94,7 +66,7 @@ sealed abstract class Block extends Product:
     case HandleBlock(lhs, res, par, args, cls, hdr, bod, rst) => rst.definedVars + res
     case TryBlock(sub, fin, rst) => sub.definedVars ++ fin.definedVars ++ rst.definedVars
     case Label(lbl, _, bod, rst) => bod.definedVars ++ rst.definedVars
-    case Scoped(syms, body) => body.definedVars
+    case Scoped(syms, body) => body.definedVars ++ syms
   
   lazy val size: Int = this match
     case _: Return | _: Throw | _: End | _: Break | _: Continue => 1
@@ -107,7 +79,8 @@ sealed abstract class Block extends Product:
     case Define(_, rst) => 1 + rst.size
     case TryBlock(sub, fin, rst) => 1 + sub.size + fin.size + rst.size
     case Label(_, _, bod, rst) => 1 + bod.size + rst.size
-    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) => 1 + handlers.map(_.body.size).sum + bdy.size + rst.size
+    case HandleBlock(lhs, res, par, args, cls, handlers, bdy, rst) =>
+      1 + handlers.map(_.body.size).sum + bdy.size + rst.size
     case Scoped(_, body) => body.size
   
   // TODO conserve if no changes
@@ -768,6 +741,7 @@ extension (k: Block => Block)
   def transform(f: (Block => Block) => (Block => Block)) = f(k)
   
   def assign(l: Local, r: Result) = k.chain(Assign(l, r, _))
+  def assignScoped(l: Local, r: Result) = k.scopedVars(Set.single(l)).assign(l, r)
   def assignFieldN(lhs: Path, nme: Tree.Ident, rhs: Result) = k.chain(AssignField(lhs, nme, rhs, _)(N))
   def break(l: LabelSymbol): Block = k.rest(Break(l))
   def continue(l: LabelSymbol): Block = k.rest(Continue(l))
@@ -777,6 +751,7 @@ extension (k: Block => Block)
     k.chain(Match(scrut, cse -> trm :: Nil, els, _))
   def label(label: LabelSymbol, loop: Bool, body: Block) = k.chain(Label(label, loop, body, _))
   def ret(r: Result) = k.rest(Return(r, false))
+  def scopedVars(s: collection.Set[Local]) = k.chain(Scoped(s, _))
   def staticif(b: Boolean, f: (Block => Block) => (Block => Block)) = if b then k.transform(f) else k
   def foldLeft[A](xs: Iterable[A])(f: (Block => Block, A) => Block => Block) = xs.foldLeft(k)(f)
 

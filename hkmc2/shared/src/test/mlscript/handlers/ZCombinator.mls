@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 :stackSafe 1000
 
 fun selfApp(f) = f(f)
@@ -87,7 +88,7 @@ let fact =
         x * prev
     b
   mkrec(a)
-//│ fact = fun b
+//│ fact = fun
 
 :expect 3628800
 :stackSafe 5

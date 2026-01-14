@@ -905,7 +905,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     vars
 
   def block(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
-    val locals = blockPreamble(t.definedVars)
+    val locals = blockPreamble(t.definedVars) // TODO: remove use of `definedVars` now that we properly put everything in proper Scoped blocks (see the change already done in JSBuilder)
     (returningTerm(t), locals)
 
   def body(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
