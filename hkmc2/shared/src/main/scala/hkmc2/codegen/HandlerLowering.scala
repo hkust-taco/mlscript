@@ -4,9 +4,7 @@ package codegen
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.util.boundary
-import sourcecode.Line
-import sourcecode.FileName
-import sourcecode.Name
+import sourcecode.{ Line, FileName, Name }
 
 import mlscript.utils.*, shorthands.*
 import hkmc2.utils.*
@@ -188,18 +186,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         S(uid, loc)
       case _ => N
 
-  abstract class LazyId:
-    private var id: Opt[StateId] = N
-    protected def getImpl: StateId
-    def get: StateId = id match
-      case S(value) => value
-      case N =>
-        val value = getImpl
-        id = S(value)
-        value
-    def isUsed: Bool = id.isDefined
+  abstract class LazyId extends Lazy[StateId]:
+    def isUsed: Bool = !isEmpty
     def transitionOrBlk(blk: => Block) =
-      if isUsed then StateTransition(get) else blk
+      if isEmpty then blk else StateTransition(get_!)
   
   private class IdAllocator:
     var id: Int = 0
@@ -257,7 +247,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
           .rest(StateTransition(stateId))
         boundary.break(newBlock)
       class RestLazyId(rst: Block) extends LazyId:
-        def getImpl: StateId = forceId(go(rst)(using partitioned = true), false)
+        def compute: StateId = forceId(go(rst)(using partitioned = true), false)
         def transitionSoft: Block = transitionOrBlk(go(rst))
 
       val nonTrivialBlockChecker = new BlockDataTransformer(SymbolSubst()):
@@ -287,13 +277,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case Label(label, loop, body, rest) =>
         val restId = RestLazyId(rest)
         val startId = new LazyId:
-          def getImpl = allocId()
+          def compute = allocId()
         labelIds(label) = (startId, restId)
         val newBody = go(body)(using S(restId))
         if startId.isUsed then
           // We break down the label, and force the usage of rest so that all Break will be rewritten later
-          result(startId.get) = BlockPartition(Begin(newBody, StateTransition(restId.get)), false)
-          StateTransition(startId.get)
+          result(startId.get_!) = BlockPartition(Begin(newBody, StateTransition(restId.get_!)), false)
+          StateTransition(startId.get_!)
         else
           Label(label, loop, newBody, restId.transitionSoft)
 
@@ -306,7 +296,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             return blk
           case S(value) => value
         if partitioned then
-          StateTransition(end.get)
+          StateTransition(end.get_!)
         else
           // We might still need to do a StateTransition if the label is broken down.
           // This is done afterwards in a replacement pass.
@@ -321,7 +311,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             return blk
           case S(value) => value
         if partitioned then
-          StateTransition(start.get)
+          StateTransition(start.get_!)
         else
           // Same as above.
           Continue(label)
@@ -333,7 +323,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
       case End(_) =>
         if partitioned then
-          afterEnd.fold(blk)(id => StateTransition(id.get))
+          afterEnd.fold(blk)(id => StateTransition(id.get_!))
         else
           blk
 
@@ -365,14 +355,16 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
 
     val replaceStaleLabels = new BlockTransformerShallow(SymbolSubst()):
       override def applyBlock(b: Block): Block = b match
-        case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.get)
-        case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.get)
+        case Break(label) if labelIds(label)._2.isUsed => StateTransition(labelIds(label)._2.get_!)
+        case Continue(label) if labelIds(label)._1.isUsed => StateTransition(labelIds(label)._2.get_!)
         case _ => super.applyBlock(b)
     val newMap = Map.from(result.map: (id, part) =>
       id -> BlockPartition(replaceStaleLabels.applyBlock(part.blk), part.resumable))
     PartitionedBlock(initId, newMap, allocId, containsCall)
 
   private def computeRestoreList(parts: PartitionedBlock)(using ctx: FunctionCtx): List[Local] =
+    // We compute the restore list by taking the union of live variables at each resumption point
+    // The live variable analysis uses a classic work list approach
     val locals = ctx.resumeInfo.currentLocals
 
     val localSetMap = locals.zipWithIndex.toMap
@@ -388,7 +380,9 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       newId
 
     def computeVarInfo(blk: Block): PartitionVarInfo =
+      // Variables that are assigned in the block
       val assigned = mutable.BitSet.empty
+      // Variables that are used before any assignment in the block, which means they must be live
       val used = mutable.BitSet.empty
       val outgoing = mutable.HashSet.empty[StateId]
 
@@ -434,7 +428,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             applyBlock(rest)
           case _ => super.applyBlock(b)
         override def applySymbol(sym: Symbol): Unit =
-          localSetMap.get(sym).fold(()): idx =>
+          localSetMap.get(sym).foreach: idx =>
             if !assigned.contains(idx) then
               used += idx
 
@@ -483,10 +477,10 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
   
   private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
-    if opt.hardLifterError then
-      InternalError(msgs, source = Diagnostic.Source.Compilation)
-    else
+    if opt.softLifterError then
       WarningReport(msgs, source = Diagnostic.Source.Compilation)
+    else
+      InternalError(msgs, source = Diagnostic.Source.Compilation)
 
   /**
    * The actual translation:
@@ -704,7 +698,6 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     transform.applyBlock(b)
 
   def translateTopLevel(b: Block): (Block, StackSafetyMap) =
-    stackSafetyMap.clear()
     val preTransformed = new PreHandlerLowering().applyBlock(b)
     val ctx = HandlerCtx.TopLevel
     val transformed = translateBlock(preTransformed, ctx, Set.empty)
