@@ -24,11 +24,11 @@ data class Lol(h) with
 //│     this.h = h;
 //│     tmp = runtime.safeCall(this.h.perform("k"));
 //│     if (runtime.curEffect !== null) {
-//│       tmp = runtime.ctorEffect();
+//│       tmp = runtime.illegalEffect("in a constructor");
 //│     }
 //│     tmp1 = Predef.print(tmp);
 //│     if (runtime.curEffect !== null) {
-//│       tmp1 = runtime.ctorEffect();
+//│       tmp1 = runtime.illegalEffect("in a constructor");
 //│     }
 //│     tmp1;
 //│   }
@@ -53,7 +53,7 @@ handle k = Eff with
   fun test()(k) = k()
 k.test()
 print("test")
-//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$ is raised inside a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$ is raised in a constructor
 
 :fixme
 let oops = 
@@ -62,7 +62,7 @@ let oops =
       print(arg)
       "b"
   Lol(h)
-//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$2 is raised inside a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$2 is raised in a constructor
 //│ oops = undefined
 
 :fixme
@@ -77,7 +77,7 @@ let oops =
       print(arg)
       "b"
   new Lol(h)
-//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$4 is raised inside a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$4 is raised in a constructor
 //│ oops = undefined
 
 :fixme
@@ -93,7 +93,7 @@ let oops =
       print(arg)
       k("b")
   Lol(h)
-//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised inside a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$6 is raised in a constructor
 //│ oops = undefined
 
 :fixme

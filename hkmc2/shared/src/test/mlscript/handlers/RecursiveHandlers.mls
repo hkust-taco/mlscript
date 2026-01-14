@@ -205,7 +205,7 @@ str
 //│       let tmp13;
 //│       tmp13 = super();
 //│       if (runtime.curEffect !== null) {
-//│         tmp13 = runtime.ctorEffect();
+//│         tmp13 = runtime.illegalEffect("in a constructor");
 //│       }
 //│       tmp13;
 //│     }
@@ -264,7 +264,7 @@ str
 //│       let tmp13;
 //│       tmp13 = super();
 //│       if (runtime.curEffect !== null) {
-//│         tmp13 = runtime.ctorEffect();
+//│         tmp13 = runtime.illegalEffect("in a constructor");
 //│       }
 //│       tmp13;
 //│     }

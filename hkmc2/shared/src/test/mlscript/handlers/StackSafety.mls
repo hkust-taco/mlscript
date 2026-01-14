@@ -141,9 +141,9 @@ abstract class Eff with
 // functions and lambdas inside handlers
 :stackSafe 100
 :expect 50005000
-fun foo(h) = h.perform
+fun foo(h) = h.perform()
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
@@ -156,14 +156,14 @@ foo(h)
 :stackSafe 100
 :expect 50005000
 handle h = Eff with
-  fun perform(resume) =
+  fun perform()(resume) =
     let f = ()
     set f = n =>
       if n <= 0 then 0
       else n + f(n-1)
     resume(f(10000))
 in
-  fun foo(h) = h.perform
+  fun foo(h) = h.perform()
   foo(h)
 //│ = 50005000
 

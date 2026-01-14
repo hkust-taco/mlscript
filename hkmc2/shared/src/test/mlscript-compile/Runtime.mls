@@ -214,10 +214,10 @@ fun topLevelEffect(debug) =
   else
     v
 
-fun ctorEffect() =
+fun illegalEffect(position) =
   let tmp = curEffect
   set curEffect = null
-  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised inside a constructor", tmp, false, false))
+  throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised " + position, tmp, false, false))
 
 fun showStackTrace(header, tr, debug, showLocals) =
   let

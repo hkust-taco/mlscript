@@ -77,7 +77,7 @@ module A with
 :lift
 handle h = Object with
   @tailcall
-  fun f(r) = 2
+  fun f()(r) = 2
 //│ ═══[WARNING] This annotation has no effect.
 
 :w

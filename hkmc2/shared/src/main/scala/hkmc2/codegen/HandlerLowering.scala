@@ -92,7 +92,7 @@ object HandlerLowering:
   
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
-  private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo):
+  private case class FunctionCtx(currentFun: Path, thisPath: Option[Path], resumeInfo: ResumeInfo, debugInfo: DebugInfo, isGetter: Bool):
     def doUnwind(loc: Value, stateId: BigInt, restoreList: List[Local])(using paths: HandlerPaths) =
       Return(Call(paths.unwindPath, (
         currentFun ::
@@ -132,7 +132,7 @@ class HandlerPaths(using Elaborator.State):
   val handleBlockImplPath: Path = runtimePath.selSN("handleBlockImpl")
   val stackDelayClsPath: Path = runtimePath.selSN("StackDelay")
   val topLevelEffectPath: Path = runtimePath.selSN("topLevelEffect")
-  val ctorEffectPath: Path = runtimePath.selSN("ctorEffect")
+  val illegalEffectPath: Path = runtimePath.selSN("illegalEffect")
   val enterHandleBlockPath: Path = runtimePath.selSN("enterHandleBlock")
   val stackDepthIdent = new Tree.Ident("stackDepth")
   val stackDepthPath: Path = runtimePath.selN(stackDepthIdent)
@@ -496,7 +496,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val scopedVars = fun.body match
         case Scoped(syms, body) => syms
         case _ => Set()
-      val varList = (scopedVars).toList.sortBy(_.uid)
+      val varList = scopedVars.toList.sortBy(_.uid)
       val debugInfo = Value.Lit(Tree.StrLit(debugNme)).asArg :: varList.zipWithIndex.filter(_._1.isInstanceOf[VarSymbol])
         .flatMap: (sym, idx) =>
           List(intLit(idx), Value.Lit(Tree.StrLit(sym.nme)))
@@ -506,7 +506,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       val rtArgLists = intLit(fun.params.length) :: fun.params.flatMap: pl =>
         intLit(pl.params.length) :: pl.params.map(_.sym.asPath)
       val newCtx = HandlerCtx.FunctionLike(FunctionCtx(funcPath, thisPath, ResumeInfo(rtArgLists, varList, L(fun.sym)),
-        DebugInfo(debugNme, if opt.debug then debugInfoSym.asPath else unit)))
+        DebugInfo(debugNme, if opt.debug then debugInfoSym.asPath else unit), thisPath.isDefined && fun.params.isEmpty))
       val bod2 = translateBlock(fun.body, newCtx, scopedVars)
       val fun2 = if fun.body is bod2 then fun else
         FunDefn(fun.owner, fun.sym, fun.dSym, fun.params, bod2)(fun.forceTailRec)
@@ -551,10 +551,12 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         case _ => super.applyDefn(defn)(k)
     val b = subblockTransform.applyBlock(blk)
     if h.inCtor then
-      return translateTopLevelOrCtor(b, Call(paths.ctorEffectPath, Nil)(true, true, false))
+      return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, Value.Lit(Tree.StrLit("in a constructor")).asArg :: Nil)(true, true, false))
     if h.inTopLevel then
-      return translateTopLevelOrCtor(b, Call(paths.topLevelEffectPath, Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
+      return translateIllegalEffectCtx(b, Call(paths.topLevelEffectPath, Value.Lit(Tree.BoolLit(opt.debug)).asArg :: Nil)(true, false, false))
     val ctx = h.asInstanceOf[HandlerCtx.FunctionLike].ctx
+    if ctx.isGetter then
+      return translateIllegalEffectCtx(b, Call(paths.illegalEffectPath, Value.Lit(Tree.StrLit("in a getter")).asArg :: Nil)(true, false, false))
     given FunctionCtx = ctx
     val parts = partitionBlock(b)
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
@@ -616,8 +618,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
   private def translateCtorLike(b: Block, thisPath: Path, isModCtor: Bool)(using h: HandlerCtx): Block =
     translateBlock(b, if isModCtor then HandlerCtx.ModCtor else HandlerCtx.Ctor, Set.empty)
 
-  private def translateTopLevelOrCtor(b: Block, onEffect: Call)(using HandlerCtx): Block =
-    def topLevelCheck(l: Local, r: Result, rst: Block): Block =
+  private def translateIllegalEffectCtx(b: Block, onEffect: Call)(using HandlerCtx): Block =
+    def effectCheck(l: Local, r: Result, rst: Block): Block =
       blockBuilder
         .assign(l, r)
         .ifthen(
@@ -630,13 +632,13 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       override def applyBlock(b: Block) = b match
         case Assign(lhs, EffectfulResult(r), rest) =>
           // Optimization to reuse lhs instead of fresh local
-          topLevelCheck(lhs, r, applyBlock(rest))
+          effectCheck(lhs, r, applyBlock(rest))
         case _ => super.applyBlock(b)
       override def applyResult(r: Result)(k: Result => Block) = r match
         case EffectfulResult(r) =>
           // Fallback case, this may lead to unnecessary assignments if it is assign-like
           val l = freshTmp()
-          Scoped(Set(l), topLevelCheck(l, r, k(Value.Ref(l))))
+          Scoped(Set(l), effectCheck(l, r, k(Value.Ref(l))))
         case _ => super.applyResult(r)(k)
     topLevelTransform.applyBlock(b)
   

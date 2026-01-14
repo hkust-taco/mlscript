@@ -703,14 +703,15 @@ let Runtime1;
       return v
     }
   } 
-  static ctorEffect() {
-    let tmp, tmp1, tmp2, tmp3;
+  static illegalEffect(position) {
+    let tmp, tmp1, tmp2, tmp3, tmp4;
     tmp = Runtime.curEffect;
     Runtime.curEffect = null;
     tmp1 = "Error: Effect " + tmp.handler.constructor.name;
-    tmp2 = tmp1 + " is raised inside a constructor";
-    tmp3 = Runtime.showStackTrace(tmp2, tmp, false, false);
-    throw Runtime.CustomStackError(tmp3)
+    tmp2 = tmp1 + " is raised ";
+    tmp3 = tmp2 + position;
+    tmp4 = Runtime.showStackTrace(tmp3, tmp, false, false);
+    throw Runtime.CustomStackError(tmp4)
   } 
   static showStackTrace(header, tr, debug, showLocals) {
     let msg, curHandler, atTail, tmp, tmp1, tmp2, tmp3;

@@ -115,7 +115,7 @@ result
 //│     let tmp8;
 //│     tmp8 = super();
 //│     if (runtime.curEffect !== null) {
-//│       tmp8 = runtime.ctorEffect();
+//│       tmp8 = runtime.illegalEffect("in a constructor");
 //│     }
 //│     tmp8;
 //│   }
