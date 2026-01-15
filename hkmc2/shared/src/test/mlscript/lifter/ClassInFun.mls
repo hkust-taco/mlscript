@@ -90,8 +90,7 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let f6, tmp5;
-//│ let Bad1, Good1, Bad$, Good$, f$capture3;
+//│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
 //│   let tmp6, tmp7;
 //│   if (isMut === true) {

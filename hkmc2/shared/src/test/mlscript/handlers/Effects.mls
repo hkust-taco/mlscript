@@ -71,8 +71,7 @@ in
   h.perform("5")
 result
 //│ JS (unsanitized):
-//│ let result, h7, tmp7, handleBlock$7, Handler$h$15;
-//│ let Handler$h$perform7, Handler$h$perform$7;
+//│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$7;
 //│ result = "";
 //│ Handler$h$perform$7 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
 //│   let v, pc;

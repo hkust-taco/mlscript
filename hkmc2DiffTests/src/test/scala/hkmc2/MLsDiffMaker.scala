@@ -105,6 +105,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       target = if wasm.isSet then CompilationTarget.Wasm else CompilationTarget.JS,
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
+      qqEnabled = importQQ.isSet,
     )
   
   

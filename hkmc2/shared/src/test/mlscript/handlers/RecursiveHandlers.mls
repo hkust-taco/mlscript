@@ -156,11 +156,10 @@ if true do
 str
 //│ JS (unsanitized):
 //│ let str, scrut, h11, tmp11, tmp12;
-//│ let handleBlock$9, Handler$h2$perform1, Handler$h2$3, Handler$h1$perform1, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   let handleBlock$10, Handler$h1$3;
+//│   let handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
 //│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
 //│     let tmp13, tmp14, tmp15, pc;
 //│     if (runtime.resumePc === -1) {
@@ -309,8 +308,7 @@ str
 //│     }
 //│   });
 //│   handleBlock$10 = (undefined, function () {
-//│     let h22, tmp13, pc;
-//│     let handleBlock$$here;
+//│     let h22, tmp13, handleBlock$$here, pc;
 //│     if (runtime.resumePc === -1) {
 //│       pc = 0;
 //│     } else {

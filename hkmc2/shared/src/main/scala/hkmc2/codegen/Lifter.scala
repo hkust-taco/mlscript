@@ -14,6 +14,7 @@ import hkmc2.codegen.llir.FreshInt
 
 import scala.collection.mutable.LinkedHashMap
 import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
 
 object Lifter:
   /**
@@ -623,7 +624,11 @@ class Lifter()(using State, Raise, Config):
     var activeClosures: Set[Local] = Set.empty
     // Map from block member symbols to initialized closures
     val closureMap: MutMap[BlockMemberSymbol, Local] = MutMap.empty
+    val extraLocals: MutSet[Local] = MutSet.empty
     
+    def rewrite(b: Block) =
+      val ret = applyBlock(b)
+      Scoped(extraLocals, ret)
     
     // Replaces references to BlockMemberSymbols as needed with fresh variables, and
     // returns the mapping from the symbol to the required variable. When possible,
@@ -635,6 +640,7 @@ class Lifter()(using State, Raise, Config):
     def rewriteBms(b: Block) =
       // BMS's that need to be created
       val syms: LinkedHashMap[FunSyms[?], Local] = LinkedHashMap.empty
+      val extraLocals: MutSet[Local] = MutSet.empty
 
       val walker = new BlockDataTransformer(SymbolSubst()):
         // only scan within the block. don't traverse
@@ -674,6 +680,7 @@ class Lifter()(using State, Raise, Config):
                 // $this was previously used, but it may be confused with the `this` keyword
                 // let's use $here instead
                 val newSym = TempSymbol(N, l.nme + "$here")
+                extraLocals.add(newSym)
                 syms.addOne(FunSyms(l, d) -> newSym) // add to `syms`: this closure will be initialized in `applyBlock`
                 closureMap.addOne(l -> newSym) // add to `closureMap`: `newSym` refers to the closure and can be used later
                 newSym
@@ -686,7 +693,7 @@ class Lifter()(using State, Raise, Config):
                 value
             k(Value.Ref(newSym, S(d)))
           case _ => super.applyPath(p)(k)
-      (walker.applyBlock(b), syms.toList)
+      (walker.applyBlock(b), syms.toList, extraLocals)
     end rewriteBms
     
     def applySubBlockAndReset(b: Block): Block =
@@ -698,7 +705,8 @@ class Lifter()(using State, Raise, Config):
     override def applyBlock(b: Block): Block = 
       // extract references to BlockMemberSymbols in the block which now may
       // need to be enriched with aux parameters
-      val (rewritten, syms) = rewriteBms(b)
+      val (rewritten, syms, extras) = rewriteBms(b)
+      extraLocals.addAll(extras)
       val pre = syms.foldLeft(blockBuilder):
         case (blk, (bms, local)) =>
           val initial = blk.assign(local, createCall(bms, ctx))
@@ -778,6 +786,7 @@ class Lifter()(using State, Raise, Config):
         case Define(d: ClsLikeDefn, rest: Block) => ctx.modObjLocals.get(d.sym) match
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
             case Some(_) => // has args
+              extraLocals.add(sym)
               blockBuilder
                 .assign(sym, Instantiate(mut = false, d.sym.asPath, getCallArgs(FunSyms(d.sym, d.isym), ctx)))
                 .rest(applyBlock(rest))
@@ -1041,7 +1050,7 @@ class Lifter()(using State, Raise, Config):
                 val call = Call(curSym.asPath, ps.map(_.asPath.asArg))(true,
                   rst === Nil && config.checkInstantiateEffect, false)
                 val thisSym = TempSymbol(None, "tmp")
-                go(rst, thisSym, acc.assign(thisSym, call))
+                go(rst, thisSym, acc.assignScoped(thisSym, call))
               case Nil => acc.ret(curSym.asPath)
             
             val bod = go(newAuxSyms, initSym, blk => Match(
@@ -1087,7 +1096,7 @@ class Lifter()(using State, Raise, Config):
               
               case Some(value) => (ParamList(value.flags, extraPlist.params ++ value.params, value.restParam), auxPlist)
             
-            val auxCtorDefn_ = FunDefn(None, singleCallBms.b, singleCallBms.d, headParams :: newAuxPlist, bod)(false)
+            val auxCtorDefn_ = FunDefn(None, singleCallBms.b, singleCallBms.d, headParams :: newAuxPlist, Scoped(Set.single(initSym), bod))(false)
             val auxCtorDefn = BlockTransformer(subst).applyFunDefn(auxCtorDefn_)
             
             // Lifted(lifted, extras ::: (fakeCtorDefn :: auxCtorDefn :: Nil))
@@ -1095,6 +1104,10 @@ class Lifter()(using State, Raise, Config):
         case _ => Lifted(d, Nil)
   
   end liftOutDefnCont
+  
+  def removeDefnsFromScope(b: Block, defns: List[Defn]) = b match
+    case Scoped(syms, body) => Scoped(syms.toSet -- defns.map(_.sym), body)
+    case _ => b
   
   def liftDefnsInCls(c: ClsLikeDefn, ctx: LifterCtx): Lifted[ClsLikeDefn] =
     val ctxx = if c.companion.isDefined then ctx.inModule(c) else ctx // TODO: refine handling of companions
@@ -1162,9 +1175,9 @@ class Lifter()(using State, Raise, Config):
     
     val replacedDefnsCtx = newCtx.addreplacedDefns(ctorIgnoredRewrite)
     val rewriter = BlockRewriter(newCtx.inScopeISyms, replacedDefnsCtx)
-    val newPreCtor = rewriter.applyBlock(preCtor)
-    val newCtor = rewriter.applyBlock(ctor)
-    val newCCtor = cCtor.map(rewriter.applyBlock(_))
+    val newPreCtor = removeDefnsFromScope(rewriter.rewrite(preCtor), ctorIncluded)
+    val newCtor = removeDefnsFromScope(rewriter.rewrite(ctor), ctorIncluded)
+    val newCCtor = cCtor.map(blk => removeDefnsFromScope(rewriter.rewrite(blk), ctorIncluded))
     
     // ===========================================================
     // STEP 2: rewrite non-static class methods
@@ -1251,10 +1264,11 @@ class Lifter()(using State, Raise, Config):
         lifted.liftedDefn.sym -> lifted.liftedDefn
       .toMap
 
-    val transformed = BlockRewriter(ctx.inScopeISyms, captureCtx.addreplacedDefns(ignoredRewrite)).applyBlock(blk)
+    val transformed = BlockRewriter(ctx.inScopeISyms, captureCtx.addreplacedDefns(ignoredRewrite)).rewrite(blk)
+    val newScopedBlk = removeDefnsFromScope(transformed, included)
 
     if thisVars.reqCapture.size == 0 then
-      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, transformed)(forceTailRec = f.forceTailRec), newDefns)
+      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, newScopedBlk)(forceTailRec = f.forceTailRec), newDefns)
     else
       // move the function's parameters to the capture
       val paramsSet = f.params.flatMap(_.paramSyms)
@@ -1264,8 +1278,9 @@ class Lifter()(using State, Raise, Config):
       val bod = blockBuilder
         .assignScoped(captureSym, Instantiate(mut = true, // * Note: `mut` is needed for capture classes
           captureCls.sym.asPath, paramsList))
-        .rest(transformed)
-      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, bod)(forceTailRec = f.forceTailRec), captureCls :: newDefns)
+        .rest(newScopedBlk)
+      val withScope = Scoped(Set(captureSym), bod)
+      Lifted(FunDefn(f.owner, f.sym, f.dSym, f.params, withScope)(forceTailRec = f.forceTailRec), captureCls :: newDefns)
 
   end liftDefnsInFn
 
@@ -1319,6 +1334,9 @@ class Lifter()(using State, Raise, Config):
               val ctxxx = ctxx.withDefnsCur(analyzer.nestedDeep(d.sym))
               liftDefnsInCls(c, ctxxx.addBmsReqdInfo(createLiftInfoCls(c, ctxxx)))
             case _ => return super.applyBlock(b)
-          (lifted :: extra).foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
+          val newDefns = lifted :: extra
+          val newBms = extra.map(_.sym)
+          val newBlk = newDefns.foldLeft(applyBlock(rest))((acc, defn) => Define(defn, acc))
+          Scoped(newBms.toSet, newBlk)
         case _ => super.applyBlock(b)
     walker1.applyBlock(blk)

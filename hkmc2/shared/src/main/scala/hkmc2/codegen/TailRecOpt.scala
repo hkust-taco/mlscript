@@ -324,8 +324,10 @@ class TailRecOpt(using State, TL, Raise):
                 case x => x
               ret
             // bind the tmps
-            requiredTmps.toList.foldRight(assigns):
-              case ((v, l), acc) => Assign(l, Value.Ref(v), acc)
+            Scoped(
+              requiredTmps.values.toSet,
+              requiredTmps.toList.foldRight(assigns):
+                case ((v, l), acc) => Assign(l, Value.Ref(v), acc))
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
       
@@ -440,5 +442,7 @@ class TailRecOpt(using State, TL, Raise):
         
         case _ => super.applyDefn(defn)(k)
     
-    optFNew.foldLeft(transformer.applyBlock(b)):
-      case (acc, f) => Define(f, acc)
+    Scoped(
+      optFNew.map(_.sym).toSet,
+      optFNew.foldLeft(transformer.applyBlock(b)):
+        case (acc, f) => Define(f, acc))

@@ -138,3 +138,10 @@ safeDiv(10, 3, 0)
 safeDiv(10, 0, -1)
 //│ = -1
 
+
+QuoteExample2.genOpened()
+
+import "../../mlscript-compile/quotes/Opened.mls"
+
+Opened.res
+//│ = false
