@@ -208,6 +208,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     // "ignore" `c` in the sense that it does not need to capture `s`'s scoped object's variables, nor does
     // it require the current scoped object to create a capture class for its accessed variables.
     def isIgnored(c: ScopedInfo) =
+      println("in " + s.obj.toInfo + ":")
+      println("  " + c.toString + " is ignored: " + s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo))
+      println("  first lifted parent of " + c + ": " + scopeData.getNode(c).firstLiftedParent.toInfo)
       s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo)
 
     // All objects in the same scc must have at least the same accesses as each other

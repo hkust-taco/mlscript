@@ -58,7 +58,7 @@ object ScopeData:
         case ClassCtor(cls) => cls.isym.nme // should be unused
         case Func(fun, isMethod) => fun.dSym.nme
         case Loop(sym, block) => "loop$" + sym.uid.toString()
-        case ScopedBlock(uid, block) => "scope$" + uid
+        case ScopedBlock(uid, block) => "scope" + uid
       
       // Locals defined by a scoped object.
       lazy val definedLocals: Set[Local] = this match
@@ -190,11 +190,11 @@ object ScopeData:
         case Some(_: ScopedObject.Companion) => false // there is no need to lift objects nested inside a module
         case _ =>
           obj match
-          case _: ScopedObject.ScopedBlock => false
           // case _: ScopedObject.Companion => false
           // case c: ScopedObject.Class if c.cls.companion.isDefined => false
-          case ScopedObject.Func(isMethod = true) => false
           case _ if ignored.contains(obj.toInfo) => false
+          case ScopedObject.Func(isMethod = true) => false
+          case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
           case _ => true
       
       lazy val isTopLevel: Bool = parent match
@@ -264,14 +264,19 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
   def getNode(defn: FunDefn): ScopeNode = getNode(defn.dSym)
   def getUID(blk: Scoped): ScopeUID =
     if scopedMap.containsKey(blk) then scopedMap.get(blk)
-    else lastWords("getUID: key not found")
+    else
+      println("key not found:")
+      println(blk)
+      lastWords("getUID: key not found")
   def getNode(blk: Scoped): ScopeNode = getNode(getUID(blk))
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
   class ScopeFinder extends BlockTraverserShallow:
     var objs: List[ScopedObject] = Nil
     override def applyBlock(b: Block): Unit = b match
       case s: Scoped =>
-        objs ::= ScopedObject.ScopedBlock(fresh.make, s)
+        val id = fresh.make
+        println("fresh: " + id)
+        objs ::= ScopedObject.ScopedBlock(id, s)
       case l: Label if l.loop =>
         objs ::= ScopedObject.Loop(l.label, l.body)
       case _ => super.applyBlock(b)

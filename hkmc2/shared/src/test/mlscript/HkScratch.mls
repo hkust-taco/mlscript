@@ -5,45 +5,75 @@
 // :elt
 
 :global
-// :d
-// :todo
+:d
+:todo
 
-
+:noSanityCheck
 :lift
-:sjs
-fun f(x, y) =
-  fun g(a)(z) =
-    set x += 1
-    y
-  [g, g]
-//│ JS (unsanitized):
-//│ let g, f, f$capture1, g$;
-//│ g$ = function g$(f$captureAAAA, y) {
-//│   return (a) => {
-//│     return g(f$captureAAAA, y, a)
+:ssjs
+:noTailRec
+fun f(x, y, i) =
+  let x = []
+  while i < 10 do
+    let x = 2
+    fun bruh() = set x += 1
+    bruh()
+    bruh()
+    set i += 1
+  i
+//│ Elab: { fun member:f‹687›(x‹688›, y‹689›, i‹690›) = { let x‹692›; x‹692› = []; while { let scrut = builtin:<‹33›#0(i‹690›#666, 10); $scrut‹694›#0 is true then { let x‹695›; x‹695› = 2; fun member:bruh‹686›() = x‹695›#666 := builtin:+‹48›#0(x‹695›#666, 1); member:bruh‹686›#666(); member:bruh‹686›#666(); i‹690›#666 := builtin:+‹48›#1(i‹690›#666, 1) }; else () }; i‹690›#666 }; }
+//│ JS:
+//│ let bruh, f, Capture$scope11, bruh$;
+//│ bruh$ = function bruh$(scope1$cap) {
+//│   return () => {
+//│     return bruh(scope1$cap)
 //│   }
 //│ };
-//│ g = function g(f$captureAAAA, y, a) {
-//│   return (z) => {
-//│     let tmp;
-//│     tmp = f$captureAAAA.x$capture$0 + 1;
-//│     f$captureAAAA.x$capture$0 = tmp;
-//│     return y
-//│   }
-//│ };
-//│ (class f$capture {
+//│ (class Capture$scope1 {
 //│   static {
-//│     f$capture1 = this
+//│     Capture$scope11 = this
 //│   }
-//│   constructor(x$capture$0) {
-//│     this.x$capture$0 = x$capture$0;
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "f$capture"]; 
+//│   static [definitionMetadata] = ["class", "Capture$scope1"]; 
 //│ });
-//│ f = function f(x, y) {
-//│   let f$capture2, g$here;
-//│   f$capture2 = new f$capture1(undefined);
-//│   g$here = g$(f$capture2, y);
-//│   return globalThis.Object.freeze([ g$here, g$here ])
+//│ bruh$ = function bruh$(scope1$cap) {
+//│   return () => {
+//│     return bruh(scope1$cap)
+//│   }
 //│ };
+//│ bruh = function bruh(scope1$cap) {
+//│   let tmp;
+//│   tmp = scope1$cap.x$0 + 1;
+//│   scope1$cap.x$0 = tmp;
+//│   return runtime.Unit
+//│ };
+//│ f = function f(x, y, i) {
+//│   let x1, tmp;
+//│   x1 = globalThis.Object.freeze([]);
+//│   lbl: while (true) {
+//│     let scrut, x2, tmp1, tmp2, tmp3, scope1$cap;
+//│     scope1$cap = new Capture$scope11(undefined);
+//│     scrut = i < 10;
+//│     if (scrut === true) {
+//│       bruh = function bruh(scope1$cap1) {
+//│         let tmp4;
+//│         tmp4 = scope1$cap1.x$0 + 1;
+//│         scope1$cap1.x$0 = tmp4;
+//│         return runtime.Unit
+//│       };
+//│       scope1$cap.x$0 = 2;
+//│       tmp1 = bruh(scope1$cap);
+//│       tmp2 = bruh(scope1$cap);
+//│       tmp3 = i + 1;
+//│       i = tmp3;
+//│       tmp = runtime.Unit;
+//│       continue lbl
+//│     } else { tmp = runtime.Unit; }
+//│     break;
+//│   }
+//│   return i
+//│ };
+//│ block$res1 = undefined;

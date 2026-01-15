@@ -112,7 +112,7 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(blk: Block)(using State, Raise):
+class Lifter(topLevelBlk: Block)(using State, Raise):
   import Lifter.*
 
   /**
@@ -817,14 +817,14 @@ class Lifter(blk: Block)(using State, Raise):
   end liftOutDefnCont
   
   given ignoredScopes: IgnoredScopes = IgnoredScopes(N)
-  val data = ScopeData(blk)
+  val data = ScopeData(topLevelBlk)
   val metadata = data.root.children.foldLeft(LifterMetadata.empty)(_ ++ createMetadata(_))
   
   def asDSym(s: ClsSym | ModuleOrObjSym): DefinitionSymbol[?] = s
   val ignored: Set[ScopedInfo] = metadata.unliftable.map(asDSym)
   ignoredScopes.ignored = S(ignored)
     
-  val usedVars = UsedVarAnalyzer(blk, data)
+  val usedVars = UsedVarAnalyzer(topLevelBlk, data)
   
   // for debugging
   def printMap[T, V](m: Map[T, V]) =
@@ -836,7 +836,7 @@ class Lifter(blk: Block)(using State, Raise):
       println(v)
     println(")")
   
-  /*
+  
   println("accessesShallow")
   printMap(usedVars.shallowAccesses)
   println("accesses")
@@ -844,7 +844,7 @@ class Lifter(blk: Block)(using State, Raise):
   printMap(usedVars.accessMapWithIgnored)
   println("usedVars")
   printMap(usedVars.reqdCaptures)
-  */
+  
   
   def isIgnored(d: Defn) = d match
     case f: FunDefn => ignored.contains(f.dSym)
@@ -868,7 +868,7 @@ class Lifter(blk: Block)(using State, Raise):
     */
   def createCaptureCls(s: ScopedObject)
       : (ClsLikeDefn, List[(Local, TermSymbol)]) =
-    val nme = s.nme + "$capture"
+    val nme = "Capture$" + s.nme
 
     val clsSym = ClassSymbol(
       Tree.DummyTypeDef(syntax.Cls),
@@ -881,7 +881,7 @@ class Lifter(blk: Block)(using State, Raise):
     
     val sortedVars = cap.toArray.sortBy(_.uid).map: sym =>
       val id = fresh.make
-      val nme = sym.nme + "$capture$" + id
+      val nme = sym.nme + "$" + id
       
       val ident = new Tree.Ident(nme)
       val varSym = VarSymbol(ident)
@@ -1085,7 +1085,7 @@ class Lifter(blk: Block)(using State, Raise):
     * A rewritten scope with a generic VarSymbol capture symbol.
     */
   sealed trait GenericRewrittenScope[T] extends RewrittenScope[T]:
-    lazy val captureSym = VarSymbol(Tree.Ident(this.obj.nme + "$capture"))
+    lazy val captureSym = VarSymbol(Tree.Ident(this.obj.nme + "$cap"))
     override lazy val capturePath = captureSym.asPath
     
     protected def addCaptureSym(b: Block): Block =
@@ -1113,12 +1113,21 @@ class Lifter(blk: Block)(using State, Raise):
     override def rewriteImpl: LifterResult[Block] =
       val rewriter = new BlockRewriter
       
-      val rmved = removeLiftedScopes(obj)
-      val (syms, rewritten) = rmved match
-        case s: Scoped => (s.syms.toSet, rewriter.rewrite(s.body))
-        case b => (Set.empty, rewriter.rewrite(b))
+      // Remove symbols belonging to lifted scopes
+      val liftedChildSyms = node.children.collect:
+        case s @ ScopeNode(obj = l: ScopedObject.Liftable[?]) if s.isLifted => l.defn.sym
+      
+      val (syms, rewritten) = (obj.block.syms.toSet -- liftedChildSyms, rewriter.rewrite(obj.block.body))
       val withCapture = addCaptureSym(rewritten)
       LifterResult(Scoped(syms, withCapture), rewriter.extraDefns.toList)
+  
+  class RewrittenLoop(override val obj: ScopedObject.Loop)(using ctx: LifterCtxNew) extends RewrittenScope[Block](obj) with GenericRewrittenScope[Block]:
+    override def rewriteImpl: LifterResult[Block] =
+      val rewriter = new BlockRewriter
+      
+      val rewritten = rewriter.rewrite(obj.body)
+      val withCapture = addCaptureSym(rewritten)
+      LifterResult(withCapture, rewriter.extraDefns.toList)
   
   class RewrittenFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends RewrittenScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     override def rewriteImpl: LifterResult[FunDefn] =
@@ -1134,7 +1143,7 @@ class Lifter(blk: Block)(using State, Raise):
       .toMap
     private val capSymsMap_ : Map[ScopedInfo, VarSymbol] = reqCaptures.map: i =>
         val nme = data.getNode(i).obj.nme
-        i -> VarSymbol(Tree.Ident(nme + "$capture"))
+        i -> VarSymbol(Tree.Ident(nme + "$cap"))
       .toMap
     
     override lazy val capturesOrder: List[ScopedInfo] = reqCaptures.toList.sortBy(c => capSymsMap_(c).uid)
@@ -1227,34 +1236,6 @@ class Lifter(blk: Block)(using State, Raise):
     def rewriteImpl: LifterResult[FunDefn] =
       val LifterResult(lifted, extra) = mkFlattenedDefn
       LifterResult(lifted, mkAuxDefn :: extra)
-      
-
-  /**
-    * Removes nested scopes that are to be lifted.
-    *
-    * @param s The scoped object whose nested scopes are to be removed.
-    * @return The scoped object's contents with its nested scopes removed.
-    */
-  def removeLiftedScopes[T](s: TScopedObject[T]): T = s match
-    case ScopedObject.Top(b) => lastWords("Tried to remove nested scopes from the top level scope.")
-    case ScopedObject.Class(cls) =>
-      val (preCtorNew, defns1) = cls.preCtor.extractDefns(isIgnored)
-      val (ctorNew, defns2) = cls.ctor.extractDefns(isIgnored)
-      cls.copy(ctor = ctorNew, preCtor = preCtorNew)
-    case ScopedObject.Companion(comp, par) =>
-      val (ctorNew, defns) = comp.ctor.extractDefns(isIgnored)
-      comp.copy(ctor = ctorNew)
-    case ScopedObject.ClassCtor(cls) => ()
-    case ScopedObject.Func(fun, isMethod) =>
-      val (bodyNew, defns) = fun.body.extractDefns(isIgnored)
-      fun.copy(body = bodyNew)(fun.forceTailRec)
-    case ScopedObject.Loop(sym, block) =>
-      val (blkNew, defns) = block.extractDefns(isIgnored)
-      blkNew
-    case ScopedObject.ScopedBlock(uid, block) =>
-      val (blkNew, defns) = block.body.extractDefns(isIgnored)
-      val bms = defns.map(_.sym)
-      block.copy(block.syms.toSet -- bms, blkNew)
   
   private def createRewritten[T](s: TScopeNode[T])(using ctx: LifterCtxNew): RewrittenScope[T] = s.obj match
     case _: ScopedObject.Top => lastWords("tried to rewrite the top-level scope")
@@ -1264,7 +1245,7 @@ class Lifter(blk: Block)(using State, Raise):
     case o: ScopedObject.Func =>
       if s.isLifted && !s.isTopLevel then LiftedFunc(o)
       else RewrittenFunc(o)
-    case o: ScopedObject.Loop => ???
+    case o: ScopedObject.Loop => RewrittenLoop(o)
     case o: ScopedObject.ScopedBlock =>
       RewrittenScopedBlock(o)
   
