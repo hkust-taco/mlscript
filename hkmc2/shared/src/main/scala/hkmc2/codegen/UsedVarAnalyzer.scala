@@ -9,9 +9,29 @@ import hkmc2.codegen.*
 import hkmc2.semantics.*
 import hkmc2.Message.*
 import hkmc2.semantics.Elaborator.State
+import hkmc2.ScopeData.*
+import hkmc2.Lifter.*
 
 import scala.collection.mutable.Map as MutMap
+import scala.collection.mutable.Set as MutSet
+import scala.jdk.CollectionConverters.*
+import java.util.IdentityHashMap
+import java.util.Collections
+import scala.collection.mutable.Buffer
 
+object UsedVarAnalyzer:
+  case class MutAccessInfo(
+    accessed: MutSet[Local], 
+    mutated: MutSet[Local], 
+    refdDefns: MutSet[ScopedInfo]
+  ):
+    def toIMut = AccessInfo(accessed.toSet, mutated.toSet, refdDefns.toSet)
+  object MutAccessInfo:
+    def empty = MutAccessInfo(
+      MutSet.empty,
+      MutSet.empty,
+      MutSet.empty
+    )
 /**
   * Analyzes which variables have been used and mutated by which functions.
   * Also finds which variables can be passed to a capture class without a heap
@@ -19,256 +39,264 @@ import scala.collection.mutable.Map as MutMap
   *
   * Assumes the input trees have no lambdas.
   */
-class UsedVarAnalyzer(b: Block)(using State):
-  import Lifter.*
-
-  private case class DefnMetadata(
-    definedLocals: Map[BlockMemberSymbol, Set[Local]], // locals defined explicitly by that function
-    defnsMap: Map[BlockMemberSymbol, Defn], // map bms to defn
-    existingVars: Map[BlockMemberSymbol, Set[Local]], // variables already existing when that defn is defined
-    inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions that are in scope and not nested within this defn, and not including itself
-    nestedDefns: Map[BlockMemberSymbol, List[Defn]], // definitions that are a successor of the current defn
-    nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]], // definitions nested within another defn, including that defn (deep)
-    nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol], // the definition that a definition is directly nested in
-    companionMap: Map[InnerSymbol, InnerSymbol], // a (bijective) map between companion object symbols and class symbols
-  )
-  private def createMetadata: DefnMetadata =
-    var defnsMap: Map[BlockMemberSymbol, Defn] = Map.empty
-    var definedLocals: Map[BlockMemberSymbol, Set[Local]] = Map.empty
-    var existingVars: Map[BlockMemberSymbol, Set[Local]] = Map.empty
-    var inScopeDefns: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
-    var nestedDefns: Map[BlockMemberSymbol, List[Defn]] = Map.empty
-    var nestedDeep: Map[BlockMemberSymbol, Set[BlockMemberSymbol]] = Map.empty
-    var nestedIn: Map[BlockMemberSymbol, BlockMemberSymbol] = Map.empty
-    var companionMap: Map[InnerSymbol, InnerSymbol] = Map.empty
-
-    def createMetadataFn(f: FunDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      var nested: Set[BlockMemberSymbol] = Set.empty
-      
-      existingVars += (f.sym -> existing)
-      val thisVars = Lifter.getVars(f) -- existing
-      val newExisting = existing ++ thisVars
-      
-      val thisScopeDefns: List[Defn] = f.body.gatherDefns()
-      
-      nestedDefns += f.sym -> thisScopeDefns
-
-      val newInScope = inScope ++ thisScopeDefns.map(_.sym)
-      for s <- thisScopeDefns do
-        inScopeDefns += s.sym -> (newInScope - s.sym)
-        nested += s.sym
-
-      defnsMap += (f.sym -> f)
-      definedLocals += (f.sym -> thisVars)
-
-      for d <- thisScopeDefns do
-        nestedIn += (d.sym -> f.sym)
-        createMetadataDefn(d, newExisting, newInScope)
-        nested ++= nestedDeep(d.sym)
-      
-      nestedDeep += f.sym -> nested
-
-    def createMetadataDefn(d: Defn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      d match
-      case f: FunDefn =>
-        createMetadataFn(f, existing, inScope)
-      case c: ClsLikeDefn =>
-        createMetadataCls(c, existing, inScope)
-      case d => Map.empty
-    
-    def createMetadataCls(c: ClsLikeDefn, existing: Set[Local], inScope: Set[BlockMemberSymbol]): Unit =
-      var nested: Set[BlockMemberSymbol] = Set.empty
-      
-      existingVars += (c.sym -> existing)
-      val thisVars = Lifter.getVars(c) -- existing
-      val newExisting = existing ++ thisVars
-      
-      val thisScopeDefns: List[Defn] = c.methods ++ c.preCtor.gatherDefns()
-        ++ c.ctor.gatherDefns() ++ c.companion.fold(Nil)(comp => comp.ctor.gatherDefns() ++ comp.methods)
-      
-      nestedDefns += c.sym -> thisScopeDefns
-      
-      val newInScope = inScope ++ thisScopeDefns.map(_.sym)
-      for s <- thisScopeDefns do
-        inScopeDefns += s.sym -> (newInScope - s.sym)
-        nested += s.sym
-      
-      defnsMap += (c.sym -> c)
-      definedLocals += (c.sym -> thisVars)
-      
-      for d <- thisScopeDefns do
-        nestedIn += (d.sym -> c.sym)
-        createMetadataDefn(d, newExisting, newInScope)
-        nested ++= nestedDeep(d.sym)
-      
-      nestedDeep += c.sym -> nested
-      
-      c.companion match
-        case None => 
-        case Some(value) => companionMap += (value.isym -> c.isym)
-    
+class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes):
+  import UsedVarAnalyzer.*
+  
+  object SDSym:
+    def unapply(v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = dSymUnapply(scopeData, v)
+  
+  // Finds the locals that this block accesses/mutates, and the definitions which it could use.
+  private def blkAccessesShallow(b: Block): AccessInfo =
+    var accessed: MutAccessInfo = MutAccessInfo.empty
     new BlockTraverserShallow:
-      // If there's any variables available at the top-level we need to explicitly ignore,
-      // then we add them here
-      val ignoredVars = b.definedVars
       applyBlock(b)
-      override def applyDefn(defn: Defn): Unit =
-        inScopeDefns += defn.sym -> Set.empty
-        createMetadataDefn(defn, ignoredVars, Set.empty)
-    DefnMetadata(definedLocals, defnsMap, existingVars, inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap)
-
-  val DefnMetadata(definedLocals, defnsMap, existingVars, 
-    inScopeDefns, nestedDefns, nestedDeep, nestedIn, companionMap) = createMetadata
-  
-  private val blkMutCache: MutMap[Local, AccessInfo] = MutMap.empty
-  private def blkAccessesShallow(b: Block, cacheId: Opt[Local] = N): AccessInfo =
-    cacheId.flatMap(blkMutCache.get) match
-    case Some(value) => value
-    case None => 
-      var accessed: AccessInfo = AccessInfo.empty
-      new BlockTraverserShallow:
-        applyBlock(b)
-        
-        override def applyBlock(b: Block): Unit = b match
-          case Assign(lhs, rhs, rest) =>
-            accessed = accessed.addMutated(lhs)
-            applyResult(rhs)
-            applyBlock(rest)
-          case Label(label, loop, body, rest) =>
-            accessed ++= blkAccessesShallow(body, S(label))
-            applyBlock(rest)
-          case _ => super.applyBlock(b)
-        
-        override def applyValue(v: Value): Unit = v match
-          case Value.Ref(_: BuiltinSymbol, _) => super.applyValue(v)
-          case RefOfBms(l, _) =>
-            accessed = accessed.addRefdDefn(l)
-          case Value.Ref(l, _) =>
-            accessed = accessed.addAccess(l)
-          case _ => super.applyValue(v)
-
-      cacheId match
-        case None => ()
-        case Some(value) => blkMutCache.addOne(value -> accessed)
       
-      accessed
-
-  private val accessedCache: MutMap[BlockMemberSymbol, AccessInfo] = MutMap.empty
-  
+      override def applyBlock(b: Block): Unit = b match
+        case s: Scoped =>
+          accessed.refdDefns.add(scopeData.getUID(s))
+        case Assign(lhs, rhs, rest) =>
+          accessed.mutated.add(lhs)
+          applyResult(rhs)
+          applyBlock(rest)
+        case l: Label if l.loop =>
+          accessed.refdDefns.add(l.label)
+        case d: Define => applySubBlock(d.rest)
+        case _ => super.applyBlock(b)
+      
+      override def applyPath(p: Path): Unit = p match
+        case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
+        case RefOfBms(_, SDSym(dSym)) if scopeData.contains(dSym) =>
+          accessed.refdDefns.add(scopeData.getNode(dSym).obj.toInfo)
+        case Value.Ref(l, _) =>
+          accessed.accessed.add(l)
+        case _ => super.applyPath(p)
+    accessed.toIMut
+    
   /**
-    * Finds the variables which this definition could possibly mutate, excluding mutations through
-    * calls to other functions and, in the case of functions, mutations of its own variables.
-    *
-    * @param defn The definition to search through.
+    * Finds the variables belonging to a parent scope which this scoped object could possibly 
+    * access or mutate, excluding mutations through calls to other functions and mutations 
+    * of their own variables. Also finds the other scoped objects that this definition may enter.
+    * 
+    * @param obj The scoped object to search through.
     * @return The variables which this definition could possibly mutate.
     */
-  private def findAccessesShallow(defn: Defn): AccessInfo = 
-    def create = defn match
-      case f: FunDefn =>
-        val fVars = definedLocals(f.sym)
-        blkAccessesShallow(f.body).withoutLocals(fVars)
-      case c: ClsLikeDefn =>
-        val methodSyms = c.methods.map(_.sym).toSet
-        c.methods.foldLeft(blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)):
-          case (acc, fDefn) =>
-            // class methods do not need to be lifted, so we don't count calls to their methods.
-            // a previous reference to this class's block member symbol is enough to assume any
-            // of the class's methods could be called.
-            //
-            // however, we must keep references to the class itself!
-            val defnAccess = findAccessesShallow(fDefn)
-            acc ++ defnAccess.withoutBms(methodSyms)
-      case _: ValDefn => AccessInfo.empty
-    
-    accessedCache.getOrElseUpdate(defn.sym, create)
+  private def findAccessesShallow(obj: ScopedObject): AccessInfo =
+    val accessed = obj match
+      case ScopedObject.Top(b) => b match
+        case s: Scoped => blkAccessesShallow(s.body)
+        case _ => blkAccessesShallow(b)
+      case ScopedObject.Func(f, _) =>
+        blkAccessesShallow(f.body)
+      case ScopedObject.Class(c) =>
+        // We must assume that classes may access all their methods.
+        // When the class symbol is referenced once, that symbol may be used in
+        // arbitrary ways, which includes calling any of this class's methods.
+        val res = blkAccessesShallow(c.preCtor) ++ blkAccessesShallow(c.ctor)
+        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
+      case ScopedObject.ClassCtor(cls) =>
+        // Recall that we interpret the ctor as just another function in the same scope
+        // as the corresponding class, and initializes the class.
+        AccessInfo.empty.addRefdScopedObj(scopeData.getNode(cls).obj.toInfo)
+      case ScopedObject.ScopedBlock(uid, b) => blkAccessesShallow(b.body)
+      case ScopedObject.Companion(c, _) =>
+        // There likely won't be nested companion classes in the future, but for now,
+        // just assume they may access all their methods
+        val res = blkAccessesShallow(c.ctor)
+        res.copy(refdDefns = res.refdDefns ++ c.methods.map(_.dSym))
+      case ScopedObject.Loop(_, b) => blkAccessesShallow(b)
+    // Variables introduced by this scoped object do not belong to a parent scope, so
+    // we remove them
+    accessed.withoutLocals(obj.definedLocals)
+  
+  private def combineInfos(m1: Map[ScopedInfo, AccessInfo], m2: Map[ScopedInfo, AccessInfo]): Map[ScopedInfo, AccessInfo] =
+    if m2.size < m1.size then combineInfos(m2, m1)
+    else m1.foldLeft(m2):
+      case (acc, info -> accesses) => m2.get(info) match
+        case Some(value) => acc + (info -> (accesses ++ value))
+        case None => acc + (info -> accesses)
+  
+  val shallowAccesses: Map[ScopedInfo, AccessInfo] =
+    scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
+  
+  // Optimization: Find all nodes which are accessed by their children
+  // See the comment for findAccesses
+  private val allEdges =
+    for 
+      (src, accesses) <- shallowAccesses
+      refd <- accesses.refdDefns
+      if src =/= refd
+    yield
+      (src, refd)
+  private val accessedByChild = allEdges
+    .groupBy(_._2) // group by edge destination
+    .map:
+      case (_: Unit) -> _ => () -> false
+      case d -> edges =>
+        val par = scopeData.getNode(d).parent.get.obj.toInfo
+        d -> edges.exists:
+          case a -> b => a =/= par
+    .collect:
+      case d -> true => d
+    .toSet
 
-  // MUST be called from a top-level defn
-  private def findAccesses(d: Defn): Map[BlockMemberSymbol, AccessInfo] =
-    var defns: mutable.Buffer[Defn] = mutable.Buffer.empty
-    var definedVarsDeep: Set[Local] = Set.empty
+  // Find:
+  // - Map 1:
+  //    - Variables that each scoped object has accessed, either through itself or a nested scoped object.
+  //    - Variables that each scoped object has mutated, either through itself or a nested scoped object.
+  //    - Scoped objects that each object accesses, either through itself or a nested scoped object.
+  // - Map 2:
+  //    - Variables that each scoped object has accessed, either through itself or a *lifted* scoped object.
+  //    - Variables that each scoped object has mutated, either through itself or a lifted nested scoped object.
+  //    - Scoped objects that each object accesses, either through itself or a lifted nested scoped object.
+  //
+  // The former includes ignored objects, and is used to do the readers/writers analysis. The latter is used to determine
+  // whether we actually need to allocate a capture for the object. In particular, we never need to allocate a capture
+  // for a variable if only nested scopes mutate it.
+  //
+  // Note that it is possible for a lifted scoped object to be reached by traversing through an ignored object.
+  // 
+  // Also observe that if a node is not accesed from any of its children, then we can re-use the result of its parent's analysis.
+  private def findAccesses(s: ScopeNode): (Map[ScopedInfo, AccessInfo], Map[ScopedInfo, AccessInfo]) =
+    // Note: these include `s`
+    val children = s.allChildren
+    val childInfo = children.map(_.toInfo).toSet
 
-    new BlockTraverser:
-      applyDefn(d)
-      
-      override def applyFunDefn(f: FunDefn): Unit =
-        defns += f
-        definedVarsDeep ++= definedLocals(f.sym)
-        super.applyFunDefn(f)
-      
-      override def applyDefn(defn: Defn): Unit =
-        defn match
-          case c: ClsLikeDefn =>
-            defns += c
-            definedVarsDeep ++= definedLocals(c.sym)
-          case _ =>
-        super.applyDefn(defn)
+    // Traverses the node's children, and stops when a child that is accessed by one of its children is found.
+    // The analysis will be performed on *all* of the traversed nodes simultaneously.
+    // We will later recurse on the children of all these nodes.
+    val nexts: Buffer[ScopeNode] = Buffer.empty
+    def findNodes(s: ScopeNode): List[ScopeNode] = s :: s.children.flatMap: child =>
+      if accessedByChild(child.obj.toInfo) then
+        nexts.addOne(child)
+        List.empty
+      else findNodes(child)
+    val nodes = findNodes(s)
     
-    val defnSyms = defns.iterator.map(_.sym).toSet
-    val accessInfo = defns.map: d =>
-      val AccessInfo(accessed, mutated, refdDefns) = findAccessesShallow(d)
-      d.sym -> AccessInfo(
-        accessed.intersect(definedVarsDeep),
-        mutated.intersect(definedVarsDeep),
-        refdDefns.intersect(defnSyms) // only care about definitions nested in this top-level definition
+    val allLocals = nodes.flatMap(node => node.obj.definedLocals).toSet
+    
+    val accessInfo = children.map: obj =>
+      val a @ AccessInfo(accessed, mutated, refdDefns) = shallowAccesses(obj.toInfo)
+      obj.toInfo -> AccessInfo(
+        accessed = accessed.intersect(allLocals),
+        mutated = mutated.intersect(allLocals),
+        refdDefns = refdDefns.intersect(childInfo)
       )
     
     val accessInfoMap = accessInfo.toMap
-    
-    val edges =
+    val edges: Set[(ScopedInfo, ScopedInfo)] =
       for
-        (sym, AccessInfo(_, _, refd)) <- accessInfo
+        (src, AccessInfo(_, _, refd)) <- accessInfo
         r <- refd
-        if defnSyms.contains(r)
-      yield sym -> r
+        // remove self-edges: they do not affect this analysis
+        if src =/= r
+        // very important: we only care about edges that flow into the subtree rooted at `s`
+        if childInfo.contains(r) && r =/= s.obj.toInfo
+      yield src -> r
     .toSet
     
     // (sccs, sccEdges) forms a directed acyclic graph (DAG)
-    val algorithms.SccsInfo(sccs, sccEdges, inDegs, outDegs) = algorithms.sccsWithInfo(edges, defnSyms)
-    
-    // all defns in the same scc must have at least the same accesses as each other
-    val base = for (id, scc) <- sccs yield id ->
-      scc.foldLeft(AccessInfo.empty):
-        case (acc, sym) => acc ++ accessInfoMap(sym)
-    
-    // dp on DAG
-    val dp: MutMap[Int, AccessInfo] = MutMap.empty
-    def sccAccessInfo(scc: Int): AccessInfo = dp.get(scc) match
-      case Some(value) => value
-      case None =>
-        val ret = sccEdges(scc).foldLeft(base(scc)):
-          case (acc, nextScc) => acc ++ sccAccessInfo(nextScc)
-        dp.addOne(scc -> ret)
-        ret
-    
-    for
-      (id, scc) <- sccs
-      sym <- scc
-    yield sym -> (sccAccessInfo(id).intersectLocals(existingVars(sym)))
-  
-  private def findAccessesTop =
-    var accessMap: Map[BlockMemberSymbol, AccessInfo] = Map.empty
-    new BlockTraverserShallow:
-      applyBlock(b)
-      override def applyDefn(defn: Defn): Unit = defn match
-        case _: FunDefn | _: ClsLikeDefn =>
-          accessMap ++= findAccesses(defn)
-        case _ => super.applyDefn(defn)
-    
-    accessMap
-  
-  val accessMap = findAccessesTop
-  
-  // TODO: let declarations inside loops (also broken without class lifting)
-  // I'll fix it once it's fixed in the IR since we will have more tools to determine
-  // what locals belong to what block.
-  private def reqdCaptureLocals(f: FunDefn) =
-    var defns = f.body.gatherDefns()
-    val defnSyms = defns.collect:
-        case f: FunDefn => f.sym -> f
-        case c: ClsLikeDefn => c.sym -> c
-      .toMap
+    val algorithms.SccsInfo(sccs, sccEdges, inDegs, outDegs) = algorithms.sccsWithInfo(edges, childInfo)
 
-    val thisVars = definedLocals(f.sym)
+    val rootInfo = s.obj.toInfo
+    val (rootId, rootElems) = sccs.find:
+        case (id, elems) => elems.contains(rootInfo)
+      .get
+    if rootElems.size != 1 then lastWords("SCC containing root had a degree other than 1.")
+    
+    // With respect to the current scoped object `s`, we may "ignore" one of its children `c` if and only if
+    // it is ignored (not lifted), and `s` is in the subtree rooted at the first lifted parent of `c`. We
+    // "ignore" `c` in the sense that it does not need to capture `s`'s scoped object's variables, nor does
+    // it require the current scoped object to create a capture class for its accessed variables.
+    def isIgnored(c: ScopedInfo) =
+      s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo)
+
+    // All objects in the same scc must have at least the same accesses as each other
+    def go(includeIgnored: Bool) =
+      val base = for (id, scc) <- sccs yield
+        // If all objects in this SCC are ignored, then we treat it as if it does not access anything,
+        // unless we explicitly want to count ignored items (for the readers-mutators analysis)
+        if !includeIgnored && scc.forall(isIgnored) then id -> AccessInfo.empty
+        else id -> scc.foldLeft(AccessInfo.empty):
+          case (acc, sym) => acc ++ accessInfoMap(sym)
+      
+      // dp on DAG
+      val dp: MutMap[Int, AccessInfo] = MutMap.empty
+      def sccAccessInfo(scc: Int): AccessInfo = dp.get(scc) match
+        case Some(value) => value
+        case None =>
+          val ret = sccEdges(scc).foldLeft(base(scc)):
+            case (acc, nextScc) => acc ++ sccAccessInfo(nextScc)
+          dp.addOne(scc -> ret)
+          ret
+      
+      for
+        (id, scc) <- sccs
+        sym <- scc
+      yield
+        sym -> sccAccessInfo(id).withoutLocals(scopeData.getNode(sym).obj.definedLocals)
+    
+    val (m1, m2) = (go(true), go(false))
+    val subCases = nexts.map(findAccesses)
+    subCases.foldLeft((m1, m2)):
+      case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
+  
+  // Searching from the root makes no sense. We instead start searching from each scope nested in the top-level
+  private val (m1, m2) = scopeData.scopeTree.root.children.map(findAccesses).unzip
+  val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+  val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+
+  private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, (Set[Local], Set[Local])] =
+    val (blk, extraMtds) = s.obj match
+      case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
+      case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> (Set.empty, Set.empty))
+      case ScopedObject.Class(cls) => (Begin(cls.preCtor, cls.ctor), cls.methods)
+      case ScopedObject.Companion(comp, _) => (comp.ctor, comp.methods)
+      case ScopedObject.Func(fun, _) => (fun.body, Nil)
+      case ScopedObject.ScopedBlock(uid, block) => (block, Nil)
+      case ScopedObject.Loop(sym, block) => (block, Nil)
+    
+    // traverse all scoped blocks
+    val nexts: Buffer[ScopeNode] = Buffer.empty
+    def findNodes(s: ScopeNode): List[ScopeNode] = s :: s.children.flatMap:
+      case c @ ScopeNode(obj = obj: ScopedObject.ScopedBlock) => findNodes(c)
+      case c =>
+        nexts.addOne(c)
+        List.empty
+    val nodes = findNodes(s)
+    
+    val locals = nodes.flatMap(_.obj.definedLocals).toSet
+    
+    val (read, cap) = reqdCaptureLocalsBlk(blk, nexts.toList, locals)
+    
+    // Variables mutated by a lifted child of a class methods requires a capture
+    val additional = extraMtds
+      .flatMap: mtd =>
+        scopeData.getNode(mtd).liftedChildNodes.map(x => x.obj.toInfo)
+      .foldLeft(AccessInfo.empty):
+        case (acc, value) => acc ++ accessMap(value)
+    val (newRead, newCap) = (read ++ additional.accessed, cap ++ additional.mutated)
+    
+    val (usedVarsL, mutatedVarsL) = nexts.map: node =>
+        val a = accessMap(node.obj.toInfo)
+        (a.accessed, a.mutated)
+      .unzip
+    
+    val usedVars = usedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
+    val mutatedVars = mutatedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
+    
+    val cur: Map[ScopedInfo, (Set[Local], Set[Local])] = nodes.map: n =>
+        n.obj.toInfo -> (
+          newRead.intersect(usedVars).intersect(n.obj.definedLocals),
+          newCap.intersect(mutatedVars).intersect(n.obj.definedLocals)
+        )
+      .toMap
+    
+    nexts.foldLeft(cur):
+      case (mp, acc) => mp ++ reqdCaptureLocals(acc)
+
+  // readers-mutators analysis
+  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], thisVars: Set[Local]): (Set[Local], Set[Local]) =
+    val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
     case class CaptureInfo(reqCapture: Set[Local], hasReader: Set[Local], hasMutator: Set[Local])
 
@@ -288,6 +316,10 @@ class UsedVarAnalyzer(b: Block)(using State):
       new BlockTraverserShallow:
         applyBlock(b)
         override def applyBlock(b: Block): Unit = b match
+          // Note that we traverse directly into scoped blocks without using handleCalledScope
+          
+          case l: Label if l.loop =>
+            handleCalledScope(l.label)
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
@@ -300,18 +332,8 @@ class UsedVarAnalyzer(b: Block)(using State):
             val dfltInfo = dflt.map:
               case arm => rec(arm)
             
-            infos.map(merge) // IMPORTANT: rec all first, then merge, since each branch is mutually exclusive
-            dfltInfo.map(merge)
-            applyBlock(rest)
-          case Label(label, loop, body, rest) =>
-            // for now, if the loop body mutates a variable and that variable is accessed or mutated by a defn,
-            // or if it reads a variable that is later mutated by an instance inside the loop,
-            // we put it in a capture. this preserves the current semantics of the IR (even though it's incorrect).
-            // See the above TODO
-            val c @ CaptureInfo(req, read, mut) = rec(body)
-            merge(c)
-            reqCapture ++= read.intersect(blkAccessesShallow(body, S(label)).mutated)
-            reqCapture ++= mut.intersect(body.freeVars)
+            infos.foreach(merge) // IMPORTANT: rec all first, then merge, since each branch is mutually exclusive
+            dfltInfo.foreach(merge)
             applyBlock(rest)
           case Begin(sub, rest) =>
             rec(sub) |> merge
@@ -327,16 +349,22 @@ class UsedVarAnalyzer(b: Block)(using State):
             hasMutator = Set.empty
           case _ => super.applyBlock(b)
 
-        def handleCalledBms(called: BlockMemberSymbol): Unit = defnSyms.get(called) match
+        def handleCalledScope(called: ScopedInfo): Unit = scopeInfos.get(called) match
           case None => ()
-          case Some(defn) => 
-            val AccessInfo(accessed, muted, refd) = accessMap(defn.sym)
+          case Some(node) =>
+            val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(called)
             val muts = muted.intersect(thisVars)
-            val reads = defn.freeVars.intersect(thisVars) -- muts
+            val reads = accessed.intersect(thisVars) -- muts
+            val refdExcl = refd.filter: sym =>
+              scopeData.getNode(sym).obj match
+                case s: ScopedObject.ScopedBlock => false
+                case ScopedObject.Func(_, true) => false
+                case _ => true
+            
             // this not a naked reference. if it's a ref to a class, this can only ever create once instance
             // so the "one writer" rule applies
             for l <- muts do
-              if hasReader.contains(l) || hasMutator.contains(l) || defn.isInstanceOf[FunDefn] then
+              if hasReader.contains(l) || hasMutator.contains(l) then
                 reqCapture += l
               hasMutator += l
             for l <- reads do
@@ -347,34 +375,33 @@ class UsedVarAnalyzer(b: Block)(using State):
             // function, we must capture the latter's mutated variables in a capture, as arbitrarily
             // many mutators could be created from it
             for
-              sym <- refd
-              l <- accessMap(sym).mutated
+              sym <- refdExcl
+              l <- accessMapWithIgnored(sym).mutated
             do
               reqCapture += l
               hasMutator += l
 
-        override def applyResult(r: Result): Unit = r match
-          case Call(RefOfBms(l, _), args) =>
-            args.map(super.applyArg(_))
-            handleCalledBms(l)
-          case Instantiate(mut, InstSel(l), args) =>
-            args.map(super.applyArg)
-            handleCalledBms(l._1)
+        override def applyResult(r: Result): Unit = 
+          r match
+          case Call(RefOfBms(_, SDSym(d)), args) =>
+            args.foreach(super.applyArg(_))
+            handleCalledScope(d)
+          case Instantiate(mut, InstSel(_, S(d)), args) =>
+            args.foreach(super.applyArg)
+            handleCalledScope(d)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(l, _) =>
-            defnSyms.get(l) match
+          case RefOfBms(_, SDSym(d)) =>
+            scopeInfos.get(d) match
             case None => super.applyPath(p)
             case Some(defn) =>
-              val isMod = defn match
-                case c: ClsLikeDefn => modOrObj(c)
-                case _ => false
+              val isMod = defn.obj.isInstanceOf[ScopedObject.Companion]
               if isMod then super.applyPath(p)
               else
-                val AccessInfo(accessed, muted, refd) = accessMap(defn.sym)
+                val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(d)
                 val muts = muted.intersect(thisVars)
-                val reads = defn.freeVars.intersect(thisVars) -- muts
+                val reads = accessed.intersect(thisVars) -- muts
                 // this is a naked reference, we assume things it mutates always needs a capture
                 for l <- muts do
                   reqCapture += l
@@ -388,7 +415,7 @@ class UsedVarAnalyzer(b: Block)(using State):
                 // many mutators could be created from it
                 for
                   sym <- refd
-                  l <- accessMap(sym).mutated
+                  l <- accessMapWithIgnored(sym).mutated
                 do
                   reqCapture += l
                   hasMutator += l
@@ -399,52 +426,29 @@ class UsedVarAnalyzer(b: Block)(using State):
         
         override def applyDefn(defn: Defn): Unit = defn match
           case c: ClsLikeDefn if modOrObj(c) =>
-            handleCalledBms(c.sym)
+            handleCalledScope(c.isym)
             super.applyDefn(defn)
           case _ => super.applyDefn(defn)
 
       CaptureInfo(reqCapture, hasReader, hasMutator)
 
-    val reqCapture = go(f.body, Set.empty, Set.empty, Set.empty).reqCapture
-    val usedVars = defns.flatMap(_.freeVars.intersect(thisVars)).toSet
+    val (usedVarsL, mutatedVarsL) = scopeInfos.map:
+        case (info, node) =>
+          val a = accessMap(info).intersectLocals(thisVars)
+          (a.accessed, a.mutated)
+      .unzip
+    val usedVars = usedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
+    val mutatedVars = mutatedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
+    val reqCapture = go(b, Set.empty, Set.empty, Set.empty).reqCapture.intersect(mutatedVars)
+
     (usedVars, reqCapture)
 
-  // the current problem is that we need extra code to find which variables were really defined by a function
-  // this may be resolved in the future when the IR gets explicit variable declarations
-  private def findUsedLocalsFn(f: FunDefn): Map[BlockMemberSymbol, FreeVars] =
-    val thisVars = definedLocals(f.sym)
-
-    val (vars, cap) = reqdCaptureLocals(f)
-
-    var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
-    usedMap += (f.sym -> Lifter.FreeVars(vars.intersect(thisVars), cap.intersect(thisVars)))
-    for d <- nestedDefns(f.sym) do
-      usedMap ++= findUsedLocalsDefn(d)
-    usedMap
-
-  private def findUsedLocalsDefn(d: Defn) =
-    d match
-    case f: FunDefn => 
-      findUsedLocalsFn(f)
-    case c: ClsLikeDefn =>
-      findUsedLocalsCls(c)
-    case d => Map.empty
-
-  private def findUsedLocalsCls(c: ClsLikeDefn): Map[BlockMemberSymbol, FreeVars] =
-    nestedDefns(c.sym).foldLeft(Map.empty):
-      case (acc, d) => acc ++ findUsedLocalsDefn(d)
+  val reqdCaptures: Map[ScopedInfo, (Set[Local], Set[Local])] = scopeData.root.children.foldLeft(Map.empty):
+    case (acc, node) => acc ++ reqdCaptureLocals(node)
   
-  /**
-    * Finds the used locals of functions which have been used by their nested definitions.
-    *
-    * @param b
-    * @return
-    */
-  def findUsedLocals: Lifter.UsedLocalsMap =
-    var usedMap: Map[BlockMemberSymbol, FreeVars] = Map.empty
-    new BlockTraverserShallow:
-      applyBlock(b)
-      override def applyDefn(defn: Defn): Unit =
-        usedMap ++= findUsedLocalsDefn(defn)
-
-    Lifter.UsedLocalsMap(usedMap)
+  // For local inside a capture, finds the node to which this local belongs.
+  val capturesMap =
+    for
+      case (info -> (_, reqCap)) <- reqdCaptures
+      s <- reqCap
+    yield s -> info

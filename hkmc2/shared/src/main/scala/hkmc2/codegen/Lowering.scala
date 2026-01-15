@@ -1046,15 +1046,14 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val withHandlers1 = config.effectHandlers.fold(desug): opt =>
       HandlerLowering(handlerPaths, opt).translateHandleBlocks(desug)
     
-    // TODO: Refactor the lifter so it does not require flattened scopes
-    val shouldFlattenScopes = config.effectHandlers.isDefined || config.liftDefns.isDefined
+    val shouldFlattenScopes = config.effectHandlers.isDefined
     
     val scopeFlattened =
       if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
       else withHandlers1
     
     val lifted =
-      if lift then Lifter().transform(scopeFlattened)
+      if lift then Lifter(scopeFlattened).transform
       else scopeFlattened
     
     val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
