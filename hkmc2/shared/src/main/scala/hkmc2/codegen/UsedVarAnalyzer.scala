@@ -55,6 +55,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         case s: Scoped =>
           accessed.refdDefns.add(scopeData.getUID(s))
         case Assign(lhs, rhs, rest) =>
+          accessed.accessed.add(lhs)
           accessed.mutated.add(lhs)
           applyResult(rhs)
           applyBlock(rest)

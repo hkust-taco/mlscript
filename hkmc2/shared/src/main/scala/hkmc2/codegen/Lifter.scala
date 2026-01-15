@@ -1055,8 +1055,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
     /** Maps scopes to the path to the path representing their captures within this object. */
     protected val capSymsMap: Map[ScopedInfo, Path]
     
-    protected lazy val capturesOrder: List[ScopedInfo]
-    protected lazy val passedSymsOrder: List[Local]
+    protected lazy val capturesOrdered: List[ScopedInfo]
+    protected lazy val passedSymsOrdered: List[Local]
     
     override lazy val capturePaths =
       if thisCapturedLocals.isEmpty then capSymsMap
@@ -1085,8 +1085,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
       fromParents ++ pathsFromThisObj
     
     def formatArgs(captures: Map[ScopedInfo, Path], locals: Map[Local, LocalPath]): List[Arg] =
-      val captureArgs = capturesOrder.map(c => captures(c).asArg)
-      val localArgs = passedSymsOrder.map(l => locals(l).asArg)
+      val captureArgs = capturesOrdered.map(c => captures(c).asArg)
+      val localArgs = passedSymsOrdered.map(l => locals(l).asArg)
       captureArgs ::: localArgs
   
   /**
@@ -1154,8 +1154,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
         i -> VarSymbol(Tree.Ident(nme + "$cap"))
       .toMap
     
-    override lazy val capturesOrder: List[ScopedInfo] = reqCaptures.toList.sortBy(c => capSymsMap_(c).uid)
-    override lazy val passedSymsOrder: List[Local] = passedSyms.toList.sortBy(_.uid)
+    override lazy val capturesOrdered: List[ScopedInfo] = reqCaptures.toList.sortBy(c => capSymsMap_(c).uid)
+    override lazy val passedSymsOrdered: List[Local] = passedSyms.toList.sortBy(_.uid)
     
     override protected val passedSymsMap = passedSymsMap_.view.mapValues(_.asLocalPath).toMap
     override protected val capSymsMap = capSymsMap_.view.mapValues(_.asPath).toMap
