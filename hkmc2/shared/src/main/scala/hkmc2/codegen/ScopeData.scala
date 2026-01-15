@@ -99,6 +99,11 @@ object ScopeData:
         case Class(cls) => cls.isym
         case Companion(comp, par) => comp.isym
         case Func(fun, isMethod) => fun.dSym
+      def bsym: BlockMemberSymbol = this match
+        case Class(cls) => cls.sym
+        case Companion(comp, par) => par.sym
+        case Func(fun, isMethod) => fun.sym
+      
     
     // Scoped nodes which could possibly be lifted to the top level.
     sealed abstract class Liftable[T <: Defn] extends Referencable[T]:
