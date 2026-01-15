@@ -936,6 +936,14 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
           case b: Block => b
           case _ => die
         l.copy(body = blk)
+      case Define(defn, rest) =>
+        val dsym = defn match
+          case f: FunDefn => f.dSym
+          case v: ValDefn => v.tsym
+          case c: ClsLikeDefn => c.isym
+        ctx.liftedScopes.get(dsym) match
+          case Some(_) => applySubBlock(rest)
+          case None => super.applyBlock(b)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn) =
       applyRewrittenScope(ctx.rewrittenScopes(fun.dSym)) match
