@@ -8,67 +8,27 @@
 :d
 :todo
 
-:noSanityCheck
 :lift
 :ssjs
-:noTailRec
-fun f(x, y, i) =
-  let x = []
+:noSanityCheck
+fun f() =
+  let i = 0
   while i < 10 do
-    let x = 2
-    fun bruh() = set x += 1
-    bruh()
-    bruh()
     set i += 1
   i
-//│ Elab: { fun member:f‹687›(x‹688›, y‹689›, i‹690›) = { let x‹692›; x‹692› = []; while { let scrut = builtin:<‹33›#0(i‹690›#666, 10); $scrut‹694›#0 is true then { let x‹695›; x‹695› = 2; fun member:bruh‹686›() = x‹695›#666 := builtin:+‹48›#0(x‹695›#666, 1); member:bruh‹686›#666(); member:bruh‹686›#666(); i‹690›#666 := builtin:+‹48›#1(i‹690›#666, 1) }; else () }; i‹690›#666 }; }
+f()
+//│ Elab: { fun member:f‹686›() = { let i‹688›; i‹688› = 0; while { let scrut = builtin:<‹33›#0(i‹688›#666, 10); $scrut‹690›#0 is true then i‹688›#666 := builtin:+‹48›#0(i‹688›#666, 1); else () }; i‹688›#666 }; member:f‹686›#666() }
 //│ JS:
-//│ let bruh, f, Capture$scope11, bruh$;
-//│ bruh$ = function bruh$(scope1$cap) {
-//│   return () => {
-//│     return bruh(scope1$cap)
-//│   }
-//│ };
-//│ (class Capture$scope1 {
-//│   static {
-//│     Capture$scope11 = this
-//│   }
-//│   constructor(x$0) {
-//│     this.x$0 = x$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$scope1"]; 
-//│ });
-//│ bruh$ = function bruh$(scope1$cap) {
-//│   return () => {
-//│     return bruh(scope1$cap)
-//│   }
-//│ };
-//│ bruh = function bruh(scope1$cap) {
-//│   let tmp;
-//│   tmp = scope1$cap.x$0 + 1;
-//│   scope1$cap.x$0 = tmp;
-//│   return runtime.Unit
-//│ };
-//│ f = function f(x, y, i) {
-//│   let x1, tmp;
-//│   x1 = globalThis.Object.freeze([]);
+//│ let f;
+//│ f = function f() {
+//│   let i, tmp;
+//│   i = 0;
 //│   lbl: while (true) {
-//│     let scrut, x2, tmp1, tmp2, tmp3, scope1$cap;
-//│     scope1$cap = new Capture$scope11(undefined);
+//│     let scrut, tmp1;
 //│     scrut = i < 10;
 //│     if (scrut === true) {
-//│       bruh = function bruh(scope1$cap1) {
-//│         let tmp4;
-//│         tmp4 = scope1$cap1.x$0 + 1;
-//│         scope1$cap1.x$0 = tmp4;
-//│         return runtime.Unit
-//│       };
-//│       scope1$cap.x$0 = 2;
-//│       tmp1 = bruh(scope1$cap);
-//│       tmp2 = bruh(scope1$cap);
-//│       tmp3 = i + 1;
-//│       i = tmp3;
+//│       tmp1 = i + 1;
+//│       i = tmp1;
 //│       tmp = runtime.Unit;
 //│       continue lbl
 //│     } else { tmp = runtime.Unit; }
@@ -76,4 +36,16 @@ fun f(x, y, i) =
 //│   }
 //│   return i
 //│ };
-//│ block$res1 = undefined;
+//│ block$res1 = f();
+//│ undefined
+//│ = 10
+
+:expect 2
+fun f() =
+  let x = g
+  let y = 2
+  fun g() = y
+  x()
+f()
+//│ Elab: { fun member:f‹701›() = { let x‹703›; x‹703› = member:g‹700›#666; let y‹704›; y‹704› = 2; fun member:g‹700›() = y‹704›#666; x‹703›#666() }; member:f‹701›#666() }
+//│ = 2

@@ -875,7 +875,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
       Tree.Ident(nme)
     )
 
-    val (_, cap) = usedVars.reqdCaptures(s.toInfo)
+    val cap = usedVars.reqdCaptures(s.toInfo)
 
     val fresh = FreshInt()
     
@@ -960,7 +960,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
   sealed abstract class RewrittenScope[T](val obj: TScopedObject[T]):
     val node = obj.node.get
     
-    protected val (_, thisCapturedLocals) = usedVars.reqdCaptures(obj.toInfo)
+    protected val thisCapturedLocals = usedVars.reqdCaptures(obj.toInfo)
     val hasCapture = !thisCapturedLocals.isEmpty
     
     // These are lazy, because we don't necessarily need a captrue 

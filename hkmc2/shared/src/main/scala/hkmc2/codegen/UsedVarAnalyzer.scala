@@ -248,20 +248,20 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
   val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
   val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
 
-  private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, (Set[Local], Set[Local])] =
+  private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[Local]] =
     val (blk, extraMtds) = s.obj match
       case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
-      case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> (Set.empty, Set.empty))
+      case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> Set.empty)
       case ScopedObject.Class(cls) => (Begin(cls.preCtor, cls.ctor), cls.methods)
       case ScopedObject.Companion(comp, _) => (comp.ctor, comp.methods)
       case ScopedObject.Func(fun, _) => (fun.body, Nil)
       case ScopedObject.ScopedBlock(uid, block) => (block, Nil)
       case ScopedObject.Loop(sym, block) => (block, Nil)
     
-    // traverse all scoped blocks
+    // traverse all scoped blocks and loops
     val nexts: Buffer[ScopeNode] = Buffer.empty
     def findNodes(s: ScopeNode): List[ScopeNode] = s :: s.children.flatMap:
-      case c @ ScopeNode(obj = obj: ScopedObject.ScopedBlock) => findNodes(c)
+      case c @ ScopeNode(obj = obj: (ScopedObject.ScopedBlock | ScopedObject.Loop)) => findNodes(c)
       case c =>
         nexts.addOne(c)
         List.empty
@@ -269,7 +269,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     
     val locals = nodes.flatMap(_.obj.definedLocals).toSet
     
-    val (read, cap) = reqdCaptureLocalsBlk(blk, nexts.toList, locals)
+    val cap = reqdCaptureLocalsBlk(blk, nexts.toList, locals)
     
     // Variables mutated by a lifted child of a class methods requires a capture
     val additional = extraMtds
@@ -277,33 +277,24 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         scopeData.getNode(mtd).liftedChildNodes.map(x => x.obj.toInfo)
       .foldLeft(AccessInfo.empty):
         case (acc, value) => acc ++ accessMap(value)
-    val (newRead, newCap) = (read ++ additional.accessed, cap ++ additional.mutated)
+    val newCap = cap ++ additional.mutated
     
-    val (usedVarsL, mutatedVarsL) = nexts.map: node =>
-        val a = accessMap(node.obj.toInfo)
-        (a.accessed, a.mutated)
-      .unzip
-    
-    val usedVars = usedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
-    val mutatedVars = mutatedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
-    
-    val cur: Map[ScopedInfo, (Set[Local], Set[Local])] = nodes.map: n =>
-        n.obj.toInfo -> (
-          newRead.intersect(usedVars).intersect(n.obj.definedLocals),
-          newCap.intersect(mutatedVars).intersect(n.obj.definedLocals)
-        )
+    val cur: Map[ScopedInfo, Set[Local]] = nodes.map: n =>
+        n.obj.toInfo -> newCap.intersect(n.obj.definedLocals)
       .toMap
     
     nexts.foldLeft(cur):
       case (mp, acc) => mp ++ reqdCaptureLocals(acc)
 
   // readers-mutators analysis
-  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], thisVars: Set[Local]): (Set[Local], Set[Local]) =
+  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], thisVars: Set[Local]): Set[Local] =
     val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
     case class CaptureInfo(reqCapture: Set[Local], hasReader: Set[Local], hasMutator: Set[Local])
-
-    def go(b: Block, reqCapture_ : Set[Local], hasReader_ : Set[Local], hasMutator_ : Set[Local]): CaptureInfo =
+    
+    // isLinear denotes whether the control flow is linear, i.e. whether `b` could be executed more than once assuming that
+    // the input block in `reqdCaptureLocalsBlk` is only executed once.
+    def go(b: Block, reqCapture_ : Set[Local], hasReader_ : Set[Local], hasMutator_ : Set[Local])(using isLinear: Bool): CaptureInfo =
       var reqCapture = reqCapture_
       var hasReader = hasReader_
       var hasMutator = hasMutator_
@@ -313,7 +304,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         hasReader ++= c.hasReader
         hasMutator ++= c.hasMutator
 
-      def rec(blk: Block) =
+      def rec(blk: Block)(using isLinear: Bool) =
         go(blk, reqCapture, hasReader, hasMutator)
       
       new BlockTraverserShallow:
@@ -322,8 +313,11 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           // Note that we traverse directly into scoped blocks without using handleCalledScope
           
           case l: Label if l.loop =>
-            handleCalledScope(l.label)
+            rec(l.body)(using isLinear = false) |> merge
+            applyBlock(l.rest)
           case Assign(lhs, rhs, rest) =>
+            println("assign: " + lhs + " = " + rhs)
+            println("has readers: " + hasReader) 
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
             applyBlock(rest)
@@ -364,11 +358,13 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 case ScopedObject.Func(_, true) => false
                 case _ => true
             
-            // this not a naked reference. if it's a ref to a class, this can only ever create once instance
-            // so the "one writer" rule applies
+            // This not a naked reference. If it's a ref to a class, this can only ever create once instance
+            // so the "one writer" rule applies.
+            // However, if the control flow is not linear, we are forced to add all the mutated variables
             for l <- muts do
-              if hasReader.contains(l) || hasMutator.contains(l) then
+              if hasReader.contains(l) || hasMutator.contains(l) || !isLinear then
                 reqCapture += l
+              hasReader += l
               hasMutator += l
             for l <- reads do
               if hasMutator.contains(l) then
@@ -405,6 +401,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(d)
                 val muts = muted.intersect(thisVars)
                 val reads = accessed.intersect(thisVars) -- muts
+                println("naked ref: " + p)
                 // this is a naked reference, we assume things it mutates always needs a capture
                 for l <- muts do
                   reqCapture += l
@@ -412,6 +409,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 for l <- reads do
                   if hasMutator.contains(l) then
                     reqCapture += l
+                  println("has reader: " + l)
                   hasReader += l
                 // if this defn calls another defn that creates a class or has a naked reference to a
                 // function, we must capture the latter's mutated variables in a capture, as arbitrarily
@@ -434,24 +432,16 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           case _ => super.applyDefn(defn)
 
       CaptureInfo(reqCapture, hasReader, hasMutator)
+    
+    val reqCapture = go(b, Set.empty, Set.empty, Set.empty)(using isLinear = true).reqCapture
+    reqCapture.intersect(thisVars)
 
-    val (usedVarsL, mutatedVarsL) = scopeInfos.map:
-        case (info, node) =>
-          val a = accessMap(info).intersectLocals(thisVars)
-          (a.accessed, a.mutated)
-      .unzip
-    val usedVars = usedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
-    val mutatedVars = mutatedVarsL.foldLeft[Set[Local]](Set.empty)(_ ++ _)
-    val reqCapture = go(b, Set.empty, Set.empty, Set.empty).reqCapture.intersect(mutatedVars)
-
-    (usedVars, reqCapture)
-
-  val reqdCaptures: Map[ScopedInfo, (Set[Local], Set[Local])] = scopeData.root.children.foldLeft(Map.empty):
+  val reqdCaptures: Map[ScopedInfo, Set[Local]] = scopeData.root.children.foldLeft(Map.empty):
     case (acc, node) => acc ++ reqdCaptureLocals(node)
   
   // For local inside a capture, finds the node to which this local belongs.
   val capturesMap =
     for
-      case (info -> (_, reqCap)) <- reqdCaptures
+      case (info -> reqCap) <- reqdCaptures
       s <- reqCap
     yield s -> info
