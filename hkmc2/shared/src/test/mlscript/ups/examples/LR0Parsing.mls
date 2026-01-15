@@ -1,12 +1,4 @@
 :js
-// :de
-// :sjs
-// :pt
-// :elt
-
-:global
-// :d
-// :todo
 
 
 import "../../../mlscript-compile/Stack.mls"
@@ -14,17 +6,17 @@ open Stack
 
 
 
-pattern Identifier = ("a" ..= "z") ~ (Identifier | "")
+pattern Ident = ("a" ..= "z") ~ (Ident | "")
 
 // data class Expr with
 //   constructor
-//     Ident(name: Str)
+//     Id(name: Str)
 //     Op(lhs: Sub, op: Str, rhs: Sub)
 //     Sub(inner: Expr, prec: Int)
 
 data class Subexpr with
   constructor
-    Ident(name: Str)
+    Id(name: Str)
     Op(lhs: Subexpr, op: Str, rhs: Subexpr)
 data class Expr(sub: Subexpr, prec: Int)
 
@@ -41,8 +33,8 @@ f("*")
 //│ = ["*", 2]
 
 pattern ParseStep =
-  | (Identifier(name) :: rest) =>
-      Expr(Ident(name), 0) :: rest
+  | (Ident(name) :: rest) =>
+      Expr(Id(name), 0) :: rest
   | (Expr(e1, p1) :: AtPrec(op, p) :: rest where p1 < p) =>
       Expr(e1, p) :: op :: rest
   | (Expr(e1, p1) :: AtPrec(op, p) :: Expr(e2, p2) :: rest where p1 >= p and p2 >= p) =>
@@ -94,37 +86,37 @@ parse(Nil)
 //│ > Failure: can't parse: Nil
 
 parse("x" :: Nil)
-//│ > Success: Expr(Ident("x"), 0)
+//│ > Success: Expr(Id("x"), 0)
 
 let input = "x" :: "+" :: "y" :: Nil
 //│ input = Cons("x", Cons("+", Cons("y", Nil)))
 
 parse(input)
-//│ > Success: Expr(Op(Ident("x"), "+", Ident("y")), 5)
+//│ > Success: Expr(Op(Id("x"), "+", Id("y")), 5)
 
 if input is ParseStep as rest then rest
-//│ = Cons(Expr(Ident("x"), 0), Cons("+", Cons("y", Nil)))
+//│ = Cons(Expr(Id("x"), 0), Cons("+", Cons("y", Nil)))
 
 parse("(" :: "x" :: ")" :: Nil)
-//│ > Success: Expr(Ident("x"), 0)
+//│ > Success: Expr(Id("x"), 0)
 
 parse("a" :: "*" :: "x" :: "+" :: "y" :: Nil)
-//│ > Success: Expr(Op(Op(Ident("a"), "*", Ident("x")), "+", Ident("y")), 5)
+//│ > Success: Expr(Op(Op(Id("a"), "*", Id("x")), "+", Id("y")), 5)
 
 parse("a" :: "+" :: "x" :: "*" :: "y" :: Nil)
-//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("x"), "*", Ident("y"))), 5)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("x"), "*", Id("y"))), 5)
 
 parse("(" :: "x" :: "+" :: "y" :: ")" :: Nil)
-//│ > Success: Expr(Op(Ident("x"), "+", Ident("y")), 0)
+//│ > Success: Expr(Op(Id("x"), "+", Id("y")), 0)
 
 parse("a" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: Nil)
-//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("x"), "+", Ident("y"))), 5)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("x"), "+", Id("y"))), 5)
 
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "x" :: "+" :: "y" :: ")" :: Nil)
-//│ > Success: Expr(Op(Ident("a"), "+", Op(Op(Ident("b"), "+", Ident("x")), "+", Ident("y"))), 5)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Op(Id("b"), "+", Id("x")), "+", Id("y"))), 5)
 
 parse("a" :: "+" :: "(" :: "b" :: "+" :: "(" :: "x" :: "+" :: "y" :: ")" :: ")" :: Nil)
-//│ > Success: Expr(Op(Ident("a"), "+", Op(Ident("b"), "+", Op(Ident("x"), "+", Ident("y")))), 5)
+//│ > Success: Expr(Op(Id("a"), "+", Op(Id("b"), "+", Op(Id("x"), "+", Id("y")))), 5)
 
 
 

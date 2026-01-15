@@ -1,12 +1,4 @@
 :js
-// :de
-// :sjs
-// :pt
-// :elt
-
-:global
-// :d
-// :todo
 
 
 import "../mlscript-compile/Stack.mls"
@@ -44,10 +36,10 @@ if [1,1] is
 pattern Sym =
   ([x,y] where (x == y))
 //│ ╔══[WARNING] Useless pattern binding: x.
-//│ ║  l.45: 	  ([x,y] where (x == y))
+//│ ║  l.37: 	  ([x,y] where (x == y))
 //│ ╙──      	    ^
 //│ ╔══[WARNING] Useless pattern binding: y.
-//│ ║  l.45: 	  ([x,y] where (x == y))
+//│ ║  l.37: 	  ([x,y] where (x == y))
 //│ ╙──      	      ^
 
 
@@ -115,7 +107,7 @@ pattern MultiSet(pattern Head, pattern Rest) =
   | ((Head as h) :: (Rest as r)) => h :: r
   | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
 //│ ╔══[ERROR] Name not found: rst
-//│ ║  l.116: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
+//│ ║  l.108: 	  | ((h0 :: (Head as h) :: r) where ((h0 :: r) is (Rest as rst))) => h :: rst
 //│ ╙──       	                                                                          ^^^
 
   // | ((h0 :: (Head as h) :: r) and ((h0 :: r) is (Rest as rst))) => h :: rst
@@ -143,7 +135,7 @@ arr is
 if [1,2,3] is
   MultiSet(2, MultiSet(1, x)) do print(x)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.144: 	  MultiSet(2, MultiSet(1, x)) do print(x)
+//│ ║  l.136: 	  MultiSet(2, MultiSet(1, x)) do print(x)
 //│ ╙──       	                                       ^
 
 pattern Id = _
@@ -154,7 +146,7 @@ if [1,2,3] is
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
 //│ ═══[COMPILATION ERROR] No definition found in scope for member 'arg$Id$0$'
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'x'
-//│ ║  l.153: 	  MultiSet(2, MultiSet(1, Id(x))) do print(x)
+//│ ║  l.145: 	  MultiSet(2, MultiSet(1, Id(x))) do print(x)
 //│ ╙──       	                                           ^
 
 
