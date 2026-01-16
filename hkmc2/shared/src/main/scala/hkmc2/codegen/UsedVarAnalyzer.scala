@@ -209,9 +209,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     // "ignore" `c` in the sense that it does not need to capture `s`'s scoped object's variables, nor does
     // it require the current scoped object to create a capture class for its accessed variables.
     def isIgnored(c: ScopedInfo) =
-      println("in " + s.obj.toInfo + ":")
-      println("  " + c.toString + " is ignored: " + s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo))
-      println("  first lifted parent of " + c + ": " + scopeData.getNode(c).firstLiftedParent.toInfo)
       s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo)
 
     // All objects in the same scc must have at least the same accesses as each other
@@ -317,8 +314,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             rec(l.body)(using isLinear = false) |> merge
             applyBlock(l.rest)
           case Assign(lhs, rhs, rest) =>
-            println("assign: " + lhs + " = " + rhs)
-            println("has readers: " + hasReader) 
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
             applyBlock(rest)
@@ -402,7 +397,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(d)
                 val muts = muted.intersect(thisVars)
                 val reads = accessed.intersect(thisVars) -- muts
-                println("naked ref: " + p)
                 // this is a naked reference, we assume things it mutates always needs a capture
                 for l <- muts do
                   reqCapture += l
@@ -410,7 +404,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 for l <- reads do
                   if hasMutator.contains(l) then
                     reqCapture += l
-                  println("has reader: " + l)
                   hasReader += l
                 // if this defn calls another defn that creates a class or has a naked reference to a
                 // function, we must capture the latter's mutated variables in a capture, as arbitrarily

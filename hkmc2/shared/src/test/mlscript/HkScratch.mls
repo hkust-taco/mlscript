@@ -7,18 +7,79 @@
 :global
 :d
 :todo
+:noSanityCheck
 
 :lift
-:rewriteWhile
-:noSanityCheck
-fun f() =
-  let i = 0
-  while i < 10 do
-    set i += 1
-  i
-f()
-//│ Elab: { fun member:f‹686›() = { let i‹688›; i‹688› = 0; while { let scrut = builtin:<‹33›#0(i‹688›#666, 10); $scrut‹690›#0 is true then i‹688›#666 := builtin:+‹48›#0(i‹688›#666, 1); else () }; i‹688›#666 }; member:f‹686›#666() }
-//│ = 10
-
-
-
+:ssjs
+class A with
+  let x = 2
+  val bruh = () => x
+  fun f =
+    fun g() =
+      set x += 2
+      this
+    g
+let a = new A
+a.f()
+a.f()
+a.bruh()
+//│ Elab: { Cls A { let term:class:A‹690›.x‹692›; term:class:A‹690›.x‹692› = 2; method val member:bruh‹688› = λ(). term:class:A‹690›.x‹692›#666; method fun member:f‹687› = { fun member:g‹686›() = { term:class:A‹690›.x‹692›#666 := builtin:+‹48›#0(term:class:A‹690›.x‹692›#666, 2); class:A‹690›#0 }; member:g‹686›#666 }; }; let a‹703›; a‹703› = new member:A‹689›#666; a‹703›#666.f(); a‹703›#666.f(); a‹703›#666.bruh() }
+//│ JS:
+//│ let g, A1, a, lambda, tmp, tmp1, Capture$A1, lambda$, g$;
+//│ g$ = function g$(A$cap, A2) {
+//│   return () => {
+//│     return g(A$cap, A2)
+//│   }
+//│ };
+//│ g = function g(A$cap, A2) {
+//│   let tmp2;
+//│   tmp2 = A$cap.x$0 + 2;
+//│   A$cap.x$0 = tmp2;
+//│   return A2
+//│ };
+//│ lambda$ = (undefined, function (A$cap) {
+//│   return () => {
+//│     return lambda(A$cap)
+//│   }
+//│ });
+//│ lambda = (undefined, function (A$cap) {
+//│   return A$cap.x$0
+//│ });
+//│ (class Capture$A {
+//│   static {
+//│     Capture$A1 = this
+//│   }
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$A"]; 
+//│ });
+//│ (class A {
+//│   static {
+//│     A1 = this
+//│   }
+//│   constructor() {
+//│     this.A$cap = new Capture$A1(undefined);
+//│     let lambda$here;
+//│     this.A$cap.x$0 = 2;
+//│     lambda$here = lambda$(this.A$cap);
+//│     this.bruh = lambda$here;
+//│   }
+//│   #A$cap;
+//│   #x;
+//│   get f() {
+//│     let g$here;
+//│     g$here = g$(this.A$cap, this);
+//│     return g$here;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A"]; 
+//│ });
+//│ a = globalThis.Object.freeze(new A1());
+//│ tmp = runtime.safeCall(a.f());
+//│ tmp1 = runtime.safeCall(a.f());
+//│ block$res1 = runtime.safeCall(a.bruh());
+//│ undefined
+//│ = 6
+//│ a = A { A$cap: Capture$A { x$0: 6 }, bruh: fun }

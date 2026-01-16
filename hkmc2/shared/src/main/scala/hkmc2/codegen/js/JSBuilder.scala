@@ -266,6 +266,8 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
           =>
             val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
             val ctorParams = clsParams.map(p => p -> scope.allocateName(p))
+            println(isym)
+            println(ctorParams)
             val ctorAuxParams = auxParams.map(ps => ps.params.map(p => p.sym -> scope.allocateName(p.sym)))
             
             def mkMethods(mtds: Ls[FunDefn], mtdPrefix: Str)(using Scope): Document =

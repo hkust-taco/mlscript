@@ -264,10 +264,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
   def getNode(defn: FunDefn): ScopeNode = getNode(defn.dSym)
   def getUID(blk: Scoped): ScopeUID =
     if scopedMap.containsKey(blk) then scopedMap.get(blk)
-    else
-      println("key not found:")
-      println(blk)
-      lastWords("getUID: key not found")
+    else lastWords("getUID: key not found")
   def getNode(blk: Scoped): ScopeNode = getNode(getUID(blk))
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
   class ScopeFinder extends BlockTraverserShallow:
@@ -275,7 +272,6 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
     override def applyBlock(b: Block): Unit = b match
       case s: Scoped =>
         val id = fresh.make
-        println("fresh: " + id)
         objs ::= ScopedObject.ScopedBlock(id, s)
       case l: Label if l.loop =>
         objs ::= ScopedObject.Loop(l.label, l.body)

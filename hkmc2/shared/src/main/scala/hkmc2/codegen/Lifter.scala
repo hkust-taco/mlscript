@@ -510,12 +510,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
           case _ => super.applyResult(r)(k)
         
         // extract the call
-        override def applyPath(p: Path)(k: Path => Block): Block = 
-          p match
+        override def applyPath(p: Path)(k: Path => Block): Block = p match
           case r @ RefOfBms(l, S(d)) => ctx.liftedScopes.get(d) match
             case S(f: LiftedFunc) =>
               if f.isTrivial then k(r)
-              else 
+              else
                 val newSym = closureMap.get(l) match
                   case None =>
                     val newSym = TempSymbol(N, l.nme + "$here")
@@ -530,7 +529,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
                   case Some(value) =>
                     syms.addOne(FunSyms(l, d) -> value)
                     value
-                k(Value.Ref(newSym, S(d)))
+                k(Value.Ref(newSym, N))
             
             // Other naked references to BlockMemberSymbols.
             case N => ctx.symbolsMap.get(d) match
@@ -579,27 +578,27 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
                 if (scrut2 is scrut) &&
                     (arms2 is arms) &&
                     (dflt2 is dflt) && (rst2 is rst)
-                  then b else Match(scrut2, arms2, dflt2, rst2)
+                  then rewritten else Match(scrut2, arms2, dflt2, rst2)
             
         case Label(lbl, false, bod, rst) =>
           val lbl2 = lbl.subst
           val bod2 = applySubBlockAndReset(bod)
           val rst2 = applySubBlock(rst)
-          if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, false, bod2, rst2)
+          if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then rewritten else Label(lbl2, false, bod2, rst2)
         case TryBlock(sub, fin, rst) =>
           val sub2 = applySubBlockAndReset(sub)
           val fin2 = applySubBlockAndReset(fin)
           val rst2 = applySubBlock(rst)
-          if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then b else TryBlock(sub2, fin2, rst2)
+          if (sub2 is sub) && (fin2 is fin) && (rst2 is rst) then rewritten else TryBlock(sub2, fin2, rst2)
         
         // Assignment to variables
         case Assign(lhs, rhs, rest) => ctx.symbolsMap.get(lhs) match
           case Some(path) => applyResult(rhs): rhs2 =>
             path.assign(rhs2, applySubBlock(rest))
-          case _ => super.applyBlock(b)
+          case _ => super.applyBlock(rewritten)
         
         // rewrite ValDefns (in ctors)
-        case Define(d: ValDefn, rest: Block) if d.owner.isDefined => super.applyBlock(b) // TODO
+        case define @ Define(d: ValDefn, rest: Block) if d.owner.isDefined => super.applyBlock(rewritten) // TODO
           /*
           ctx.getIsymPath(d.owner.get) match
             case Some(value) if !iSymInScope(d.owner.get) =>
@@ -608,7 +607,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
             case _ => super.applyBlock(rewritten)
           */
         // rewrite object definitions, assigning to the given symbol in modObjLocals
-        case Define(d: ClsLikeDefn, rest: Block) => super.applyBlock(b) // TODO
+        case Define(d: ClsLikeDefn, rest: Block) => super.applyBlock(rewritten) // TODO
           /*
           ctx.modObjLocals.get(d.sym) match
           case Some(sym) if !ctx.ignored(d.sym) => ctx.getBmsReqdInfo(d.sym) match
@@ -836,6 +835,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
       println(v)
     println(")")
   
+  /*
   
   println("accessesShallow")
   printMap(usedVars.shallowAccesses)
@@ -845,6 +845,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
   println("usedVars")
   printMap(usedVars.reqdCaptures)
   
+  */
   
   def isIgnored(d: Defn) = d match
     case f: FunDefn => ignored.contains(f.dSym)
@@ -981,6 +982,24 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
 
     protected def rewriteImpl: LifterResult[T]
     
+    protected def addCaptureSym(b: Block, captureSym: Local, define: Bool): Block =
+      if hasCapture then
+        val undef = Value.Lit(Tree.UnitLit(false)).asArg
+        val inst = Instantiate(
+          true,
+          Value.Ref(captureClass.sym, S(captureClass.isym)),
+          List.fill(thisCapturedLocals.size)(undef)
+        )
+        val assign = Assign(captureSym, inst, b)
+        if define then
+          Scoped(
+            Set(captureSym),
+            assign
+          )
+        else assign
+      else
+        b
+    
     /**
       * Rewrites the contents of this scoped object to reference the lifted versions of variables.
       *
@@ -1093,23 +1112,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
     * A rewritten scope with a generic VarSymbol capture symbol.
     */
   sealed trait GenericRewrittenScope[T] extends RewrittenScope[T]:
-    lazy val captureSym = VarSymbol(Tree.Ident(this.obj.nme + "$cap"))
+    lazy val captureSym = VarSymbol(Tree.Ident(obj.nme + "$cap"))
     override lazy val capturePath = captureSym.asPath
     
-    protected def addCaptureSym(b: Block): Block =
-      if hasCapture then
-        val undef = Value.Lit(Tree.UnitLit(false)).asArg
-        val inst = Instantiate(
-          true,
-          Value.Ref(captureClass.sym, S(captureClass.isym)),
-          List.fill(thisCapturedLocals.size)(undef)
-        )
-        Scoped(
-          Set(captureSym),
-          Assign(captureSym, inst, b)
-        )
-      else
-        b
+    protected def addCaptureSym(b: Block): Block = addCaptureSym(b, captureSym, true)
   
   // some helpers
   private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme)))
@@ -1144,6 +1150,35 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addCaptureSym(rewritten)
       LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec), rewriter.extraDefns.toList)
+
+  class RewrittenClass(override val obj: ScopedObject.Class)(using ctx: LifterCtxNew) extends RewrittenScope[ClsLikeDefn](obj):
+    
+    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(obj.nme + "$cap"))
+    override lazy val capturePath: Path = captureSym.asPath
+    
+    protected def rewriteMethods =
+      val mtds = node.children
+        .map: c =>
+          ctx.rewrittenScopes(c.obj.toInfo)
+        .collect:
+          case r: RewrittenFunc if r.obj.isMethod => r 
+      val (liftedMtds, extras) = mtds.map(liftNestedScopes).unzip(using l => (l.liftedDefn, l.extraDefns))
+      LifterResult(liftedMtds, extras.flatten)
+      
+    override def rewriteImpl: LifterResult[ClsLikeDefn] =
+      val rewriterCtor = new BlockRewriter
+      val rewriterPreCtor = new BlockRewriter
+      val rewrittenCtor = rewriterCtor.rewrite(obj.cls.ctor)
+      val rewrittenPrector = rewriterPreCtor.rewrite(obj.cls.preCtor)
+      val preCtorWithCap = addCaptureSym(rewrittenPrector, captureSym, false)
+      val LifterResult(newMtds, extras) = rewriteMethods
+      val newCls = obj.cls.copy(
+        ctor = rewrittenCtor,
+        preCtor = preCtorWithCap,
+        privateFields = captureSym :: obj.cls.privateFields,
+        methods = newMtds
+      )
+      LifterResult(newCls, rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras)
    
   class LiftedFunc(override val obj: ScopedObject.Func)(using ctx: LifterCtxNew) extends LiftedScope[FunDefn](obj) with GenericRewrittenScope[FunDefn]:
     private val passedSymsMap_ : Map[Local, VarSymbol] = passedSyms.map: s =>
@@ -1247,7 +1282,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
   
   private def createRewritten[T](s: TScopeNode[T])(using ctx: LifterCtxNew): RewrittenScope[T] = s.obj match
     case _: ScopedObject.Top => lastWords("tried to rewrite the top-level scope")
-    case o: ScopedObject.Class => ???
+    case o: ScopedObject.Class =>
+      if s.isLifted && !s.isTopLevel then ???
+      else RewrittenClass(o)
     case o: ScopedObject.Companion => ???
     case o: ScopedObject.ClassCtor => ???
     case o: ScopedObject.Func =>
