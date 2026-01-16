@@ -37,8 +37,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
-  private case class ActiveLabel(sym: Local, breakLabel: Str, continueLabel: Opt[Str])
-  private var activeLabels: List[ActiveLabel] = Nil
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -53,7 +51,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def tupleArrayType(mut: Bool)(using Ctx): TypeIdx =
     ctx.getOrCreateWasmIntrinsicType(
-      Ctx.WasmIntrinsicType.TupleArray(mutable = mut),
+      WasmIntrinsicType.TupleArray(mutable = mut),
       createType = 
         val suffix = if mut then "Mut" else ""
         val sym = BlockMemberSymbol(s"TupleArray$suffix", Nil)
@@ -94,7 +92,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       fld: Path,
       loc: Opt[Loc],
       errCtx: Str,
-      extra: => Str
+      errExtra: => Str
   )(using Ctx, Raise, Scope): Expr => Expr =
     fld match
       case Value.Lit(IntLit(value)) if value.isValidInt =>
@@ -114,7 +112,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             return (_: Expr) => errExpr(
               msg"$errCtx expects an integer index but found ${ty.fold("(none)")(_.toWat.mkString())}" -> loc
                 :: Nil,
-              extraInfo = S(extra)
+              extraInfo = S(errExtra)
             )
         tupleRef =>
           Instructions.`if`(
@@ -345,7 +343,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           fld = fld,
           loc = fld.toLoc,
           errCtx = "WatBuilder::result for array-style dynamic selections",
-          extra = dyn.toString
+          errExtra = dyn.toString
         )
         tupleArrayGet(qualRes, idxBuilder)
       else
@@ -583,7 +581,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             fld = fld,
             loc = fld.toLoc,
             errCtx = "WatBuilder::returningTerm for AssignDynField(...)",
-            extra = assign.toString
+            errExtra = assign.toString
           )
           val idxExpr = idxBuilder(tupleRef)
           array.set(tupleArrayType, tupleRef, idxExpr, rhsExpr)

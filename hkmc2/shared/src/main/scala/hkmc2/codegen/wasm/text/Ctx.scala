@@ -9,7 +9,7 @@ import hkmc2.utils.*
 import document.*
 import document.Document
 import semantics.*
-import hkmc2.codegen.wasm.text.Param as WasmParam
+import text.Param as WasmParam
 import Instructions.*
 
 import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
@@ -128,10 +128,10 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
-object Ctx:
-  enum WasmIntrinsicType:
-    case TupleArray(mutable: Bool)
+enum WasmIntrinsicType:
+  case TupleArray(mutable: Bool)
 
+object Ctx:
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
     "minus_impl" -> i32.sub,
@@ -195,7 +195,7 @@ class Ctx(
   import Ctx.prettyString
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
-  private val wasmIntrinsicTypes: MutMap[Ctx.WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -332,7 +332,7 @@ class Ctx(
    * Returns the cached [[TypeIdx]] for the intrinsic type `key`, creating it with `createType` if
    * it does not yet exist in this context.
    */
-  def getOrCreateWasmIntrinsicType(key: Ctx.WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
+  def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
