@@ -7,41 +7,24 @@ data class A(x) with
     fun getB() = x + y
   fun getA() = B(2).getB()
 //│ JS (unsanitized):
-//│ let B1, A1, B$;
-//│ B$ = function B$(isMut, A$instance, y) {
-//│   let tmp, tmp1;
-//│   if (isMut === true) {
-//│     tmp = new B1.class(y);
-//│   } else {
-//│     tmp = globalThis.Object.freeze(new B1.class(y));
-//│   }
-//│   tmp1 = tmp(A$instance);
-//│   return tmp1
-//│ };
-//│ B1 = function B(y) {
-//│   return (A$instance) => {
-//│     return globalThis.Object.freeze(new B.class(y)(A$instance));
-//│   }
+//│ let B1, A1;
+//│ B1 = function B(A2, y) {
+//│   return globalThis.Object.freeze(new B.class(A2, y));
 //│ };
 //│ (class B {
 //│   static {
 //│     B1.class = this
 //│   }
-//│   constructor(y) {
-//│     return (A$instance) => {
-//│       this.A$instance = A$instance;
-//│       this.y = y;
-//│       return this;
-//│     }
+//│   constructor(A2, y) {
+//│     this.A = A2;
+//│     this.y = y;
 //│   }
-//│   #A$instance;
-//│   get A$instance() { return this.#A$instance; }
-//│   set A$instance(value) { this.#A$instance = value; }
+//│   #B$cap;
 //│   getB() {
-//│     return this.A$instance.x + this.y
+//│     return this.A.x + this.y
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "B", ["y"]]; 
+//│   static [definitionMetadata] = ["class", "B", [null, "y"]]; 
 //│ });
 //│ A1 = function A(x) {
 //│   return globalThis.Object.freeze(new A.class(x));
@@ -53,9 +36,10 @@ data class A(x) with
 //│   constructor(x) {
 //│     this.x = x;
 //│   }
+//│   #A$cap;
 //│   getA() {
 //│     let tmp;
-//│     tmp = B$(false, this, 2);
+//│     tmp = B1(this, 2);
 //│     return tmp.getB()
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -74,26 +58,40 @@ class A with
 (new A).x()
 //│ JS (unsanitized):
 //│ let g, A3, tmp1, g$;
-//│ g$ = function g$(A$instance) {
-//│   return 2
-//│ };
-//│ g = function g(A$instance) {
+//│ g$ = function g$() {
 //│   return () => {
-//│     return g$(A$instance)
+//│     return g()
 //│   }
+//│ };
+//│ g = function g() {
+//│   return 2
 //│ };
 //│ (class A2 {
 //│   static {
 //│     A3 = this
 //│   }
 //│   constructor() {
-//│     let g$here;
-//│     g$here = runtime.safeCall(g(this));
-//│     this.x = g$here;
+//│     this.x = g;
 //│   }
+//│   #A$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
 //│ tmp1 = globalThis.Object.freeze(new A3());
 //│ runtime.safeCall(tmp1.x())
 //│ = 2
+
+class A with
+  let x = 2
+  val bruh = () => x
+  fun f =
+    fun g() =
+      set x += 2
+      this
+    g
+let a = new A
+a.f()
+a.f()
+a.bruh()
+//│ = 6
+//│ a = A { A$cap: Capture$A { x$0: 6 }, bruh: fun }

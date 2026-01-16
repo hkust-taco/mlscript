@@ -93,12 +93,12 @@ fun f(a1, a2, a3, a4, a5, a6) =
 f(1,2,3,4,5,6)
 //│ JS (unsanitized):
 //│ let g4, f4, g$4;
-//│ g$4 = function g$(a3, a4, a5, a2, a6, a1) {
+//│ g$4 = function g$(a1, a2, a3, a4, a5, a6) {
 //│   return () => {
-//│     return g4(a3, a4, a5, a2, a6, a1)
+//│     return g4(a1, a2, a3, a4, a5, a6)
 //│   }
 //│ };
-//│ g4 = function g(a3, a4, a5, a2, a6, a1) {
+//│ g4 = function g(a1, a2, a3, a4, a5, a6) {
 //│   let tmp1, tmp2, tmp3, tmp4;
 //│   tmp1 = a1 + a2;
 //│   tmp2 = tmp1 + a3;
@@ -128,18 +128,12 @@ let x = f2().toString()
 f1()
 let y = f2().toString()
 x + y
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1252)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1312)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1311)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ = "01"
+//│ f1 = fun
+//│ f2 = fun
+//│ ret = Tuple(fun, fun)
+//│ x = "0"
+//│ y = "1"
 
 
 data class Tuple(a, b)
@@ -152,18 +146,6 @@ fun f(used1) =
     Tuple(h, i)
   fun g22() = used1
   Tuple(g1(10), g22)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1252)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1312)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1311)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 :expect "11110110"
 let ret = f(1)
@@ -177,55 +159,16 @@ hFun()
 let c = g2()
 let d = iFun()
 a.toString() + b + c + d
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:f
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res4, $block$res -> block$res7, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $selRes -> selRes3, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, member:g$ -> g$4, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, $block$res -> block$res5, member:g$ -> g$2, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g -> g3, member:f -> f3, $block$res -> block$res1, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $tmp -> tmp, member:bar$ -> bar$1, member:g -> g, member:f -> f, $block$res -> block$res6, member:g$ -> g$3, member:Predef‹726› -> Predef, member:g -> g4, member:f -> f4, $block$res -> block$res3, member:g$ -> g$, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
-//│ ║  l.169: 	let ret = f(1)
-//│ ║         	          ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.146: 	fun f(used1) =
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.147: 	  fun g1(used2) =
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ║  l.148: 	    fun h() = 
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.149: 	      set used1 = 10
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.150: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] Error: Function 'f' expected 2 arguments but got 1
-//│     at Runtime.checkArgs (file:///storage/mark/Repos/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs:615:41)
-//│     at f (REPL16:1:535)
-//│     at REPL31:1:180
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '"11110110"', got: 'undefined'
-//│ a = undefined
-//│ b = undefined
-//│ c = undefined
-//│ d = undefined
-//│ g2 = undefined
-//│ gRet = undefined
-//│ hFun = undefined
-//│ iFun = undefined
-//│ ret = undefined
+//│ = "11110110"
+//│ a = 11
+//│ b = 1
+//│ c = 10
+//│ d = 110
+//│ g2 = fun
+//│ gRet = Tuple(fun, fun)
+//│ hFun = fun
+//│ iFun = fun
+//│ ret = Tuple(Tuple(fun, fun), fun)
 
 // some variables mutated, some not
 :sjs
@@ -239,27 +182,27 @@ fun f(unused, immutable, mutated) =
   a + h() + unused
 f(1, 2, 1000)
 //│ JS (unsanitized):
-//│ let g5, h, f5, Capture$f1, h$, g$5;
-//│ g$5 = function g$(f$cap, immutable) {
+//│ let g6, h2, f7, Capture$f3, h$2, g$6;
+//│ g$6 = function g$(f$cap, immutable) {
 //│   return () => {
-//│     return g5(f$cap, immutable)
+//│     return g6(f$cap, immutable)
 //│   }
 //│ };
-//│ h$ = function h$(f$cap) {
+//│ h$2 = function h$(f$cap) {
 //│   return () => {
-//│     return h(f$cap)
+//│     return h2(f$cap)
 //│   }
 //│ };
-//│ g5 = function g(f$cap, immutable) {
+//│ g6 = function g(f$cap, immutable) {
 //│   f$cap.mutated$0 = 2;
 //│   return immutable + f$cap.mutated$0
 //│ };
-//│ h = function h(f$cap) {
+//│ h2 = function h(f$cap) {
 //│   return f$cap.mutated$0
 //│ };
-//│ (class Capture$f {
+//│ (class Capture$f2 {
 //│   static {
-//│     Capture$f1 = this
+//│     Capture$f3 = this
 //│   }
 //│   constructor(mutated$0) {
 //│     this.mutated$0 = mutated$0;
@@ -267,15 +210,15 @@ f(1, 2, 1000)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
-//│ f5 = function f(unused, immutable, mutated) {
-//│   let a1, tmp5, tmp6, f$cap;
-//│   f$cap = new Capture$f1(undefined);
-//│   a1 = g5(f$cap, immutable);
-//│   tmp5 = h(f$cap);
-//│   tmp6 = a1 + tmp5;
-//│   return tmp6 + unused
+//│ f7 = function f(unused, immutable, mutated) {
+//│   let a1, tmp8, tmp9, f$cap;
+//│   f$cap = new Capture$f3(mutated);
+//│   a1 = g6(f$cap, immutable);
+//│   tmp8 = h2(f$cap);
+//│   tmp9 = a1 + tmp8;
+//│   return tmp9 + unused
 //│ };
-//│ f5(1, 2, 1000)
+//│ f7(1, 2, 1000)
 //│ = 7
 
 // if used as a higher order function, pass closures
@@ -337,56 +280,11 @@ fun g() =
     x
   f
 g()(1)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = k
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res4, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $selRes -> selRes3, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, member:g -> g5, member:h -> h, member:f -> f5, $block$res -> block$res5, member:g$ -> g$2, member:g -> g3, member:f -> f3, $block$res -> block$res9, class:Capture$f -> Capture$f, member:Capture$f -> Capture$f1, member:h$ -> h$, member:g$ -> g$5, $block$res -> block$res6, member:g -> g6, member:f -> f6, member:g$ -> g$3, member:g -> g4, member:f -> f4, $block$res -> block$res10, class:Capture$scope0 -> Capture$scope0, member:Capture$scope0 -> Capture$scope01, member:g$ -> g$6, member:g -> g7, member:f -> f7, $block$res -> block$res11, class:Capture$scope0 -> Capture$scope02, member:Capture$scope0 -> Capture$scope03, $block$res -> block$res7, member:g$ -> g$7, member:g -> g8, member:h -> h1, member:f -> f8, member:g$ -> g$4, $block$res -> block$res12, member:h$ -> h$1, member:g$ -> g$8, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g_h -> g_h, member:f -> f9, $block$res -> block$res1, member:g -> g9, member:f -> f10, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $block$res -> block$res13, $tmp -> tmp, member:f$ -> f$, member:bar$ -> bar$1, member:g$ -> g$9, member:g -> g, member:f -> f, member:h -> h2, member:f -> f11, member:g -> g10, member:Predef‹726› -> Predef, $block$res -> block$res14, $block$res -> block$res3, member:h$ -> h$2, member:g$ -> g$, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│         curThis = N
-//│         bindings = HashMap(member:h$ -> h$3, member:h -> h3, member:f -> f12, member:g -> g11, $tmp -> tmp5, class:Capture$scope0 -> Capture$scope04, member:Capture$scope0 -> Capture$scope05, member:f$ -> f$1)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x, scope0$cap -> scope0$cap)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'k'
-//│ ║  l.329: 	    let k = 4
-//│ ║         	        ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.329: 	    let k = 4
-//│ ╙──       	        ^
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = scope0$cap
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res4, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $prettyPrint -> prettyPrint, $discarded -> discarded2, $Term -> Term, $selRes -> selRes3, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, member:g -> g5, member:h -> h, member:f -> f5, $block$res -> block$res5, member:g$ -> g$2, member:g -> g3, member:f -> f3, $block$res -> block$res9, class:Capture$f -> Capture$f, member:Capture$f -> Capture$f1, member:h$ -> h$, member:g$ -> g$5, $block$res -> block$res6, member:g -> g6, member:f -> f6, member:g$ -> g$3, member:g -> g4, member:f -> f4, $block$res -> block$res10, class:Capture$scope0 -> Capture$scope0, member:Capture$scope0 -> Capture$scope01, member:g$ -> g$6, member:g -> g7, member:f -> f7, $block$res -> block$res11, class:Capture$scope0 -> Capture$scope02, member:Capture$scope0 -> Capture$scope03, $block$res -> block$res7, member:g$ -> g$7, member:g -> g8, member:h -> h1, member:f -> f8, member:g$ -> g$4, $block$res -> block$res12, member:h$ -> h$1, member:g$ -> g$8, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g_h -> g_h, member:f -> f9, $block$res -> block$res1, member:g -> g9, member:f -> f10, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $block$res -> block$res13, $tmp -> tmp, member:f$ -> f$, member:bar$ -> bar$1, member:g$ -> g$9, member:g -> g, member:f -> f, member:h -> h2, member:f -> f11, member:g -> g10, member:Predef‹726› -> Predef, $block$res -> block$res14, $block$res -> block$res3, member:h$ -> h$2, member:g$ -> g$, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│         curThis = N
-//│         bindings = HashMap(member:h$ -> h$3, member:h -> h3, member:f -> f12, member:g -> g11, $tmp -> tmp5, class:Capture$scope0 -> Capture$scope04, member:Capture$scope0 -> Capture$scope05, member:f$ -> f$1)
-//│       curThis = S of N
-//│       bindings = HashMap(x -> x)
-//│     curThis = N
-//│     bindings = HashMap(k -> k)
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'scope0$cap'
 //│ JS (unsanitized):
-//│ let h3, f12, g11, tmp5, Capture$scope05, f$1, h$3;
-//│ (class Capture$scope04 {
+//│ let h5, f15, g13, tmp8, Capture$scope07, f$1, h$5;
+//│ (class Capture$scope06 {
 //│   static {
-//│     Capture$scope05 = this
+//│     Capture$scope07 = this
 //│   }
 //│   constructor(y$0) {
 //│     this.y$0 = y$0;
@@ -394,48 +292,37 @@ g()(1)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
-//│ h$3 = function h$(scope0$cap, x) {
+//│ h$5 = function h$(scope0$cap, x1, k) {
 //│   return () => {
-//│     return h3(scope0$cap, x)
+//│     return h5(scope0$cap, x1, k)
 //│   }
 //│ };
-//│ h3 = function h(scope0$cap, x) {
+//│ h5 = function h(scope0$cap, x1, k) {
 //│   k = 5;
-//│   x = 4;
-//│   return x + scope0$cap.y$0
+//│   x1 = 4;
+//│   return x1 + scope0$cap.y$0
 //│ };
-//│ f$1 = function f$() {
-//│   return (x) => {
-//│     return f12(x)
+//│ f$1 = function f$(scope0$cap) {
+//│   return (x1) => {
+//│     return f15(scope0$cap, x1)
 //│   }
 //│ };
-//│ f12 = function f(x) {
+//│ f15 = function f(scope0$cap, x1) {
 //│   let k;
 //│   k = 4;
 //│   scope0$cap.y$0 = 2;
-//│   return x
+//│   return x1
 //│ };
-//│ g11 = function g() {
-//│   let y, scope0$cap;
-//│   scope0$cap = new Capture$scope05(undefined);
+//│ g13 = function g() {
+//│   let y1, scope0$cap, f$here;
+//│   scope0$cap = new Capture$scope07(y1);
 //│   scope0$cap.y$0 = 0;
-//│   return f12
+//│   f$here = f$1(scope0$cap);
+//│   return f$here
 //│ };
-//│ tmp5 = g11();
-//│ runtime.safeCall(tmp5(1))
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: scope0$cap is not defined
-//│     at f (REPL61:1:1065)
-//│     at REPL61:1:1345
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ tmp8 = g13();
+//│ runtime.safeCall(tmp8(1))
+//│ = 1
 
 :expect 2
 fun f() =
@@ -463,56 +350,7 @@ fun f(x, y, z) =
     set z = 3
   g
 f(0, 0, 0)()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = f$cap
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res4, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $block$res -> block$res15, $prettyPrint -> prettyPrint, $discarded -> discarded2, $tmp -> tmp5, $Term -> Term, $selRes -> selRes3, class:Capture$scope0 -> Capture$scope04, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, member:Capture$scope0 -> Capture$scope05, member:g -> g5, member:h -> h, member:f -> f5, member:f$ -> f$1, member:h$ -> h$3, member:g -> g12, member:f -> f13, $block$res -> block$res5, ret -> ret1, $block$res -> block$res16, member:g$ -> g$2, $tmp -> tmp6, class:Capture$scope0 -> Capture$scope06, member:g -> g3, member:Capture$scope0 -> Capture$scope07, member:f -> f3, member:g$ -> g$10, member:g -> g13, $block$res -> block$res9, member:h -> h4, member:i -> i, member:f -> f14, class:Capture$f -> Capture$f, member:Capture$f -> Capture$f1, member:h$ -> h$, member:g$ -> g$5, $block$res -> block$res6, member:g -> g6, member:f -> f6, member:g$ -> g$3, $block$res -> block$res17, $tmp -> tmp7, class:Capture$f -> Capture$f2, member:g -> g4, member:f -> f4, $block$res -> block$res10, class:Capture$scope0 -> Capture$scope0, member:Capture$scope0 -> Capture$scope01, member:Capture$f -> Capture$f3, member:i$ -> i$, member:g$ -> g$6, member:h$ -> h$4, member:g -> g7, member:g$ -> g$11, member:f -> f7, $block$res -> block$res11, class:Capture$scope0 -> Capture$scope02, member:Capture$scope0 -> Capture$scope03, $block$res -> block$res7, member:g$ -> g$7, member:g -> g8, member:h -> h1, member:f -> f8, member:g$ -> g$4, $block$res -> block$res12, member:h$ -> h$1, member:g$ -> g$8, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g_h -> g_h, member:f -> f9, $block$res -> block$res1, member:g -> g9, member:f -> f10, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $block$res -> block$res13, $tmp -> tmp, member:f$ -> f$, member:bar$ -> bar$1, member:g$ -> g$9, member:g -> g, member:f -> f, member:h -> h2, member:f -> f11, member:g -> g10, member:Predef‹726› -> Predef, $block$res -> block$res14, $block$res -> block$res3, member:h$ -> h$2, member:h -> h3, member:f -> f12, member:g$ -> g$, member:g -> g11, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f$cap'
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = f$cap
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res4, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $block$res -> block$res15, $prettyPrint -> prettyPrint, $discarded -> discarded2, $tmp -> tmp5, $Term -> Term, $selRes -> selRes3, class:Capture$scope0 -> Capture$scope04, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, member:Capture$scope0 -> Capture$scope05, member:g -> g5, member:h -> h, member:f -> f5, member:f$ -> f$1, member:h$ -> h$3, member:g -> g12, member:f -> f13, $block$res -> block$res5, ret -> ret1, $block$res -> block$res16, member:g$ -> g$2, $tmp -> tmp6, class:Capture$scope0 -> Capture$scope06, member:g -> g3, member:Capture$scope0 -> Capture$scope07, member:f -> f3, member:g$ -> g$10, member:g -> g13, $block$res -> block$res9, member:h -> h4, member:i -> i, member:f -> f14, class:Capture$f -> Capture$f, member:Capture$f -> Capture$f1, member:h$ -> h$, member:g$ -> g$5, $block$res -> block$res6, member:g -> g6, member:f -> f6, member:g$ -> g$3, $block$res -> block$res17, $tmp -> tmp7, class:Capture$f -> Capture$f2, member:g -> g4, member:f -> f4, $block$res -> block$res10, class:Capture$scope0 -> Capture$scope0, member:Capture$scope0 -> Capture$scope01, member:Capture$f -> Capture$f3, member:i$ -> i$, member:g$ -> g$6, member:h$ -> h$4, member:g -> g7, member:g$ -> g$11, member:f -> f7, $block$res -> block$res11, class:Capture$scope0 -> Capture$scope02, member:Capture$scope0 -> Capture$scope03, $block$res -> block$res7, member:g$ -> g$7, member:g -> g8, member:h -> h1, member:f -> f8, member:g$ -> g$4, $block$res -> block$res12, member:h$ -> h$1, member:g$ -> g$8, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g_h -> g_h, member:f -> f9, $block$res -> block$res1, member:g -> g9, member:f -> f10, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $block$res -> block$res13, $tmp -> tmp, member:f$ -> f$, member:bar$ -> bar$1, member:g$ -> g$9, member:g -> g, member:f -> f, member:h -> h2, member:f -> f11, member:g -> g10, member:Predef‹726› -> Predef, $block$res -> block$res14, $block$res -> block$res3, member:h$ -> h$2, member:h -> h3, member:f -> f12, member:g$ -> g$, member:g -> g11, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'f$cap'
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: f$cap is not defined
-//│     at h (REPL68:1:979)
-//│     at g (REPL68:1:834)
-//│     at REPL68:1:266
-//│     at REPL68:1:1774
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '6', got: 'undefined'
+//│ = 6
 
 fun f(x, cond) =
   set x = 1
@@ -531,39 +369,7 @@ fun f() =
   f()
   x
 f()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = scope0$cap
-//│     _2 = class hkmc2.semantics.VarSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = N
-//│         curThis = S of S of globalThis:globalThis
-//│         bindings = HashMap($block$res -> block$res4, $block$res -> block$res8, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $runtime -> runtime, $discarded -> discarded1, $definitionMetadata -> definitionMetadata, member:g$ -> g$1, $selRes -> selRes2, $block$res -> block$res15, $prettyPrint -> prettyPrint, $discarded -> discarded2, $tmp -> tmp5, $Term -> Term, $selRes -> selRes3, class:Capture$scope0 -> Capture$scope04, $Block -> Block, $discarded -> discarded3, $Shape -> Shape, $tmp -> tmp1, member:g -> g2, $tmp -> tmp2, member:f -> f2, $tmp -> tmp3, $tmp -> tmp4, member:Capture$scope0 -> Capture$scope05, member:g -> g5, member:h -> h, member:f -> f5, member:f$ -> f$1, member:h$ -> h$3, member:g -> g12, member:f -> f13, $block$res -> block$res5, ret -> ret1, $block$res -> block$res16, member:g$ -> g$2, $tmp -> tmp6, class:Capture$scope0 -> Capture$scope06, member:g -> g3, member:Capture$scope0 -> Capture$scope07, member:f -> f3, member:g$ -> g$10, member:g -> g13, $block$res -> block$res9, member:h -> h4, member:i -> i, member:f -> f14, class:Capture$f -> Capture$f, member:Capture$f -> Capture$f1, member:h$ -> h$, member:g$ -> g$5, $block$res -> block$res6, member:g -> g6, member:f -> f6, member:g$ -> g$3, $block$res -> block$res17, $tmp -> tmp7, class:Capture$f -> Capture$f2, member:g -> g4, member:f -> f4, $block$res -> block$res10, class:Capture$scope0 -> Capture$scope0, member:Capture$scope0 -> Capture$scope01, member:Capture$f -> Capture$f3, member:i$ -> i$, member:g$ -> g$6, member:h$ -> h$4, member:g -> g7, member:g$ -> g$11, member:f -> f7, member:f -> f15, $block$res -> block$res18, member:lambda -> lambda, $block$res -> block$res11, class:Capture$scope0 -> Capture$scope02, member:lambda -> lambda1, member:lambda$ -> lambda$, member:Capture$scope0 -> Capture$scope03, $block$res -> block$res7, member:lambda$ -> lambda$1, member:g$ -> g$7, member:f -> f16, member:g -> g8, member:g -> g14, member:h -> h1, member:f -> f17, member:f -> f8, member:g$ -> g$4, $block$res -> block$res19, class:Capture$scope0 -> Capture$scope08, member:Capture$scope0 -> Capture$scope09, member:f$ -> f$2, $block$res -> block$res12, member:g$ -> g$12, member:h$ -> h$1, member:g$ -> g$8, $block$res -> block$res, member:bar -> bar, member:foo -> foo, member:g_h -> g_h, member:f -> f9, $block$res -> block$res1, member:g -> g9, member:f -> f10, member:bar$ -> bar$, member:bar -> bar1, member:foo -> foo1, $block$res -> block$res2, $block$res -> block$res13, $tmp -> tmp, member:f$ -> f$, member:bar$ -> bar$1, member:g$ -> g$9, member:g -> g, member:f -> f, member:h -> h2, member:f -> f11, member:g -> g10, member:Predef‹726› -> Predef, $block$res -> block$res14, $block$res -> block$res3, member:h$ -> h$2, member:h -> h3, member:f -> f12, member:g$ -> g$, member:g -> g11, member:g -> g1, member:f -> f1, ret -> ret, gRet -> gRet, g2 -> g21, hFun -> hFun, iFun -> iFun, a -> a, b -> b, c -> c, d -> d)
-//│       curThis = S of N
-//│       bindings = HashMap($args -> args)
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'scope0$cap'
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: scope0$cap is not defined
-//│     at f (REPL74:1:862)
-//│     at f (REPL74:1:1106)
-//│     at REPL74:1:1173
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ = 1
 
 let n = 0
 //│ n = 0
@@ -581,18 +387,6 @@ fun f(es, vs) =
   class A with
     val fld = v'
   new A
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1250)
-//│ 	at: hkmc2.Lifter.$anonfun$50(Lifter.scala:1281)
-//│ 	at: scala.collection.immutable.List.map(List.scala:236)
-//│ 	at: hkmc2.Lifter.liftNestedScopesImpl(Lifter.scala:1281)
-//│ 	at: hkmc2.Lifter.liftNestedScopes(Lifter.scala:1301)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyRewrittenScope(Lifter.scala:923)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyBlock(Lifter.scala:930)
-//│ 	at: hkmc2.Lifter$BlockRewriter.applyBlock(Lifter.scala:629)
-//│ 	at: hkmc2.Lifter$BlockRewriter.rewrite(Lifter.scala:480)
 
 // try to avoid creating multiple closures
 
@@ -611,26 +405,26 @@ fun f(x) =
     set y = 2
     [g, g]
 //│ JS (unsanitized):
-//│ let g17, f20, g$15;
-//│ g$15 = function g$(y) {
+//│ let g19, f25, g$16;
+//│ g$16 = function g$(y1) {
 //│   return () => {
-//│     return g17(y)
+//│     return g19(y1)
 //│   }
 //│ };
-//│ g17 = function g(y) {
-//│   return y
+//│ g19 = function g(y1) {
+//│   return y1
 //│ };
-//│ f20 = function f(x) {
-//│   let y, scrut, g$here;
-//│   scrut = x < 0;
+//│ f25 = function f(x1) {
+//│   let y1, scrut, g$here;
+//│   scrut = x1 < 0;
 //│   if (scrut === true) {
-//│     y = 1;
-//│     g$here = g$15(y);
+//│     y1 = 1;
+//│     g$here = g$16(y1);
 //│     return globalThis.Object.freeze([
 //│       g$here,
 //│       g$here
 //│     ])
-//│   } else { y = 2; g$here = g$15(y); return globalThis.Object.freeze([ g$here, g$here ]) }
+//│   } else { y1 = 2; g$here = g$16(y1); return globalThis.Object.freeze([ g$here, g$here ]) }
 //│ };
 
 :sjs
@@ -640,18 +434,18 @@ fun f(x) =
   set x += 1
   [a, g]
 //│ JS (unsanitized):
-//│ let g18, f21, Capture$f5, g$16;
-//│ g$16 = function g$(f$cap) {
+//│ let g20, f26, Capture$f7, g$17;
+//│ g$17 = function g$(f$cap) {
 //│   return () => {
-//│     return g18(f$cap)
+//│     return g20(f$cap)
 //│   }
 //│ };
-//│ g18 = function g(f$cap) {
+//│ g20 = function g(f$cap) {
 //│   return f$cap.x$0
 //│ };
-//│ (class Capture$f4 {
+//│ (class Capture$f6 {
 //│   static {
-//│     Capture$f5 = this
+//│     Capture$f7 = this
 //│   }
 //│   constructor(x$0) {
 //│     this.x$0 = x$0;
@@ -659,14 +453,14 @@ fun f(x) =
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
-//│ f21 = function f(x) {
-//│   let a1, tmp8, f$cap, g$here;
-//│   f$cap = new Capture$f5(undefined);
-//│   g$here = g$16(f$cap);
+//│ f26 = function f(x1) {
+//│   let a1, tmp11, f$cap, g$here;
+//│   f$cap = new Capture$f7(x1);
+//│   g$here = g$17(f$cap);
 //│   a1 = g$here;
-//│   tmp8 = f$cap.x$0 + 1;
-//│   f$cap.x$0 = tmp8;
-//│   g$here = g$16(f$cap);
+//│   tmp11 = f$cap.x$0 + 1;
+//│   f$cap.x$0 = tmp11;
+//│   g$here = g$17(f$cap);
 //│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };
 

@@ -1,0 +1,59 @@
+:js
+// :de
+// :sjs
+// :pt
+// :elt
+
+:global
+:d
+:todo
+:noSanityCheck
+
+class Eff
+//│ Elab: { Cls Eff { }; }
+
+// function call and defn inside handler
+:sjs
+:lift
+fun f =
+  fun g =
+    let y = 2
+    fun h() = set y += 1
+    h
+//│ Elab: { fun member:f‹693› = { fun member:g‹692› = { let y‹696›; y‹696› = 2; fun member:h‹691›() = y‹696›#666 := builtin:+‹48›#0(y‹696›#666, 1); member:h‹691›#666 }; () }; }
+//│ JS (unsanitized):
+//│ let h, g, f, g$, Capture$scope11, h$;
+//│ (class Capture$scope1 {
+//│   static {
+//│     Capture$scope11 = this
+//│   }
+//│   constructor(y$0) {
+//│     this.y$0 = y$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$scope1"]; 
+//│ });
+//│ h$ = function h$(scope1$cap) {
+//│   return () => {
+//│     return h(scope1$cap)
+//│   }
+//│ };
+//│ h = function h(scope1$cap) {
+//│   let tmp;
+//│   tmp = scope1$cap.y$0 + 1;
+//│   scope1$cap.y$0 = tmp;
+//│   return runtime.Unit
+//│ };
+//│ g$ = function g$() {
+//│   return () => {
+//│     return g()
+//│   }
+//│ };
+//│ g = function g() {
+//│   let y, scope1$cap, h$here;
+//│   scope1$cap = new Capture$scope11(y);
+//│   scope1$cap.y$0 = 2;
+//│   h$here = h$(scope1$cap);
+//│   return h$here
+//│ };
+//│ f = function f() { return runtime.Unit };

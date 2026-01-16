@@ -18,6 +18,12 @@ import scala.jdk.CollectionConverters.*
 import java.util.IdentityHashMap
 import java.util.Collections
 import scala.collection.mutable.Buffer
+import hkmc2.ScopeData.ScopedObject.Top
+import hkmc2.ScopeData.ScopedObject.Companion
+import hkmc2.ScopeData.ScopedObject.ClassCtor
+import hkmc2.ScopeData.ScopedObject.Func
+import hkmc2.ScopeData.ScopedObject.Loop
+import hkmc2.ScopeData.ScopedObject.ScopedBlock
 
 object UsedVarAnalyzer:
   case class MutAccessInfo(
@@ -61,13 +67,24 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           applyBlock(rest)
         case l: Label if l.loop =>
           accessed.refdDefns.add(l.label)
-        case d: Define => applySubBlock(d.rest)
+        case d: Define => d.defn match
+          case v: ValDefn =>
+            applyDefn(v)
+            applySubBlock(d.rest)
+          case _ => applySubBlock(d.rest)
+        
         case _ => super.applyBlock(b)
       
       override def applyPath(p: Path): Unit = p match
         case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
         case RefOfBms(_, SDSym(dSym)) if scopeData.contains(dSym) =>
-          accessed.refdDefns.add(scopeData.getNode(dSym).obj.toInfo)
+          // Check if it's referencing a class method.
+          // If so, then it requires reading the class symbol
+          val node = scopeData.getNode(dSym)
+          node.obj match
+            case Func(isMethod = false) => accessed.refdDefns.add(node.obj.toInfo)
+            case f @ Func(isMethod = true) => accessed.accessed.add(f.fun.owner.get)
+            case _ => ()
         case Value.Ref(l, _) =>
           accessed.accessed.add(l)
         case _ => super.applyPath(p)
@@ -236,7 +253,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
       yield
         sym -> sccAccessInfo(id).withoutLocals(scopeData.getNode(sym).obj.definedLocals)
     
-    val (m1, m2) = (go(true), go(false))
+    // Remove locals that are not yet defined
+    def removeUnused(m: Map[ScopedInfo, AccessInfo]) = m.map:
+      case k -> v =>
+        val node = scopeData.getNode(k)
+        k -> v.intersectLocals(node.existingVars)
+    
+    val (m1, m2) = (removeUnused(go(true)), removeUnused(go(false)))
+    
     val subCases = nexts.map(findAccesses)
     subCases.foldLeft((m1, m2)):
       case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
@@ -267,7 +291,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     
     val locals = nodes.flatMap(_.obj.definedLocals).toSet
     
-    val cap = reqdCaptureLocalsBlk(blk, nexts.toList, locals)
+    val cap = reqdCaptureLocalsBlk(blk, nexts.toList, s.obj.definedLocals, locals)
     
     // Variables mutated by a lifted child of a class methods requires a capture
     val additional = extraMtds
@@ -285,37 +309,44 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
       case (mp, acc) => mp ++ reqdCaptureLocals(acc)
 
   // readers-mutators analysis
-  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], thisVars: Set[Local]): Set[Local] =
+  private def reqdCaptureLocalsBlk(b: Block, nextNodes: List[ScopeNode], startingVars: Set[Local], thisVars: Set[Local]): Set[Local] =
     val scopeInfos: Map[ScopedInfo, ScopeNode] = nextNodes.map(node => node.obj.toInfo -> node).toMap
 
-    case class CaptureInfo(reqCapture: Set[Local], hasReader: Set[Local], hasMutator: Set[Local])
+    case class CaptureInfo(reqCapture: Set[Local], hasReader: Set[Local], hasMutator: Set[Local], mutated: Set[Local])
     
-    // isLinear denotes whether the control flow is linear, i.e. whether `b` could be executed more than once assuming that
-    // the input block in `reqdCaptureLocalsBlk` is only executed once.
-    def go(b: Block, reqCapture_ : Set[Local], hasReader_ : Set[Local], hasMutator_ : Set[Local])(using isLinear: Bool): CaptureInfo =
+    // linearVars denotes the variables defined inside the scopes up to the nearest loop or the top level block.
+    // If a loop modifies a non-linear variable and then one of its nested definitions accesses it, we must put put
+    // that variable in a capture.
+    def go(b: Block, reqCapture_ : Set[Local], hasReader_ : Set[Local], hasMutator_ : Set[Local], mutated_ : Set[Local])(using linearVars: Set[Local]): CaptureInfo =
       var reqCapture = reqCapture_
       var hasReader = hasReader_
       var hasMutator = hasMutator_
+      // note: the meaning of `mutated` is a bit strange: it basically means variables which are currently not linear that have been mutated
+      // if a variable is in this set but is linear, then it's ignored
+      var mutated = mutated_
 
       inline def merge(c: CaptureInfo) =
         reqCapture ++= c.reqCapture
         hasReader ++= c.hasReader
         hasMutator ++= c.hasMutator
+        mutated ++= c.mutated
 
-      def rec(blk: Block)(using isLinear: Bool) =
-        go(blk, reqCapture, hasReader, hasMutator)
+      def rec(blk: Block)(using linearVars: Set[Local]) =
+        go(blk, reqCapture, hasReader, hasMutator, mutated_)
       
       new BlockTraverserShallow:
         applyBlock(b)
         override def applyBlock(b: Block): Unit = b match
           // Note that we traverse directly into scoped blocks without using handleCalledScope
-          
+          case s: Scoped =>
+            rec(s.body)(using linearVars = linearVars ++ s.syms) |> merge
           case l: Label if l.loop =>
-            rec(l.body)(using isLinear = false) |> merge
+            rec(l.body)(using linearVars = Set.empty) |> merge
             applyBlock(l.rest)
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
+            if !linearVars.contains(lhs) then mutated += lhs
             applyBlock(rest)
 
           case Match(scrut, arms, dflt, rest) =>
@@ -358,12 +389,15 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             // so the "one writer" rule applies.
             // However, if the control flow is not linear, we are forced to add all the mutated variables
             for l <- muts do
-              if hasReader.contains(l) || hasMutator.contains(l) || !isLinear then
+              if hasReader.contains(l) || hasMutator.contains(l) || !linearVars.contains(l) then
                 reqCapture += l
               hasReader += l
               hasMutator += l
+              mutated += l
             for l <- reads do
               if hasMutator.contains(l) then
+                reqCapture += l
+              if mutated.contains(l) && !linearVars.contains(l) then
                 reqCapture += l
               hasReader += l
             // if this defn calls another defn that creates a class or has a naked reference to a
@@ -425,9 +459,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             super.applyDefn(defn)
           case _ => super.applyDefn(defn)
 
-      CaptureInfo(reqCapture, hasReader, hasMutator)
+      CaptureInfo(reqCapture, hasReader, hasMutator, mutated)
     
-    val reqCapture = go(b, Set.empty, Set.empty, Set.empty)(using isLinear = true).reqCapture
+    val reqCapture = go(b, Set.empty, Set.empty, Set.empty, Set.empty)(using linearVars = startingVars).reqCapture
     reqCapture.intersect(thisVars)
 
   val reqdCaptures: Map[ScopedInfo, Set[Local]] = scopeData.root.children.foldLeft(Map.empty):
