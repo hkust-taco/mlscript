@@ -16,8 +16,7 @@ fun f(x) =
   a(1)
 f(2)
 //│ > 2
-//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
-//│ = []
+//│ = [1]
 
 // The following are problems with lifting classes inside other definitions.
 
@@ -83,8 +82,8 @@ fun f(used1, unused1) =
   let foo = Test
   foo(unused1)
 f(1, 2).get()
-//│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ = 1
+//│ ═══[RUNTIME ERROR] Expected: '1', got: '2'
+//│ = 2
 
 
 :todo
@@ -100,14 +99,12 @@ fun foo1(x, n) =
 fun foo2() =
   class C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :w
 fun foo3() =
   class C()
   fun f = C()
   C
-//│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
 
 :todo
 :expect "NN"
@@ -134,9 +131,7 @@ class A(a) with
     fun g() = x
     g()
 A(2).f()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
 :expect 2
 module M with
@@ -145,8 +140,10 @@ module M with
     fun g() = x
     g
 M.f()()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '()'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.142: 	module M with
+//│ ╙──       	       ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 /// The following are related to modules and objects. ///
 
@@ -158,11 +155,29 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.155: 	  module M with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :expect 14
 foo(10, 0)
-//│ = 14
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
+//│ ║  l.164: 	foo(10, 0)
+//│ ║         	^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.154: 	fun foo(x, y) =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.155: 	  module M with
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.156: 	    val test = 2
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.157: 	    fun foo() =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.158: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
+//│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
 
 fun foo(x, y) =
   module M with
@@ -171,12 +186,28 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'M$'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.168: 	  module M with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M$ is not defined
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
+//│ ║  l.178: 	foo(10, 0)
+//│ ║         	^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.167: 	fun foo(x, y) =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.168: 	  module M with
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.169: 	    fun foo() =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.170: 	      set y = 2
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.171: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 
@@ -184,11 +215,27 @@ data class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.184: 	  module M with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :expect 2
 A(2).getA()
-//│ = 2
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.190: 	A(2).getA()
+//│ ║         	^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.183: 	data class A(x) with
+//│ ║         	           ^^^^^^^^^
+//│ ║  l.184: 	  module M with
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.185: 	    fun getB() = x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.186: 	  fun getA() = M.getB()
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 // TODO: Foo needs to be put in a mutable capture. Also, we need to pass the Foo instance itself into Foo
 fun foo(x) =
@@ -202,8 +249,7 @@ foo(2)
 //│ ║  l.198: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
@@ -215,7 +261,9 @@ fun f =
       fun h = M.g
       h
   M.g
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:M
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.213: 	  module M with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 

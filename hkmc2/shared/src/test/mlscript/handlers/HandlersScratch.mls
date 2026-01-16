@@ -5,4 +5,94 @@
 abstract class Effect
 
 
+class PrintEffect
 
+:sjs
+// :sjs
+handle h = PrintEffect with
+  fun p(x)(k) =
+    print(x)
+    k(())
+  fun aux(x)(k) =
+    h.p(x)
+    k(())
+    h.p(x)
+h.aux(3)
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
+//│ ╔══[ERROR] Name not found: h
+//│ ║  l.17: 	    h.p(x)
+//│ ╙──      	    ^
+//│ FAILURE: Unexpected type error
+//│ FAILURE LOCATION: subterm (Elaborator.scala:481)
+//│ ╔══[ERROR] Name not found: h
+//│ ║  l.19: 	    h.p(x)
+//│ ╙──      	    ^
+//│ JS (unsanitized):
+//│ let h, tmp, handleBlock$, Handler$h$p, Handler$h$aux, Handler$h$1, Handler$h$p$;
+//│ Handler$h$aux = function Handler$h$aux(k) {
+//│   /* error */
+//│ };
+//│ Handler$h$p$ = function Handler$h$p$(x) {
+//│   return (k) => {
+//│     return Handler$h$p(x, k)
+//│   }
+//│ };
+//│ Handler$h$p = function Handler$h$p(x, k) {
+//│   let tmp1, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         runtime.resumeValue = Predef.print(x);
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(Handler$h$p, 1, "HandlersScratch.mls:14:5", null, null, 1, 2, x, k, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp1 = runtime.resumeValue;
+//│         return runtime.safeCall(k(runtime.Unit));
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ (class Handler$h$ extends PrintEffect1 {
+//│   static {
+//│     Handler$h$1 = this
+//│   }
+//│   constructor() {
+//│     let tmp1;
+//│     tmp1 = super();
+//│     if (runtime.curEffect !== null) {
+//│       tmp1 = runtime.illegalEffect("in a constructor");
+//│     }
+//│     tmp1;
+//│   }
+//│   #Handler$h$$cap;
+//│   p(x) {
+//│     let Handler$h$p$here;
+//│     Handler$h$p$here = Handler$h$p$(x);
+//│     return runtime.mkEffect(this, Handler$h$p$here)
+//│   } 
+//│   aux(x) {
+//│     return runtime.mkEffect(this, Handler$h$aux)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h$"]; 
+//│ });
+//│ h = new Handler$h$1();
+//│ handleBlock$ = (undefined, function () {
+//│   return runtime.safeCall(h.aux(3))
+//│ });
+//│ tmp = runtime.enterHandleBlock(h, handleBlock$);
+//│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
+//│ tmp

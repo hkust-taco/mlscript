@@ -2,17 +2,28 @@
 :effectHandlers
 :lift
 
-
 fun f() =
   (() => return 100)()
   print("Bad")
 f()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
 //│ = 100
 
 
 fun foo(x) =
   let xs = [() => return x + 1]
   xs.0()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
 
 foo(123)
 //│ = 124
@@ -31,6 +42,18 @@ fun f() =
   print("Bad")
   100
 f()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
 //│ > Ok
 //│ = 123
 
@@ -47,6 +70,18 @@ fun f() =
   print("Continue")
   100
 f()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
 //│ > Ok
 //│ > 200
 //│ > Continue
@@ -56,34 +91,46 @@ f()
 :re
 fun f() = () => return 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_12
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_6
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_14
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_7
 
 
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.68: 	return 100
-//│ ╙──      	^^^^^^^^^^
+//│ ║  l.115: 	return 100
+//│ ╙──       	^^^^^^^^^^
 
 :e
 if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.76: 	    let f = () => return 100
-//│ ╙──      	                  ^^^^^^^^^^
+//│ ║  l.123: 	    let f = () => return 100
+//│ ╙──       	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.83: 	  type A = return "lol"
-//│ ╙──      	           ^^^^^^^^^^^^
+//│ ║  l.130: 	  type A = return "lol"
+//│ ╙──       	           ^^^^^^^^^^^^
 
 
 :expect 100
@@ -98,6 +145,12 @@ fun f() =
     f()
     print("Bad")
 f()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:233)
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyDefn (HandlerLowering.scala:524)
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
 //│ = 100
 
 // broken due to handlers currently not handling `object` properly
@@ -108,8 +161,9 @@ fun f() =
     return 100
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'ret')
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
@@ -120,7 +174,9 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_10 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -130,8 +186,9 @@ fun f() =
     (() => return 100)()
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'ret')
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -142,5 +199,7 @@ fun f() =
   new A
   4
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
+//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
+//│ ═══[WARNING] Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_12 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

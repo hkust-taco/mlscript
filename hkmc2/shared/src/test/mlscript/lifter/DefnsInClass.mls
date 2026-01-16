@@ -57,12 +57,7 @@ class A with
     g
 (new A).x()
 //│ JS (unsanitized):
-//│ let g, A3, tmp1, g$;
-//│ g$ = function g$() {
-//│   return () => {
-//│     return g()
-//│   }
-//│ };
+//│ let g, A3, tmp1;
 //│ g = function g() {
 //│   return 2
 //│ };

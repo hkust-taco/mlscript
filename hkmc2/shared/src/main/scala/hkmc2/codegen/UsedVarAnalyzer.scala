@@ -77,13 +77,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
       
       override def applyPath(p: Path): Unit = p match
         case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
-        case RefOfBms(_, SDSym(dSym)) if scopeData.contains(dSym) =>
+        case RefOfBms(_, SDSym(dSym)) =>
           // Check if it's referencing a class method.
           // If so, then it requires reading the class symbol
           val node = scopeData.getNode(dSym)
           node.obj match
             case Func(isMethod = false) => accessed.refdDefns.add(node.obj.toInfo)
             case f @ Func(isMethod = true) => accessed.accessed.add(f.fun.owner.get)
+            case _: ScopedObject.Class | _: ClassCtor => accessed.refdDefns.add(node.obj.toInfo)
             case _ => ()
         case Value.Ref(l, _) =>
           accessed.accessed.add(l)
