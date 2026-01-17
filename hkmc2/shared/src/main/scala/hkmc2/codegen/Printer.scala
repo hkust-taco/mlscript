@@ -7,6 +7,8 @@ import mlscript.utils._, shorthands._
 import hkmc2._
 import hkmc2.Message.MessageContext
 import hkmc2.document._
+import hkmc2.semantics._
+import hkmc2.syntax._
 import hkmc2.semantics.Elaborator.State
 import hkmc2.utils.Scope
 
@@ -60,11 +62,38 @@ object Printer:
     case End(msg) => doc"end ${msg}"
     case _ => TODO(blk)
   
+  def mkDocument(c: ClsLikeBody)(using Raise, Scope): Document =
+    mkDocument(c.privateFields, c.publicFields, c.methods, N, c.ctor)
+  
+  def mkDocument(
+      privateFields: List[TermSymbol],
+      publicFields: List[(BlockMemberSymbol, TermSymbol)],
+      methods: List[FunDefn],
+      preCtor: Opt[Block],
+      ctor: Block
+  )(using Raise, Scope): Document =
+    val privFields = privateFields.map(x => doc"let ${x.id.name} = ...").mkDocument(sep = doc" # ")
+    val pubFields = publicFields.map(x => doc"${x._1.nme}").mkDocument(sep = doc" # ")
+    val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
+    val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
+    val docPreCtor = preCtor match
+      case Some(End(_)) => doc""
+      case Some(value) => doc" # preCtor { #{  # ${mkDocument(value)} #}  # }"
+      case None => doc""
+    val docCtor = ctor match
+      case End(_) => doc""
+      case _ => doc" # ctor { #{  # ${mkDocument(ctor)} #}  # }"
+    
+    val mtds = methods.map(mkDocument).mkDocument(sep = doc" # ")
+    val docMethods = if methods.isEmpty then doc"" else doc" # ${mtds}"
+    if publicFields.isEmpty && privateFields.isEmpty && methods.isEmpty then doc""
+    else doc" { #{ ${docPrivFlds}${docPubFlds}${docPreCtor}${docCtor}${docMethods} #}  # }"
+
   def mkDocument(defn: Defn)(using Raise, Scope): Document = defn match
     case FunDefn(own, sym, dSym, params, body) =>
-      val docParams = doc"${own.fold("")(_.toString+"::")}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
+      val docParams = doc"${own.fold("")(_.toString + "::")}${sym.nme}${params.map(_.params.map(x => summon[Scope].allocateName(x.sym)).mkDocument("(", ", ", ")")).mkDocument("")}"
       val docBody = mkDocument(body)
-      doc"fun ${sym.nme}${docParams} { #{  # ${docBody} #}  # }"
+      doc"fun ${docParams} { #{  # ${docBody} #}  # }"
     case ValDefn(tsym, sym, rhs) =>
       doc"val ${tsym.nme} = ${mkDocument(rhs)}"
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, methods,
@@ -77,14 +106,24 @@ object Printer:
       val clsParams = paramsOpt.fold(Nil)(_.paramSyms)
       val auxClsParams = auxParams.flatMap(_.paramSyms)
       val ctorParams = (clsParams ++ auxClsParams).map(p => summon[Scope].allocateName(p))
-      val privFields = privateFields.map(x => doc"let ${x.id.name} = ...").mkDocument(sep = doc" # ")
-      val pubFields = publicFields.map(x => doc"${x._1.nme}").mkDocument(sep = doc" # ")
-      val docPrivFlds = if privateFields.isEmpty then doc"" else doc" # ${privFields}"
-      val docPubFlds = if publicFields.isEmpty then doc"" else doc" # ${pubFields}"
-      val docBody = if publicFields.isEmpty && privateFields.isEmpty then doc"" else doc" { #{ ${docPrivFlds}${docPubFlds} #}  # }"
       val docCtorParams = if clsParams.isEmpty then doc"" else doc"(${ctorParams.mkDocument(", ")})"
       val docStaged = if isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
-      doc"${docStaged}class ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
+      val docBody = mkDocument(privateFields, publicFields, methods, S(preCtor), ctor)
+      val docPreCtor = mkDocument(preCtor)
+      val docCtor = mkDocument(ctor)
+      val clsType = k match
+        case Cls => "class"
+        case Pat => "pattern"
+        case Obj => "object"
+        case Mod => "module"
+      val docCls = doc"${docStaged}${clsType} ${own.fold("")(_.toString+"::")}${sym.nme}${docCtorParams}${docBody}"
+      val docModule = mod match
+        case Some(mod) =>
+          val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
+          val docBody = mkDocument(mod)
+          doc" with # ${docStaged}module ${own.fold("")(_.toString+"::")}${sym.nme}${docBody}"
+        case None => doc""
+      doc"${docCls}${docModule}"
   
   def mkDocument(arg: Arg)(using Raise, Scope): Document =
     val doc = mkDocument(arg.value)
@@ -118,6 +157,8 @@ object Printer:
       doc"${if mut then "mut " else ""}{ ${
         args.map(x => x.idx.fold(doc"...")(p => mkDocument(p) :: ": ") :: mkDocument(x.value)).mkDocument(", ")
       } }"
+    case DynSelect(qual, fld, arrayIdx) =>
+      doc"${mkDocument(qual)}${if arrayIdx then "." else "!"}${mkDocument(fld)}"
     case x: Path => mkDocument(x)
   
   def mkDocument(prog: Program)(using Raise, Scope): Document = summon[Scope].nest.givenIn:
