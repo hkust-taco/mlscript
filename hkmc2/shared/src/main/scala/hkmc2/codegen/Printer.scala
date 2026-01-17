@@ -121,7 +121,7 @@ object Printer:
         case Some(mod) =>
           val docStaged = if mod.isym.defn.forall(_.hasStagedModifier.isEmpty) then doc"" else doc"staged "
           val docBody = mkDocument(mod)
-          doc" in # ${docStaged}module ${own.fold("")(_.toString+"::")}${sym.nme}${docBody}"
+          doc" with # ${docStaged}module ${own.fold("")(_.toString+"::")}${sym.nme}${docBody}"
         case None => doc""
       doc"${docCls}${docModule}"
   
