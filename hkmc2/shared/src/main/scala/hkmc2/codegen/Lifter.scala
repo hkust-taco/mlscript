@@ -175,10 +175,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise):
     // use a map to convert 
     
     val moduleObjs = nestedScopeNodes.collect:
-      case ScopeNode(obj = o: ScopedObject.Companion) => o
+      case s @ ScopeNode(obj = o: ScopedObject.Companion) if !s.isTopLevel => o
     
     // TODO: refine handling of companions
     for m <- moduleObjs do
+      println(m.node.get.parent.get.obj)
       ignored += m.par.isym
       ignored += m.comp.isym
       raise(WarningReport(

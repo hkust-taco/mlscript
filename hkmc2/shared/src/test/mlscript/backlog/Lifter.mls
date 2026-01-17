@@ -141,7 +141,7 @@ module M with
     g
 M.f()()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.142: 	module M with
+//│ ║  l.137: 	module M with
 //│ ╙──       	       ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
@@ -156,7 +156,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.155: 	  module M with
+//│ ║  l.152: 	  module M with
 //│ ╙──       	         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
@@ -166,15 +166,15 @@ foo(10, 0)
 //│ ║  l.164: 	foo(10, 0)
 //│ ║         	^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.154: 	fun foo(x, y) =
+//│ ║  l.151: 	fun foo(x, y) =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.155: 	  module M with
+//│ ║  l.152: 	  module M with
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.156: 	    val test = 2
+//│ ║  l.153: 	    val test = 2
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.157: 	    fun foo() =
+//│ ║  l.154: 	    fun foo() =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.158: 	... (more lines omitted) ...
+//│ ║  l.155: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 //│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
@@ -187,25 +187,25 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.168: 	  module M with
+//│ ║  l.183: 	  module M with
 //│ ╙──       	         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :expect 12
 foo(10, 0)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.178: 	foo(10, 0)
+//│ ║  l.195: 	foo(10, 0)
 //│ ║         	^^^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.167: 	fun foo(x, y) =
+//│ ║  l.182: 	fun foo(x, y) =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.168: 	  module M with
+//│ ║  l.183: 	  module M with
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.169: 	    fun foo() =
+//│ ║  l.184: 	    fun foo() =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.170: 	      set y = 2
+//│ ║  l.185: 	      set y = 2
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.171: 	... (more lines omitted) ...
+//│ ║  l.186: 	... (more lines omitted) ...
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
@@ -215,24 +215,21 @@ data class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.184: 	  module M with
-//│ ╙──       	         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 :expect 2
 A(2).getA()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ║  l.190: 	A(2).getA()
+//│ ║  l.224: 	A(2).getA()
 //│ ║         	^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.183: 	data class A(x) with
+//│ ║  l.214: 	data class A(x) with
 //│ ║         	           ^^^^^^^^^
-//│ ║  l.184: 	  module M with
+//│ ║  l.215: 	  module M with
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.185: 	    fun getB() = x
+//│ ║  l.216: 	    fun getB() = x
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.186: 	  fun getA() = M.getB()
+//│ ║  l.217: 	  fun getA() = M.getB()
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
@@ -246,7 +243,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.198: 	  class Bar extends Foo
+//│ ║  l.245: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
@@ -262,7 +259,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.213: 	  module M with
+//│ ║  l.259: 	  module M with
 //│ ╙──       	         ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

@@ -439,6 +439,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
                 for l <- reads do
                   if hasMutator.contains(l) then
                     reqCapture += l
+                  if mutated.contains(l) && !linearVars.contains(l) then
+                    reqCapture += l
                   hasReader += l
                 // if this defn calls another defn that creates a class or has a naked reference to a
                 // function, we must capture the latter's mutated variables in a capture, as arbitrarily

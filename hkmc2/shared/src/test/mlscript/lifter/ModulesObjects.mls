@@ -132,58 +132,49 @@ fun foo(x, y) =
       x + y
   fun foo3 = M.foo2()
   foo3
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: object:M
-//│ 	at: scala.collection.immutable.Map$Map3.apply(Map.scala:417)
-//│ 	at: hkmc2.Lifter$$anon$3.applyPath(Lifter.scala:537)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyResult(BlockTransformer.scala:136)
-//│ 	at: hkmc2.Lifter$$anon$3.applyResult(Lifter.scala:508)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:27)
-//│ 	at: hkmc2.codegen.BlockTransformerShallow.applyBlock(BlockTransformer.scala:307)
-//│ 	at: hkmc2.Lifter$BlockRewriter.rewriteBms(Lifter.scala:548)
-//│ 	at: hkmc2.Lifter$BlockRewriter.applyBlock(Lifter.scala:560)
-//│ 	at: hkmc2.Lifter$BlockRewriter.rewrite(Lifter.scala:480)
-//│ 	at: hkmc2.Lifter$LiftedFunc.mkFlattenedDefn(Lifter.scala:1238)
+//│ JS (unsanitized):
+//│ let M5, foo31, foo4;
+//│ foo31 = function foo3() {
+//│   return M5.foo2()
+//│ };
+//│ (class M4 {
+//│   static {
+//│     new this
+//│   }
+//│   constructor(x, y) {
+//│     M5 = this;
+//│     this.x = x;
+//│     this.y = y;
+//│     Object.defineProperty(this, "class", {
+//│       value: M4
+//│     });
+//│     globalThis.Object.freeze(this);
+//│   }
+//│   #M$cap;
+//│   foo2() {
+//│     this.y = 2;
+//│     return this.x + this.y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["object", "M"]; 
+//│ });
+//│ foo4 = function foo(x, y) { let tmp; tmp = foo31(); return tmp };
 
 :expect 12
 foo(10, 0)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:foo
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap(member:Capture$foo -> Capture$foo1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, cc -> cc, c0 -> c0, c1 -> c1, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:O -> O1, member:foo -> foo3, object:O -> O, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, $block$res -> block$res, member:M -> M1, member:foo -> foo, member:Capture$foo -> Capture$foo3, object:M -> M, o -> o, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, $block$res -> block$res1, $block$res -> block$res2, member:M -> M3, member:foo -> foo1, member:Predef -> Predef, class:M -> M2, $block$res -> block$res11, $block$res -> block$res3, member:C -> C1, member:foo -> foo2, class:C -> C, $block$res -> block$res4, class:Capture$foo -> Capture$foo)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.156: 	foo(10, 0)
-//│ ║         	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.104: 	fun foo(x, y) =
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.105: 	  object M with
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.106: 	    fun foo2() =
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.107: 	      set y = 2
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.108: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M.foo (REPL10:1:447)
-//│     at foo (REPL10:1:758)
-//│     at REPL44:1:39
+//│     at M4.foo2 (REPL44:1:555)
+//│     at foo3 (REPL44:1:141)
+//│     at foo (REPL44:1:847)
+//│     at REPL47:1:39
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
 //│     at REPLServer.onLine (node:repl:886:12)
 //│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
@@ -199,8 +190,8 @@ A(2).getA()
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'getB')
-//│     at A.getA (REPL47:1:899)
-//│     at REPL50:1:83
+//│     at A.getA (REPL50:1:899)
+//│     at REPL53:1:83
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
@@ -223,17 +214,17 @@ module M with
   val hi = A()
 M.hi.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.172: 	module M with
+//│ ║  l.219: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -248,17 +239,17 @@ module M with
     g
 M.f()()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.181: 	module M with
+//│ ║  l.244: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -290,20 +281,20 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.208: 	module M with
+//│ ║  l.287: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:311)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:199)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:88)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -317,17 +308,17 @@ module M with
   class B() extends A
 M.B().get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.253: 	module M with
+//│ ║  l.313: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -350,20 +341,20 @@ module M with
   0 is A
 M.A(2).newB.newA_B(3).newB.get
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.267: 	module M with
+//│ ║  l.343: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:311)
+//│ FAILURE LOCATION: applyCase (Lifter.scala:199)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -374,17 +365,17 @@ module M with
   class A
   object B extends A
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.278: 	module M with
+//│ ║  l.373: 	module M with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -401,9 +392,9 @@ fun foo(x) =
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x$0')
-//│     at new O2 (REPL59:1:194)
-//│     at <static_initializer> (REPL59:1:85)
-//│     at REPL59:1:419
+//│     at new O2 (REPL62:1:194)
+//│     at <static_initializer> (REPL62:1:85)
+//│     at REPL62:1:419
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
@@ -415,8 +406,8 @@ fun foo(x) =
 foo(123)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: foo4 is not a function
-//│     at REPL62:1:39
+//│ ═══[RUNTIME ERROR] TypeError: foo5 is not a function
+//│     at REPL65:1:39
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
@@ -432,17 +423,17 @@ module A with
   fun f = () => g
   f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.293: 	module A with
+//│ ║  l.430: 	module A with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -452,17 +443,17 @@ module A with
 module A with
   val a = (() => 1)()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.298: 	module A with
+//│ ║  l.452: 	module A with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -475,17 +466,17 @@ module A with
     fun f() = 1
     f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.302: 	module A with
+//│ ║  l.473: 	module A with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -501,17 +492,17 @@ module A with
     f() + g()
 A.x
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.307: 	module A with
+//│ ║  l.495: 	module A with
 //│ ╙──       	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
@@ -527,7 +518,7 @@ module A with
     nested()
 A.mtd
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.319: 	module A with
+//│ ║  l.523: 	module A with
 //│ ╙──       	       ^
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 

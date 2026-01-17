@@ -7,17 +7,17 @@ import "../../mlscript-compile/Option.mls"
 module A with
   fun f(x) = x is Option.Some
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:296)
+//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.7: 	module A with
 //│ ╙──     	       ^
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1407)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1468)
+//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
+//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
 //│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1467)
+//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
 //│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
 //│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:88)
 //│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)

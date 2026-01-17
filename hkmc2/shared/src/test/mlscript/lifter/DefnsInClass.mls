@@ -1,50 +1,39 @@
 :js
 :lift
 
-:sjs
+:slot
 data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
-//│ JS (unsanitized):
-//│ let B1, A1;
-//│ B1 = function B(A2, y) {
-//│   return globalThis.Object.freeze(new B.class(A2, y));
-//│ };
-//│ (class B {
-//│   static {
-//│     B1.class = this
+//│ Pretty Lowered:
+//│  
+//│ define class B(A, y) {
+//│   let B$cap = ...
+//│   y
+//│   ctor {
+//│     set A1 = A in
+//│     define val y = y in
+//│     end
 //│   }
-//│   constructor(A2, y) {
-//│     this.A = A2;
-//│     this.y = y;
+//│   fun class:B::getB() {
+//│     return +(A.x, B.y)
 //│   }
-//│   #B$cap;
-//│   getB() {
-//│     return this.A.x + this.y
+//│ } in
+//│ define class A(x) {
+//│   let A$cap = ...
+//│   x
+//│   ctor {
+//│     define val x = x in
+//│     end
 //│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "B", [null, "y"]]; 
-//│ });
-//│ A1 = function A(x) {
-//│   return globalThis.Object.freeze(new A.class(x));
-//│ };
-//│ (class A {
-//│   static {
-//│     A1.class = this
-//│   }
-//│   constructor(x) {
-//│     this.x = x;
-//│   }
-//│   #A$cap;
-//│   getA() {
-//│     let tmp;
-//│     tmp = B1(this, 2);
+//│   fun class:A::getA() {
+//│     set tmp = B(A, 2) in
 //│     return tmp.getB()
 //│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
-//│ });
+//│ } in
+//│ set block$res1 = undefined in
+//│ end
 
 :expect 3
 A(1).getA()
