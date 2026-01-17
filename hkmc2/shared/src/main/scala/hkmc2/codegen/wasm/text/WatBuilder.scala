@@ -67,6 +67,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
     )
 
+  private def mkTempLocal(base: Str)(using Ctx, Scope): LocalIdx =
+    val sym = TempSymbol(N, base)
+    val nme = scope.allocateName(sym)
+    ctx.addLocal(sym)
+    LocalIdx(SymIdx(nme))
+
+  private def getExtraLocals(exclude: Set[Local])(using Ctx): Seq[Local] =
+    ctx.getWasmLocals._2.getOrElse(Seq.empty).filterNot(exclude.contains)
+
   private def tupleArrayGet(
       tupleExpr: Expr,
       idxBuilder: Expr => Expr
@@ -74,12 +83,14 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val elemType = RefType.anyref
     val mutArrayType = tupleArrayType(true)
     val immArrayType = tupleArrayType(false)
-    val tupleIsMutable = ref.test(tupleExpr, RefType(mutArrayType, nullable = true))
+    val tupleTmp = mkTempLocal("tuple")
+    val tupleIsMutable = ref.test(local.tee(tupleTmp, tupleExpr), RefType(mutArrayType, nullable = true))
+    val tupleValue = local.get(tupleTmp, RefType.anyref)
     val mutableBranch =
-      val tupleRef = ref.cast(tupleExpr, RefType(mutArrayType, nullable = false))
+      val tupleRef = ref.cast(tupleValue, RefType(mutArrayType, nullable = false))
       array.get(mutArrayType, tupleRef, idxBuilder(tupleRef), elemType)
     val immutableBranch =
-      val tupleRef = ref.cast(tupleExpr, RefType(immArrayType, nullable = false))
+      val tupleRef = ref.cast(tupleValue, RefType(immArrayType, nullable = false))
       array.get(immArrayType, tupleRef, idxBuilder(tupleRef), elemType)
     Instructions.`if`(
       condition = tupleIsMutable,
@@ -114,11 +125,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                 :: Nil,
               extraInfo = S(errExtra)
             )
+
+        val idxTmp = mkTempLocal("idx")
+
         tupleRef =>
-          Instructions.`if`(
-            condition = i32.lt_s(idxI32, i32.const(0)),
-            ifTrue = i32.add(idxI32, array.len(tupleRef)),
-            ifFalse = S(idxI32),
+          val storeIdx = local.set(idxTmp, ref.i31(idxI32))
+          def idxVal: Expr =
+            i31.get(ref.cast(local.get(idxTmp, RefType.anyref), RefType.i31ref), signed = true)
+
+          val normalizedIdx = Instructions.`if`(
+            condition = i32.lt_s(idxVal, i32.const(0)),
+            ifTrue = i32.add(idxVal, array.len(tupleRef)),
+            ifFalse = S(idxVal),
+            resultTypes = Seq(Result(I32Type))
+          )
+
+          Instructions.block(
+            label = N,
+            children = Seq(storeIdx, normalizedIdx),
             resultTypes = Seq(Result(I32Type))
           )
 
@@ -1055,8 +1079,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
     )
     
+    // Compile the entry function under a dedicated local scope so that any temp locals introduced
+    // during codegen (e.g., via `local.tee`) are declared in the entry function.
+    ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
       block(p.main)(using ctx, summon[Raise], summon[Scope])
+    val entryExtraLocals = getExtraLocals(entryFnLocals.toSet)(using ctx)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
     val entryNme = scope.allocateName(entrySym)
@@ -1071,10 +1099,12 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       params = Seq.empty,
       nResults = 1,
       // TODO(Derppening): Should we place top-level scope variables in the global section?
-      locals = entryFnLocals.map(l => l -> scope.lookup_!(l, l.toLoc)),
+      locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       body = entryFnExpr
     )
     ctx.addFunc(S(entrySym), entryFnInfo)
+
+    ctx.popLocal()
 
     (ctx.toWat, entryNme)
   end program
@@ -1112,7 +1142,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         ctx.addLocal(p.sym)
         param -> paramNme
       val (wasmBody, locals) = block(body)
-      val localsWithNames = locals.map(l => l -> scope.lookup_!(l, l.toLoc))
+      val paramSyms: Set[Local] = params.params.map(p => (p.sym: Local)).toSet
+      val extraLocals = getExtraLocals(locals.toSet ++ paramSyms)
+      val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
       (wasmParams.toSeq, wasmBody, localsWithNames)
 
     // Restore `ctx.locals`

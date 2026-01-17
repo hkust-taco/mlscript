@@ -57,6 +57,7 @@ c.[3]
 //│   (type (func (result (ref null any))))
 //│   (func $entry (type 3) (result (ref null any))
 //│     (local $c (ref null any))
+//│     (local $tuple (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $c
 //│         (array.new_fixed $TupleArray 4
@@ -70,16 +71,17 @@ c.[3]
 //│             (i32.const 40))))
 //│       (if (result (ref null any))
 //│         (ref.test (ref null $TupleArrayMut)
-//│           (local.get $c))
+//│           (local.tee $tuple
+//│             (local.get $c)))
 //│         (then
 //│           (array.get $TupleArrayMut
 //│             (ref.cast (ref $TupleArrayMut)
-//│               (local.get $c))
+//│               (local.get $tuple))
 //│             (i32.const 3)))
 //│         (else
 //│           (array.get $TupleArray
 //│             (ref.cast (ref $TupleArray)
-//│               (local.get $c))
+//│               (local.get $tuple))
 //│             (i32.const 3))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))

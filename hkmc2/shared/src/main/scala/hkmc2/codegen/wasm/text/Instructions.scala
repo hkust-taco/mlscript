@@ -324,6 +324,14 @@ object Instructions:
       resultType = S(ty)
     )
 
+    /** Creates a `local.tee` instruction. */
+    def tee(index: LocalIdx, value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "local.tee",
+      instrargs = Seq(index),
+      stackargs = Seq(value),
+      resultTypes = value.resultTypes
+    )
+
     /** Creates a `local.set` instruction. */
     def set(index: LocalIdx, value: Expr): FoldedInstr = FoldedInstr(
       mnemonic = "local.set",
