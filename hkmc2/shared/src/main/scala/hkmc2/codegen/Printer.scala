@@ -7,13 +7,10 @@ import mlscript.utils._, shorthands._
 import hkmc2._
 import hkmc2.Message.MessageContext
 import hkmc2.document._
+import hkmc2.semantics._
+import hkmc2.syntax._
 import hkmc2.semantics.Elaborator.State
 import hkmc2.utils.Scope
-import hkmc2.semantics.*
-import hkmc2.syntax.Cls
-import hkmc2.syntax.Pat
-import hkmc2.syntax.Obj
-import hkmc2.syntax.Mod
 
 object Printer:
   def getVar(l: Local)(using Raise, Scope): String = l match
