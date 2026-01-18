@@ -49,6 +49,76 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  private var topLevelClassDefnsByName: Map[Str, ClsLikeDefn] = Map.empty
+
+  private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
+    defn.owner.isEmpty
+      && (defn.k is syntax.Cls)
+      && defn.auxParams.isEmpty
+      && defn.parentPath.isEmpty
+      && defn.methods.isEmpty
+      && defn.companion.isEmpty
+      && (defn.preCtor match
+        case End(_) => true
+        case _ => false)
+
+  private def indexTopLevelClasses(b: Block): Unit = b match
+    case Define(defn: ClsLikeDefn, rst) =>
+      if isSupportedTopLevelClass(defn) then
+        topLevelClassDefnsByName.get(defn.sym.nme) match
+          case S(existing) =>
+            lastWords(s"Duplicate top-level class name `${defn.sym.nme}` in wasm backend: ${existing.sym} and ${defn.sym}")
+          case N =>
+            topLevelClassDefnsByName = topLevelClassDefnsByName.updated(defn.sym.nme, defn)
+      indexTopLevelClasses(rst)
+    case Define(_, rst) =>
+      indexTopLevelClasses(rst)
+    case Begin(_, rst) =>
+      indexTopLevelClasses(rst)
+    case Scoped(_, body) =>
+      indexTopLevelClasses(body)
+    case _ => ()
+
+  private def ensureTopLevelClassType(sym: BlockMemberSymbol)(using Ctx): Unit =
+    if ctx.getType(sym).isEmpty then
+      topLevelClassDefnsByName.get(sym.nme) match
+        case S(defn) =>
+          getOrCreateClassType(defn)
+          ()
+        case N => ()
+
+  private def getOrCreateClassType(clsLikeDefn: ClsLikeDefn)(using Ctx): TypeIdx =
+    ctx.getType(clsLikeDefn.sym).getOrElse {
+      val inheritedFields = baseObjectStruct.fields.toMap
+      val inheritedSize = inheritedFields.size
+
+      val classFields: Map[DefinitionSymbol[?], NumIdx -> Field] = (clsLikeDefn.publicFields.map(
+        _._2
+      ) ++ clsLikeDefn.privateFields).zipWithIndex.map: (f, index) =>
+        f -> (NumIdx(index + inheritedSize) -> Field(
+          RefType.anyref,
+          mutable = true,
+          id = S(f.nme)
+        ))
+      .toMap
+
+      val allFields: Map[DefinitionSymbol[?], NumIdx -> Field] = inheritedFields ++ classFields
+
+      // Only parent is base Object for now. For general inheritance add other parents.
+      ctx.addType(
+        sym = S(clsLikeDefn.sym),
+        typeInfo =
+          TypeInfo(
+            id = S(SymIdx(clsLikeDefn.sym.nme)),
+            compType = StructType(
+              fields = allFields,
+              parents = Seq(baseObjectTypeIdx),
+              isSubtype = true
+            )
+          )
+      )
+    }
+
   /**
    * Raises a [[WarningReport]] with the given `warnMsgs` and `extraInfo`, and emits an
    * `unreachable` instruction.
@@ -131,6 +201,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case r => result(r)
 
   def fieldSelect(thisSym: BlockMemberSymbol, sym: DefinitionSymbol[?])(using Ctx, Raise): FieldIdx =
+    ensureTopLevelClassType(thisSym)
     val structInfo = ctx.getTypeInfo_!(thisSym)
     val symToField = structInfo.compType match
       case ty: StructType => ty.fields
@@ -157,7 +228,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.cast(
         local.get(LocalIdx(SymIdx(scope.findThis_!(sym))), RefType.anyref),
         RefType(
-          ctx.getType_!(sym.asBlkMember.get),
+          sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
           nullable = false
         )
       )
@@ -560,34 +631,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ctx.addLocal(p.sym)
                       p -> scope.allocateName(p.sym)
 
-                  val inheritedFields = baseObjectStruct.fields.toMap
-                  val inheritedSize = inheritedFields.size
-
-                  val classFields: Map[DefinitionSymbol[?], NumIdx -> Field] = (clsLikeDefn.publicFields.map(
-                    _._2
-                  ) ++ clsLikeDefn.privateFields).zipWithIndex.map: (f, index) =>
-                    f -> (NumIdx(index + inheritedSize) -> Field(
-                      RefType.anyref,
-                      mutable = true,
-                      id = S(f.nme)
-                    ))
-                  .toMap
-
-                  val allFields: Map[DefinitionSymbol[?], NumIdx -> Field] = inheritedFields ++ classFields
-
-                  // Only parent is base Object for now. For general inheritance add other parents.
-                  val typeref = ctx.addType(
-                    sym = S(clsLikeDefn.sym),
-                    typeInfo =
-                      TypeInfo(
-                        sym = clsLikeDefn.sym,
-                        compType = StructType(
-                          fields = allFields,
-                          parents = Seq(baseObjectTypeIdx),
-                          isSubtype = true
-                        )
-                      )
-                  )
+                  val typeref = getOrCreateClassType(clsLikeDefn)
 
                   // * If there are no ctor params, pop one param list off the aux params
                   val (newCtorAuxParams, initialCtorParams) = clsLikeDefn.paramsOpt match
@@ -751,6 +795,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                   extraInfo = S(s"ClassLikeSymbol: ${cls.toString}")
                 ))
+              ensureTopLevelClassType(clsBlkMemberSym)
               val clsTypeIdx = ctx.getType_!(clsBlkMemberSym, resolveSymIdx = true)
               
               val expectedTag = clsTypeIdx match
@@ -855,6 +900,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
 
     val ctx = Ctx.empty
+    given Ctx = ctx
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
@@ -869,6 +915,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       )
     )
+
+    topLevelClassDefnsByName = Map.empty
+    indexTopLevelClasses(p.main)
     
     val (entryFnExpr, entryFnLocals) =
       block(p.main)(using ctx, summon[Raise], summon[Scope])

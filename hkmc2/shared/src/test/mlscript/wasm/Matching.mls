@@ -186,3 +186,9 @@ class Foo(val x, val y)
 if Foo(1,2) is Foo(a,b) then 0
 //│ Wasm result:
 //│ = 0
+
+class Foo(val x)
+fun getXor(f) = if f is Foo(a) then a else false
+getXor(Foo(42))
+//│ Wasm result:
+//│ = 42

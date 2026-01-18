@@ -201,6 +201,15 @@ class Ctx(
       namedTypes(_) = numIdx
     TypeIdx(typeInfo.id.getOrElse(numIdx))
 
+  private def resolveTypeByName(sym: BlockMemberSymbol): Opt[NumIdx] =
+    val matches = namedTypes.iterator.collect {
+      case (k, v) if k.nme == sym.nme => v
+    }.toList
+    matches match
+      case idx :: Nil => S(idx)
+      case Nil => N
+      case _ => lastWords(s"Ambiguous type definition for name `${sym.nme}`")
+
   /**
    * Returns the [[TypeIdx]] of the given `typeref`, optionally resolving the symbolic index into a
    * numeric index.
@@ -210,7 +219,8 @@ class Ctx(
       case TypeIdx(SymIdx(nme)) if resolveSymIdx =>
         namedTypes.find(_._1.nme == nme).map(t => TypeIdx(t._2))
       case typeidx: TypeIdx => S(typeidx)
-      case sym: BlockMemberSymbol if resolveSymIdx => namedTypes.get(sym).map(TypeIdx(_))
+      case sym: BlockMemberSymbol if resolveSymIdx =>
+        namedTypes.get(sym).orElse(resolveTypeByName(sym)).map(TypeIdx(_))
       case sym: BlockMemberSymbol =>
         getType(sym, resolveSymIdx = true).map: numIdx =>
           getTypeInfo(numIdx).flatMap(_.id).fold(numIdx)(TypeIdx(_))
@@ -225,7 +235,10 @@ class Ctx(
     case TypeIdx(NumIdx(idx)) => types.unapply(idx.toInt)
     case TypeIdx(SymIdx(nme)) =>
       namedTypes.find(_._1.nme == nme).flatMap(t => getTypeInfo(TypeIdx(t._2)))
-    case sym: BlockMemberSymbol => namedTypes.get(sym).flatMap(idx => getTypeInfo(TypeIdx(idx)))
+    case sym: BlockMemberSymbol =>
+      namedTypes.get(sym)
+        .orElse(resolveTypeByName(sym))
+        .flatMap(idx => getTypeInfo(TypeIdx(idx)))
 
   /** Same as [[getTypeInfo]] but throws an exception when the `typeref` is not found. */
   def getTypeInfo_!(typeref: TypeIdx | BlockMemberSymbol): TypeInfo =
