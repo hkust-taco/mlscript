@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 abstract class StackDelay with
   fun perform(): ()

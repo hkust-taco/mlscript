@@ -93,7 +93,8 @@ if Bar(true) is
 //│     (local $scrut (ref null any))
 //│     (local $a (ref null any))
 //│     (local $b (ref null any))
-//│     (local $argument0$ (ref null any))
+//│     (local $arg$Baz$0$ (ref null any))
+//│     (local $arg$Bar$0$ (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
@@ -118,13 +119,13 @@ if Bar(true) is
 //│                   (then
 //│                     (block $arm1
 //│                       (block (result (ref null any))
-//│                         (local.set $argument0$
+//│                         (local.set $arg$Bar$0$
 //│                           (struct.get $Bar 1
 //│                             (ref.cast (ref $Bar)
 //│                               (local.get $scrut))))
 //│                         (block (result (ref null any))
 //│                           (local.set $a
-//│                             (local.get $argument0$))
+//│                             (local.get $arg$Bar$0$))
 //│                           (block $match1 (result (ref null any))
 //│                             (if
 //│                               (i32.eq
@@ -153,13 +154,13 @@ if Bar(true) is
 //│                   (then
 //│                     (block $arm2
 //│                       (block (result (ref null any))
-//│                         (local.set $argument0$
+//│                         (local.set $arg$Baz$0$
 //│                           (struct.get $Baz 1
 //│                             (ref.cast (ref $Baz)
 //│                               (local.get $scrut))))
 //│                         (block (result (ref null any))
 //│                           (local.set $b
-//│                             (local.get $argument0$))
+//│                             (local.get $arg$Baz$0$))
 //│                           (local.get $b)))
 //│                       (br $match))))))
 //│             (ref.i31

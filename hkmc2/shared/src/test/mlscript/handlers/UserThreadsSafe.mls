@@ -1,5 +1,6 @@
 :js
 :effectHandlers debug
+:lift
 
 
 class ThreadEffect with
@@ -43,11 +44,11 @@ in
 //│ > main end
 //│ > f 2
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at f (UserThreadsSafe.mls:17:3)
-//│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=7)
-//│ 	at fork (UserThreadsSafe.mls:35:5)
-//│ 	at fork (UserThreadsSafe.mls:35:5)
+//│ 	at f (UserThreadsSafe.mls:18:3)
+//│ 	at while$ (UserThreadsSafe.mls:11:7)
+//│ 	at ThreadEffect#drain (pc=1)
+//│ 	at Handler$h$fork$ (UserThreadsSafe.mls:36:5)
+//│ 	at Handler$h$fork$ (UserThreadsSafe.mls:36:5)
 
 
 // FIFO
@@ -65,11 +66,11 @@ in
 //│ > main start
 //│ > main end
 //│ > f 0
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$1
-//│ 	at f (UserThreadsSafe.mls:17:3)
-//│ 	at while (UserThreadsSafe.mls:10:7)
-//│ 	at drain (pc=7)
-//│ 	at fork (UserThreadsSafe.mls:58:5)
-//│ 	at fork (UserThreadsSafe.mls:58:5)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$2
+//│ 	at f (UserThreadsSafe.mls:18:3)
+//│ 	at while$ (UserThreadsSafe.mls:11:7)
+//│ 	at ThreadEffect#drain (pc=1)
+//│ 	at Handler$h$fork$ (UserThreadsSafe.mls:59:5)
+//│ 	at Handler$h$fork$ (UserThreadsSafe.mls:59:5)
 
 

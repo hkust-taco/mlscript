@@ -18,10 +18,10 @@ class BlockTransformer(subst: SymbolSubst):
   def applyBlock(b: Block): Block = b match
     case _: End => b
     case Break(lbl) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       if lbl2 is lbl then b else Break(lbl2)
     case Continue(lbl) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       if lbl2 is lbl then b else Continue(lbl2)
     case Return(res, implct) =>
       applyResult(res): res2 =>
@@ -46,7 +46,7 @@ class BlockTransformer(subst: SymbolSubst):
                 (dflt2 is dflt) && (rst2 is rst)
               then b else Match(scrut2, arms2, dflt2, rst2)
     case Label(lbl, loop, bod, rst) =>
-      val lbl2 = applyLocal(lbl)
+      val lbl2 = lbl.subst
       val bod2 = if loop then applyScopedBlock(bod) else applySubBlock(bod)
       val rst2 = applySubBlock(rst)
       if (lbl2 is lbl) && (bod2 is bod) && (rst2 is rst) then b else Label(lbl2, loop, bod2, rst2)

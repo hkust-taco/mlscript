@@ -1,8 +1,10 @@
 :lift
 :js
 
-// make sure class fields are discriminated properly for immutable captures when supported
+// This test was previously used to demonstrate immutable captures names are not properly discriminated,
+// but handler no longer occur before lifting so this now yield the correct result.
 :effectHandlers
+:expect 3
 abstract class Effect with
   fun perform()
 handle h = Effect with
@@ -11,7 +13,7 @@ fun f() =
   h.perform()
   1
 f() + f() + f()
-//│ = 2
+//│ = 3
 
 :expect 1
 fun f(x) =
@@ -88,17 +90,16 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let f6, tmp9;
-//│ let Bad1, Good1, Bad$, Good$, f$capture3;
+//│ let Bad1, Good1, f6, tmp5, Bad$, Good$, f$capture3;
 //│ Good$ = function Good$(isMut, x, y, z, f$capture4) {
-//│   let tmp10, tmp11;
+//│   let tmp6, tmp7;
 //│   if (isMut === true) {
-//│     tmp10 = new Good1.class();
+//│     tmp6 = new Good1.class();
 //│   } else {
-//│     tmp10 = globalThis.Object.freeze(new Good1.class());
+//│     tmp6 = globalThis.Object.freeze(new Good1.class());
 //│   }
-//│   tmp11 = tmp10(x, y, z, f$capture4);
-//│   return tmp11
+//│   tmp7 = tmp6(x, y, z, f$capture4);
+//│   return tmp7
 //│ };
 //│ Good1 = function Good() {
 //│   return (x, y, z, f$capture4) => {
@@ -131,24 +132,24 @@ f().foo()
 //│   get z() { return this.#z; }
 //│   set z(value) { this.#z = value; }
 //│   foo() {
-//│     let tmp10, tmp11;
+//│     let tmp6, tmp7;
 //│     this.z = 100;
-//│     tmp10 = this.x + this.y;
-//│     tmp11 = tmp10 + this.z;
-//│     return tmp11 + this.f$capture.w$capture$0
+//│     tmp6 = this.x + this.y;
+//│     tmp7 = tmp6 + this.z;
+//│     return tmp7 + this.f$capture.w$capture$0
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Good", []]; 
 //│ });
 //│ Bad$ = function Bad$(isMut, f$capture4) {
-//│   let tmp10, tmp11;
+//│   let tmp6, tmp7;
 //│   if (isMut === true) {
-//│     tmp10 = new Bad1.class();
+//│     tmp6 = new Bad1.class();
 //│   } else {
-//│     tmp10 = globalThis.Object.freeze(new Bad1.class());
+//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
 //│   }
-//│   tmp11 = tmp10(f$capture4);
-//│   return tmp11
+//│   tmp7 = tmp6(f$capture4);
+//│   return tmp7
 //│ };
 //│ Bad1 = function Bad() {
 //│   return (f$capture4) => {
@@ -186,30 +187,29 @@ f().foo()
 //│   static [definitionMetadata] = ["class", "f$capture"]; 
 //│ });
 //│ f6 = function f() {
-//│   let x, y, z, w, tmp10, tmp11;
-//│   let capture;
+//│   let x, y, z, w, tmp6, tmp7, capture;
 //│   capture = new f$capture3(null);
 //│   x = 1;
 //│   y = 10;
 //│   z = 10;
 //│   capture.w$capture$0 = 1000;
-//│   tmp10 = Bad$(false, capture);
-//│   tmp11 = tmp10.foo();
+//│   tmp6 = Bad$(false, capture);
+//│   tmp7 = tmp6.foo();
 //│   return Good$(false, x, y, z, capture)
 //│ };
-//│ tmp9 = f6();
-//│ runtime.safeCall(tmp9.foo())
+//│ tmp5 = f6();
+//│ runtime.safeCall(tmp5.foo())
 //│ = 10111
 
 :expect 2
 fun f(x) =
-  class A() with
-    fun newA() = A()
+  class A()() with
+    fun newA() = A()()
     fun foo() =
       set x += 1
       x
     fun getX() = x
-  A()
+  A()()
 let a = f(0)
 a.foo()
 let b = a.newA()

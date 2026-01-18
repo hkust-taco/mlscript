@@ -1,0 +1,69 @@
+:js
+:effectHandlers
+:lift
+
+
+// This acts as a function that may throw an effect
+fun f() = ()
+
+// A constant function to block any potential optimization.
+fun always_true() = true
+
+
+// Observe that no local variables will be saved, as they are not needed.
+:sjs
+fun g() =
+  let a =
+    if always_true() then
+      f()
+      1
+    else
+      2
+  a
+//│ JS (unsanitized):
+//│ let g;
+//│ g = function g() {
+//│   let a, scrut, tmp, tmp1, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         runtime.resumeValue = always_true();
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(g, 3, "SavedVars.mls:17:8", null, null, 1, 0, 0)
+//│         }
+//│         pc = 3;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         a = tmp1;
+//│         return a;
+//│         break;
+//│       case 2:
+//│         tmp = runtime.resumeValue;
+//│         tmp1 = 1;
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 3:
+//│         scrut = runtime.resumeValue;
+//│         if (scrut === true) {
+//│           runtime.resumeValue = f();
+//│           if (runtime.curEffect !== null) {
+//│             return runtime.unwind(g, 2, "SavedVars.mls:18:7", null, null, 1, 0, 0)
+//│           }
+//│           pc = 2;
+//│           continue main
+//│         } else { tmp1 = 2; pc = 1; continue main }
+//│         /* unreachable */
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ };
