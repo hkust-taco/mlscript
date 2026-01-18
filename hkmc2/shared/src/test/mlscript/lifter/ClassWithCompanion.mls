@@ -12,57 +12,9 @@ fun foo(x) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.9: 	  module C with
 //│ ╙──     	         ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.$anonfun$33(Lifter.scala:1077)
-//│ 	at: scala.collection.immutable.List.map(List.scala:236)
-//│ 	at: hkmc2.Lifter.liftNestedScopesImpl(Lifter.scala:1077)
-//│ 	at: hkmc2.Lifter.liftNestedScopes(Lifter.scala:1097)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyRewrittenScope(Lifter.scala:572)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyBlock(Lifter.scala:579)
-//│ 	at: hkmc2.Lifter$BlockRewriter.applyBlock(Lifter.scala:453)
-//│ 	at: hkmc2.Lifter$BlockRewriter.rewrite(Lifter.scala:298)
 
 foo(10).get
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:foo
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res1, $Block -> Block, $tmp -> tmp, $Shape -> Shape, $selRes -> selRes, $block$res -> block$res, $discarded -> discarded, member:Predef -> Predef)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.28: 	foo(10).get
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.6: 	fun foo(x) =
-//│ ║       	^^^^^^^^^^^^
-//│ ║  l.7: 	  class C(y) with
-//│ ║       	^^^^^^^^^^^^^^^^^
-//│ ║  l.8: 	    fun get = [x, y]
-//│ ║       	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.9: 	  module C with
-//│ ║       	^^^^^^^^^^^^^^^
-//│ ║  l.10: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│     at REPL10:1:48
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = [10, 123]
 
 :w
 fun foo(x) =
@@ -72,58 +24,10 @@ fun foo(x) =
     val empty = new C
   C.empty
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.71: 	  module C with
+//│ ║  l.23: 	  module C with
 //│ ╙──      	         ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.$anonfun$33(Lifter.scala:1077)
-//│ 	at: scala.collection.immutable.List.map(List.scala:236)
-//│ 	at: hkmc2.Lifter.liftNestedScopesImpl(Lifter.scala:1077)
-//│ 	at: hkmc2.Lifter.liftNestedScopes(Lifter.scala:1097)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyRewrittenScope(Lifter.scala:572)
-//│ 	at: hkmc2.Lifter$ScopeRewriter.applyBlock(Lifter.scala:579)
-//│ 	at: hkmc2.Lifter$BlockRewriter.applyBlock(Lifter.scala:453)
-//│ 	at: hkmc2.Lifter$BlockRewriter.rewrite(Lifter.scala:298)
 
 foo(10).get
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:foo
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res2, $tmp -> tmp1, $runtime -> runtime, $selRes -> selRes1, $definitionMetadata -> definitionMetadata, $discarded -> discarded1, $prettyPrint -> prettyPrint, $Term -> Term, $block$res -> block$res1, $Block -> Block, $tmp -> tmp, $Shape -> Shape, $selRes -> selRes, $block$res -> block$res, $discarded -> discarded, member:Predef -> Predef)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.90: 	foo(10).get
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.68: 	fun foo(x) =
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.69: 	  class C with
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.70: 	    fun get = x
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.71: 	  module C with
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.72: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│     at REPL13:1:52
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = 10
 
 

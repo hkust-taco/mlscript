@@ -125,6 +125,25 @@ h3.perform()
 //│ } in
 //│ define class Handler$h3$ {
 //│   let Handler$h3$$cap = ...
+//│   preCtor {
+//│     set tmp4 = super() in
+//│     match runtime.curEffect
+//│       null =>
+//│         end
+//│       else
+//│         set tmp4 = runtime.illegalEffect("in a constructor") in
+//│         end
+//│     in
+//│     return tmp4
+//│   }
+//│   ctor {
+//│     set h23 = h22 in
+//│     end
+//│   }
+//│   fun class:Handler$h3$‹718›::perform() {
+//│     set Handler$h3$perform$here = Handler$h3$perform$(h2) in
+//│     return runtime.mkEffect(Handler$h3$, Handler$h3$perform$here)
+//│   }
 //│ } in
 //│ define fun handleBlock$(h31) {
 //│   match runtime.resumePc
@@ -148,7 +167,7 @@ h3.perform()
 //│       set pc2 = 1 in
 //│       continue main2
 //│     1 =>
-//│       set tmp4 = runtime.resumeValue in
+//│       set tmp5 = runtime.resumeValue in
 //│       return h31.perform()
 //│     else
 //│       
@@ -156,13 +175,27 @@ h3.perform()
 //│   end in
 //│   end
 //│ } in
-//│ define fun handleBlock$$(h23)() {
-//│   return handleBlock$(h23)
+//│ define fun handleBlock$$(h24)() {
+//│   return handleBlock$(h24)
 //│ } in
 //│ define class Handler$h2$ {
 //│   let Handler$h2$$cap = ...
+//│   preCtor {
+//│     set tmp6 = super() in
+//│     match runtime.curEffect
+//│       null =>
+//│         end
+//│       else
+//│         set tmp6 = runtime.illegalEffect("in a constructor") in
+//│         end
+//│     in
+//│     return tmp6
+//│   }
+//│   fun class:Handler$h2$‹706›::perform() {
+//│     return runtime.mkEffect(Handler$h2$, Handler$h2$perform)
+//│   }
 //│ } in
-//│ define fun handleBlock$(h24) {
+//│ define fun handleBlock$(h25) {
 //│   match runtime.resumePc
 //│     -1 =>
 //│       set pc3 = 0 in
@@ -174,20 +207,20 @@ h3.perform()
 //│   in
 //│   labelled loop main3 = match pc3
 //│     0 =>
-//│       set h32 = new mut Handler$h3$(h24) in
+//│       set h32 = new mut Handler$h3$(h25) in
 //│       set handleBlock$$here = handleBlock$$(h32) in
 //│       set runtime.resumeValue = runtime.enterHandleBlock(h32, handleBlock$$here) in
 //│       match runtime.curEffect
 //│         null =>
 //│           end
 //│         else
-//│           return runtime.unwind(handleBlock$, 1, null, null, null, 1, 1, h24, 0)
+//│           return runtime.unwind(handleBlock$, 1, null, null, null, 1, 1, h25, 0)
 //│       in
 //│       set pc3 = 1 in
 //│       continue main3
 //│     1 =>
-//│       set tmp5 = runtime.resumeValue in
-//│       return tmp5
+//│       set tmp7 = runtime.resumeValue in
+//│       return tmp7
 //│     else
 //│       
 //│   in
@@ -216,7 +249,7 @@ h3.perform()
 //│       set pc4 = 1 in
 //│       continue main4
 //│     1 =>
-//│       set tmp6 = runtime.resumeValue in
+//│       set tmp8 = runtime.resumeValue in
 //│       return k3()
 //│     else
 //│       
@@ -226,6 +259,20 @@ h3.perform()
 //│ } in
 //│ define class Handler$h1$ {
 //│   let Handler$h1$$cap = ...
+//│   preCtor {
+//│     set tmp9 = super() in
+//│     match runtime.curEffect
+//│       null =>
+//│         end
+//│       else
+//│         set tmp9 = runtime.illegalEffect("in a constructor") in
+//│         end
+//│     in
+//│     return tmp9
+//│   }
+//│   fun class:Handler$h1$‹695›::perform() {
+//│     return runtime.mkEffect(Handler$h1$, Handler$h1$perform)
+//│   }
 //│ } in
 //│ set h1 = new mut Handler$h1$() in
 //│ define fun handleBlock$() {
@@ -240,9 +287,9 @@ h3.perform()
 //│   in
 //│   labelled loop main5 = match pc5
 //│     0 =>
-//│       set h25 = new mut Handler$h2$() in
-//│       set handleBlock$$here1 = handleBlock$$(h25) in
-//│       set runtime.resumeValue = runtime.enterHandleBlock(h25, handleBlock$$here1) in
+//│       set h26 = new mut Handler$h2$() in
+//│       set handleBlock$$here1 = handleBlock$$(h26) in
+//│       set runtime.resumeValue = runtime.enterHandleBlock(h26, handleBlock$$here1) in
 //│       match runtime.curEffect
 //│         null =>
 //│           end
@@ -252,23 +299,23 @@ h3.perform()
 //│       set pc5 = 1 in
 //│       continue main5
 //│     1 =>
-//│       set tmp7 = runtime.resumeValue in
-//│       return tmp7
+//│       set tmp10 = runtime.resumeValue in
+//│       return tmp10
 //│     else
 //│       
 //│   in
 //│   end in
 //│   end
 //│ } in
-//│ set tmp8 = runtime.enterHandleBlock(h1, handleBlock$) in
+//│ set tmp11 = runtime.enterHandleBlock(h1, handleBlock$) in
 //│ match runtime.curEffect
 //│   null =>
 //│     end
 //│   else
-//│     set tmp8 = runtime.topLevelEffect(false) in
+//│     set tmp11 = runtime.topLevelEffect(false) in
 //│     end
 //│ in
-//│ set block$res2 = tmp8 in
+//│ set block$res2 = tmp11 in
 //│ return undefined
 //│ > h1
 //│ > h3

@@ -11,25 +11,13 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
 
 :expect 14
 foo(10, 0)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M.foo (REPL10:1:447)
-//│     at foo (REPL10:1:758)
-//│     at REPL13:1:38
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '14', got: 'undefined'
+//│ = 14
 
 // * This works the same with classes.
 // * Note that we currently generate accessors, which is not ideal;
@@ -42,10 +30,10 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let M3, foo1;
-//│ (class M2 {
+//│ let M2, foo1;
+//│ (class M1 {
 //│   static {
-//│     M3 = this
+//│     M2 = this
 //│   }
 //│   constructor(y) {
 //│     this.y = y;
@@ -60,14 +48,14 @@ foo(10)
 //│ });
 //│ foo1 = function foo(y) {
 //│   let tmp;
-//│   tmp = globalThis.Object.freeze(new M3(y));
+//│   tmp = globalThis.Object.freeze(new M2(y));
 //│   return tmp.foo()
 //│ };
 //│ foo1(10)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M2.foo (REPL16:1:283)
+//│     at M1.foo (REPL16:1:283)
 //│     at foo (REPL16:1:602)
 //│     at REPL16:1:643
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -115,9 +103,12 @@ fun foo(y) =
     fun foo() =
       set y = 2
   O
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
 
 let o = foo(10)
-//│ o = O { foo$cap: undefined, class: object O }
+//│ o = O
 
 :re
 set o.x = 1
@@ -132,42 +123,80 @@ fun foo(x, y) =
       x + y
   fun foo3 = M.foo2()
   foo3
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:M
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = N
+//│           curThis = S of S of globalThis:globalThis
+//│           bindings = HashMap(member:Capture$foo -> Capture$foo1, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res2, $block$res -> block$res5, member:M -> M2, $selRes -> selRes, member:foo -> foo1, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, class:M -> M1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, member:Predef -> Predef, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:C -> C1, $block$res -> block$res, member:foo -> foo2, member:Capture$foo -> Capture$foo3, class:C -> C, member:foo -> foo, o -> o, object:M -> M, $block$res -> block$res9, $block$res -> block$res4, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:Capture$foo -> Capture$foo)
+//│         curThis = N
+//│         bindings = HashMap(object:M -> M3, member:foo3 -> foo31, member:foo -> foo4)
+//│       curThis = S of N
+//│       bindings = HashMap()
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
+//│ ║  l.124: 	  fun foo3 = M.foo2()
+//│ ║         	             ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.120: 	  object M with
+//│ ║         	         ^^^^^^
+//│ ║  l.121: 	    fun foo2() =
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.122: 	      set y = 2
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.123: 	      x + y
+//│ ╙──       	^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let M5, foo31, foo4;
+//│ let foo31, foo4;
 //│ foo31 = function foo3() {
-//│   return M5.foo2()
+//│   return M.foo2()
 //│ };
-//│ (class M4 {
-//│   static {
-//│     new this
-//│   }
-//│   constructor(x, y) {
-//│     M5 = this;
-//│     this.x = x;
-//│     this.y = y;
-//│     Object.defineProperty(this, "class", {
-//│       value: M4
-//│     });
-//│     globalThis.Object.freeze(this);
-//│   }
-//│   #M$cap;
-//│   foo2() {
-//│     this.y = 2;
-//│     return this.x + this.y
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["object", "M"]; 
-//│ });
-//│ foo4 = function foo(x, y) { let tmp; tmp = foo31(); return tmp };
+//│ foo4 = function foo(x, y) {
+//│   let M4, tmp;
+//│   (class M3 {
+//│     static {
+//│       new this
+//│     }
+//│     constructor() {
+//│       M4 = this;
+//│       Object.defineProperty(this, "class", {
+//│         value: M3
+//│       });
+//│       globalThis.Object.freeze(this);
+//│     }
+//│     #M$cap;
+//│     foo2() {
+//│       y = 2;
+//│       return x + y
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["object", "M"]; 
+//│   });
+//│   tmp = foo31();
+//│   return tmp
+//│ };
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
 
 :expect 12
 foo(10, 0)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M4.foo2 (REPL44:1:555)
-//│     at foo3 (REPL44:1:141)
-//│     at foo (REPL44:1:847)
+//│ ═══[RUNTIME ERROR] ReferenceError: M is not defined
+//│     at foo3 (REPL44:1:134)
+//│     at foo (REPL44:1:839)
 //│     at REPL47:1:39
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
@@ -175,6 +204,7 @@ foo(10, 0)
 //│     at REPLServer.runBound [as eval] (node:domain:444:12)
 //│     at REPLServer.onLine (node:repl:886:12)
 //│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
 //│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
@@ -213,23 +243,44 @@ module M with
     fun get = x
   val hi = A()
 M.hi.get
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.219: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:Capture$foo -> Capture$foo1, $block$res -> block$res14, $tmp -> tmp, $runtime -> runtime, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, member:M -> M7, $Term -> Term, c0 -> c0, module:M -> M6, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, class:A -> A2, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $block$res -> block$res15, member:foo -> foo3, class:M -> M6, object:O -> O, $selRes -> selRes5, $discarded -> discarded5, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, $block$res -> block$res, member:Capture$foo -> Capture$foo3, member:foo -> foo, o -> o, object:M -> M, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, member:foo3 -> foo31, member:foo -> foo4, object:M -> M3, $block$res -> block$res1, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:M -> M1, member:Predef -> Predef, $block$res -> block$res11, $block$res -> block$res12, $block$res -> block$res3, member:M -> M5, member:A -> A1, class:A -> A, member:C -> C1, member:foo -> foo2, object:M -> M4, class:C -> C, $block$res -> block$res4, $block$res -> block$res13, class:Capture$foo -> Capture$foo)
+//│       curThis = S of S of module:M
+//│       bindings = HashMap()
+//│     curThis = N
+//│     bindings = HashMap($tmp -> tmp1)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.242: 	  class A() with
+//│ ║         	        ^^^^^^^^
+//│ ║  l.243: 	    fun get = x
+//│ ╙──       	^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
+//│     at <static_initializer> (REPL56:1:612)
+//│     at REPL56:1:718
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:562:24)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
 :expect 2
 module M with
@@ -238,23 +289,7 @@ module M with
     fun g() = x
     g
 M.f()()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.244: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ = 2
 
 :expect 2
 object M with
@@ -280,26 +315,114 @@ module M with
     fun get = M.x + x
   val x = if A() is A then 2 else 3
 M.A().get
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.287: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:199)
-//│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:88)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = N
+//│           curThis = S of S of globalThis:globalThis
+//│           bindings = HashMap(member:Capture$foo -> Capture$foo1, $block$res -> block$res14, $tmp -> tmp, $runtime -> runtime, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, member:M -> M7, $Term -> Term, c0 -> c0, module:M -> M6, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, class:A -> A2, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $block$res -> block$res15, member:foo -> foo3, class:M -> M6, object:O -> O, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:M -> M9, module:M -> M8, $block$res -> block$res, member:Capture$foo -> Capture$foo3, member:foo -> foo, o -> o, object:M -> M, $block$res -> block$res9, $block$res -> block$res10, $block$res -> block$res16, $selRes -> selRes4, class:M -> M8, $discarded -> discarded4, $tmp -> tmp1, member:foo3 -> foo31, member:foo -> foo4, member:g$ -> g$, object:M -> M3, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res11, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res12, $block$res -> block$res3, member:M -> M5, member:A -> A1, member:g -> g1, class:A -> A, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, object:M -> M4, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $block$res -> block$res13, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│         curThis = N
+//│         bindings = HashMap(member:M -> M15, module:M -> M14, class:M -> M14, class:A -> A5, $tmp -> tmp3)
+//│       curThis = S of S of module:M
+//│       bindings = HashMap()
+//│     curThis = N
+//│     bindings = HashMap($scrut -> scrut, $tmp -> tmp4)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.277: 	  class A() with
+//│ ║         	        ^^^^^^^^
+//│ ║  l.278: 	    fun get = M.x + x
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = N
+//│           curThis = S of S of globalThis:globalThis
+//│           bindings = HashMap(member:Capture$foo -> Capture$foo1, $block$res -> block$res14, $tmp -> tmp, $runtime -> runtime, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, member:M -> M7, $Term -> Term, c0 -> c0, module:M -> M6, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, class:A -> A2, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, $block$res -> block$res15, member:foo -> foo3, class:M -> M6, object:O -> O, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:M -> M9, module:M -> M8, $block$res -> block$res, member:Capture$foo -> Capture$foo3, member:foo -> foo, o -> o, object:M -> M, $block$res -> block$res9, $block$res -> block$res10, $block$res -> block$res16, $selRes -> selRes4, class:M -> M8, $discarded -> discarded4, $tmp -> tmp1, member:foo3 -> foo31, member:foo -> foo4, member:g$ -> g$, object:M -> M3, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res11, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res12, $block$res -> block$res3, member:M -> M5, member:A -> A1, member:g -> g1, class:A -> A, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, object:M -> M4, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $block$res -> block$res13, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│         curThis = N
+//│         bindings = HashMap(member:M -> M15, module:M -> M14, class:M -> M14, class:A -> A5, $tmp -> tmp3)
+//│       curThis = S of S of module:M
+//│       bindings = HashMap()
+//│     curThis = N
+//│     bindings = HashMap($scrut -> scrut, $tmp -> tmp4)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.277: 	  class A() with
+//│ ║         	  ^^^^^^^^^^^^^^
+//│ ║  l.278: 	    fun get = M.x + x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.277: 	  class A() with
+//│ ║         	        ^^^^^^^^
+//│ ║  l.278: 	    fun get = M.x + x
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ JS (unsanitized):
+//│ let M15, tmp3;
+//│ (class M14 {
+//│   static {
+//│     M15 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static #M_mod$cap;
+//│   static {
+//│     let scrut, tmp4;
+//│     this.A = function A() {
+//│       return globalThis.Object.freeze(new A.class());
+//│     };
+//│     (class A5 {
+//│       static {
+//│         M14.A.class = this
+//│       }
+//│       constructor() {}
+//│       #A$cap;
+//│       get get() {
+//│         return M15.x + M14.x;
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", []]; 
+//│     });
+//│     scrut = A();
+//│     if (scrut instanceof A.class) {
+//│       tmp4 = 2;
+//│     } else {
+//│       tmp4 = 3;
+//│     }
+//│     this.x = tmp4;
+//│   }
+//│   #M$cap;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ tmp3 = M15.A();
+//│ tmp3.get
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
+//│     at <static_initializer> (REPL68:1:604)
+//│     at REPL68:1:796
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:562:24)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:886:12)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
 
 module M with
   val x = 2
@@ -307,23 +430,7 @@ module M with
     fun get = x
   class B() extends A
 M.B().get
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.313: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ = 2
 
 /// Top Level Modules ///
 
@@ -340,74 +447,161 @@ module M with
     fun newB = B()
   0 is A
 M.A(2).newB.newA_B(3).newB.get
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.343: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyCase (Lifter.scala:199)
-//│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
-
-module M with
-  class A
-  object B extends A
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.373: 	module M with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
-
-
-:lift
-fun foo(x) =
-  object O with
-    fun bar = x
-    val baz = x
-  [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = N
+//│             curThis = S of S of globalThis:globalThis
+//│             bindings = HashMap(member:Capture$foo -> Capture$foo1, member:M -> M15, $runtime -> runtime, module:M -> M14, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, class:A -> A5, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res19, class:M -> M14, $tmp -> tmp3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, member:M -> M17, module:M -> M16, o -> o, class:A -> A6, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:B -> B, member:foo3 -> foo31, member:foo -> foo4, $block$res -> block$res20, class:M -> M16, object:M -> M3, $tmp -> tmp4, $selRes -> selRes7, $discarded -> discarded7, member:B -> B2, member:M -> M19, module:M -> M18, class:A -> A7, $block$res -> block$res11, class:B -> B1, $block$res -> block$res12, member:M -> M5, member:A -> A1, class:A -> A, object:M -> M4, $block$res -> block$res21, class:M -> M18, $tmp -> tmp5, $block$res -> block$res13, $tmp -> tmp6, $selRes -> selRes8, $discarded -> discarded8, $selRes -> selRes9, $discarded -> discarded9, $block$res -> block$res14, $tmp -> tmp, member:M -> M7, module:M -> M6, class:A -> A2, $block$res -> block$res15, class:M -> M6, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, member:M -> M9, module:M -> M8, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res16, class:M -> M8, $tmp -> tmp1, member:g$ -> g$, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res3, member:g -> g1, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│           curThis = S of S of module:M
+//│           bindings = HashMap()
+//│         curThis = N
+//│         bindings = HashMap($scrut -> scrut)
+//│       curThis = S of S of class:A
+//│       bindings = HashMap(x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	             ^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = N
+//│             curThis = S of S of globalThis:globalThis
+//│             bindings = HashMap(member:Capture$foo -> Capture$foo1, member:M -> M15, $runtime -> runtime, module:M -> M14, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, class:A -> A5, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res19, class:M -> M14, $tmp -> tmp3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, member:M -> M17, module:M -> M16, o -> o, class:A -> A6, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:B -> B, member:foo3 -> foo31, member:foo -> foo4, $block$res -> block$res20, class:M -> M16, object:M -> M3, $tmp -> tmp4, $selRes -> selRes7, $discarded -> discarded7, member:B -> B2, member:M -> M19, module:M -> M18, class:A -> A7, $block$res -> block$res11, class:B -> B1, $block$res -> block$res12, member:M -> M5, member:A -> A1, class:A -> A, object:M -> M4, $block$res -> block$res21, class:M -> M18, $tmp -> tmp5, $block$res -> block$res13, $tmp -> tmp6, $selRes -> selRes8, $discarded -> discarded8, $selRes -> selRes9, $discarded -> discarded9, $block$res -> block$res14, $tmp -> tmp, member:M -> M7, module:M -> M6, class:A -> A2, $block$res -> block$res15, class:M -> M6, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, member:M -> M9, module:M -> M8, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res16, class:M -> M8, $tmp -> tmp1, member:g$ -> g$, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res3, member:g -> g1, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│           curThis = S of S of module:M
+//│           bindings = HashMap()
+//│         curThis = N
+//│         bindings = HashMap($scrut -> scrut)
+//│       curThis = S of S of class:A
+//│       bindings = HashMap(x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	       ^^^^^^^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	             ^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = S of Scope:
+//│           parent = S of Scope:
+//│             parent = N
+//│             curThis = S of S of globalThis:globalThis
+//│             bindings = HashMap(member:Capture$foo -> Capture$foo1, member:M -> M15, $runtime -> runtime, module:M -> M14, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, class:A -> A5, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res19, class:M -> M14, $tmp -> tmp3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, member:M -> M17, module:M -> M16, o -> o, class:A -> A6, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:B -> B, member:foo3 -> foo31, member:foo -> foo4, $block$res -> block$res20, class:M -> M16, object:M -> M3, $tmp -> tmp4, $selRes -> selRes7, $discarded -> discarded7, member:B -> B2, member:M -> M19, module:M -> M18, class:A -> A7, $block$res -> block$res11, class:B -> B1, $block$res -> block$res12, member:M -> M5, member:A -> A1, class:A -> A, object:M -> M4, $block$res -> block$res21, class:M -> M18, $tmp -> tmp5, $block$res -> block$res13, $tmp -> tmp6, $selRes -> selRes8, $discarded -> discarded8, $selRes -> selRes9, $discarded -> discarded9, $block$res -> block$res14, $tmp -> tmp, member:M -> M7, module:M -> M6, class:A -> A2, $block$res -> block$res15, class:M -> M6, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, member:M -> M9, module:M -> M8, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res16, class:M -> M8, $tmp -> tmp1, member:g$ -> g$, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res3, member:g -> g1, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│           curThis = S of S of module:M
+//│           bindings = HashMap()
+//│         curThis = N
+//│         bindings = HashMap($scrut -> scrut)
+//│       curThis = S of S of class:A
+//│       bindings = HashMap(x -> x)
+//│     curThis = N
+//│     bindings = HashMap()
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	             ^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = member:A
+//│     _2 = class hkmc2.semantics.BlockMemberSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:Capture$foo -> Capture$foo1, member:M -> M15, $runtime -> runtime, module:M -> M14, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, class:A -> A5, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res19, class:M -> M14, $tmp -> tmp3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, member:M -> M17, module:M -> M16, o -> o, class:A -> A6, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:B -> B, member:foo3 -> foo31, member:foo -> foo4, $block$res -> block$res20, class:M -> M16, object:M -> M3, $tmp -> tmp4, $selRes -> selRes7, $discarded -> discarded7, member:B -> B2, member:M -> M19, module:M -> M18, class:A -> A7, $block$res -> block$res11, class:B -> B1, $block$res -> block$res12, member:M -> M5, member:A -> A1, class:A -> A, object:M -> M4, $block$res -> block$res21, class:M -> M18, $tmp -> tmp5, $block$res -> block$res13, $tmp -> tmp6, $selRes -> selRes8, $discarded -> discarded8, $selRes -> selRes9, $discarded -> discarded9, $block$res -> block$res14, $tmp -> tmp, member:M -> M7, module:M -> M6, class:A -> A2, $block$res -> block$res15, class:M -> M6, $selRes -> selRes5, $discarded -> discarded5, member:g -> g, member:M -> M9, module:M -> M8, $block$res -> block$res, member:foo -> foo, object:M -> M, $block$res -> block$res16, class:M -> M8, $tmp -> tmp1, member:g$ -> g$, $block$res -> block$res1, member:A -> A4, member:M -> M11, object:M -> M10, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:A -> A3, class:M -> M1, member:Predef -> Predef, $block$res -> block$res17, $selRes -> selRes6, $discarded -> discarded6, $block$res -> block$res3, member:g -> g1, member:M -> M13, object:M -> M12, member:C -> C1, member:foo -> foo2, class:C -> C, $block$res -> block$res4, $block$res -> block$res18, $tmp -> tmp2, class:Capture$foo -> Capture$foo, member:g$ -> g$1)
+//│       curThis = S of S of module:M
+//│       bindings = HashMap()
+//│     curThis = N
+//│     bindings = HashMap($scrut -> scrut)
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	       ^^^^^^^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.380: 	  data class A(x) with
+//│ ║         	             ^^^^^^^^^
+//│ ║  l.381: 	    class B() with
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.382: 	      fun get = x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.383: 	      fun newA_B(y) = A(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.384: 	... (more lines omitted) ...
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x$0')
-//│     at new O2 (REPL62:1:194)
-//│     at <static_initializer> (REPL62:1:85)
-//│     at REPL62:1:419
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-
-foo(123)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: foo5 is not a function
-//│     at REPL65:1:39
+//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
+//│     at <static_initializer> (REPL74:1:1453)
+//│     at REPL74:1:1576
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
@@ -416,72 +610,47 @@ foo(123)
 //│     at REPLServer.emit (node:events:508:28)
 //│     at REPLServer.emit (node:domain:489:12)
 //│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+
+module M with
+  class A
+  object B extends A
+
+
+:lift
+fun foo(x) =
+  object O with
+    fun bar = x
+    val baz = x
+  [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
+//│ FAILURE: Unexpected warning
+//│ FAILURE LOCATION: applyValue (Lifter.scala:278)
+//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
+
+foo(123)
+//│ = [true, [true, false], true]
 
 module A with
   fun g = 1
   fun f = () => g
   f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.430: 	module A with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 module A with
   val a = (() => 1)()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.452: 	module A with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 // This is related to the above, but it will look into the ignored bms map
 module A with
   val x =
     fun f() = 1
     f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.473: 	module A with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 module A with
   val x =
@@ -491,35 +660,15 @@ module A with
       h()
     f() + g()
 A.x
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.495: 	module A with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
+//│ = 2
 
 // private fields in modules
-:fixme
 module A with
   let x = 1
   fun mtd =
     fun nested() = x
     nested()
 A.mtd
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.523: 	module A with
-//│ ╙──       	       ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ = 1
 
 

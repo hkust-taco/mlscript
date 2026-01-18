@@ -13,6 +13,12 @@ import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
+import hkmc2.ScopeData.ScopedObject.Top
+import hkmc2.ScopeData.ScopedObject.Companion
+import hkmc2.ScopeData.ScopedObject.ClassCtor
+import hkmc2.ScopeData.ScopedObject.Func
+import hkmc2.ScopeData.ScopedObject.Loop
+import hkmc2.ScopeData.ScopedObject.ScopedBlock
 
 object ScopeData:
   opaque type ScopeUID = BigInt
@@ -62,9 +68,9 @@ object ScopeData:
       
       // Locals defined by a scoped object.
       lazy val definedLocals: Set[Local] = this match
-        case Top(b) => b match
-          case Scoped(syms, _) => syms.toSet
-          case _ => Set.empty
+        // we want definedLocals for the top level scope to be empty, because otherwise,
+        // the lifter may try to capture those locals.
+        case Top(b) => Set.empty
         case Class(cls) =>
           // Public fields are not included, as they are accessed using
           // a field selection rather than directly using the BlockMemberSymbol.
@@ -99,11 +105,12 @@ object ScopeData:
         case Class(cls) => cls.isym
         case Companion(comp, par) => comp.isym
         case Func(fun, isMethod) => fun.dSym
+        case ClassCtor(cls) => cls.ctorSym.get
       def bsym: BlockMemberSymbol = this match
         case Class(cls) => cls.sym
         case Companion(comp, par) => par.sym
         case Func(fun, isMethod) => fun.sym
-      
+        case ClassCtor(cls) => cls.sym
     
     // Scoped nodes which could possibly be lifted to the top level.
     sealed abstract class Liftable[T <: Defn] extends Referencable[T]:
@@ -115,8 +122,12 @@ object ScopeData:
       val defn = cls
     case class Companion(comp: ClsLikeBody, par: ClsLikeDefn) extends Referencable[ClsLikeBody]
     // We model it like this: the ctor is just another function in the same scope as the class and initializes the corresponding class
-    case class ClassCtor(cls: ClsLikeDefn) extends ScopedObject[Unit]
-    case class Func(fun: FunDefn, isMethod: Bool) extends Liftable[FunDefn]:
+    case class ClassCtor(cls: ClsLikeDefn) extends Referencable[Unit]
+    // isMethod:
+    // N = not a method
+    // S(false) = module method
+    // S(true) = class or object method
+    case class Func(fun: FunDefn, isMethod: Opt[Bool]) extends Liftable[FunDefn]:
       val defn = fun
     // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
     // a scoped block.
@@ -179,7 +190,28 @@ object ScopeData:
         case Some(value) => value.existingVars ++ value.obj.definedLocals
         case None => Set.empty
       
-      // The following must not be called until ignoredScopes is populated with the relevant data.
+      lazy val isTopLevel: Bool = parent match
+        case Some(ScopeNode(obj = _: ScopedObject.Top)) => true
+        case _ => false
+      
+      lazy val isInTopLevelMod: Bool = parent match
+        case Some(par) => par.obj match
+          case _: Companion => par.isInTopLevelMod
+          case s: ScopedBlock => s.node.get.parent.get.obj match
+            case c: Companion => c.node.get.parent.get.isInTopLevelMod
+            case _ => false
+          case _ => false
+        case None => true
+      
+      // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes them.
+      lazy val localsWithoutBms: Set[Local] = obj match
+        case s: ScopedObject.ScopedBlock =>
+          val rmv = children.collect:
+            case c @ ScopeNode(obj = s: ScopedObject.Referencable[?]) => s.bsym
+          obj.definedLocals -- rmv
+        case _ => obj.definedLocals
+      
+      // All of the following must not be called until ignoredScopes is populated with the relevant data.
       
       lazy val isLifted: Bool =
         val ignored = ignoredScopes.ignored match
@@ -193,13 +225,10 @@ object ScopeData:
           // case _: ScopedObject.Companion => false
           // case c: ScopedObject.Class if c.cls.companion.isDefined => false
           case _ if ignored.contains(obj.toInfo) => false
-          case ScopedObject.Func(isMethod = true) => false
+          case _ if isInTopLevelMod => false
+          case ScopedObject.Func(isMethod = S(true)) => false
           case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
           case _ => true
-      
-      lazy val isTopLevel: Bool = parent match
-        case Some(ScopeNode(obj = _: ScopedObject.Top)) => true
-        case _ => false
       
       lazy val liftedChildNodes: List[ScopeNode[?]] =
         if isLifted then this :: Nil
@@ -228,16 +257,7 @@ object ScopeData:
         case _ =>
           if isLifted then reqCaptureObjsImpl
           else parent.get.reqCaptureObjsImpl
-      
-      // Scoped blocks include the BlockMemberSymbols of their nested definitions. This removes the ones
-      // belonging to objects that are lifted.
-      lazy val localsWithoutLifted: Set[Local] = obj match
-        case s: ScopedObject.ScopedBlock =>
-          val rmv = children.collect:
-            case c @ ScopeNode(obj = s: ScopedObject.Liftable[?]) if c.isLifted => s.defn.sym
-          obj.definedLocals -- rmv
-        case _ => obj.definedLocals
-    
+  
   def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
     case Some(d) if data.contains(d) => S(d)
     case d: DefinitionSymbol[?] if data.contains(d) => S(d)
@@ -250,6 +270,8 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
   
   val scopeTree = NestedScopeTree(makeScopeTreeRec(ScopedObject.Top(b)))
   val root = scopeTree.root
+  val allBms = root.allChildren.collect:
+    case s: ScopedObject.Referencable[?] => s.bsym
   
   def contains(s: ScopedInfo) = scopeTree.nodesMap.contains(s)
     
@@ -277,7 +299,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         objs ::= ScopedObject.Loop(l.label, l.body)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn): Unit =
-      objs ::= ScopedObject.Func(fun, false)
+      objs ::= ScopedObject.Func(fun, N)
     override def applyDefn(defn: Defn): Unit = defn match
       case f: FunDefn => applyFunDefn(f)
       case c: ClsLikeDefn =>
@@ -310,8 +332,8 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => finder.applyBlock(b)
     val mtdObjs = obj match
-      case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_, true))
-      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, true))
+      case ScopedObject.Class(cls) => cls.methods.map(ScopedObject.Func(_, S(true)))
+      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, S(false)))
       case _ => Nil
     val children = (mtdObjs ::: finder.objs).map(makeScopeTreeRec)
     val retNode = ScopeNode.ScopeNode(obj, N, children)

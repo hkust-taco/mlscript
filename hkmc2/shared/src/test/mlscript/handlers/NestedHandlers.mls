@@ -237,7 +237,18 @@ fun handleEffects(g) =
 //│ } in
 //│ define class Handler$h2$ {
 //│   let Handler$h2$$cap = ...
-//│   fun class:Handler$h2$ :: f(x4) {
+//│   preCtor {
+//│     set tmp14 = super() in
+//│     match runtime.curEffect
+//│       null =>
+//│         end
+//│       else
+//│         set tmp14 = runtime.illegalEffect("in a constructor") in
+//│         end
+//│     in
+//│     return tmp14
+//│   }
+//│   fun class:Handler$h2$::f(x4) {
 //│     set Handler$h2$f$here = Handler$h2$f$(x4) in
 //│     return runtime.mkEffect(Handler$h2$, Handler$h2$f$here)
 //│   }
@@ -250,7 +261,18 @@ fun handleEffects(g) =
 //│ } in
 //│ define class Handler$h1$ {
 //│   let Handler$h1$$cap = ...
-//│   fun class:Handler$h1$ :: f(x5) {
+//│   preCtor {
+//│     set tmp15 = super() in
+//│     match runtime.curEffect
+//│       null =>
+//│         end
+//│       else
+//│         set tmp15 = runtime.illegalEffect("in a constructor") in
+//│         end
+//│     in
+//│     return tmp15
+//│   }
+//│   fun class:Handler$h1$::f(x5) {
 //│     set Handler$h1$f$here = Handler$h1$f$(x5) in
 //│     return runtime.mkEffect(Handler$h1$, Handler$h1$f$here)
 //│   }
@@ -279,8 +301,8 @@ fun handleEffects(g) =
 //│       set pc2 = 1 in
 //│       continue main2
 //│     1 =>
-//│       set tmp14 = runtime.resumeValue in
-//│       return tmp14
+//│       set tmp16 = runtime.resumeValue in
+//│       return tmp16
 //│     else
 //│       
 //│   in
@@ -311,8 +333,8 @@ fun handleEffects(g) =
 //│       set pc3 = 1 in
 //│       continue main3
 //│     1 =>
-//│       set tmp15 = runtime.resumeValue in
-//│       return tmp15
+//│       set tmp17 = runtime.resumeValue in
+//│       return tmp17
 //│     else
 //│       
 //│   in

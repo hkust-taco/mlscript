@@ -82,9 +82,9 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           // If so, then it requires reading the class symbol
           val node = scopeData.getNode(dSym)
           node.obj match
-            case Func(isMethod = false) => accessed.refdDefns.add(node.obj.toInfo)
-            case f @ Func(isMethod = true) => accessed.accessed.add(f.fun.owner.get)
-            case _: ScopedObject.Class | _: ClassCtor => accessed.refdDefns.add(node.obj.toInfo)
+            case f @ Func(isMethod = S(true)) => accessed.accessed.add(f.fun.owner.get)
+            case Func(isMethod = N | S(false)) => accessed.refdDefns.add(node.obj.toInfo)
+            case _: ScopedObject.Class | _: ClassCtor | _: Companion => accessed.refdDefns.add(node.obj.toInfo)
             case _ => ()
         case Value.Ref(l, _) =>
           accessed.accessed.add(l)
@@ -377,13 +377,18 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         def handleCalledScope(called: ScopedInfo): Unit = scopeInfos.get(called) match
           case None => ()
           case Some(node) =>
+            node.obj match
+              // ignore method calls to class or object methods
+              case ScopedObject.Func(_, S(true)) => return
+              case _ => ()
+            
             val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(called)
             val muts = muted.intersect(thisVars)
             val reads = accessed.intersect(thisVars) -- muts
             val refdExcl = refd.filter: sym =>
               scopeData.getNode(sym).obj match
                 case s: ScopedObject.ScopedBlock => false
-                case ScopedObject.Func(_, true) => false
+                case ScopedObject.Func(_, S(true)) => false
                 case _ => true
             
             // This not a naked reference. If it's a ref to a class, this can only ever create once instance
@@ -458,7 +463,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         
         override def applyDefn(defn: Defn): Unit = defn match
           case c: ClsLikeDefn if modOrObj(c) =>
-            handleCalledScope(c.isym)
+            handleCalledScope(c.isym) // TODO: use new system
             super.applyDefn(defn)
           case _ => super.applyDefn(defn)
 

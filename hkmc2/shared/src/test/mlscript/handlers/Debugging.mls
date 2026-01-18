@@ -157,61 +157,33 @@ module Test with
     j / i
   fun main()(using Debugger) =
     test(12) + test(34)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1048)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1109)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1108)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 // Currently this test fails due to lifter issue. Commenting out :lift at the top of this file will make this work.
 // The lifter currently does not correctly consider the member variable as a local that could be captured.
-:fixme
 let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
   using Debugger = h
   Runtime.try(() => Test.main())
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'Test'
-//│ ║  l.180: 	  Runtime.try(() => Test.main())
-//│ ║         	                    ^^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.151: 	module Test with
-//│ ║         	       ^^^^^^^^^
-//│ ║  l.152: 	  fun test(j)(using dbg: Debugger) =
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	    let i = 0
-//│ ║         	^^^^^^^^^^^^^
-//│ ║  l.154: 	    let k = 2000
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.155: 	... (more lines omitted) ...
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: Test is not defined
-//│ res = undefined
+//│ res = EffectHandle(_)
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:156:18)
+//│ 	at Test.main (pc=3)
 
-:fixme
 set res = res.resumeWith(42)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:156:18)
+//│ 	at Test.main (pc=1)
 
-:fixme
 :expect 0.33676533676533676
 res.resumeWith(666)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
-//│ ═══[RUNTIME ERROR] Expected: '0.33676533676533676', got: 'undefined'
+//│ = 0.33676533676533676
 
 let i = 100
 fun f() =
@@ -227,8 +199,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:221:3) with locals: j=200
+//│ > 	at f (Debugging.mls:193:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:223:3)
+//│ > 	at f (Debugging.mls:195:3)
 //│ > Stack Trace:
 //│ > 	at tail position

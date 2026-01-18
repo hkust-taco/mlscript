@@ -7,7 +7,7 @@ fun f() =
   print("Bad")
 f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -27,7 +27,7 @@ fun foo(x) =
   let xs = [() => return x + 1]
   xs.0()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -52,7 +52,7 @@ foo(123)
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res1, $tmp -> tmp, member:Predef‹726› -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
+//│     bindings = HashMap($block$res -> block$res1, $tmp -> tmp, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
 //│ ║  l.45: 	foo(123)
 //│ ║        	^^^
@@ -92,10 +92,10 @@ fun f() =
   100
 f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -124,10 +124,10 @@ fun f() =
   100
 f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -147,7 +147,7 @@ f()
 fun f() = () => return 3
 f()()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -166,7 +166,7 @@ f()()
 fun f(): () -> Int = () => return () => 3
 f()()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -217,7 +217,7 @@ fun f() =
     print("Bad")
 f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:234)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.

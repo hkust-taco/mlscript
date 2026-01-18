@@ -1,42 +1,22 @@
 :js
 :lift
 
-:slot
 data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
-//│ Pretty Lowered:
-//│  
-//│ define class B(A, y) {
-//│   let B$cap = ...
-//│   y
-//│   ctor {
-//│     set A1 = A in
-//│     define val y = y in
-//│     end
-//│   }
-//│   fun class:B::getB() {
-//│     return +(A.x, B.y)
-//│   }
-//│ } in
-//│ define class A(x) {
-//│   let A$cap = ...
-//│   x
-//│   ctor {
-//│     define val x = x in
-//│     end
-//│   }
-//│   fun class:A::getA() {
-//│     set tmp = B(A, 2) in
-//│     return tmp.getB()
-//│   }
-//│ } in
-//│ set block$res1 = undefined in
-//│ end
 
 :expect 3
 A(1).getA()
+//│ = 3
+
+data class A1(x) with
+  data class B(y) with
+    fun getB() = x + y
+  fun getA() = (new B(2)).getB()
+
+:expect 3
+(new A1(1)).getA()
 //│ = 3
 
 :sjs
@@ -46,7 +26,7 @@ class A with
     g
 (new A).x()
 //│ JS (unsanitized):
-//│ let g, A3, tmp1;
+//│ let g, A3, tmp2;
 //│ g = function g() {
 //│   return 2
 //│ };
@@ -61,8 +41,8 @@ class A with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });
-//│ tmp1 = globalThis.Object.freeze(new A3());
-//│ runtime.safeCall(tmp1.x())
+//│ tmp2 = globalThis.Object.freeze(new A3());
+//│ runtime.safeCall(tmp2.x())
 //│ = 2
 
 class A with

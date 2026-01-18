@@ -3,23 +3,6 @@
 :lift
 
 module M
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.5: 	module M
-//│ ╙──     	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 // * Notice that the two module definitions are lifted to the top of the block.
 :sjs
@@ -32,11 +15,11 @@ fun foo(h): module M =
     module A
     A
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.32: 	    module A
+//│ ║  l.15: 	    module A
 //│ ╙──      	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.29: 	    module A
+//│ ║  l.12: 	    module A
 //│ ╙──      	           ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 

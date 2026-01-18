@@ -9,140 +9,42 @@
 :todo
 :noSanityCheck
 
-class Eff
-//│ Elab: { Cls Eff { }; }
-
 :lift
-:sjs
+:ssjs
 fun f(x) =
-  while false do
-    let i = 0
-    set x += 1
-    set i += 1
-    fun g() = x + i
-    g
-//│ Elab: { fun member:f‹692›(x‹693›) = while { let scrut = false; $scrut‹695›#0 is true then { let i‹696›; i‹696› = 0; x‹693›#666 := builtin:+‹48›#0(x‹693›#666, 1); i‹696›#666 := builtin:+‹48›#1(i‹696›#666, 1); fun member:g‹691›() = builtin:+‹48›#2(x‹693›#666, i‹696›#666); member:g‹691›#666 }; else () }; }
-//│ JS (unsanitized):
-//│ let g, f, Capture$f1, g$;
-//│ g$ = function g$(f$cap, i) {
+  class A with
+    fun get = x
+  module A
+  fun g = new A
+//│ Elab: { fun member:f‹873›(x‹874›) = { Cls A { method fun member:get‹870› = x‹874›#666; }; Mod A { }; fun member:g‹872› = new member:A‹871›#666; () }; }
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.17: 	  module A
+//│ ╙──      	         ^
+//│ JS:
+//│ let g, f, g$;
+//│ g$ = function g$(A$) {
 //│   return () => {
-//│     return g(f$cap, i)
+//│     return g(A$)
 //│   }
 //│ };
-//│ g = function g(f$cap, i) {
-//│   return f$cap.x$0 + i
+//│ g = function g(A$) {
+//│   return globalThis.Object.freeze(new A$())
 //│ };
-//│ (class Capture$f {
-//│   static {
-//│     Capture$f1 = this
-//│   }
-//│   constructor(x$0) {
-//│     this.x$0 = x$0;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Capture$f"]; 
-//│ });
 //│ f = function f(x) {
-//│   let tmp, f$cap;
-//│   f$cap = new Capture$f1(x);
-//│   lbl: while (true) {
-//│     let scrut, i, tmp1, tmp2, g$here;
-//│     scrut = false;
-//│     if (scrut === true) {
-//│       i = 0;
-//│       tmp1 = f$cap.x$0 + 1;
-//│       f$cap.x$0 = tmp1;
-//│       tmp2 = i + 1;
-//│       i = tmp2;
-//│       g$here = g$(f$cap, i);
-//│       tmp = g$here;
-//│       continue lbl
-//│     } else { tmp = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp
-//│ };
-
-:slot
-class C with
-  let x = 2
-  fun f(x) = 2
-//│ Elab: { Cls C { let term:class:C‹755›.x‹757›; term:class:C‹755›.x‹757› = 2; method fun member:f‹753›(x‹758›) = 2; }; }
-//│ Pretty Lowered:
-//│  
-//│ define class C {
-//│   let x = ...
-//│   ctor {
-//│     set x = 2 in
-//│     end
-//│   }
-//│   fun class:C‹755›::f(x1) {
-//│     return 2
-//│   }
-//│ } in
-//│ set block$res3 = undefined in
-//│ end
-
-:slot
-module M with
-  fun bruh = 2
-  fun lol = 54
-//│ Elab: { Mod M { fun member:bruh‹765› = 2; fun member:lol‹764› = 54; }; }
-//│ Pretty Lowered:
-//│  
-//│ define class M in
-//│ module M {
-//│   fun module:M‹767›::bruh {
-//│     return 2
-//│   }
-//│   fun module:M‹767›::lol {
-//│     return 54
-//│   }
-//│ } in
-//│ set block$res4 = undefined in
-//│ end
-
-:slot 
-class A(x) with
-  fun bruh = 2
-  fun a = 4
-//│ Elab: { Cls AParamList(‹›,List(Param(‹›,x‹784›,None,Modulefulness(None))),None) { let term:class:A‹782›.x‹787›; term:class:A‹782›.x‹787› = x‹784›#0; method fun member:bruh‹780› = 2; method fun member:a‹779› = 4; }; }
-//│ Pretty Lowered:
-//│  
-//│ define class A(x) {
-//│   let x = ...
-//│   ctor {
-//│     set x1 = x in
-//│     end
-//│   }
-//│   fun class:A‹782›::bruh {
-//│     return 2
-//│   }
-//│   fun class:A‹782›::a {
-//│     return 4
-//│   }
-//│ } in
-//│ set block$res5 = undefined in
-//│ end
-
-:slot
-fun g = 1
-fun h = 4
-fun f(x) =
-  set x += 2
-//│ Elab: { fun member:g‹797› = 1; fun member:h‹798› = 4; fun member:f‹796›(x‹805›) = x‹805›#666 := builtin:+‹48›#3(x‹805›#666, 2); }
-//│ Pretty Lowered:
-//│  
-//│ define fun g() {
-//│   return 1
-//│ } in
-//│ define fun h() {
-//│   return 4
-//│ } in
-//│ define fun f(x) {
-//│   set tmp = +(x, 2) in
-//│   set x = tmp in
+//│   let A1;
+//│   (class A {
+//│     static {
+//│       A1 = this
+//│     }
+//│     constructor() {}
+//│     static #A_mod$cap;
+//│     #A$cap;
+//│     get get() {
+//│       return x;
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "A"]; 
+//│   });
 //│   return runtime.Unit
-//│ } in
-//│ set block$res6 = undefined in
-//│ end
+//│ };
+//│ block$res1 = undefined;

@@ -277,65 +277,11 @@ module A with
   data class Effect(x) with
     fun test() = x
     fun perform(arg)
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: createMetadata (Lifter.scala:184)
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.276: 	module A with
-//│ ╙──       	       ^
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: hkmc2.Lifter.createRewritten(Lifter.scala:1047)
-//│ 	at: hkmc2.Lifter.transform$$anonfun$1(Lifter.scala:1108)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.Lifter.transform(Lifter.scala:1107)
-//│ 	at: hkmc2.codegen.Lowering.program(Lowering.scala:1056)
-//│ 	at: hkmc2.JSBackendDiffMaker.processTerm(JSBackendDiffMaker.scala:110)
-//│ 	at: hkmc2.BbmlDiffMaker.processTerm(BbmlDiffMaker.scala:36)
-//│ 	at: hkmc2.LlirDiffMaker.processTerm(LlirDiffMaker.scala:63)
-//│ 	at: hkmc2.WasmDiffMaker.processTerm(WasmDiffMaker.scala:51)
 
 handle h = A.Effect(3) with
   fun perform()(k) = 0
 h.perform()
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:A
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = N
-//│       curThis = S of S of globalThis:globalThis
-//│       bindings = HashMap($block$res -> block$res4, $tmp -> tmp2, member:handleBlock$ -> handleBlock$2, $runtime -> runtime, member:Handler$h$perform -> Handler$h$perform2, $definitionMetadata -> definitionMetadata, member:Handler$h$perform$ -> Handler$h$perform$7, $prettyPrint -> prettyPrint, $Term -> Term, member:Handler$h$ -> Handler$h$5, $Block -> Block, $Shape -> Shape, h -> h3, $block$res -> block$res10, class:Handler$h$ -> Handler$h$6, $tmp -> tmp7, member:handleBlock$ -> handleBlock$7, member:Handler$h$perform -> Handler$h$perform7, member:Handler$h$ -> Handler$h$15, $block$res -> block$res5, $tmp -> tmp3, member:handleBlock$ -> handleBlock$3, member:Handler$h$perform$ -> Handler$h$perform$4, member:Handler$h$perform -> Handler$h$perform3, member:Handler$h$ -> Handler$h$7, member:Handler$h$perform$ -> Handler$h$perform$, member:f -> f, h -> h11, class:Handler$h$ -> Handler$h$22, h -> h4, class:Handler$h$ -> Handler$h$8, h -> h8, $block$res -> block$res14, class:Handler$h$ -> Handler$h$16, $tmp -> tmp11, member:handleBlock$ -> handleBlock$11, member:Handler$h$perform -> Handler$h$perform11, member:Handler$h$ -> Handler$h$23, member:Handler$h$perform$ -> Handler$h$perform$8, $block$res -> block$res6, $tmp -> tmp4, member:handleBlock$ -> handleBlock$4, $block$res -> block$res11, member:Handler$h$perform -> Handler$h$perform4, $tmp -> tmp8, member:handleBlock$ -> handleBlock$8, member:Handler$h$ -> Handler$h$9, member:Handler$h$perform -> Handler$h$perform8, member:Handler$h$perform$ -> Handler$h$perform$1, member:Handler$h$ -> Handler$h$17, member:Handler$h$perform$ -> Handler$h$perform$5, member:foo -> foo, h -> h5, class:Handler$h$ -> Handler$h$10, member:foo -> foo2, h -> h12, h -> h9, class:Handler$h$ -> Handler$h$24, $block$res -> block$res7, class:Handler$h$ -> Handler$h$18, $tmp -> tmp5, member:handleBlock$ -> handleBlock$5, member:Handler$h$perform -> Handler$h$perform5, member:Handler$h$ -> Handler$h$11, $block$res -> block$res15, $tmp -> tmp12, member:handleBlock$ -> handleBlock$12, member:Handler$h$perform$ -> Handler$h$perform$2, member:Handler$h$perform -> Handler$h$perform12, member:Handler$h$ -> Handler$h$25, $block$res -> block$res12, $tmp -> tmp9, member:handleBlock$ -> handleBlock$9, member:Handler$h$perform -> Handler$h$perform9, member:foo -> foo1, member:Handler$h$ -> Handler$h$19, member:Handler$h$perform$ -> Handler$h$perform$6, $block$res -> block$res8, h -> h6, class:Handler$h$ -> Handler$h$12, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, $block$res -> block$res9, $tmp -> tmp6, $block$res -> block$res1, member:lambda -> lambda, member:handleBlock$ -> handleBlock$6, h -> h, class:Handler$h$ -> Handler$h$, member:Handler$h$perform -> Handler$h$perform6, member:bar -> bar, member:foobar -> foobar, member:foo -> foo3, member:Handler$h$ -> Handler$h$13, member:Handler$h$perform$ -> Handler$h$perform$3, $block$res -> block$res2, $tmp -> tmp, member:handleBlock$ -> handleBlock$, member:Handler$h$perform -> Handler$h$perform, member:Handler$h$ -> Handler$h$1, member:Predef -> Predef, h -> h1, class:Handler$h$ -> Handler$h$2, h -> h10, class:Handler$h$ -> Handler$h$20, result -> result, h -> h7, class:Handler$h$ -> Handler$h$14, $block$res -> block$res3, $tmp -> tmp1, member:handleBlock$ -> handleBlock$1, member:Handler$h$perform -> Handler$h$perform1, member:Handler$h$ -> Handler$h$3, $block$res -> block$res13, h -> h2, $tmp -> tmp10, class:Handler$h$ -> Handler$h$4, member:handleBlock$ -> handleBlock$10, member:Handler$h$perform -> Handler$h$perform10, member:Handler$h$ -> Handler$h$21)
-//│     curThis = S of S of class:Handler$h$
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'A'
-//│ ║  l.298: 	handle h = A.Effect(3) with
-//│ ║         	           ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.276: 	module A with
-//│ ║         	       ^^^^^^
-//│ ║  l.277: 	  data class Effect(x) with
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.278: 	    fun test() = x
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ║  l.279: 	    fun perform(arg)
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: A is not defined
-//│     at REPL53:1:282
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = 0
 
 fun f(perform) =
   handle h = Effect with
@@ -497,18 +443,18 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.492: 	    module A with
+//│ ║  l.438: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.488: 	    module A with
+//│ ║  l.434: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.484: 	    module A with
+//│ ║  l.430: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.480: 	    module A with
+//│ ║  l.426: 	    module A with
 //│ ╙──       	           ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 // Access superclass fields
 handle h1 = Object with
