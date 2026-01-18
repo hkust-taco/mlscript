@@ -18,12 +18,6 @@ import scala.jdk.CollectionConverters.*
 import java.util.IdentityHashMap
 import java.util.Collections
 import scala.collection.mutable.Buffer
-import hkmc2.ScopeData.ScopedObject.Top
-import hkmc2.ScopeData.ScopedObject.Companion
-import hkmc2.ScopeData.ScopedObject.ClassCtor
-import hkmc2.ScopeData.ScopedObject.Func
-import hkmc2.ScopeData.ScopedObject.Loop
-import hkmc2.ScopeData.ScopedObject.ScopedBlock
 
 object UsedVarAnalyzer:
   case class MutAccessInfo(
@@ -82,10 +76,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           // If so, then it requires reading the class symbol
           val node = scopeData.getNode(dSym)
           node.obj match
-            case f @ Func(isMethod = S(true)) => accessed.accessed.add(f.fun.owner.get)
-            case Func(isMethod = N | S(false)) => accessed.refdDefns.add(node.obj.toInfo)
-            case _: ScopedObject.Class | _: ClassCtor | _: Companion => accessed.refdDefns.add(node.obj.toInfo)
+            // for definitions nested inside a class: they need the InnerSymbol of the class instance
+            case f @ ScopedObject.Func(isMethod = S(true)) => accessed.accessed.add(f.fun.owner.get)
+            // definitions that access a module's method directly need an edge to that method
+            case ScopedObject.Func(isMethod = N | S(false)) =>
+              accessed.refdDefns.add(node.obj.toInfo)
+            case _: ScopedObject.Class | _: ScopedObject.ClassCtor => accessed.refdDefns.add(node.obj.toInfo)
             case _ => ()
+            
         case Value.Ref(l, _) =>
           accessed.accessed.add(l)
         case _ => super.applyPath(p)

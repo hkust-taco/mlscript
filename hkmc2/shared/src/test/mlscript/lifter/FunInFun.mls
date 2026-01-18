@@ -481,3 +481,16 @@ fun f(x) =
   else
     g
   g
+
+// Spread arguments
+
+:expect [1]
+fun f(x) =
+  fun g(...rest) = 
+    print(x)
+    rest
+  let a = g
+  a(1)
+f(2)
+//│ > 2
+//│ = [1]

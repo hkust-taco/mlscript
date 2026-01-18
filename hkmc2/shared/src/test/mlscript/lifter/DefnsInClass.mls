@@ -45,6 +45,15 @@ class A with
 //│ runtime.safeCall(tmp2.x())
 //│ = 2
 
+:expect 2
+class A(a) with
+  let x = 2
+  fun f() =
+    fun g() = x
+    g()
+A(2).f()
+//│ = 2
+
 class A with
   let x = 2
   val bruh = () => x

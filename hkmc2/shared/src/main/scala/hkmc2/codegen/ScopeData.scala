@@ -13,12 +13,6 @@ import hkmc2.codegen.llir.FreshInt
 import java.util.IdentityHashMap
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
-import hkmc2.ScopeData.ScopedObject.Top
-import hkmc2.ScopeData.ScopedObject.Companion
-import hkmc2.ScopeData.ScopedObject.ClassCtor
-import hkmc2.ScopeData.ScopedObject.Func
-import hkmc2.ScopeData.ScopedObject.Loop
-import hkmc2.ScopeData.ScopedObject.ScopedBlock
 
 object ScopeData:
   opaque type ScopeUID = BigInt
@@ -111,6 +105,12 @@ object ScopeData:
         case Companion(comp, par) => par.sym
         case Func(fun, isMethod) => fun.sym
         case ClassCtor(cls) => cls.sym
+      def owner: Opt[InnerSymbol] = this match
+        case Class(cls) => cls.owner
+        case Companion(comp, par) => par.owner
+        case ClassCtor(cls) => cls.owner
+        case Func(fun, isMethod) => fun.owner
+      
     
     // Scoped nodes which could possibly be lifted to the top level.
     sealed abstract class Liftable[T <: Defn] extends Referencable[T]:
@@ -196,9 +196,9 @@ object ScopeData:
       
       lazy val isInTopLevelMod: Bool = parent match
         case Some(par) => par.obj match
-          case _: Companion => par.isInTopLevelMod
-          case s: ScopedBlock => s.node.get.parent.get.obj match
-            case c: Companion => c.node.get.parent.get.isInTopLevelMod
+          case _: ScopedObject.Companion => par.isInTopLevelMod
+          case s: ScopedObject.ScopedBlock => s.node.get.parent.get.obj match
+            case c: ScopedObject.Companion => c.node.get.parent.get.isInTopLevelMod
             case _ => false
           case _ => false
         case None => true
@@ -210,6 +210,16 @@ object ScopeData:
             case c @ ScopeNode(obj = s: ScopedObject.Referencable[?]) => s.bsym
           obj.definedLocals -- rmv
         case _ => obj.definedLocals
+        
+      lazy val inScopeISyms: Set[Local] =
+        val parVals = parent match
+          case Some(value) => value.inScopeISyms
+          case None => Set.empty
+        
+        obj match
+        case c: ScopedObject.Class => parVals + c.cls.isym
+        case c: ScopedObject.Companion => parVals + c.comp.isym
+        case _ => parVals
       
       // All of the following must not be called until ignoredScopes is populated with the relevant data.
       

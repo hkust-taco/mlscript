@@ -9,4 +9,47 @@
 :todo
 :noSanityCheck
 
-
+:sjs
+:lift
+fun f =
+  module M with
+    fun foo() = 2
+  fun bar = M.foo
+  bar
+//│ Elab: { fun member:f‹873› = { Mod M { fun member:foo‹870›() = 2; }; fun member:bar‹871› = member:M‹872›#666.foo‹member:foo‹870››; member:bar‹871›#666 }; }
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.15: 	  module M with
+//│ ╙──      	         ^
+//│ JS (unsanitized):
+//│ let bar, f, bar$;
+//│ bar$ = function bar$(M1) {
+//│   return () => {
+//│     return bar(M1)
+//│   }
+//│ };
+//│ bar = function bar(M1) {
+//│   return M1.foo
+//│ };
+//│ f = function f() {
+//│   let M1, tmp;
+//│   (class M {
+//│     static {
+//│       M1 = this
+//│     }
+//│     constructor() {
+//│       runtime.Unit;
+//│     }
+//│     static #M_mod$cap;
+//│     static foo() {
+//│       return 2
+//│     }
+//│     #M$cap;
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["class", "M"]; 
+//│   });
+//│   tmp = bar(M1);
+//│   return tmp
+//│ };
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.15: 	  module M with
+//│ ╙──      	         ^
