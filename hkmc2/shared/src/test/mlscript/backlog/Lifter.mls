@@ -155,7 +155,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.157: 	  module M with
+//│ ║  l.151: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
@@ -170,19 +170,19 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.172: 	  module M with
+//│ ║  l.166: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.176: 	  fun foo = M.foo()
+//│ ║  l.170: 	  fun foo = M.foo()
 //│ ║         	            ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.172: 	  module M with
+//│ ║  l.166: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.173: 	    fun foo() =
+//│ ║  l.167: 	    fun foo() =
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.174: 	      set y = 2
+//│ ║  l.168: 	      set y = 2
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.175: 	      x + y
+//│ ║  l.169: 	      x + y
 //│ ╙──       	^^^^^^^^^^^
 
 :expect 12
@@ -196,7 +196,7 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.201: 	  module M with
+//│ ║  l.195: 	  module M with
 //│ ╙──       	         ^
 
 :expect 2
@@ -212,7 +212,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.217: 	  class Bar extends Foo
+//│ ║  l.211: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift class `Foo` as it is used as a first-class class.
@@ -229,7 +229,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.232: 	  module M with
+//│ ║  l.226: 	  module M with
 //│ ╙──       	         ^
 
 

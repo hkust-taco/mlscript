@@ -9,42 +9,4 @@
 :todo
 :noSanityCheck
 
-:lift
-:ssjs
-fun f(x) =
-  class A with
-    fun get = x
-  module A
-  fun g = new A
-//│ Elab: { fun member:f‹873›(x‹874›) = { Cls A { method fun member:get‹870› = x‹874›#666; }; Mod A { }; fun member:g‹872› = new member:A‹871›#666; () }; }
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.17: 	  module A
-//│ ╙──      	         ^
-//│ JS:
-//│ let g, f, g$;
-//│ g$ = function g$(A$) {
-//│   return () => {
-//│     return g(A$)
-//│   }
-//│ };
-//│ g = function g(A$) {
-//│   return globalThis.Object.freeze(new A$())
-//│ };
-//│ f = function f(x) {
-//│   let A1;
-//│   (class A {
-//│     static {
-//│       A1 = this
-//│     }
-//│     constructor() {}
-//│     static #A_mod$cap;
-//│     #A$cap;
-//│     get get() {
-//│       return x;
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "A"]; 
-//│   });
-//│   return runtime.Unit
-//│ };
-//│ block$res1 = undefined;
+

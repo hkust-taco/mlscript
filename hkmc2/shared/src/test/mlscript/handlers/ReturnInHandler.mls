@@ -17,7 +17,7 @@ fun f() =
   return 3 // Note: changing this to just `3` leads to `print("Bye!")` executing
 f()
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:241)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
@@ -43,7 +43,7 @@ fun f() =
     return 3
   10
 //│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:254)
+//│ FAILURE LOCATION: applyDefn (Lifter.scala:241)
 //│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
 //│ FAILURE: Unexpected exception
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.

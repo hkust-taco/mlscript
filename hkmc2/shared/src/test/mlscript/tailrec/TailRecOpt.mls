@@ -192,12 +192,12 @@ class A with
   fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 (new A).f(10)
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.201: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.191: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	                                                      ^^^^^^^^
 //│ ╔══[ERROR] Class methods may not yet be marked @tailrec.
-//│ ║  l.201: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
+//│ ║  l.191: 	  @tailrec fun f(x) = if x == 0 then 0 else @tailcall g(x - 1)
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Calls from class methods cannot yet be marked @tailcall.
-//│ ║  l.202: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
+//│ ║  l.192: 	  fun g(x) = if x == 0 then 1 else @tailcall f(x - 1)
 //│ ╙──       	                                             ^^^^^^^^
 //│ = 0
