@@ -6,76 +6,15 @@ fun f() =
   (() => return 100)()
   print("Bad")
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ = 100
 
 
 fun foo(x) =
   let xs = [() => return x + 1]
   xs.0()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
 
 foo(123)
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:foo
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = N
-//│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res1, $tmp -> tmp, member:Predef -> Predef, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res)
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.45: 	foo(123)
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.26: 	fun foo(x) =
-//│ ║        	^^^^^^^^^^^^
-//│ ║  l.27: 	  let xs = [() => return x + 1]
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.28: 	  xs.0()
-//│ ╙──      	^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│     at REPL10:1:29
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ = 124
 
 
 :expect 123
@@ -91,24 +30,8 @@ fun f() =
   print("Bad")
   100
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ > Ok
+//│ = 123
 
 :expect 100
 fun f() =
@@ -123,85 +46,43 @@ fun f() =
   print("Continue")
   100
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ > Ok
+//│ > 200
+//│ > Continue
+//│ = 100
 
 
 :re
 fun f() = () => return 3
 f()()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_12
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_14
 
 
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.186: 	return 100
-//│ ╙──       	^^^^^^^^^^
+//│ ║  l.67: 	return 100
+//│ ╙──      	^^^^^^^^^^
 
 :e
 if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.194: 	    let f = () => return 100
-//│ ╙──       	                  ^^^^^^^^^^
+//│ ║  l.75: 	    let f = () => return 100
+//│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.201: 	  type A = return "lol"
-//│ ╙──       	           ^^^^^^^^^^^^
+//│ ║  l.82: 	  type A = return "lol"
+//│ ╙──      	           ^^^^^^^^^^^^
 
 
 :expect 100
@@ -216,21 +97,7 @@ fun f() =
     f()
     print("Bad")
 f()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyDefn (Lifter.scala:238)
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:61)
-//│ 	at: hkmc2.InternalError$.apply(Diagnostic.scala:72)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$lifterReport(HandlerLowering.scala:483)
-//│ 	at: hkmc2.codegen.HandlerLowering$$anon$5.applyDefn(HandlerLowering.scala:524)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:75)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyScopedBlock(BlockTransformer.scala:111)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock(BlockTransformer.scala:98)
-//│ 	at: hkmc2.codegen.HandlerLowering.translateBlock(HandlerLowering.scala:552)
-//│ 	at: hkmc2.codegen.HandlerLowering.hkmc2$codegen$HandlerLowering$$_$translateFunLike$1(HandlerLowering.scala:510)
+//│ = 100
 
 // broken due to handlers currently not handling `object` properly
 :fixme
@@ -240,8 +107,8 @@ fun f() =
     return 100
   4
 f()
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 // ctor cannot raise effect, so error is expected.
 :fixme
@@ -251,8 +118,8 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
 :expect 100
@@ -261,8 +128,8 @@ fun f() =
     (() => return 100)()
   4
 f()
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_22 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
 :expect 100
@@ -272,5 +139,5 @@ fun f() =
   new A
   4
 f()
-//│ ═══[WARNING] Cannot yet lift definition `‹non-local return effect›` as it extends an expression.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

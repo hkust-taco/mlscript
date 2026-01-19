@@ -65,6 +65,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           case v: ValDefn =>
             applyDefn(v)
             applySubBlock(d.rest)
+          case c @ ClsLikeDefn(k = syntax.Obj) =>
+            accessed.refdDefns.add(c.isym)
           case _ => applySubBlock(d.rest)
         
         case _ => super.applyBlock(b)
@@ -81,7 +83,8 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             // definitions that access a module's method directly need an edge to that method
             case ScopedObject.Func(isMethod = N | S(false)) =>
               accessed.refdDefns.add(node.obj.toInfo)
-            case _: ScopedObject.Class | _: ScopedObject.ClassCtor => accessed.refdDefns.add(node.obj.toInfo)
+            case c: ScopedObject.Class if c.isObj => accessed.accessed.add(c.cls.isym)
+            case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
             case _ => ()
             
         case Value.Ref(l, _) =>
@@ -104,7 +107,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         case _ => blkAccessesShallow(b)
       case ScopedObject.Func(f, _) =>
         blkAccessesShallow(f.body)
-      case ScopedObject.Class(c) =>
+      case ScopedObject.Class(c, _) =>
         // We must assume that classes may access all their methods.
         // When the class symbol is referenced once, that symbol may be used in
         // arbitrary ways, which includes calling any of this class's methods.
@@ -270,14 +273,14 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
   val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
 
   private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[Local]] =
-    val (blk, extraMtds) = s.obj match
+    val blk = s.obj match
       case ScopedObject.Top(b) => lastWords("reqdCaptureLocals called on top block")
       case ScopedObject.ClassCtor(cls) => return Map.empty + (s.obj.toInfo -> Set.empty)
-      case ScopedObject.Class(cls) => (Begin(cls.preCtor, cls.ctor), cls.methods)
-      case ScopedObject.Companion(comp, _) => (comp.ctor, comp.methods)
-      case ScopedObject.Func(fun, _) => (fun.body, Nil)
-      case ScopedObject.ScopedBlock(uid, block) => (block, Nil)
-      case ScopedObject.Loop(sym, block) => (block, Nil)
+      case ScopedObject.Class(cls, _) => Begin(cls.preCtor, cls.ctor)
+      case ScopedObject.Companion(comp, _) => comp.ctor
+      case ScopedObject.Func(fun, _) => fun.body
+      case ScopedObject.ScopedBlock(uid, block) => block
+      case ScopedObject.Loop(sym, block) => block
     
     // traverse all scoped blocks and loops
     val nexts: Buffer[ScopeNode] = Buffer.empty
@@ -292,13 +295,18 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     
     val cap = reqdCaptureLocalsBlk(blk, nexts.toList, s.obj.definedLocals, locals)
     
-    // Variables mutated by a lifted child of a class methods requires a capture
-    val additional = extraMtds
-      .flatMap: mtd =>
-        scopeData.getNode(mtd).liftedChildNodes.map(x => x.obj.toInfo)
-      .foldLeft(AccessInfo.empty):
-        case (acc, value) => acc ++ accessMap(value)
-    val newCap = cap ++ additional.mutated
+    // In a class, all variables that are mutated by a child scope and accessed by a lifted class must be captured
+    val additional = s.obj match
+      case _: ScopedObject.Companion | _: ScopedObject.Class =>
+        val (a, b) = s.children.map: c =>
+            val acc = accessMap(c.obj.toInfo)
+            val accAll = accessMapWithIgnored(c.obj.toInfo)
+            (accAll.mutated, acc.accessed)
+          .unzip
+        a.flatten.toSet.intersect(b.flatten.toSet)
+      case _ => Set.empty
+  
+    val newCap = cap ++ additional
     
     val cur: Map[ScopedInfo, Set[Local]] = nodes.map: n =>
         n.obj.toInfo -> newCap.intersect(n.obj.definedLocals)
@@ -341,13 +349,15 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             rec(s.body)(using linearVars = linearVars ++ s.syms) |> merge
           case l: Label if l.loop =>
             rec(l.body)(using linearVars = Set.empty) |> merge
-            applyBlock(l.rest)
+            applySubBlock(l.rest)
           case Assign(lhs, rhs, rest) =>
             applyResult(rhs)
             if hasReader.contains(lhs) || hasMutator.contains(lhs) then reqCapture += lhs
             if !linearVars.contains(lhs) then mutated += lhs
-            applyBlock(rest)
-
+            applySubBlock(rest)
+          case Define(c @ ClsLikeDefn(k = syntax.Obj), rest) =>
+            handleCalledScope(c.isym)
+            applySubBlock(rest)
           case Match(scrut, arms, dflt, rest) =>
             applyPath(scrut)
             val infos = arms.map:
@@ -357,15 +367,15 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             
             infos.foreach(merge) // IMPORTANT: rec all first, then merge, since each branch is mutually exclusive
             dfltInfo.foreach(merge)
-            applyBlock(rest)
+            applySubBlock(rest)
           case Begin(sub, rest) =>
             rec(sub) |> merge
-            applyBlock(rest)
+            applySubBlock(rest)
           case TryBlock(sub, finallyDo, rest) =>
             // sub and finallyDo could be executed sequentially, so we must merge
             rec(sub) |> merge
             rec(finallyDo) |> merge
-            applyBlock(rest)
+            applySubBlock(rest)
           case Return(res, false) =>
             applyResult(res)
             hasReader = Set.empty
@@ -429,8 +439,11 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             scopeInfos.get(d) match
             case None => super.applyPath(p)
             case Some(defn) =>
-              val isMod = defn.obj.isInstanceOf[ScopedObject.Companion]
-              if isMod then super.applyPath(p)
+              val isModOrObj = defn.obj match
+                case c: ScopedObject.Companion => true
+                case c: ScopedObject.Class => c.isObj
+                case _ => false
+              if isModOrObj then super.applyPath(p)
               else
                 val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(d)
                 val muts = muted.intersect(thisVars)

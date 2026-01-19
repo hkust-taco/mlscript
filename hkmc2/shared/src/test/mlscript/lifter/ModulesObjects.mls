@@ -11,9 +11,6 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
 
 :expect 14
 foo(10, 0)
@@ -30,19 +27,19 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let M2, foo1, M$;
+//│ let M3, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
 //│   if (isMut === true) {
-//│     tmp = new M2(y);
+//│     tmp = new M3(y);
 //│   } else {
-//│     tmp = globalThis.Object.freeze(new M2(y));
+//│     tmp = globalThis.Object.freeze(new M3(y));
 //│   }
 //│   return tmp
 //│ };
-//│ (class M1 {
+//│ (class M2 {
 //│   static {
-//│     M2 = this
+//│     M3 = this
 //│   }
 //│   constructor(y) {
 //│     this.y = y;
@@ -60,7 +57,7 @@ foo(10)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M1.foo (REPL16:1:540)
+//│     at M2.foo (REPL16:1:540)
 //│     at foo (REPL16:1:855)
 //│     at REPL16:1:896
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
@@ -108,17 +105,15 @@ fun foo(y) =
     fun foo() =
       set y = 2
   O
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
 
 let o = foo(10)
-//│ o = O
+//│ o = O { y: 10, O: undefined }
 
 :re
 set o.x = 1
 o.x
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ = 1
+//│ FAILURE: Unexpected lack of runtime error
 
 :sjs
 fun foo(x, y) =
@@ -128,116 +123,50 @@ fun foo(x, y) =
       x + y
   fun foo3 = M.foo2()
   foo3
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
-//│ FAILURE: Unexpected compilation error
-//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
-//│ FAILURE INFO: Tuple2:
-//│   _1 = Tuple2:
-//│     _1 = member:M
-//│     _2 = class hkmc2.semantics.BlockMemberSymbol
-//│   _2 = Scope:
-//│     parent = S of Scope:
-//│       parent = S of Scope:
-//│         parent = S of Scope:
-//│           parent = N
-//│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap($block$res -> block$res4, class:Capture$foo -> Capture$foo, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:Capture$foo -> Capture$foo1, $Block -> Block, $Shape -> Shape, member:C$ -> C$, cc -> cc, c0 -> c0, c1 -> c1, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, $block$res -> block$res, object:O -> O, member:foo -> foo, object:M -> M, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, o -> o, $block$res -> block$res1, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:M -> M1, member:Predef -> Predef, $block$res -> block$res3, member:M$ -> M$, member:C -> C1, member:foo -> foo2, class:C -> C)
-//│         curThis = N
-//│         bindings = HashMap(object:M -> M3, member:foo3 -> foo31, member:foo -> foo4)
-//│       curThis = S of N
-//│       bindings = HashMap()
-//│     curThis = N
-//│     bindings = HashMap()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.129: 	  fun foo3 = M.foo2()
-//│ ║         	             ^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.125: 	  object M with
-//│ ║         	         ^^^^^^
-//│ ║  l.126: 	    fun foo2() =
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.127: 	      set y = 2
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.128: 	      x + y
-//│ ╙──       	^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let foo31, foo4;
-//│ foo31 = function foo3() {
-//│   return M.foo2()
+//│ let M5, foo31, foo4, foo3$;
+//│ foo3$ = function foo3$(M6) {
+//│   return () => {
+//│     return foo31(M6)
+//│   }
 //│ };
-//│ foo4 = function foo(x, y) {
-//│   let M4, tmp;
-//│   (class M3 {
-//│     static {
-//│       new this
-//│     }
-//│     constructor() {
-//│       M4 = this;
-//│       Object.defineProperty(this, "class", {
-//│         value: M3
-//│       });
-//│       globalThis.Object.freeze(this);
-//│     }
-//│     #M$cap;
-//│     foo2() {
-//│       y = 2;
-//│       return x + y
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["object", "M"]; 
-//│   });
-//│   tmp = foo31();
-//│   return tmp
+//│ foo31 = function foo3(M6) {
+//│   return M6.foo2()
 //│ };
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `M` as it is used as a first-class class.
+//│ (class M4 {
+//│   static {
+//│     M5 = this
+//│   }
+//│   constructor(x, y, M6) {
+//│     this.x = x;
+//│     this.y = y;
+//│     this.M = M6;
+//│   }
+//│   #M$cap;
+//│   foo2() {
+//│     this.y = 2;
+//│     return this.x + this.y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ foo4 = function foo(x, y) { let tmp, M$1; M$1 = new M5(x, y, M$1); tmp = foo31(M$1); return tmp };
 
 :expect 12
 foo(10, 0)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] ReferenceError: M is not defined
-//│     at foo3 (REPL44:1:134)
-//│     at foo (REPL44:1:839)
-//│     at REPL47:1:39
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+//│ = 12
 
 
 data class A(x) with
   object M with
     fun getB() = x
-  fun getA() = M.getB()
+  fun getA() =
+    fun bar = M.getB()
+    bar
 
 :expect 2
 A(2).getA()
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'getB')
-//│     at A.getA (REPL50:1:1161)
-//│     at REPL53:1:83
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: processTerm (JSBackendDiffMaker.scala:210)
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
 // Classes and functions in modules //
 
@@ -284,10 +213,10 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M15, tmp3;
-//│ (class M14 {
+//│ let M17, tmp3;
+//│ (class M16 {
 //│   static {
-//│     M15 = this
+//│     M17 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
@@ -300,18 +229,18 @@ M.A().get
 //│     };
 //│     (class A5 {
 //│       static {
-//│         M14.A.class = this
+//│         M16.A.class = this
 //│       }
 //│       constructor() {}
 //│       #A$cap;
 //│       get get() {
-//│         return M15.x + M14.x;
+//│         return M17.x + M16.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "A", []]; 
 //│     });
-//│     scrut = M14.A();
-//│     if (scrut instanceof M14.A.class) {
+//│     scrut = M16.A();
+//│     if (scrut instanceof M16.A.class) {
 //│       tmp4 = 2;
 //│     } else {
 //│       tmp4 = 3;
@@ -322,7 +251,7 @@ M.A().get
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp3 = M15.A();
+//│ tmp3 = M17.A();
 //│ tmp3.get
 //│ = 4
 
@@ -349,19 +278,7 @@ module M with
     fun newB = B()
   0 is A
 M.A(2).newB.newA_B(3).newB.get
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at get newA (REPL74:1:1666)
-//│     at get newB (REPL74:1:1820)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
-//│     at get newB (REPL74:1:1831)
+//│ = 3
 
 module M with
   class A
@@ -374,18 +291,6 @@ fun foo(x) =
     fun bar = x
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
-//│ FAILURE: Unexpected warning
-//│ FAILURE LOCATION: applyValue (Lifter.scala:262)
-//│ ═══[WARNING] Cannot yet lift class `O` as it is used as a first-class class.
 
 foo(123)
 //│ = [true, [true, false], true]

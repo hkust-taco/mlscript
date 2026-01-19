@@ -9,25 +9,88 @@
 :todo
 :noSanityCheck
 
+
 :lift
-:sjs
-fun f(x) =
-  fun g() = x
-  fun h(a) = a()
-  h(g)
-//│ Elab: { fun member:f‹688›(x‹689›) = { fun member:g‹686›() = x‹689›#666; fun member:h‹687›(a‹694›) = a‹694›#666(); member:h‹687›#666(member:g‹686›#666) }; }
-//│ JS (unsanitized):
-//│ let g, h, f, g$;
-//│ g$ = function g$(x) {
-//│   return () => {
-//│     return g(x)
+:ssjs
+module M with
+  data class A(x) with
+    class B() with
+      fun newA_B(y) =
+        newA_B(2)
+        A(y)
+    fun newB = B()
+M.A(2).newB
+//│ Elab: { Mod M { Cls AParamList(‹›,List(Param(‹val›,x‹879›,None,Modulefulness(None))),None) { val member:x‹882› = x‹879›#0; Cls BParamList(‹›,List(),None) { method fun member:newA_B‹870›(y‹889›) = { (class:B‹885›#666.)newA_B‹member:newA_B‹870››(2); (module:M‹875›#666.)A‹member:A‹873››(y‹889›#666) }; }; method fun member:newB‹871› = (class:A‹877›#666.)B‹member:B‹872››(); }; }; member:M‹874›#666.A‹member:A‹873››(2).newB }
+//│ JS:
+//│ let B1, M1, tmp, B$;
+//│ B$ = function B$(isMut, A$, A$1, B$1, M2) {
+//│   let tmp1;
+//│   if (isMut === true) {
+//│     tmp1 = new B1.class();
+//│   } else {
+//│     tmp1 = globalThis.Object.freeze(new B1.class());
+//│   }
+//│   return tmp1(A$, A$1, B$1, M2)
+//│ };
+//│ B1 = function B() {
+//│   return (A$, A$1, B$1, M2) => {
+//│     return globalThis.Object.freeze(new B.class()(A$, A$1, B$1, M2));
 //│   }
 //│ };
-//│ g = function g(x) {
-//│   return x
-//│ };
-//│ h = function h(a) {
-//│   return runtime.safeCall(a())
-//│ };
-//│ f = function f(x) { let g$here; g$here = g$(x); return h(g) };
-
+//│ (class B {
+//│   static {
+//│     B1.class = this
+//│   }
+//│   constructor() {
+//│     return (A$, A$1, B$1, M2) => {
+//│       this.A$ = A$;
+//│       this.A$ = A$1;
+//│       this.B$ = B$1;
+//│       this.M = M2;
+//│       return this;
+//│     }
+//│   }
+//│   #B$cap;
+//│   newA_B(y) {
+//│     let tmp1;
+//│     tmp1 = this.newA_B(2);
+//│     return this.A$(y)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B", []]; 
+//│ });
+//│ (class M {
+//│   static {
+//│     M1 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static #M_mod$cap;
+//│   static {
+//│     this.A = function A(x) {
+//│       return globalThis.Object.freeze(new A.class(x));
+//│     };
+//│     (class A {
+//│       static {
+//│         M.A.class = this
+//│       }
+//│       constructor(x) {
+//│         this.x = x;
+//│       }
+//│       #A$cap;
+//│       get newB() {
+//│         return B$(false, M.A.class, M.A, this.B, M);
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│     });
+//│   }
+//│   #M$cap;
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "M"]; 
+//│ });
+//│ tmp = M1.A(2);
+//│ block$res1 = tmp.newB;
+//│ undefined
+//│ = B()

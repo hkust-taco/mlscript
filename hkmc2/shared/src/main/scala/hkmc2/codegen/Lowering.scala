@@ -1053,7 +1053,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       else withHandlers1
     
     val lifted =
-      if lift then Lifter(scopeFlattened).transform
+      if lift then Lifter(scopeFlattened, handlerPaths).transform
       else scopeFlattened
     
     val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>
