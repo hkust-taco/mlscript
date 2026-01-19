@@ -206,6 +206,20 @@ object M with
 M.f()()
 //│ = 2
 
+// unlifted objects
+:lift
+:w
+:expect 2
+fun f =
+  object A with
+    fun a = 2
+  0 is A
+  fun foo = A
+  foo
+f.a
+//│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
+//│ = 2
+
 :sjs
 module M with
   class A() with
@@ -213,7 +227,7 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp3;
+//│ let M17, tmp4;
 //│ (class M16 {
 //│   static {
 //│     M17 = this
@@ -223,11 +237,11 @@ M.A().get
 //│   }
 //│   static #M_mod$cap;
 //│   static {
-//│     let scrut, tmp4;
+//│     let scrut, tmp5;
 //│     this.A = function A() {
 //│       return globalThis.Object.freeze(new A.class());
 //│     };
-//│     (class A5 {
+//│     (class A6 {
 //│       static {
 //│         M16.A.class = this
 //│       }
@@ -241,18 +255,18 @@ M.A().get
 //│     });
 //│     scrut = M16.A();
 //│     if (scrut instanceof M16.A.class) {
-//│       tmp4 = 2;
+//│       tmp5 = 2;
 //│     } else {
-//│       tmp4 = 3;
+//│       tmp5 = 3;
 //│     }
-//│     this.x = tmp4;
+//│     this.x = tmp5;
 //│   }
 //│   #M$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp3 = M17.A();
-//│ tmp3.get
+//│ tmp4 = M17.A();
+//│ tmp4.get
 //│ = 4
 
 module M with

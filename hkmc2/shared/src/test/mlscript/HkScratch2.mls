@@ -20,7 +20,7 @@ module M with
         A(y)
     fun newB = B()
 M.A(2).newB
-//│ Elab: { Mod M { Cls AParamList(‹›,List(Param(‹val›,x‹879›,None,Modulefulness(None))),None) { val member:x‹882› = x‹879›#0; Cls BParamList(‹›,List(),None) { method fun member:newA_B‹870›(y‹889›) = { (class:B‹885›#666.)newA_B‹member:newA_B‹870››(2); (module:M‹875›#666.)A‹member:A‹873››(y‹889›#666) }; }; method fun member:newB‹871› = (class:A‹877›#666.)B‹member:B‹872››(); }; }; member:M‹874›#666.A‹member:A‹873››(2).newB }
+//│ Elab: { Mod M { Cls AParamList(‹›,List(Param(‹val›,x‹695›,None,Modulefulness(None))),None) { val member:x‹698› = x‹695›#0; Cls BParamList(‹›,List(),None) { method fun member:newA_B‹686›(y‹705›) = { (class:B‹701›#666.)newA_B‹member:newA_B‹686››(2); (module:M‹691›#666.)A‹member:A‹689››(y‹705›#666) }; }; method fun member:newB‹687› = (class:A‹693›#666.)B‹member:B‹688››(); }; }; member:M‹690›#666.A‹member:A‹689››(2).newB }
 //│ JS:
 //│ let B1, M1, tmp, B$;
 //│ B$ = function B$(isMut, A$, A$1, B$1, M2) {

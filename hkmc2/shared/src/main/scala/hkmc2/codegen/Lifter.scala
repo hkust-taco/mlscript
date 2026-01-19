@@ -336,7 +336,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
           ctx.defnsMap.get(d) match
           case Some(defnRef) => S(defnRef.read)
           case None => r.obj match
-            case c: ScopedObject.Class if c.isObj && r.isInstanceOf[LiftedClass] =>
+            case c: ScopedObject.Class if c.isObj =>
               S(ctx.symbolsMap(c.cls.isym).read)
             case r: ScopedObject.Referencable[?] =>
               // rewrite the parent
@@ -723,8 +723,11 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     // BMS refs from ignored defns (including child defns of modules)
     // Note that we map the DefinitionSymbol to the disambiguated BMS.
     protected val defnPathsFromThisObj: Map[DefinitionSymbol[?], DefnRef] =
-      node.children.collect:
-        case s @ ScopeNode(obj = r: ScopedObject.Referencable[?]) if !s.isLifted =>
+      node.children.filter:
+        case s @ ScopeNode(obj = r: ScopedObject.Class) if r.isObj => false
+        case _ => true
+      .collect:
+        case s @ ScopeNode(obj = r: ScopedObject.Referencable[?]) => !s.isLifted
           val path = r.owner match
             case Some(isym) => DefnRef.Field(isym, r.bsym, r.sym)
             case None => DefnRef.InScope(r.bsym, r.sym)

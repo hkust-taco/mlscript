@@ -11,29 +11,3 @@
 class Eff
 //│ Elab: { Cls Eff { }; }
 
-:lift
-:sjs
-fun f =
-  object A
-  fun foo = A
-//│ Elab: { fun member:f‹693› = { Obj A { }; fun member:foo‹692› = member:A‹691›#666; () }; }
-//│ JS (unsanitized):
-//│ let A1, foo, f, foo$;
-//│ foo$ = function foo$(A2) {
-//│   return () => {
-//│     return foo(A2)
-//│   }
-//│ };
-//│ foo = function foo(A2) {
-//│   return A2
-//│ };
-//│ (class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {}
-//│   #A$cap;
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ f = function f() { let A$; A$ = new A1(); return runtime.Unit };
