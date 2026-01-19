@@ -63,7 +63,7 @@ fun test(n, stackLimit) =
   set stackDepth = 0
   ans
 //│ JS (unsanitized):
-//│ let b, a, b1, a1, mkrec, selfApp, StackDelay1, test, handleBlock$, Handler$h$perform, Handler$h$1, Capture$scope01, handleBlock$$, a$, mkrec$, selfApp$, b$, a$1, b$1, Handler$h$perform$;
+//│ let b, a, b1, a1, mkrec, selfApp, StackDelay1, test, handleBlock$, Handler$h$perform, Handler$h$1, Capture$scope01, handleBlock$$, Handler$h$$, a$, mkrec$, selfApp$, b$, a$1, b$1, Handler$h$perform$;
 //│ (class Capture$scope0 {
 //│   static {
 //│     Capture$scope01 = this
@@ -131,6 +131,15 @@ fun test(n, stackLimit) =
 //│     }
 //│     break;
 //│   }
+//│ };
+//│ Handler$h$$ = function Handler$h$$(isMut, scope0$cap) {
+//│   let tmp;
+//│   if (isMut === true) {
+//│     tmp = new Handler$h$1(scope0$cap);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new Handler$h$1(scope0$cap));
+//│   }
+//│   return tmp
 //│ };
 //│ selfApp$ = function selfApp$(scope0$cap, stackLimit, h) {
 //│   return (f) => {
@@ -565,7 +574,7 @@ fun test(n, stackLimit) =
 //│         scope0$cap = new Capture$scope01(stackDepth, stackOffset);
 //│         scope0$cap.stackDepth$0 = 0;
 //│         scope0$cap.stackOffset$1 = 0;
-//│         h = new Handler$h$1(scope0$cap);
+//│         h = Handler$h$$(true, scope0$cap);
 //│         handleBlock$$here = handleBlock$$(scope0$cap, n, stackLimit, h);
 //│         runtime.resumeValue = runtime.enterHandleBlock(h, handleBlock$$here);
 //│         if (runtime.curEffect !== null) {

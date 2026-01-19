@@ -90,7 +90,7 @@ fun f() =
   Good()
 f().foo()
 //│ JS (unsanitized):
-//│ let Bad1, Good1, f6, tmp5, Capture$scope01;
+//│ let Bad1, Good1, f6, tmp5, Capture$scope01, Bad$, Good$;
 //│ (class Capture$scope0 {
 //│   static {
 //│     Capture$scope01 = this
@@ -102,17 +102,40 @@ f().foo()
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
-//│ Good1 = function Good(scope0$cap, x, y) {
-//│   return globalThis.Object.freeze(new Good.class(scope0$cap, x, y));
+//│ Good$ = function Good$(isMut, scope0$cap, x, y) {
+//│   let tmp6;
+//│   if (isMut === true) {
+//│     tmp6 = new Good1.class();
+//│   } else {
+//│     tmp6 = globalThis.Object.freeze(new Good1.class());
+//│   }
+//│   return tmp6(scope0$cap, x, y)
+//│ };
+//│ Bad$ = function Bad$(isMut, scope0$cap) {
+//│   let tmp6;
+//│   if (isMut === true) {
+//│     tmp6 = new Bad1.class();
+//│   } else {
+//│     tmp6 = globalThis.Object.freeze(new Bad1.class());
+//│   }
+//│   return tmp6(scope0$cap)
+//│ };
+//│ Good1 = function Good() {
+//│   return (scope0$cap, x, y) => {
+//│     return globalThis.Object.freeze(new Good.class()(scope0$cap, x, y));
+//│   }
 //│ };
 //│ (class Good {
 //│   static {
 //│     Good1.class = this
 //│   }
-//│   constructor(scope0$cap, x, y) {
-//│     this.scope0$cap = scope0$cap;
-//│     this.x = x;
-//│     this.y = y;
+//│   constructor() {
+//│     return (scope0$cap, x, y) => {
+//│       this.scope0$cap = scope0$cap;
+//│       this.x = x;
+//│       this.y = y;
+//│       return this;
+//│     }
 //│   }
 //│   #Good$cap;
 //│   foo() {
@@ -123,17 +146,22 @@ f().foo()
 //│     return tmp7 + this.scope0$cap.w$1
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Good", [null, null, null]]; 
+//│   static [definitionMetadata] = ["class", "Good", []]; 
 //│ });
-//│ Bad1 = function Bad(scope0$cap) {
-//│   return globalThis.Object.freeze(new Bad.class(scope0$cap));
+//│ Bad1 = function Bad() {
+//│   return (scope0$cap) => {
+//│     return globalThis.Object.freeze(new Bad.class()(scope0$cap));
+//│   }
 //│ };
 //│ (class Bad {
 //│   static {
 //│     Bad1.class = this
 //│   }
-//│   constructor(scope0$cap) {
-//│     this.scope0$cap = scope0$cap;
+//│   constructor() {
+//│     return (scope0$cap) => {
+//│       this.scope0$cap = scope0$cap;
+//│       return this;
+//│     }
 //│   }
 //│   #Bad$cap;
 //│   foo() {
@@ -141,7 +169,7 @@ f().foo()
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bad", [null]]; 
+//│   static [definitionMetadata] = ["class", "Bad", []]; 
 //│ });
 //│ f6 = function f() {
 //│   let x, y, z, w, tmp6, tmp7, scope0$cap;
@@ -150,9 +178,9 @@ f().foo()
 //│   y = 10;
 //│   scope0$cap.z$0 = 10;
 //│   scope0$cap.w$1 = 1000;
-//│   tmp6 = Bad1(scope0$cap);
+//│   tmp6 = Bad$(false, scope0$cap);
 //│   tmp7 = tmp6.foo();
-//│   return Good1(scope0$cap, x, y)
+//│   return Good$(false, scope0$cap, x, y)
 //│ };
 //│ tmp5 = f6();
 //│ runtime.safeCall(tmp5.foo())
@@ -173,8 +201,8 @@ let b = a.newA()
 b.foo()
 a.getX()
 //│ = 2
-//│ a = A(_, _)
-//│ b = A(_, _)
+//│ a = A()
+//│ b = A()
 
 // handler
 
@@ -229,3 +257,11 @@ fun test(f) =
     f(x)
   A(1)
 
+// Check that the extra params are not printed
+:expect "A(2)"
+fun f(x) =
+  data class A(y) with
+    fun hi = x + y
+  A(2).toString()
+f(0)
+//│ = "A(2)"

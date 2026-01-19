@@ -8,32 +8,6 @@
 :d
 :todo
 
+class Eff
+//│ Elab: { Cls Eff { }; }
 
-:sjs
-class A with
-  let y = 2
-  fun f() =
-    set y = 3
-let a = new A
-a.f()
-//│ Elab: { Cls A { let term:class:A‹688›.y‹690›; term:class:A‹688›.y‹690› = 2; method fun member:f‹686›() = term:class:A‹688›.y‹690›#666 := 3; }; let a‹694›; a‹694› = new member:A‹687›#666; a‹694›#666.f() }
-//│ JS (unsanitized):
-//│ let A1, a;
-//│ (class A {
-//│   static {
-//│     A1 = this
-//│   }
-//│   constructor() {
-//│     this.#y = 2;
-//│   }
-//│   #y;
-//│   f() {
-//│     this.#y = 3;
-//│     return runtime.Unit
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "A"]; 
-//│ });
-//│ a = globalThis.Object.freeze(new A1());
-//│ runtime.safeCall(a.f())
-//│ a = A

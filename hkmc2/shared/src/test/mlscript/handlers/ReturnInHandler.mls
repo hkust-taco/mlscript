@@ -69,7 +69,7 @@ f()
 //│   _2 = Scope:
 //│     parent = N
 //│     curThis = S of S of globalThis:globalThis
-//│     bindings = HashMap($block$res -> block$res2, $tmp -> tmp, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, $block$res -> block$res1, member:Predef -> Predef)
+//│     bindings = HashMap($block$res -> block$res2, $runtime -> runtime, $tmp -> tmp, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res, member:Effect -> Effect1, class:Effect -> Effect, $block$res -> block$res1, member:Predef -> Predef)
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'f'
 //│ ║  l.62: 	f()
 //│ ║        	^
@@ -126,7 +126,7 @@ let l = () =>
   4
 l()
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.165: 	  return 3
+//│ ║  l.125: 	  return 3
 //│ ╙──       	  ^^^^^^^^
 
 

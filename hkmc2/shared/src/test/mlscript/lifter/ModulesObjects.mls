@@ -30,7 +30,16 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let M2, foo1;
+//│ let M2, foo1, M$;
+//│ M$ = function M$(isMut, y) {
+//│   let tmp;
+//│   if (isMut === true) {
+//│     tmp = new M2(y);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new M2(y));
+//│   }
+//│   return tmp
+//│ };
 //│ (class M1 {
 //│   static {
 //│     M2 = this
@@ -46,18 +55,14 @@ foo(10)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo1 = function foo(y) {
-//│   let tmp;
-//│   tmp = globalThis.Object.freeze(new M2(y));
-//│   return tmp.foo()
-//│ };
+//│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M1.foo (REPL16:1:283)
-//│     at foo (REPL16:1:602)
-//│     at REPL16:1:643
+//│     at M1.foo (REPL16:1:540)
+//│     at foo (REPL16:1:855)
+//│     at REPL16:1:896
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
 //│     at bound (node:domain:433:15)
@@ -138,7 +143,7 @@ fun foo(x, y) =
 //│         parent = S of Scope:
 //│           parent = N
 //│           curThis = S of S of globalThis:globalThis
-//│           bindings = HashMap(member:Capture$foo -> Capture$foo1, $block$res -> block$res1, $runtime -> runtime, $definitionMetadata -> definitionMetadata, cc -> cc, $prettyPrint -> prettyPrint, $Term -> Term, c0 -> c0, $Block -> Block, c1 -> c1, $Shape -> Shape, $block$res -> block$res2, $block$res -> block$res5, member:M -> M2, $selRes -> selRes, member:foo -> foo1, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, class:M -> M1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, member:Predef -> Predef, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, object:O -> O, $block$res -> block$res3, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:C -> C1, $block$res -> block$res, member:foo -> foo2, member:Capture$foo -> Capture$foo3, class:C -> C, member:foo -> foo, o -> o, object:M -> M, $block$res -> block$res9, $block$res -> block$res4, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, class:Capture$foo -> Capture$foo)
+//│           bindings = HashMap($block$res -> block$res4, class:Capture$foo -> Capture$foo, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, member:Capture$foo -> Capture$foo1, $Block -> Block, $Shape -> Shape, member:C$ -> C$, cc -> cc, c0 -> c0, c1 -> c1, $block$res -> block$res5, $selRes -> selRes, $discarded -> discarded, $selRes -> selRes1, $discarded -> discarded1, $block$res -> block$res6, $selRes -> selRes2, $discarded -> discarded2, $block$res -> block$res7, $selRes -> selRes3, $discarded -> discarded3, member:foo -> foo3, $block$res -> block$res, object:O -> O, member:foo -> foo, object:M -> M, $block$res -> block$res8, class:Capture$foo -> Capture$foo2, member:Capture$foo -> Capture$foo3, o -> o, $block$res -> block$res1, $block$res -> block$res9, $block$res -> block$res10, $selRes -> selRes4, $discarded -> discarded4, $block$res -> block$res2, member:M -> M2, member:foo -> foo1, class:M -> M1, member:Predef -> Predef, $block$res -> block$res3, member:M$ -> M$, member:C -> C1, member:foo -> foo2, class:C -> C)
 //│         curThis = N
 //│         bindings = HashMap(object:M -> M3, member:foo3 -> foo31, member:foo -> foo4)
 //│       curThis = S of N
@@ -146,16 +151,16 @@ fun foo(x, y) =
 //│     curThis = N
 //│     bindings = HashMap()
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
-//│ ║  l.124: 	  fun foo3 = M.foo2()
+//│ ║  l.129: 	  fun foo3 = M.foo2()
 //│ ║         	             ^
 //│ ╟── which references the symbol introduced here
-//│ ║  l.120: 	  object M with
+//│ ║  l.125: 	  object M with
 //│ ║         	         ^^^^^^
-//│ ║  l.121: 	    fun foo2() =
+//│ ║  l.126: 	    fun foo2() =
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.122: 	      set y = 2
+//│ ║  l.127: 	      set y = 2
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.123: 	      x + y
+//│ ║  l.128: 	      x + y
 //│ ╙──       	^^^^^^^^^^^
 //│ JS (unsanitized):
 //│ let foo31, foo4;
@@ -220,7 +225,7 @@ A(2).getA()
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'getB')
-//│     at A.getA (REPL50:1:899)
+//│     at A.getA (REPL50:1:1161)
 //│     at REPL53:1:83
 //│     at ContextifyScript.runInThisContext (node:vm:137:12)
 //│     at REPLServer.defaultEval (node:repl:562:24)
@@ -347,16 +352,16 @@ M.A(2).newB.newA_B(3).newB.get
 //│ FAILURE: Unexpected runtime error
 //│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
-//│     at get newA (REPL74:1:1156)
-//│     at get newB (REPL74:1:1303)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
-//│     at get newB (REPL74:1:1314)
+//│     at get newA (REPL74:1:1666)
+//│     at get newB (REPL74:1:1820)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
+//│     at get newB (REPL74:1:1831)
 
 module M with
   class A

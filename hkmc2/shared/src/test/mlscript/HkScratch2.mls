@@ -9,47 +9,34 @@
 :todo
 :noSanityCheck
 
-:sjs
+
+fun test() =
+  class A with
+    fun get = 2
+  class B() extends A
+  B().get
+test()
+//│ Elab: { fun member:test‹873›() = { Cls A { method fun member:get‹870› = 2; }; Cls BParamList(‹›,List(),None) { }; member:B‹872›#666().get }; member:test‹873›#666() }
+//│ = 2
+
 :lift
-fun f =
-  module M with
-    fun foo() = 2
-  fun bar = M.foo
-  bar
-//│ Elab: { fun member:f‹873› = { Mod M { fun member:foo‹870›() = 2; }; fun member:bar‹871› = member:M‹872›#666.foo‹member:foo‹870››; member:bar‹871›#666 }; }
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.15: 	  module M with
-//│ ╙──      	         ^
+:sjs
+fun f(x) =
+  fun g() = x
+  fun h(a) = a()
+  h(g)
+//│ Elab: { fun member:f‹893›(x‹894›) = { fun member:g‹891›() = x‹894›#666; fun member:h‹892›(a‹899›) = a‹899›#666(); member:h‹892›#666(member:g‹891›#666) }; }
 //│ JS (unsanitized):
-//│ let bar, f, bar$;
-//│ bar$ = function bar$(M1) {
+//│ let g, h, f, g$;
+//│ g$ = function g$(x) {
 //│   return () => {
-//│     return bar(M1)
+//│     return g(x)
 //│   }
 //│ };
-//│ bar = function bar(M1) {
-//│   return M1.foo
+//│ g = function g(x) {
+//│   return x
 //│ };
-//│ f = function f() {
-//│   let M1, tmp;
-//│   (class M {
-//│     static {
-//│       M1 = this
-//│     }
-//│     constructor() {
-//│       runtime.Unit;
-//│     }
-//│     static #M_mod$cap;
-//│     static foo() {
-//│       return 2
-//│     }
-//│     #M$cap;
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "M"]; 
-//│   });
-//│   tmp = bar(M1);
-//│   return tmp
+//│ h = function h(a) {
+//│   return runtime.safeCall(a())
 //│ };
-//│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.15: 	  module M with
-//│ ╙──      	         ^
+//│ f = function f(x) { let g$here; g$here = g$(x); return h(g) };

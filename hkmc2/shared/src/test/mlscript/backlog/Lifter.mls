@@ -149,13 +149,13 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.159: 	  module M with
+//│ ║  l.148: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.159: 	  module M with
+//│ ║  l.148: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.160: 	    fun getB() = x
+//│ ║  l.149: 	    fun getB() = x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 
 :expect 2
@@ -172,7 +172,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.182: 	  class Bar extends Foo
+//│ ║  l.171: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift class `Foo` as it is used as a first-class class.
@@ -189,7 +189,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.197: 	  module M with
+//│ ║  l.186: 	  module M with
 //│ ╙──       	         ^
 
 
