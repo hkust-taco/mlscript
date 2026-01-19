@@ -49,6 +49,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** 
+   * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
+   */
   private def tupleArrayType(mut: Bool)(using Ctx): TypeIdx =
     ctx.getOrCreateWasmIntrinsicType(
       WasmIntrinsicType.TupleArray(mutable = mut),
@@ -67,15 +70,24 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
     )
 
+  /** 
+   * Allocates a fresh temp local (typed `anyref`) and returns its `LocalIdx`. 
+   */
   private def mkTempLocal(base: Str)(using Ctx, Scope): LocalIdx =
     val sym = TempSymbol(N, base)
     val nme = scope.allocateName(sym)
     ctx.addLocal(sym)
     LocalIdx(SymIdx(nme))
 
+  /** 
+   * Returns locals allocated during codegen which are not in `exclude`. 
+   */
   private def getExtraLocals(exclude: Set[Local])(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty).filterNot(exclude.contains)
 
+  /** 
+   * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
+   */
   private def tupleArrayGet(
       tupleExpr: Expr,
       idxBuilder: Expr => Expr
@@ -98,7 +110,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ifFalse = S(immutableBranch),
       resultTypes = Seq(Result(elemType.asValType_!))
     )
-
+  /** 
+   * Builds an i32 index for tuple indexing (supports negative indices; caches non-literals). 
+   */
   private def compileTupleIndex(
       fld: Path,
       loc: Opt[Loc],
