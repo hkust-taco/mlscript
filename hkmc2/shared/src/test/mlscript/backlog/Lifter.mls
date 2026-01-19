@@ -51,6 +51,25 @@ test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
 
+// This is due to `super` not being called with multiple parameter lists.
+:expect "B()"
+fun test(x) =
+  class A() with
+    fun get = x
+  class B() extends A() with
+    fun bar = x
+  B()
+test(0).toString()
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.x = x;       return this;     }"'
+//│ = "(x) => {       this.x = x;       return this;     }"
+
+// In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
+// return (params) => {
+//   super(parentMainParams);
+//   // ctor
+//   return this(parentAuxParams);
+// }
+
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
 :w
@@ -121,7 +140,7 @@ fun foo(x, y) =
       x + y + test
   M.foo()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.117: 	  module M with
+//│ ║  l.136: 	  module M with
 //│ ╙──       	         ^
 
 :expect 14
@@ -136,7 +155,7 @@ fun foo(x, y) =
   fun foo = M.foo()
   foo
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.132: 	  module M with
+//│ ║  l.151: 	  module M with
 //│ ╙──       	         ^
 
 :expect 12
@@ -149,13 +168,13 @@ data class A(x) with
     fun getB() = x
   fun getA() = M.getB()
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.148: 	  module M with
+//│ ║  l.167: 	  module M with
 //│ ╙──       	         ^
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.148: 	  module M with
+//│ ║  l.167: 	  module M with
 //│ ║         	         ^^^^^^
-//│ ║  l.149: 	    fun getB() = x
+//│ ║  l.168: 	    fun getB() = x
 //│ ╙──       	^^^^^^^^^^^^^^^^^^
 
 :expect 2
@@ -172,7 +191,7 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.171: 	  class Bar extends Foo
+//│ ║  l.190: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift class `Foo` as it is used as a first-class class.
@@ -189,7 +208,7 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.186: 	  module M with
+//│ ║  l.205: 	  module M with
 //│ ╙──       	         ^
 
 
