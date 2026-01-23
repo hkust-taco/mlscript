@@ -1,0 +1,34 @@
+:js
+:defunc
+
+:sjs
+fun aux(f) = f(1) + f(10)
+//│ JS (unsanitized):
+//│ let aux;
+//│ aux = function aux(f) {
+//│   let tmp, tmp1;
+//│   tmp = runtime.safeCall(f(1));
+//│   tmp1 = runtime.safeCall(f(10));
+//│   return tmp + tmp1
+//│ };
+
+
+:sjs
+fun f(x, y, b) =
+  aux(z => x + z) * aux(z => if b then y + z else y - z)
+//│ JS (unsanitized):
+//│ let f;
+//│ f = function f(x, y, b) {
+//│   let lambda, tmp, lambda1, tmp1;
+//│   lambda = (undefined, function (z) {
+//│     return x + z
+//│   });
+//│   tmp = aux(lambda);
+//│   lambda1 = (undefined, function (z) {
+//│     if (b === true) {
+//│       return y + z
+//│     } else { return y - z }
+//│   });
+//│   tmp1 = aux(lambda1);
+//│   return tmp * tmp1
+//│ };
