@@ -79,11 +79,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addLocal(sym)
     LocalIdx(SymIdx(nme))
 
-  /** 
-   * Returns locals allocated during codegen which are not in `exclude`. 
-   */
-  private def getExtraLocals(exclude: Set[Local])(using Ctx): Seq[Local] =
-    ctx.getWasmLocals._2.getOrElse(Seq.empty).filterNot(exclude.contains)
+  /** Returns locals allocated during codegen (e.g., temp locals). */
+  private def getExtraLocals(using Ctx): Seq[Local] =
+    ctx.getWasmLocals._2.getOrElse(Seq.empty)
 
   /** 
    * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
@@ -110,6 +108,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ifFalse = S(immutableBranch),
       resultTypes = Seq(Result(elemType.asValType_!))
     )
+    
   /** 
    * Builds an i32 index for tuple indexing (supports negative indices; caches non-literals). 
    */
@@ -1098,7 +1097,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
       block(p.main)(using ctx, summon[Raise], summon[Scope])
-    val entryExtraLocals = getExtraLocals(entryFnLocals.toSet)(using ctx)
+    val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
     val entryNme = scope.allocateName(entrySym)
@@ -1157,7 +1156,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         param -> paramNme
       val (wasmBody, locals) = block(body)
       val paramSyms: Set[Local] = params.params.map(p => (p.sym: Local)).toSet
-      val extraLocals = getExtraLocals(locals.toSet ++ paramSyms)
+      val extraLocals = getExtraLocals.filterNot((locals.toSet ++ paramSyms).contains)
       val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
       (wasmParams.toSeq, wasmBody, localsWithNames)
 
