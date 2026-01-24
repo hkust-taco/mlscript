@@ -32,7 +32,9 @@ trait StratVar(s: StratVarState):
   def uid = s.uid
 
 sealed abstract class ProdStrat
-case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s)
+case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s):
+  override def toString(): String =
+    s"${s.name}(${s.generatedForFun})"
 case class ProdFun(params: Ls[ConsStrat], res: ProdStrat) extends ProdStrat
 case object NoProd extends ProdStrat
 class Ctor(
@@ -91,24 +93,16 @@ class DeforestPreAnalyzer(
   
   object res:
     val primitiveStratVar = StratVarState.freshVar("unknown")
-    // this contains handleable
-    // - toplvl FunDefns
-    //   - fundefns
-    //   - modules' methods
-    // later when analyzing these FunDefn bodies,
-    // we guarantee that there is no unsupported forms, like
-    // nested class/mod defns or while loops...
-    // And:
-    // - the toplvl block
-    // later when analyzing these top level blocks
-    // class/mod defns are always ignored;
-    // toplevel blocks also contain toplevel fundefns,
-    // those toplevel fundefns are ignored
-    // And:
-    // - toplvl modules'
-    // for toplvl modules, we guarantee that they are lone-modules,
-    // and we process their ctor/preCtor, private/public fields and
-    // methods. fundefns in modules' preCtor/Ctor are not ignored.
+    // this contains
+    // - fundefs in toplvl/lone-modules(not necessarily toplvl ones) that
+    //     - does not contain unsupported forms like while loops
+    //     - does not contain nested class/modules (but nested functions are allowed)
+    // - blocks
+    //     - toplvl block if it does not contain unsupported forms
+    //     - lone-module ctors that does not contain unsupported forms
+    // - modules
+    //     - that are not nested in functions
+    //     - that are lone modules
     val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block | ClsLikeBody]
     // the keys could possibly be one of the following kinds:
     // - BlockMemberSymbol: functions and val definitions without an owner
@@ -125,10 +119,6 @@ class DeforestPreAnalyzer(
     val labelSymToCtxOfLabel = MutMap.empty[Symbol, Ls[InCtx]]
     val selToCtxOfSel = MutMap.empty[ResultId, Ls[InCtx]]
     
-    lazy val topLvlFunAndModFunSymbols =
-      toplvlFunAndBlkToAnalyze.collect:
-        // TODO: these term symbols must exist?
-        case f: FunDefn => f.sym.tsym.get
     def getFullRestOfMatch(scrut: ResultId) = matchScrutToCtxOfMatch(scrut)
       .iterator
       .takeWhile:
@@ -143,6 +133,7 @@ class DeforestPreAnalyzer(
   enum InCtx:
     case TopLvl()
     case Mod(mod: ClsLikeBody)
+    case ModCtor(b: Block)
     case Fn(f: FunDefn)
     case Lbl(l: Label)
     case Mtch(m: Match, cse: Opt[ClassLikeSymbol | Int])
@@ -193,10 +184,9 @@ class DeforestPreAnalyzer(
       
       c match
         case c: ClsLikeBody =>
-          if getAllMod.isEmpty && newCtx.handleable then
-            res.toplvlFunAndBlkToAnalyze.add(c)
+          res.toplvlFunAndBlkToAnalyze.add(c)
         case f: FunDefn =>
-          if getImmediateCtxFn.isEmpty && newCtx.handleable then
+          if newCtx.handleable && (isToplvl || ctx.head.isInstanceOf[InCtx.Mod]) then
             res.toplvlFunAndBlkToAnalyze.add(f)
         case l: Label =>
           if newCtx.handleable then
@@ -209,11 +199,10 @@ class DeforestPreAnalyzer(
         case b: Begin => ()
         case s: Scoped => ()
       ctx.head match
-        case _: (InCtx.Fn | InCtx.Lbl | InCtx.Mtch | InCtx.Begn | InCtx.Scped) =>
+        case _: (InCtx.Fn | InCtx.Lbl | InCtx.Mtch | InCtx.Begn | InCtx.Scped | InCtx.ModCtor) =>
           ctx.head.handleable &&= newCtx.handleable
          // do not propagate non-handleable flags up to top level and module,
-         // because top level may contain handleable computations,
-         // and modules may contain handleable computations in their ctors
+         // because top level may contain handleable computations
         case _: (InCtx.TopLvl | InCtx.Mod) => ()
     
     inline def inTopLvl(toplvlBlk: Block)(inline body: => Any) =
@@ -225,6 +214,16 @@ class DeforestPreAnalyzer(
         res.toplvlFunAndBlkToAnalyze.add(toplvlBlk)
       ctx = ctx.tail
       assert(ctx.isEmpty)
+    
+    inline def inModCtor(ctor: Block)(inline body: => Any) =
+      assert(ctx.head.matches{ case _: InCtx.Mod => true })
+      val newCtx = InCtx.ModCtor(ctor)
+      ctx = newCtx :: ctx
+      body
+      if newCtx.handleable then
+        res.toplvlFunAndBlkToAnalyze.add(ctor)
+      ctx = ctx.tail
+      assert(ctx.head.matches{ case _: InCtx.Mod => true })
     
     def markAsNonHandleable() =
       ctx.head.handleable = false
@@ -305,8 +304,6 @@ class DeforestPreAnalyzer(
     case Value.Lit(lit) => ()
   
   override def applyFunDefn(fun: FunDefn): Unit =
-    // TODO: generating prodvars are deferred to later steps, when we know
-    // all the handleable top lvl fundefns and blocks
     ctxTracker.inCtxOf(fun):
       fun.params.foreach(applyParamList)
       applyBlock(fun.body)
@@ -321,11 +318,10 @@ class DeforestPreAnalyzer(
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
-      if ctxTracker.isToplvl then
+      if ctxTracker.getImmediateCtxFn.isEmpty then
         if locally:
-          // skip non-lone modules
-          own.isDefined
-          || ctorSym.isDefined
+          // own.isDefined does not matter
+          ctorSym.isDefined
           || paramsOpt.isDefined
           || auxParams.nonEmpty
           || parentPath.isDefined
@@ -337,7 +333,7 @@ class DeforestPreAnalyzer(
           || !ctor.matches:
             case Return(Select(Value.Ref(runtimeSym, None), Tree.Ident("Unit")), true) =>
               runtimeSym is elabState.runtimeSymbol
-        then ()
+        then () // skip non-lone modules
         else
           mod.foreach(applyClsLikeBody)
       else
@@ -346,7 +342,8 @@ class DeforestPreAnalyzer(
   override def applyClsLikeBody(b: ClsLikeBody): Unit =
     ctxTracker.inCtxOf(b):
       b.methods.foreach(applyFunDefn)
-      applyBlock(b.ctor)
+      ctxTracker.inModCtor(b.ctor):
+        applyBlock(b.ctor)
 end DeforestPreAnalyzer
 
 class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
@@ -358,6 +355,12 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   import StratVarState.freshVar
   
   object generateProdVars:
+    // generating strat vars for
+    //   - let/val bindings in top level blocks
+    //   - let/val bindings in top level lone-modules with
+    // top level fun bindings 
+    // other class/modules do not need to have a prodstrat
+    //
     // the keys could possibly be one of the following kinds:
     // - TermSymbol:
     //   - functions, let and val definitions in an module (with an owner)
@@ -365,14 +368,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
     // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
     // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
     val store = MutMap.empty[Symbol, ProdStrat].withDefaultValue(NoProd)
-    // TODO: generated for what?????? also need a context to determine what function we are
-    // in now...
+    // for top level block
     if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
-      // generating strat vars for
-      //   - let/val bindings in top level blocks
-      //   - let/val bindings in top level lone-modules with
-      // top level fun bindings 
-      // other class/modules do not need to have a prodstrat
       object AddStratForTopLvlSymbols extends BlockTraverserShallow:
         override def applyBlock(b: Block): Unit = b match
           case Scoped(syms, body) => for s <- syms do
@@ -388,20 +385,68 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             applyBlock(body)
           case _ => super.applyBlock(b)
       AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
-    
-    // TODO: we also need to know the definitions of toplvl modules
-    // themselves because we need to know the `privateFields` and `publicFields`
-    // object AddStratForTopLvlModCtors extends BlockTraverser:
-    //   override def applyBlock(b: Block): Unit = b match
-    //     case Scoped(syms, body) => 
-      // override def apply
-    
-      
-      
+    // for module private/public fields and mod ctors
+    for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+      for priv <- mod.privateFields do store(priv) = freshVar(priv.name).asProdStrat
+      for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name).asProdStrat
+      // mod.ctor can nest functions and class/module defs
+      // among which only nested functions needs to be handled here
+      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor) then
+        object AddStratForModCtorSymbols extends BlockTraverser:
+          override def applyBlock(b: Block): Unit = b match
+            case Scoped(syms, body) => for s <- syms do
+              s match
+              // local fun and vals
+              case bms: BlockMemberSymbol if bms.tsym.exists(tsym => (tsym.k is Fun) || (tsym.k is ImmutVal)) =>
+                val tsym = bms.tsym.get
+                store(tsym) = freshVar(tsym.nme).asProdStrat
+              // varsymbols for let binding
+              case s: VarSymbol => store(s) = freshVar(s.nme).asProdStrat
+              case s: TempSymbol => store(s) = freshVar(s.nme).asProdStrat
+              case _ => ()
+              applyBlock(body)
+            case _ => super.applyBlock(b)
+          override def applyClsLikeBody(b: ClsLikeBody): Unit = ()
+          override def applyDefn(defn: Defn): Unit =
+            defn match
+              case _: ClsLikeDefn => ()
+              case _ => super.applyDefn(defn)
+              // case FunDefn(forceTailRec) => 
+              // case ValDefn(tsym, sym, rhs) =>
+            
+          override def applyParamList(pl: ParamList): Unit =
+            for p <- pl.params do store(p.sym) = freshVar(p.sym.nme).asProdStrat
+        AddStratForModCtorSymbols.applyBlock(mod.ctor)
+    // for toplvl fundefns
+    for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+      val forFun = f.dSym
+      // funs can only nest other funs
+      object AddStratForToplvlFun extends BlockTraverser:
+        override def applyFunDefn(fun: FunDefn): Unit =
+          store(fun.dSym) = freshVar(fun.sym.nme, forFun).asProdStrat
+          super.applyFunDefn(fun)
+        override def applyParamList(pl: ParamList): Unit =
+          for p <- pl do store(p.sym) = freshVar(p.sym.nme, forFun).asProdStrat
+        override def applyBlock(b: Block): Unit = b match
+          case Scoped(syms, body) => for s <- syms do
+            s match
+            // local vals
+            case bms: BlockMemberSymbol if bms.tsym.exists(tsym => tsym.k is ImmutVal) =>
+              val tsym = bms.tsym.get
+              store(tsym) = freshVar(tsym.nme, forFun).asProdStrat
+            // varsymbols for let binding
+            case s: VarSymbol => store(s) = freshVar(s.nme, forFun).asProdStrat
+            case s: TempSymbol => store(s) = freshVar(s.nme, forFun).asProdStrat
+            case _ => ()
+            applyBlock(body)
+          case _ => super.applyBlock(b)
+      AddStratForToplvlFun.applyFunDefn(f)
   end generateProdVars
   
-  for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
-  // object res:
-  //   val constraints = ???
+  // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
+  
+  // for x <- generateProdVars.store do tl.log(s"${x._1} -> ${x._2}")
+  
+  
 
 end DeforestConstraintsCollector

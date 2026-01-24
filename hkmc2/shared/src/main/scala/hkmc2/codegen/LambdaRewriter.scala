@@ -16,6 +16,7 @@ object LambdaRewriter:
         case lam: Lambda => 
           val sym = BlockMemberSymbol("lambda", Nil, nameIsMeaningful = false)
           val tSym = TermSymbol.fromFunBms(sym, N)
+          sym.tsym = S(tSym)
           val lamDefn =
             val Lambda(params, body) = super.applyLam(lam)
             FunDefn(N, sym, tSym, params :: Nil, body)(false)
@@ -28,6 +29,7 @@ object LambdaRewriter:
             nameIsMeaningful = true // TODO: lhs.nme is not always meaningful
           )
           val defn = FunDefn.withFreshSymbol(N, newSym, params :: Nil, applyBlock(body))(false)
+          newSym.tsym = S(defn.dSym)
           val blk = blockBuilder
             .define(defn)
             .assign(lhs, defn.asPath)
