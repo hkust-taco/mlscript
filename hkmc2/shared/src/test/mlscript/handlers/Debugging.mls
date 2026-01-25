@@ -57,7 +57,7 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(f, 5, "Debugging.mls:17:8", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -118,7 +118,7 @@ lambda_test(() =>
   100)
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
 //│ 	at lambda (Debugging.mls:117:3)
-//│ 	at lambda_test (pc=1)
+//│ 	at lambda_test (Debugging.mls:114:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -168,16 +168,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:156:18)
-//│ 	at Test.main (pc=3)
+//│ 	at Test.test (Debugging.mls:156:15)
+//│ 	at Test.main (Debugging.mls:159:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:156:18)
-//│ 	at Test.main (pc=1)
+//│ 	at Test.test (Debugging.mls:156:15)
+//│ 	at Test.main (Debugging.mls:159:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)

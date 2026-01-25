@@ -333,7 +333,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
                 applyArgs(args): newArgs =>
                   def join2: Block =
                     resolveDefnRef(l, d, r) match
-                      case Some(value) => k(c.copy(fun = value, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+                      case Some(value) => k(c.copy(fun = value, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                       case None => super.applyResult(c)(k)
                   r match
                     // function call
@@ -348,12 +348,12 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
             applyArgs(args): newArgs =>
               def join =
                 if args is newArgs then inst
-                else inst.copy(args = newArgs)
+                else inst.copy(args = newArgs).withLoc(inst.toLoc)
               val res = ctx.rewrittenScopes.get(d) match
                 case N => join
                 case S(c: LiftedClass) => c.rewriteInstantiate(inst, newArgs)
                 case S(r) => resolveDefnRef(l, d, r) match
-                  case Some(value) => Instantiate(inst.mut, value, newArgs)
+                  case Some(value) => Instantiate(inst.mut, value, newArgs).withLoc(inst.toLoc)
                   case None => join
               k(res)
           case _ => super.applyResult(r)(k)
@@ -1006,7 +1006,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
           isMlsFun = true,
           mayRaiseEffects = c.mayRaiseEffects,
           explicitTailCall = c.explicitTailCall
-        )
+        ).withLoc(c.toLoc)
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
@@ -1136,7 +1136,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(inst.mut)).asArg :: formatArgs ::: args
-        )(true, config.checkInstantiateEffect, false)
+        )(true, config.checkInstantiateEffect, false).withLoc(inst.toLoc)
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
@@ -1152,7 +1152,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
           isMlsFun = true,
           mayRaiseEffects = c.mayRaiseEffects,
           explicitTailCall = c.explicitTailCall
-        )
+        ).withLoc(c.toLoc)
     
     def rewriteImpl: LifterResult[ClsLikeDefn] =
       val rewriterCtor = new BlockRewriter
