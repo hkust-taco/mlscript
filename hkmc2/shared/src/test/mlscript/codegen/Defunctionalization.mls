@@ -17,18 +17,49 @@ fun aux(f) = f(1) + f(10)
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
 //│ JS (unsanitized):
-//│ let f;
+//│ let f, Lambda$01, Lambda$11;
+//│ Lambda$01 = function Lambda$0(x) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(x));
+//│ };
+//│ (class Lambda$0 extends globalThis.Function {
+//│   static {
+//│     Lambda$01.class = this
+//│   }
+//│   constructor(x) {
+//│     super();
+//│     this.x = x;
+//│   }
+//│   call(z) {
+//│     return this.x + z
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│ });
+//│ Lambda$11 = function Lambda$1(y, b) {
+//│   return globalThis.Object.freeze(new Lambda$1.class(y, b));
+//│ };
+//│ (class Lambda$1 extends globalThis.Function {
+//│   static {
+//│     Lambda$11.class = this
+//│   }
+//│   constructor(y, b) {
+//│     super();
+//│     this.y = y;
+//│     this.b = b;
+//│   }
+//│   call(z) {
+//│     if (this.b === true) {
+//│       return this.y + z
+//│     } else {
+//│       return this.y - z
+//│     }
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
+//│ });
 //│ f = function f(x, y, b) {
 //│   let lambda, tmp, lambda1, tmp1;
-//│   lambda = (undefined, function (z) {
-//│     return x + z
-//│   });
 //│   tmp = aux(lambda);
-//│   lambda1 = (undefined, function (z) {
-//│     if (b === true) {
-//│       return y + z
-//│     } else { return y - z }
-//│   });
 //│   tmp1 = aux(lambda1);
 //│   return tmp * tmp1
 //│ };

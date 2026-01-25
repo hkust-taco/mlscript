@@ -132,5 +132,5 @@ module meta with
   fun print(t) = Term.print(t)
 
 
-class Function with
-  fun apply(args) = ???
+// class Function() with
+//   fun apply(args) = ???

@@ -56,17 +56,6 @@ let Predef1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "meta"]; 
     });
-    (class Function {
-      static {
-        Predef.Function = this
-      }
-      constructor() {}
-      apply(args) {
-        return Predef.notImplementedError
-      }
-      toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "Function"]; 
-    });
   }
   static id(x) {
     return x
