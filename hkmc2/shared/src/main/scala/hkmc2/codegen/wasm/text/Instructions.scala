@@ -243,6 +243,30 @@ object Instructions:
       stackargs = Seq(arrayRef),
       resultType = S(I32Type)
     )
+
+    /** Creates an `array.new_fixed` instruction. */
+    def new_fixed(arrayType: TypeIdx, items: Seq[Expr]): FoldedInstr = FoldedInstr(
+      mnemonic = "array.new_fixed",
+      instrargs = Seq(arrayType.toWat, doc"${items.length}"),
+      stackargs = items,
+      resultType = S(RefType(arrayType, nullable = false))
+    )
+
+    /** Creates an `array.get` instruction. */
+    def get(arrayType: TypeIdx, arrayRef: Expr, index: Expr, elemType: Type): FoldedInstr = FoldedInstr(
+      mnemonic = "array.get",
+      instrargs = Seq(arrayType.toWat),
+      stackargs = Seq(arrayRef, index),
+      resultType = S(elemType)
+    )
+
+    /** Creates an `array.set` instruction. */
+    def set(arrayType: TypeIdx, arrayRef: Expr, index: Expr, value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "array.set",
+      instrargs = Seq(arrayType.toWat),
+      stackargs = Seq(arrayRef, index, value),
+      resultType = N
+    )
   end array
 
   object ref:
@@ -298,6 +322,14 @@ object Instructions:
       instrargs = Seq(index),
       stackargs = Seq.empty,
       resultType = S(ty)
+    )
+
+    /** Creates a `local.tee` instruction. */
+    def tee(index: LocalIdx, value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "local.tee",
+      instrargs = Seq(index),
+      stackargs = Seq(value),
+      resultTypes = value.resultTypes
     )
 
     /** Creates a `local.set` instruction. */
