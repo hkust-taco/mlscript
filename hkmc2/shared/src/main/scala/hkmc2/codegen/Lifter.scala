@@ -496,27 +496,6 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     
   val usedVars = UsedVarAnalyzer(topLevelBlk, data)
   
-  // for debugging
-  def printMap[T, V](m: Map[T, V]) =
-    println("Map(")
-    for case (k, v) <- m do
-      print("  ")
-      print(k)
-      print(" -> ")
-      println(v)
-    println(")")
-  
-  
-  /*
-  println("accessesShallow")
-  printMap(usedVars.shallowAccesses)
-  println("accesses")
-  printMap(usedVars.accessMap)
-  printMap(usedVars.accessMapWithIgnored)
-  println("usedVars")
-  printMap(usedVars.reqdCaptures)
-  */
-  
   case class LifterResult[+T](liftedDefn: T, extraDefns: List[LazyDefn | Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]] = MutMap.empty,
