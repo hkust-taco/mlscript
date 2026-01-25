@@ -60,8 +60,8 @@ fun test(x) =
     fun bar = x
   B()
 test(0).toString()
-//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.x = x;       return this;     }"'
-//│ = "(x) => {       this.x = x;       return this;     }"
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
+//│ = "(x) => {       this.#x = x;       return this;     }"
 
 // In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
 // return (params) => {
@@ -195,7 +195,7 @@ foo(2)
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
-//│ = Bar { Foo: undefined }
+//│ = Bar
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme

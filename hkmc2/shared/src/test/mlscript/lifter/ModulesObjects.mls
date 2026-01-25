@@ -42,11 +42,12 @@ foo(10)
 //│     M3 = this
 //│   }
 //│   constructor(y) {
-//│     this.y = y;
+//│     this.#y = y;
 //│   }
 //│   #M$cap;
+//│   #y;
 //│   foo() {
-//│     this.y = 2;
+//│     this.#y = 2;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -54,19 +55,6 @@ foo(10)
 //│ });
 //│ foo1 = function foo(y) { let tmp; tmp = M$(false, y); return tmp.foo() };
 //│ foo1(10)
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'y' of object '[object Object]'
-//│     at M2.foo (REPL16:1:540)
-//│     at foo (REPL16:1:855)
-//│     at REPL16:1:896
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:562:24)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:886:12)
-//│     at REPLServer.emit (node:events:508:28)
-//│     at REPLServer.emit (node:domain:489:12)
 
 
 // * `new mut` (or lack thereof) should be preserved by the lifter
@@ -81,12 +69,9 @@ let
   cc = foo(10)
   c0 = cc.0
   c1 = cc.1
-//│ c0 = C { foo$cap: Capture$foo { y$0: 10 } }
-//│ c1 = C { foo$cap: Capture$foo { y$0: 10 } }
-//│ cc = [
-//│   C { foo$cap: Capture$foo { y$0: 10 } },
-//│   C { foo$cap: Capture$foo { y$0: 10 } }
-//│ ]
+//│ c0 = C
+//│ c1 = C
+//│ cc = [C, C]
 
 :re
 set c0.x = 1
@@ -107,13 +92,12 @@ fun foo(y) =
   O
 
 let o = foo(10)
-//│ o = O { y: 10, O: undefined }
+//│ o = O
 
 :re
 set o.x = 1
 o.x
-//│ = 1
-//│ FAILURE: Unexpected lack of runtime error
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
 :sjs
 fun foo(x, y) =
@@ -138,19 +122,27 @@ fun foo(x, y) =
 //│     M5 = this
 //│   }
 //│   constructor(x, y, M6) {
-//│     this.x = x;
-//│     this.y = y;
-//│     this.M = M6;
+//│     this.#x = x;
+//│     this.#y = y;
+//│     this.#M = M6;
 //│   }
 //│   #M$cap;
+//│   #x;
+//│   #y;
+//│   #M;
 //│   foo2() {
-//│     this.y = 2;
-//│     return this.x + this.y
+//│     this.#y = 2;
+//│     return this.#x + this.#y
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ foo4 = function foo(x, y) { let tmp, M$1; M$1 = new M5(x, y, M$1); tmp = foo31(M$1); return tmp };
+//│ foo4 = function foo(x, y) {
+//│   let tmp, M$1;
+//│   M$1 = globalThis.Object.freeze(new M5(x, y, M$1));
+//│   tmp = foo31(M$1);
+//│   return tmp
+//│ };
 
 :expect 12
 foo(10, 0)

@@ -131,19 +131,22 @@ f().foo()
 //│   }
 //│   constructor() {
 //│     return (scope0$cap, x, y) => {
-//│       this.scope0$cap = scope0$cap;
-//│       this.x = x;
-//│       this.y = y;
+//│       this.#scope0$cap = scope0$cap;
+//│       this.#x = x;
+//│       this.#y = y;
 //│       return this;
 //│     }
 //│   }
 //│   #Good$cap;
+//│   #y;
+//│   #x;
+//│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
-//│     this.scope0$cap.z$0 = 100;
-//│     tmp6 = this.x + this.y;
-//│     tmp7 = tmp6 + this.scope0$cap.z$0;
-//│     return tmp7 + this.scope0$cap.w$1
+//│     this.#scope0$cap.z$0 = 100;
+//│     tmp6 = this.#x + this.#y;
+//│     tmp7 = tmp6 + this.#scope0$cap.z$0;
+//│     return tmp7 + this.#scope0$cap.w$1
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Good", []]; 
@@ -159,13 +162,14 @@ f().foo()
 //│   }
 //│   constructor() {
 //│     return (scope0$cap) => {
-//│       this.scope0$cap = scope0$cap;
+//│       this.#scope0$cap = scope0$cap;
 //│       return this;
 //│     }
 //│   }
 //│   #Bad$cap;
+//│   #scope0$cap;
 //│   foo() {
-//│     this.scope0$cap.w$1 = 10000;
+//│     this.#scope0$cap.w$1 = 10000;
 //│     return runtime.Unit
 //│   }
 //│   toString() { return runtime.render(this); }

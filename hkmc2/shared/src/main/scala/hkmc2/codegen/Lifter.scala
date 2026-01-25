@@ -1079,24 +1079,28 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         s -> 
           (
             VarSymbol(Tree.Ident(s.nme)),
-            TermSymbol(syntax.MutVal, S(obj.cls.isym), Tree.Ident(s.nme))
+            TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(s.nme))
           )
       .toMap
     private val capSymsMap_ : Map[ScopedInfo, (vs: VarSymbol, ts: TermSymbol)] = reqCaptures.map: i =>
         val nme = data.getNode(i).obj.nme + "$cap"
-        i -> 
+        i ->
           (
             VarSymbol(Tree.Ident(nme)),
-            TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(nme))
+            TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(nme))
           )
       .toMap
     private val defnSymsMap_ : Map[DefinitionSymbol[?], (vs: VarSymbol, ts: TermSymbol)] = reqDefns.map: i =>
         i -> 
           (
             VarSymbol(Tree.Ident(i.nme + "$")),
-            TermSymbol(syntax.ImmutVal, S(obj.cls.isym), Tree.Ident(i.nme + "$"))
+            TermSymbol(syntax.LetBind, S(obj.cls.isym), Tree.Ident(i.nme + "$"))
           )
       .toMap
+    
+    private val extraPrivSyms = 
+      liftedObjsSyms.values ++ passedSymsMap_.values.map(_.ts)
+      ++ capSymsMap_.values.map(_.ts) ++ defnSymsMap_.values.map(_.ts)
     
     override lazy val capturesOrdered: List[ScopedInfo] = reqCaptures.toList.sortBy(c => capSymsMap_(c).vs.uid)
     
@@ -1105,7 +1109,9 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     override protected val passedDefnsMap = defnSymsMap_.view.mapValues(_.ts.asDefnRef).toMap
     
     val auxParams: List[Param] =
-      (passedDefnsOrdered.map(x => defnSymsMap_(x).vs) ::: capturesOrdered.map(x => capSymsMap_(x).vs) ::: passedSymsOrdered.map(x => passedSymsMap_(x).vs))
+      (passedDefnsOrdered.map(x => defnSymsMap_(x).vs)
+        ::: capturesOrdered.map(x => capSymsMap_(x).vs)
+        ::: passedSymsOrdered.map(x => passedSymsMap_(x).vs))
       .map(Param.simple(_))
     
     // Whether this can be lifted without the need to pass extra parameters.
@@ -1161,7 +1167,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
       
       S(FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false))
     
-    def instObject = Instantiate(true, Value.Ref(cls.sym, S(cls.isym)), formatArgs)
+    def instObject = Instantiate(false, Value.Ref(cls.sym, S(cls.isym)), formatArgs)
     
     def rewriteInstantiate(inst: Instantiate, args: List[Arg]): Result =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
@@ -1221,7 +1227,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         k = syntax.Cls, // turn objects into classes
         ctor = ctorWithDefns,
         preCtor = rewrittenPrector,
-        privateFields = captureSym :: liftedObjsSyms.values.toList ::: obj.cls.privateFields,
+        privateFields = captureSym :: extraPrivSyms.toList ::: obj.cls.privateFields,
         methods = newMtds,
         auxParams = newAuxList
       )
