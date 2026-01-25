@@ -19,12 +19,7 @@ fun f(x) =
       let z = 3
       fun g() = z
 //│ JS (unsanitized):
-//│ let g, f, g$;
-//│ g$ = function g$(z) {
-//│   return () => {
-//│     return g(z)
-//│   }
-//│ };
+//│ let g, f;
 //│ g = function g(z) {
 //│   return z
 //│ };
@@ -115,12 +110,7 @@ fun f(x) =
       let z = 3
       fun g() = z )
 //│ JS (unsanitized):
-//│ let g5, f4, g$3;
-//│ g$3 = function g$(z) {
-//│   return () => {
-//│     return g5(z)
-//│   }
-//│ };
+//│ let g5, f4;
 //│ g5 = function g(z) {
 //│   return z
 //│ };

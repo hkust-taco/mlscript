@@ -108,12 +108,7 @@ fun foo(x, y) =
   fun foo3 = M.foo2()
   foo3
 //│ JS (unsanitized):
-//│ let M5, foo31, foo4, foo3$;
-//│ foo3$ = function foo3$(M6) {
-//│   return () => {
-//│     return foo31(M6)
-//│   }
-//│ };
+//│ let M5, foo31, foo4;
 //│ foo31 = function foo3(M6) {
 //│   return M6.foo2()
 //│ };

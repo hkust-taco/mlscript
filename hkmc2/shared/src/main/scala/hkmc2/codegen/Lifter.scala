@@ -29,18 +29,16 @@ object Lifter:
     def ++(that: FreeVars) = FreeVars(vars ++ that.vars, reqCapture ++ that.reqCapture)
   object FreeVars:
     val empty = FreeVars(Set.empty, Set.empty)
-
-  /**
-    * Describes the free variables of functions that have been accessed by their nested definitions.
-    * @param mp The map from functions' `BlockMemberSymbol`s to their accessed variables.
-    */
-  class UsedLocalsMap(val mp: Map[BlockMemberSymbol, FreeVars]):
-    def apply(f: BlockMemberSymbol) = mp(f)
-    private lazy val inverse = mp.flatMap:
-      case fn -> vars => vars.vars.map(v => v -> fn)
-    // gets the function to which a local belongs
-    def lookup(l: Local) = inverse.get(l)
   
+  class LazyDefn(defn: => Defn):
+    var value: Opt[Defn] = N
+    def force =
+      value = S(defn)
+  extension (l: List[LazyDefn | Defn])
+    def gatherUsed: List[Defn] = l.collect:
+      case l: LazyDefn if l.value.isDefined => l.value.get
+      case d: Defn => d
+    
   /**
     * Describes previously defined locals and definitions which could possibly be accessed or mutated by particular definition.
     * Here, a "previously defined" local or definition means it is accessible to the particular definition (which we call `d`), 
@@ -519,7 +517,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
   printMap(usedVars.reqdCaptures)
   */
   
-  case class LifterResult[+T](liftedDefn: T, extraDefns: List[Defn])
+  case class LifterResult[+T](liftedDefn: T, extraDefns: List[LazyDefn | Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]] = MutMap.empty,
     rewrittenScopes: MutMap[ScopedInfo, RewrittenScope[?]] = MutMap.empty,
@@ -590,7 +588,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     
     def applyRewrittenScope[T](r: RewrittenScope[T]): T =
       val LifterResult(rewritten, defns) = liftNestedScopes(r)
-      extraDefns ++= defns
+      extraDefns ++= defns.gatherUsed
       rewritten
     
     override def applyBlock(b: Block): Block = b match
@@ -1042,6 +1040,8 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         bod
       )(false)
     
+    private val aux = LazyDefn(mkAuxDefn)
+    
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
       if isTrivial then c
       else
@@ -1055,6 +1055,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         )
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
+      aux.force
       Call(
         Value.Ref(auxSym, S(auxDsym)),
         formatArgs
@@ -1067,7 +1068,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     def rewriteImpl: LifterResult[FunDefn] =
       val LifterResult(lifted, extra) = mkFlattenedDefn
       if isTrivial then LifterResult(lifted, extra)
-      else LifterResult(lifted, mkAuxDefn :: extra)
+      else LifterResult(lifted, aux :: extra)
   class LiftedClass(override val obj: ScopedObject.Class)(using ctx: LifterCtxNew)
       extends LiftedScope[ClsLikeDefn](obj)
       with ClsLikeRewrittenScope[ClsLikeDefn](obj.cls.isym):
@@ -1122,8 +1123,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     val flattenedSym = BlockMemberSymbol(obj.cls.sym.nme + "$", Nil, true)
     val flattenedDSym = TermSymbol.fromFunBms(flattenedSym, N)
     
-    def mkFlattenedDefn: Opt[FunDefn] =
-      if isTrivial || obj.isObj then return N
+    def mkFlattenedDefn: FunDefn =
       val auxSyms = auxParams.map(p => VarSymbol(Tree.Ident(p.sym.nme)))
       val main = obj.cls.paramsOpt match
         case Some(value) => dupParamList(value)
@@ -1165,7 +1165,9 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         ret
       ))
       
-      S(FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false))
+      FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false)
+    
+    private val flat = LazyDefn(mkFlattenedDefn)
     
     def instObject = Instantiate(false, Value.Ref(cls.sym, S(cls.isym)), formatArgs)
     
@@ -1175,6 +1177,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         if inst.args is args then inst
         else inst.copy(args = args)
       else
+        flat.force
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(inst.mut)).asArg :: formatArgs ::: args
@@ -1186,6 +1189,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         if c.args is args then c
         else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
       else
+        flat.force
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(false)).asArg :: formatArgs ::: args
@@ -1232,9 +1236,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         auxParams = newAuxList
       )
       val extrasDefns = rewriterCtor.extraDefns.toList ::: rewriterPreCtor.extraDefns.toList ::: extras
-      mkFlattenedDefn match
-        case Some(value) => LifterResult(newCls, value :: extrasDefns)
-        case None => LifterResult(newCls, extrasDefns)
+      LifterResult(newCls, flat :: extrasDefns)
   
   private def createRewritten[T](s: TScopeNode[T])(using ctx: LifterCtxNew): RewrittenScope[T] = s.obj match
     case _: ScopedObject.Top => lastWords("tried to rewrite the top-level scope")
