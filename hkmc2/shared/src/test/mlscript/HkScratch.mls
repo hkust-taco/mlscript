@@ -5,28 +5,8 @@
 // :elt
 
 :global
-:d
-:todo
+// :d
+// :todo
 
-class Eff
-//│ Elab: { Cls Eff { }; }
 
-:noSanityCheck
-:ssjs
-:lift
-fun f(x) =
-  fun g() = x
-  g
-//│ Elab: { fun member:f‹692›(x‹693›) = { fun member:g‹691›() = x‹693›#666; member:g‹691›#666 }; }
-//│ JS:
-//│ let g, f, g$;
-//│ g$ = function g$(x) {
-//│   return () => {
-//│     return g(x)
-//│   }
-//│ };
-//│ g = function g(x) {
-//│   return x
-//│ };
-//│ f = function f(x) { let g$here; g$here = g$(x); return g$here };
-//│ block$res2 = undefined;
+
