@@ -1,7 +1,5 @@
 package hkmc2
 
-import scala.collection.mutable
-
 import mlscript.utils.*, shorthands.*
 import utils.*
 
@@ -75,31 +73,12 @@ object Lifter:
   object AccessInfo:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
-  type LocalVarSymbol = VarSymbol | TempSymbol
-  
-  def getVars(d: Defn): Set[Local] = d match
-    case f: FunDefn =>
-      (f.body.definedVars ++ f.params.flatMap(_.paramSyms)).collect:
-        case s: LocalVarSymbol => s
-    case c: ClsLikeDefn =>      
-      val companionVars = c.companion.fold(Set.empty)(_.ctor.definedVars)
-      (companionVars ++ c.preCtor.definedVars ++ c.ctor.definedVars).collect:
-        case s: LocalVarSymbol => s
-      
-    case _ => Set.empty
-
   object RefOfBms:
     def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]])] = p match
       case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
       case s @ Select(_, _) => s.symbol match
         case Some(value) => value.asBlkMember.map((_, S(value)))
         case _ => N
-      case _ => N
-  
-  object InstSel:
-    def unapply(p: Path) = p match
-      case Value.Ref(l: BlockMemberSymbol, d) => S((l, d))
-      case s @ Select(Value.Ref(l: BlockMemberSymbol, _), Tree.Ident("class")) => S((l, s.symbol))
       case _ => N
   
   def modOrObj(d: Defn) = d match
@@ -161,12 +140,11 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
   case class LifterMetadata(
     unliftable: Set[ClsSym | ModuleOrObjSym],
     modules: Set[ModuleOrObjSym],
-    firstClsFns: Set[TermSymbol]
   ):
     def ++(that: LifterMetadata) =
-      LifterMetadata(unliftable ++ that.unliftable, modules ++ that.modules, firstClsFns ++ that.firstClsFns)
+      LifterMetadata(unliftable ++ that.unliftable, modules ++ that.modules)
   object LifterMetadata:
-    def empty = LifterMetadata(Set.empty, Set.empty, Set.empty)
+    def empty = LifterMetadata(Set.empty, Set.empty)
   
   // d is a top-level definition
   // returns (ignored classes, modules, objects)
@@ -209,9 +187,11 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
           case _ => ()
       
       override def applyResult(r: Result): Unit = r match
-        case Call(Value.Ref(_: BlockMemberSymbol, _), args) =>
+        // do not search the ref to the class
+        case Instantiate(mut, RefOfBms(_, S(d)), args) =>
           args.foreach(applyArg)
-        case Instantiate(mut, InstSel(_), args) =>
+        // for class constructors
+        case Call(RefOfBms(_, S(d)), args) =>
           args.foreach(applyArg)
         case _ => super.applyResult(r)
       
@@ -272,7 +252,6 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
               case c: ScopedObject.Class => c.cls.isym
               case c: ScopedObject.ClassCtor => c.cls.isym
             ignored += isym
-          case ScopedObject.Func(fun, isMethod) => firstClsFns += fun.dSym
           case _ => super.applyValue(v)
         case _ => super.applyValue(v)
     
@@ -296,7 +275,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     for case s: ClsLikeSym <- ignored do
       dfs(s)
     
-    LifterMetadata(ignored ++ newUnliftable, modules, firstClsFns)
+    LifterMetadata(ignored ++ newUnliftable, modules)
   
   // This rewrites code so that it's valid when lifted to the top level.
   // This way, no piece of code must be traversed by a BlockRewriter more than once.
@@ -842,6 +821,14 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
       .toMap
     override lazy val liftedObjsMap: Map[InnerSymbol, LocalPath] = liftedObjsSyms.map:
       case k -> v => k -> v.asLocalPath
+    protected def rewriteMethods(node: ScopeNode, methods: List[FunDefn])(using ctx: LifterCtxNew) =
+      val mtds = node.children
+        .map: c =>
+          ctx.rewrittenScopes(c.obj.toInfo)
+        .collect:
+          case r: RewrittenFunc if r.obj.isMethod.isDefined => r 
+      val (liftedMtds, extras) = mtds.map(liftNestedScopes).unzip(using l => (l.liftedDefn, l.extraDefns))
+      LifterResult(liftedMtds, extras.flatten)
   
   // some helpers
   private def dupParam(p: Param): Param = p.copy(sym = VarSymbol(Tree.Ident(p.sym.nme)))
@@ -878,15 +865,6 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
       val rewritten = rewriter.rewrite(obj.fun.body)
       val withCapture = addExtraSyms(rewritten)
       LifterResult(obj.fun.copy(body = withCapture)(obj.fun.forceTailRec), rewriter.extraDefns.toList)
-
-  private def rewriteMethods(node: ScopeNode, methods: List[FunDefn])(using ctx: LifterCtxNew) =
-    val mtds = node.children
-      .map: c =>
-        ctx.rewrittenScopes(c.obj.toInfo)
-      .collect:
-        case r: RewrittenFunc if r.obj.isMethod.isDefined => r 
-    val (liftedMtds, extras) = mtds.map(liftNestedScopes).unzip(using l => (l.liftedDefn, l.extraDefns))
-    LifterResult(liftedMtds, extras.flatten)
   
   class RewrittenClassCtor(override val obj: ScopedObject.ClassCtor)(using ctx: LifterCtxNew) extends RewrittenScope[Unit](obj):
     override lazy val capturePath: Path = lastWords("tried to create a capture class for a class ctor")

@@ -429,7 +429,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           case Call(RefOfBms(_, SDSym(d)), args) =>
             args.foreach(super.applyArg(_))
             handleCalledScope(d)
-          case Instantiate(mut, InstSel(_, S(d)), args) =>
+          case Instantiate(mut, RefOfBms(_, SDSym(d)), args) =>
             args.foreach(super.applyArg)
             handleCalledScope(d)
           case _ => super.applyResult(r)
@@ -474,7 +474,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         
         override def applyDefn(defn: Defn): Unit = defn match
           case c: ClsLikeDefn if modOrObj(c) =>
-            handleCalledScope(c.isym) // TODO: use new system
+            handleCalledScope(c.isym)
             super.applyDefn(defn)
           case _ => super.applyDefn(defn)
 
