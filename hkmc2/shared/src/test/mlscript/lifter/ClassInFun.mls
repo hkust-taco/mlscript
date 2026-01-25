@@ -269,3 +269,15 @@ fun f(x) =
   A(2).toString()
 f(0)
 //│ = "A(2)"
+
+:todo
+fun f(x) =
+  class A(...r) with
+    fun a = r.push_back(x)
+    fun b = r
+  new A(1, 2, 3)
+let res = f(0)
+res.a
+res.b
+//│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
+//│ res = A(_)

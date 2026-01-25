@@ -2,6 +2,7 @@
 :effectHandlers
 :lift
 
+
 fun f() =
   (() => return 100)()
   print("Bad")
@@ -66,7 +67,7 @@ f()()
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.67: 	return 100
+//│ ║  l.68: 	return 100
 //│ ╙──      	^^^^^^^^^^
 
 :e
@@ -74,14 +75,14 @@ if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.75: 	    let f = () => return 100
+//│ ║  l.76: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.82: 	  type A = return "lol"
+//│ ║  l.83: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 

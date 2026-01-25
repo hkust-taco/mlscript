@@ -2,5 +2,7 @@
 :effectHandlers
 :lift
 
+abstract class Effect
+
 
 

@@ -1,10 +1,65 @@
 :js
 :lift
 
+:sjs
 data class A(x) with
   data class B(y) with
     fun getB() = x + y
   fun getA() = B(2).getB()
+//│ JS (unsanitized):
+//│ let B1, A1, B$;
+//│ B$ = function B$(isMut, A2, y) {
+//│   let tmp;
+//│   if (isMut === true) {
+//│     tmp = new B1.class(y);
+//│   } else {
+//│     tmp = globalThis.Object.freeze(new B1.class(y));
+//│   }
+//│   return tmp(A2)
+//│ };
+//│ B1 = function B(y) {
+//│   return (A2) => {
+//│     return globalThis.Object.freeze(new B.class(y)(A2));
+//│   }
+//│ };
+//│ (class B {
+//│   static {
+//│     B1.class = this
+//│   }
+//│   constructor(y) {
+//│     return (A2) => {
+//│       this.#A = A2;
+//│       this.y = y;
+//│       return this;
+//│     }
+//│   }
+//│   #B$cap;
+//│   #A;
+//│   getB() {
+//│     return this.#A.x + this.y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "B", ["y"]]; 
+//│ });
+//│ A1 = function A(x) {
+//│   return globalThis.Object.freeze(new A.class(x));
+//│ };
+//│ (class A {
+//│   static {
+//│     A1.class = this
+//│   }
+//│   constructor(x) {
+//│     this.x = x;
+//│   }
+//│   #A$cap;
+//│   getA() {
+//│     let tmp;
+//│     tmp = B$(false, this, 2);
+//│     return tmp.getB()
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "A", ["x"]]; 
+//│ });
 
 :expect 3
 A(1).getA()

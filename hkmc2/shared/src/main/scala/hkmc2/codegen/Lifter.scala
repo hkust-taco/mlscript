@@ -1055,6 +1055,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         )
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
+      if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
       aux.force
       Call(
         Value.Ref(auxSym, S(auxDsym)),
