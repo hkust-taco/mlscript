@@ -14,9 +14,6 @@ import hkmc2.Lifter.*
 
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
-import scala.jdk.CollectionConverters.*
-import java.util.IdentityHashMap
-import java.util.Collections
 import scala.collection.mutable.Buffer
 
 object UsedVarAnalyzer:
