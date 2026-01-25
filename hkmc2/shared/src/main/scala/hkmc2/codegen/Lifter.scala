@@ -738,9 +738,6 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
       * once lifted, referenced by their *definition symbol* (not BMS).
       */
     final val reqDefns = node.reqCaptureObjs
-      .filter:
-        case f: ScopedObject.Func if f.isMethod.isDefined => false
-        case _ => true
       .map(_.sym)
       .toSet.intersect(refdDSyms)
     

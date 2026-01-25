@@ -272,8 +272,12 @@ object ScopeData:
         case _: ScopedObject.Top => List.empty
         case _ =>
           // All unlifted neighbour nodes ::: parent's reqCaptureObjsImpl
-          val initial = parent.get.children.collect:
-            case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
+          val initial = parent.get.children
+            .filter:
+              case ScopeNode(obj = f: ScopedObject.Func) if f.isMethod.isDefined => false
+              case _ => true
+            .collect:
+              case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
           initial ::: parent.get.reqCaptureObjsImpl
       
       lazy val reqCaptureObjs: List[ScopedObject.Referencable[?]] = obj match
