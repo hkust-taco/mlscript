@@ -10,7 +10,7 @@ import document.*
 import document.Document
 import js.CodeBuilder
 import semantics.*, Elaborator.State
-import syntax.Tree.{BoolLit, IntLit, Ident}
+import syntax.Tree.{BoolLit, IntLit, StrLit, Ident}
 import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
@@ -275,6 +275,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.i31(i32.const(if value then 1 else 0))
     case Value.Lit(IntLit(value)) =>
       ref.i31(i32.const(value.toInt))
+    case Value.Lit(StrLit(value)) =>
+      string.const(value)
     case Value.Ref(l, _) =>
       ctx.getFunc(l) match
         case S(funcIdx) =>

@@ -1,0 +1,67 @@
+
+:global
+:wasm
+
+"Hello World!"
+//│ Wasm result:
+//│ = "Hello World!"
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] function body type must match, if function returns, on 
+//│ (string.const "Hello World!")
+//│ Assertion failed
+//│ 
+
+let s = "mlx"
+s
+//│ Wasm result:
+//│ = "mlx"
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
+//│ (local.set $0
+//│  (string.const "mlx")
+//│ )
+//│ Assertion failed
+//│ 
+
+let t = ["a", "b", "c"]
+t.[1]
+//│ Wasm result:
+//│ = "b"
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
+//│ (array.new_fixed $TupleArray 3
+//│  (string.const "a")
+//│  (string.const "b")
+//│  (string.const "c")
+//│ )
+//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
+//│ (array.new_fixed $TupleArray 3
+//│  (string.const "a")
+//│  (string.const "b")
+//│  (string.const "c")
+//│ )
+//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
+//│ (array.new_fixed $TupleArray 3
+//│  (string.const "a")
+//│  (string.const "b")
+//│  (string.const "c")
+//│ )
+//│ Assertion failed
+//│ 
+
+let greeting = "Hello, "
+let who = "Wasm"
+[greeting, who].[0]
+//│ Wasm result:
+//│ = "Hello, "
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
+//│ (local.set $0
+//│  (string.const "Hello, ")
+//│ )
+//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
+//│ (local.set $1
+//│  (string.const "Wasm")
+//│ )
+//│ Assertion failed
+//│ 

@@ -11,8 +11,9 @@ import hkmc2.utils.*
 class ReplHost(rootPath: Str)(using TL) {
   
   private val builder = new java.lang.ProcessBuilder()
-  // `--interactive` always enters the REPL even if stdin is not a terminal
-  builder.command("node", "--interactive")
+  // `--interactive` always enters the REPL even if stdin is not a terminal.
+  // `--experimental-wasm-stringref` is required for Binaryen stringref opcodes like `string.const`.
+  builder.command("node", "--interactive", "--experimental-wasm-stringref")
   private val proc = builder.start()
 
   private val stdin = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream))
