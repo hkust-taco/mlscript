@@ -49,8 +49,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
-  private var topLevelClassDefnsByName: Map[Str, ClsLikeDefn] = Map.empty
-
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
     defn.owner.isEmpty
       && (defn.k is syntax.Cls)
@@ -62,30 +60,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case End(_) => true
         case _ => false)
 
-  private def indexTopLevelClasses(b: Block): Unit = b match
+  private def predeclareTopLevelDefnTypes(b: Block)(using Ctx): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
       if isSupportedTopLevelClass(defn) then
-        topLevelClassDefnsByName.get(defn.sym.nme) match
-          case S(existing) =>
-            lastWords(s"Duplicate top-level class name `${defn.sym.nme}` in wasm backend: ${existing.sym} and ${defn.sym}")
-          case N =>
-            topLevelClassDefnsByName = topLevelClassDefnsByName.updated(defn.sym.nme, defn)
-      indexTopLevelClasses(rst)
+        getOrCreateClassType(defn)
+      predeclareTopLevelDefnTypes(rst)
     case Define(_, rst) =>
-      indexTopLevelClasses(rst)
+      predeclareTopLevelDefnTypes(rst)
     case Begin(_, rst) =>
-      indexTopLevelClasses(rst)
+      predeclareTopLevelDefnTypes(rst)
     case Scoped(_, body) =>
-      indexTopLevelClasses(body)
+      predeclareTopLevelDefnTypes(body)
     case _ => ()
-
-  private def ensureTopLevelClassType(sym: BlockMemberSymbol)(using Ctx): Unit =
-    if ctx.getType(sym).isEmpty then
-      topLevelClassDefnsByName.get(sym.nme) match
-        case S(defn) =>
-          getOrCreateClassType(defn)
-          ()
-        case N => ()
 
   private def getOrCreateClassType(clsLikeDefn: ClsLikeDefn)(using Ctx): TypeIdx =
     ctx.getType(clsLikeDefn.sym).getOrElse {
@@ -311,7 +297,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case r => result(r)
 
   def fieldSelect(thisSym: BlockMemberSymbol, sym: DefinitionSymbol[?])(using Ctx, Raise): FieldIdx =
-    ensureTopLevelClassType(thisSym)
     val structInfo = ctx.getTypeInfo_!(thisSym)
     val symToField = structInfo.compType match
       case ty: StructType => ty.fields
@@ -749,7 +734,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               defn match
                 case FunDefn(params = Nil) =>
                   lastWords("cannot generate function with no parameter list")
-                case FunDefn(own, sym, dSym, ps :: pss, bod) =>
+                case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
                   if own.nonEmpty then
                     break(errExpr(
                       Ls(
@@ -991,7 +976,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   Ls(msg"Could not resolve BlockMemberSymbol for class pattern" -> cls.toLoc),
                   extraInfo = S(s"ClassLikeSymbol: ${cls.toString}")
                 ))
-              ensureTopLevelClassType(clsBlkMemberSym)
               val clsTypeIdx = ctx.getType_!(clsBlkMemberSym, resolveSymIdx = true)
               
               val expectedTag = clsTypeIdx match
@@ -1138,8 +1122,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
     )
     
-    topLevelClassDefnsByName = Map.empty
-    indexTopLevelClasses(p.main)
+    // Two-pass scheme: register all supported top-level class struct types before compiling any
+    // functions, so nested function codegen never observes missing class types.
+    predeclareTopLevelDefnTypes(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
