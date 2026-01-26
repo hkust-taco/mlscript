@@ -58,8 +58,10 @@ fun f(x, y, b) =
 //│   static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
 //│ });
 //│ f = function f(x, y, b) {
-//│   let lambda, tmp, lambda1, tmp1;
-//│   tmp = aux(lambda);
-//│   tmp1 = aux(lambda1);
+//│   let lambda, tmp, lambda1, tmp1, tmp2, tmp3;
+//│   tmp2 = globalThis.Object.freeze(new Lambda$01(x));
+//│   tmp = aux(tmp2);
+//│   tmp3 = globalThis.Object.freeze(new Lambda$11(y, b));
+//│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
 //│ };

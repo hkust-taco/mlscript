@@ -21,6 +21,17 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
         val l2 = applyLocal(l)
         k(Value.Ref(l2, disamb))
       case _ => super.applyValue(v)(k)
+  
+  class InsertInstance(using mapping: Map[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
+    override def applyValue(v: Value)(k: Value => Block) = v match
+      case Value.Ref(l: BlockMemberSymbol, disamb) => mapping.get(l) match
+        case Some(fd) =>
+          val tmp = new TempSymbol(None, "tmp")
+          Scoped(Set(tmp),
+            Assign(tmp,
+              Instantiate(false, Value.Ref(fd.sym, disamb), fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
+        case _ => super.applyValue(v)(k)
+      case _ => super.applyValue(v)(k)
 
   private def collectFCFunctionDefs(d: Defn)(using mapping: HashMap[BlockMemberSymbol, FunDefn]): Option[Defn] = d match
     case fd @ FunDefn(owner, sym, dSym, params, body) if !sym.nameIsMeaningful => // lambda functions are here
@@ -67,50 +78,6 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
         case Handler(sym, resumeSym, params, body) => Handler(sym, resumeSym, params, collectFCFunctionDefs(body))
       }, collectFCFunctionDefs(body), collectFCFunctionDefs(rest))
 
-  private def rewriteFCRefs(p: Path)(using mapping: HashMap[BlockMemberSymbol, FunDefn]): Path = p // TODO
-
-  private def rewriteFCRefs(r: Result)(using mapping: HashMap[BlockMemberSymbol, FunDefn]): Result = r // TODO
-
-  private def rewriteFCRefs(d: Defn)(using mapping: HashMap[BlockMemberSymbol, FunDefn]): Defn = d match
-    case fd @ FunDefn(owner, sym, dSym, params, body) =>
-      FunDefn(owner, sym, dSym, params, rewriteFCRefs(body))(fd.forceTailRec)
-    case ValDefn(tsym, sym, rhs) => ValDefn(tsym, sym, rewriteFCRefs(rhs))
-    case ClsLikeDefn(owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor, companion, bufferable) =>
-      ClsLikeDefn(owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields,
-        rewriteFCRefs(preCtor), rewriteFCRefs(ctor), companion.map {
-          case ClsLikeBody(isym, methods, privateFields, publicFields, ctor) =>
-            ClsLikeBody(isym, methods.map(
-              m => rewriteFCRefs(m) match
-                case f: FunDefn => f
-                case _ => ???
-            ), privateFields, publicFields, rewriteFCRefs(ctor))
-        }, bufferable)
-
-  private def rewriteFCRefs(b: Block)(using mapping: HashMap[BlockMemberSymbol, FunDefn]): Block = b match
-    case _: End | _: Break | _: Continue => b
-    case Return(res, imp) => Return(rewriteFCRefs(res), imp)
-    case Throw(v) => Throw(rewriteFCRefs(v))
-    case Label(label, loop, body, rest) =>
-      Label(label, loop, rewriteFCRefs(body), rewriteFCRefs(rest))
-    case Scoped(syms, body) => Scoped(syms, rewriteFCRefs(body))
-    case Begin(body, rest) =>
-      Begin(rewriteFCRefs(body), rewriteFCRefs(rest))
-    case Match(scrut, arms, dflt, rest) =>
-      Match(scrut, arms.map(p => (p._1, rewriteFCRefs(p._2))), dflt.map(rewriteFCRefs), rewriteFCRefs(rest))
-    case TryBlock(sub, finallyDo, rest) =>
-      TryBlock(rewriteFCRefs(sub), rewriteFCRefs(finallyDo), rewriteFCRefs(rest))
-    case Assign(lhs, rhs, rest) =>
-      Assign(lhs, rewriteFCRefs(rhs), rewriteFCRefs(rest))
-    case af @ AssignField(lhs, nme, rhs, rest) =>
-      AssignField(lhs, nme, rewriteFCRefs(rhs), rewriteFCRefs(rest))(af.symbol)
-    case AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
-      AssignDynField(lhs, fld, arrayIdx, rewriteFCRefs(rhs), rewriteFCRefs(rest))
-    case Define(defn, rest) => Define(rewriteFCRefs(defn), rewriteFCRefs(rest))
-    case HandleBlock(lhs, res, par, args, cls, handlers, body, rest) =>
-      HandleBlock(lhs, res, par, args, cls, handlers.map {
-        case Handler(sym, resumeSym, params, body) => Handler(sym, resumeSym, params, rewriteFCRefs(body))
-      }, rewriteFCRefs(body), rewriteFCRefs(rest))
-
   private def generateFunctionClasses(funcs: List[FunDefn], rest: Block): Block = funcs.foldRight(rest)(
     (func, res) =>
       val capturedVariables = func.capturedVariables
@@ -133,9 +100,9 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
   override def applyBlock(b: Block): Block =
     val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
     val noFirstClassFunc = collectFCFunctionDefs(b)(using fcfDefs)
-    val applied = rewriteFCRefs(noFirstClassFunc)(using fcfDefs)
+    val applied = new InsertInstance(using fcfDefs.toMap).applyBlock(noFirstClassFunc)
     // TODO: put things inside module
-    generateFunctionClasses(fcfDefs.map(p => p._2).toList, noFirstClassFunc)
+    generateFunctionClasses(fcfDefs.map(p => p._2).toList, applied)
 
   extension (fd: FunDefn) {
     def capturedVariables: List[VarSymbol] =
