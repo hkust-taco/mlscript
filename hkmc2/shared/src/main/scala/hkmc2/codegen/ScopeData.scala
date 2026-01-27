@@ -15,7 +15,7 @@ import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 
 object ScopeData:
-  opaque type ScopeUID = BigInt
+  opaque type ScopeUID = Int
   val dummyUID: ScopeUID = 0
   class FreshUID:
     private val underlying = FreshInt()

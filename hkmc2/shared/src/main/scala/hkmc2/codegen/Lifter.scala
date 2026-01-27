@@ -28,13 +28,9 @@ object Lifter:
   object FreeVars:
     val empty = FreeVars(Set.empty, Set.empty)
   
-  class LazyDefn(defn: => Defn):
-    var value: Opt[Defn] = N
-    def force =
-      value = S(defn)
-  extension (l: List[LazyDefn | Defn])
+  extension (l: List[Lazy[Defn] | Defn])
     def gatherUsed: List[Defn] = l.collect:
-      case l: LazyDefn if l.value.isDefined => l.value.get
+      case l: Lazy[?] if !l.isEmpty => l.get_!
       case d: Defn => d
     
   /**
@@ -89,10 +85,8 @@ object Lifter:
   * Lifts classes and functions to the top-level. Also automatically rewrites lambdas.
   * Assumes the input block does not have any `HandleBlock`s.
   */
-class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise, Config):
+class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   import Lifter.*
-  
-  val handlerSyms: Set[Symbol] = Set(State.nonLocalRet, State.effectSigSymbol)
   
   extension (l: Local)
     def asLocalPath: LocalPath = LocalPath.Sym(l)
@@ -214,8 +208,6 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
             case None => ()
             // for now, allow selecting runtime symbols
             case Some(Select(qual = Value.Ref(l, _))) if State.runtimeSymbol is l => ()
-            case Some(RefOfBms(_, S(s: ClassSymbol))) if handlerSyms.contains(s) => ()
-            case Some(RefOfBms(s, _)) if handlerSyms.contains(s) => ()
             case Some(RefOfBms(_, S(s: ClassSymbol))) =>
               if nestedScopes.contains(s) then extendsGraph += (s -> isym)
             case _ if !ignored.contains(isym) =>
@@ -475,7 +467,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     
   val usedVars = UsedVarAnalyzer(topLevelBlk, data)
   
-  case class LifterResult[+T](liftedDefn: T, extraDefns: List[LazyDefn | Defn])
+  case class LifterResult[+T](liftedDefn: T, extraDefns: List[Lazy[Defn] | Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]] = MutMap.empty,
     rewrittenScopes: MutMap[ScopedInfo, RewrittenScope[?]] = MutMap.empty,
@@ -994,7 +986,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         bod
       )(false)
     
-    private val aux = LazyDefn(mkAuxDefn)
+    private val aux = Lazy[Defn](mkAuxDefn)
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
       if isTrivial then c
@@ -1010,7 +1002,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
-      aux.force
+      aux.get // forces computation
       Call(
         Value.Ref(auxSym, S(auxDsym)),
         formatArgs
@@ -1122,7 +1114,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
       
       FunDefn(N, flattenedSym, flattenedDSym, params :: Nil, bod)(false)
     
-    private val flat = LazyDefn(mkFlattenedDefn)
+    private val flat = Lazy[Defn](mkFlattenedDefn)
     
     def instObject = Instantiate(false, Value.Ref(cls.sym, S(cls.isym)), formatArgs)
     
@@ -1132,7 +1124,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         if inst.args is args then inst
         else inst.copy(args = args)
       else
-        flat.force
+        flat.get // force computation
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(inst.mut)).asArg :: formatArgs ::: args
@@ -1144,7 +1136,7 @@ class Lifter(topLevelBlk: Block, handlerPaths: HandlerPaths)(using State, Raise,
         if c.args is args then c
         else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
       else
-        flat.force
+        flat.get // force computation
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(false)).asArg :: formatArgs ::: args
