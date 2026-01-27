@@ -354,6 +354,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   given DeforestPreAnalyzer = preAnalyzer
   import StratVarState.freshVar
   
+  // generate prod vars for symbols that we care,
+  // default to NoProd for unknown symbols
   object generateProdVars:
     // generating strat vars for
     //   - let/val bindings in top level blocks
@@ -445,7 +447,20 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
   
-  // for x <- generateProdVars.store do tl.log(s"${x._1} -> ${x._2}")
+  for x <- generateProdVars.store do tl.log(s"${x._1} -> ${x._2}")
+  
+  class ConstraintsAndCacheHitCollector(val forFun: Opt[TermSymbol]):
+    var constraints: Ls[ProdStrat -> ConsStrat] = Nil
+    var trackedFunctionSymbolsInOneRecGroup: Ls[BlockMemberSymbol] = Nil
+    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
+    def constrain(cs: Ls[ProdStrat -> ConsStrat]) = constraints :::= cs
+    def hit(s: BlockMemberSymbol) = trackedFunctionSymbolsInOneRecGroup ::= s
+    def hit(ss: Ls[BlockMemberSymbol]) = trackedFunctionSymbolsInOneRecGroup :::= ss
+  
+  // object funSymToProdStratScheme:
+  //   def getOrUpdate(s: TermSymbol)
+  
+  
   
   
 
