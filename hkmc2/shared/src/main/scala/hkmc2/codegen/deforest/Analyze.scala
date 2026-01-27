@@ -16,7 +16,7 @@ type InstantiationId = Ls[ResultId]
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
   lazy val asProdStrat = ProdVar(this)
   lazy val asConsStrat = ConsVar(this)
-  override def toString(): String = s"${if name.isEmpty() then "var" else name}@${uid}@$generatedForFun"
+  override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 object StratVarState:
   def freshVar(nme: String)(using vuid: Uid.StratVar.State) =
     val newId = vuid.nextUid
@@ -119,6 +119,10 @@ class DeforestPreAnalyzer(
     val labelSymToCtxOfLabel = MutMap.empty[Symbol, Ls[InCtx]]
     val selToCtxOfSel = MutMap.empty[ResultId, Ls[InCtx]]
     
+    lazy val funSymToFunDefn = toplvlFunAndBlkToAnalyze
+      .collect:
+        case f: FunDefn => f.dSym -> f
+      .toMap
     def getFullRestOfMatch(scrut: ResultId) = matchScrutToCtxOfMatch(scrut)
       .iterator
       .takeWhile:
@@ -129,7 +133,9 @@ class DeforestPreAnalyzer(
         case InCtx.Mtch(m, cse) => m.rest
         case InCtx.Begn(b) => b.rest
       .foldLeft(matchScrutToMatchBlock(scrut).rest)(Begin.apply)
-
+  end res
+  
+  
   enum InCtx:
     case TopLvl()
     case Mod(mod: ClsLikeBody)
@@ -356,7 +362,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   // generate prod vars for symbols that we care,
   // default to NoProd for unknown symbols
-  object generateProdVars:
+  val generateProdVars =
     // generating strat vars for
     //   - let/val bindings in top level blocks
     //   - let/val bindings in top level lone-modules with
@@ -443,22 +449,30 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             applyBlock(body)
           case _ => super.applyBlock(b)
       AddStratForToplvlFun.applyFunDefn(f)
+    store.toMap.withDefaultValue(NoProd)
   end generateProdVars
   
+  // just compute the scc first...
+  val scc: List[(String, Set[TermSymbol])] =
+    import algorithms.partitionScc
+    var edges = List.empty[(TermSymbol, TermSymbol)]
+    for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+      object CollectAllReferredFun extends BlockTraverser:
+        override def applyPath(p: Path) = p match
+          case FunRef(callee) =>
+            if preAnalyzer.res.funSymToFunDefn.contains(callee) then
+              edges ::= f.dSym -> callee
+          case _ => ()
+      CollectAllReferredFun.applyBlock(f.body)
+    partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse.map: fs =>
+      fs.sortBy(_.uid).map(_.name).mkString("_") -> fs.toSet
+  end scc
+  
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
+  // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
+  // tl.log(scc)
   
-  for x <- generateProdVars.store do tl.log(s"${x._1} -> ${x._2}")
   
-  class ConstraintsAndCacheHitCollector(val forFun: Opt[TermSymbol]):
-    var constraints: Ls[ProdStrat -> ConsStrat] = Nil
-    var trackedFunctionSymbolsInOneRecGroup: Ls[BlockMemberSymbol] = Nil
-    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
-    def constrain(cs: Ls[ProdStrat -> ConsStrat]) = constraints :::= cs
-    def hit(s: BlockMemberSymbol) = trackedFunctionSymbolsInOneRecGroup ::= s
-    def hit(ss: Ls[BlockMemberSymbol]) = trackedFunctionSymbolsInOneRecGroup :::= ss
-  
-  // object funSymToProdStratScheme:
-  //   def getOrUpdate(s: TermSymbol)
   
   
   

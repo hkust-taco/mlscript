@@ -23,11 +23,17 @@ object DeforestableSelect:
   // and this selection gets a bot strategy
   def unapply(s: Select)(using eState: Elaborator.State): Opt[TermSymbol | ClassSymbol | ModuleOrObjectSymbol | TopLevelSymbol] =
     s.symbol match
-    case S(s) if s.asTrm.isDefined =>
-      val tSym = s.asTrm.get
+    case S(sSym) if sSym.asTrm.isDefined =>
+      val tSym = sSym.asTrm.get
       tSym.k match
         case (Ins | HandlerBind | MutVal) => None
-        case (ImmutVal | LetBind | Fun | ParamBind) => Some(tSym)
+        case (ImmutVal | LetBind | ParamBind) => Some(tSym)
+        case Fun =>
+          // if is class ctor, we should return ClassSymbol
+          val isClassCtor =
+            tSym.owner.exists(c => c.asCls.exists(cls => cls.name == s.name.name))
+          if isClassCtor then tSym.owner.flatMap(_.asCls)
+          else Some(tSym)
     case S(s) if s.asCls.isDefined || s.asObj.isDefined =>
       s.asCls orElse s.asObj
     case _ => s match
@@ -36,7 +42,6 @@ object DeforestableSelect:
         Tree.Ident("Error")
       ) => Some(eState.globalThisSymbol)
       case _ => None
-      
 
 object CtorRef:
   def unapply(s: Path)(using Elaborator.State): Option[ClassSymbol | ModuleOrObjectSymbol] =
@@ -45,6 +50,18 @@ object CtorRef:
       case Value.Ref(r, _) => r.asCls orElse r.asObj
       case _ => None
 
+object FunRef:
+  def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
+    case DeforestableSelect(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
+    case Value.Ref(l, disamb) =>
+      for
+        defnSym <- disamb
+        tSym <- defnSym.asTrm
+        // make sure this is not a ref to a class ctor
+        if (tSym.k is syntax.Fun) && l.asCls.isEmpty
+      yield
+        tSym
+    case _ => None
 
 object Deforest:
   class State:
