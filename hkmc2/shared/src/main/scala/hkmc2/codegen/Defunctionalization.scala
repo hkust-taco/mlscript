@@ -57,16 +57,18 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
         k(Value.Ref(l2, disamb))
       case _ => super.applyValue(v)(k)
   
-  class InsertInstance(using mapping: Map[BlockMemberSymbol, FunDefn | BlockMemberSymbol]) extends BlockTransformer(new SymbolSubst):
+  class InsertInstance(topLevelMod: Option[BlockMemberSymbol])(using mapping: Map[BlockMemberSymbol, FunDefn | BlockMemberSymbol]) extends BlockTransformer(new SymbolSubst):
     override def applyValue(v: Value)(k: Value => Block) = v match
       case Value.Ref(l: BlockMemberSymbol, disamb) => mapping.get(l) match
         case Some(fd: FunDefn) =>
           val tmp = new TempSymbol(None, "tmp")
+          val cls = topLevelMod.map(sym => Value.Ref(sym, None).selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
           Scoped(Set(tmp),
             Assign(tmp,
-              Instantiate(false, Value.Ref(fd.sym, disamb), fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
+              Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
         case Some(sym: BlockMemberSymbol) =>
           val tmp = new TempSymbol(None, "tmp")
+          val cls = topLevelMod.map(s => Value.Ref(s, None).selSN(sym.nme)).getOrElse(Value.Ref(sym, disamb))
           Scoped(Set(tmp),
             Assign(tmp,
               Instantiate(false, Value.Ref(sym, disamb), Nil), k(Value.Ref(tmp, None))))
@@ -127,7 +129,10 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
   override def applyBlock(b: Block): Block =
     val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn | BlockMemberSymbol]
     val noFirstClassFunc = new CollectFirstClassFunctions(using fcfDefs).applyBlock(b)
-    val passInstance = new InsertInstance(using fcfDefs.toMap).applyBlock(noFirstClassFunc)
+    val topLevelMod = noFirstClassFunc match
+      case Scoped(_, Define(cls: ClsLikeDefn, _)) if cls.companion.isDefined => Some(cls.sym)
+      case _ => None
+    val passInstance = new InsertInstance(topLevelMod)(using fcfDefs.toMap).applyBlock(noFirstClassFunc)
     val called = new UpdateCall().applyBlock(passInstance)
     val (fcfCls, rhsCls) = fcfDefs.toList.partitionMap {
       case (_, fd: FunDefn) => Left(fd)
@@ -144,8 +149,9 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
         generateRHSFunctionClasses(None, rhsCls, generateFCFunctionClasses(None, fcfCls, called))
 
   extension (fd: FunDefn) {
-    def capturedVariables: List[VarSymbol] =
+    def capturedVariables: List[VarSymbol | TermSymbol] =
       (fd.body.freeVars -- fd.params.flatMap(p => p.params.map(e => e.sym))).toList.collect {
         case v: VarSymbol => v
+        case t: TermSymbol => t 
       }
   }
