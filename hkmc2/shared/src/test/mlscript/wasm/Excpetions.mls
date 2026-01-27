@@ -1,0 +1,40 @@
+
+:global
+:wasm
+
+
+:re
+throw 1
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
+
+:re
+let x = 2
+throw x
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
+
+:re
+throw 0
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
+
+:re
+throw "error"
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
+//│ // Standard Error:
+//│ [wasm-validator error in function entry] tag param types must match, on 
+//│ (string.const "error")
+//│ (on argument 0)
+//│ Assertion failed
+//│ 
+
+:re
+let x = 1
+set x += 1 in x
+//│ Wasm result:
+//│ ═══[RUNTIME ERROR] CompileError: WebAssembly.instantiate(): Compiling function #1 failed: Invalid opcode 0x1f (enable with --experimental-wasm-exnref) @+101
+//│ // Standard Error:
+//│ Assertion failed
+//│ 

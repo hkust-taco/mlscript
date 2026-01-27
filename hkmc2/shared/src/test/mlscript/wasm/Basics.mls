@@ -33,7 +33,7 @@ x
 fun foo() = 42
 foo
 //│ ╔══[COMPILATION ERROR] Returning function instances is not supported
-//│ ║  l.34: 	foo
+//│ ║  l.44: 	foo
 //│ ╙──      	^^^
 
 

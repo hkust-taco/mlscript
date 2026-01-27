@@ -180,12 +180,12 @@ class Baz(val z)
 if Baz(10) is
   Bar(a) then 0
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: unreachable
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
 
 :re
 if false then 1
 //│ Wasm result:
-//│ ═══[RUNTIME ERROR] RuntimeError: unreachable
+//│ ═══[RUNTIME ERROR] [object WebAssembly.Exception]
 
 class Foo(val x, val y)
 if Foo(1,2) is Foo(a,b) then 0

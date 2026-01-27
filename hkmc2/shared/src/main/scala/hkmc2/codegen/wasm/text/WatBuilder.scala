@@ -49,6 +49,21 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** Gets (and caches) the exception tag used for MLX `throw`. */
+  private def exnTagIdx(using Ctx): TagIdx =
+    ctx.getOrCreateWasmIntrinsicTag("mlx_exn",
+      ctx.addTag(TagInfo(id = S(SymIdx("mlx_exn")), typeIdx = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = N,
+          FunctionType(
+            params = Seq(WasmParam(N, RefType.anyref)),
+            results = Seq.empty
+          )
+        )
+      )))
+    )
+
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
    */
@@ -82,6 +97,11 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty)
+
+  /** Converts expression result types to WAT result clauses, dropping unreachable types. */
+  private def resultClauses(expr: Expr): Seq[Result] =
+    if expr.resultTypes.exists(_ is UnreachableType) then Seq.empty
+    else expr.resultTypes.map(ty => Result(ty.asValType_!))
 
   /** 
    * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
@@ -392,6 +412,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
 
     case Instantiate(_, cls, as) =>
+      cls match
+        case Select(Value.Ref(sym, _), id) if (sym eq State.globalThisSymbol) && id.name == "Error" =>
+          return as.headOption match
+            case S(arg) => arg.value match
+                case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
+                case Value.Lit(IntLit(value)) => ref.i31(i32.const(value.toInt))
+                case _ => ref.i31(i32.const(0))
+            case N => ref.i31(i32.const(0))
+        case _ => ()
       val ctorClsSymOpt = cls match
         case ref: Value.Ref => ref.disamb
         case sel: Select => sel.symbol
@@ -573,7 +602,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignExpr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case assign @ AssignField(lhs, nme, rhs, rst) =>
@@ -606,7 +635,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case assign @ AssignDynField(lhs, fld, arrayIdx, rhs, rst) =>
@@ -634,7 +663,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Instructions.block(
         label = N,
         children = Seq(assignInstr, rstBlk),
-        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+        resultTypes = resultClauses(rstBlk)
       )
 
     case Define(defn, rst) =>
@@ -665,7 +694,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   ),
                   rstWat
                 ),
-                resultTypes = rstWat.resultTypes.map(r => Result(r.asValType_!))
+                resultTypes = resultClauses(rstWat)
               )
 
         case defn: (FunDefn | ClsLikeDefn) =>
@@ -874,7 +903,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             case _ => Instructions.block(
                 label = N,
                 children = Seq(res, rstBlk),
-                resultTypes = rstBlk.resultTypes.map(ty => Result(ty.asValType_!))
+                resultTypes = resultClauses(rstBlk)
               )
 
     case Return(res, true) =>
@@ -1042,11 +1071,52 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             Instructions.block(
               label = N,
               children = Seq(matchBlock, rstExpr),
-              resultTypes = rstExpr.resultTypes.map(ty => Result(ty.asValType_!))
+              resultTypes = resultClauses(rstExpr)
             )
 
-    // TODO: Implement proper WASM exception throwing
-    case Throw(res) => unreachable
+    case TryBlock(sub, finallyDo, rst) =>
+      val exnLocal = mkTempLocal("exn")
+      val catchLabelSym = TempSymbol(N, "catch")
+      val catchLabel = scope.allocateName(catchLabelSym)
+
+      val tryExpr = Instructions.block(
+        label = S(catchLabel),
+        children = Seq(
+          Instructions.try_table(
+            label = N,
+            resultTypes = Seq(Result(RefType.anyref)),
+            catches = Seq(Instructions.CatchClause.Catch(exnTagIdx, catchLabel)),
+            body = Seq(
+              returningTerm(sub),
+              ref.`null`(HeapType.Any)
+            )
+          )
+        ),
+        resultTypes = Seq(Result(RefType.anyref))
+      )
+
+      val setExn = local.set(exnLocal, tryExpr)
+      val finallyExpr = returningTerm(finallyDo)
+      val rstExpr = returningTerm(rst)
+
+      val exnIsNull = ref.is_null(local.get(exnLocal, RefType.anyref))
+      val rethrow = Instructions.`throw`(exnTagIdx, Seq(local.get(exnLocal, RefType.anyref)))
+      val afterTry = Instructions.`if`(
+        condition = exnIsNull,
+        ifTrue = rstExpr,
+        ifFalse = S(rethrow),
+        resultTypes = resultClauses(rstExpr)
+      )
+
+      Instructions.block(
+        label = N,
+        children = Seq(setExn, finallyExpr, afterTry),
+        resultTypes = resultClauses(afterTry)
+      )
+
+    case Throw(res) =>
+      val excWat = result(res)
+      Instructions.`throw`(exnTagIdx, Seq(excWat))
 
     case End(_) => nop
 

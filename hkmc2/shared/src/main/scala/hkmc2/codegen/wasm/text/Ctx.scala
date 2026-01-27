@@ -128,6 +128,18 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
+/** A Wasm tag and its associated information. */
+class TagInfo(
+    val id: Opt[SymIdx],
+    val typeIdx: TypeIdx
+) extends ToWat:
+
+  private def idDoc: Document = id.fold(doc"")(_.toWat)
+
+  def toWat: Document =
+    doc"(tag${idDoc.surroundUnlessEmpty(doc" ")} (type ${typeIdx.toWat}))"
+end TagInfo
+
 enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
@@ -159,6 +171,7 @@ object Ctx:
     namedTypes = MutMap.empty,
     funcs = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
+    tags = ArrayBuf.empty,
     locals = MutMap() :: Nil
   )
 
@@ -189,6 +202,7 @@ class Ctx(
     namedTypes: MutMap[BlockMemberSymbol, NumIdx],
     funcs: ArrayBuf[FuncInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
+    tags: ArrayBuf[TagInfo],
     var locals: Ls[MutMap[Local, NumIdx]]
 ) extends ToWat:
 
@@ -196,6 +210,7 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val wasmIntrinsicTags: MutMap[Str, TagIdx] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -243,6 +258,12 @@ class Ctx(
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
+
+  /** Adds a tag into this context. */
+  def addTag(tagInfo: TagInfo): TagIdx =
+    val numIdx = NumIdx(tags.size)
+    tags += tagInfo
+    TagIdx(tagInfo.id.getOrElse(numIdx))
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
@@ -335,7 +356,11 @@ class Ctx(
   def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
+  /** Returns the cached [[TagIdx]] for the intrinsic tag named `name`, creating it if absent. */
+  def getOrCreateWasmIntrinsicTag(name: Str, createTag: => TagIdx): TagIdx =
+    wasmIntrinsicTags.getOrElseUpdate(name, createTag)
+
   def toWat: Document =
-    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${(types.toSeq ++ tags.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
 
 end Ctx

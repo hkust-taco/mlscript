@@ -6,6 +6,12 @@ import mlscript.utils.*, shorthands.*
 import document.*
 
 object Instructions:
+  sealed trait CatchClause extends ToWat
+
+  object CatchClause:
+    case class Catch(tag: TagIdx, label: Str) extends CatchClause:
+      def toWat: Document = doc"(catch ${tag.toWat} $$${label})"
+
   /** Creates a `block` instruction. */
   def block(
       label: Opt[Str],
@@ -89,6 +95,29 @@ object Instructions:
     instrargs = Seq.empty,
     stackargs = value.toSeq,
     resultTypes = value.fold(Seq.empty)(_.resultTypes)
+  )
+
+  /** Creates a `try_table` instruction. */
+  def try_table(
+      label: Opt[Str],
+      resultTypes: Seq[Result],
+      catches: Seq[CatchClause],
+      body: Seq[Expr]
+  ): FoldedInstr =
+    val labelWat = label.map(lbl => doc"$$$lbl")
+    FoldedInstr(
+      mnemonic = "try_table",
+      instrargs = labelWat.toSeq ++ resultTypes ++ catches,
+      stackargs = body,
+      resultTypes = resultTypes.map(_.valtype)
+    )
+
+  /** Creates a `throw` instruction. */
+  def `throw`(tag: TagIdx, operands: Seq[Expr]): FoldedInstr = FoldedInstr(
+    mnemonic = "throw",
+    instrargs = Seq(tag.toWat),
+    stackargs = operands,
+    resultType = S(UnreachableType)
   )
 
   /** Creates an `unreachable` instruction. */
@@ -270,6 +299,21 @@ object Instructions:
   end array
 
   object ref:
+    /** Creates a `ref.null` instruction. */
+    def `null`(heapType: HeapType): FoldedInstr = FoldedInstr(
+      mnemonic = "ref.null",
+      instrargs = Seq(heapType.toWat),
+      stackargs = Seq.empty,
+      resultType = S(RefType(heapType, nullable = true))
+    )
+
+    /** Creates a `ref.is_null` instruction. */
+    def is_null(value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "ref.is_null",
+      instrargs = Seq.empty,
+      stackargs = Seq(value),
+      resultType = S(I32Type)
+    )
     /** Creates a `ref.func` instruction. */
     def func(idx: FuncIdx, ty: RefType): FoldedInstr = FoldedInstr(
       mnemonic = "ref.func",
