@@ -68,19 +68,28 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         
         case _ => super.applyBlock(b)
       
+      def addModObjParent(node: ScopeNode) = node.bestModOrObjOwner.foreach: d =>
+        accessed.accessed.add(d)
+      
       override def applyPath(p: Path): Unit = p match
         case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
         case RefOfBms(_, SDSym(dSym)) =>
-          // Check if it's referencing a class method.
-          // If so, then it requires reading the class symbol
           val node = scopeData.getNode(dSym)
           node.obj match
-            // for definitions nested inside a class: they need the InnerSymbol of the class instance
-            case f @ ScopedObject.Func(isMethod = S(true)) => accessed.accessed.add(f.fun.owner.get)
+            // for class methods: they need the InnerSymbol of the class instance
+            case f @ ScopedObject.Func(isMethod = S(MethodKind.ClsMethod)) => accessed.accessed.add(f.fun.owner.get)
+            case ScopedObject.Func(isMethod = S(MethodKind.ObjMethod)) => addModObjParent(node)
             // definitions that access a module's method directly need an edge to that method
-            case ScopedObject.Func(isMethod = N | S(false)) =>
+            case ScopedObject.Func(isMethod = S(MethodKind.ModMethod)) =>
               accessed.refdDefns.add(node.obj.toInfo)
-            case c: ScopedObject.Class if c.isObj => accessed.accessed.add(c.cls.isym)
+              addModObjParent(node)
+            case ScopedObject.Func(isMethod = N) =>
+              accessed.refdDefns.add(node.obj.toInfo)
+            case c: ScopedObject.Class if c.isObj && !node.isLifted =>
+              addModObjParent(node)
+            case r: ScopedObject.Referencable[?] if !node.isLifted =>
+              addModObjParent(node)
+              accessed.refdDefns.add(node.obj.toInfo)
             case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
             case _ => ()
             
@@ -149,7 +158,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     .map:
       case (_: Unit) -> _ => () -> false
       case d -> edges =>
-        val par = scopeData.getNode(d).parent.get.obj.toInfo
+        val par = scopeData.getNode(d).ancestor.get.obj.toInfo
         d -> edges.exists:
           case a -> b => a =/= par
     .collect:
@@ -225,7 +234,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     // "ignore" `c` in the sense that it does not need to capture `s`'s scoped object's variables, nor does
     // it require the current scoped object to create a capture class for its accessed variables.
     def isIgnored(c: ScopedInfo) =
-      s.inSubtree(scopeData.getNode(c).firstLiftedParent.toInfo)
+      s.inSubtree(scopeData.getNode(c).firstLiftedAncestor.toInfo)
 
     // All objects in the same scc must have at least the same accesses as each other
     def go(includeIgnored: Bool) =
@@ -384,7 +393,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
           case Some(node) =>
             node.obj match
               // ignore method calls to class or object methods
-              case ScopedObject.Func(_, S(true)) => return
+              case ScopedObject.Func(_, S(MethodKind.ClsMethod | MethodKind.ObjMethod)) => return
               case _ => ()
             
             val AccessInfo(accessed, muted, refd) = accessMapWithIgnored(called)
@@ -393,7 +402,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
             val refdExcl = refd.filter: sym =>
               scopeData.getNode(sym).obj match
                 case s: ScopedObject.ScopedBlock => false
-                case ScopedObject.Func(_, S(true)) => false
+                case ScopedObject.Func(_, S(MethodKind.ClsMethod | MethodKind.ObjMethod)) => false
                 case _ => true
             
             // This not a naked reference. If it's a ref to a class, this can only ever create once instance

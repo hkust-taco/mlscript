@@ -16,7 +16,6 @@ import scala.collection.mutable.Set as MutSet
 
 object ScopeData:
   opaque type ScopeUID = Int
-  val dummyUID: ScopeUID = 0
   class FreshUID:
     private val underlying = FreshInt()
     def make: ScopeUID = underlying.make
@@ -35,6 +34,11 @@ object ScopeData:
   
   extension (d: DefinitionSymbol[?])
     def asBmsRef = Value.Ref(d.asBlkMember.get, S(d))
+  
+  enum MethodKind:
+    case ClsMethod
+    case ObjMethod
+    case ModMethod
   
   // These cannot be hashed
   object ScopedObject:
@@ -127,7 +131,7 @@ object ScopeData:
     // N = not a method
     // S(false) = module method
     // S(true) = class or object method
-    case class Func(fun: FunDefn, isMethod: Opt[Bool]) extends Liftable[FunDefn]:
+    case class Func(fun: FunDefn, isMethod: Opt[MethodKind]) extends Liftable[FunDefn]:
       val defn = fun
     // The purpose of `Loop` is to enforce the rule that the control flow remains linear when we enter
     // a scoped block.
@@ -171,13 +175,13 @@ object ScopeData:
   type ScopeNode = ScopeNode.ScopeNode[?]
   type TScopeNode[T] = ScopeNode.ScopeNode[T]
   object ScopeNode:
-    case class ScopeNode[T](obj: TScopedObject[T], var parent: Opt[ScopeNode[?]], children: List[ScopeNode[?]])(using ignoredScopes: IgnoredScopes):
+    case class ScopeNode[T](obj: TScopedObject[T], var ancestor: Opt[ScopeNode[?]], children: List[ScopeNode[?]])(using ignoredScopes: IgnoredScopes):
       
-      lazy val allParents: List[ScopeNode[?]] = parent match
-        case Some(value) => this :: value.allParents
+      lazy val allAncestors: List[ScopeNode[?]] = ancestor match
+        case Some(value) => this :: value.allAncestors
         case None => this :: Nil
       
-      lazy val parentsSet = allParents.map(_.obj.toInfo).toSet
+      lazy val parentsSet = allAncestors.map(_.obj.toInfo).toSet
       
       def inSubtree(root: ScopedInfo) = parentsSet.contains(root)
       
@@ -186,17 +190,14 @@ object ScopeData:
       lazy val allChildren: List[ScopedObject] = allChildNodes.map(_.obj)
       
       // does not include variables introduced by itself
-      lazy val existingVars: Set[Local] = parent match
-        case Some(value) => value.existingVars ++ value.obj.definedLocals ++ value.nestedObjSyms
+      lazy val existingVars: Set[Local] = ancestor match
+        case Some(value) => value.existingVars ++ value.obj.definedLocals ++ value.nestedModObjSyms
         case None => Set.empty
       
-      lazy val isTopLevel: Bool = parent match
-        case Some(ScopeNode(obj = _: ScopedObject.Top)) => true
-        case _ => false
-      
-      lazy val isModOrTopLevel: Bool = parent match
+      lazy val inModOrTopLevel: Bool = ancestor match
         case Some(par) => par.obj match
           case _: ScopedObject.Companion => true
+          case _: ScopedObject.Top => true
           case _ => false
         case None => true
       
@@ -208,16 +209,31 @@ object ScopeData:
           obj.definedLocals -- rmv
         case _ => obj.definedLocals
       
-      lazy val nestedObjSyms: Set[InnerSymbol] = children.collect:
+      lazy val nestedModObjSyms: Set[InnerSymbol] = children.collect:
           case ScopeNode(obj = c: ScopedObject.Class) if c.isObj => c.cls.isym
+          case ScopeNode(obj = c: ScopedObject.Companion) => c.comp.isym
         .toSet
       
       lazy val liftedObjSyms: Set[InnerSymbol] = children.collect:
           case n @ ScopeNode(obj = c: ScopedObject.Class) if c.isObj && n.isLifted => c.cls.isym
         .toSet
+      
+      // Finds the nearest module or object M in the ownership tree such that, at any site where this scoped object
+      // is accessed, M is accessible without a field selection.
+      lazy val bestModOrObjOwner: Opt[DefinitionSymbol[?]] =
+        def join = obj match
+          case c: ScopedObject.Companion => S(c.comp.isym)
+          case c: ScopedObject.Class if c.isObj => S(c.cls.isym)
+          case _ => N
+        ancestor match
+          case N => join
+          case S(p) => p.obj match
+            case _: ScopedObject.Companion => p.bestModOrObjOwner
+            case c: ScopedObject.Class if c.isObj => p.bestModOrObjOwner
+            case _ => join
 
       lazy val inScopeISyms: Set[Local] =
-        val parVals = parent match
+        val parVals = ancestor match
           case Some(value) => value.inScopeISyms
           case None => Set.empty
         
@@ -241,29 +257,25 @@ object ScopeData:
               case _ => ()
             case _ => ()
           
-          parent.map(_.obj) match
+          ancestor.map(_.obj) match
           case Some(_: ScopedObject.Companion) => false // there is no need to lift objects nested inside a module
           case _ =>
             obj match
-            // case _: ScopedObject.Companion => false
-            // case c: ScopedObject.Class if c.cls.companion.isDefined => false
             case _ if ignored.contains(obj.toInfo) => false
-            case _ if isModOrTopLevel => false
-            case ScopedObject.Func(isMethod = S(true)) => false
+            case _ if inModOrTopLevel => false
+            case ScopedObject.Func(isMethod = S(_)) => false
             case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
             case _ => true
         impl
-        
-      lazy val liftedChildNodes: List[ScopeNode[?]] =
-        if isLifted then this :: Nil
-        else children.flatMap(_.liftedChildNodes)
       
-      // Finds the first parent that is a lifted object, i.e. a non-ignored definition, or the top level
-      lazy val firstLiftedParent: ScopedObject =
+      // Finds the first ancestor that is a lifted object, i.e. a non-ignored definition, or the top level
+      lazy val firstLiftedAncestor: ScopedObject =
         if !isLifted then
-          parent match
-          case Some(value) => value.firstLiftedParent
-          case None => obj // unreachable
+          ancestor match
+          case Some(value) => value.firstLiftedAncestor
+          case None => obj match
+            case _: ScopedObject.Top => obj
+            case _ => lastWords("unreachable")
         else obj
       
       // When a node is lifted, some neighbouring ignored definitions may become out of scope. This computes
@@ -271,20 +283,20 @@ object ScopeData:
       private lazy val reqCaptureObjsImpl: List[ScopedObject.Referencable[?]] = obj match
         case _: ScopedObject.Top => List.empty
         case _ =>
-          // All unlifted neighbour nodes ::: parent's reqCaptureObjsImpl
-          val initial = parent.get.children
+          // All unlifted neighbour nodes ::: ancestor's reqCaptureObjsImpl
+          val initial = ancestor.get.children
             .filter:
               case ScopeNode(obj = f: ScopedObject.Func) if f.isMethod.isDefined => false
               case _ => true
             .collect:
-              case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted => t
-          initial ::: parent.get.reqCaptureObjsImpl
+              case c @ ScopeNode(obj = t: ScopedObject.Referencable[?]) if !c.isLifted && !inModOrTopLevel && !(t is obj) => t
+          initial ::: ancestor.get.reqCaptureObjsImpl
       
       lazy val reqCaptureObjs: List[ScopedObject.Referencable[?]] = obj match
         case _: ScopedObject.Top => List.empty
         case _ =>
           if isLifted then reqCaptureObjsImpl
-          else parent.get.reqCaptureObjsImpl
+          else ancestor.get.reqCaptureObjsImpl
     
   
   def dSymUnapply(data: ScopeData, v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = v match
@@ -326,6 +338,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         objs ::= ScopedObject.ScopedBlock(id, s)
       case l: Label if l.loop =>
         objs ::= ScopedObject.Loop(l.label, l.body)
+        applySubBlock(l.rest)
       case _ => super.applyBlock(b)
     override def applyFunDefn(fun: FunDefn): Unit =
       objs ::= ScopedObject.Func(fun, N)
@@ -377,8 +390,10 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.ClassCtor(c) => ()
       case ScopedObject.Loop(_, b) => finder.applyBlock(b)
     val mtdObjs = obj match
-      case ScopedObject.Class(cls, _) => cls.methods.map(ScopedObject.Func(_, S(true)))
-      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, S(false)))
+      case ScopedObject.Class(cls, _) =>
+        val k = if cls.k is syntax.Obj then MethodKind.ObjMethod else MethodKind.ClsMethod
+        cls.methods.map(ScopedObject.Func(_, S(k)))
+      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, S(MethodKind.ModMethod)))
       case _ => Nil
     
     // This extracts owned definitions from the ctor and makes them a descendant of the class scope node,
@@ -392,12 +407,12 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
         val children = ctorBlkChildren.map(makeScopeTreeRec)
         val ctorNde = ScopeNode.ScopeNode(ctorBlkObj, N, children)
         ctorBlkObj.node = S(ctorNde)
-        for c <- children do c.parent = S(ctorNde)
+        for c <- children do c.ancestor = S(ctorNde)
         (S(ctorNde), ctorObjs)
       case None => (N, Nil)
     
     val children = (ctorObjs ::: mtdObjs ::: finder.objs).map(makeScopeTreeRec).prependedAll(ctorNode)
     val retNode = ScopeNode.ScopeNode(obj, N, children)
     obj.node = S(retNode)
-    for c <- children do c.parent = S(retNode)
+    for c <- children do c.ancestor = S(retNode)
     retNode

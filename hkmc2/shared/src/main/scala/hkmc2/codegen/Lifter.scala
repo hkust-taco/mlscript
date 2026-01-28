@@ -133,26 +133,23 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   
   case class LifterMetadata(
     unliftable: Set[ClsSym | ModuleOrObjSym],
-    modules: Set[ModuleOrObjSym],
   ):
     def ++(that: LifterMetadata) =
-      LifterMetadata(unliftable ++ that.unliftable, modules ++ that.modules)
+      LifterMetadata(unliftable ++ that.unliftable)
   object LifterMetadata:
-    def empty = LifterMetadata(Set.empty, Set.empty)
+    def empty = LifterMetadata(Set.empty)
   
-  // d is a top-level definition
-  // returns (ignored classes, modules, objects)
+  // s is a top-level definition
+  // returns (ignored classes, modules)
   private def createMetadata(s: ScopeNode): LifterMetadata =
     var ignored: Set[ClsSym | ModuleOrObjSym] = Set.empty
-    var firstClsFns: Set[TermSymbol] = Set.empty
-    val nestedScopeNodes: List[ScopeNode] = s.allChildNodes
-    val nestedScopes: Set[ScopedInfo] = nestedScopeNodes.map(_.obj.toInfo).toSet - s.obj.toInfo
+    val nestedScopes: Set[ScopedInfo] = s.allChildNodes.map(_.obj.toInfo).toSet - s.obj.toInfo
     
     // hack: ClassLikeSymbol does not extend DefinitionSymbol directly, so we must
-    // use a map to convert 
+    // use a map to convert
     
-    val moduleObjs = nestedScopeNodes.collect:
-      case s @ ScopeNode(obj = o: ScopedObject.Companion) if !s.isTopLevel => o
+    val moduleObjs = s.allChildNodes.collect:
+      case s @ ScopeNode(obj = o: ScopedObject.Companion) if !s.inModOrTopLevel => o
     
     // TODO: refine handling of companions
     for m <- moduleObjs do
@@ -163,8 +160,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         N, Diagnostic.Source.Compilation
       ))
     
-    val modules: Set[ModuleOrObjSym] = moduleObjs.map(_.comp.isym).toSet
-    var extendsGraph: Set[(ClsSym, ClsSym)] = Set.empty
+    var inheritanceTree: Set[(ClsSym, ClsSym)] = Set.empty
     
     // search for unliftable classes and build the extends graph
     new BlockTraverser:
@@ -172,7 +168,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       override def applyCase(cse: Case): Unit =
         cse match
           case Case.Cls(cls: (ClassSymbol | ModuleOrObjectSymbol), _) =>
-            if nestedScopes.contains(cls) && !ignored.contains(cls) && !data.getNode(cls).isModOrTopLevel then // don't generate a warning if it's already ignored
+            if nestedScopes.contains(cls) && !ignored.contains(cls) && !data.getNode(cls).inModOrTopLevel then // don't generate a warning if it's already ignored
               raise(WarningReport(
                 msg"Cannot yet lift class/module `${cls.nme}` as it is used in an instance check." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
@@ -209,7 +205,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             // for now, allow selecting runtime symbols
             case Some(Select(qual = Value.Ref(l, _))) if State.runtimeSymbol is l => ()
             case Some(RefOfBms(_, S(s: ClassSymbol))) =>
-              if nestedScopes.contains(s) then extendsGraph += (s -> isym)
+              if nestedScopes.contains(s) then inheritanceTree += (s -> isym)
             case _ if !ignored.contains(isym) =>
               raise(WarningReport(
                 msg"Cannot yet lift definition `${sym.nme}` as it extends an expression." -> N :: Nil,
@@ -235,7 +231,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case RefOfBms(_, S(l)) if nestedScopes.contains(l) => data.getNode(l).obj match
           case c: ScopedObject.Class if c.isObj => ()
           case c: (ScopedObject.Class | ScopedObject.ClassCtor) =>
-            if !c.node.get.isModOrTopLevel then
+            if !c.node.get.inModOrTopLevel then
               raise(WarningReport(
                 msg"Cannot yet lift class `${l.nme}` as it is used as a first-class class." -> N :: Nil,
                 N, Diagnostic.Source.Compilation
@@ -248,7 +244,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case _ => super.applyValue(v)
     
     // analyze the extends graph
-    val extendsEdges = extendsGraph.groupBy(_._1).map:
+    val extendsEdges = inheritanceTree.groupBy(_._1).map:
         case (a, bs) => a -> bs.map(_._2)
       .toMap
     var newUnliftable: Set[ClsSym] = Set.empty
@@ -267,7 +263,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     for case s: ClsLikeSym <- ignored do
       dfs(s)
     
-    LifterMetadata(ignored ++ newUnliftable, modules)
+    LifterMetadata(ignored ++ newUnliftable)
   
   // This rewrites code so that it's valid when lifted to the top level.
   // This way, no piece of code must be traversed by a BlockRewriter more than once.
@@ -306,13 +302,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           case Some(defnRef) => S(defnRef.read)
           case None => r.obj match
             case c: ScopedObject.Class if c.isObj =>
-              S(ctx.symbolsMap(c.cls.isym).read)
-            case r: ScopedObject.Referencable[?] =>
-              // rewrite the parent
-              r.owner.flatMap(ctx.symbolsMap.get(_)) match
-                case Some(value) =>
-                  S(Select(value.read, Tree.Ident(l.nme))(S(d)))
-                case None => N
+              ctx.symbolsMap.get(c.cls.isym).map(_.read)
+            case c: ScopedObject.Companion =>
+              ctx.symbolsMap.get(c.comp.isym).map(_.read)
             case _ => N
 
         override def applyResult(r: Result)(k: Result => Block): Block =
@@ -373,7 +365,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                 k(Value.Ref(newSym, N))
             
             // Other naked references to BlockMemberSymbols.
-            case S(r) => resolveDefnRef(l, d, r) match
+            case S(r) =>
+              resolveDefnRef(l, d, r) match
               case Some(value) => k(value)
               case None => super.applyPath(p)(k)
             case _ => super.applyPath(p)(k)
@@ -698,18 +691,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       * as a parameter. Does not include neighbouring objects that this definition may lose
       * access to. Those are in a separate list.
       * 
-      * Includes symbols introduced by modules and objects.
+      * Includes symbols introduced by modules and objects, which could be introduced when
+      * accessing their member functions.
       */
-    final val reqSymbols = accessed ++ allRefdScopes.map(data.getNode(_).obj)
-      .collect:
-        case s: ScopedObject.Referencable[?] if s.owner.isDefined => s.owner.get
-      .collect:
-        case d: DefinitionSymbol[?] => d
-      .filter: d =>
-        data.getNode(d).obj match
-          case _: ScopedObject.Companion => true
-          case c: ScopedObject.Class if c.isObj => true
-          case _ => false
+    final val reqSymbols = accessed
     
     private val (reqPassedSymbols, captures) = reqSymbols
       .partitionMap: s =>
@@ -962,7 +947,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             newPList.params.map(_.sym) ::: duped.params.map(_.sym),
             duped.restParam.map(_.sym))
         // we need to append an empty param list so calling this function returns a lambda
-        case Nil => 
+        case Nil =>
           (
             newPList :: PlainParamList(Nil) :: Nil,
             newPList.params.map(_.sym),
@@ -1002,6 +987,11 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
+      if fun.params.isEmpty then
+        raise(WarningReport(
+          msg"Got a naked reference to a param-less function." -> N :: Nil,
+          N, Diagnostic.Source.Compilation
+        ))
       aux.get // forces computation
       Call(
         Value.Ref(auxSym, S(auxDsym)),
@@ -1188,12 +1178,12 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
   private def createRewritten[T](s: TScopeNode[T])(using ctx: LifterCtxNew): RewrittenScope[T] = s.obj match
     case _: ScopedObject.Top => lastWords("tried to rewrite the top-level scope")
     case o: ScopedObject.Class =>
-      if s.isLifted && !s.isTopLevel then LiftedClass(o)
+      if s.isLifted then LiftedClass(o)
       else RewrittenClass(o)
     case o: ScopedObject.Companion => RewrittenCompanion(o)
     case o: ScopedObject.ClassCtor => RewrittenClassCtor(o)
     case o: ScopedObject.Func =>
-      if s.isLifted && !s.isTopLevel then LiftedFunc(o)
+      if s.isLifted then LiftedFunc(o)
       else RewrittenFunc(o)
     case o: ScopedObject.Loop => RewrittenLoop(o)
     case o: ScopedObject.ScopedBlock =>
@@ -1242,6 +1232,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     val curSyms = ctx.symbolsMap
     val curCaptures = ctx.capturesMap
     val curDefns = ctx.defnsMap
+    if r.node.isLifted then
+      ctx.symbolsMap = Map.empty
+      ctx.capturesMap = Map.empty
+      ctx.defnsMap = Map.empty
     val ret = liftNestedScopesImpl(r)
     ctx.symbolsMap = curSyms
     ctx.capturesMap = curCaptures
