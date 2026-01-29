@@ -11,9 +11,9 @@ import collection.mutable.HashMap
 
 class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockTransformer(new SymbolSubst):
 
-  class CollectFirstClassFunctions(topLevelMod: Option[BlockMemberSymbol])(using mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
+  class DefunctionalizationInModule(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def callFunc(fd: FunDefn) =
-      val f = topLevelMod.map(sym => Value.Ref(sym, None).selSN(fd.sym.nme)).getOrElse(fd.asPath)
+      val f = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
       val params = fd.params.head.params.map(p => Value.Ref(p.sym).asArg) // TODO: remove head
       Return(Call(f, params)(true, false, false), false)
 
@@ -27,40 +27,44 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
           val lamClsSym = new BlockMemberSymbol("Lambda$" + sym.nme + mapping.size.toString(), Nil, false)
           mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, callFunc(fd))(fd.forceTailRec))
           applyDefn(fd): fd2 =>
-            val lhs = topLevelMod.map(sym => Value.Ref(sym, None).selSN(fd.sym.nme)).getOrElse(fd.asPath)
-            val rhs = topLevelMod.map(sym => Value.Ref(sym, None).selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
+            val lhs = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
+            val rhs = outModulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
             val rst2 = applySubBlock(AssignField(lhs, syntax.Tree.Ident("firstCls"), rhs, rst)(None))
             Define(fd2, rst2)
         case _ => super.applyBlock(b)
       case _ => super.applyBlock(b)
 
-    override def applyObjBody(defn: ClsLikeBody): ClsLikeBody =
-      val withFirstClsDefs = defn.methods.foldRight(defn.ctor)((fd, rst) => {
-        val lamClsSym = new BlockMemberSymbol("Lambda$" + fd.sym.nme + mapping.size.toString(), Nil, false)
-        val lhs = topLevelMod.map(sym => Value.Ref(sym, None).selSN(fd.sym.nme)).getOrElse(fd.asPath)
-        val rhs = topLevelMod.map(sym => Value.Ref(sym, None).selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
-        mapping += (fd.sym -> FunDefn.withFreshSymbol(fd.owner, lamClsSym, fd.params, callFunc(fd))(fd.forceTailRec))
-        AssignField(lhs, syntax.Tree.Ident("firstCls"), rhs, rst)(None)
-      })
-      super.applyObjBody(ClsLikeBody(defn.isym, defn.methods, defn.privateFields, defn.publicFields, applySubBlock(withFirstClsDefs)))
-  
-  class UpdateReference(using subst: Map[Symbol, Symbol]) extends BlockTransformer(new SymbolSubst):
-    override def applyLocal(sym: Symbol): Symbol = subst.get(sym) match
-      case Some(r) => r
-      case _ => sym
+    private def packMethods(ms: List[FunDefn]) = ms.foldRight[Block](End())((fd, rst) => Define(fd, rst))
 
-    override def applyValue(v: Value)(k: Value => Block) = v match
-      case Value.Ref(l, disamb) =>
-        val l2 = applyLocal(l)
-        k(Value.Ref(l2, disamb))
-      case _ => super.applyValue(v)(k)
-  
-  class InsertInstance(topLevelMod: Option[BlockMemberSymbol])(using mapping: Map[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
+    private def unpackMethods(b: Block, rest: Block) =
+      def rec(b: Block, acc1: List[FunDefn], acc2: Block): (List[FunDefn], Block) = b match
+        case Define(fd: FunDefn, rest) => rec(rest, fd :: acc1, acc2)
+        case f @ AssignField(lhs, nme, rhs, rest) => rec(rest, acc1, AssignField(lhs, nme, rhs, acc2)(f.symbol))
+        case _ => (acc1.reverse, acc2)
+      rec(b, Nil, rest)
+
+    override def applyDefn(defn: Defn)(k: Defn => Block): Block = defn match
+      case ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods,
+        privateFields, publicFields, preCtor, ctor, mod, bufferable) => mod match
+          case Some(mod) =>
+            val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
+            val nestedPath = outModulePath match
+              case Some(p) => Some(p.selSN(sym.nme))
+              case None => Some(Value.Ref(sym, Some(isym)))
+            val msBlk = new DefunctionalizationInModule(nestedPath, fcfDefs).applyBlock(packMethods(mod.methods))
+            val ctor2 = new DefunctionalizationInModule(nestedPath, fcfDefs).applyBlock(mod.ctor)
+            val fcfCls = fcfDefs.map(_._2).toList
+            val (mths, withClsDefs) = unpackMethods(msBlk, ctor2)
+            k(ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor,
+              Some(ClsLikeBody(mod.isym, mths, mod.privateFields, mod.publicFields, generateFCFunctionClasses(Some(mod.isym), fcfCls, withClsDefs))), bufferable))
+          case _ => super.applyDefn(defn)(k)
+      case _ => super.applyDefn(defn)(k)
+
     private def updateRHSPath(p: Path, mustBeAnonymous: Boolean)(k: Path => Block) = p match
       case ref @ Value.Ref(l: BlockMemberSymbol, disamb) if !l.nameIsMeaningful || !mustBeAnonymous => mapping.get(l) match
         case Some(fd) =>
           val tmp = new TempSymbol(None, "tmp")
-          val cls = topLevelMod.map(sym => Value.Ref(sym, None).selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
+          val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
           Scoped(Set(tmp),
             Assign(tmp,
               Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
@@ -79,7 +83,7 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
           )
           blkSym match
             case Some(p) =>
-              k(topLevelMod.map(sym => Value.Ref(sym, None).selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
+              k(outModulePath.map(_.selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
             case _ => s.owner match
               case Some(_: ModuleOrObjectSymbol) =>
                 val tmp = new TempSymbol(None, "tmp")
@@ -106,6 +110,17 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
       case p: Path => updateRHSPath(p, false): p2 =>
         k(p2)
       case _ => super.applyResult(r)(k)
+  
+  class UpdateReference(using subst: Map[Symbol, Symbol]) extends BlockTransformer(new SymbolSubst):
+    override def applyLocal(sym: Symbol): Symbol = subst.get(sym) match
+      case Some(r) => r
+      case _ => sym
+
+    override def applyValue(v: Value)(k: Value => Block) = v match
+      case Value.Ref(l, disamb) =>
+        val l2 = applyLocal(l)
+        k(Value.Ref(l2, disamb))
+      case _ => super.applyValue(v)(k)
 
   class UpdateCall() extends BlockTransformer(new SymbolSubst):
     override def applyResult(r: Result)(k: Result => Block): Block = r match
@@ -139,21 +154,10 @@ class Defunctionalization(using Elaborator.State, Elaborator.Ctx) extends BlockT
   )
 
   override def applyBlock(b: Block): Block =
-    val topLevelMod = b match
-      case Scoped(_, Define(cls: ClsLikeDefn, _)) if cls.companion.isDefined => Some(cls.sym)
-      case _ => None
     val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
-    val noFirstClassFunc = new CollectFirstClassFunctions(topLevelMod)(using fcfDefs).applyBlock(b)
-    val passInstance = new InsertInstance(topLevelMod)(using fcfDefs.toMap).applyBlock(noFirstClassFunc)
-    // val called = new UpdateCall().applyBlock(passInstance)
+    val noFirstClassFunc = new DefunctionalizationInModule(None, fcfDefs).applyBlock(b)
     val fcfCls = fcfDefs.map(_._2).toList
-    
-    val withClasses = passInstance match
-      case Scoped(syms, Define(ClsLikeDefn(owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
-        privateFields, publicFields, preCtor, ctor, Some(ClsLikeBody(isym2, methods2, privateFields2, publicFields2, ctor2)), bufferable), rest)) =>
-          Scoped(syms, Define(ClsLikeDefn(owner, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor,
-            Some(ClsLikeBody(isym2, methods2, privateFields2, publicFields2, generateFCFunctionClasses(Some(isym2), fcfCls, ctor2))), bufferable), rest))
-      case _ => generateFCFunctionClasses(None, fcfCls, passInstance)
+    val withClasses = generateFCFunctionClasses(None, fcfCls, noFirstClassFunc)
     new UpdateCall().applyBlock(withClasses)
 
   extension (fd: FunDefn) {
