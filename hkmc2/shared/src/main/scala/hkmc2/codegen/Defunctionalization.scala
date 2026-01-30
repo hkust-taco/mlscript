@@ -13,11 +13,11 @@ import collection.mutable.HashMap
 class Defunctionalization(using Elaborator.State, Raise) extends BlockTransformer(new SymbolSubst):
 
   // Collect functions in a single module and
-  //  1. generate corresponding function class with a call function
+  //  1. generate corresponding function classes with call function
   //  2. generate firstCls field for each non-anonymous function
   //  3. substitute all first-class functions with corresponding class instantiation.
   //    if the function is defined in another module, the class can be retrieved by firstCls field
-  //  4. invoke the call function for each first-class functions
+  //  4. invoke the call function for each first-class function
   class DefunctionalizationInModule(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def callFunc(fd: FunDefn) =
       val f = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
