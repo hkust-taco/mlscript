@@ -10,6 +10,7 @@ import mlscript.utils.*, shorthands.*
 import utils.*
 
 import hkmc2.Message.MessageContext
+import hkmc2.CompilationTarget
 
 import codegen.Instrumentation
 
@@ -126,7 +127,10 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     Select(Value.Ref(State.runtimeSymbol), Tree.Ident("unreachable"))(N)
   
   def unit: Path =
-    Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
+    if config.target == CompilationTarget.Wasm then
+      Value.Ref(State.unitSymbol)
+    else
+      Select(Value.Ref(State.runtimeSymbol), Tree.Ident("Unit"))(S(State.unitSymbol))
   
   def fail(err: ErrorReport): Block =
     raise(err)

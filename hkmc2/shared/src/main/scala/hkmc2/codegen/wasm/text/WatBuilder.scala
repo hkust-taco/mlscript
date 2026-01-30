@@ -94,6 +94,41 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         super.applyDefn(defn)
     traverser.applyBlock(block)
 
+  private def hasUnitObject(block: Block): Bool =
+    var found = false
+    val traverser = new BlockTraverser:
+      override def applyDefn(defn: Defn): Unit =
+        defn match
+          case cls: ClsLikeDefn if (cls.k is syntax.Obj) && cls.owner.isEmpty && cls.sym.nme == "Unit" =>
+            found = true
+          case _ => ()
+        super.applyDefn(defn)
+    traverser.applyBlock(block)
+    found
+
+  private def synthesizeUnitObject(block: Block)(using State): Block =
+    if hasUnitObject(block) then block
+    else
+      val unitSym = BlockMemberSymbol(State.unitSymbol.nme, Nil)
+      val unitDefn = ClsLikeDefn(
+        owner = N,
+        isym = State.unitSymbol,
+        sym = unitSym,
+        ctorSym = N,
+        k = syntax.Obj,
+        paramsOpt = N,
+        auxParams = Nil,
+        parentPath = N,
+        methods = Nil,
+        privateFields = Nil,
+        publicFields = Nil,
+        preCtor = End(),
+        ctor = End(),
+        companion = N,
+        bufferable = N
+      )
+      Define(unitDefn, block)
+
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
 
@@ -1387,7 +1422,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
 
     val ctx = Ctx.empty
-    collectSingletons(p.main)
+    val needsUnit = hasUnitObject(p.main) || p.main.freeVars.contains(State.unitSymbol)
+    val mainWithUnit = if needsUnit then synthesizeUnitObject(p.main) else p.main
+    collectSingletons(mainWithUnit)
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
@@ -1407,7 +1444,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(p.main)(using ctx, summon[Raise], summon[Scope])
+      block(mainWithUnit)(using ctx, summon[Raise], summon[Scope])
     val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)

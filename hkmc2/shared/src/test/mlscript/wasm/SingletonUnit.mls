@@ -1,0 +1,90 @@
+
+:global
+:wasm
+
+:wat
+()
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Unit (sub $Object (struct (field $$tag (mut i32)))))
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
+//│   (func $Unit (type 2) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Unit))
+//│       (struct.set $Unit 0
+//│         (ref.cast (ref $Unit)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (nop)
+//│       (return
+//│         (local.get $this))))
+//│   (export "Unit" (func $Unit))
+//│   (elem declare func $Unit)
+//│   (func $Unit$instance (type 3) (result (ref null any))
+//│     (if (result (ref null $Unit))
+//│       (ref.is_null
+//│         (global.get $Unit$inst))
+//│       (then
+//│         (block (result (ref null $Unit))
+//│           (global.set $Unit$inst
+//│             (ref.cast (ref null $Unit)
+//│               (call 0)))
+//│           (global.get $Unit$inst)))
+//│       (else
+//│         (global.get $Unit$inst))))
+//│   (export "Unit$instance" (func $Unit$instance))
+//│   (elem declare func $Unit$instance)
+//│   (func $entry (type 4) (result (ref null any))
+//│     (local $Unit (ref null any))
+//│     (local $Unit1 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call $Unit$instance)))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = {}
+
+
+if true then () else 0
+//│ Wasm result:
+//│ = {}
+
+
+fun foo() = ()
+foo()
+//│ Wasm result:
+//│ = {}
+
+
+let x = 1
+()
+//│ Wasm result:
+//│ = {}
+
+
+[(), 1].[0]
+//│ Wasm result:
+//│ = {}
+
+
+object O with
+  fun unit() = ()
+O.unit()
+//│ Wasm result:
+//│ = {}
+
+
+:fixme
+() is ()
+//│ ╔══[ERROR] Unrecognized pattern (unit).
+//│ ║  l.85: 	() is ()
+//│ ╙──      	      ^^
+//│ Wasm result:
+//│ = 1

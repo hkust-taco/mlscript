@@ -106,15 +106,14 @@ Example.f(2).[1]
 //│ = 1
 
 
-:fixme
 object O with
   val x = 1
   fun gy = x
   fun sy = set x += 1
 O.gy
 O.sy
-//│ ═══[COMPILATION ERROR] WatBuilder::getVar for TempSymbol (symbol not in top-level scope) not implemented yet
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Expected resolved Select(...) expression to be a TermSymbol, but got object:Unit (hkmc2.semantics.ModuleOrObjectSymbol)
+//│ Wasm result:
+//│ = {}
 
 
 
