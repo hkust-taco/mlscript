@@ -130,7 +130,3 @@ fun raiseUnhandledEffect() =
 module meta with
   fun codegen(t, file) = Term.codegen(t, file)
   fun print(t) = Term.print(t)
-
-
-// class Function() with
-//   fun apply(args) = ???
