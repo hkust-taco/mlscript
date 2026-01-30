@@ -788,3 +788,13 @@ foo(Foo.Bar1.bar)
 foo(Foo.Bar2.bar)
 //│ = -1
 
+
+module Foo with
+  val x = 1
+  fun bar() = 0
+
+
+fun foo(y) = y + 1
+
+foo(Foo.x)
+//│ = 2
