@@ -15,7 +15,7 @@ import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -37,6 +37,62 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
+
+  private case class SingletonInfo(
+      globalSym: BlockMemberSymbol,
+      globalName: Str,
+      getterSym: BlockMemberSymbol,
+      getterName: Str
+  )
+
+  private case class MethodInfo(owner: InnerSymbol, params: ParamList)
+
+  private val singletonByBms: MutMap[BlockMemberSymbol, SingletonInfo] = MutMap.empty
+  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, SingletonInfo] = MutMap.empty
+  private val methodInfo: MutMap[BlockMemberSymbol, MethodInfo] = MutMap.empty
+
+  private def getOrCreateSingletonInfo(
+      objSym: BlockMemberSymbol,
+      objIsym: Opt[ModuleOrObjectSymbol]
+  )(using Scope): SingletonInfo =
+    singletonByBms.get(objSym) match
+      case S(info) =>
+        objIsym.foreach(isym => singletonByIsym.getOrElseUpdate(isym, info))
+        info
+      case N =>
+        val globalSym = BlockMemberSymbol(s"${objSym.nme}$$inst", Nil, nameIsMeaningful = false)
+        val getterSym = BlockMemberSymbol(s"${objSym.nme}$$instance", Nil, nameIsMeaningful = false)
+        val globalName = scope.allocateName(globalSym)
+        val getterName = scope.allocateName(getterSym)
+        val info = SingletonInfo(globalSym, globalName, getterSym, getterName)
+        singletonByBms(objSym) = info
+        objIsym.foreach(isym => singletonByIsym(isym) = info)
+        info
+
+  private def singletonInfoFor(sym: Local): Opt[SingletonInfo] = sym match
+    case bms: BlockMemberSymbol => singletonByBms.get(bms)
+    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
+    case _ => N
+
+  private def singletonGetterCall(info: SingletonInfo): Expr =
+    call(
+      funcidx = FuncIdx(SymIdx(info.getterName)),
+      operands = Seq.empty,
+      returnTypes = Seq(Result(RefType.anyref))
+    )
+
+  private def collectSingletons(block: Block)(using Scope): Unit =
+    val traverser = new BlockTraverser:
+      override def applyDefn(defn: Defn): Unit =
+        defn match
+          case cls: ClsLikeDefn if (cls.k is syntax.Obj) && cls.owner.isEmpty =>
+            val isymOpt = cls.isym match
+              case mos: ModuleOrObjectSymbol => S(mos)
+              case _ => N
+            getOrCreateSingletonInfo(cls.sym, isymOpt)
+          case _ => ()
+        super.applyDefn(defn)
+    traverser.applyBlock(block)
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -82,6 +138,72 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Returns locals allocated during codegen (e.g., temp locals). */
   private def getExtraLocals(using Ctx): Seq[Local] =
     ctx.getWasmLocals._2.getOrElse(Seq.empty)
+
+  private def registerSingleton(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
+      Ctx,
+      Raise,
+      Scope
+  ): Unit =
+    val isymOpt = clsLikeDefn.isym match
+      case mos: ModuleOrObjectSymbol => S(mos)
+      case _ => N
+    val info = getOrCreateSingletonInfo(clsLikeDefn.sym, isymOpt)
+    val globalTy = RefType(typeref, nullable = true)
+    if !ctx.containsGlobal(info.globalSym) then
+      ctx.addGlobal(
+        info.globalSym,
+        GlobalInfo(
+          id = S(SymIdx(info.globalName)),
+          valType = globalTy,
+          mutable = true,
+          init = ref.null_(typeref)
+        )
+      )
+    if ctx.getFunc(info.getterSym).isEmpty then
+      val globalIdx = GlobalIdx(SymIdx(info.globalName))
+      val globalGet = global.get(globalIdx, globalTy)
+      val initExpr =
+        val ctorCall = call(
+          funcidx = ctx.getFunc_!(clsLikeDefn.sym, resolveSymIdx = true),
+          operands = Seq.empty,
+          returnTypes = Seq(Result(RefType.anyref))
+        )
+        val castedCtor = ref.cast(ctorCall, globalTy)
+        Instructions.block(
+          label = N,
+          children = Seq(
+            global.set(globalIdx, castedCtor),
+            global.get(globalIdx, globalTy)
+          ),
+          resultTypes = Seq(Result(globalTy))
+        )
+      val body = Instructions.`if`(
+        condition = ref.is_null(globalGet),
+        ifTrue = initExpr,
+        ifFalse = S(globalGet),
+        resultTypes = Seq(Result(globalTy))
+      )
+      val getterTy = ctx.addType(
+        sym = N,
+        TypeInfo(
+          id = N,
+          FunctionType(
+            params = Seq.empty,
+            results = Seq(Result(RefType.anyref))
+          )
+        )
+      )
+      ctx.addFunc(
+        S(info.getterSym),
+        FuncInfo(
+          id = S(SymIdx(info.getterName)),
+          typeIdx = getterTy,
+          params = Seq.empty,
+          nResults = body.resultTypes.length,
+          locals = Seq.empty,
+          body = body
+        )
+      )
 
   /** 
    * Emits a tuple element load that works for both mutable and immutable tuple arrays. 
@@ -183,10 +305,41 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   def getVar(l: Local, loc: Opt[Loc])(using Ctx, Raise, Scope): Expr = l match
     case ts: semantics.TermSymbol =>
-      errExpr(
-        Ls(msg"WatBuilder::getVar for TermSymbol not implemented yet" -> l.toLoc),
-        extraInfo = S(ts.toString)
-      )
+      ts.owner match
+        case S(owner) =>
+          val ownerBlk = owner.asBlkMember.getOrElse:
+            lastWords(
+              s"Expected owner of TermSymbol `${ts.toString}` to be a BlockMemberSymbol, but got ${owner.getClass.getName}"
+            )
+          val fieldidx = fieldSelect(ownerBlk, ts)
+          val ownerRef = result(Value.This(owner))
+          struct.get(
+            fieldidx,
+            ref = ref.cast(ownerRef, RefType(ctx.getType_!(ownerBlk), nullable = false)),
+            ty = RefType.anyref
+          )
+        case N =>
+          if ctx.containsLocal(l) then
+            local.get(LocalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
+          else if ctx.containsGlobal(l) then
+            global.get(GlobalIdx(SymIdx(scope.lookup_!(l, l.toLoc))), RefType.anyref)
+          else
+            errExpr(
+              Ls(
+                msg"WatBuilder::getVar for TermSymbol (symbol not in scope) not implemented yet" -> l.toLoc
+              ),
+              extraInfo = S(ts.toString)
+            )
+    case ts: semantics.ModuleOrObjectSymbol if ts.tree.k is syntax.Obj =>
+      singletonInfoFor(ts) match
+        case S(info) => singletonGetterCall(info)
+        case N =>
+          errExpr(
+            Ls(
+              msg"WatBuilder::getVar for object `${ts.nme}` is not supported in wasm backend yet" -> ts.toLoc
+            ),
+            extraInfo = S(ts.toString)
+          )
     case ts: semantics.ModuleOrObjectSymbol if ts.asMod.isDefined =>
       errExpr(
         Ls(
@@ -276,10 +429,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.Lit(IntLit(value)) =>
       ref.i31(i32.const(value.toInt))
     case Value.Ref(l, _) =>
-      ctx.getFunc(l) match
-        case S(funcIdx) =>
-          ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
-        case N => getVar(l, r.toLoc)
+      singletonInfoFor(l) match
+        case S(info) => singletonGetterCall(info)
+        case N =>
+          ctx.getFunc(l) match
+            case S(funcIdx) =>
+              ref.func(funcIdx, RefType(ctx.getFuncInfo_!(l).typeIdx, nullable = false))
+            case N => getVar(l, r.toLoc)
 
     case Call(Value.Ref(l: BuiltinSymbol, _), lhs :: rhs :: Nil) if !l.functionLike =>
       if l.binary then
@@ -321,57 +477,122 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             returnTypes = Seq(Result(RefType.anyref))
           )
         case N =>
-          val base = subexpression(fun)
-          if base.resultTypes.exists(_ is UnreachableType) then return base
-          val wasmArgs = args.map(argument)
+          fun match
+            case sel @ Select(qual, _) =>
+              val methodSym = sel.symbol.flatMap(_.asBlkMember)
+              methodSym match
+                case S(mSym) if methodInfo.contains(mSym) =>
+                  val funcIdx = ctx.getFunc_!(mSym, resolveSymIdx = true)
+                  val funcType = ctx.getTypeInfo_!(ctx.getFuncInfo_!(mSym).typeIdx).compType.asInstanceOf[FunctionType]
+                  call(
+                    funcidx = funcIdx,
+                    operands = Seq(result(qual)) ++ args.map(argument),
+                    returnTypes = funcType.sigType.results
+                  )
+                case _ =>
+                  val base = subexpression(fun)
+                  if base.resultTypes.exists(_ is UnreachableType) then return base
+                  val wasmArgs = args.map(argument)
 
-          val baseTypeIdx = base.resultType match
-            case S(RefType(idx: TypeIdx, _)) => idx
-            case ty =>
-              return errExpr(
-                Ls(
-                  msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> r.toLoc
-                ),
-                extraInfo = S(
-                  s"Block IR: `${fun.toString}`\nCompiled WAT: `${base.toWat.toString}`\n... which has type `${ty.fold("(none)")(_.toWat.toString)}`"
-                )
+                  val baseTypeIdx = base.resultType match
+                    case S(RefType(idx: TypeIdx, _)) => idx
+                    case ty =>
+                      return errExpr(
+                        Ls(
+                          msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> c.toLoc
+                        ),
+                        extraInfo = S(
+                          s"Block IR: `${fun.toString}`\nCompiled WAT: `${base.toWat.toString}`\n... which has type `${ty.fold("(none)")(_.toWat.toString)}`"
+                        )
+                      )
+                  val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+
+                  call_ref(
+                    target = base,
+                    operands = wasmArgs.toSeq,
+                    typeIdx = baseTypeIdx,
+                    funcType = baseTypeInfo.compType.asInstanceOf[FunctionType]
+                  )
+            case Value.Ref(mSym: BlockMemberSymbol, _) if methodInfo.contains(mSym) =>
+              val funcIdx = ctx.getFunc_!(mSym, resolveSymIdx = true)
+              val funcType = ctx.getTypeInfo_!(ctx.getFuncInfo_!(mSym).typeIdx).compType.asInstanceOf[FunctionType]
+              val owner = methodInfo(mSym).owner
+              call(
+                funcidx = funcIdx,
+                operands = Seq(result(Value.This(owner))) ++ args.map(argument),
+                returnTypes = funcType.sigType.results
               )
-          val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+            case _ =>
+              val base = subexpression(fun)
+              if base.resultTypes.exists(_ is UnreachableType) then return base
+              val wasmArgs = args.map(argument)
 
-          call_ref(
-            target = base,
-            operands = wasmArgs.toSeq,
-            typeIdx = baseTypeIdx,
-            funcType = baseTypeInfo.compType.asInstanceOf[FunctionType]
-          )
+              val baseTypeIdx = base.resultType match
+                case S(RefType(idx: TypeIdx, _)) => idx
+                case ty =>
+                  return errExpr(
+                    Ls(
+                      msg"Expected WAT of `fun` expression in Call(...) to have a `(ref <typeidx>)` type" -> c.toLoc
+                    ),
+                    extraInfo = S(
+                      s"Block IR: `${fun.toString}`\nCompiled WAT: `${base.toWat.toString}`\n... which has type `${ty.fold("(none)")(_.toWat.toString)}`"
+                    )
+                  )
+              val baseTypeInfo = ctx.getTypeInfo_!(baseTypeIdx)
+
+              call_ref(
+                target = base,
+                operands = wasmArgs.toSeq,
+                typeIdx = baseTypeIdx,
+                funcType = baseTypeInfo.compType.asInstanceOf[FunctionType]
+              )
 
     case sel @ Select(qual, id) =>
       val qualRes = result(qual)
-      sel.symbol match
-        case S(selSym: TermSymbol) =>
-          val selOwner = selSym.owner getOrElse:
-            lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
-          val selCls = selOwner.asBlkMember getOrElse:
-            lastWords(
-              s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+      sel.symbol.flatMap(_.asBlkMember).filter(methodInfo.contains) match
+        case S(mSym) =>
+          val info = methodInfo(mSym)
+          if info.params.params.nonEmpty || info.params.restParam.nonEmpty then
+            errExpr(
+              Ls(
+                msg"WatBuilder::result for method value selection is not supported (use a call or member projection)" -> sel.toLoc
+              ),
+              extraInfo = S(sel)
             )
-          val fieldidx = fieldSelect(selCls, selSym)
-          struct.get(
-            fieldidx,
-            ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
-            ty = RefType.anyref
-          )
-        case S(otherSym) =>
-          lastWords(
-            s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
-          )
+          else
+            val funcIdx = ctx.getFunc_!(mSym, resolveSymIdx = true)
+            val funcType = ctx.getTypeInfo_!(ctx.getFuncInfo_!(mSym).typeIdx).compType.asInstanceOf[FunctionType]
+            call(
+              funcidx = funcIdx,
+              operands = Seq(qualRes),
+              returnTypes = funcType.sigType.results
+            )
         case N =>
-          errExpr(
-            Ls(
-              msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${id.name}`). Use `_.[_]` for index-based accesses." -> sel.toLoc
-            ),
-            extraInfo = S(sel)
-          )
+          sel.symbol match
+            case S(selSym: TermSymbol) =>
+              val selOwner = selSym.owner getOrElse:
+                lastWords(s"Expected resolved Select(...) expression `$selSym` to have an owner")
+              val selCls = selOwner.asBlkMember getOrElse:
+                lastWords(
+                  s"Expected resolved class for Select(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+                )
+              val fieldidx = fieldSelect(selCls, selSym)
+              struct.get(
+                fieldidx,
+                ref = ref.cast(qualRes, RefType(ctx.getType_!(selCls), nullable = false)),
+                ty = RefType.anyref
+              )
+            case S(otherSym) =>
+              lastWords(
+                s"Expected resolved Select(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
+              )
+            case N =>
+              errExpr(
+                Ls(
+                  msg"WatBuilder::result for field selection without a resolved symbol is not implemented (field `${id.name}`). Use `_.[_]` for index-based accesses." -> sel.toLoc
+                ),
+                extraInfo = S(sel)
+              )
 
     case dyn @ DynSelect(qual, fld, arrayIdx) =>
       val qualRes = result(qual)
@@ -549,6 +770,26 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       errExpr(
         Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N)
       )
+    case Assign(l: TermSymbol, r, rst) if l.owner.nonEmpty =>
+      val owner = l.owner.get
+      val ownerBlk = owner.asBlkMember.getOrElse:
+        lastWords(
+          s"Expected owner of TermSymbol `${l.toString}` to be a BlockMemberSymbol, but got ${owner.getClass.getName}"
+        )
+      val rhsExpr = result(r)
+      val ownerRef = result(Value.This(owner))
+      val fieldidx = fieldSelect(ownerBlk, l)
+      val assignExpr = struct.set(
+        fieldidx,
+        ref.cast(ownerRef, RefType(ctx.getType_!(ownerBlk), nullable = false)),
+        rhsExpr
+      )
+      val rstBlk = returningTerm(rst)
+      Instructions.block(
+        label = N,
+        children = Seq(assignExpr, rstBlk),
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+      )
     case Assign(l, r, rst) =>
       val lExpr = getVar(l, l.toLoc)
       val rExpr = result(r)
@@ -577,17 +818,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case assign @ AssignField(lhs, nme, rhs, rst) =>
       val lhsExpr = result(lhs)
       val rhsExpr = result(rhs)
+      def assignToField(selSym: TermSymbol): Expr =
+        val selOwner = selSym.owner getOrElse
+          lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
+        val selCls = selOwner.asBlkMember getOrElse
+          lastWords(
+            s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
+          )
+        val fieldidx = fieldSelect(selCls, selSym)
+        val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
+        struct.set(fieldidx, objRef, rhsExpr)
+
       val assignInstr = assign.symbol match
         case S(selSym: TermSymbol) =>
-          val selOwner = selSym.owner getOrElse
-            lastWords(s"Expected resolved AssignField(...) expression `$selSym` to have an owner")
-          val selCls = selOwner.asBlkMember getOrElse
-            lastWords(
-              s"Expected resolved class for AssignField(...) expression to be a BlockMemberSymbol, but got $selOwner (${selOwner.getClass.getName})"
-            )
-          val fieldidx = fieldSelect(selCls, selSym)
-          val objRef = ref.cast(lhsExpr, RefType(ctx.getType_!(selCls), nullable = false))
-          struct.set(fieldidx, objRef, rhsExpr)
+          assignToField(selSym)
+        case S(memSym: BlockMemberSymbol) =>
+          memSym.tsym match
+            case S(selSym) => assignToField(selSym)
+            case N =>
+              lastWords(
+                s"Expected AssignField(...) BlockMemberSymbol `${memSym.nme}` to have a TermSymbol"
+              )
         case S(otherSym) =>
           lastWords(
             s"Expected resolved AssignField(...) expression to be a TermSymbol, but got $otherSym (${otherSym.getClass.getName})"
@@ -731,16 +982,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     ),
                     extraInfo = S(defn.showAsTree)
                   ))
+                  val isSingletonObj = clsLikeDefn.k is syntax.Obj
                   if clsLikeDefn.owner.nonEmpty then
                     break(errUnimplExpr("owner.nonEmpty"))
-                  if !(clsLikeDefn.k is syntax.Cls) then
-                    break(errUnimplExpr("!(k is Cls)"))
+                  if !(clsLikeDefn.k is syntax.Cls) && !isSingletonObj then
+                    break(errUnimplExpr("unsupported ClsLikeDefn kind"))
+                  if isSingletonObj && clsLikeDefn.paramsOpt.nonEmpty then
+                    break(errUnimplExpr("paramsOpt.nonEmpty for object"))
                   if clsLikeDefn.auxParams.nonEmpty then
                     break(errUnimplExpr("auxParams.nonEmpty"))
                   if clsLikeDefn.parentPath.nonEmpty then
                     break(errUnimplExpr("parentPath.nonEmpty"))
-                  if clsLikeDefn.methods.nonEmpty then
-                    break(errUnimplExpr("methods.nonEmpty"))
                   clsLikeDefn.preCtor match
                     case End(_) => ()
                     case _ => break(errUnimplExpr("preCtor is not End"))
@@ -793,7 +1045,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     case Some(_) => (ctorAuxParams, ctorParams)
 
                   ctx.addLocal(clsLikeDefn.isym)
-                  val thisVar = getVar(clsLikeDefn.isym, N).instrargs(0).asInstanceOf[LocalIdx]
+                  val thisVar = LocalIdx(SymIdx(scope.findThis_!(clsLikeDefn.isym)))
                   val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
                   
                   val classTypeIdx = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true)
@@ -847,6 +1099,64 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       body = ctorAux
                     )
                   )
+
+                  val methodPlans = clsLikeDefn.methods.map: mtd =>
+                    val FunDefn(_, mSym, _, mParams, mBody) = mtd
+                    val (paramList, bodyBlock) = mParams match
+                      case Nil =>
+                        (ParamList(ParamListFlags.empty, Nil, N), mBody)
+                      case ps :: pss =>
+                        val result = pss.foldRight(mBody):
+                          case (ps, block) =>
+                            Return(Lambda(ps, block), false)
+                        (ps, result)
+                    methodInfo(mSym) = MethodInfo(clsLikeDefn.isym, paramList)
+                    (mSym, paramList, bodyBlock)
+
+                  val methodPlaceholders = methodPlans.map: (mSym, paramList, bodyBlock) =>
+                    val arity = 1 + paramList.params.length
+                    val dummyParams = (0 until arity).map: i =>
+                      val sym = TempSymbol(N, s"mtd_arg$i")
+                      sym -> s"mtd_arg$i"
+                    val dummyType = ctx.addType(
+                      sym = N,
+                      TypeInfo(
+                        id = N,
+                        FunctionType(
+                          params = Seq.fill(arity)(WasmParam(N, RefType.anyref)),
+                          results = Seq(Result(RefType.anyref))
+                        )
+                      )
+                    )
+                    val dummyInfo = FuncInfo(
+                      id = N,
+                      typeIdx = dummyType,
+                      params = dummyParams,
+                      nResults = 1,
+                      locals = Seq.empty,
+                      body = unreachable
+                    )
+                    val funcIdx = ctx.addFunc(S(mSym), dummyInfo)
+                    (mSym, funcIdx, dummyType, paramList, bodyBlock)
+
+                  methodPlaceholders.foreach: (mSym, funcIdx, funcTy, paramList, bodyBlock) =>
+                    val (mParamsWat, mBodyWat, mLocals) =
+                      setupMethodFunction(clsLikeDefn.isym, paramList, bodyBlock)
+
+                    val mFuncInfo = FuncInfo(
+                      id = N,
+                      typeIdx = funcTy,
+                      params = mParamsWat,
+                      nResults = mBodyWat.resultTypes.length,
+                      locals = mLocals,
+                      body = mBodyWat
+                    )
+                    funcIdx.idx match
+                      case NumIdx(idx) => ctx.updateFunc(NumIdx(idx), mFuncInfo)
+                      case SymIdx(nme) => lastWords(s"Expected numeric function index for method ${mSym.nme}, got $nme")
+
+                  if isSingletonObj then
+                    registerSingleton(clsLikeDefn, typeref)
 
                   nop
 
@@ -1077,6 +1387,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
 
     val ctx = Ctx.empty
+    collectSingletons(p.main)
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
@@ -1139,6 +1450,33 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   def body(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
     scope.nest givenIn:
       block(t)
+
+  private def setupMethodFunction(
+      owner: InnerSymbol,
+      params: ParamList,
+      body: Block
+  )(using Ctx, Raise, Scope): (Seq[Local -> Str], Expr, Seq[(Local, Str)]) =
+    ctx.pushLocal()
+
+    val result = scope.nestRebindThis(S(owner)):
+      val thisName = "this"
+      scope.addToBindings(owner, thisName, shadow = true)
+      ctx.addLocal(owner)
+
+      val paramPairs = params.params.map: p =>
+        val paramName = scope.allocateName(p.sym)
+        ctx.addLocal(p.sym)
+        p.sym -> paramName
+
+      val (wasmBody, locals) = block(body)
+      val paramSyms: Set[Local] = (params.params.map(_.sym) :+ owner).toSet
+      val extraLocals = getExtraLocals.filterNot((locals.toSet ++ paramSyms).contains)
+      val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
+      val wasmParams = (owner -> thisName) +: paramPairs
+      (wasmParams.toSeq, wasmBody, localsWithNames)
+
+    ctx.popLocal()
+    result._2
 
   def setupFunction(name: Option[Str], params: ParamList, body: Block)(using
       Ctx,

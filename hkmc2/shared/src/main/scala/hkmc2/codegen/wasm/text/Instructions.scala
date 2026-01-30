@@ -270,6 +270,14 @@ object Instructions:
   end array
 
   object ref:
+    /** Creates a `ref.null` instruction. */
+    def null_(heapType: HeapType): FoldedInstr = FoldedInstr(
+      mnemonic = "ref.null",
+      instrargs = Seq(heapType.toWat),
+      stackargs = Seq.empty,
+      resultType = S(RefType(heapType, nullable = true))
+    )
+
     /** Creates a `ref.func` instruction. */
     def func(idx: FuncIdx, ty: RefType): FoldedInstr = FoldedInstr(
       mnemonic = "ref.func",
@@ -300,6 +308,14 @@ object Instructions:
       instrargs = Seq(castType.toWat),
       stackargs = Seq(value),
       resultType = S(castType)
+    )
+
+    /** Creates a `ref.is_null` instruction. */
+    def is_null(value: Expr): FoldedInstr = FoldedInstr(
+      mnemonic = "ref.is_null",
+      instrargs = Seq.empty,
+      stackargs = Seq(value),
+      resultType = S(I32Type)
     )
   end ref
 

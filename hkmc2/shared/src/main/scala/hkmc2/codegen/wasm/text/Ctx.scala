@@ -91,6 +91,36 @@ class FuncInfo(
 end FuncInfo
 
 /**
+ * A Wasm global and its associated information.
+ *
+ * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
+ *
+ * @param id
+ *   Symbolic identifier for the global, or `N` if the global is anonymous.
+ * @param valType
+ *   The value type of the global.
+ * @param mutable
+ *   Whether the global is mutable.
+ * @param init
+ *   The initializer expression for the global.
+ */
+class GlobalInfo(
+    val id: Opt[SymIdx],
+    val valType: ValType,
+    val mutable: Bool,
+    val init: Expr
+) extends ToWat:
+
+  private def idDoc: Document = id.fold(doc"")(_.toWat)
+
+  def toWat: Document =
+    val typeDoc =
+      if mutable then doc"(mut ${valType.toWat})"
+      else valType.toWat
+    doc"(global${idDoc.surroundUnlessEmpty(doc" ")} ${typeDoc} ${init.toWat})"
+end GlobalInfo
+
+/**
  * A Wasm type and its associated information.
  *
  * Each instance of [[FuncInfo]] represents a single type defintion in a WebAssembly module.
@@ -158,6 +188,7 @@ object Ctx:
     types = ArrayBuf.empty,
     namedTypes = MutMap.empty,
     funcs = ArrayBuf.empty,
+    globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
     locals = MutMap() :: Nil
   )
@@ -178,6 +209,8 @@ object Ctx:
  *   [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices.
  * @param funcs
  *   [[ArrayBuf]] containing all function definitions in the module.
+ * @param globals
+ *   [[ArrayBuf]] containing all global definitions in the module.
  * @param namedFuncs
  *   [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices.
  * @param locals
@@ -188,6 +221,7 @@ class Ctx(
     types: ArrayBuf[TypeInfo],
     namedTypes: MutMap[BlockMemberSymbol, NumIdx],
     funcs: ArrayBuf[FuncInfo],
+    globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
     var locals: Ls[MutMap[Local, NumIdx]]
 ) extends ToWat:
@@ -244,6 +278,12 @@ class Ctx(
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
 
+  /** Replaces an existing function definition at the given numeric index. */
+  def updateFunc(idx: NumIdx, funcInfo: FuncInfo): Unit =
+    if idx.index < 0 || idx.index >= funcs.size then
+      lastWords(s"Invalid function index ${idx.index} for update (size = ${funcs.size})")
+    funcs(idx.index) = funcInfo
+
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
    * numeric index.
@@ -292,14 +332,15 @@ class Ctx(
   def containsLocal(sym: Local): Bool = locals.head.contains(sym)
 
   /** Adds a new variable into the global variable scope. */
-  def addGlobal(sym: Symbol): GlobalIdx =
-    val numIdx = NumIdx(locals.last.size)
+  def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
+    val numIdx = NumIdx(globals.size)
+    globals += globalInfo
     locals.last(sym) = numIdx
-    GlobalIdx(numIdx)
+    GlobalIdx(globalInfo.id.getOrElse(numIdx))
 
   /** Adds a [[Seq]] of variables into the global variable scope. */
-  def addGlobals(syms: Seq[Symbol]): Seq[GlobalIdx] =
-    syms.map(addGlobal)
+  def addGlobals(globals: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
+    globals.map(addGlobal.tupled)
 
     /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = locals.last.contains(sym)
@@ -336,6 +377,6 @@ class Ctx(
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
-    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
+    doc"(module #{  # ${(types.toSeq ++ globals.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
 
 end Ctx

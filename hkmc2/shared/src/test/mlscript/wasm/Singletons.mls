@@ -1,0 +1,129 @@
+
+:global
+:wasm
+
+object Foo
+Foo
+//│ Wasm result:
+//│ = {}
+//
+
+
+object Foo with
+    val x = 1
+Foo.x
+//│ Wasm result:
+//│ = 1
+
+
+:wat
+object Foo with
+  val x = 2
+  fun get() = bar()
+  fun bar() = x
+Foo.get()
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type (func (result (ref null any))))
+//│   (type (func (param (ref null any)) (result (ref null any))))
+//│   (type (func (param (ref null any)) (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
+//│   (func $Foo (type 2) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo 0
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo 1
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (ref.i31
+//│             (i32.const 2)))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo" (func $Foo))
+//│   (elem declare func $Foo)
+//│   (func  (type 3) (param $this (ref null any)) (result (ref null any))
+//│     (return
+//│       (call 2
+//│         (call $Foo$instance))))
+//│   (func  (type 4) (param $this (ref null any)) (result (ref null any))
+//│     (return
+//│       (struct.get $Foo 1
+//│         (ref.cast (ref $Foo)
+//│           (call $Foo$instance)))))
+//│   (func $Foo$instance (type 5) (result (ref null any))
+//│     (if (result (ref null $Foo))
+//│       (ref.is_null
+//│         (global.get $Foo$inst))
+//│       (then
+//│         (block (result (ref null $Foo))
+//│           (global.set $Foo$inst
+//│             (ref.cast (ref null $Foo)
+//│               (call 0)))
+//│           (global.get $Foo$inst)))
+//│       (else
+//│         (global.get $Foo$inst))))
+//│   (export "Foo$instance" (func $Foo$instance))
+//│   (elem declare func $Foo$instance)
+//│   (func $entry (type 6) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $Foo1 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (call 1
+//│         (call $Foo$instance))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 2
+
+
+fun test() =
+  object Test with
+    fun bar = 1
+    fun foo() = Test.bar + 2
+  Test.foo()
+test()
+//│ Wasm result:
+//│ = 3
+
+
+object Example with
+  val a = 1
+  fun f(x) = [x, a]
+Example.f(2).[1]
+//│ Wasm result:
+//│ = 1
+
+
+:fixme
+object O with
+  val x = 1
+  fun gy = x
+  fun sy = set x += 1
+O.gy
+O.sy
+//│ ═══[COMPILATION ERROR] WatBuilder::getVar for TempSymbol (symbol not in top-level scope) not implemented yet
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Expected resolved Select(...) expression to be a TermSymbol, but got object:Unit (hkmc2.semantics.ModuleOrObjectSymbol)
+
+
+
+// TODO: field x needs to be mutable ('mut') for field assignment using 'set'
+:fixme
+object Foo with
+    val x = 1
+set Foo.x = 3
+Foo.x
+//│ Wasm result:
+//│ = 3
+//│ FAILURE: Unexpected lack of error to fix
