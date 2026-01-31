@@ -40,10 +40,11 @@ fun binaryenCompileToModule(wat, importObject): Promise =
   )
 
 fun unwrapWasmException(err, tag) =
-  if err is WebAssembly.Exception then
-    if tag === null or tag === undefined then err
-    else err.getArg(tag, 0)
-  else err
+  if tag === null || tag === undefined then err
+  else
+    Runtime.try_catch of
+      () => err.getArg(tag, 0)
+      _ => err
 
 fun binaryenRunFunc(wat, importObject, func): Promise =
   binaryenCompileToModule(wat, importObject)
