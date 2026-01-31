@@ -220,104 +220,58 @@ fun illegalEffect(position) =
   throw CustomStackError(showStackTrace("Error: Effect " + tmp.handler.constructor.name + " is raised " + position, tmp, false, false))
 
 fun showStackTrace(header, tr, debug, showLocals) =
-  "Stack Trace not impl"
-  // let
-  //   msg = header
-  //   stack = tr.funStack
-  //   atTail = true
-  // if debug do
-  //   while stack !== null do
-  //     let curSeg = stack.SegHead
-  //     while curSeg !== null do
-  //       let curOff = curSeg.off
-  //       // ???
-  //       let curLocals = cur.getLocals
-  //       let loc = cur.getLoc
-  //       let localsMsg = if showLocals and curLocals.length > 0 then
-  //         " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
-  //       else
-  //         ""
-  //       set
-  //         msg += "\n\tat " + cur.getNme + " (" + loc + ")"
-  //         msg += localsMsg
-  //         curSeg = curSeg.next
-  //         atTail = false
-  //     set curHandler = curHandler.nextHandler
-  //     if stack.handler !== null do
-  //       set
-  //         msg += "\n\twith handler " + stack.handler.constructor.name
-  //         atTail = false
-  //   if atTail do
-  //     set msg += "\n\tat tail position"
-  // msg
+  let
+    msg = header
+    stack = tr.contTrace.funStack
+    atTail = true
+  if debug do
+    while stack !== null do
+      let curSeg = stack.segHead
+      while curSeg !== null do
+        let
+          curBuf = curSeg.buf
+          curOff = curSeg.off
+          curBufLen = curBuf.length
+        while curOff < curBufLen do
+          let
+            dbgInfo = curBuf.[curOff + 3]
+            nme = dbgInfo.[0]
+            loc = if
+              let x = curBuf.[curOff + 2]
+              x is null then "pc=" + curBuf.[curOff + 1]
+              else x
+            i = 0
+            argListLength = curBuf.[curOff + 5]
+          set
+            msg += "\n\tat " + nme + " (" + loc + ")"
+            curOff += 6
+          while i < argListLength do
+            set
+              curOff += curBuf.[curOff] + 1
+              i += 1
+          if showLocals and dbgInfo.length > 1 do
+            set msg += " with locals: "
+            let i = 1
+            while i < dbgInfo.length do
+              if i !== 1 do
+                set msg += ", "
+              set msg += dbgInfo.[i + 1] + "=" + curBuf.[curOff + 1 + dbgInfo.[i]]
+              set i += 1
+          set
+            curOff += curBuf.[curOff] + 1
+            atTail = false
+        set curSeg = curSeg.nextSegment
+      if stack.handler !== null do
+        set
+          msg += "\n\twith handler " + stack.handler.constructor.name
+          atTail = false
+      set stack = stack.nextStack
+    if atTail do
+      set msg += "\n\tat tail position"
+  msg
 
-// fun showFunctionContChain(cont, hl, vis, reps) =
-//   if cont is FunctionContFrame then
-//     let result = cont.constructor.name + "(pc=" + cont.saved.[1]
-//     hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
-//     if vis.has(cont) then
-//       set reps = reps + 1
-//       if reps > 10 do
-//         throw Error("10 repeated continuation frame (loop?)")
-//       set result += ", REPEAT"
-//     else
-//       vis.add(cont)
-//     result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
-//   else if cont === null then
-//     "(null)"
-//   else
-//     "(NOT CONT)"
-
-// fun showHandlerContChain(cont, hl, vis, reps) =
-//   if cont is HandlerContFrame then
-//     let result = cont.handler.constructor.name
-//     hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
-//     if vis.has(cont) then
-//       set reps = reps + 1
-//       if reps > 10 do
-//         throw Error("10 repeated continuation frame (loop?)")
-//       set result += ", REPEAT"
-//     else
-//       vis.add(cont)
-//     result + " -> " + showFunctionContChain(cont.next, hl, vis, reps)
-//   else if cont === null then
-//     "(null)"
-//   else
-//     "(NOT HANDLER CONT)"
-
-// fun debugCont(cont) = console.log(showFunctionContChain(cont, new Map(), new Set(), 0))
-// fun debugHandler(cont) = console.log(showHandlerContChain(cont, new Map(), new Set(), 0))
-
-// fun debugContTrace(contTrace) =
-//   if contTrace is ContTrace then
-//     console.log("resumed: ", contTrace.resumed)
-//     if contTrace.last === contTrace do
-//       console.log("<last is self>")
-//     if contTrace.lastHandler === contTrace do
-//       console.log("<lastHandler is self>")
-//     let vis = new Set()
-//     let hl = new Map()
-//     hl.set("last", new Set([contTrace.last]))
-//     hl.set("last-handler", new Set([contTrace.lastHandler]))
-//     console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
-//     let cur = contTrace.nextHandler
-//     while cur !== null do
-//       console.log(showHandlerContChain(cur, hl, vis, 0))
-//       set cur = cur.nextHandler
-//     console.log()
-//   else
-//     console.log("Not a cont trace:")
-//     console.log(contTrace)
-
-// fun debugEff(eff) =
-//   if eff is EffectSig then
-//     console.log("Debug EffectSig:")
-//     console.log("handler: ", eff.handler.constructor.name)
-//     console.log("handlerFun: ", eff.handlerFun)
-//     debugContTrace(eff.contTrace)
-//   else
-//     console.log("Not an effect:")
-//     console.log(eff)
+fun debugEff(eff) =
+  console.log(showStackTrace("Debug Effect: ", eff, true, false))
 
 // runtime implementations
 

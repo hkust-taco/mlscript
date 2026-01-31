@@ -6,7 +6,8 @@
 
 :re
 raiseUnhandledEffect()
-//│ ═══[RUNTIME ERROR] Stack Trace not impl
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at tail position
 
 :sjs
 fun f() =
@@ -56,7 +57,7 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(f, 5, "Debugging.mls:16:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.curEffect.lastSegmentBuf.push(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -66,7 +67,7 @@ fun f() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.curEffect.lastSegmentBuf.push(f, 4, "Debugging.mls:17:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│             return runtime.curEffect.lastSegmentBuf.push(f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -88,7 +89,7 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(f, 2, "Debugging.mls:17:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.curEffect.lastSegmentBuf.push(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -105,7 +106,8 @@ fun f() =
 
 :re
 f()
-//│ ═══[RUNTIME ERROR] Stack Trace not impl
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at f (Debugging.mls:18:14)
 
 :re
 fun lambda_test(f) =
@@ -114,7 +116,9 @@ fun lambda_test(f) =
 lambda_test(() =>
   raiseUnhandledEffect()
   100)
-//│ ═══[RUNTIME ERROR] Stack Trace not impl
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect FatalEffect
+//│ 	at lambda (Debugging.mls:117:3)
+//│ 	at lambda_test (Debugging.mls:114:3)
 
 
 import "../../mlscript-compile/Runtime.mls"
@@ -122,40 +126,14 @@ import "../../mlscript-compile/Runtime.mls"
 :silent
 let res = Runtime.try(f)
 
+// Maybe we can expose a wrapper around the real effect trace, as the underlying stack is just an array and .next requires a lot of calculation to get the next frame.
+:re
 res.reified.contTrace.next.getLocals
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
-//│     at REPL27:1:651
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
 
 Runtime.debugEff(res.reified)
-//│ FAILURE: Unexpected type error
-//│ FAILURE LOCATION: resolveField (Elaborator.scala:345)
-//│ ╔══[ERROR] Module 'Runtime' does not contain member 'debugEff'
-//│ ║  l.140: 	Runtime.debugEff(res.reified)
-//│ ╙──       	       ^^^^^^^^^
-//│ FAILURE: Unexpected runtime error
-//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
-//│ ═══[RUNTIME ERROR] TypeError: Runtime.debugEff is not a function
-//│     at REPL30:1:279
-//│     at ContextifyScript.runInThisContext (node:vm:137:12)
-//│     at REPLServer.defaultEval (node:repl:598:22)
-//│     at bound (node:domain:433:15)
-//│     at REPLServer.runBound [as eval] (node:domain:444:12)
-//│     at REPLServer.onLine (node:repl:927:10)
-//│     at REPLServer.emit (node:events:518:28)
-//│     at REPLServer.emit (node:domain:489:12)
-//│     at [_onLine] [as _onLine] (node:internal/readline/interface:415:12)
-//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:609:22)
+//│ > Debug Effect: 
+//│ > 	at f (Debugging.mls:18:14)
 
 :expect Infinity
 res.resumeWith(42)
@@ -187,7 +165,7 @@ let res =
   Runtime.try(() => Test.main())
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'instance$Ident(Debugger)'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.186: 	  using Debugger = h
+//│ ║  l.164: 	  using Debugger = h
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] ReferenceError: instance$Ident is not defined
 //│ res = undefined
@@ -223,6 +201,9 @@ fun f() =
 //│ i = 100
 
 f()
-//│ > Stack Trace not impl
-//│ > Stack Trace not impl
-//│ > Stack Trace not impl
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:196:3) with locals: j=200, undefined=function f(...args) {   runtime.checkArgs("f", 0, true, args.length);   let j, tmp10, tmp11, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     j = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp10 = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp11 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         j = 200;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(true));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 2, "Debugging.mls:196:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 2;         continue main;         break;       case 1:         tmp11 = runtime.resumeValue;         return runtime.checkCall(runtime.raisePrintStackEffect(true));         break;       case 2:         tmp10 = runtime.resumeValue;         j = 300;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(false));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 1, "Debugging.mls:198:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 1;         continue main;         break;     }     break;   } }
+//│ > Stack Trace:
+//│ > 	at f (Debugging.mls:198:3)
+//│ > Stack Trace:
+//│ > 	at tail position

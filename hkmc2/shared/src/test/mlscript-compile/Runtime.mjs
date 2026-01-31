@@ -760,7 +760,167 @@ let Runtime1;
     throw Runtime.CustomStackError(tmp4)
   } 
   static showStackTrace(header, tr, debug, showLocals) {
-    return "Stack Trace not impl"
+    let msg, stack, atTail, tmp, tmp1, tmp2, tmp3;
+    msg = header;
+    stack = tr.contTrace.funStack;
+    atTail = true;
+    if (debug === true) {
+      lbl: while (true) {
+        let scrut, curSeg, scrut1, tmp4, tmp5, tmp6, tmp7;
+        scrut = stack !== null;
+        if (scrut === true) {
+          curSeg = stack.segHead;
+          lbl1: while (true) {
+            let scrut2, curBuf, curOff, curBufLen, tmp8;
+            scrut2 = curSeg !== null;
+            if (scrut2 === true) {
+              curBuf = curSeg.buf;
+              curOff = curSeg.off;
+              curBufLen = curBuf.length;
+              lbl2: while (true) {
+                let scrut3, dbgInfo, nme, loc, x, i, argListLength, i1, scrut4, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17, tmp18, tmp19, tmp20, tmp21, tmp22, tmp23, tmp24, tmp25;
+                scrut3 = curOff < curBufLen;
+                if (scrut3 === true) {
+                  tmp9 = curOff + 3;
+                  dbgInfo = curBuf.at(tmp9);
+                  nme = dbgInfo.at(0);
+                  tmp10 = curOff + 2;
+                  x = curBuf.at(tmp10);
+                  if (x === null) {
+                    tmp11 = curOff + 1;
+                    tmp12 = "pc=" + curBuf.at(tmp11);
+                  } else {
+                    tmp12 = x;
+                  }
+                  loc = tmp12;
+                  i = 0;
+                  tmp13 = curOff + 5;
+                  argListLength = curBuf.at(tmp13);
+                  tmp14 = "\n\tat " + nme;
+                  tmp15 = tmp14 + " (";
+                  tmp16 = tmp15 + loc;
+                  tmp17 = tmp16 + ")";
+                  tmp18 = msg + tmp17;
+                  msg = tmp18;
+                  tmp19 = curOff + 6;
+                  curOff = tmp19;
+                  lbl3: while (true) {
+                    let scrut5, tmp26, tmp27, tmp28;
+                    scrut5 = i < argListLength;
+                    if (scrut5 === true) {
+                      tmp26 = curBuf.at(curOff) + 1;
+                      tmp27 = curOff + tmp26;
+                      curOff = tmp27;
+                      tmp28 = i + 1;
+                      i = tmp28;
+                      tmp20 = runtime.Unit;
+                      continue lbl3
+                    } else {
+                      tmp20 = runtime.Unit;
+                    }
+                    break;
+                  }
+                  split_root$: {
+                    split_1$: {
+                      if (showLocals === true) {
+                        scrut4 = dbgInfo.length > 1;
+                        if (scrut4 === true) {
+                          tmp21 = msg + " with locals: ";
+                          msg = tmp21;
+                          i1 = 1;
+                          lbl4: while (true) {
+                            let scrut6, scrut7, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37;
+                            scrut6 = i1 < dbgInfo.length;
+                            if (scrut6 === true) {
+                              scrut7 = i1 !== 1;
+                              if (scrut7 === true) {
+                                tmp29 = msg + ", ";
+                                msg = tmp29;
+                                tmp30 = runtime.Unit;
+                              } else {
+                                tmp30 = runtime.Unit;
+                              }
+                              tmp31 = i1 + 1;
+                              tmp32 = dbgInfo.at(tmp31) + "=";
+                              tmp33 = curOff + 1;
+                              tmp34 = tmp33 + dbgInfo.at(i1);
+                              tmp35 = tmp32 + curBuf.at(tmp34);
+                              tmp36 = msg + tmp35;
+                              msg = tmp36;
+                              tmp37 = i1 + 1;
+                              i1 = tmp37;
+                              tmp22 = runtime.Unit;
+                              continue lbl4
+                            } else {
+                              tmp22 = runtime.Unit;
+                            }
+                            break;
+                          }
+                          tmp23 = tmp22;
+                          break split_root$
+                        } else {
+                          break split_1$
+                        }
+                      } else {
+                        break split_1$
+                      }
+                    }
+                    tmp23 = runtime.Unit;
+                  }
+                  tmp24 = curBuf.at(curOff) + 1;
+                  tmp25 = curOff + tmp24;
+                  curOff = tmp25;
+                  atTail = false;
+                  tmp8 = runtime.Unit;
+                  continue lbl2
+                } else {
+                  tmp8 = runtime.Unit;
+                }
+                break;
+              }
+              curSeg = curSeg.nextSegment;
+              tmp4 = runtime.Unit;
+              continue lbl1
+            } else {
+              tmp4 = runtime.Unit;
+            }
+            break;
+          }
+          scrut1 = stack.handler !== null;
+          if (scrut1 === true) {
+            tmp5 = "\n\twith handler " + stack.handler.constructor.name;
+            tmp6 = msg + tmp5;
+            msg = tmp6;
+            atTail = false;
+            tmp7 = runtime.Unit;
+          } else {
+            tmp7 = runtime.Unit;
+          }
+          stack = stack.nextStack;
+          tmp = runtime.Unit;
+          continue lbl
+        } else {
+          tmp = runtime.Unit;
+        }
+        break;
+      }
+      if (atTail === true) {
+        tmp1 = msg + "\n\tat tail position";
+        msg = tmp1;
+        tmp2 = runtime.Unit;
+      } else {
+        tmp2 = runtime.Unit;
+      }
+      tmp3 = tmp2;
+    } else {
+      tmp3 = runtime.Unit;
+    }
+    return msg
+  } 
+  static debugEff(eff) {
+    let tmp;
+    tmp = Runtime.showStackTrace("Debug Effect: ", eff, true, false);
+    return runtime.safeCall(globalThis.console.log(tmp))
   } 
   static mkEffect(handler, handlerFun) {
     let buf, seg, stack, cont, tmp;
