@@ -137,7 +137,10 @@ class TagInfo(
   private def idDoc: Document = id.fold(doc"")(_.toWat)
 
   def toWat: Document =
-    doc"(tag${idDoc.surroundUnlessEmpty(doc" ")} (type ${typeIdx.toWat}))"
+    doc"""(tag${idDoc.surroundUnlessEmpty(doc" ")} (type ${typeIdx.toWat}))${
+      id.fold(doc""): id =>
+        doc""" (export "${id.id}" (tag ${id.toWat}))"""
+    }"""
 end TagInfo
 
 enum WasmIntrinsicType:

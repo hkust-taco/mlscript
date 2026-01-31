@@ -39,10 +39,19 @@ fun binaryenCompileToModule(wat, importObject): Promise =
     loadWasmBinary of modBuf, importObject
   )
 
+fun unwrapWasmException(err, tag) =
+  if err is WebAssembly.Exception then
+    if tag === null or tag === undefined then err
+    else err.getArg(tag, 0)
+  else err
+
 fun binaryenRunFunc(wat, importObject, func): Promise =
   binaryenCompileToModule(wat, importObject)
     .then(wasmMod =>
-      func(wasmMod.instance.exports)
+      let exnTag = wasmMod.instance.exports.mlx_exn
+      Runtime.try_catch of
+        () => func(wasmMod.instance.exports)
+        err => throw unwrapWasmException(err, exnTag)
     )
 
 fun binaryenPrintFuncRes(wat, importObject, func): Promise = 
