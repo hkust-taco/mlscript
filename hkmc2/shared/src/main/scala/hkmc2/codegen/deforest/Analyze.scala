@@ -18,12 +18,16 @@ class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt
   lazy val asConsStrat = ConsVar(this)
   override def toString(): String = s"${if name.isEmpty() then "$stratvar" else name}@${uid}@$generatedForFun"
 object StratVarState:
-  def freshVar(nme: String)(using vuid: Uid.StratVar.State) =
+  def freshVar(nme: String)(using vuid: Uid.StratVar.State): StratVarState =
     val newId = vuid.nextUid
     StratVarState(newId, nme, N)
-  def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State) =
+  def freshVar(nme: String, generatedForFun: TermSymbol)(using vuid: Uid.StratVar.State): StratVarState =
     val newId = vuid.nextUid
     StratVarState(newId, s"${nme}_for_${generatedForFun.nme}", S(generatedForFun))
+  def freshVar(nme: String, forFunOpt: Opt[TermSymbol])(using vuid: Uid.StratVar.State): StratVarState =
+    forFunOpt match
+    case None => freshVar(nme)
+    case Some(forFun) => freshVar(nme, forFun)
 
 trait StratVar(s: StratVarState):
   this: ProdVar | ConsVar =>
@@ -39,7 +43,8 @@ case class ProdFun(params: Ls[ConsStrat], res: ProdStrat) extends ProdStrat
 case object NoProd extends ProdStrat
 class Ctor(
   val exprId: ResultId,
-  val instantiationId: Opt[InstantiationId])(
+  val instantiationId: Opt[InstantiationId])
+  (
   val ctor: ClassLikeSymbol,
   val args: Ls[TermSymbol -> ProdStrat]) extends ProdStrat
 // TODO: a new case class for Tuple
@@ -50,7 +55,8 @@ case class ConsFun(params: Ls[ProdStrat], res: ConsStrat) extends ConsStrat
 case object NoCons extends ConsStrat
 class FieldSel(
   val exprId: ResultId,
-  val instantiationId: Opt[InstantiationId],
+  val instantiationId: Opt[InstantiationId])
+  (
   val field: TermSymbol,
   val consVar: ConsVar) extends ConsStrat:
     // TODO: with this term symbol, we may not need filter
@@ -67,6 +73,13 @@ class FieldSel(
 class Dtor(
   val scrutExprId: ResultId,
   val instantiationId: Opt[InstantiationId]) extends ConsStrat
+
+
+
+class ProdStratScheme(s: StratVarState, constraints: Ls[ProdStrat -> ConsStrat])
+
+
+
 
 
 
@@ -103,6 +116,12 @@ class DeforestPreAnalyzer(
     // - modules
     //     - that are not nested in functions
     //     - that are lone modules
+    // when traversing
+    // - fundefs in the set: nothing should be ignored
+    // - blocks in the set:
+    //    - toplvl block: ignore all class/module/fun defs
+    //    - module ctor blocks: ignore everything other than functions
+    // - modules: they are only traversed for collecting the symbols of their public/private fields
     val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block | ClsLikeBody]
     // the keys could possibly be one of the following kinds:
     // - BlockMemberSymbol: functions and val definitions without an owner
@@ -362,7 +381,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   // generate prod vars for symbols that we care,
   // default to NoProd for unknown symbols
-  val generateProdVars =
+  val generatedProdVars: Map[Symbol, StratVarState] =
     // generating strat vars for
     //   - let/val bindings in top level blocks
     //   - let/val bindings in top level lone-modules with
@@ -375,7 +394,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
     //   - functions and val definitions in top level or nested in function body (without an owner)
     // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
     // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
-    val store = MutMap.empty[Symbol, ProdStrat].withDefaultValue(NoProd)
+    val store = MutMap.empty[Symbol, StratVarState]
     // for top level block
     if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
       object AddStratForTopLvlSymbols extends BlockTraverserShallow:
@@ -385,18 +404,18 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             // top level immutable val defs
             case bms: BlockMemberSymbol if bms.tsym.exists(_.k is ImmutVal) =>
               val tsym = bms.tsym.get
-              store(tsym) = freshVar(tsym.nme).asProdStrat
+              store(tsym) = freshVar(tsym.nme)
             // varsymbols for let binding
-            case s: VarSymbol => store(s) = freshVar(s.nme).asProdStrat
-            case s: TempSymbol => store(s) = freshVar(s.nme).asProdStrat
+            case s: VarSymbol => store(s) = freshVar(s.nme)
+            case s: TempSymbol => store(s) = freshVar(s.nme)
             case _ => ()
             applyBlock(body)
           case _ => super.applyBlock(b)
       AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
     // for module private/public fields and mod ctors
     for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-      for priv <- mod.privateFields do store(priv) = freshVar(priv.name).asProdStrat
-      for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name).asProdStrat
+      for priv <- mod.privateFields do store(priv) = freshVar(priv.name)
+      for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name)
       // mod.ctor can nest functions and class/module defs
       // among which only nested functions needs to be handled here
       if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor) then
@@ -407,10 +426,10 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               // local fun and vals
               case bms: BlockMemberSymbol if bms.tsym.exists(tsym => (tsym.k is Fun) || (tsym.k is ImmutVal)) =>
                 val tsym = bms.tsym.get
-                store(tsym) = freshVar(tsym.nme).asProdStrat
+                store(tsym) = freshVar(tsym.nme)
               // varsymbols for let binding
-              case s: VarSymbol => store(s) = freshVar(s.nme).asProdStrat
-              case s: TempSymbol => store(s) = freshVar(s.nme).asProdStrat
+              case s: VarSymbol => store(s) = freshVar(s.nme)
+              case s: TempSymbol => store(s) = freshVar(s.nme)
               case _ => ()
               applyBlock(body)
             case _ => super.applyBlock(b)
@@ -423,7 +442,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               // case ValDefn(tsym, sym, rhs) =>
             
           override def applyParamList(pl: ParamList): Unit =
-            for p <- pl.params do store(p.sym) = freshVar(p.sym.nme).asProdStrat
+            for p <- pl.params do store(p.sym) = freshVar(p.sym.nme)
         AddStratForModCtorSymbols.applyBlock(mod.ctor)
     // for toplvl fundefns
     for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
@@ -431,31 +450,31 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       // funs can only nest other funs
       object AddStratForToplvlFun extends BlockTraverser:
         override def applyFunDefn(fun: FunDefn): Unit =
-          store(fun.dSym) = freshVar(fun.sym.nme, forFun).asProdStrat
+          store(fun.dSym) = freshVar(fun.sym.nme, forFun)
           super.applyFunDefn(fun)
         override def applyParamList(pl: ParamList): Unit =
-          for p <- pl do store(p.sym) = freshVar(p.sym.nme, forFun).asProdStrat
+          for p <- pl do store(p.sym) = freshVar(p.sym.nme, forFun)
         override def applyBlock(b: Block): Unit = b match
           case Scoped(syms, body) => for s <- syms do
             s match
             // local vals
             case bms: BlockMemberSymbol if bms.tsym.exists(tsym => tsym.k is ImmutVal) =>
               val tsym = bms.tsym.get
-              store(tsym) = freshVar(tsym.nme, forFun).asProdStrat
+              store(tsym) = freshVar(tsym.nme, forFun)
             // varsymbols for let binding
-            case s: VarSymbol => store(s) = freshVar(s.nme, forFun).asProdStrat
-            case s: TempSymbol => store(s) = freshVar(s.nme, forFun).asProdStrat
+            case s: VarSymbol => store(s) = freshVar(s.nme, forFun)
+            case s: TempSymbol => store(s) = freshVar(s.nme, forFun)
             case _ => ()
             applyBlock(body)
           case _ => super.applyBlock(b)
       AddStratForToplvlFun.applyFunDefn(f)
-    store.toMap.withDefaultValue(NoProd)
-  end generateProdVars
+    store.toMap.withDefaultValue(preAnalyzer.res.primitiveStratVar)
+  end generatedProdVars
   
   // just compute the scc first...
-  val scc: List[(String, Set[TermSymbol])] =
+  val sccInOrder: Ls[Ls[TermSymbol]] =
     import algorithms.partitionScc
-    var edges = List.empty[(TermSymbol, TermSymbol)]
+    var edges = Ls.empty[(TermSymbol, TermSymbol)]
     for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
       object CollectAllReferredFun extends BlockTraverser:
         override def applyPath(p: Path) = p match
@@ -464,18 +483,152 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               edges ::= f.dSym -> callee
           case _ => ()
       CollectAllReferredFun.applyBlock(f.body)
-    partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse.map: fs =>
-      fs.sortBy(_.uid).map(_.name).mkString("_") -> fs.toSet
-  end scc
+    partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse
+  end sccInOrder
+  val funToSccRep: Map[TermSymbol, TermSymbol] =
+    sccInOrder
+      .flatMap: funs =>
+        funs.map(_ -> funs.head)
+      .toMap
+  
+  private enum IgnoreMode:
+    case Nothing // for function, which can only nest function
+    case EverythingExceptFun // for module ctor, which can nest functions (not ignored) and other things (ignored)
+    case Everything // for toplvl, which can have function and other things (both ignored)
+  private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
+    var constraints = Ls.empty[ProdStrat -> ConsStrat]
+    val labelToRestStrat = MutMap.empty[Symbol, BlockStrat]
+    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
+    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = constraints :::= cs.toList
+  private enum BlockStrat:
+    case Ret(p: ProdStrat)
+    case MayRet(p: ProdStrat)
+    case NoRet
+    def mergeBranches(other: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
+      (this, other) match
+      case Ret(p1) -> Ret(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        Ret(res.asProdStrat)
+      case Ret(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case Ret(p1) -> NoRet => MayRet(p1)
+      case MayRet(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case MayRet(p1) -> NoRet => MayRet(p1)
+      case NoRet -> NoRet => NoRet
+      case _ => other.mergeBranches(this)
+    def mergeSeq(rest: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
+      (this, rest) match
+      case Ret(p1) -> _ => Ret(p1)
+      case MayRet(p1) -> Ret(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        Ret(res.asProdStrat)
+      case MayRet(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case MayRet(p1) -> NoRet => MayRet(p1)
+      case NoRet -> Ret(p2) => Ret(p2)
+      case NoRet -> MayRet(p2) => MayRet(p2)
+      case NoRet -> NoRet => NoRet
+  import BlockStrat.*
+  private def processBlock(b: Block)(using cc: ConstraintsCollector, im: IgnoreMode): BlockStrat =
+    b match
+    case Return(res, implct) => Ret(processResult(res))
+    case Throw(exc) => Ret(freshVar("throw", cc.forFunGroup).asProdStrat)
+    case Match(scrut, arms, dflt, rest) =>
+      val scrutStrat = processResult(scrut)
+      cc.constrain(
+        scrutStrat,
+        new Dtor(scrut.uid, cc.forFunGroup.fold(S(Nil))(_ => N)))
+      val allArmsRes = (arms.map(_._2) ++ dflt).map(processBlock).reduce(_.mergeBranches(_))
+      allArmsRes.mergeSeq(processBlock(rest))
+    case Label(l, false, body, rest) =>
+      val restRes = processBlock(rest)
+      cc.labelToRestStrat.addOne(l -> restRes)
+      processBlock(body).mergeSeq(restRes)
+    case Break(label) => cc.labelToRestStrat(label)
+    case Scoped(syms, body) => processBlock(body)
+    case Begin(sub, rest) =>
+      processBlock(sub).mergeSeq(processBlock(rest))
+    case Assign(lhs, rhs, rest) =>
+      val rhsStrat = processResult(rhs)
+      cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
+      processBlock(rest)
+    case Define(defn, rest) =>
+      defn match
+      case ValDefn(tsym, sym, rhs) =>
+        cc.constrain(processResult(rhs), generatedProdVars(tsym).asConsStrat)
+      case FunDefn(_, _, dSym, params, body) =>
+        if (im is IgnoreMode.Nothing) || (im is IgnoreMode.EverythingExceptFun) then
+          val funRes = freshVar(s"${dSym.nme}_res", cc.forFunGroup)
+          val funProdStrat = params.foldRight[ProdStrat](funRes.asProdStrat): (ps, acc) =>
+            assert(ps.restParam.isEmpty)
+            ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+          processBlock(body) match
+            case Ret(p) => cc.constrain(p, funRes.asConsStrat)
+            case _ => cc.constrain(NoProd, funRes.asConsStrat)
+          cc.constrain(funProdStrat, generatedProdVars(dSym).asConsStrat)
+      case cls: ClsLikeDefn => im match
+        case IgnoreMode.Nothing => die
+        case _ => ()
+      processBlock(rest)
+    case End(msg) => NoRet
+    case _ => die
+    
+  private def processResult(r: Result)(using cc: ConstraintsCollector, im: IgnoreMode): ProdStrat = ???
+  
+  val funsToProdStratScheme: Map[TermSymbol, ProdStratScheme] =
+    val store = MutMap.empty[TermSymbol, ProdStratScheme]
+    for groupedFuns <- sccInOrder do
+      given IgnoreMode = IgnoreMode.Nothing
+      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
+      for funSym <- groupedFuns do
+        val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+        val thisFunVar = generatedProdVars(fun.dSym)
+        val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
+        val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
+          assert(ps.restParam.isEmpty)
+          ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+        processBlock(fun.body) match
+          case Ret(p) => cc.constrain(p, res.asConsStrat)
+          case _ => cc.constrain(NoProd, res.asConsStrat)
+        cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+      for funSym <- groupedFuns do
+        store(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+    store.toMap
+  end funsToProdStratScheme
+  
+  val allConstraints =
+    given cc: ConstraintsCollector = new ConstraintsCollector(N)
+    cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
+    cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
+    // collect for toplvl block
+    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
+      given IgnoreMode = IgnoreMode.Everything
+      processBlock(preAnalyzer.b)
+    // collect for module ctor
+    for
+      case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
+      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
+    do
+      given IgnoreMode = IgnoreMode.EverythingExceptFun
+      processBlock(mod.ctor)
+    cc.constraints
+  end allConstraints
   
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
   // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
   // tl.log(scc)
-  
-  
-  
-  
-  
-  
-
 end DeforestConstraintsCollector
