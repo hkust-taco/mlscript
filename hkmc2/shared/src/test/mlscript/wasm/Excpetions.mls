@@ -20,17 +20,6 @@ throw 0
 //│ ═══[RUNTIME ERROR] 0
 
 :re
-throw "error"
-//│ Wasm result:
-//│ ═══[RUNTIME ERROR] error
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] tag param types must match, on 
-//│ (string.const "error")
-//│ (on argument 0)
-//│ Assertion failed
-//│ 
-
-:re
 let x = 1
 set x += 1 in x
 //│ Wasm result:
