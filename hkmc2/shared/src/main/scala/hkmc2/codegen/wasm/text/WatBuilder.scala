@@ -49,6 +49,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** True if this top-level class can be declared as a Wasm struct type. */
   private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
     defn.owner.isEmpty
       && (defn.k is syntax.Cls)
@@ -60,21 +61,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case End(_) => true
         case _ => false)
 
-  private def predeclareTopLevelDefnTypes(b: Block)(using Ctx): Unit = b match
+  /** Declares supported top-level class types (needed for nested function codegen). */
+  private def declareTopLevelDefnTypes(b: Block)(using Ctx): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
       if isSupportedTopLevelClass(defn) then
         getOrCreateClassType(defn)
-      predeclareTopLevelDefnTypes(rst)
+      declareTopLevelDefnTypes(rst)
     case Define(_, rst) =>
-      predeclareTopLevelDefnTypes(rst)
+      declareTopLevelDefnTypes(rst)
     case Begin(_, rst) =>
-      predeclareTopLevelDefnTypes(rst)
+      declareTopLevelDefnTypes(rst)
     case Scoped(_, body) =>
-      predeclareTopLevelDefnTypes(body)
+      declareTopLevelDefnTypes(body)
     case _ => ()
 
+  /** Gets or creates the Wasm struct type for a supported class definition. */
   private def getOrCreateClassType(clsLikeDefn: ClsLikeDefn)(using Ctx): TypeIdx =
-    ctx.getType(clsLikeDefn.sym).getOrElse {
+    ctx.getType(clsLikeDefn.sym).getOrElse:
       val inheritedFields = baseObjectStruct.fields.toMap
       val inheritedSize = inheritedFields.size
 
@@ -103,7 +106,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
             )
           )
       )
-    }
 
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
@@ -1123,8 +1125,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     )
     
     // Two-pass scheme: register all supported top-level class struct types before compiling any
-    // functions, so nested function codegen never observes missing class types.
-    predeclareTopLevelDefnTypes(p.main)
+    // functions, so all class types are available during nested function codegen.
+    declareTopLevelDefnTypes(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
