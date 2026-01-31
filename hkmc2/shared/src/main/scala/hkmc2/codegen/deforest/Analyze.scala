@@ -491,10 +491,10 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         funs.map(_ -> funs.head)
       .toMap
   
-  private enum IgnoreMode:
-    case Nothing // for function, which can only nest function
-    case EverythingExceptFun // for module ctor, which can nest functions (not ignored) and other things (ignored)
-    case Everything // for toplvl, which can have function and other things (both ignored)
+  private enum ProcessMode:
+    case Fun // ignore nothing, but only expect nested functions
+    case ModCtor // ignore module/class but not fun, expect everything
+    case ToplvlBlk // ignore everything, expect everything
   private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
     var constraints = Ls.empty[ProdStrat -> ConsStrat]
     val labelToRestStrat = MutMap.empty[Symbol, BlockStrat]
@@ -543,7 +543,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case NoRet -> MayRet(p2) => MayRet(p2)
       case NoRet -> NoRet => NoRet
   import BlockStrat.*
-  private def processBlock(b: Block)(using cc: ConstraintsCollector, im: IgnoreMode): BlockStrat =
+  private def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): BlockStrat =
     b match
     case Return(res, implct) => Ret(processResult(res))
     case Throw(exc) => Ret(freshVar("throw", cc.forFunGroup).asProdStrat)
@@ -571,7 +571,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case ValDefn(tsym, sym, rhs) =>
         cc.constrain(processResult(rhs), generatedProdVars(tsym).asConsStrat)
       case FunDefn(_, _, dSym, params, body) =>
-        if (im is IgnoreMode.Nothing) || (im is IgnoreMode.EverythingExceptFun) then
+        if (im is ProcessMode.Fun) || (im is ProcessMode.ModCtor) then
           val funRes = freshVar(s"${dSym.nme}_res", cc.forFunGroup)
           val funProdStrat = params.foldRight[ProdStrat](funRes.asProdStrat): (ps, acc) =>
             assert(ps.restParam.isEmpty)
@@ -581,18 +581,18 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             case _ => cc.constrain(NoProd, funRes.asConsStrat)
           cc.constrain(funProdStrat, generatedProdVars(dSym).asConsStrat)
       case cls: ClsLikeDefn => im match
-        case IgnoreMode.Nothing => die
+        case ProcessMode.Fun => die
         case _ => ()
       processBlock(rest)
     case End(msg) => NoRet
     case _ => die
     
-  private def processResult(r: Result)(using cc: ConstraintsCollector, im: IgnoreMode): ProdStrat = ???
+  private def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat = ???
   
   val funsToProdStratScheme: Map[TermSymbol, ProdStratScheme] =
     val store = MutMap.empty[TermSymbol, ProdStratScheme]
     for groupedFuns <- sccInOrder do
-      given IgnoreMode = IgnoreMode.Nothing
+      given ProcessMode = ProcessMode.Fun
       given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
       for funSym <- groupedFuns do
         val fun = preAnalyzer.res.funSymToFunDefn(funSym)
@@ -616,14 +616,14 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
     cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
     // collect for toplvl block
     if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
-      given IgnoreMode = IgnoreMode.Everything
+      given ProcessMode = ProcessMode.ToplvlBlk
       processBlock(preAnalyzer.b)
     // collect for module ctor
     for
       case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
       if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
     do
-      given IgnoreMode = IgnoreMode.EverythingExceptFun
+      given ProcessMode = ProcessMode.ModCtor
       processBlock(mod.ctor)
     cc.constraints
   end allConstraints
