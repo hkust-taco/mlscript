@@ -30,7 +30,7 @@ object Lifter:
   
   extension (l: List[Lazy[Defn] | Defn])
     def gatherUsed: List[Defn] = l.collect:
-      case l: Lazy[?] if !l.isEmpty => l.get_!
+      case l: Lazy[?] if !l.isEmpty => l.force_!
       case d: Defn => d
     
   /**
@@ -980,7 +980,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
-      aux.get // forces computation
+      aux.force // forces computation
       Call(
         Value.Ref(auxSym, S(auxDsym)),
         formatArgs
@@ -1103,7 +1103,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if (inst.cls === path) && (inst.args is args) then inst
         else inst.copy(cls = path, args = args)
       else
-        flat.get // force computation
+        flat.force // force computation
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(inst.mut)).asArg :: formatArgs ::: args
@@ -1115,7 +1115,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         if c.args is args then c
         else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
       else
-        flat.get // force computation
+        flat.force // force computation
         Call(
           Value.Ref(flattenedSym, S(flattenedDSym)),
           Value.Lit(Tree.BoolLit(false)).asArg :: formatArgs ::: args
