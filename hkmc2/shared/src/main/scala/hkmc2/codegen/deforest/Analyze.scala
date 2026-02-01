@@ -76,7 +76,7 @@ class Dtor(
 
 
 
-class ProdStratScheme(s: StratVarState, constraints: Ls[ProdStrat -> ConsStrat])
+class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> ConsStrat])
 
 
 
@@ -379,6 +379,61 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   given DeforestPreAnalyzer = preAnalyzer
   import StratVarState.freshVar
   
+  private enum ProcessMode:
+    case Fun // ignore nothing, but only expect nested functions
+    case ModCtor // ignore module/class but not fun, expect everything
+    case ToplvlBlk // ignore everything, expect everything
+  private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
+    var constraints = Ls.empty[ProdStrat -> ConsStrat]
+    val labelToRestStrat = MutMap.empty[Symbol, BlockStrat]
+    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
+    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = constraints :::= cs.toList
+  private enum BlockStrat:
+    case Ret(p: ProdStrat)
+    case MayRet(p: ProdStrat)
+    case NoRet
+    def mergeBranches(other: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
+      (this, other) match
+      case Ret(p1) -> Ret(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        Ret(res.asProdStrat)
+      case Ret(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case Ret(p1) -> NoRet => MayRet(p1)
+      case MayRet(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case MayRet(p1) -> NoRet => MayRet(p1)
+      case NoRet -> NoRet => NoRet
+      case _ => other.mergeBranches(this)
+    def mergeSeq(rest: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
+      (this, rest) match
+      case Ret(p1) -> _ => Ret(p1)
+      case MayRet(p1) -> Ret(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        Ret(res.asProdStrat)
+      case MayRet(p1) -> MayRet(p2) =>
+        val res = freshVar("merged", cc.forFunGroup)
+        cc.constrain(p1, res.asConsStrat)
+        cc.constrain(p2, res.asConsStrat)
+        MayRet(res.asProdStrat)
+      case MayRet(p1) -> NoRet => MayRet(p1)
+      case NoRet -> Ret(p2) => Ret(p2)
+      case NoRet -> MayRet(p2) => MayRet(p2)
+      case NoRet -> NoRet => NoRet
+  import BlockStrat.*
+  
+  // ===================================================
+  
   // generate prod vars for symbols that we care,
   // default to NoProd for unknown symbols
   val generatedProdVars: Map[Symbol, StratVarState] =
@@ -491,58 +546,45 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         funs.map(_ -> funs.head)
       .toMap
   
-  private enum ProcessMode:
-    case Fun // ignore nothing, but only expect nested functions
-    case ModCtor // ignore module/class but not fun, expect everything
-    case ToplvlBlk // ignore everything, expect everything
-  private class ConstraintsCollector(val forFunGroup: Opt[TermSymbol]):
-    var constraints = Ls.empty[ProdStrat -> ConsStrat]
-    val labelToRestStrat = MutMap.empty[Symbol, BlockStrat]
-    def constrain(p: ProdStrat, c: ConsStrat) = constraints ::= p -> c
-    def constrain(cs: Iterable[ProdStrat -> ConsStrat]) = constraints :::= cs.toList
-  private enum BlockStrat:
-    case Ret(p: ProdStrat)
-    case MayRet(p: ProdStrat)
-    case NoRet
-    def mergeBranches(other: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
-      (this, other) match
-      case Ret(p1) -> Ret(p2) =>
-        val res = freshVar("merged", cc.forFunGroup)
-        cc.constrain(p1, res.asConsStrat)
-        cc.constrain(p2, res.asConsStrat)
-        Ret(res.asProdStrat)
-      case Ret(p1) -> MayRet(p2) =>
-        val res = freshVar("merged", cc.forFunGroup)
-        cc.constrain(p1, res.asConsStrat)
-        cc.constrain(p2, res.asConsStrat)
-        MayRet(res.asProdStrat)
-      case Ret(p1) -> NoRet => MayRet(p1)
-      case MayRet(p1) -> MayRet(p2) =>
-        val res = freshVar("merged", cc.forFunGroup)
-        cc.constrain(p1, res.asConsStrat)
-        cc.constrain(p2, res.asConsStrat)
-        MayRet(res.asProdStrat)
-      case MayRet(p1) -> NoRet => MayRet(p1)
-      case NoRet -> NoRet => NoRet
-      case _ => other.mergeBranches(this)
-    def mergeSeq(rest: BlockStrat)(using cc: ConstraintsCollector): BlockStrat =
-      (this, rest) match
-      case Ret(p1) -> _ => Ret(p1)
-      case MayRet(p1) -> Ret(p2) =>
-        val res = freshVar("merged", cc.forFunGroup)
-        cc.constrain(p1, res.asConsStrat)
-        cc.constrain(p2, res.asConsStrat)
-        Ret(res.asProdStrat)
-      case MayRet(p1) -> MayRet(p2) =>
-        val res = freshVar("merged", cc.forFunGroup)
-        cc.constrain(p1, res.asConsStrat)
-        cc.constrain(p2, res.asConsStrat)
-        MayRet(res.asProdStrat)
-      case MayRet(p1) -> NoRet => MayRet(p1)
-      case NoRet -> Ret(p2) => Ret(p2)
-      case NoRet -> MayRet(p2) => MayRet(p2)
-      case NoRet -> NoRet => NoRet
-  import BlockStrat.*
+  val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
+  for groupedFuns <- sccInOrder do
+    given ProcessMode = ProcessMode.Fun
+    given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
+    for funSym <- groupedFuns do
+      val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+      val thisFunVar = generatedProdVars(fun.dSym)
+      val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
+      val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
+        assert(ps.restParam.isEmpty)
+        ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+      processBlock(fun.body) match
+        case Ret(p) => cc.constrain(p, res.asConsStrat)
+        case _ => cc.constrain(NoProd, res.asConsStrat)
+      cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+    for funSym <- groupedFuns do
+      funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+  
+  val allConstraints =
+    given cc: ConstraintsCollector = new ConstraintsCollector(N)
+    cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
+    cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
+    // collect for toplvl block
+    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
+      given ProcessMode = ProcessMode.ToplvlBlk
+      processBlock(preAnalyzer.b)
+    // collect for module ctor
+    for
+      case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
+      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
+    do
+      given ProcessMode = ProcessMode.ModCtor
+      processBlock(mod.ctor)
+    cc.constraints
+  end allConstraints
+  
+  // ===================================================
+  
+  
   private def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): BlockStrat =
     b match
     case Return(res, implct) => Ret(processResult(res))
@@ -587,48 +629,96 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
     case End(msg) => NoRet
     case _ => die
     
-  private def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat = ???
+  private def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat =
+    def handleCallLike(f: Path, args: List[Arg]): ProdStrat =
+      val fStrat = processResult(f)
+      val argsStrat = args.map(a => processResult(a.value))
+      val callRes = freshVar("call_res", cc.forFunGroup)
+      cc.constrain(fStrat, ConsFun(argsStrat, callRes.asConsStrat))
+      callRes.asProdStrat
+    r match
+    case Call(fun, args) => handleCallLike(fun, args)
+    case Instantiate(false, cls, args) => handleCallLike(cls, args)
+    case Lambda(ParamList(_, params, N), body) =>
+      val res = freshVar("lam_res", cc.forFunGroup)
+      val paramsStrat = params.map(p => generatedProdVars(p.sym).asConsStrat)
+      processBlock(body) match
+        case Ret(p) => cc.constrain(p, res.asConsStrat)
+        case _ => cc.constrain(NoProd, res.asConsStrat)
+      ProdFun(paramsStrat, res.asProdStrat)
+    case Tuple(mut, elems) => ??? // TODO: tuple strat
+    case p: Path =>
+      p match
+      case CtorRef(ctor) => ctor match
+        case cls: ClassSymbol =>
+          val argsAndParam = cls.tree.clsParams.map: tsym =>
+            tsym -> freshVar(s"cls_arg_${tsym.nme}", cc.forFunGroup).asProdStrat
+          ProdFun(
+            argsAndParam.unzip._2.map(_.asConsStrat),
+            new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(cls, argsAndParam))
+        case obj: ModuleOrObjectSymbol =>
+          new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(obj, Nil)
+      case refSite@FunRef(f) =>
+        funsToProdStratScheme.get(f) match
+        case Some(fScheme) => fScheme.instantiate(refSite.uid, f)
+        case None => generatedProdVars(f).asProdStrat
+      case sel@DeforestableSelect(s: TermSymbol) =>
+        // only parambind and let/vals in modules are handled here
+        s.k match
+        case ParamBind =>
+          val obj = processResult(sel.qual)
+          val selRes = freshVar("sel_res", cc.forFunGroup)
+          cc.constrain(
+            obj,
+            FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
+          selRes.asProdStrat
+        case (ImmutVal | LetBind) => generatedProdVars(s).asProdStrat
+        case _ => die
+      case Value.Ref(l, disamb) =>
+        disamb.fold(generatedProdVars(l))(generatedProdVars.apply).asProdStrat
+      case Value.Lit(lit) => NoProd
+      case _ => die
+    case _ => die
   
-  val funsToProdStratScheme: Map[TermSymbol, ProdStratScheme] =
-    val store = MutMap.empty[TermSymbol, ProdStratScheme]
-    for groupedFuns <- sccInOrder do
-      given ProcessMode = ProcessMode.Fun
-      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
-      for funSym <- groupedFuns do
-        val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-        val thisFunVar = generatedProdVars(fun.dSym)
-        val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
-        val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
-          assert(ps.restParam.isEmpty)
-          ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
-        processBlock(fun.body) match
-          case Ret(p) => cc.constrain(p, res.asConsStrat)
-          case _ => cc.constrain(NoProd, res.asConsStrat)
-        cc.constrain(funProdStrat, thisFunVar.asConsStrat)
-      for funSym <- groupedFuns do
-        store(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
-    store.toMap
-  end funsToProdStratScheme
+  extension (pScheme: ProdStratScheme) private def instantiate(
+    referSite: ResultId,
+    referringTo: TermSymbol
+  )(using cc: ConstraintsCollector): ProdStrat =
+    val groupRep = funToSccRep(referringTo)
+    val stratVarMap = MutMap.empty[StratVarState, StratVarState]
+    def updateInstantiationId(instId: Opt[InstantiationId]) =
+      S(instId.fold(referSite :: Nil)(referSite :: _))
+    def duplicateVarState(s: StratVarState) =
+      if s.generatedForFun.fold(false)(_ is groupRep) then
+        stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
+      else
+        s
+    def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
+      case ProdVar(s) => duplicateVarState(s).asProdStrat
+      case ProdFun(params, res) => ProdFun(params.map(duplicateConsStrat), duplicateProdStrat(res))
+      case NoProd => NoProd
+      case c: Ctor => new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
+        c.ctor,
+        c.args.map((a, b) => a -> duplicateProdStrat(b)))
+    def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
+      case ConsVar(s) => duplicateVarState(s).asConsStrat
+      case ConsFun(params, res) => ConsFun(params.map(duplicateProdStrat), duplicateConsStrat(res))
+      case NoCons => NoCons
+      case fSel: FieldSel =>
+        new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
+          fSel.field,
+          duplicateVarState(fSel.consVar.s).asConsStrat)
+      case dtor: Dtor => new Dtor(dtor.scrutExprId, updateInstantiationId(dtor.instantiationId))
+    val newProd = duplicateVarState(pScheme.s).asProdStrat
+    pScheme.constraints.foreach: (p, c) =>
+      cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
+    newProd
   
-  val allConstraints =
-    given cc: ConstraintsCollector = new ConstraintsCollector(N)
-    cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
-    cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
-    // collect for toplvl block
-    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
-      given ProcessMode = ProcessMode.ToplvlBlk
-      processBlock(preAnalyzer.b)
-    // collect for module ctor
-    for
-      case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
-      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
-    do
-      given ProcessMode = ProcessMode.ModCtor
-      processBlock(mod.ctor)
-    cc.constraints
-  end allConstraints
   
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
   // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
   // tl.log(scc)
+  allConstraints.foreach: 
+    case p -> c => tl.log(s"$p --> $c")
+  
 end DeforestConstraintsCollector
