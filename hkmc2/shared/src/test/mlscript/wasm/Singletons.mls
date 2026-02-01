@@ -116,13 +116,10 @@ O.sy
 //│ = {}
 
 
-
 // TODO: field x needs to be mutable ('mut') for field assignment using 'set'
-:fixme
 object Foo with
     val x = 1
 set Foo.x = 3
 Foo.x
 //│ Wasm result:
 //│ = 3
-//│ FAILURE: Unexpected lack of error to fix
