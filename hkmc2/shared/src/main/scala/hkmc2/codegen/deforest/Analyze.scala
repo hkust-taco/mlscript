@@ -36,9 +36,7 @@ trait StratVar(s: StratVarState):
   def uid = s.uid
 
 sealed abstract class ProdStrat
-case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s):
-  override def toString(): String =
-    s"${s.name}(${s.generatedForFun})"
+case class ProdVar(s: StratVarState) extends ProdStrat with StratVar(s)
 case class ProdFun(params: Ls[ConsStrat], res: ProdStrat) extends ProdStrat
 case object NoProd extends ProdStrat
 class Ctor(
