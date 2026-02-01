@@ -61,8 +61,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case End(_) => true
         case _ => false)
 
-  /** Declares supported top-level class types (needed for nested function codegen). */
-  private def declareTopLevelDefnTypes(b: Block)(using Ctx): Unit = b match
+  /** Recursively declares supported top-level class types (needed for nested function codegen). */
+  private def createDefnTypes(b: Block)(using Ctx): Unit = b match
     case Define(defn: ClsLikeDefn, rst) =>
       if isSupportedTopLevelClass(defn) then
         val inheritedFields = baseObjectStruct.fields.toMap
@@ -93,27 +93,27 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               )
             )
         )
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Define(_, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Match(_, _, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Begin(_, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case TryBlock(_, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Assign(_, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case af @ AssignField(_, _, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case AssignDynField(_, _, _, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case HandleBlock(_, _, _, _, _, _, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Label(_, _, _, rst) =>
-      declareTopLevelDefnTypes(rst)
+      createDefnTypes(rst)
     case Scoped(_, body) =>
-      declareTopLevelDefnTypes(body)
+      createDefnTypes(body)
     case _: BlockTail => ()
 
   /** 
@@ -1136,7 +1136,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     
     // Two-pass scheme: register all supported top-level class struct types before compiling any
     // functions, so all class types are available during nested function codegen.
-    declareTopLevelDefnTypes(p.main)
+    createDefnTypes(p.main)
 
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
