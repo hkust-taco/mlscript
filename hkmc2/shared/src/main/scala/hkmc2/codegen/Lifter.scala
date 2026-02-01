@@ -148,17 +148,26 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     // hack: ClassLikeSymbol does not extend DefinitionSymbol directly, so we must
     // use a map to convert
     
-    val moduleObjs = s.allChildNodes.collect:
+    val moduleObjs: List[ScopedObject.Companion | ScopedObject.Class] = s.allChildNodes.collect:
       case s @ ScopeNode(obj = o: ScopedObject.Companion) if !s.inModOrTopLevel => o
+      case s @ ScopeNode(obj = o: ScopedObject.Class) if !s.inModOrTopLevel && o.isObj => o
     
     // TODO: refine handling of companions
     for m <- moduleObjs do
-      ignored += m.par.isym
-      ignored += m.comp.isym
-      raise(WarningReport(
-        msg"Modules are not yet lifted." -> m.comp.isym.toLoc :: Nil,
-        N, Diagnostic.Source.Compilation
-      ))
+      m match
+        case c: ScopedObject.Class =>
+          ignored += c.cls.isym
+          raise(WarningReport(
+            msg"Objects are not yet lifted." -> c.cls.isym.toLoc :: Nil,
+            N, Diagnostic.Source.Compilation
+          ))
+        case m: ScopedObject.Companion =>
+          ignored += m.par.isym
+          ignored += m.comp.isym
+          raise(WarningReport(
+            msg"Modules are not yet lifted." -> m.comp.isym.toLoc :: Nil,
+            N, Diagnostic.Source.Compilation
+          ))
     
     var inheritanceTree: Set[(ClsSym, ClsSym)] = Set.empty
     
@@ -204,7 +213,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             case None => ()
             // for now, allow selecting runtime symbols
             case Some(Select(qual = Value.Ref(l, _))) if State.runtimeSymbol is l => ()
-            case Some(RefOfBms(_, S(s: ClassSymbol))) =>
+            case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)))) =>
               if nestedScopes.contains(s) then inheritanceTree += (s -> isym)
             case _ if !ignored.contains(isym) =>
               raise(WarningReport(
@@ -450,16 +459,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       case _ => super.applyPath(p)(k)
   
-  given ignoredScopes: IgnoredScopes = IgnoredScopes(N)
-  val data = ScopeData(topLevelBlk)
-  val metadata = data.root.children.foldLeft(LifterMetadata.empty)(_ ++ createMetadata(_))
-  
-  def asDSym(s: ClsSym | ModuleOrObjSym): DefinitionSymbol[?] = s
-  val ignored: Set[ScopedInfo] = metadata.unliftable.map(asDSym)
-  ignoredScopes.ignored = S(ignored)
-    
-  val usedVars = UsedVarAnalyzer(topLevelBlk, data)
-  
   case class LifterResult[+T](liftedDefn: T, extraDefns: List[Lazy[Defn] | Defn])
   case class LifterCtxNew(
     liftedScopes: MutMap[LiftedSym, LiftedScope[?]] = MutMap.empty,
@@ -668,7 +667,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case s @ ScopeNode(obj = r: ScopedObject.Class) if r.isObj => false
         case _ => true
       .collect:
-        case s @ ScopeNode(obj = r: ScopedObject.Referencable[?]) => !s.isLifted
+        case s @ ScopeNode(obj = r: ScopedObject.Referencable[?]) if !s.isLifted => 
           val path = r.owner match
             case Some(isym) => DefnRef.Field(isym, r.bsym, r.sym)
             case None => DefnRef.InScope(r.bsym, r.sym)
@@ -946,13 +945,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             newPList :: duped :: Nil,
             newPList.params.map(_.sym) ::: duped.params.map(_.sym),
             duped.restParam.map(_.sym))
-        // we need to append an empty param list so calling this function returns a lambda
-        case Nil =>
-          (
-            newPList :: PlainParamList(Nil) :: Nil,
-            newPList.params.map(_.sym),
-            N
-          )
+        case Nil => lastWords("tried to make an aux defn for a function with no parameter list")
       val args = restSym match
         case Some(value) =>
           val tail = Arg(S(true), value.asPath) :: Nil
@@ -987,11 +980,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     
     def rewriteRef(using ctx: LifterCtxNew): Call =
       if isTrivial then lastWords("tried to rewrite a ref to a trivial function")
-      if fun.params.isEmpty then
-        raise(WarningReport(
-          msg"Got a naked reference to a param-less function." -> N :: Nil,
-          N, Diagnostic.Source.Compilation
-        ))
       aux.get // forces computation
       Call(
         Value.Ref(auxSym, S(auxDsym)),
@@ -1111,8 +1099,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     def rewriteInstantiate(inst: Instantiate, args: List[Arg]): Result =
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       if isTrivial then
-        if inst.args is args then inst
-        else inst.copy(args = args)
+        val path = Value.Ref(cls.sym, S(cls.isym))
+        if (inst.cls === path) && (inst.args is args) then inst
+        else inst.copy(cls = path, args = args)
       else
         flat.get // force computation
         Call(
@@ -1242,6 +1231,17 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     ctx.defnsMap = curDefns
     ret
   
+  // entry point
+  given ignoredScopes: IgnoredScopes = IgnoredScopes(N)
+  val data = ScopeData(topLevelBlk)
+  val metadata = data.root.children.foldLeft(LifterMetadata.empty)(_ ++ createMetadata(_))
+  
+  def asDSym(s: ClsSym | ModuleOrObjSym): DefinitionSymbol[?] = s
+  val ignored: Set[ScopedInfo] = metadata.unliftable.map(asDSym)
+  ignoredScopes.ignored = S(ignored)
+    
+  val usedVars = UsedVarAnalyzer(topLevelBlk, data)
+  
   def transform =
     given ctx: LifterCtxNew = new LifterCtxNew
     val root = data.root
@@ -1262,5 +1262,3 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     val withDefns = topLevelRewriter.extraDefns.foldLeft(transformed):
       case (acc, d) => Define(d, acc)
     Scoped(newSyms, withDefns)
-    
-    

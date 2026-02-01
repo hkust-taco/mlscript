@@ -20,6 +20,30 @@ object ScopeData:
     private val underlying = FreshInt()
     def make: ScopeUID = underlying.make
   
+  class ScopeFinder(fresh: FreshUID, ignoredClasses: Set[DefinitionSymbol[?] & InnerSymbol]) extends BlockTraverserShallow:
+    var objs: List[ScopedObject] = Nil
+    override def applyBlock(b: Block): Unit = b match
+      case s: Scoped =>
+        val id = fresh.make
+        objs ::= ScopedObject.ScopedBlock(id, s)
+      case l: Label if l.loop =>
+        objs ::= ScopedObject.Loop(l.label, l.body)
+        applySubBlock(l.rest)
+      case _ => super.applyBlock(b)
+    override def applyFunDefn(fun: FunDefn): Unit =
+      objs ::= ScopedObject.Func(fun, N)
+    override def applyDefn(defn: Defn): Unit = defn match
+      case f: FunDefn => applyFunDefn(f)
+      case c: ClsLikeDefn =>
+        if !ignoredClasses.contains(c.isym) then
+          objs ::= ScopedObject.Class(c, c.k === syntax.Obj)
+          c.ctorSym match
+            case Some(value) => objs ::= ScopedObject.ClassCtor(c)
+            case None => ()
+          c.companion.map: comp =>
+            objs ::= ScopedObject.Companion(comp, c)
+        
+      case _ => super.applyDefn(defn)
   type ScopedInfo = DefinitionSymbol[?] | LabelSymbol | ScopeUID | Unit
 
   // ScopeData requires the set of ignored scopes to compute certain things, but
@@ -264,6 +288,7 @@ object ScopeData:
             case _ if ignored.contains(obj.toInfo) => false
             case _ if inModOrTopLevel => false
             case ScopedObject.Func(isMethod = S(_)) => false
+            case c: ScopedObject.Class if c.isObj => false
             case _: ScopedObject.Loop | _: ScopedObject.ClassCtor | _: ScopedObject.ScopedBlock | _: ScopedObject.Companion => false
             case _ => true
         impl
@@ -307,20 +332,8 @@ object ScopeData:
 class ScopeData(b: Block)(using State, IgnoredScopes):
   import ScopeData.*
   
-  private val fresh = FreshUID()
-  
-  val scopeTree = NestedScopeTree(makeScopeTreeRec(ScopedObject.Top(b)))
-  val root = scopeTree.root
-  val allBms = root.allChildren.collect:
-    case s: ScopedObject.Referencable[?] => s.bsym
-  
   def contains(s: ScopedInfo) = scopeTree.nodesMap.contains(s)
-    
-  private val scopedMap: IdentityHashMap[Scoped, ScopeUID] = new IdentityHashMap
-  for
-    case ScopeNode(obj = ScopedObject.ScopedBlock(uid, blk)) <- scopeTree.root.allChildNodes
-  do
-    scopedMap.put(blk, uid)
+  
   def getNode(x: ScopedInfo): ScopeNode = scopeTree.nodesMap(x)
   def getNode(defn: ClsLikeDefn): ScopeNode = getNode(defn.isym)
   def getNode(companion: ClsLikeBody): ScopeNode = getNode(companion.isym)
@@ -330,59 +343,58 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
     else lastWords("getUID: key not found")
   def getNode(blk: Scoped): ScopeNode = getNode(getUID(blk))
   // From the input block or definition, traverses until a function, class or new scoped block is found and appends them.
-  class ScopeFinder extends BlockTraverserShallow:
-    var objs: List[ScopedObject] = Nil
-    override def applyBlock(b: Block): Unit = b match
-      case s: Scoped =>
-        val id = fresh.make
-        objs ::= ScopedObject.ScopedBlock(id, s)
-      case l: Label if l.loop =>
-        objs ::= ScopedObject.Loop(l.label, l.body)
-        applySubBlock(l.rest)
-      case _ => super.applyBlock(b)
-    override def applyFunDefn(fun: FunDefn): Unit =
-      objs ::= ScopedObject.Func(fun, N)
-    override def applyDefn(defn: Defn): Unit = defn match
-      case f: FunDefn => applyFunDefn(f)
-      case c: ClsLikeDefn =>
-        objs ::= ScopedObject.Class(c, c.k === syntax.Obj)
-        c.ctorSym match
-          case Some(value) => objs ::= ScopedObject.ClassCtor(c)
-          case None => ()
-        c.companion.map: comp =>
-          objs ::= ScopedObject.Companion(comp, c)
-        
-      case _ => super.applyDefn(defn)
   
+  // Classes with owners are ignored, as they could be defined within a scoped block within the constructor.
+  // We instead add all these classes when we encounter them.
+  def scopeFinder = new ScopeFinder(fresh, classesWithOwner.keySet)
   
-  def scopeFinder = new ScopeFinder()
+  // entry point
+  private val fresh = FreshUID()
+  
+  private val (classesWithOwner, classesMap) =
+    val mp1: MutMap[DefinitionSymbol[?] & InnerSymbol, InnerSymbol] = MutMap.empty
+    val mp2: MutMap[InnerSymbol, ClsLikeDefn] = MutMap.empty
+    new BlockTraverser:
+      applyBlock(b)
+      override def applyDefn(defn: Defn): Unit = defn match
+        case c @ ClsLikeDefn(owner = S(own)) =>
+          mp1.put(c.isym, own)
+          mp2.put(c.isym, c)
+          c.companion.foreach: comp =>
+            mp1.put(comp.isym, own)
+          super.applyDefn(c)
+        case _ => super.applyDefn(defn)
+    (mp1.toMap, mp2.toMap)
+  
+  private val ownersInv: Map[InnerSymbol, List[DefinitionSymbol[?] & InnerSymbol]] = classesWithOwner
+    .toList.groupBy(_._2)
+    .map:
+      case k -> v => k -> v.map(_._1)
+    .toMap
+  
+  val scopeTree = NestedScopeTree(makeScopeTreeRec(ScopedObject.Top(b)))
+  val root = scopeTree.root
+  val allBms = root.allChildren.collect:
+    case s: ScopedObject.Referencable[?] => s.bsym
+  private val scopedMap: IdentityHashMap[Scoped, ScopeUID] = new IdentityHashMap
+  for
+    case ScopeNode(obj = ScopedObject.ScopedBlock(uid, blk)) <- scopeTree.root.allChildNodes
+  do
+    scopedMap.put(blk, uid)
   
   def makeScopeTreeRec[T](obj: TScopedObject[T]): TScopeNode[T] =
     // An annoying thing with class ctors:
     // Sometimes, nested classes/objects appear inside the top-level scoped block of class/module ctor,
     // despite being a child of the class, but we want these to be a direct child of the class/module.
     val finder = scopeFinder
-    val ctorFinder = scopeFinder
-    val ctorScoped = obj match
-      case ScopedObject.Class(cls, _) => cls.ctor match
-        case s: Scoped => S((s, cls.isym))
-        case _ => N
-      case ScopedObject.Companion(comp, _) => comp.ctor match
-        case s: Scoped => S((s, comp.isym))
-        case _ => N
-      case _ => N
     obj match
       case ScopedObject.Top(s: Scoped) => finder.applyBlock(s.body)
       case ScopedObject.Top(b) => finder.applyBlock(b)
       case ScopedObject.Class(cls, _) =>
         finder.applyBlock(cls.preCtor)
-        ctorScoped match
-          case Some((value, _)) => ctorFinder.applyBlock(value.body)
-          case None => finder.applyBlock(cls.ctor)
+        finder.applyBlock(cls.ctor)
       case ScopedObject.Companion(comp, par) =>
-        ctorScoped match
-          case Some((value, _)) => ctorFinder.applyBlock(value.body)
-          case None => finder.applyBlock(comp.ctor)
+        finder.applyBlock(comp.ctor)
       case ScopedObject.Func(fun, _) =>
         finder.applyBlock(fun.body)
       case ScopedObject.ScopedBlock(_, block) =>
@@ -396,22 +408,25 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, S(MethodKind.ModMethod)))
       case _ => Nil
     
-    // This extracts owned definitions from the ctor and makes them a descendant of the class scope node,
-    // while making the other scoped objects in the ctor a descendant of the ctor's scoped block node.
-    val (ctorNode, ctorObjs) = ctorScoped match
-      case Some((ctor, isym)) =>
-        val ctorBlkObj = ScopedObject.ScopedBlock(fresh.make, ctor)
-        val (ctorObjs, ctorBlkChildren) = ctorFinder.objs.partitionMap:
-          case a: ScopedObject.Referencable[?] if a.owner.isDefined && a.owner.get === isym => L(a)
-          case a => R(a)
-        val children = ctorBlkChildren.map(makeScopeTreeRec)
-        val ctorNde = ScopeNode.ScopeNode(ctorBlkObj, N, children)
-        ctorBlkObj.node = S(ctorNde)
-        for c <- children do c.ancestor = S(ctorNde)
-        (S(ctorNde), ctorObjs)
-      case None => (N, Nil)
+    val isym = obj match
+      case c: ScopedObject.Class => S(c.cls.isym)
+      case c: ScopedObject.Companion => S(c.comp.isym)
+      case _ => N
+    val ownedClasses = isym.flatMap(ownersInv.get(_)) match
+      case S(syms) => syms.map(d => classesMap.get(d)).collect:
+        case S(c) => c
+      case N => Nil
+    val ownedClassObjs = ownedClasses.flatMap: c =>
+      var objs: List[ScopedObject] = List.empty
+      objs ::= ScopedObject.Class(c, c.k === syntax.Obj)
+      c.ctorSym match
+        case Some(value) => objs ::= ScopedObject.ClassCtor(c)
+        case None => ()
+      c.companion.map: comp =>
+        objs ::= ScopedObject.Companion(comp, c)
+      objs
     
-    val children = (ctorObjs ::: mtdObjs ::: finder.objs).map(makeScopeTreeRec).prependedAll(ctorNode)
+    val children = (ownedClassObjs ::: mtdObjs ::: finder.objs).map(makeScopeTreeRec)
     val retNode = ScopeNode.ScopeNode(obj, N, children)
     obj.node = S(retNode)
     for c <- children do c.ancestor = S(retNode)

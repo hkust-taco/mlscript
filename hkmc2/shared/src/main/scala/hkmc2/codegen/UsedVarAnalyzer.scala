@@ -42,6 +42,10 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
   object SDSym:
     def unapply(v: DefinitionSymbol[?] | Option[DefinitionSymbol[?]]) = dSymUnapply(scopeData, v)
   
+  private def isObj(s: ScopeNode) = s.obj match
+    case c: ScopedObject.Class if c.isObj => true
+    case _ => false
+  
   // Finds the locals that this block accesses/mutates, and the definitions which it could use.
   private def blkAccessesShallow(b: Block): AccessInfo =
     var accessed: MutAccessInfo = MutAccessInfo.empty
@@ -76,23 +80,31 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         case RefOfBms(_, SDSym(dSym)) =>
           val node = scopeData.getNode(dSym)
           node.obj match
-            // for class methods: they need the InnerSymbol of the class instance
-            case f @ ScopedObject.Func(isMethod = S(MethodKind.ClsMethod)) => accessed.accessed.add(f.fun.owner.get)
-            case ScopedObject.Func(isMethod = S(MethodKind.ObjMethod)) => addModObjParent(node)
-            // definitions that access a module's method directly need an edge to that method
+            // Here, we add an edge to a definition, even if it is the result of a field selection, if it is:
+            // - Lifted, but not an object
+            // - Is a module method
+            // - Is a ctor of a lifted class
+            // Otherwise, we ignore the disambiguated symbol and traverse into the the selection's path. Once
+            // we reach the "base" reference to an object, then we add a reference to that as required.
+            
             case ScopedObject.Func(isMethod = S(MethodKind.ModMethod)) =>
               accessed.refdDefns.add(node.obj.toInfo)
-              addModObjParent(node)
+              super.applyPath(p)
             case ScopedObject.Func(isMethod = N) =>
               accessed.refdDefns.add(node.obj.toInfo)
-            case c: ScopedObject.Class if c.isObj && !node.isLifted =>
-              addModObjParent(node)
-            case r: ScopedObject.Referencable[?] if !node.isLifted =>
-              addModObjParent(node)
-              accessed.refdDefns.add(node.obj.toInfo)
-            case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
-            case _ => ()
-            
+              super.applyPath(p)
+            case _ if node.isLifted && !isObj(node) => accessed.refdDefns.add(node.obj.toInfo)
+            case ScopedObject.ClassCtor(cls) if scopeData.getNode(cls).isLifted => accessed.refdDefns.add(node.obj.toInfo)
+            case _ => p match
+              case _: Value.Ref => node.obj match
+                case c: ScopedObject.Class if c.isObj =>
+                  accessed.accessed.add(c.cls.isym)
+                case r: ScopedObject.Referencable[?] if !node.isLifted =>
+                  accessed.refdDefns.add(r.toInfo)
+                case _: ScopedObject.Class | _: ScopedObject.ClassCtor | _: ScopedObject.Companion => accessed.refdDefns.add(node.obj.toInfo)
+                case _ => ()
+              case _ => super.applyPath(p)
+              
         case Value.Ref(l, _) =>
           accessed.accessed.add(l)
         case _ => super.applyPath(p)
@@ -141,30 +153,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
         case Some(value) => acc + (info -> (accesses ++ value))
         case None => acc + (info -> accesses)
   
-  val shallowAccesses: Map[ScopedInfo, AccessInfo] =
-    scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
-  
-  // Optimization: Find all nodes which are accessed by their children
-  // See the comment for findAccesses
-  private val allEdges =
-    for 
-      (src, accesses) <- shallowAccesses
-      refd <- accesses.refdDefns
-      if src =/= refd
-    yield
-      (src, refd)
-  private val accessedByChild = allEdges
-    .groupBy(_._2) // group by edge destination
-    .map:
-      case (_: Unit) -> _ => () -> false
-      case d -> edges =>
-        val par = scopeData.getNode(d).ancestor.get.obj.toInfo
-        d -> edges.exists:
-          case a -> b => a =/= par
-    .collect:
-      case d -> true => d
-    .toSet
-
   // Find:
   // - Map 1:
   //    - Variables that each scoped object has accessed, either through itself or a nested scoped object.
@@ -272,11 +260,6 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     val subCases = nexts.map(findAccesses)
     subCases.foldLeft((m1, m2)):
       case ((acc1, acc2), (new1, new2)) => (combineInfos(acc1, new1), combineInfos(acc2, new2))
-  
-  // Searching from the root makes no sense. We instead start searching from each scope nested in the top-level
-  private val (m1, m2) = scopeData.scopeTree.root.children.map(findAccesses).unzip
-  val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
-  val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
 
   private def reqdCaptureLocals(s: ScopeNode): Map[ScopedInfo, Set[Local]] =
     val blk = s.obj match
@@ -488,7 +471,38 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
     
     val reqCapture = go(b, Set.empty, Set.empty, Set.empty, Set.empty)(using linearVars = startingVars).reqCapture
     reqCapture.intersect(thisVars)
-
+  
+  // entry point
+  val shallowAccesses: Map[ScopedInfo, AccessInfo] =
+    scopeData.scopeTree.root.allChildren.map(obj => obj.toInfo -> findAccessesShallow(obj)).toMap
+  
+  // Optimization: Find all nodes which are accessed by their children
+  // See the comment for findAccesses
+  private val allEdges =
+    for 
+      (src, accesses) <- shallowAccesses
+      refd <- accesses.refdDefns
+      if src =/= refd
+    yield
+      (src, refd)
+  
+  private val accessedByChild = allEdges
+    .groupBy(_._2) // group by edge destination
+    .map:
+      case (_: Unit) -> _ => () -> false
+      case d -> edges =>
+        val par = scopeData.getNode(d).ancestor.get.obj.toInfo
+        d -> edges.exists:
+          case a -> b => a =/= par
+    .collect:
+      case d -> true => d
+    .toSet
+  
+  // Searching from the root makes no sense. We instead start searching from each scope nested in the top-level
+  private val (m1, m2) = scopeData.scopeTree.root.children.map(findAccesses).unzip
+  val accessMapWithIgnored = m1.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+  val accessMap = m2.foldLeft[Map[ScopedInfo, AccessInfo]](Map.empty)(_ ++ _)
+    
   val reqdCaptures: Map[ScopedInfo, Set[Local]] = scopeData.root.children.foldLeft(Map.empty):
     case (acc, node) => acc ++ reqdCaptureLocals(node)
   

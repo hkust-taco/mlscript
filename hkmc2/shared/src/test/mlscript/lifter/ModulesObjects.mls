@@ -4,6 +4,8 @@
 
 // * Lifting an object may require it to gain some mutable fields
 
+:todo
+:w
 fun foo(x, y) =
   object M with
     val test = 2
@@ -11,6 +13,9 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.10: 	  object M with
+//│ ╙──      	         ^
 
 :expect 14
 foo(10, 0)
@@ -27,19 +32,19 @@ fun foo(y) =
   (new M).foo()
 foo(10)
 //│ JS (unsanitized):
-//│ let M3, foo1, M$;
+//│ let M2, foo1, M$;
 //│ M$ = function M$(isMut, y) {
 //│   let tmp;
 //│   if (isMut === true) {
-//│     tmp = new M3(y);
+//│     tmp = new M2(y);
 //│   } else {
-//│     tmp = globalThis.Object.freeze(new M3(y));
+//│     tmp = globalThis.Object.freeze(new M2(y));
 //│   }
 //│   return tmp
 //│ };
-//│ (class M2 {
+//│ (class M1 {
 //│   static {
-//│     M3 = this
+//│     M2 = this
 //│   }
 //│   constructor(y) {
 //│     this.#y = y;
@@ -85,11 +90,16 @@ c1.x
 
 // * Objects should remain non-`new mut`
 
+:todo
+:w
 fun foo(y) =
   object O with
     fun foo() =
       set y = 2
   O
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.96: 	  object O with
+//│ ╙──      	         ^
 
 let o = foo(10)
 //│ o = O
@@ -99,6 +109,8 @@ set o.x = 1
 o.x
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 
+:todo
+:w
 :sjs
 fun foo(x, y) =
   object M with
@@ -107,47 +119,57 @@ fun foo(x, y) =
       x + y
   fun foo3 = M.foo2()
   foo3
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.116: 	  object M with
+//│ ╙──       	         ^
 //│ JS (unsanitized):
-//│ let M5, foo31, foo4;
-//│ foo31 = function foo3(M6) {
-//│   return M6.foo2()
+//│ let foo31, foo4;
+//│ foo31 = function foo3(M4) {
+//│   return M4.foo2()
 //│ };
-//│ (class M4 {
-//│   static {
-//│     M5 = this
-//│   }
-//│   constructor(x, y) {
-//│     this.#x = x;
-//│     this.#y = y;
-//│   }
-//│   #M$cap;
-//│   #x;
-//│   #y;
-//│   foo2() {
-//│     this.#y = 2;
-//│     return this.#x + this.#y
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "M"]; 
-//│ });
 //│ foo4 = function foo(x, y) {
-//│   let tmp, M$1;
-//│   M$1 = globalThis.Object.freeze(new M5(x, y));
-//│   tmp = foo31(M$1);
+//│   let M4, tmp;
+//│   (class M3 {
+//│     static {
+//│       new this
+//│     }
+//│     constructor() {
+//│       M4 = this;
+//│       Object.defineProperty(this, "class", {
+//│         value: M3
+//│       });
+//│       globalThis.Object.freeze(this);
+//│     }
+//│     #M$cap;
+//│     foo2() {
+//│       y = 2;
+//│       return x + y
+//│     }
+//│     toString() { return runtime.render(this); }
+//│     static [definitionMetadata] = ["object", "M"]; 
+//│   });
+//│   tmp = foo31(M4);
 //│   return tmp
 //│ };
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.116: 	  object M with
+//│ ╙──       	         ^
 
 :expect 12
 foo(10, 0)
 //│ = 12
 
-
+:todo
+:w
 data class A(x) with
   object M with
     fun getB() = x
   fun getA() =
     fun bar = M.getB()
     bar
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.165: 	  object M with
+//│ ╙──       	         ^
 
 :expect 2
 A(2).getA()
@@ -202,7 +224,9 @@ fun f =
   fun foo = A
   foo
 f.a
-//│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.221: 	  object A with
+//│ ╙──       	         ^
 //│ = 2
 
 :sjs
@@ -212,10 +236,10 @@ module M with
   val x = if A() is A then 2 else 3
 M.A().get
 //│ JS (unsanitized):
-//│ let M17, tmp4;
-//│ (class M16 {
+//│ let M14, tmp4;
+//│ (class M13 {
 //│   static {
-//│     M17 = this
+//│     M14 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
@@ -228,18 +252,18 @@ M.A().get
 //│     };
 //│     (class A6 {
 //│       static {
-//│         M16.A.class = this
+//│         M13.A.class = this
 //│       }
 //│       constructor() {}
 //│       #A$cap;
 //│       get get() {
-//│         return M16.x + M16.x;
+//│         return M13.x + M13.x;
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "A", []]; 
 //│     });
-//│     scrut = M16.A();
-//│     if (scrut instanceof M16.A.class) {
+//│     scrut = M13.A();
+//│     if (scrut instanceof M13.A.class) {
 //│       tmp5 = 2;
 //│     } else {
 //│       tmp5 = 3;
@@ -250,7 +274,7 @@ M.A().get
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "M"]; 
 //│ });
-//│ tmp4 = M17.A();
+//│ tmp4 = M14.A();
 //│ tmp4.get
 //│ = 4
 
@@ -284,12 +308,17 @@ module M with
   object B extends A
 
 
+:todo
+:w
 :lift
 fun foo(x) =
   object O with
     fun bar = x
     val baz = x
   [x === O.bar, set x += 1 in [x === O.bar, x === O.baz], x === O.bar]
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.315: 	  object O with
+//│ ╙──       	         ^
 
 foo(123)
 //│ = [true, [true, false], true]
@@ -327,4 +356,51 @@ module A with
 A.mtd
 //│ = 1
 
+// nested objects
+:todo
+:w
+fun f =
+  object A with
+    object B with
+      object C
+  A.B.C
+f
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.363: 	  object A with
+//│ ╙──       	         ^
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.364: 	    object B with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.365: 	      object C
+//│ ╙──       	             ^
+//│ = C
 
+:todo
+:w
+fun f =
+  module A with
+    object B with
+      object C
+  A.B.C
+f
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.382: 	  module A with
+//│ ╙──       	         ^
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.384: 	      object C
+//│ ╙──       	             ^
+//│ = C
+
+:todo
+:w
+fun f =
+  module A with
+    module B with
+      object C
+  A.B.C
+f
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.398: 	  module A with
+//│ ╙──       	         ^
+//│ = C

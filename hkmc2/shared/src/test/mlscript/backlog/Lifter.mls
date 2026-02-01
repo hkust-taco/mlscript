@@ -187,8 +187,11 @@ foo(2)
 //│ ║  l.183: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.180: 	  object Foo with
+//│ ╙──       	         ^^^
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
-//│ = Bar
+//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
@@ -200,7 +203,19 @@ fun f =
       h
   M.g
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.197: 	  module M with
+//│ ║  l.200: 	  module M with
 //│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
+//│ ║  l.202: 	      fun h = M.g
+//│ ║         	              ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.200: 	  module M with
+//│ ║         	         ^^^^^^
+//│ ║  l.201: 	    fun g =
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.202: 	      fun h = M.g
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	      h
+//│ ╙──       	^^^^^^^
 
 
