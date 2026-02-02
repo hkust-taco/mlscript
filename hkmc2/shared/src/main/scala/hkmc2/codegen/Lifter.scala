@@ -162,7 +162,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             N, Diagnostic.Source.Compilation
           ))
         case m: ScopedObject.Companion =>
-          ignored += m.par.isym
+          ignored += m.cls.isym
           ignored += m.comp.isym
           raise(WarningReport(
             msg"Modules are not yet lifted." -> m.comp.isym.toLoc :: Nil,

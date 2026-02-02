@@ -72,7 +72,7 @@ object ScopeData:
       lazy val toInfo: ScopedInfo = this match
         case Top(_) => ()
         case Class(cls, _) => cls.isym
-        case Companion(comp, par) => comp.isym
+        case Companion(comp, cls) => comp.isym
         case ClassCtor(cls) => cls.ctorSym.get
         case Func(fun, _) => fun.dSym
         case ScopedBlock(uid, block) => uid
@@ -82,7 +82,7 @@ object ScopeData:
       lazy val nme = this match
         case Top(b) => "top"
         case Class(cls, _) => cls.isym.nme
-        case Companion(comp, par) => comp.isym.nme + "_mod"
+        case Companion(comp, cls) => comp.isym.nme + "_mod"
         case ClassCtor(cls) => cls.isym.nme // should be unused
         case Func(fun, isMethod) => fun.dSym.nme
         case Loop(sym, block) => "loop$" + sym.uid.toString()
@@ -103,7 +103,7 @@ object ScopeData:
               p.params.map(_.sym)
             .toSet
           paramsSet ++ auxSet ++ cls.privateFields + cls.isym
-        case Companion(comp, par) =>
+        case Companion(comp, cls) =>
           comp.privateFields.toSet + comp.isym
         case _: ClassCtor => Set.empty
         case Func(fun, _) => fun.params.flatMap: p =>
@@ -115,7 +115,7 @@ object ScopeData:
       def contents: T = this match
         case Top(b) => b
         case Class(cls, _) => cls
-        case Companion(comp, par) => comp
+        case Companion(comp, cls) => comp
         case ClassCtor(cls) => ()
         case Func(fun, _) => fun
         case ScopedBlock(_, block) => block
@@ -125,17 +125,17 @@ object ScopeData:
     sealed abstract class Referencable[T] extends TScopedObject[T]:
       def sym: LiftedSym = this match
         case Class(cls, _) => cls.isym
-        case Companion(comp, par) => comp.isym
+        case Companion(comp, cls) => comp.isym
         case Func(fun, isMethod) => fun.dSym
         case ClassCtor(cls) => cls.ctorSym.get
       def bsym: BlockMemberSymbol = this match
         case Class(cls, _) => cls.sym
-        case Companion(comp, par) => par.sym
+        case Companion(comp, cls) => cls.sym
         case Func(fun, isMethod) => fun.sym
         case ClassCtor(cls) => cls.sym
       def owner: Opt[InnerSymbol] = this match
         case Class(cls, _) => cls.owner
-        case Companion(comp, par) => par.owner
+        case Companion(comp, cls) => cls.owner
         case ClassCtor(cls) => cls.owner
         case Func(fun, isMethod) => fun.owner
       
@@ -148,7 +148,7 @@ object ScopeData:
     case class Top(b: Block) extends ScopedObject[Block] // b may be a scoped block, in which case, its variables represent the top-level variables.
     case class Class(cls: ClsLikeDefn, isObj: Bool) extends Liftable[ClsLikeDefn]:
       val defn = cls
-    case class Companion(comp: ClsLikeBody, par: ClsLikeDefn) extends Referencable[ClsLikeBody]
+    case class Companion(comp: ClsLikeBody, cls: ClsLikeDefn) extends Referencable[ClsLikeBody]
     // We model it like this: the ctor is just another function in the same scope as the class and initializes the corresponding class
     case class ClassCtor(cls: ClsLikeDefn) extends Referencable[Unit]
     // isMethod:
@@ -186,7 +186,7 @@ object ScopeData:
           f._1.traverse; f._2.traverse
         traverser.applySubBlock(preCtor)
         traverser.applySubBlock(ctor)
-      case ScopedObject.Companion(comp, par) => traverser.applyClsLikeBody(comp)
+      case ScopedObject.Companion(comp, cls) => traverser.applyClsLikeBody(comp)
       case ScopedObject.Func(fun, isMethod) => traverser.applyFunDefn(fun)
       case ScopedObject.ScopedBlock(uid, block) => traverser.applyBlock(block)
       case ScopedObject.ClassCtor(c) => ()
@@ -393,7 +393,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.Class(cls, _) =>
         finder.applyBlock(cls.preCtor)
         finder.applyBlock(cls.ctor)
-      case ScopedObject.Companion(comp, par) =>
+      case ScopedObject.Companion(comp, cls) =>
         finder.applyBlock(comp.ctor)
       case ScopedObject.Func(fun, _) =>
         finder.applyBlock(fun.body)
@@ -405,7 +405,7 @@ class ScopeData(b: Block)(using State, IgnoredScopes):
       case ScopedObject.Class(cls, _) =>
         val k = if cls.k is syntax.Obj then MethodKind.ObjMethod else MethodKind.ClsMethod
         cls.methods.map(ScopedObject.Func(_, S(k)))
-      case ScopedObject.Companion(comp, par) => comp.methods.map(ScopedObject.Func(_, S(MethodKind.ModMethod)))
+      case ScopedObject.Companion(comp, cls) => comp.methods.map(ScopedObject.Func(_, S(MethodKind.ModMethod)))
       case _ => Nil
     
     val isym = obj match
