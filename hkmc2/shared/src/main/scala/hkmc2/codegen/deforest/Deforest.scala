@@ -84,6 +84,7 @@ object Deforest:
     val importInfo = ImportedInfo(Nil)
     val pre = new DeforestPreAnalyzer(importInfo, p.main)(using tl, elabState, dState)
     val constrCol = new DeforestConstraintsCollector(pre)
+    val constrSol = new DeforestConstrainSolver(constrCol)
     p
     // val defns = p.main.gatherDefns()
     // val (funs, clses) = defns.partitionMap:

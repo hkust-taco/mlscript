@@ -58,8 +58,9 @@ class FieldSel(
   val field: TermSymbol,
   val consVar: ConsVar) extends ConsStrat:
     // TODO: with this term symbol, we may not need filter
+    def isSelFromCls = field.owner.flatMap(_.asCls).get
     assert:
-      field.owner.forall:
+      field.owner.exists:
         _.matches:
           case c: ClassSymbol => c.tree.clsParams.contains(field)
     // this map "filter" means that this selection occurs in match branches where the
@@ -72,6 +73,8 @@ class Dtor(
   val scrutExprId: ResultId,
   val instantiationId: Opt[InstantiationId]) extends ConsStrat
 
+type ConcreteProducer = Ctor
+type ConcreteConsumer = Dtor | FieldSel
 
 
 class ProdStratScheme(val s: StratVarState, val constraints: Ls[ProdStrat -> ConsStrat])
@@ -430,54 +433,36 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case NoRet -> NoRet => NoRet
   import BlockStrat.*
   
+  private val globalCollector = new ConstraintsCollector(N)
+  def allConstraints = globalCollector.constraints
+  
   // ===================================================
   
-  // generate prod vars for symbols that we care,
-  // default to NoProd for unknown symbols
-  val generatedProdVars: Map[Symbol, StratVarState] =
-    // generating strat vars for
-    //   - let/val bindings in top level blocks
-    //   - let/val bindings in top level lone-modules with
-    // top level fun bindings 
-    // other class/modules do not need to have a prodstrat
-    //
-    // the keys could possibly be one of the following kinds:
-    // - TermSymbol:
-    //   - functions, let and val definitions in an module (with an owner)
-    //   - functions and val definitions in top level or nested in function body (without an owner)
-    // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
-    // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
-    val store = MutMap.empty[Symbol, StratVarState]
-    // for top level block
-    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
-      object AddStratForTopLvlSymbols extends BlockTraverserShallow:
-        override def applyBlock(b: Block): Unit = b match
-          case Scoped(syms, body) => for s <- syms do
-            s match
-            // top level immutable val defs
-            case bms: BlockMemberSymbol if bms.tsym.exists(_.k is ImmutVal) =>
-              val tsym = bms.tsym.get
-              store(tsym) = freshVar(tsym.nme)
-            // varsymbols for let binding
-            case s: VarSymbol => store(s) = freshVar(s.nme)
-            case s: TempSymbol => store(s) = freshVar(s.nme)
-            case _ => ()
-            applyBlock(body)
-          case _ => super.applyBlock(b)
-      AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
-    // for module private/public fields and mod ctors
-    for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-      for priv <- mod.privateFields do store(priv) = freshVar(priv.name)
-      for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name)
-      // mod.ctor can nest functions and class/module defs
-      // among which only nested functions needs to be handled here
-      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor) then
-        object AddStratForModCtorSymbols extends BlockTraverser:
+  locally {
+    // generate prod vars for symbols that we care,
+    // default to NoProd for unknown symbols
+    val generatedProdVars: Map[Symbol, StratVarState] =
+      // generating strat vars for
+      //   - let/val bindings in top level blocks
+      //   - let/val bindings in top level lone-modules with
+      // top level fun bindings 
+      // other class/modules do not need to have a prodstrat
+      //
+      // the keys could possibly be one of the following kinds:
+      // - TermSymbol:
+      //   - functions, let and val definitions in an module (with an owner)
+      //   - functions and val definitions in top level or nested in function body (without an owner)
+      // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
+      // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
+      val store = MutMap.empty[Symbol, StratVarState]
+      // for top level block
+      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
+        object AddStratForTopLvlSymbols extends BlockTraverserShallow:
           override def applyBlock(b: Block): Unit = b match
             case Scoped(syms, body) => for s <- syms do
               s match
-              // local fun and vals
-              case bms: BlockMemberSymbol if bms.tsym.exists(tsym => (tsym.k is Fun) || (tsym.k is ImmutVal)) =>
+              // top level immutable val defs
+              case bms: BlockMemberSymbol if bms.tsym.exists(_.k is ImmutVal) =>
                 val tsym = bms.tsym.get
                 store(tsym) = freshVar(tsym.nme)
               // varsymbols for let binding
@@ -486,237 +471,319 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               case _ => ()
               applyBlock(body)
             case _ => super.applyBlock(b)
-          override def applyClsLikeBody(b: ClsLikeBody): Unit = ()
-          override def applyDefn(defn: Defn): Unit =
-            defn match
-              case _: ClsLikeDefn => ()
-              case _ => super.applyDefn(defn)
-              // case FunDefn(forceTailRec) => 
-              // case ValDefn(tsym, sym, rhs) =>
-            
+        AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
+      // for module private/public fields and mod ctors
+      for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+        for priv <- mod.privateFields do store(priv) = freshVar(priv.name)
+        for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name)
+        // mod.ctor can nest functions and class/module defs
+        // among which only nested functions needs to be handled here
+        if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor) then
+          object AddStratForModCtorSymbols extends BlockTraverser:
+            override def applyBlock(b: Block): Unit = b match
+              case Scoped(syms, body) => for s <- syms do
+                s match
+                // local fun and vals
+                case bms: BlockMemberSymbol if bms.tsym.exists(tsym => (tsym.k is Fun) || (tsym.k is ImmutVal)) =>
+                  val tsym = bms.tsym.get
+                  store(tsym) = freshVar(tsym.nme)
+                // varsymbols for let binding
+                case s: VarSymbol => store(s) = freshVar(s.nme)
+                case s: TempSymbol => store(s) = freshVar(s.nme)
+                case _ => ()
+                applyBlock(body)
+              case _ => super.applyBlock(b)
+            override def applyClsLikeBody(b: ClsLikeBody): Unit = ()
+            override def applyDefn(defn: Defn): Unit =
+              defn match
+                case _: ClsLikeDefn => ()
+                case _ => super.applyDefn(defn)
+                // case FunDefn(forceTailRec) => 
+                // case ValDefn(tsym, sym, rhs) =>
+              
+            override def applyParamList(pl: ParamList): Unit =
+              for p <- pl.params do store(p.sym) = freshVar(p.sym.nme)
+          AddStratForModCtorSymbols.applyBlock(mod.ctor)
+      // for toplvl fundefns
+      for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+        val forFun = f.dSym
+        // funs can only nest other funs
+        object AddStratForToplvlFun extends BlockTraverser:
+          override def applyFunDefn(fun: FunDefn): Unit =
+            store(fun.dSym) = freshVar(fun.sym.nme, forFun)
+            super.applyFunDefn(fun)
           override def applyParamList(pl: ParamList): Unit =
-            for p <- pl.params do store(p.sym) = freshVar(p.sym.nme)
-        AddStratForModCtorSymbols.applyBlock(mod.ctor)
-    // for toplvl fundefns
-    for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-      val forFun = f.dSym
-      // funs can only nest other funs
-      object AddStratForToplvlFun extends BlockTraverser:
-        override def applyFunDefn(fun: FunDefn): Unit =
-          store(fun.dSym) = freshVar(fun.sym.nme, forFun)
-          super.applyFunDefn(fun)
-        override def applyParamList(pl: ParamList): Unit =
-          for p <- pl do store(p.sym) = freshVar(p.sym.nme, forFun)
-        override def applyBlock(b: Block): Unit = b match
-          case Scoped(syms, body) => for s <- syms do
-            s match
-            // local vals
-            case bms: BlockMemberSymbol if bms.tsym.exists(tsym => tsym.k is ImmutVal) =>
-              val tsym = bms.tsym.get
-              store(tsym) = freshVar(tsym.nme, forFun)
-            // varsymbols for let binding
-            case s: VarSymbol => store(s) = freshVar(s.nme, forFun)
-            case s: TempSymbol => store(s) = freshVar(s.nme, forFun)
-            case _ => ()
-            applyBlock(body)
-          case _ => super.applyBlock(b)
-      AddStratForToplvlFun.applyFunDefn(f)
-    store.toMap.withDefaultValue(preAnalyzer.res.primitiveStratVar)
-  end generatedProdVars
-  
-  // just compute the scc first...
-  val sccInOrder: Ls[Ls[TermSymbol]] =
-    import algorithms.partitionScc
-    var edges = Ls.empty[(TermSymbol, TermSymbol)]
-    for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-      object CollectAllReferredFun extends BlockTraverser:
-        override def applyPath(p: Path) = p match
-          case FunRef(callee) =>
-            if preAnalyzer.res.funSymToFunDefn.contains(callee) then
-              edges ::= f.dSym -> callee
-          case _ => ()
-      CollectAllReferredFun.applyBlock(f.body)
-    partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse
-  end sccInOrder
-  val funToSccRep: Map[TermSymbol, TermSymbol] =
-    sccInOrder
-      .flatMap: funs =>
-        funs.map(_ -> funs.head)
-      .toMap
-  
-  val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
-  for groupedFuns <- sccInOrder do
-    given ProcessMode = ProcessMode.Fun
-    given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
-    for funSym <- groupedFuns do
-      val fun = preAnalyzer.res.funSymToFunDefn(funSym)
-      val thisFunVar = generatedProdVars(fun.dSym)
-      val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
-      val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
-        assert(ps.restParam.isEmpty)
-        ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
-      processBlock(fun.body) match
-        case Ret(p) => cc.constrain(p, res.asConsStrat)
-        case _ => cc.constrain(NoProd, res.asConsStrat)
-      cc.constrain(funProdStrat, thisFunVar.asConsStrat)
-    for funSym <- groupedFuns do
-      funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
-  
-  val allConstraints =
-    given cc: ConstraintsCollector = new ConstraintsCollector(N)
-    cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
-    cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
-    // collect for toplvl block
-    if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
-      given ProcessMode = ProcessMode.ToplvlBlk
-      processBlock(preAnalyzer.b)
-    // collect for module ctor
-    for
-      case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
-      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
-    do
-      given ProcessMode = ProcessMode.ModCtor
-      processBlock(mod.ctor)
-    cc.constraints
-  end allConstraints
-  
-  // ===================================================
-  
-  
-  private def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): BlockStrat =
-    b match
-    case Return(res, implct) => Ret(processResult(res))
-    case Throw(exc) => Ret(freshVar("throw", cc.forFunGroup).asProdStrat)
-    case Match(scrut, arms, dflt, rest) =>
-      val scrutStrat = processResult(scrut)
-      cc.constrain(
-        scrutStrat,
-        new Dtor(scrut.uid, cc.forFunGroup.fold(S(Nil))(_ => N)))
-      val allArmsRes = (arms.map(_._2) ++ dflt).map(processBlock).reduce(_.mergeBranches(_))
-      allArmsRes.mergeSeq(processBlock(rest))
-    case Label(l, false, body, rest) =>
-      val restRes = processBlock(rest)
-      cc.labelToRestStrat.addOne(l -> restRes)
-      processBlock(body).mergeSeq(restRes)
-    case Break(label) => cc.labelToRestStrat(label)
-    case Scoped(syms, body) => processBlock(body)
-    case Begin(sub, rest) =>
-      processBlock(sub).mergeSeq(processBlock(rest))
-    case Assign(lhs, rhs, rest) =>
-      val rhsStrat = processResult(rhs)
-      cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
-      processBlock(rest)
-    case Define(defn, rest) =>
-      defn match
-      case ValDefn(tsym, sym, rhs) =>
-        cc.constrain(processResult(rhs), generatedProdVars(tsym).asConsStrat)
-      case FunDefn(_, _, dSym, params, body) =>
-        if (im is ProcessMode.Fun) || (im is ProcessMode.ModCtor) then
-          val funRes = freshVar(s"${dSym.nme}_res", cc.forFunGroup)
-          val funProdStrat = params.foldRight[ProdStrat](funRes.asProdStrat): (ps, acc) =>
-            assert(ps.restParam.isEmpty)
-            ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
-          processBlock(body) match
-            case Ret(p) => cc.constrain(p, funRes.asConsStrat)
-            case _ => cc.constrain(NoProd, funRes.asConsStrat)
-          cc.constrain(funProdStrat, generatedProdVars(dSym).asConsStrat)
-      case cls: ClsLikeDefn => im match
-        case ProcessMode.Fun => die
-        case _ => ()
-      processBlock(rest)
-    case End(msg) => NoRet
-    case _ => die
+            for p <- pl do store(p.sym) = freshVar(p.sym.nme, forFun)
+          override def applyBlock(b: Block): Unit = b match
+            case Scoped(syms, body) => for s <- syms do
+              s match
+              // local vals
+              case bms: BlockMemberSymbol if bms.tsym.exists(tsym => tsym.k is ImmutVal) =>
+                val tsym = bms.tsym.get
+                store(tsym) = freshVar(tsym.nme, forFun)
+              // varsymbols for let binding
+              case s: VarSymbol => store(s) = freshVar(s.nme, forFun)
+              case s: TempSymbol => store(s) = freshVar(s.nme, forFun)
+              case _ => ()
+              applyBlock(body)
+            case _ => super.applyBlock(b)
+        AddStratForToplvlFun.applyFunDefn(f)
+      store.toMap.withDefaultValue(preAnalyzer.res.primitiveStratVar)
+    end generatedProdVars
     
-  private def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat =
-    def handleCallLike(f: Path, args: List[Arg]): ProdStrat =
-      val fStrat = processResult(f)
-      val argsStrat = args.map(a => processResult(a.value))
-      val callRes = freshVar("call_res", cc.forFunGroup)
-      cc.constrain(fStrat, ConsFun(argsStrat, callRes.asConsStrat))
-      callRes.asProdStrat
-    r match
-    case Call(fun, args) => handleCallLike(fun, args)
-    case Instantiate(false, cls, args) => handleCallLike(cls, args)
-    case Lambda(ParamList(_, params, N), body) =>
-      val res = freshVar("lam_res", cc.forFunGroup)
-      val paramsStrat = params.map(p => generatedProdVars(p.sym).asConsStrat)
-      processBlock(body) match
-        case Ret(p) => cc.constrain(p, res.asConsStrat)
-        case _ => cc.constrain(NoProd, res.asConsStrat)
-      ProdFun(paramsStrat, res.asProdStrat)
-    case Tuple(mut, elems) => ??? // TODO: tuple strat
-    case p: Path =>
-      p match
-      case CtorRef(ctor) => ctor match
-        case cls: ClassSymbol =>
-          val argsAndParam = cls.tree.clsParams.map: tsym =>
-            tsym -> freshVar(s"cls_arg_${tsym.nme}", cc.forFunGroup).asProdStrat
-          ProdFun(
-            argsAndParam.unzip._2.map(_.asConsStrat),
-            new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(cls, argsAndParam))
-        case obj: ModuleOrObjectSymbol =>
-          new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(obj, Nil)
-      case refSite@FunRef(f) =>
-        funsToProdStratScheme.get(f) match
-        case Some(fScheme) => fScheme.instantiate(refSite.uid, f)
-        case None => generatedProdVars(f).asProdStrat
-      case sel@DeforestableSelect(s: TermSymbol) =>
-        // only parambind and let/vals in modules are handled here
-        s.k match
-        case ParamBind =>
-          val obj = processResult(sel.qual)
-          val selRes = freshVar("sel_res", cc.forFunGroup)
-          cc.constrain(
-            obj,
-            FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
-          selRes.asProdStrat
-        case (ImmutVal | LetBind) => generatedProdVars(s).asProdStrat
-        case _ => die
-      case Value.Ref(l, disamb) =>
-        disamb.fold(generatedProdVars(l))(generatedProdVars.apply).asProdStrat
-      case Value.Lit(lit) => NoProd
+    // just compute the scc first...
+    val sccInOrder: Ls[Ls[TermSymbol]] =
+      import algorithms.partitionScc
+      var edges = Ls.empty[(TermSymbol, TermSymbol)]
+      for case f: FunDefn <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
+        object CollectAllReferredFun extends BlockTraverser:
+          override def applyPath(p: Path) = p match
+            case FunRef(callee) =>
+              if preAnalyzer.res.funSymToFunDefn.contains(callee) then
+                edges ::= f.dSym -> callee
+            case _ => ()
+        CollectAllReferredFun.applyBlock(f.body)
+      partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse
+    end sccInOrder
+    val funToSccRep: Map[TermSymbol, TermSymbol] =
+      sccInOrder
+        .flatMap: funs =>
+          funs.map(_ -> funs.head)
+        .toMap
+    
+    val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
+    for groupedFuns <- sccInOrder do
+      given ProcessMode = ProcessMode.Fun
+      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
+      for funSym <- groupedFuns do
+        val fun = preAnalyzer.res.funSymToFunDefn(funSym)
+        val thisFunVar = generatedProdVars(fun.dSym)
+        val res = freshVar(s"${funSym.nme}_res", cc.forFunGroup)
+        val funProdStrat = fun.params.foldRight[ProdStrat](res.asProdStrat): (ps, acc) =>
+          assert(ps.restParam.isEmpty)
+          ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+        processBlock(fun.body) match
+          case Ret(p) => cc.constrain(p, res.asConsStrat)
+          case _ => cc.constrain(NoProd, res.asConsStrat)
+        cc.constrain(funProdStrat, thisFunVar.asConsStrat)
+      for funSym <- groupedFuns do
+        funsToProdStratScheme(funSym) = ProdStratScheme(generatedProdVars(funSym), cc.constraints)
+    
+    globalCollector.givenIn: cc ?=>
+      cc.constrain(preAnalyzer.res.primitiveStratVar.asProdStrat, NoCons)
+      cc.constrain(NoProd, preAnalyzer.res.primitiveStratVar.asConsStrat)
+      // collect for toplvl block
+      if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(preAnalyzer.b) then
+        given ProcessMode = ProcessMode.ToplvlBlk
+        processBlock(preAnalyzer.b)
+      // collect for module ctor
+      for
+        case (mod: ClsLikeBody) <- preAnalyzer.res.toplvlFunAndBlkToAnalyze
+        if preAnalyzer.res.toplvlFunAndBlkToAnalyze.contains(mod.ctor)
+      do
+        given ProcessMode = ProcessMode.ModCtor
+        processBlock(mod.ctor)
+  
+    // ===================================================
+    
+    extension (pScheme: ProdStratScheme) def instantiate(
+      referSite: ResultId,
+      referringTo: TermSymbol
+    )(using cc: ConstraintsCollector): ProdStrat =
+      val groupRep = funToSccRep(referringTo)
+      val stratVarMap = MutMap.empty[StratVarState, StratVarState]
+      def updateInstantiationId(instId: Opt[InstantiationId]) =
+        S(instId.fold(referSite :: Nil)(referSite :: _))
+      def duplicateVarState(s: StratVarState) =
+        if s.generatedForFun.fold(false)(_ is groupRep) then
+          stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
+        else
+          s
+      def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
+        case ProdVar(s) => duplicateVarState(s).asProdStrat
+        case ProdFun(params, res) => ProdFun(params.map(duplicateConsStrat), duplicateProdStrat(res))
+        case NoProd => NoProd
+        case c: Ctor => new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
+          c.ctor,
+          c.args.map((a, b) => a -> duplicateProdStrat(b)))
+      def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
+        case ConsVar(s) => duplicateVarState(s).asConsStrat
+        case ConsFun(params, res) => ConsFun(params.map(duplicateProdStrat), duplicateConsStrat(res))
+        case NoCons => NoCons
+        case fSel: FieldSel =>
+          new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
+            fSel.field,
+            duplicateVarState(fSel.consVar.s).asConsStrat)
+        case dtor: Dtor => new Dtor(dtor.scrutExprId, updateInstantiationId(dtor.instantiationId))
+      val newProd = duplicateVarState(pScheme.s).asProdStrat
+      pScheme.constraints.foreach: (p, c) =>
+        cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
+      newProd
+    
+    def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): BlockStrat =
+      b match
+      case Return(res, implct) => Ret(processResult(res))
+      case Throw(exc) => Ret(freshVar("throw", cc.forFunGroup).asProdStrat)
+      case Match(scrut, arms, dflt, rest) =>
+        val scrutStrat = processResult(scrut)
+        cc.constrain(
+          scrutStrat,
+          new Dtor(scrut.uid, cc.forFunGroup.fold(S(Nil))(_ => N)))
+        val allArmsRes = (arms.map(_._2) ++ dflt).map(processBlock).reduce(_.mergeBranches(_))
+        allArmsRes.mergeSeq(processBlock(rest))
+      case Label(l, false, body, rest) =>
+        val restRes = processBlock(rest)
+        cc.labelToRestStrat.addOne(l -> restRes)
+        processBlock(body).mergeSeq(restRes)
+      case Break(label) => cc.labelToRestStrat(label)
+      case Scoped(syms, body) => processBlock(body)
+      case Begin(sub, rest) =>
+        processBlock(sub).mergeSeq(processBlock(rest))
+      case Assign(lhs, rhs, rest) =>
+        val rhsStrat = processResult(rhs)
+        cc.constrain(rhsStrat, generatedProdVars(lhs).asConsStrat)
+        processBlock(rest)
+      case Define(defn, rest) =>
+        defn match
+        case ValDefn(tsym, sym, rhs) =>
+          cc.constrain(processResult(rhs), generatedProdVars(tsym).asConsStrat)
+        case FunDefn(_, _, dSym, params, body) =>
+          if (im is ProcessMode.Fun) || (im is ProcessMode.ModCtor) then
+            val funRes = freshVar(s"${dSym.nme}_res", cc.forFunGroup)
+            val funProdStrat = params.foldRight[ProdStrat](funRes.asProdStrat): (ps, acc) =>
+              assert(ps.restParam.isEmpty)
+              ProdFun(ps.params.map(p => generatedProdVars(p.sym).asConsStrat), acc)
+            processBlock(body) match
+              case Ret(p) => cc.constrain(p, funRes.asConsStrat)
+              case _ => cc.constrain(NoProd, funRes.asConsStrat)
+            cc.constrain(funProdStrat, generatedProdVars(dSym).asConsStrat)
+        case cls: ClsLikeDefn => im match
+          case ProcessMode.Fun => die
+          case _ => ()
+        processBlock(rest)
+      case End(msg) => NoRet
       case _ => die
-    case _ => die
-  
-  extension (pScheme: ProdStratScheme) private def instantiate(
-    referSite: ResultId,
-    referringTo: TermSymbol
-  )(using cc: ConstraintsCollector): ProdStrat =
-    val groupRep = funToSccRep(referringTo)
-    val stratVarMap = MutMap.empty[StratVarState, StratVarState]
-    def updateInstantiationId(instId: Opt[InstantiationId]) =
-      S(instId.fold(referSite :: Nil)(referSite :: _))
-    def duplicateVarState(s: StratVarState) =
-      if s.generatedForFun.fold(false)(_ is groupRep) then
-        stratVarMap.getOrElseUpdate(s, freshVar(s.name, cc.forFunGroup))
-      else
-        s
-    def duplicateProdStrat(s: ProdStrat): ProdStrat = s match
-      case ProdVar(s) => duplicateVarState(s).asProdStrat
-      case ProdFun(params, res) => ProdFun(params.map(duplicateConsStrat), duplicateProdStrat(res))
-      case NoProd => NoProd
-      case c: Ctor => new Ctor(c.exprId, updateInstantiationId(c.instantiationId))(
-        c.ctor,
-        c.args.map((a, b) => a -> duplicateProdStrat(b)))
-    def duplicateConsStrat(c: ConsStrat): ConsStrat = c match
-      case ConsVar(s) => duplicateVarState(s).asConsStrat
-      case ConsFun(params, res) => ConsFun(params.map(duplicateProdStrat), duplicateConsStrat(res))
-      case NoCons => NoCons
-      case fSel: FieldSel =>
-        new FieldSel(fSel.exprId, updateInstantiationId(fSel.instantiationId))(
-          fSel.field,
-          duplicateVarState(fSel.consVar.s).asConsStrat)
-      case dtor: Dtor => new Dtor(dtor.scrutExprId, updateInstantiationId(dtor.instantiationId))
-    val newProd = duplicateVarState(pScheme.s).asProdStrat
-    pScheme.constraints.foreach: (p, c) =>
-      cc.constrain(duplicateProdStrat(p), duplicateConsStrat(c))
-    newProd
-  
+    
+    def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat =
+      def handleCallLike(f: Path, args: List[Arg]): ProdStrat =
+        val fStrat = processResult(f)
+        val argsStrat = args.map(a => processResult(a.value))
+        val callRes = freshVar("call_res", cc.forFunGroup)
+        cc.constrain(fStrat, ConsFun(argsStrat, callRes.asConsStrat))
+        callRes.asProdStrat
+      r match
+      case Call(fun, args) => handleCallLike(fun, args)
+      case Instantiate(false, cls, args) => handleCallLike(cls, args)
+      case Lambda(ParamList(_, params, N), body) =>
+        val res = freshVar("lam_res", cc.forFunGroup)
+        val paramsStrat = params.map(p => generatedProdVars(p.sym).asConsStrat)
+        processBlock(body) match
+          case Ret(p) => cc.constrain(p, res.asConsStrat)
+          case _ => cc.constrain(NoProd, res.asConsStrat)
+        ProdFun(paramsStrat, res.asProdStrat)
+      case Tuple(mut, elems) => ??? // TODO: tuple strat
+      case p: Path =>
+        p match
+        case CtorRef(ctor) => ctor match
+          case cls: ClassSymbol =>
+            val argsAndParam = cls.tree.clsParams.map: tsym =>
+              tsym -> freshVar(s"cls_arg_${tsym.nme}", cc.forFunGroup).asProdStrat
+            ProdFun(
+              argsAndParam.unzip._2.map(_.asConsStrat),
+              new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(cls, argsAndParam))
+          case obj: ModuleOrObjectSymbol =>
+            new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(obj, Nil)
+        case refSite@FunRef(f) =>
+          funsToProdStratScheme.get(f) match
+          case Some(fScheme) => fScheme.instantiate(refSite.uid, f)
+          case None => generatedProdVars(f).asProdStrat
+        case sel@DeforestableSelect(s: TermSymbol) =>
+          // only parambind and let/vals in modules are handled here
+          s.k match
+          case ParamBind =>
+            val obj = processResult(sel.qual)
+            val selRes = freshVar("sel_res", cc.forFunGroup)
+            cc.constrain(
+              obj,
+              FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
+            selRes.asProdStrat
+          case (ImmutVal | LetBind) => generatedProdVars(s).asProdStrat
+          case _ => die
+        case Value.Ref(l, disamb) =>
+          disamb.fold(generatedProdVars(l))(generatedProdVars.apply).asProdStrat
+        case Value.Lit(lit) => NoProd
+        case _ => die
+      case _ => die
+  }
   
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
   // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
   // tl.log(scc)
   allConstraints.foreach: 
     case p -> c => tl.log(s"$p --> $c")
-  
 end DeforestConstraintsCollector
+
+
+class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
+  given tl: TraceLogger = collector.tl
+  
+  val ctorDests = MutMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
+  val dtorSrcs = MutMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
+  val finalCtorDest = MutMap.empty[ConcreteConsumer, ConcreteConsumer]
+  val finalDtorSrc = MutMap.empty[ConcreteConsumer, ConcreteProducer]
+  
+  locally {
+    val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
+    val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
+    val cache = MutSet.empty[ProdStrat -> ConsStrat]
+    def handle(constraint: ProdStrat -> ConsStrat): Unit = if cache.add(constraint) then
+      assert:
+        val prod = constraint._1
+        val cons = constraint._2
+        (!prod.isInstanceOf[Ctor] || prod.asInstanceOf[Ctor].instantiationId.isDefined) &&
+        (!cons.isInstanceOf[Dtor] || cons.asInstanceOf[Dtor].instantiationId.isDefined)
+      constraint match
+      case (c: Ctor, d: Dtor) =>
+        ctorDests(c) += d
+        dtorSrcs(d) += c
+      case (c: Ctor, d: FieldSel) =>
+        if d.isSelFromCls is c.ctor then
+          ctorDests(c) += d
+          dtorSrcs(d) += c
+          handle(
+            c.args.find(_._1 is d.field).get._2,
+            d.consVar)
+      case (c: Ctor, NoCons) =>
+        ctorDests(c) += NoCons
+        for (_, argProd) <- c.args do handle(argProd, NoCons)
+      case (ProdFun(argsP, resP), ConsFun(argsC, resC)) =>
+        argsC.lazyZip(argsP).foreach(handle)
+        handle(resP, resC)
+      case (ProdFun(argsP, resP), NoCons) =>
+        for a <- argsP do handle(NoProd, a)
+        handle(resP, NoCons)
+      case (NoProd, d: Dtor) =>
+        dtorSrcs(d) += NoProd
+      case (NoProd, sel: FieldSel) =>
+        dtorSrcs(sel) += NoProd
+        handle(NoProd, sel.consVar)
+      case (NoProd, ConsFun(args, res)) =>
+        for a <- args do handle(a, NoCons)
+        handle(NoProd, res)
+      case (p: ProdVar, c) =>
+        upperBounds(p.s.uid) ::= c
+        for l <- lowerBounds(p.s.uid) do handle(l, c)
+      case (p, c: ConsVar) =>
+        lowerBounds(c.s.uid) ::= p
+        for u <- upperBounds(c.s.uid) do handle(p, u)
+      case _ => () // ignore other cases
+    end handle
+    for c <- collector.allConstraints do handle(c)
+  }
+  
+  tl.log("==============")
+  for (c, ds) <- ctorDests do
+    tl.log(s"$c ->")
+    for d <- ds do tl.log(s"\t$d")
+  
+end DeforestConstrainSolver
