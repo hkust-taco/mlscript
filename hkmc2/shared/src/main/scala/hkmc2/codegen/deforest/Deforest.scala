@@ -71,7 +71,13 @@ object Deforest:
     extension (resultId: ResultId)
       def getResult = resultIdToResult(resultId)
     extension (r: Result)
-      def uid = resultToResultId.getOrElseUpdate(r, ResultUidState.nextUid)
+      def uid = resultToResultId.get(r) match
+        case None =>
+          val id = ResultUidState.nextUid
+          resultIdToResult(id) = r
+          resultToResultId(r) = id
+          id
+        case Some(id) => id
   
   def apply(p: Program)(using
     cfg: Config,

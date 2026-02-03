@@ -6,7 +6,7 @@ import utils.*
 import mlscript.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
-import scala.collection.mutable.{Set as MutSet, Map as MutMap}
+import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
 import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
 
 type ResultId = Uid[Result]
@@ -153,6 +153,10 @@ class DeforestPreAnalyzer(
         case InCtx.Mtch(m, cse) => m.rest
         case InCtx.Begn(b) => b.rest
       .foldLeft(matchScrutToMatchBlock(scrut).rest)(Begin.apply)
+    def getEnclosingMatchesForSel(selExprId: ResultId) = selToCtxOfSel(selExprId)
+      .iterator
+      .collect:
+        case InCtx.Mtch(m, cse) => m.scrut.uid
   end res
   
   
@@ -178,6 +182,7 @@ class DeforestPreAnalyzer(
   private object ctxTracker:
     private var ctx: Ls[InCtx] = Nil
     
+    def getAllCtx = ctx
     def getUntilFnOrCls: Iterator[InCtx] = ctx.iterator.takeWhile:
       case _: (InCtx.Fn | InCtx.Mod) => false
       case _ => true
@@ -318,7 +323,8 @@ class DeforestPreAnalyzer(
       ctxTracker.markAsNonHandleable()
       applyPath(qual); applyPath(fld)
     case p@Select(qual, name) => p match
-      case DeforestableSelect(_) => ()
+      case DeforestableSelect(_) =>
+        res.selToCtxOfSel.addOne(p.uid -> ctxTracker.getAllCtx)
       case _ =>
         ctxTracker.markAsNonHandleable()
         super.applyPath(p)
@@ -705,7 +711,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             val selRes = freshVar("sel_res", cc.forFunGroup)
             cc.constrain(
               obj,
-              FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
+              new FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
             selRes.asProdStrat
           case (ImmutVal | LetBind) => generatedProdVars(s).asProdStrat
           case _ => die
@@ -726,12 +732,23 @@ end DeforestConstraintsCollector
 
 class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   given tl: TraceLogger = collector.tl
+  given dState: Deforest.State = collector.dState
+  val preAnalyzer = collector.preAnalyzer
   
-  val ctorDests = MutMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
-  val dtorSrcs = MutMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
-  val finalCtorDest = MutMap.empty[ConcreteConsumer, ConcreteConsumer]
-  val finalDtorSrc = MutMap.empty[ConcreteConsumer, ConcreteProducer]
+  private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
+    sel.instantiationId == dtor.instantiationId &&
+    preAnalyzer.res.getEnclosingMatchesForSel(sel.exprId).contains(dtor.scrutExprId) &&
+    sel.exprId.getResult.matches:
+      case Select(p, _) => p === dtor.scrutExprId.getResult
   
+  case class FinalDest(dtor: Dtor, sels: Set[FieldSel]):
+    assert(sels.forall(selAndDtorIsSameConsumer(dtor, _)))
+  val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
+  val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
+  val finalCtorDests = MutMap.empty[ConcreteProducer, FinalDest]
+  val finalDtorSrcs = MutMap.empty[ConcreteConsumer, Set[ConcreteProducer]]
+  
+  // propagate
   locally {
     val upperBounds = MutMap.empty[StratVarId, Ls[ConsStrat]].withDefaultValue(Nil)
     val lowerBounds = MutMap.empty[StratVarId, Ls[ProdStrat]].withDefaultValue(Nil)
@@ -778,7 +795,55 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         for u <- upperBounds(c.s.uid) do handle(p, u)
       case _ => () // ignore other cases
     end handle
+    
     for c <- collector.allConstraints do handle(c)
+  }
+  
+  // remove clashes
+  locally {
+    val toRemoveCtor = MutSet.empty[ConcreteProducer]
+    val toRemoveDtor = MutSet.empty[ConcreteConsumer]
+    def markCtorToBeRemoved(rm: ConcreteProducer): Unit = if toRemoveCtor.add(rm) then
+      for case dtor: ConcreteConsumer <- ctorDests(rm) do markDtorToBeRemoved(dtor)
+    def markDtorToBeRemoved(rm: ConcreteConsumer): Unit = if toRemoveDtor.add(rm) then
+      for case ctor: ConcreteProducer <- dtorSrcs(rm) do markCtorToBeRemoved(ctor)
+    def mergeDests(dests: Set[ConcreteConsumer | NoCons.type]): Opt[FinalDest] =
+      if dests.contains(NoCons) then N
+      else
+        val (dtors, sels) = dests.partitionMap:
+          case d: Dtor => Left(d)
+          case fs: FieldSel => Right(fs)
+          case _ => die
+        if dtors.size != 1 then N
+        else
+          val dtor = dtors.head
+          if sels.forall(s => selAndDtorIsSameConsumer(dtor, s)) then
+            S(FinalDest(dtor, sels))
+          else N
+    end mergeDests
+    
+    // mark ctors to be removed
+    for
+      (ctor, dests) <- ctorDests
+      if mergeDests(dests).isEmpty
+    do markCtorToBeRemoved(ctor)
+    // mark dtors to be removed
+    for
+      (dtor, srcs) <- dtorSrcs
+      if srcs.contains(NoProd)
+    do markDtorToBeRemoved(dtor)
+    
+    toRemoveCtor.foreach(ctorDests.remove)
+    toRemoveDtor.foreach(dtorSrcs.remove)
+    
+    for (ctor, dests) <- ctorDests do finalCtorDests(ctor) = mergeDests(dests).get
+    for (dtor, srcs) <- dtorSrcs do finalDtorSrcs(dtor) = srcs.map(_.asInstanceOf[ConcreteProducer])
+    
+    assert:
+      finalCtorDests.forall:
+        case (c, FinalDest(dtor, sels)) =>
+          finalDtorSrcs(dtor).contains(c) &&
+          sels.forall(sel => finalDtorSrcs(sel).contains(c))
   }
   
   tl.log("==============")
