@@ -13,7 +13,6 @@ let Runtime1;
   constructor() {
     runtime.Unit;
   }
-  static #times;
   static #curEffect;
   static #resumeValue;
   static #resumeArr;
@@ -561,7 +560,6 @@ let Runtime1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["class", "Unwind", ["ret"]]; 
     });
-    Runtime.#times = 0;
     this.stackLimit = 0;
     this.stackDepth = 0;
     this.stackHandler = null;
@@ -1051,17 +1049,6 @@ let Runtime1;
       } else {
         throw globalThis.Object.freeze(new globalThis.Error("match error"))
       }
-    }
-  } 
-  static dbgTimes(cnt, fn) {
-    let scrut, tmp;
-    tmp = Runtime.#times + 1;
-    Runtime.#times = tmp;
-    scrut = Runtime.#times === cnt;
-    if (scrut === true) {
-      return runtime.safeCall(fn())
-    } else {
-      return runtime.Unit
     }
   } 
   static resumeContTrace(contTrace, value) {

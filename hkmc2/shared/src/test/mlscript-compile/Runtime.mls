@@ -361,11 +361,6 @@ fun resume(contTrace)(value) =
     NewEffect then handleEffects()
     Unwind(ret) then ret
 
-let times = 0
-fun dbgTimes(cnt, fn) =
-  set times += 1
-  if times === cnt do fn()
-
 // Assumes curEffect === null, return either NewEffect or Unwind(...) if no effect
 fun resumeContTrace(contTrace, value) =
   // TODO: increment stackDepth by some constant amount
