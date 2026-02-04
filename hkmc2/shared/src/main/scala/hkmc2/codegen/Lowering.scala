@@ -1052,13 +1052,8 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       if shouldFlattenScopes then ScopeFlattener().applyBlock(withHandlers1)
       else withHandlers1
     
-    // (new ObjectRewriter).transform(scopeFlattened)
-    
     val lifted =
-      if lift then
-        // (new ObjectRewriter).transform(scopeFlattened)
-        Lifter(scopeFlattened).transform
-        // Lifter((new ObjectRewriter).transform(scopeFlattened)).transform
+      if lift then Lifter(scopeFlattened).transform
       else scopeFlattened
     
     val (withHandlers2, stackSafetyInfo) = config.effectHandlers.fold((lifted, Map.empty)): opt =>

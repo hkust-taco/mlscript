@@ -86,6 +86,8 @@ object Lifter:
   * Assumes the input block does not have any `HandleBlock`s.
   */
 class Lifter(topLevelBlk: Block)(using State, Raise, Config):
+  // TODO: implement tracing debug system
+
   import Lifter.*
   
   extension (l: Local)
@@ -162,10 +164,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             N, Diagnostic.Source.Compilation
           ))
         case m: ScopedObject.Companion =>
-          ignored += m.cls.isym
-          ignored += m.comp.isym
+          ignored += m.compDefn.isym
+          ignored += m.clsBody.isym
           raise(WarningReport(
-            msg"Modules are not yet lifted." -> m.comp.isym.toLoc :: Nil,
+            msg"Modules are not yet lifted." -> m.clsBody.isym.toLoc :: Nil,
             N, Diagnostic.Source.Compilation
           ))
     
@@ -311,7 +313,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
             case c: ScopedObject.Class if c.isObj =>
               ctx.symbolsMap.get(c.cls.isym).map(_.read)
             case c: ScopedObject.Companion =>
-              ctx.symbolsMap.get(c.comp.isym).map(_.read)
+              ctx.symbolsMap.get(c.clsBody.isym).map(_.read)
             case _ => N
 
         override def applyResult(r: Result)(k: Result => Block): Block =
@@ -486,25 +488,26 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
 
     val fresh = FreshInt()
     
-    val sortedVars: Array[(ctorSyms: (local: Local, vs: VarSymbol), param: Param, valDefn: ValDefn)] = cap.toArray.sortBy(_.uid).map: sym =>
-      val id = fresh.make
-      val nme = sym.nme + "$" + id
-      
-      val ident = new Tree.Ident(nme)
-      val varSym = VarSymbol(ident)
-      val fldSym = BlockMemberSymbol(nme, Nil)
-      val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident)
-      
-      val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)
-      varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
-      
-      val vd = ValDefn(
-        tSym,
-        fldSym,
-        Value.Ref(varSym)
-      )
-      
-      (sym -> varSym, p, vd)
+    val sortedVars: Array[(ctorSyms: (local: Local, vs: VarSymbol), param: Param, valDefn: ValDefn)] =
+      cap.toArray.sortBy(_.uid).map: sym =>
+        val id = fresh.make
+        val nme = sym.nme + "$" + id
+        
+        val ident = new Tree.Ident(nme)
+        val varSym = VarSymbol(ident)
+        val fldSym = BlockMemberSymbol(nme, Nil)
+        val tSym = TermSymbol(syntax.MutVal, S(clsSym), ident)
+        
+        val p = Param(FldFlags.empty.copy(isVal = true), varSym, N, Modulefulness.none)
+        varSym.decl = S(p) // * Currently this is only accessed to create the class' toString method
+        
+        val vd = ValDefn(
+          tSym,
+          fldSym,
+          Value.Ref(varSym)
+        )
+        
+        (sym -> varSym, p, vd)
     
     val defn = ClsLikeDefn(
       None, clsSym, BlockMemberSymbol(nme, Nil),
@@ -641,8 +644,8 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val isyms = node.children
         .collect:
           case ScopeNode(obj = c: ScopedObject.Companion) =>
-            val s: Local = c.comp.isym
-            s -> LocalPath.BmsRef(c.bsym, c.comp.isym)
+            val s: Local = c.clsBody.isym
+            s -> LocalPath.BmsRef(c.bsym, c.clsBody.isym)
           case ScopeNode(obj = c: ScopedObject.Class) if c.isObj =>
             c.cls.isym -> (liftedObjsMap.get(c.cls.isym) match
               case Some(value) => value // lifted
@@ -726,7 +729,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     protected final lazy val passedSymsOrdered: List[Local] = reqPassedSymbols.toList.sortBy(_.uid)
     protected final lazy val passedDefnsOrdered: List[DefinitionSymbol[?]] = reqDefns.toList.sortBy(_.uid)
     
-    override lazy val capturePaths =
+    override lazy val capturePaths: Map[ScopedInfo, Path] =
       if thisCapturedLocals.isEmpty then capSymsMap
       else capSymsMap + (obj.toInfo -> capturePath)
     
@@ -870,19 +873,19 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
 
   class RewrittenCompanion(override val obj: ScopedObject.Companion)(using ctx: LifterCtxNew)
       extends RewrittenScope[ClsLikeBody](obj)
-      with ClsLikeRewrittenScope[ClsLikeBody](obj.comp.isym):
+      with ClsLikeRewrittenScope[ClsLikeBody](obj.clsBody.isym):
     
-    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.comp.isym), Tree.Ident(obj.nme + "$cap"))
+    private val captureSym = TermSymbol(syntax.ImmutVal, S(obj.clsBody.isym), Tree.Ident(obj.nme + "$cap"))
     override lazy val capturePath: Path = captureSym.asPath
       
     override def rewriteImpl: LifterResult[ClsLikeBody] =
       val rewriterCtor = new BlockRewriter
-      val rewrittenCtor = rewriterCtor.rewrite(obj.comp.ctor)
+      val rewrittenCtor = rewriterCtor.rewrite(obj.clsBody.ctor)
       val ctorWithCap = addExtraSyms(rewrittenCtor, captureSym, Nil, false)
-      val LifterResult(newMtds, extras) = rewriteMethods(node, obj.comp.methods)
-      val newComp = obj.comp.copy(
+      val LifterResult(newMtds, extras) = rewriteMethods(node, obj.clsBody.methods)
+      val newComp = obj.clsBody.copy(
         ctor = ctorWithCap,
-        privateFields = captureSym :: liftedObjsSyms.values.toList ::: obj.comp.privateFields,
+        privateFields = captureSym :: liftedObjsSyms.values.toList ::: obj.clsBody.privateFields,
         methods = newMtds
       )
       LifterResult(newComp, rewriterCtor.extraDefns.toList ::: extras)
