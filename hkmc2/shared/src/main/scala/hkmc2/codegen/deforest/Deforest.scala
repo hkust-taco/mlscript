@@ -12,6 +12,9 @@ import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins
 
 case class ImportedInfo(seeThroughMods: Ls[ClsLikeBody])
 
+type ResultId = Uid[Result]
+type InstantiationId = Ls[ResultId]
+
 object DeforestableSelect:
   // TermSymbol:
   //   - pattern variables (kind is parambind)
@@ -75,8 +78,18 @@ object Deforest:
     val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala
     val resultIdToResult = mutable.Map.empty[Uid[Result], Result]
     object ResultUidState extends Uid.Result.State
+    extension (instId: InstantiationId)
+      def mkFunName(using Elaborator.State): String =
+        instId
+          .map: i =>
+            s"${i.getReferredFun.get.name}_$i"
+          .mkString("_")
     extension (resultId: ResultId)
       def getResult = resultIdToResult(resultId)
+      def getReferredFun(using Elaborator.State): Option[TermSymbol] =
+        resultId.getResult match
+        case FunRef(f) => Some(f)
+        case _ => None
     extension (r: Result)
       def uid = resultToResultId.get(r) match
         case None =>
@@ -98,6 +111,7 @@ object Deforest:
     val pre = new DeforestPreAnalyzer(importInfo, p.main)(using tl, elabState, dState)
     val constrCol = new DeforestConstraintsCollector(pre)
     val constrSol = new DeforestConstrainSolver(constrCol)
+    val rewrite = new DeforestRewriter(constrSol)
     p
     // val defns = p.main.gatherDefns()
     // val (funs, clses) = defns.partitionMap:

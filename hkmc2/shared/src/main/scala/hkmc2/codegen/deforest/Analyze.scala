@@ -6,12 +6,10 @@ import utils.*
 import mlscript.utils.*, shorthands.*
 import semantics.*
 import syntax.Tree
-import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap}
+import scala.collection.mutable.{Set as MutSet, Map as MutMap, LinkedHashMap, LinkedHashSet}
 import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins}
 
-type ResultId = Uid[Result]
 type StratVarId = Uid[StratVar]
-type InstantiationId = Ls[ResultId]
 
 class StratVarState(val uid: StratVarId, val name: Str, val generatedForFun: Opt[TermSymbol]):
   lazy val asProdStrat = ProdVar(this)
@@ -41,10 +39,12 @@ case class ProdFun(params: Ls[ConsStrat], res: ProdStrat) extends ProdStrat
 case object NoProd extends ProdStrat
 class Ctor(
   val exprId: ResultId,
-  val instantiationId: Opt[InstantiationId])
-  (
+  val instantiationId: Opt[InstantiationId]
+)(
   val ctor: ClassLikeSymbol,
-  val args: Ls[TermSymbol -> ProdStrat]) extends ProdStrat
+  val args: Ls[TermSymbol -> ProdStrat]
+) extends ProdStrat:
+  def pp(using dState: Deforest.State) = s"${exprId.getResult}"
 // TODO: a new case class for Tuple
 
 sealed abstract class ConsStrat
@@ -53,25 +53,29 @@ case class ConsFun(params: Ls[ProdStrat], res: ConsStrat) extends ConsStrat
 case object NoCons extends ConsStrat
 class FieldSel(
   val exprId: ResultId,
-  val instantiationId: Opt[InstantiationId])
-  (
+  val instantiationId: Opt[InstantiationId]
+)(
   val field: TermSymbol,
-  val consVar: ConsVar) extends ConsStrat:
-    // TODO: with this term symbol, we may not need filter
-    def isSelFromCls = field.owner.flatMap(_.asCls).get
-    assert:
-      field.owner.exists:
-        _.matches:
-          case c: ClassSymbol => c.tree.clsParams.contains(field)
-    // this map "filter" means that this selection occurs in match branches where the
-    // keys (of type ProdVar) are known to be of the type of the ClassLikeSymbols
-    // val filter = MutMap.empty[ProdVar, Ls[ClassLikeSymbol]].withDefaultValue(Nil)
-    // def updateFilter(p: ProdVar, c: Ls[ClassLikeSymbol]) =
-    //   filter += p -> (c ::: filter(p))
+  val consVar: ConsVar
+) extends ConsStrat:
+  def pp(using dState: Deforest.State) = s"${exprId.getResult}"
+  // TODO: with this term symbol, we may not need filter
+  def isSelFromCls = field.owner.flatMap(_.asCls).get
+  assert:
+    field.owner.exists:
+      _.matches:
+        case c: ClassSymbol => c.tree.clsParams.contains(field)
+  // this map "filter" means that this selection occurs in match branches where the
+  // keys (of type ProdVar) are known to be of the type of the ClassLikeSymbols
+  // val filter = MutMap.empty[ProdVar, Ls[ClassLikeSymbol]].withDefaultValue(Nil)
+  // def updateFilter(p: ProdVar, c: Ls[ClassLikeSymbol]) =
+  //   filter += p -> (c ::: filter(p))
 
 class Dtor(
   val scrutExprId: ResultId,
-  val instantiationId: Opt[InstantiationId]) extends ConsStrat
+  val instantiationId: Opt[InstantiationId]
+) extends ConsStrat:
+  def pp(using Deforest.State) = s"${scrutExprId.getResult}"
 
 type ConcreteProducer = Ctor
 type ConcreteConsumer = Dtor | FieldSel
@@ -749,8 +753,8 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     assert(sels.forall(selAndDtorIsSameConsumer(dtor, _)))
   val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
   val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
-  val finalCtorDests = MutMap.empty[ConcreteProducer, FinalDest]
-  val finalDtorSrcs = MutMap.empty[ConcreteConsumer, Set[ConcreteProducer]]
+  val finalCtorDests = LinkedHashMap.empty[ConcreteProducer, FinalDest]
+  val finalDtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer]]
   
   // propagate
   locally {
@@ -762,7 +766,8 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         val prod = constraint._1
         val cons = constraint._2
         (!prod.isInstanceOf[Ctor] || prod.asInstanceOf[Ctor].instantiationId.isDefined) &&
-        (!cons.isInstanceOf[Dtor] || cons.asInstanceOf[Dtor].instantiationId.isDefined)
+        (!cons.isInstanceOf[Dtor] || cons.asInstanceOf[Dtor].instantiationId.isDefined) &&
+        (!cons.isInstanceOf[FieldSel] || cons.asInstanceOf[FieldSel].instantiationId.isDefined)
       constraint match
       case (c: Ctor, d: Dtor) =>
         ctorDests(c) += d
@@ -805,8 +810,8 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   
   // remove clashes
   locally {
-    val toRemoveCtor = MutSet.empty[ConcreteProducer]
-    val toRemoveDtor = MutSet.empty[ConcreteConsumer]
+    val toRemoveCtor = LinkedHashSet.empty[ConcreteProducer]
+    val toRemoveDtor = LinkedHashSet.empty[ConcreteConsumer]
     def markCtorToBeRemoved(rm: ConcreteProducer): Unit = if toRemoveCtor.add(rm) then
       for case dtor: ConcreteConsumer <- ctorDests(rm) do markDtorToBeRemoved(dtor)
     def markDtorToBeRemoved(rm: ConcreteConsumer): Unit = if toRemoveDtor.add(rm) then
@@ -851,8 +856,9 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   }
   
   tl.log("==============")
-  for (c, ds) <- ctorDests do
-    tl.log(s"$c ->")
-    for d <- ds do tl.log(s"\t$d")
+  for (c, FinalDest(dtor, sels)) <- finalCtorDests do
+    tl.log(s"${c.pp} ->")
+    tl.log(s"\t${dtor.pp}")
+    for s <- sels do tl.log(s"\t${s.pp}")
   
 end DeforestConstrainSolver
