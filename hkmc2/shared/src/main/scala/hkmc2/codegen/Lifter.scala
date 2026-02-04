@@ -211,8 +211,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
-            // for now, allow selecting runtime symbols
-            case Some(Select(qual = Value.Ref(l, _))) if State.runtimeSymbol is l => ()
             case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)))) =>
               if nestedScopes.contains(s) then inheritanceTree += (s -> isym)
             case _ if !ignored.contains(isym) =>

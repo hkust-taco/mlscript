@@ -689,7 +689,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     case sel @ SynthSel(prefix, nme) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>
-        k(Select(p, nme)(N))
+        k(Select(p, nme)(sel.sym.collect {case s: DefinitionSymbol[?] => s}))
     case Resolved(sel @ SynthSel(prefix, nme), sym) =>
       // * Not using `setupSelection` as these selections are not meant to be sanity-checked
       subTerm(prefix): p =>

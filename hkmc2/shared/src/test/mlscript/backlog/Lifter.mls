@@ -65,9 +65,9 @@ test(0).toString()
 
 // In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
 // return (params) => {
-//   super(parentMainParams);
+//   let ret = super(parentMainParams)(parentAuxParams);
 //   // ctor
-//   return this(parentAuxParams);
+//   return ret;
 // }
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
