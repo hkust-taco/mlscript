@@ -78,7 +78,7 @@ object Lifter:
       case _ => N
   
   def modOrObj(d: Defn) = d match
-    case c: ClsLikeDefn => (c.companion.isDefined) || (c.k is syntax.Obj) // TODO: refine handling of companions
+    case c: ClsLikeDefn => (c.companion.isDefined) || (c.k is syntax.Obj)
     case _ => false
 
 /**
@@ -154,7 +154,6 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       case s @ ScopeNode(obj = o: ScopedObject.Companion) if !s.inModOrTopLevel => o
       case s @ ScopeNode(obj = o: ScopedObject.Class) if !s.inModOrTopLevel && o.isObj => o
     
-    // TODO: refine handling of companions
     for m <- moduleObjs do
       m match
         case c: ScopedObject.Class =>
