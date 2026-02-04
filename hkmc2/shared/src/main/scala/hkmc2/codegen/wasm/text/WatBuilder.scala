@@ -49,6 +49,73 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
 
+  /** True if this top-level class can be declared as a Wasm struct type. */
+  private def isSupportedTopLevelClass(defn: ClsLikeDefn): Bool =
+    defn.owner.isEmpty
+      && (defn.k is syntax.Cls)
+      && defn.auxParams.isEmpty
+      && defn.parentPath.isEmpty
+      && defn.methods.isEmpty
+      && defn.companion.isEmpty
+      && (defn.preCtor match
+        case End(_) => true
+        case _ => false)
+
+  /** Recursively declares supported top-level class types (needed for nested function codegen). */
+  private def createDefnTypes(b: Block)(using Ctx): Unit = b match
+    case Define(defn: ClsLikeDefn, rst) =>
+      if isSupportedTopLevelClass(defn) then
+        val inheritedFields = baseObjectStruct.fields.toMap
+        val inheritedSize = inheritedFields.size
+
+        val classFields: Map[DefinitionSymbol[?], NumIdx -> Field] = (defn.publicFields.map(
+          _._2
+        ) ++ defn.privateFields).zipWithIndex.map: (f, index) =>
+          f -> (NumIdx(index + inheritedSize) -> Field(
+            RefType.anyref,
+            mutable = true,
+            id = S(f.nme)
+          ))
+        .toMap
+
+        val allFields: Map[DefinitionSymbol[?], NumIdx -> Field] = inheritedFields ++ classFields
+
+        // Only parent is base Object for now. For general inheritance add other parents.
+        ctx.addType(
+          sym = S(defn.sym),
+          typeInfo =
+            TypeInfo(
+              id = S(SymIdx(defn.sym.nme)),
+              compType = StructType(
+                fields = allFields,
+                parents = Seq(baseObjectTypeIdx),
+                isSubtype = true
+              )
+            )
+        )
+      createDefnTypes(rst)
+    case Define(_, rst) =>
+      createDefnTypes(rst)
+    case Match(_, _, _, rst) =>
+      createDefnTypes(rst)
+    case Begin(_, rst) =>
+      createDefnTypes(rst)
+    case TryBlock(_, _, rst) =>
+      createDefnTypes(rst)
+    case Assign(_, _, rst) =>
+      createDefnTypes(rst)
+    case af @ AssignField(_, _, _, rst) =>
+      createDefnTypes(rst)
+    case AssignDynField(_, _, _, _, rst) =>
+      createDefnTypes(rst)
+    case HandleBlock(_, _, _, _, _, _, _, rst) =>
+      createDefnTypes(rst)
+    case Label(_, _, _, rst) =>
+      createDefnTypes(rst)
+    case Scoped(_, body) =>
+      createDefnTypes(body)
+    case _: BlockTail => ()
+
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
    */
@@ -267,7 +334,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       ref.cast(
         local.get(LocalIdx(SymIdx(scope.findThis_!(sym))), RefType.anyref),
         RefType(
-          ctx.getType_!(sym.asBlkMember.get),
+          sym.asBlkMember.fold(baseObjectTypeIdx)(ctx.getType_!(_)),
           nullable = false
         )
       )
@@ -678,7 +745,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               defn match
                 case FunDefn(params = Nil) =>
                   lastWords("cannot generate function with no parameter list")
-                case FunDefn(own, sym, dSym, ps :: pss, bod) =>
+                case fd @ FunDefn(own, sym, dSym, ps :: pss, bod) =>
                   if own.nonEmpty then
                     break(errExpr(
                       Ls(
@@ -756,34 +823,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                       ctx.addLocal(p.sym)
                       p -> scope.allocateName(p.sym)
 
-                  val inheritedFields = baseObjectStruct.fields.toMap
-                  val inheritedSize = inheritedFields.size
-
-                  val classFields: Map[DefinitionSymbol[?], NumIdx -> Field] = (clsLikeDefn.publicFields.map(
-                    _._2
-                  ) ++ clsLikeDefn.privateFields).zipWithIndex.map: (f, index) =>
-                    f -> (NumIdx(index + inheritedSize) -> Field(
-                      RefType.anyref,
-                      mutable = true,
-                      id = S(f.nme)
-                    ))
-                  .toMap
-
-                  val allFields: Map[DefinitionSymbol[?], NumIdx -> Field] = inheritedFields ++ classFields
-
-                  // Only parent is base Object for now. For general inheritance add other parents.
-                  val typeref = ctx.addType(
-                    sym = S(clsLikeDefn.sym),
-                    typeInfo =
-                      TypeInfo(
-                        sym = clsLikeDefn.sym,
-                        compType = StructType(
-                          fields = allFields,
-                          parents = Seq(baseObjectTypeIdx),
-                          isSubtype = true
-                        )
-                      )
-                  )
+                  // Use the symbolic type reference (e.g. `$Foo`) in emitted WAT for readability. 
+                  // Numeric indices are only needed for `$tag` values.
+                  val typeref = ctx.getType_!(clsLikeDefn.sym)
 
                   // * If there are no ctor params, pop one param list off the aux params
                   val (newCtorAuxParams, initialCtorParams) = clsLikeDefn.paramsOpt match
@@ -796,8 +838,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   val thisVar = getVar(clsLikeDefn.isym, N).instrargs(0).asInstanceOf[LocalIdx]
                   val (ctorWat, ctorLocals) = block(clsLikeDefn.ctor)
                   
-                  val classTypeIdx = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true)
-                  val tagValue = classTypeIdx match
+                  val tagValue = ctx.getType_!(clsLikeDefn.sym, resolveSymIdx = true) match
                     case TypeIdx(NumIdx(idx)) => idx
                     case _ => lastWords(s"Expected numeric type index for class ${clsLikeDefn.sym}")
                   
@@ -1077,6 +1118,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
 
     val ctx = Ctx.empty
+    given Ctx = ctx
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
@@ -1092,6 +1134,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
     )
     
+    // Two-pass scheme: register all supported top-level class struct types before compiling any
+    // functions, so all class types are available during nested function codegen.
+    createDefnTypes(p.main)
+
     // Compile the entry function under a dedicated local scope so that any temp locals introduced
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
