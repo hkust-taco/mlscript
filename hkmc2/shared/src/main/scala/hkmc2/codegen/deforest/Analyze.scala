@@ -344,6 +344,10 @@ class DeforestPreAnalyzer(
     if pl.restParam.isDefined then
       ctxTracker.markAsNonHandleable()
   
+  override def applyArg(arg: Arg): Unit =
+    if arg.spread.isDefined then ctxTracker.markAsNonHandleable()
+    else applyPath(arg.value)
+  
   override def applyDefn(defn: Defn): Unit = defn match
     case defn: FunDefn => applyFunDefn(defn)
     case defn: ValDefn => applyValDefn(defn)
@@ -627,6 +631,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       newProd
     
     def processBlock(b: Block)(using cc: ConstraintsCollector, im: ProcessMode): BlockStrat =
+      val instId = cc.forFunGroup.fold(S(Nil))(_ => N)
       b match
       case Return(res, implct) => Ret(processResult(res))
       case Throw(exc) => Ret(freshVar("throw", cc.forFunGroup).asProdStrat)
@@ -634,7 +639,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         val scrutStrat = processResult(scrut)
         cc.constrain(
           scrutStrat,
-          new Dtor(scrut.uid, cc.forFunGroup.fold(S(Nil))(_ => N)))
+          new Dtor(scrut.uid, instId))
         val allArmsRes = (arms.map(_._2) ++ dflt).map(processBlock).reduce(_.mergeBranches(_))
         allArmsRes.mergeSeq(processBlock(rest))
       case Label(l, false, body, rest) =>
@@ -671,6 +676,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case _ => die
     
     def processResult(r: Result)(using cc: ConstraintsCollector, im: ProcessMode): ProdStrat =
+      val instId = cc.forFunGroup.fold(S(Nil))(_ => N)
       def handleCallLike(f: Path, args: List[Arg]): ProdStrat =
         val fStrat = processResult(f)
         val argsStrat = args.map(a => processResult(a.value))
@@ -678,6 +684,12 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         cc.constrain(fStrat, ConsFun(argsStrat, callRes.asConsStrat))
         callRes.asProdStrat
       r match
+      case c@CtorCall(ctor, args) =>
+        val argsStrat = args.map:
+          case Arg(_, a) => processResult(a)
+        ctor match
+        case cls: ClassSymbol => new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(argsStrat))
+        case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
       case Call(fun, args) => handleCallLike(fun, args)
       case Instantiate(false, cls, args) => handleCallLike(cls, args)
       case Lambda(ParamList(_, params, N), body) =>
@@ -690,15 +702,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       case Tuple(mut, elems) => ??? // TODO: tuple strat
       case p: Path =>
         p match
-        case CtorRef(ctor) => ctor match
-          case cls: ClassSymbol =>
-            val argsAndParam = cls.tree.clsParams.map: tsym =>
-              tsym -> freshVar(s"cls_arg_${tsym.nme}", cc.forFunGroup).asProdStrat
-            ProdFun(
-              argsAndParam.unzip._2.map(_.asConsStrat),
-              new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(cls, argsAndParam))
-          case obj: ModuleOrObjectSymbol =>
-            new Ctor(p.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(obj, Nil)
+        case CtorRef(ctor) => NoProd
         case refSite@FunRef(f) =>
           funsToProdStratScheme.get(f) match
           case Some(fScheme) => fScheme.instantiate(refSite.uid, f)
@@ -711,7 +715,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
             val selRes = freshVar("sel_res", cc.forFunGroup)
             cc.constrain(
               obj,
-              new FieldSel(sel.uid, cc.forFunGroup.fold(S(Nil))(_ => N))(s, selRes.asConsStrat))
+              new FieldSel(sel.uid, instId)(s, selRes.asConsStrat))
             selRes.asProdStrat
           case (ImmutVal | LetBind) => generatedProdVars(s).asProdStrat
           case _ => die
@@ -725,8 +729,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   // for x <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do tl.log(x.toString())
   // for x <- generateProdVars do tl.log(s"${x._1} -> ${x._2}")
   // tl.log(scc)
-  allConstraints.foreach: 
-    case p -> c => tl.log(s"$p --> $c")
+  // allConstraints.foreach: 
+  //   case p -> c => tl.log(s"$p --> $c")
 end DeforestConstraintsCollector
 
 

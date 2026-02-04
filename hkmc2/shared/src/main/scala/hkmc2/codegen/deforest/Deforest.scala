@@ -50,6 +50,13 @@ object CtorRef:
       case Value.Ref(r, _) => r.asCls orElse r.asObj
       case _ => None
 
+object CtorCall:
+  def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol) -> Ls[Arg]] =
+    r match
+    case Call(CtorRef(ctor), args) => Some(ctor -> args)
+    case CtorRef(ctor) if ctor.asObj.isDefined => Some(ctor -> Nil)
+    case _ => None
+
 object FunRef:
   def unapply(s: Path)(using Elaborator.State): Option[TermSymbol] = s match
     case DeforestableSelect(tSym: TermSymbol) if tSym.k is syntax.Fun => Some(tSym)
