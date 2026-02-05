@@ -43,8 +43,7 @@ class Ctor(
 )(
   val ctor: ClassLikeSymbol,
   val args: Ls[TermSymbol -> ProdStrat]
-) extends ProdStrat:
-  def pp(using dState: Deforest.State) = s"${exprId.getResult}"
+) extends ProdStrat with CtorDtorId(exprId, instantiationId)
 // TODO: a new case class for Tuple
 
 sealed abstract class ConsStrat
@@ -57,8 +56,7 @@ class FieldSel(
 )(
   val field: TermSymbol,
   val consVar: ConsVar
-) extends ConsStrat:
-  def pp(using dState: Deforest.State) = s"${exprId.getResult}"
+) extends ConsStrat with CtorDtorId(exprId, instantiationId):
   // TODO: with this term symbol, we may not need filter
   def isSelFromCls = field.owner.flatMap(_.asCls).get
   assert:
@@ -74,8 +72,13 @@ class FieldSel(
 class Dtor(
   val scrutExprId: ResultId,
   val instantiationId: Opt[InstantiationId]
-) extends ConsStrat:
-  def pp(using Deforest.State) = s"${scrutExprId.getResult}"
+) extends ConsStrat with CtorDtorId(scrutExprId, instantiationId)
+
+sealed trait CtorDtorId(exprId: ResultId, instId: Opt[InstantiationId]):
+  def toFinalCtorDtor = FinalCtorDtor(exprId, instId.get)
+
+case class FinalCtorDtor(exprId: ResultId, instId: InstantiationId):
+  def pp(using dState: Deforest.State) = s"${exprId.getResult}"
 
 type ConcreteProducer = Ctor
 type ConcreteConsumer = Dtor | FieldSel
@@ -743,18 +746,24 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   given dState: Deforest.State = collector.dState
   val preAnalyzer = collector.preAnalyzer
   
+  private def selAndDtorIsSameConsumer(dtor: FinalCtorDtor, sels: Iterable[FinalCtorDtor]): Boolean =
+    sels.forall:
+      case FinalCtorDtor(selExpr, instId) =>
+        instId == dtor.instId &&
+        preAnalyzer.res.getEnclosingMatchesForSel(selExpr).contains(dtor.exprId) &&
+        selExpr.getResult.matches:
+          case Select(p, _) => p === dtor.exprId.getResult
   private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
-    sel.instantiationId == dtor.instantiationId &&
-    preAnalyzer.res.getEnclosingMatchesForSel(sel.exprId).contains(dtor.scrutExprId) &&
-    sel.exprId.getResult.matches:
-      case Select(p, _) => p === dtor.scrutExprId.getResult
+    selAndDtorIsSameConsumer(dtor.toFinalCtorDtor, sel.toFinalCtorDtor :: Nil)
   
-  case class FinalDest(dtor: Dtor, sels: Set[FieldSel]):
-    assert(sels.forall(selAndDtorIsSameConsumer(dtor, _)))
+  
+  case class FinalDest(dtor: FinalCtorDtor, sels: Set[FinalCtorDtor]):
+    assert(selAndDtorIsSameConsumer(dtor, sels))
   val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
   val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
-  val finalCtorDests = LinkedHashMap.empty[ConcreteProducer, FinalDest]
-  val finalDtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer]]
+  
+  val finalCtorDests = LinkedHashMap.empty[FinalCtorDtor, FinalDest]
+  val finalDtorSrcs = LinkedHashMap.empty[FinalCtorDtor, Set[FinalCtorDtor]]
   
   // propagate
   locally {
@@ -827,7 +836,11 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         else
           val dtor = dtors.head
           if sels.forall(s => selAndDtorIsSameConsumer(dtor, s)) then
-            S(FinalDest(dtor, sels))
+            S(FinalDest(
+              FinalCtorDtor(dtor.scrutExprId, dtor.instantiationId.get),
+              sels.map: s =>
+                FinalCtorDtor(s.exprId, s.instantiationId.get)
+            ))
           else N
     end mergeDests
     
@@ -845,8 +858,10 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     toRemoveCtor.foreach(ctorDests.remove)
     toRemoveDtor.foreach(dtorSrcs.remove)
     
-    for (ctor, dests) <- ctorDests do finalCtorDests(ctor) = mergeDests(dests).get
-    for (dtor, srcs) <- dtorSrcs do finalDtorSrcs(dtor) = srcs.map(_.asInstanceOf[ConcreteProducer])
+    for (ctor, dests) <- ctorDests do
+      finalCtorDests(ctor.toFinalCtorDtor) = mergeDests(dests).get
+    for (dtor, srcs) <- dtorSrcs do
+      finalDtorSrcs(dtor.toFinalCtorDtor) = srcs.map(_.asInstanceOf[ConcreteProducer].toFinalCtorDtor)
     
     assert:
       finalCtorDests.forall:
