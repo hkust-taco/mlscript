@@ -14,6 +14,8 @@ case class ImportedInfo(seeThroughMods: Ls[ClsLikeBody])
 
 type ResultId = Uid[Result]
 type InstantiationId = Ls[ResultId]
+type CtorCls = ClassLikeSymbol | Int
+type SelField = TermSymbol | Int
 
 object DeforestableSelect:
   // TermSymbol:
@@ -46,6 +48,26 @@ object DeforestableSelect:
       ) => Some(eState.globalThisSymbol)
       case _ => None
 
+object PossibleDeforestTupSelect:
+  def unapply(s: Result)(using eState: Elaborator.State): Opt[Symbol -> Int] =
+    s match
+    case Call(
+      Select(Select(Value.Ref(runtimeSym, N), Tree.Ident("Tuple")), Tree.Ident("get")),
+      Arg(N, Value.Ref(scrut, N)) :: Arg(N, Value.Lit(Tree.IntLit(n))) :: Nil
+    ) if runtimeSym is eState.runtimeSymbol => S(scrut -> n.toInt)
+    case _ => N
+// (Int, Int): select the i_th field from TupleN
+object DeforestTupSelect:
+  def unapply(s: Result)(using pre: DeforestPreAnalyzer, eState: Elaborator.State): Opt[Symbol -> (Int, Int)] =
+    given dState: Deforest.State = pre.dState
+    s match
+    case sel@PossibleDeforestTupSelect(scrut, ith) =>
+      pre.res.getEnclosingMatchesForSel(sel.uid).find(_._1.getReferredSym is scrut).map:
+        case (_, Some(tupSize: Int)) => scrut -> (ith, tupSize)
+        case _ => die
+    case _ => N
+    
+
 object CtorRef:
   def unapply(s: Path)(using Elaborator.State): Option[ClassSymbol | ModuleOrObjectSymbol] =
     s match
@@ -54,10 +76,11 @@ object CtorRef:
       case _ => None
 
 object CtorCall:
-  def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol) -> Ls[Arg]] =
+  def unapply(r: Result)(using Elaborator.State): Option[(ClassSymbol | ModuleOrObjectSymbol | Int) -> Ls[Arg]] =
     r match
     case Call(CtorRef(ctor), args) => Some(ctor -> args)
     case CtorRef(ctor) if ctor.asObj.isDefined => Some(ctor -> Nil)
+    case Tuple(false, args) => Some(args.size, args)
     case _ => None
 
 object FunRef:
@@ -86,6 +109,10 @@ object Deforest:
           .mkString("_")
     extension (resultId: ResultId)
       def getResult = resultIdToResult(resultId)
+      def getReferredSym: Symbol =
+        resultId.getResult match
+        case Value.Ref(s, N) => s
+        case e => lastWords(s"assumption failed: $e is not a Value.Ref")
       def getReferredFun(using Elaborator.State): Option[TermSymbol] =
         resultId.getResult match
         case FunRef(f) => Some(f)

@@ -41,10 +41,14 @@ class Ctor(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
 )(
-  val ctor: ClassLikeSymbol,
-  val args: Ls[TermSymbol -> ProdStrat]
-) extends ProdStrat with CtorDtorId(exprId, instantiationId)
-// TODO: a new case class for Tuple
+  val ctor: CtorCls,
+  val args: Ls[SelField -> ProdStrat]
+) extends ProdStrat with CtorDtorId(exprId, instantiationId):
+  assert:
+    ctor match
+      case _: Int => args.unzip._1.forall(_.isInstanceOf[Int])
+      case _ => args.unzip._1.forall(_.isInstanceOf[TermSymbol])
+    
 
 sealed abstract class ConsStrat
 case class ConsVar(s: StratVarState) extends ConsStrat with StratVar(s)
@@ -54,20 +58,23 @@ class FieldSel(
   val exprId: ResultId,
   val instantiationId: Opt[InstantiationId]
 )(
-  val field: TermSymbol,
+  val field: SelField,
   val consVar: ConsVar
 ) extends ConsStrat with CtorDtorId(exprId, instantiationId):
-  // TODO: with this term symbol, we may not need filter
-  def isSelFromCls = field.owner.flatMap(_.asCls).get
+  def isSelFromCls(using dState: Deforest.State, eState: Elaborator.State, pre: DeforestPreAnalyzer) =
+    field match
+    case tSym: TermSymbol => tSym.owner.flatMap(_.asCls).get
+    case _: Int =>
+      exprId.getResult match
+      case DeforestTupSelect(_, (_, size)) => size
+      case _die => lastWords(_die.toString())
   assert:
-    field.owner.exists:
-      _.matches:
-        case c: ClassSymbol => c.tree.clsParams.contains(field)
-  // this map "filter" means that this selection occurs in match branches where the
-  // keys (of type ProdVar) are known to be of the type of the ClassLikeSymbols
-  // val filter = MutMap.empty[ProdVar, Ls[ClassLikeSymbol]].withDefaultValue(Nil)
-  // def updateFilter(p: ProdVar, c: Ls[ClassLikeSymbol]) =
-  //   filter += p -> (c ::: filter(p))
+    field match
+    case tSym: TermSymbol =>
+      tSym.owner.exists:
+        _.matches:
+          case c: ClassSymbol => c.tree.clsParams.contains(field)
+    case _ => true
 
 class Dtor(
   val scrutExprId: ResultId,
@@ -307,6 +314,8 @@ class DeforestPreAnalyzer(
       super.applyBlock(b)
   
   override def applyResult(r: Result): Unit = r match
+    case tupSel@PossibleDeforestTupSelect(_, _) =>
+      res.selToCtxOfSel.addOne(tupSel.uid -> ctxTracker.getAllCtx)
     case Call(fun, args) =>
       applyPath(fun)
       args.foreach(applyArg)
@@ -691,12 +700,20 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         cc.constrain(fStrat, ConsFun(argsStrat, callRes.asConsStrat))
         callRes.asProdStrat
       r match
+      case tupSel@DeforestTupSelect(from, ith -> size) =>
+        val fromStrat = processResult(Value.Ref(from, N))
+        val selRes = freshVar("sel_res", cc.forFunGroup)
+        cc.constrain(
+          fromStrat,
+          new FieldSel(tupSel.uid, instId)(ith, selRes.asConsStrat))
+        selRes.asProdStrat
       case c@CtorCall(ctor, args) =>
         val argsStrat = args.map:
           case Arg(_, a) => processResult(a)
         ctor match
         case cls: ClassSymbol => new Ctor(c.uid, instId)(ctor, cls.tree.clsParams.zip(argsStrat))
         case _: ModuleOrObjectSymbol => new Ctor(c.uid, instId)(ctor, Nil)
+        case tupSize: Int => new Ctor(c.uid, instId)(tupSize, (0 until tupSize).zip(argsStrat).toList)
       case Call(fun, args) => handleCallLike(fun, args)
       case Instantiate(false, cls, args) => handleCallLike(cls, args)
       case Lambda(ParamList(_, params, N), body) =>
@@ -706,7 +723,6 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
           case Ret(p) => cc.constrain(p, res.asConsStrat)
           case _ => cc.constrain(NoProd, res.asConsStrat)
         ProdFun(paramsStrat, res.asProdStrat)
-      case Tuple(mut, elems) => ??? // TODO: tuple strat
       case p: Path =>
         p match
         case CtorRef(ctor) => NoProd
@@ -729,7 +745,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         case Value.Ref(l, disamb) =>
           disamb.fold(generatedProdVars(l))(generatedProdVars.apply).asProdStrat
         case Value.Lit(lit) => NoProd
-        case _ => die
+        case _die => lastWords(_die.toString())
       case _ => die
   }
   
@@ -744,7 +760,8 @@ end DeforestConstraintsCollector
 class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   given tl: TraceLogger = collector.tl
   given dState: Deforest.State = collector.dState
-  val preAnalyzer = collector.preAnalyzer
+  given eState: Elaborator.State = collector.elabState
+  given preAnalyzer: DeforestPreAnalyzer = collector.preAnalyzer
   
   private def selAndDtorIsSameConsumer(dtor: FinalCtorDtor, sels: Iterable[FinalCtorDtor]): Boolean =
     sels.forall:
@@ -753,6 +770,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         preAnalyzer.res.getEnclosingMatchesForSel(selExpr).exists(_._1 == dtor.exprId) &&
         selExpr.getResult.matches:
           case Select(p, _) => p === dtor.exprId.getResult
+          case DeforestTupSelect(s, _) => s === dtor.exprId.getReferredSym
   private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
     selAndDtorIsSameConsumer(dtor.toFinalCtorDtor, sel.toFinalCtorDtor :: Nil)
   
@@ -782,7 +800,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
         ctorDests(c) += d
         dtorSrcs(d) += c
       case (c: Ctor, d: FieldSel) =>
-        if d.isSelFromCls is c.ctor then
+        if d.isSelFromCls === c.ctor then
           ctorDests(c) += d
           dtorSrcs(d) += c
           handle(
