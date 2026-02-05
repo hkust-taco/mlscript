@@ -163,7 +163,7 @@ class DeforestPreAnalyzer(
     def getEnclosingMatchesForSel(selExprId: ResultId) = selToCtxOfSel(selExprId)
       .iterator
       .collect:
-        case InCtx.Mtch(m, cse) => m.scrut.uid
+        case InCtx.Mtch(m, cse) => m.scrut.uid -> cse
   end res
   
   
@@ -750,7 +750,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     sels.forall:
       case FinalCtorDtor(selExpr, instId) =>
         instId == dtor.instId &&
-        preAnalyzer.res.getEnclosingMatchesForSel(selExpr).contains(dtor.exprId) &&
+        preAnalyzer.res.getEnclosingMatchesForSel(selExpr).exists(_._1 == dtor.exprId) &&
         selExpr.getResult.matches:
           case Select(p, _) => p === dtor.exprId.getResult
   private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
