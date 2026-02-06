@@ -171,6 +171,16 @@ class DeforestPreAnalyzer(
       .iterator
       .collect:
         case InCtx.Mtch(m, cse) => m.scrut.uid -> cse
+    def getFullRestOrLabel(label: Symbol) = labelSymToCtxOfLabel(label)
+      .iterator
+      .takeWhile:
+        case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
+        case _ => true
+      .collect:
+        case InCtx.Lbl(l) => l.rest
+        case InCtx.Mtch(m, cse) => m.rest
+        case InCtx.Begn(b) => b.rest
+      .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
   end res
   
   
