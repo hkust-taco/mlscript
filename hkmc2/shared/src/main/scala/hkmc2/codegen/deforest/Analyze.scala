@@ -43,7 +43,7 @@ class Ctor(
 )(
   val ctor: CtorCls,
   val args: Ls[SelField -> ProdStrat]
-) extends ProdStrat with CtorDtorId(exprId, instantiationId):
+) extends ProdStrat with ToCtorDtorId(exprId, instantiationId):
   assert:
     ctor match
       case _: Int => args.unzip._1.forall(_.isInstanceOf[Int])
@@ -60,7 +60,7 @@ class FieldSel(
 )(
   val field: SelField,
   val consVar: ConsVar
-) extends ConsStrat with CtorDtorId(exprId, instantiationId):
+) extends ConsStrat with ToCtorDtorId(exprId, instantiationId):
   def isSelFromCls(using dState: Deforest.State, eState: Elaborator.State, pre: DeforestPreAnalyzer) =
     field match
     case tSym: TermSymbol => tSym.owner.flatMap(_.asCls).get
@@ -79,12 +79,12 @@ class FieldSel(
 class Dtor(
   val scrutExprId: ResultId,
   val instantiationId: Opt[InstantiationId]
-) extends ConsStrat with CtorDtorId(scrutExprId, instantiationId)
+) extends ConsStrat with ToCtorDtorId(scrutExprId, instantiationId)
 
-sealed trait CtorDtorId(exprId: ResultId, instId: Opt[InstantiationId]):
-  def toFinalCtorDtor = FinalCtorDtor(exprId, instId.get)
+sealed trait ToCtorDtorId(exprId: ResultId, instId: Opt[InstantiationId]):
+  def toCtorDtorId = CtorDtorId(exprId, instId.get)
 
-case class FinalCtorDtor(exprId: ResultId, instId: InstantiationId):
+case class CtorDtorId(exprId: ResultId, instId: InstantiationId):
   def pp(using dState: Deforest.State) = s"${exprId.getResult}"
 
 type ConcreteProducer = Ctor
@@ -763,25 +763,26 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   given eState: Elaborator.State = collector.elabState
   given preAnalyzer: DeforestPreAnalyzer = collector.preAnalyzer
   
-  private def selAndDtorIsSameConsumer(dtor: FinalCtorDtor, sels: Iterable[FinalCtorDtor]): Boolean =
+  private def selAndDtorIsSameConsumer(dtor: CtorDtorId, sels: Iterable[CtorDtorId]): Boolean =
     sels.forall:
-      case FinalCtorDtor(selExpr, instId) =>
+      case CtorDtorId(selExpr, instId) =>
         instId == dtor.instId &&
         preAnalyzer.res.getEnclosingMatchesForSel(selExpr).exists(_._1 == dtor.exprId) &&
         selExpr.getResult.matches:
           case Select(p, _) => p === dtor.exprId.getResult
           case DeforestTupSelect(s, _) => s === dtor.exprId.getReferredSym
   private def selAndDtorIsSameConsumer(dtor: Dtor, sel: FieldSel): Boolean =
-    selAndDtorIsSameConsumer(dtor.toFinalCtorDtor, sel.toFinalCtorDtor :: Nil)
+    selAndDtorIsSameConsumer(dtor.toCtorDtorId, sel.toCtorDtorId :: Nil)
   
   
-  case class FinalDest(dtor: FinalCtorDtor, sels: Set[FinalCtorDtor]):
+  case class FinalDest(dtor: CtorDtorId, sels: Set[CtorDtorId]):
     assert(selAndDtorIsSameConsumer(dtor, sels))
   val ctorDests = LinkedHashMap.empty[ConcreteProducer, Set[ConcreteConsumer | NoCons.type]].withDefaultValue(Set.empty)
   val dtorSrcs = LinkedHashMap.empty[ConcreteConsumer, Set[ConcreteProducer | NoProd.type]].withDefaultValue(Set.empty)
   
-  val finalCtorDests = LinkedHashMap.empty[FinalCtorDtor, FinalDest]
-  val finalDtorSrcs = LinkedHashMap.empty[FinalCtorDtor, Set[FinalCtorDtor]]
+  val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
+  val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
+  val fusingIdInfo = MutMap.empty[CtorDtorId, ConcreteConsumer | ConcreteProducer]
   
   // propagate
   locally {
@@ -855,9 +856,9 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
           val dtor = dtors.head
           if sels.forall(s => selAndDtorIsSameConsumer(dtor, s)) then
             S(FinalDest(
-              FinalCtorDtor(dtor.scrutExprId, dtor.instantiationId.get),
+              CtorDtorId(dtor.scrutExprId, dtor.instantiationId.get),
               sels.map: s =>
-                FinalCtorDtor(s.exprId, s.instantiationId.get)
+                CtorDtorId(s.exprId, s.instantiationId.get)
             ))
           else N
     end mergeDests
@@ -877,9 +878,11 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
     toRemoveDtor.foreach(dtorSrcs.remove)
     
     for (ctor, dests) <- ctorDests do
-      finalCtorDests(ctor.toFinalCtorDtor) = mergeDests(dests).get
+      finalCtorDests(ctor.toCtorDtorId) = mergeDests(dests).get
+      fusingIdInfo(ctor.toCtorDtorId) = ctor
     for (dtor, srcs) <- dtorSrcs do
-      finalDtorSrcs(dtor.toFinalCtorDtor) = srcs.map(_.asInstanceOf[ConcreteProducer].toFinalCtorDtor)
+      finalDtorSrcs(dtor.toCtorDtorId) = srcs.map(_.asInstanceOf[ConcreteProducer].toCtorDtorId)
+      fusingIdInfo(dtor.toCtorDtorId) = dtor
     
     assert:
       finalCtorDests.forall:
