@@ -96,6 +96,10 @@ object FunRef:
         tSym
     case _ => None
 
+extension (b: Block)
+  def pp(using Raise, Elaborator.State): String =
+    Printer.mkDocument(b)(using summon[Raise], Scope.empty).mkString()
+
 object Deforest:
   class State:
     val resultToResultId = new java.util.IdentityHashMap[Result, Uid[Result]].asScala

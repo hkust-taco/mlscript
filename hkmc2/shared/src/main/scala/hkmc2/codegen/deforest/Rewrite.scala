@@ -11,7 +11,7 @@ import hkmc2.syntax.{ImmutVal, MutVal, LetBind, HandlerBind, ParamBind, Fun, Ins
 
 
 
-class DeforestRewriter(val solver: DeforestConstrainSolver):
+class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   import solver.FinalDest
   given tl: TraceLogger = solver.tl
   given dState: Deforest.State = solver.dState
@@ -31,8 +31,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver):
   val ctorFieldSyms = MutMap.empty[CtorDtorId, Ls[TempSymbol]] // the `a` and `b`
   val newPolyFnSyms = MutMap.empty[InstantiationId, (BlockMemberSymbol, TermSymbol)]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]
+  val branchFunSyms = MutMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
   val ctorWhichBranch = MutMap.empty[CtorDtorId, BranchId]
-  val branchFnSyms = MutMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
   
   // just so that we don't need to look up later
   private val branchBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
@@ -86,7 +86,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver):
         Begin(tmp.fold(matchBlk.dflt.get)(_._2), pre.res.getFullRestOfMatch(dest._1))
       ctorWhichBranch(ctor) = dest -> whichBranch
       branchBodies(dest._1 -> whichBranch) = whichBranchBody
-      branchFnSyms.getOrElseUpdate(
+      branchFunSyms.getOrElseUpdate(
         dest -> whichBranch,
         locally:
           val branchName = whichBranch.fold("_dflt"):
@@ -116,7 +116,12 @@ class DeforestRewriter(val solver: DeforestConstrainSolver):
   
   
   
-  for (instId, bms) <- newPolyFnSyms do
-    tl.log(bms)
+  // for (instId, bms) <- newPolyFnSyms do
+  //   tl.log(bms)
+  
+  tl.log("========")
+  for (bId, body) <- branchBodies do
+    tl.log(bId._1.getResult)
+    tl.log(s"\t${body.pp}")
 end DeforestRewriter
 
