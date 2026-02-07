@@ -36,10 +36,18 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, (BlockMemberSymbol, TermSymbol)]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]
   val branchFunSyms = LinkedHashMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
-  // the first one is free vars,
+  // TODO: the first one is free vars,
   // the second one is for fields (which share the same symbol in `branchSelSyms`)
   val branchFunParamSyms = MutMap.empty[BranchId, (Ls[VarSymbol], Ls[VarSymbol])]
   val ctorWhichBranch = MutMap.empty[CtorDtorId, BranchId]
+  
+  // TODO: when rewriting, we should call a dtor with these free vars
+  // for non-nested matches, these are the free var symbols in the original program
+  // for nested matches, these are the free var VarSymbols from parent fusing matches
+  val callDtorFvs = MutMap.empty[CtorDtorId, Ls[Symbol]]
+  // TODO: when rewriting, we should turn a ctor to a lam with the following parameter
+  val ctorLamFvs = MutMap.empty[CtorDtorId, Ls[VarSymbol]]
+  
   
   // compute original bodies of a branch
   private val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
@@ -185,6 +193,16 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(ref.uid :: instId) =>
         val (bms, tSym) = newPolyFnSyms(ref.uid :: instId)
         k(Value.Ref(bms, S(tSym)))
+      case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
+        assert(args.isEmpty)
+        val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
+        val lambdaSym = new TempSymbol(N, "deforest$lam")
+        Assign(
+          lambdaSym,
+          Lambda(
+            ParamList(ParamListFlags.empty, Nil, N), // TODO: handle fvs, this should be a list of fvs vars
+            Return(Call(Value.Ref(branchBms, S(branchTermSym)), Nil)(true, false, false), false)),
+          k(Value.Ref(lambdaSym, N)))
       case _ => super.applyPath(p)(k)
     
     override def applyBlock(b: Block): Block =
@@ -210,8 +228,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   val newBranchFuns =
     for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
       val originalBranchBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
-      // TODO: the correct arg list, without fvs this should at least also be
-      // a correct subset of `branchSelSyms` (and in the correct order!)
+      // TODO: fvs!
       FunDefn(N, bms, tSym,
         branchFunParamSyms(branchId)._2.asParamList :: Nil,
         (new Rewriter(dtorId.instId).applyBlock(originalBranchBody)))(false)

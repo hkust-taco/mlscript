@@ -136,7 +136,7 @@ class DeforestPreAnalyzer(
     // - blocks in the set:
     //    - toplvl block: ignore all class/module/fun defs
     //    - module ctor blocks: ignore everything other than functions
-    // - modules: they are only traversed for collecting the symbols of their public/private fields
+    // - modules: they are only traversed for collecting the symbols of their public fields
     val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block | ClsLikeBody]
     // the keys could possibly be one of the following kinds:
     // - BlockMemberSymbol: functions and val definitions without an owner
@@ -289,6 +289,11 @@ class DeforestPreAnalyzer(
       ctxTracker.inCtxOf(scpd):
         applyBlock(body)
     case m@Match(scrut, arms, dflt, rest) =>
+      // TODO: pre transform the block so that
+      // scrut is never a ctor call
+      scrut match
+        case CtorCall(_, _) => ctxTracker.markAsNonHandleable()
+        case _ => ()
       applyPath(scrut)
       for (cse, body) <- arms do
         val cseCls = cse match
@@ -357,7 +362,10 @@ class DeforestPreAnalyzer(
     case v: Value => applyValue(v)
   
   override def applyValue(v: Value): Unit = v match
-    case Value.Ref(l, disamb) => ()
+    case Value.Ref(l, disamb) =>
+      val isModPrivateField = l.asTrm.exists: tSym =>
+        (tSym.k is LetBind) && tSym.owner.exists(_.asMod.isDefined)
+      if isModPrivateField then ctxTracker.markAsNonHandleable() else ()
     case Value.This(sym) => ctxTracker.markAsNonHandleable()
     case Value.Lit(lit) => ()
   
@@ -402,10 +410,12 @@ class DeforestPreAnalyzer(
         ctxTracker.markAsNonHandleable()
   
   override def applyClsLikeBody(b: ClsLikeBody): Unit =
-    ctxTracker.inCtxOf(b):
-      b.methods.foreach(applyFunDefn)
-      ctxTracker.inModCtor(b.ctor):
-        applyBlock(b.ctor)
+    if ctxTracker.isToplvl then
+      ctxTracker.inCtxOf(b):
+        b.methods.foreach(applyFunDefn)
+        ctxTracker.inModCtor(b.ctor):
+          applyBlock(b.ctor)
+    else ctxTracker.markAsNonHandleable()
 end DeforestPreAnalyzer
 
 class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
@@ -508,9 +518,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
               applyBlock(body)
             case _ => super.applyBlock(b)
         AddStratForTopLvlSymbols.applyBlock(preAnalyzer.b)
-      // for module private/public fields and mod ctors
+      // for module public fields and mod ctors
       for case mod: ClsLikeBody <- preAnalyzer.res.toplvlFunAndBlkToAnalyze do
-        for priv <- mod.privateFields do store(priv) = freshVar(priv.name)
         for (_, pub) <- mod.publicFields do store(pub) = freshVar(pub.name)
         // mod.ctor can nest functions and class/module defs
         // among which only nested functions needs to be handled here

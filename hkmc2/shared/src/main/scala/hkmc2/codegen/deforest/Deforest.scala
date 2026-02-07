@@ -20,7 +20,7 @@ type SelField = TermSymbol | Int
 object DeforestableSelect:
   // TermSymbol:
   //   - pattern variables (kind is parambind)
-  //   - functions, let and val definition in an module (with an owner)
+  //   - functions and val definition in an module (with an owner)
   // (ClassSymbol | ModuleOrObjectSymbol): class/object defined in a module.
   // ModuleOrObjectSymbols returned will always be an object symbol,
   // e.g., `_.tree.k is Obj`.
@@ -32,7 +32,10 @@ object DeforestableSelect:
       val tSym = sSym.asTrm.get
       tSym.k match
         case (Ins | HandlerBind | MutVal) => None
-        case (ImmutVal | LetBind | ParamBind) => Some(tSym)
+        case (ImmutVal | ParamBind) => Some(tSym)
+        case LetBind =>
+          if tSym.owner.exists(c => c.asMod.isDefined) then None
+          else Some(tSym)
         case Fun =>
           // if is class ctor, we should return ClassSymbol
           val isClassCtor =
