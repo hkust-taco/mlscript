@@ -153,7 +153,7 @@ class DeforestPreAnalyzer(
     val labelSymToCtxOfLabel = MutMap.empty[Symbol, Ls[InCtx]]
     val selToCtxOfSel = MutMap.empty[ResultId, Ls[InCtx]]
     
-    lazy val funSymToFunDefn = toplvlFunAndBlkToAnalyze
+    lazy val funSymToFunDefn: Map[TermSymbol, FunDefn] = toplvlFunAndBlkToAnalyze
       .collect:
         case f: FunDefn => f.dSym -> f
       .toMap
