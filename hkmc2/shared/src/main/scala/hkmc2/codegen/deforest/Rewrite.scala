@@ -36,11 +36,12 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, (BlockMemberSymbol, TermSymbol)]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]
   val branchFunSyms = LinkedHashMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
-  // TODO: the first one is free vars,
-  // the second one is for fields (which share the same symbol in `branchSelSyms`)
-  val branchFunParamSyms = MutMap.empty[BranchId, (Ls[VarSymbol], Ls[VarSymbol])]
+  // branch fun params for fields (which share the same symbol in `branchSelSyms`)
+  val branchFunParamFieldSyms = MutMap.empty[BranchId, Ls[VarSymbol]]
   val ctorWhichBranch = MutMap.empty[CtorDtorId, BranchId]
   
+  // TODO: free vars for all the fusing branches of a dtor
+  val dtorBranchFunsFvs = MutMap.empty[CtorDtorId, Set[Symbol]]
   // TODO: when rewriting, we should call a dtor with these free vars
   // for non-nested matches, these are the free var symbols in the original program
   // for nested matches, these are the free var VarSymbols from parent fusing matches
@@ -117,9 +118,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           (new BlockMemberSymbol(branchFnNme, Nil, true),
           new TermSymbol(Fun, N, Tree.Ident(branchFnNme)))
       )
-      branchFunParamSyms.getOrElseUpdate(
+      branchFunParamFieldSyms.getOrElseUpdate(
         destBranchId,
-        Nil -> // TODO: compute free vars!!
         locally:
           val completeArgs: Ls[SelField] = ctorInfo.args.unzip._1
           val selsInfos: Map[SelField, CtorDtorId] = sels
@@ -160,15 +160,13 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   // TODO:
   // - free vars
   // - handle scoped blocks
-  // - refresh vars
+  // - refresh vars (this needs to be done after deforestation rewriting because this may change uid)
+  //    refs to MM(moduleSymbol).fun needs to be changed to MM(bms).fun
   private class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
     extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
       case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-        k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
-      case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-        assert(sym.k is ParamBind)
         k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
       case ctor@CtorCall(cls, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
         val fieldSyms = ctorFieldSyms(ctor.uid.toCtorDtorId)
@@ -203,6 +201,9 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             ParamList(ParamListFlags.empty, Nil, N), // TODO: handle fvs, this should be a list of fvs vars
             Return(Call(Value.Ref(branchBms, S(branchTermSym)), Nil)(true, false, false), false)),
           k(Value.Ref(lambdaSym, N)))
+      case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+        assert(sym.k is ParamBind)
+        k(Value.Ref(branchSelSyms(s.uid.toCtorDtorId)))
       case _ => super.applyPath(p)(k)
     
     override def applyBlock(b: Block): Block =
@@ -215,6 +216,65 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case _ => super.applyBlock(b)
   end Rewriter
   
+  extension (b: Block)
+    def deforestFreeVars(ctx: collection.Set[Symbol], instId: InstantiationId) =
+      val traverser = new FreeVarTraverser(ctx, instId)
+      traverser.applyBlock(b)
+      traverser.refedVars.toSet -- traverser.assignedVars.toSet
+  private class FreeVarTraverser(ctx: collection.Set[Symbol], instId: InstantiationId) extends BlockTraverser:
+    extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
+    val assignedVars = MutSet.from[Symbol]:
+      pre.b match
+        case Scoped(syms, body) =>
+          syms
+          ++ ctx
+          ++ newPolyFnSyms.values.unzip._1
+          ++ branchFunSyms.values.unzip._1
+          ++ eState.builtinOpsMap.values
+          ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: Nil)
+        case _ => die
+    val refedVars = MutSet.empty[Symbol]
+    
+    override def applyValue(v: Value): Unit =
+      v match
+      case Value.Ref(l, disamb) => refedVars.add(l)
+      case _ => super.applyValue(v)
+    
+    override def applyResult(r: Result): Unit =
+      r match
+      case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+        refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+      case _ => super.applyResult(r)
+    
+    override def applyPath(p: Path): Unit =
+      p match
+      case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
+        assert(sym.k is ParamBind)
+        refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+      case _ => super.applyPath(p)
+    
+    override def applyBlock(b: Block): Unit =
+      b match
+      case Assign(lhs, rhs, rest) =>
+        assignedVars.add(lhs)
+        applyResult(rhs)
+        applyBlock(rest)
+      case _ => super.applyBlock(b)
+    
+    override def applyParamList(pl: ParamList): Unit =
+      assignedVars.addAll(pl.params.map(_.sym)): Unit
+    
+    override def applyDefn(defn: Defn): Unit =
+      defn match
+      case fDef: FunDefn =>
+        assignedVars.add(fDef.sym)
+        super.applyDefn(defn)
+      case _: ClsLikeDefn => die
+      case vDef: ValDefn =>
+        assignedVars.add(vDef.sym)
+        super.applyDefn(defn)
+  end FreeVarTraverser
+    
   
   val newPolyFuns =
     for case (instId@(referringTo :: _), (bms, tSym)) <- newPolyFnSyms yield
@@ -230,7 +290,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       val originalBranchBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
       // TODO: fvs!
       FunDefn(N, bms, tSym,
-        branchFunParamSyms(branchId)._2.asParamList :: Nil,
+        branchFunParamFieldSyms(branchId).asParamList :: Nil,
         (new Rewriter(dtorId.instId).applyBlock(originalBranchBody)))(false)
   end newBranchFuns
   
