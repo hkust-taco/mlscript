@@ -196,6 +196,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         b match
         case m: Match if solver.finalDtorSrcs.isDefinedAt(m.scrut.uid.toCtorDtorId) =>
           refedVars.addAll(store(m.scrut.uid.toCtorDtorId).values.flatten)
+          super.applyPath(m.scrut)
         case Assign(lhs, rhs, rest) =>
           assignedVars.add(lhs)
           applyResult(rhs)
