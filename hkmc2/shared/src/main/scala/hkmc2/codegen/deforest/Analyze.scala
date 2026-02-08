@@ -181,6 +181,12 @@ class DeforestPreAnalyzer(
         case InCtx.Mtch(m, cse) => m.rest
         case InCtx.Begn(b) => b.rest
       .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
+    def getNearestFusingParentMatch(dtorId: CtorDtorId, solver: DeforestConstrainSolver): Opt[BranchId] =
+      matchScrutToCtxOfMatch(dtorId._1)
+        .collectFirst:
+          case InCtx.Mtch(m, cse)
+            if solver.finalDtorSrcs.isDefinedAt(CtorDtorId(m.scrut.uid, dtorId._2))
+            => CtorDtorId(m.scrut.uid, dtorId.instId) -> cse
   end res
   
   
@@ -190,7 +196,7 @@ class DeforestPreAnalyzer(
     case ModCtor(b: Block)
     case Fn(f: FunDefn)
     case Lbl(l: Label)
-    case Mtch(m: Match, cse: Opt[ClassLikeSymbol | Int])
+    case Mtch(m: Match, cse: Opt[CtorCls])
     case Begn(b: Begin)
     case Scped(s: Scoped)
     // non-handleable cases:
@@ -223,13 +229,13 @@ class DeforestPreAnalyzer(
             case _: (InCtx.Begn | InCtx.Scped) => true
     
     inline def inCtxOf(
-      c: (FunDefn | Label | (Match, Opt[ClassLikeSymbol | Int]) | ClsLikeBody | Begin | Scoped)
+      c: (FunDefn | Label | (Match, Opt[CtorCls]) | ClsLikeBody | Begin | Scoped)
     )(inline body: => Any) =
       val newCtx = c match
         case c: ClsLikeBody => InCtx.Mod(c)
         case f: FunDefn => InCtx.Fn(f)
         case l: Label => InCtx.Lbl(l)
-        case m: (Match, Opt[(ClassLikeSymbol | Int)]) => InCtx.Mtch(m._1, m._2)
+        case m: (Match, Opt[(CtorCls)]) => InCtx.Mtch(m._1, m._2)
         case b: Begin => InCtx.Begn(b)
         case s: Scoped => InCtx.Scped(s)
       

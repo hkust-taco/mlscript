@@ -16,6 +16,7 @@ type ResultId = Uid[Result]
 type InstantiationId = Ls[ResultId]
 type CtorCls = ClassLikeSymbol | Int
 type SelField = TermSymbol | Int
+type BranchId = CtorDtorId -> Opt[CtorCls]
 
 object DeforestableSelect:
   // TermSymbol:
