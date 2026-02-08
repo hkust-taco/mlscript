@@ -19,7 +19,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   given pre: DeforestPreAnalyzer = solver.preAnalyzer
   
   extension (vs: Ls[VarSymbol])
-    def asParamList =
+    def asParamList: ParamList =
       ParamList(ParamListFlags.empty, vs.map(Param.simple), N)
   
   private val _symSubst = new SymbolSubst()
@@ -282,13 +282,14 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case ctor@CtorCall(cls, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
         val fieldSyms = ctorFieldSyms(ctor.uid.toCtorDtorId)
         val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
+        val ctorLamParams = ctorLamFvs(ctor.uid.toCtorDtorId)
         val callBranchFun =
           Lambda(
-            ParamList(ParamListFlags.empty, Nil, N), // TODO: handle fvs, this should be a list of fvs vars
+            ctorLamParams.asParamList,
             Return(
               Call(
                 Value.Ref(branchBms, S(branchTermSym)),
-                fieldSyms.map(f => Arg(N, Value.Ref(f))))(true, false, false),
+                (ctorLamParams ++ fieldSyms).map(a => Arg(N, Value.Ref(a, N))))(true, false, false),
               false))
         args.zip(fieldSyms).foldRight(k(callBranchFun)):
           case (Arg(N, a) -> fieldSym, rest) =>
@@ -305,12 +306,16 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
         assert(args.isEmpty)
         val (branchBms, branchTermSym) = branchFunSyms(ctorWhichBranch(ctor.uid.toCtorDtorId))
+        val ctorLamParams = ctorLamFvs(ctor.uid.toCtorDtorId)
         val lambdaSym = new TempSymbol(N, "deforest$lam")
         Assign(
           lambdaSym,
           Lambda(
-            ParamList(ParamListFlags.empty, Nil, N), // TODO: handle fvs, this should be a list of fvs vars
-            Return(Call(Value.Ref(branchBms, S(branchTermSym)), Nil)(true, false, false), false)),
+            ctorLamParams.asParamList,
+            Return(Call(
+              Value.Ref(branchBms, S(branchTermSym)),
+              ctorLamParams.map(s => Arg(N, Value.Ref(s)))
+            )(true, false, false), false)),
           k(Value.Ref(lambdaSym, N)))
       case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
         assert(sym.k is ParamBind)
@@ -321,9 +326,11 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       b match
       case m@Match(scrut, _, _, _) if solver.finalDtorSrcs.isDefinedAt(scrut.uid.toCtorDtorId) =>
         val explicitRet = dtorExplicitRet(scrut.uid)
+        val callWithFvs = callDtorFvs(scrut.uid.toCtorDtorId)
         applyPath(scrut): newScrut =>
-          // TODO: handle fvs, the call param list should be a list of fvs vars
-          Return(Call(newScrut, Nil)(true, false, false), explicitRet)
+          Return(
+            Call(newScrut, callWithFvs.map(s => Arg(N, Value.Ref(s, N))))(true, false, false),
+            explicitRet)
       case _ => super.applyBlock(b)
   end Rewriter
   
@@ -339,9 +346,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   val newBranchFuns =
     for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
       val originalBranchBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
-      // TODO: fvs!
       FunDefn(N, bms, tSym,
-        branchFunParamFieldSyms(branchId).asParamList :: Nil,
+        (branchFunParamFvSyms(branchId).unzip._2 ++ branchFunParamFieldSyms(branchId)).asParamList :: Nil,
         (new Rewriter(dtorId.instId).applyBlock(originalBranchBody)))(false)
   end newBranchFuns
   
