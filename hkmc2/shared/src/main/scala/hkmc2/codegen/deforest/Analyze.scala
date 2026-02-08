@@ -487,6 +487,8 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
   
   private val globalCollector = new ConstraintsCollector(N)
   def allConstraints = globalCollector.constraints
+  val funToSccGroups = MutMap.empty[TermSymbol, Ls[TermSymbol]]
+  def funToSccRep(tSym: TermSymbol): Option[TermSymbol] = funToSccGroups.get(tSym).map(_.head)
   
   // ===================================================
   
@@ -596,16 +598,15 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
         CollectAllReferredFun.applyBlock(f.body)
       partitionScc(edges, preAnalyzer.res.funSymToFunDefn.keys).reverse
     end sccInOrder
-    val funToSccRep: Map[TermSymbol, TermSymbol] =
-      sccInOrder
-        .flatMap: funs =>
-          funs.map(_ -> funs.head)
-        .toMap
+    for
+      group <- sccInOrder
+      f <- group
+    do funToSccGroups(f) = group
     
     val funsToProdStratScheme = MutMap.empty[TermSymbol, ProdStratScheme]
     for groupedFuns <- sccInOrder do
       given ProcessMode = ProcessMode.Fun
-      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head)))
+      given cc: ConstraintsCollector = new ConstraintsCollector(Some(funToSccRep(groupedFuns.head).get))
       for funSym <- groupedFuns do
         val fun = preAnalyzer.res.funSymToFunDefn(funSym)
         val thisFunVar = generatedProdVars(fun.dSym)
@@ -641,7 +642,7 @@ class DeforestConstraintsCollector(val preAnalyzer: DeforestPreAnalyzer):
       referSite: ResultId,
       referringTo: TermSymbol
     )(using cc: ConstraintsCollector): ProdStrat =
-      val groupRep = funToSccRep(referringTo)
+      val groupRep: TermSymbol = funToSccRep(referringTo).get
       val stratVarMap = MutMap.empty[StratVarState, StratVarState]
       def updateInstantiationId(instId: Opt[InstantiationId]) =
         S(instId.fold(referSite :: Nil)(referSite :: _))

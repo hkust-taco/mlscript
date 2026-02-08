@@ -31,7 +31,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   //  ~> fun branchBody(fvs, x, y) = let a = x; b = y in body
   
   val ctorFieldSyms = MutMap.empty[CtorDtorId, Ls[TempSymbol]] // the `a` and `b`
-  val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, (BlockMemberSymbol, TermSymbol)]
+  val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]
   val branchFunSyms = LinkedHashMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
   // branch fun params for fields (which share the same symbol in `branchSelSyms`)
@@ -56,11 +56,24 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           case n: Int => new TempSymbol(N, s"${clsNme}_$n")
       
       // create poly fun syms
-      for case ctorInstId@(referringTo :: _) <- List(ctor.instId, dest.instId) do
+      for
+        ctorInstId <- List(ctor.instId, dest.instId)
+        case path@(pathTo :+ refedFun) <- ctorInstId.inits
+      do
+        val groupFuns = solver.collector.funToSccGroups(refedFun.getReferredFun.get)
         newPolyFnSyms.getOrElseUpdate(
-          ctorInstId,
-          new BlockMemberSymbol(ctorInstId.mkFunName, Nil, true) ->
-          new TermSymbol(Fun, N, Tree.Ident(ctorInstId.mkFunName)))
+          path,
+          groupFuns
+            .map: f =>
+              val name = path.mkFunName + s"$$${f.nme}"
+              f -> (
+                new BlockMemberSymbol(name, Nil, true),
+                new TermSymbol(Fun, N, Tree.Ident(name)))
+            .toMap)
+        // newPolyFnSyms.getOrElseUpdate(
+        //   path,
+        //   new BlockMemberSymbol(path.mkFunName, Nil, true) ->
+        //   new TermSymbol(Fun, N, Tree.Ident(path.mkFunName)))
       
       // create branch sel syms
       for sel <- sels do
@@ -153,7 +166,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         pre.b match
           case Scoped(syms, body) =>
             ctx
-            ++ newPolyFnSyms.values.unzip._1
+            ++ newPolyFnSyms.values.flatMap(_.values.unzip._1)
             ++ branchFunSyms.values.unzip._1
             ++ eState.builtinOpsMap.values
             ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: Nil)
@@ -275,6 +288,16 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   //    refs to MM(moduleSymbol).fun needs to be changed to MM(bms).fun
   private class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
     extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
+    private def newRefId(refId: ResultId, refSym: TermSymbol) =
+      instId match
+      case Nil => refId :: Nil
+      case pathTo :+ called =>
+        val lastRefedSymbol = called.getReferredFun.get
+        val funToSccRepMap = solver.collector.funToSccRep
+        (funToSccRepMap(lastRefedSymbol), funToSccRepMap(refSym)) match
+          case (Some(a), Some(b)) if a is b => instId
+          case _ => instId :+ refId
+      case _ => die
     override def applyResult(r: Result)(k: Result => Block): Block =
       r match
       case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
@@ -300,8 +323,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     
     override def applyPath(p: Path)(k: Path => Block): Block =
       p match
-      case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(ref.uid :: instId) =>
-        val (bms, tSym) = newPolyFnSyms(ref.uid :: instId)
+      case ref@FunRef(f) if newPolyFnSyms.isDefinedAt(newRefId(ref.uid, f)) =>
+        val (bms, tSym) = newPolyFnSyms(newRefId(ref.uid, f))(f)
         k(Value.Ref(bms, S(tSym)))
       case ctor@CtorCall(_, args) if solver.finalCtorDests.isDefinedAt(ctor.uid.toCtorDtorId) =>
         assert(args.isEmpty)
@@ -335,8 +358,10 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   end Rewriter
   
   val newPolyFuns =
-    for case (instId@(referringTo :: _), (bms, tSym)) <- newPolyFnSyms yield
-      val referringFun = referringTo.getReferredFun.get
+    for
+      (instId, funSymMap) <- newPolyFnSyms
+      (referringFun, (bms, tSym)) <- funSymMap
+    yield
       val fDefn = pre.res.funSymToFunDefn(referringFun)
       FunDefn(
         N, bms, tSym, fDefn.params, // TODO: refresh symbols
