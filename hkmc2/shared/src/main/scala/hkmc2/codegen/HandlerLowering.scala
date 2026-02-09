@@ -138,12 +138,13 @@ class HandlerPaths(using Elaborator.State):
   val localVarInfoPath: Path = runtimePath.selSN("LocalVarInfo").selSN("class")
   val curEffect: Path = runtimePath.selSN("curEffect")
   val unwindPath: Path = curEffect.selSN("lastSegmentBuf").selSN("push")
+  // val unwindPath: Path = runtimePath.selSN("unwind")
   val resumePc: Path = runtimePath.selSN("resumePc")
   val resumeIdx: Path = runtimePath.selSN("resumeIdx")
   val resumeValueIdent = new Tree.Ident("resumeValue")
   val resumeValue: Path = runtimePath.selN(resumeValueIdent)
 
-type StackSafetyMap = collection.Map[FnOrCls, Block]
+type StackSafetyMap = collection.Map[FnOrCls, (Int, Block)]
 
 class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise, Elaborator.State, Elaborator.Ctx):
   
@@ -472,7 +473,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       .toList
       .map(locals(_))
 
-  val stackSafetyMap: mutable.Map[FnOrCls, Block] = mutable.HashMap.empty
+  val stackSafetyMap: mutable.Map[FnOrCls, (Int, Block)] = mutable.HashMap.empty
   
   private def lifterReport(using Line, FileName)(msgs: Ls[Message -> Opt[Loc]])(using Name) =
     if opt.softLifterError then
@@ -559,6 +560,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
     val parts = partitionBlock(b)
     stackSafetyMap += ctx.resumeInfo.currentStackSafetySym ->
       (
+        ctx.resumeInfo.currentLocals.length + 10,
         ctx.doUnwind(ctx.resumeInfo.currentStackSafetySym.fold(_.toLoc, _.toLoc).fold(unit)(locToStr(_)), -1, Nil)(using paths)
       )
     if parts.states.size <= 1 then

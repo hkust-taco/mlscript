@@ -15,7 +15,7 @@ sum(100)
 
 // preserve tail calls
 // MUST see "return hi(tmp1)" in the output
-:stackSafe 5
+:stackSafe 50
 :effectHandlers
 :expect 0
 :sjs
@@ -27,7 +27,7 @@ hi(0)
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   runtime.stackDepth = runtime.stackDepth + 12;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
 //│     return runtime.curEffect.lastSegmentBuf.push(hi, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
@@ -44,13 +44,13 @@ hi(0)
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp = runtime.runStackSafe(5, $_stack$_safe$_body$_);
+//│ tmp = runtime.runStackSafe(50, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
 //│ = 0
 
 :sjs
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 50005000
 fun sum(n) =
@@ -62,7 +62,7 @@ sum(10000)
 //│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 1;
+//│   runtime.stackDepth = runtime.stackDepth + 13;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
@@ -106,7 +106,7 @@ sum(10000)
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
+//│ tmp1 = runtime.runStackSafe(5000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
 //│ = 50005000
@@ -121,7 +121,7 @@ sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
-:stackSafe 100
+:stackSafe 50
 mut val ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
@@ -133,7 +133,7 @@ foo(foo)
 //│ = 0
 //│ ctr = 10001
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 50005000
 val foo =
@@ -160,7 +160,7 @@ abstract class Eff with
 
 // functions and lambdas inside handlers
 :effectHandlers
-:stackSafe 100
+:stackSafe 50
 :expect 50005000
 fun foo(h) = h.perform()
 handle h = Eff with
@@ -175,7 +175,7 @@ foo(h)
 
 // function call and defn inside handler
 :effectHandlers
-:stackSafe 100
+:stackSafe 50
 :expect 50005000
 handle h = Eff with
   fun perform()(resume) =
@@ -230,7 +230,7 @@ hi(0)
 //│ = 0
 
 
-:stackSafe 1000
+:stackSafe
 :effectHandlers
 :expect 100010000
 fun sum(n) =

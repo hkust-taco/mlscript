@@ -301,124 +301,6 @@ let Runtime1;
       toString() { return runtime.render(this); }
       static [definitionMetadata] = ["object", "PrintStackEffect"]; 
     });
-    this.FunctionContFrame = function FunctionContFrame(next, saved) {
-      return globalThis.Object.freeze(new FunctionContFrame.class(next, saved));
-    };
-    (class FunctionContFrame {
-      static {
-        Runtime.FunctionContFrame.class = this
-      }
-      constructor(next, saved) {
-        this.next = next;
-        this.saved = saved;
-      }
-      resume(value) {
-        let i, f, argListsLength, currentArgList, scrut, argListLength, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
-        i = 0;
-        f = this.saved.at(0);
-        argListsLength = this.saved.at(5);
-        currentArgList = 6;
-        Runtime.resumeValue = value;
-        Runtime.resumeArr = this.saved;
-        Runtime.resumePc = this.saved.at(1);
-        scrut = argListsLength === 0;
-        if (scrut === true) {
-          tmp1 = runtime.safeCall(globalThis.console.log("cannot resume getters"));
-        } else {
-          tmp1 = runtime.Unit;
-        }
-        lbl: while (true) {
-          let scrut1, argListLength1, tmp9, tmp10, tmp11, tmp12, tmp13, tmp14, tmp15, tmp16, tmp17;
-          tmp9 = argListsLength - 1;
-          scrut1 = i < tmp9;
-          if (scrut1 === true) {
-            argListLength1 = this.saved.at(currentArgList);
-            tmp10 = currentArgList + 1;
-            tmp11 = currentArgList + 1;
-            tmp12 = tmp11 + argListLength1;
-            tmp13 = this.saved.slice(tmp10, tmp12);
-            tmp14 = f.apply(this.saved.at(4), tmp13);
-            f = tmp14;
-            tmp15 = argListLength1 + 1;
-            tmp16 = currentArgList + tmp15;
-            currentArgList = tmp16;
-            tmp17 = i + 1;
-            i = tmp17;
-            tmp2 = runtime.Unit;
-            continue lbl
-          } else {
-            tmp2 = runtime.Unit;
-          }
-          break;
-        }
-        argListLength = this.saved.at(currentArgList);
-        tmp3 = currentArgList + argListLength;
-        tmp4 = tmp3 + 2;
-        Runtime.resumeIdx = tmp4;
-        tmp5 = currentArgList + 1;
-        tmp6 = currentArgList + 1;
-        tmp7 = tmp6 + argListLength;
-        tmp8 = this.saved.slice(tmp5, tmp7);
-        return f.apply(this.saved.at(4), tmp8)
-      } 
-      get getLocals() {
-        let debugInfo, i, cur, res, i1, tmp1, tmp2;
-        debugInfo = this.saved.at(3);
-        i = 0;
-        cur = 6;
-        lbl: while (true) {
-          let scrut, tmp3, tmp4, tmp5;
-          scrut = i < this.saved.at(5);
-          if (scrut === true) {
-            tmp3 = this.saved.at(cur) + 1;
-            tmp4 = cur + tmp3;
-            cur = tmp4;
-            tmp5 = i + 1;
-            i = tmp5;
-            tmp1 = runtime.Unit;
-            continue lbl
-          } else {
-            tmp1 = runtime.Unit;
-          }
-          break;
-        }
-        res = [];
-        i1 = 1;
-        lbl1: while (true) {
-          let scrut1, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11;
-          scrut1 = i1 < debugInfo.length;
-          if (scrut1 === true) {
-            tmp6 = i1 + 1;
-            tmp7 = cur + 1;
-            tmp8 = tmp7 + debugInfo.at(i1);
-            tmp9 = globalThis.Object.freeze(new Runtime.LocalVarInfo.class(debugInfo.at(tmp6), this.saved.at(tmp8)));
-            tmp10 = runtime.safeCall(res.push(tmp9));
-            tmp11 = i1 + 2;
-            i1 = tmp11;
-            tmp2 = runtime.Unit;
-            continue lbl1
-          } else {
-            tmp2 = runtime.Unit;
-          }
-          break;
-        }
-        return res;
-      } 
-      get getNme() {
-        return this.saved.at(3).at(0);
-      } 
-      get getLoc() {
-        let loc;
-        loc = this.saved.at(2);
-        if (loc === null) {
-          return "pc=" + this.saved.at(1)
-        } else {
-          return loc
-        }
-      }
-      toString() { return runtime.render(this); }
-      static [definitionMetadata] = ["class", "FunctionContFrame", ["next", "saved"]]; 
-    });
     this.EffectTrace = function EffectTrace(contTrace, lastSegmentBuf, handler, handlerFun) {
       return globalThis.Object.freeze(new EffectTrace.class(contTrace, lastSegmentBuf, handler, handlerFun));
     };
@@ -968,7 +850,7 @@ let Runtime1;
     return tmp
   } 
   static handleEffect() {
-    let stack, scrut, saved, newBuf, newSeg, newStack, k, f, res, scrut1, scrut2, tmp, tmp1, tmp2;
+    let stack, scrut, saved, newBuf, newSeg, newStack, k, f, savedDepth, res, scrut1, scrut2, tmp, tmp1, tmp2, tmp3;
     stack = Runtime.curEffect.contTrace.funStack;
     lbl: while (true) {
       let scrut3, scrut4;
@@ -1007,16 +889,20 @@ let Runtime1;
     stack.nextStack = newStack;
     k = Runtime.resume(Runtime.curEffect.contTrace);
     f = Runtime.curEffect.handlerFun;
+    savedDepth = Runtime.stackDepth;
     Runtime.curEffect = null;
+    tmp2 = Runtime.stackDepth + 30;
+    Runtime.stackDepth = tmp2;
     res = runtime.safeCall(f(k));
+    Runtime.stackDepth = savedDepth;
     scrut1 = Runtime.curEffect !== null;
     if (scrut1 === true) {
       scrut2 = saved.funStack === saved.lastStack;
       if (scrut2 === true) {
         saved.lastStack = Runtime.curEffect.contTrace.lastStack;
-        tmp2 = runtime.Unit;
+        tmp3 = runtime.Unit;
       } else {
-        tmp2 = runtime.Unit;
+        tmp3 = runtime.Unit;
       }
       Runtime.curEffect.contTrace.lastStack.segLast.nextSegment = saved.funStack.segHead;
       Runtime.curEffect.contTrace.lastStack.segLast = saved.funStack.segLast;
@@ -1052,8 +938,9 @@ let Runtime1;
     }
   } 
   static resumeContTrace(contTrace, value) {
-    let curDepth, stack, tmp;
-    curDepth = Runtime.stackDepth + 1;
+    let savedDepth, curDepth, stack, tmp;
+    savedDepth = Runtime.stackDepth;
+    curDepth = Runtime.stackDepth + 30;
     stack = contTrace.funStack;
     lbl: while (true) {
       let scrut, segment, tmp1;
@@ -1117,13 +1004,14 @@ let Runtime1;
                 tmp9 = Runtime.resumeIdx - 1;
                 tmp10 = Runtime.resumeIdx + buf.at(tmp9);
                 off = tmp10;
+                Runtime.stackDepth = curDepth;
                 tmp11 = currentArgList + 1;
                 tmp12 = currentArgList + 1;
                 tmp13 = tmp12 + argListLength;
                 tmp14 = buf.slice(tmp11, tmp13);
                 tmp15 = f.apply(buf.at(thisOff), tmp14);
                 value = tmp15;
-                Runtime.stackDepth = curDepth;
+                Runtime.stackDepth = savedDepth;
                 scrut4 = Runtime.curEffect !== null;
                 if (scrut4 === true) {
                   segment.off = off;

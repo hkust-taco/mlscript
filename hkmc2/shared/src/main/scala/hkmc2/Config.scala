@@ -72,7 +72,7 @@ object Config:
   case class StackSafety(stackLimit: Int)
   object StackSafety:
     val default: StackSafety = StackSafety(
-      stackLimit = 500,
+      stackLimit = 5000,
     )
 
   case class LiftDefns() // there may be other settings in the future, having it as a case class now

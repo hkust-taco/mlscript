@@ -138,50 +138,6 @@ mut val resumePc = -1
 object FatalEffect
 object PrintStackEffect
 
-data class FunctionContFrame(next, saved) with
-  fun resume(value) =
-    let
-      i = 0
-      f = saved.[0]
-      argListsLength = saved.[5]
-      currentArgList = 6
-    set
-      resumeValue = value
-      resumeArr = saved
-      resumePc = saved.[1]
-    if argListsLength === 0 do
-      console.log("cannot resume getters")
-    while i < argListsLength - 1 do
-      let argListLength = saved.[currentArgList]
-      set
-        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
-        currentArgList += argListLength + 1
-        i += 1
-    let argListLength = saved.[currentArgList]
-    set
-      resumeIdx = currentArgList + argListLength + 2
-    f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
-  fun getLocals =
-    let debugInfo = saved.[3]
-    let i = 0
-    let cur = 6
-    while i < saved.[5] do
-      set
-        cur += saved.[cur] + 1
-        i += 1
-    let res = mut []
-    let i = 1
-    while i < debugInfo.length do
-      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
-      set i += 2
-    res
-  fun getNme = saved.[3].[0]
-  fun getLoc =
-    let loc = saved.[2]
-    if
-      loc is null then "pc=" + saved.[1]
-      else loc
-
 data class EffectTrace(contTrace, lastSegmentBuf, handler, handlerFun)
 data class ContTrace(funStack, lastStack, resumed)
 data class FunStack(segHead, segLast, handler, nextStack)
@@ -331,10 +287,15 @@ fun handleEffect() =
     stack.nextStack = newStack
 
   // handle the effect
-  let k = resume(curEffect.contTrace)
-  let f = curEffect.handlerFun
-  set curEffect = null
+  let
+    k = resume(curEffect.contTrace)
+    f = curEffect.handlerFun
+    savedDepth = stackDepth
+  set
+    curEffect = null
+    stackDepth += 30
   let res = f(k)
+  set stackDepth = savedDepth
   if curEffect !== null then
     // relink the saved frames
     // We modify lastStack since the second last stack cannot be obtained quickly
@@ -363,9 +324,10 @@ fun resume(contTrace)(value) =
 
 // Assumes curEffect === null, return either NewEffect or Unwind(...) if no effect
 fun resumeContTrace(contTrace, value) =
-  // TODO: increment stackDepth by some constant amount
-  let curDepth = stackDepth + 1
-  let stack = contTrace.funStack
+  let
+    savedDepth = stackDepth
+    curDepth = stackDepth + 30
+    stack = contTrace.funStack
   while stack !== null do
     let segment = stack.segHead
     while segment !== null do
@@ -396,8 +358,9 @@ fun resumeContTrace(contTrace, value) =
         set
           resumeIdx = currentArgList + argListLength + 2
           off = resumeIdx + buf.[resumeIdx - 1]
-          value = f.apply(buf.[thisOff], buf.slice(currentArgList + 1, currentArgList + 1 + argListLength))
           stackDepth = curDepth
+          value = f.apply(buf.[thisOff], buf.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+          stackDepth = savedDepth
         if curEffect !== null do
           set
             segment.off = off
