@@ -53,7 +53,7 @@ abstract class MLsDiffMaker extends DiffMaker:
   val ppLoweredTree = NullaryCommand("slot")
   val showContext = NullaryCommand("ctx")
   val parseOnly = NullaryCommand("parseOnly")
-  val defunctionalization = NullaryCommand("defunc")
+  val funcToCls = NullaryCommand("ftc")
 
   val typeCheck = FlagCommand(false, "typeCheck")
   
@@ -107,7 +107,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       qqEnabled = importQQ.isSet,
-      defunctionalization = defunctionalization.isSet,
+      funcToCls = funcToCls.isSet,
     )
   
   

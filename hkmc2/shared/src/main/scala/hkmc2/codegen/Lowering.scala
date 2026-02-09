@@ -1071,7 +1071,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 
     val defunctionalized =
-      if config.defunctionalization then Defunctionalization().applyBlock(merged)
+      if config.funcToCls then FirstClassFunctionTransformer().applyBlock(merged)
       else merged
 
     val staged = 

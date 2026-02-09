@@ -10,7 +10,7 @@ import hkmc2.Message.MessageContext
 import collection.mutable.HashMap
 
 
-class Defunctionalization(using Elaborator.State, Raise) extends BlockTransformer(new SymbolSubst):
+class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends BlockTransformer(new SymbolSubst):
 
   // Collect functions in a single module and
   //  1. generate corresponding function classes with call function
@@ -18,7 +18,7 @@ class Defunctionalization(using Elaborator.State, Raise) extends BlockTransforme
   //  3. substitute all first-class functions with corresponding class instantiation.
   //    if the function is defined in another module, the class can be retrieved by firstCls field
   //  4. invoke the call function for each first-class function
-  class DefunctionalizationInModule(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
+  class ModuleTransformer(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def callFunc(fd: FunDefn) =
       val f = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
       val params = fd.params match
@@ -66,8 +66,8 @@ class Defunctionalization(using Elaborator.State, Raise) extends BlockTransforme
             val nestedPath = outModulePath match
               case Some(p) => Some(p.selSN(sym.nme))
               case None => Some(Value.Ref(sym, Some(isym)))
-            val msBlk = new DefunctionalizationInModule(nestedPath, fcfDefs).applyBlock(packMethods(mod.methods))
-            val ctor2 = new DefunctionalizationInModule(nestedPath, fcfDefs).applyBlock(mod.ctor)
+            val msBlk = new ModuleTransformer(nestedPath, fcfDefs).applyBlock(packMethods(mod.methods))
+            val ctor2 = new ModuleTransformer(nestedPath, fcfDefs).applyBlock(mod.ctor)
             val fcfCls = fcfDefs.map(_._2).toList
             val (mths, withClsDefs) = unpackMethods(msBlk, ctor2)
             k(ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor,
@@ -165,7 +165,7 @@ class Defunctionalization(using Elaborator.State, Raise) extends BlockTransforme
 
   override def applyBlock(b: Block): Block =
     val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
-    val noFirstClassFunc = new DefunctionalizationInModule(None, fcfDefs).applyBlock(b)
+    val noFirstClassFunc = new ModuleTransformer(None, fcfDefs).applyBlock(b)
     val fcfCls = fcfDefs.map(_._2).toList
     generateFCFunctionClasses(None, fcfCls, noFirstClassFunc)
 

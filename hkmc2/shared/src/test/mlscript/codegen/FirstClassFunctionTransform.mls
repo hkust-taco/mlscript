@@ -1,5 +1,5 @@
 :js
-:defunc
+:ftc
 
 :sjs
 fun aux(f) = f(1) + f(10)
