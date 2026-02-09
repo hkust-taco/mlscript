@@ -354,9 +354,18 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         applyPath(scrut): newScrut =>
           Return(
             Call(newScrut, callWithFvs.map(s => Arg(N, Value.Ref(s, N))))(true, false, false),
-            explicitRet)
+            !explicitRet)
       case _ => super.applyBlock(b)
   end Rewriter
+  
+  private class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends BlockTransformer(_symSubst):
+    override def applyValue(v: Value)(k: Value => Block): Block = v match
+      case Value.Ref(l, x) =>
+        (l.asMod, l.asBlkMember) match
+          case (Some(mod), Some(bms)) => k(Value.Ref(bms, S(mod)))
+          case _ => k(Value.Ref(existingMapping.getOrElse(l, l), N))
+      case _ => super.applyValue(v)(k)
+  end RefreshSymbol
   
   val newPolyFuns =
     for
@@ -364,17 +373,24 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       (referringFun, (bms, tSym)) <- funSymMap
     yield
       val fDefn = pre.res.funSymToFunDefn(referringFun)
+      val transformedBody = new Rewriter(instId).applyBlock(fDefn.body)
+      // TODO: refresh other local symbols
+      val bodyWithCorrectSymbols = new RefreshSymbol(Map.empty).applyBlock(transformedBody)
       FunDefn(
-        N, bms, tSym, fDefn.params, // TODO: refresh symbols
-        (new Rewriter(instId).applyBlock(fDefn.body)))(false)
+        N, bms, tSym, fDefn.params,
+        bodyWithCorrectSymbols)(false)
   end newPolyFuns
   
   val newBranchFuns =
     for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
       val originalBranchBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
+      val transformedBranchBody = new Rewriter(dtorId.instId).applyBlock(originalBranchBody)
+      // TODO: refresh other local symbols
+      val bodyWithCorrectSymbols = new RefreshSymbol(branchFunParamFvSyms(branchId).toMap).applyBlock(transformedBranchBody)
       FunDefn(N, bms, tSym,
         (branchFunParamFvSyms(branchId).unzip._2 ++ branchFunParamFieldSyms(branchId)).asParamList :: Nil,
-        (new Rewriter(dtorId.instId).applyBlock(originalBranchBody)))(false)
+        bodyWithCorrectSymbols
+      )(false)
   end newBranchFuns
   
   

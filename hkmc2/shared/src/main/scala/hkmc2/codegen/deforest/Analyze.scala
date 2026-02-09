@@ -138,15 +138,6 @@ class DeforestPreAnalyzer(
     //    - module ctor blocks: ignore everything other than functions
     // - modules: they are only traversed for collecting the symbols of their public fields
     val toplvlFunAndBlkToAnalyze = MutSet.empty[FunDefn | Block | ClsLikeBody]
-    // the keys could possibly be one of the following kinds:
-    // - BlockMemberSymbol: functions and val definitions without an owner
-    // - TermSymbol: functions, let and val definition in an module (with an owner)
-    // - TempSymbol: generated during codegen for intermediate results or pattern matching `$argN`
-    // - VarSymbol: let bindings without an owner, function parameters, user declared pattern variables
-    // TODO: more?
-    // when should we add things inside? maybe after deciding the
-    // subset of the program which is handleable
-    // val symToProdVar = MutMap.empty[Symbol, ProdVar]
     val matchScrutToMatchBlock = MutMap.empty[ResultId, Match]
     val labelSymToLabelBlk = MutMap.empty[Symbol, Label]
     val matchScrutToCtxOfMatch = MutMap.empty[ResultId, Ls[InCtx]]
