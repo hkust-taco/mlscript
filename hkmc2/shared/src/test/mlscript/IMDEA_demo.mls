@@ -1,0 +1,17 @@
+:js
+
+
+import "../mlscript-compile/Stack.mls"
+open Stack
+
+import "../mlscript-compile/Option.mls"
+open Option
+
+
+pattern Bin = 0 | 1
+
+
+
+
+
+
