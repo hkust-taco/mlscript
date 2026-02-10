@@ -341,16 +341,9 @@ class Ctx(
     /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = locals.last.contains(sym)
 
-  /** Returns the configured module start function, if any. */
-  def getStartFunc: Opt[FuncIdx] = startFunc
-
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =
     startFunc = S(funcIdx)
-
-  /** Clears the module start function. */
-  def clearStartFunc(): Unit =
-    startFunc = N
 
   /**
    * Converts a [[Map]] of symbols and their respective numeric identifiers into a [[Seq]] of
