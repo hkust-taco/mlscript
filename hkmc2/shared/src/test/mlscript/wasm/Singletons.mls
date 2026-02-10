@@ -1,0 +1,69 @@
+
+:global
+:wasm
+
+:wat
+object Foo with
+    val x = 1
+Foo.x
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (type (func))
+//│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
+//│   (start 2)
+//│   (func $Foo (type 2) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo 0
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo 1
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (ref.i31
+//│             (i32.const 1)))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (export "Foo" (func $Foo))
+//│   (elem declare func $Foo)
+//│   (func $entry (type 3) (result (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $Foo1 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (struct.get $Foo 1
+//│         (ref.cast (ref $Foo)
+//│           (global.get $Foo$inst)))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry)
+//│   (func  (type 4)
+//│     (block
+//│       (global.set $Foo$inst
+//│         (ref.cast (ref null $Foo)
+//│           (call 0))))))
+//│ Wasm result:
+//│ = 1
+
+
+object Example with
+  val a = [10, 20]
+Example.a.[1]
+//│ Wasm result:
+//│ = 20
+
+
+object O with
+  val x = 1
+  val gy = x
+O.gy
+//│ Wasm result:
+//│ = 1
