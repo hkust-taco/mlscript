@@ -666,7 +666,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
   // Only handle non-nested Scoped nodes: we output the bindings, but do not add another pair of braces
   def nonNestedScoped(blk: Block)(k: Block => Document)(using Raise, Scope): Document = blk match
     case Scoped(syms, body) => 
-      blockPreamble(syms) :: k(body)
+      doc"${blockPreamble(syms)} /* scoped */" :: k(body)
     case _ => k(blk)
   
   

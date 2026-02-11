@@ -19,47 +19,6 @@ c(p())
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun p_5$p() {
-//│ >    set X_a = O in
-//│ >    return () => return x_X(X_a)
-//│ >  } in
-//│ >  define fun c_6$c(x) {
-//│ >    return x()
-//│ >  } in
-//│ >  define fun x_X(X_a1) {
-//│ >    set arg$X$0$ = X_a1 in
-//│ >    set x1 = arg$X$0$ in
-//│ >    return x1
-//│ >  } in
-//│ >  define fun p() {
-//│ >    return X(O)
-//│ >  } in
-//│ >  define fun c(x2) {
-//│ >    match x2
-//│ >      X =>
-//│ >        set arg$X$0$ = x2.a in
-//│ >        set x1 = arg$X$0$ in
-//│ >        return x1
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  define class X(a) {
-//│ >    a
-//│ >  } in
-//│ >  define class Y(b) {
-//│ >    b
-//│ >  } in
-//│ >  define class Z(c) {
-//│ >    c
-//│ >  } in
-//│ >  define class O in
-//│ >  begin
-//│ >    set tmp = p_5$p() in
-//│ >    end;
-//│ >    (return) c_6$c(tmp)
 //│ = O
 
 
@@ -92,82 +51,21 @@ f(p())
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun p_8$p() {
-//│ >    begin
-//│ >      set Y_b = O in
-//│ >      set tmp = () => return arg$X$0$_Y(Y_b) in
-//│ >      end;
-//│ >      set X_a = tmp in
-//│ >      return () => return x_X(X_a)
-//│ >  } in
-//│ >  define fun f_9$f(x) {
-//│ >    begin
-//│ >      labelled block split_root$ = labelled block split_default$ = return x() in
-//│ >      throw new globalThis.Error("match error") in
-//│ >      end;
-//│ >      return ‹not in scope: $tmp›
-//│ >  } in
-//│ >  define fun x_X(X_a1) {
-//│ >    set arg$X$0$ = X_a1 in
-//│ >    return arg$X$0$()
-//│ >  } in
-//│ >  define fun arg$X$0$_Y(Y_b1) {
-//│ >    set arg$Y$0$ = Y_b1 in
-//│ >    set y = arg$Y$0$ in
-//│ >    set tmp1 = y in
-//│ >    return tmp1
-//│ >  } in
-//│ >  define fun p() {
-//│ >    begin
-//│ >      set tmp = Y(O) in
-//│ >      end;
-//│ >      return X(tmp)
-//│ >  } in
-//│ >  define fun f(x1) {
-//│ >    begin
-//│ >      labelled block split_root$1 = labelled block split_default$1 = match x1
-//│ >        X =>
-//│ >          set arg$X$0$ = x1.a in
-//│ >          match arg$X$0$
-//│ >            Y =>
-//│ >              set arg$Y$0$ = arg$X$0$.b in
-//│ >              set y = arg$Y$0$ in
-//│ >              set tmp1 = y in
-//│ >              break split_root$1
-//│ >            else
-//│ >              break split_default$1
-//│ >          in
-//│ >          end
-//│ >        else
-//│ >          break split_default$1
-//│ >      in
-//│ >      end in
-//│ >      throw new globalThis.Error("match error") in
-//│ >      end;
-//│ >      return tmp1
-//│ >  } in
-//│ >  begin
-//│ >    set tmp2 = p_8$p() in
-//│ >    end;
-//│ >    (return) f_9$f(tmp2)
 //│ JS (unsanitized):
-//│ let p1, f, tmp1;
-//│ let p_8$p, f_9$f, x_X1, arg$X$0$_Y;
+//│ let p1, f, tmp1, p_8$p, f_9$f, f_9$x_X, f_9$arg$X$0$_Y; /* scoped */
 //│ p_8$p = function p_8$p() {
-//│   let tmp2;
-//│   let X_a, Y_b;
+//│   let tmp2, X_a, Y_b; /* scoped */
 //│   Y_b = O1;
 //│   tmp2 = () => {
-//│     return arg$X$0$_Y(Y_b)
+//│     return f_9$arg$X$0$_Y(Y_b)
 //│   };
 //│   X_a = tmp2;
 //│   return () => {
-//│     return x_X1(X_a)
+//│     return f_9$x_X(X_a)
 //│   }
 //│ };
 //│ f_9$f = function f_9$f(x) {
-//│   let y, arg$X$0$, arg$Y$0$, tmp2;
+//│   let y, arg$X$0$, arg$Y$0$, tmp2; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
 //│       return x();
@@ -176,25 +74,25 @@ f(p())
 //│   }
 //│   return tmp2
 //│ };
-//│ x_X1 = function x_X(X_a) {
-//│   let arg$X$0$;
+//│ f_9$x_X = function f_9$x_X(X_a) {
+//│   let arg$X$0$; /* scoped */
 //│   arg$X$0$ = X_a;
 //│   return arg$X$0$()
 //│ };
-//│ arg$X$0$_Y = function arg$X$0$_Y(Y_b) {
-//│   let y, arg$Y$0$, tmp2;
+//│ f_9$arg$X$0$_Y = function f_9$arg$X$0$_Y(Y_b) {
+//│   let y, arg$Y$0$, tmp2; /* scoped */
 //│   arg$Y$0$ = Y_b;
 //│   y = arg$Y$0$;
 //│   tmp2 = y;
 //│   return tmp2
 //│ };
 //│ p1 = function p() {
-//│   let tmp2;
+//│   let tmp2; /* scoped */
 //│   tmp2 = Y1(O1);
 //│   return X1(tmp2)
 //│ };
 //│ f = function f(x) {
-//│   let y, arg$X$0$, arg$Y$0$, tmp2;
+//│   let y, arg$X$0$, arg$Y$0$, tmp2; /* scoped */
 //│   split_root$: {
 //│     split_default$: {
 //│       if (x instanceof X1.class) {
@@ -233,65 +131,6 @@ f(p())
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun p_8$p() {
-//│ >    begin
-//│ >      set Y_b = O in
-//│ >      set tmp = () => return arg$X$0$_Y(Y_b) in
-//│ >      end;
-//│ >      set X_a = tmp in
-//│ >      return () => return x_X(X_a)
-//│ >  } in
-//│ >  define fun f_9$f(x) {
-//│ >    begin
-//│ >      labelled block split_root$ = labelled block split_default$ = return x() in
-//│ >      throw new globalThis.Error("match error") in
-//│ >      end;
-//│ >      return ‹not in scope: $tmp›
-//│ >  } in
-//│ >  define fun x_X(X_a1) {
-//│ >    set arg$X$0$ = X_a1 in
-//│ >    return arg$X$0$()
-//│ >  } in
-//│ >  define fun arg$X$0$_Y(Y_b1) {
-//│ >    set arg$Y$0$ = Y_b1 in
-//│ >    set y = arg$Y$0$ in
-//│ >    set tmp1 = y in
-//│ >    return tmp1
-//│ >  } in
-//│ >  define fun p() {
-//│ >    begin
-//│ >      set tmp = Y(O) in
-//│ >      end;
-//│ >      return X(tmp)
-//│ >  } in
-//│ >  define fun f(x1) {
-//│ >    begin
-//│ >      labelled block split_root$1 = labelled block split_default$1 = match x1
-//│ >        X =>
-//│ >          set arg$X$0$ = x1.a in
-//│ >          match arg$X$0$
-//│ >            Y =>
-//│ >              set arg$Y$0$ = arg$X$0$.b in
-//│ >              set y = arg$Y$0$ in
-//│ >              set tmp1 = y in
-//│ >              break split_root$1
-//│ >            else
-//│ >              break split_default$1
-//│ >          in
-//│ >          end
-//│ >        else
-//│ >          break split_default$1
-//│ >      in
-//│ >      end in
-//│ >      throw new globalThis.Error("match error") in
-//│ >      end;
-//│ >      return tmp1
-//│ >  } in
-//│ >  begin
-//│ >    set tmp2 = p_8$p() in
-//│ >    end;
-//│ >    (return) f_9$f(tmp2)
 //│ = O
 
 
@@ -327,59 +166,6 @@ f(p(), 2)
 //│ deforest > 	List(var:fv_res, var:tmp)
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List(var:res)
-//│ deforest > --------
-//│ deforest > define fun p_9$p() {
-//│ >    begin
-//│ >      set Y_b = O in
-//│ >      set tmp = (fv_ctorLam_fv_res, fv_ctorLam_tmp) => return a_Y(fv_ctorLam_fv_res, fv_ctorLam_tmp, Y_b) in
-//│ >      end;
-//│ >      set X_a = tmp in
-//│ >      return (fv_ctorLam_res) => return x_X(fv_ctorLam_res, X_a)
-//│ >  } in
-//│ >  define fun f_10$f(x, res) {
-//│ >    return x(res)
-//│ >  } in
-//│ >  define fun x_X(fv_res, X_a1) {
-//│ >    set arg$X$0$ = X_a1 in
-//│ >    set a = arg$X$0$ in
-//│ >    set tmp1 = 12 in
-//│ >    return a(fv_res, tmp1)
-//│ >  } in
-//│ >  define fun a_Y(fv_res1, fv_tmp, Y_b1) {
-//│ >    set arg$Y$0$ = Y_b1 in
-//│ >    set y = arg$Y$0$ in
-//│ >    return +(fv_res1, fv_tmp)
-//│ >  } in
-//│ >  define fun p() {
-//│ >    begin
-//│ >      set tmp = Y(O) in
-//│ >      end;
-//│ >      return X(tmp)
-//│ >  } in
-//│ >  define fun f(x1, res1) {
-//│ >    match x1
-//│ >      X =>
-//│ >        set arg$X$0$ = x1.a in
-//│ >        set a = arg$X$0$ in
-//│ >        set tmp1 = 12 in
-//│ >        match a
-//│ >          Y =>
-//│ >            set arg$Y$0$ = a.b in
-//│ >            set y = arg$Y$0$ in
-//│ >            return +(res1, tmp1)
-//│ >          else
-//│ >            throw new globalThis.Error("match error")
-//│ >        in
-//│ >        end
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  begin
-//│ >    set tmp2 = p_9$p() in
-//│ >    end;
-//│ >    (return) f_10$f(tmp2, 2)
 //│ = 14
 
 
@@ -425,58 +211,6 @@ f(X(1), Y(2), 3)
 //│ deforest > 	List(var:fv_y, var:fv_res, var:a, var:tmp)
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List(var:y, var:res)
-//│ deforest > --------
-//│ deforest > define fun f_8$f(x, y, res) {
-//│ >    return x(y, res)
-//│ >  } in
-//│ >  define fun y_Y(fv_y, fv_res, fv_a, fv_tmp, Y_b) {
-//│ >    set arg$Y$0$ = Y_b in
-//│ >    set b = arg$Y$0$ in
-//│ >    define fun _d() {
-//│ >      return fv_y
-//│ >    } in
-//│ >    set _d = _d in
-//│ >    set tmp = +(fv_res, fv_tmp) in
-//│ >    return +(tmp, fv_a)
-//│ >  } in
-//│ >  define fun x_X(fv_y1, fv_res1, X_a) {
-//│ >    set arg$X$0$ = X_a in
-//│ >    set a = arg$X$0$ in
-//│ >    set tmp1 = 12 in
-//│ >    return fv_y1(fv_y1, fv_res1, a, tmp1)
-//│ >  } in
-//│ >  define fun f(x1, y1, res1) {
-//│ >    match x1
-//│ >      X =>
-//│ >        set arg$X$0$ = x1.a in
-//│ >        set a = arg$X$0$ in
-//│ >        set tmp1 = 12 in
-//│ >        match y1
-//│ >          Y =>
-//│ >            set arg$Y$0$ = y1.b in
-//│ >            set b = arg$Y$0$ in
-//│ >            define fun _d() {
-//│ >              return y1
-//│ >            } in
-//│ >            set _d = _d in
-//│ >            set tmp = +(res1, tmp1) in
-//│ >            return +(tmp, a)
-//│ >          else
-//│ >            throw new globalThis.Error("match error")
-//│ >        in
-//│ >        end
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  begin
-//│ >    set X_a1 = 1 in
-//│ >    set tmp2 = (fv_ctorLam_y, fv_ctorLam_res) => return x_X(fv_ctorLam_y, fv_ctorLam_res, X_a1) in
-//│ >    set Y_b1 = 2 in
-//│ >    set tmp3 = (fv_ctorLam_fv_y, fv_ctorLam_fv_res, fv_ctorLam_a, fv_ctorLam_tmp) => return y_Y(fv_ctorLam_fv_y, fv_ctorLam_fv_res, fv_ctorLam_a, fv_ctorLam_tmp, Y_b1) in
-//│ >    end;
-//│ >    (return) f_8$f(tmp2, tmp3, 3)
 //│ = 16
 
 
@@ -507,37 +241,6 @@ M.f(M.p())
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun p_9$p() {
-//│ >    begin
-//│ >      set YY_b = M.OO in
-//│ >      set tmp = () => return arg$XX$0$_YY(YY_b) in
-//│ >      end;
-//│ >      set XX_a = tmp in
-//│ >      return () => return x_XX(XX_a)
-//│ >  } in
-//│ >  define fun f_10$f(x) {
-//│ >    begin
-//│ >      labelled block split_root$ = labelled block split_default$ = return x() in
-//│ >      throw new globalThis.Error("match error") in
-//│ >      end;
-//│ >      return ‹not in scope: $tmp›
-//│ >  } in
-//│ >  define fun x_XX(XX_a1) {
-//│ >    set arg$XX$0$ = XX_a1 in
-//│ >    return arg$XX$0$()
-//│ >  } in
-//│ >  define fun arg$XX$0$_YY(YY_b1) {
-//│ >    set arg$YY$0$ = YY_b1 in
-//│ >    set y = arg$YY$0$ in
-//│ >    set tmp1 = M.h() in
-//│ >    return tmp1
-//│ >  } in
-//│ >  define class M in
-//│ >  begin
-//│ >    set tmp2 = p_9$p() in
-//│ >    end;
-//│ >    (return) f_10$f(tmp2)
 //│ = 123
 
 
@@ -561,80 +264,6 @@ sum(enum(3))
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun enum_7$enum(n) {
-//│ >    set scrut = >(n, 0) in
-//│ >    match scrut
-//│ >      true =>
-//│ >        begin
-//│ >          begin
-//│ >            set tmp = -(n, 1) in
-//│ >            end;
-//│ >            set tmp1 = enum_7$enum(tmp) in
-//│ >            end;
-//│ >          set Cons_h = n in
-//│ >          set Cons_t = tmp1 in
-//│ >          return () => return ls_Cons(Cons_h, Cons_t)
-//│ >      else
-//│ >        return () => return ls_Nil()
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  define fun sum_8$sum(ls) {
-//│ >    return ls()
-//│ >  } in
-//│ >  define fun ls_Cons(Cons_h1, Cons_t1) {
-//│ >    set arg$Cons$0$ = Cons_h1 in
-//│ >    set arg$Cons$1$ = Cons_t1 in
-//│ >    set t = arg$Cons$1$ in
-//│ >    set h = arg$Cons$0$ in
-//│ >    set tmp2 = sum_8$sum(t) in
-//│ >    return +(h, tmp2)
-//│ >  } in
-//│ >  define fun ls_Nil() {
-//│ >    return 0
-//│ >  } in
-//│ >  define fun sum(ls1) {
-//│ >    match ls1
-//│ >      Nil =>
-//│ >        return 0
-//│ >      Cons =>
-//│ >        set arg$Cons$0$ = ls1.h in
-//│ >        set arg$Cons$1$ = ls1.t in
-//│ >        set t = arg$Cons$1$ in
-//│ >        set h = arg$Cons$0$ in
-//│ >        set tmp2 = sum(t) in
-//│ >        return +(h, tmp2)
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  define fun enum(n1) {
-//│ >    set scrut = >(n1, 0) in
-//│ >    match scrut
-//│ >      true =>
-//│ >        begin
-//│ >          begin
-//│ >            set tmp = -(n1, 1) in
-//│ >            end;
-//│ >            set tmp1 = enum(tmp) in
-//│ >            end;
-//│ >          return Cons(n1, tmp1)
-//│ >      else
-//│ >        return Nil
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  define class Nil in
-//│ >  define class Cons(h1, t1) {
-//│ >    h
-//│ >    t
-//│ >  } in
-//│ >  begin
-//│ >    set tmp3 = enum_7$enum(3) in
-//│ >    end;
-//│ >    (return) sum_8$sum(tmp3)
 //│ = 6
 
 
@@ -657,53 +286,6 @@ main
 //│ deforest > 	List(var:d)
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List(var:d)
-//│ deforest > --------
-//│ deforest > define fun main_6_c_5$c(x, d) {
-//│ >    return x(d)
-//│ >  } in
-//│ >  define fun main_6$main() {
-//│ >    define fun lambda() {
-//│ >      begin
-//│ >        set X_a = 3 in
-//│ >        set tmp = (fv_ctorLam_d) => return x_X(fv_ctorLam_d, X_a) in
-//│ >        end;
-//│ >        return main_6_c_5$c(tmp, 2)
-//│ >    } in
-//│ >    return lambda
-//│ >  } in
-//│ >  define fun x_X(fv_d, X_a1) {
-//│ >    set arg$X$0$ = X_a1 in
-//│ >    set a = arg$X$0$ in
-//│ >    begin
-//│ >      set X_a2 = a in
-//│ >      set tmp1 = (fv_ctorLam_d1) => return x_X(fv_ctorLam_d1, X_a2) in
-//│ >      end;
-//│ >      return main_6_c_5$c(tmp1, fv_d)
-//│ >  } in
-//│ >  define fun c(x1, d1) {
-//│ >    match x1
-//│ >      X =>
-//│ >        set arg$X$0$ = x1.a in
-//│ >        set a = arg$X$0$ in
-//│ >        begin
-//│ >          set tmp1 = X(a) in
-//│ >          end;
-//│ >          return c(tmp1, d1)
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  define fun main() {
-//│ >    define fun lambda() {
-//│ >      begin
-//│ >        set tmp = X(3) in
-//│ >        end;
-//│ >        return c(tmp, 2)
-//│ >    } in
-//│ >    return lambda
-//│ >  } in
-//│ >  (return) main_6$main
 //│ = fun main_6$main
 
 
@@ -729,44 +311,6 @@ p(c())
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun c_5_b_4_a_3$a() {
-//│ >    return () => return x_O()
-//│ >  } in
-//│ >  define fun c_5_b_4$b() {
-//│ >    return c_5_b_4_a_3$a()
-//│ >  } in
-//│ >  define fun c_5$c() {
-//│ >    return c_5_b_4$b()
-//│ >  } in
-//│ >  define fun p_6$p(x) {
-//│ >    return x()
-//│ >  } in
-//│ >  define fun x_O() {
-//│ >    return 2
-//│ >  } in
-//│ >  define fun a() {
-//│ >    return O
-//│ >  } in
-//│ >  define fun b() {
-//│ >    return a()
-//│ >  } in
-//│ >  define fun c() {
-//│ >    return b()
-//│ >  } in
-//│ >  define fun p(x1) {
-//│ >    match x1
-//│ >      O =>
-//│ >        return 2
-//│ >      else
-//│ >        throw new globalThis.Error("match error")
-//│ >    in
-//│ >    end
-//│ >  } in
-//│ >  begin
-//│ >    set tmp = c_5$c() in
-//│ >    end;
-//│ >    (return) p_6$p(tmp)
 //│ = 2
 
 
@@ -786,31 +330,19 @@ if [1, 2] is
 //│ deforest > 	List()
 //│ deforest > call dtor Ref($scrut,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun scrut_2(tup2_0, tup2_1) {
-//│ >    set element0$ = tup2_0 in
-//│ >    set element1$ = tup2_1 in
-//│ >    set b = element1$ in
-//│ >    set a = element0$ in
-//│ >    return +(a, b)
-//│ >  } in
-//│ >  set tup2_01 = 1 in
-//│ >  set tup2_11 = 2 in
-//│ >  set scrut = () => return scrut_2(tup2_01, tup2_11) in
-//│ >  (return) scrut()
 //│ JS (unsanitized):
-//│ let scrut, a1, b1, element1$, element0$;
-//│ let tup2_0, tup2_1, scrut_2;
-//│ scrut_2 = function scrut_2(tup2_01, tup2_11) {
-//│   element0$ = tup2_01;
-//│   element1$ = tup2_11;
-//│   b1 = element1$;
-//│   a1 = element0$;
-//│   return a1 + b1
+//│ let scrut, a1, b1, element1$, element0$, tup2_0, tup2_1, $scrut_2; /* scoped */
+//│ $scrut_2 = function $scrut_2(tup2_01, tup2_11) {
+//│   let a2, b2, element1$1, element0$1; /* scoped */
+//│   element0$1 = tup2_01;
+//│   element1$1 = tup2_11;
+//│   b2 = element1$1;
+//│   a2 = element0$1;
+//│   return a2 + b2
 //│ };
 //│ tup2_0 = 1;
 //│ tup2_1 = 2;
-//│ scrut = () => { return scrut_2(tup2_0, tup2_1) };
+//│ scrut = () => { return $scrut_2(tup2_0, tup2_1) };
 //│ scrut()
 //│ deforest > ==============
 //│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
@@ -822,36 +354,55 @@ if [1, 2] is
 //│ deforest > 	List()
 //│ deforest > call dtor Ref($scrut,None) with:
 //│ deforest > 	List()
-//│ deforest > --------
-//│ deforest > define fun scrut_2(tup2_0, tup2_1) {
-//│ >    set element0$ = tup2_0 in
-//│ >    set element1$ = tup2_1 in
-//│ >    set b = element1$ in
-//│ >    set a = element0$ in
-//│ >    return +(a, b)
-//│ >  } in
-//│ >  set tup2_01 = 1 in
-//│ >  set tup2_11 = 2 in
-//│ >  set scrut = () => return scrut_2(tup2_01, tup2_11) in
-//│ >  (return) scrut()
 //│ = 3
 
 
-// :slot
-// fun f(x) = if x is
-//   [a,b] then a + b
-// f([1,2])
+:deforest
+fun f(x) = if x is
+  [a,b] then a + b
+f([1,2])
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:x,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:x,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 3
 
 
 
 
 
 
+:deforest
+fun f(x) = if x is
+  O then 2
+f(id(O))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
 
 
-// :lot
-// fun f(z) =
-//   let x = 1
-//   val y = x
-//   fun g() = x
-//   y + z + 12 + g
+:deforest
+fun map(f, ls) = if ls is
+  Nil then Nil
+  h :: t then f(h) :: map(f, t)
+fun enum(a) = if a < 0 then Nil else a :: enum(a - 1)
+map(x => x + 1, map(x => x * 2, id(enum(3))))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))

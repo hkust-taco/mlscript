@@ -143,6 +143,7 @@ class DeforestPreAnalyzer(
     val matchScrutToCtxOfMatch = MutMap.empty[ResultId, Ls[InCtx]]
     val labelSymToCtxOfLabel = MutMap.empty[Symbol, Ls[InCtx]]
     val selToCtxOfSel = MutMap.empty[ResultId, Ls[InCtx]]
+    val modSymToBms = MutMap.empty[Symbol, BlockMemberSymbol]
     
     lazy val funSymToFunDefn: Map[TermSymbol, FunDefn] = toplvlFunAndBlkToAnalyze
       .collect:
@@ -417,6 +418,7 @@ class DeforestPreAnalyzer(
   
   override def applyClsLikeBody(b: ClsLikeBody): Unit =
     if ctxTracker.isToplvl then
+      res.modSymToBms(b.isym.asMod.get) = b.isym.asBlkMember.get
       ctxTracker.inCtxOf(b):
         b.methods.foreach(applyFunDefn)
         ctxTracker.inModCtor(b.ctor):
