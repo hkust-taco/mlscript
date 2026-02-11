@@ -59,7 +59,7 @@ c(p())
 //│ >  begin
 //│ >    set tmp = p_5$p() in
 //│ >    end;
-//│ >    return c_6$c(tmp)
+//│ >    (return) c_6$c(tmp)
 //│ = O
 
 
@@ -150,7 +150,7 @@ f(p())
 //│ >  begin
 //│ >    set tmp2 = p_8$p() in
 //│ >    end;
-//│ >    return f_9$f(tmp2)
+//│ >    (return) f_9$f(tmp2)
 //│ JS (unsanitized):
 //│ let p1, f, tmp1;
 //│ let p_8$p, f_9$f, x_X1, arg$X$0$_Y;
@@ -291,7 +291,7 @@ f(p())
 //│ >  begin
 //│ >    set tmp2 = p_8$p() in
 //│ >    end;
-//│ >    return f_9$f(tmp2)
+//│ >    (return) f_9$f(tmp2)
 //│ = O
 
 
@@ -379,7 +379,7 @@ f(p(), 2)
 //│ >  begin
 //│ >    set tmp2 = p_9$p() in
 //│ >    end;
-//│ >    return f_10$f(tmp2, 2)
+//│ >    (return) f_10$f(tmp2, 2)
 //│ = 14
 
 
@@ -476,7 +476,7 @@ f(X(1), Y(2), 3)
 //│ >    set Y_b1 = 2 in
 //│ >    set tmp3 = (fv_ctorLam_fv_y, fv_ctorLam_fv_res, fv_ctorLam_a, fv_ctorLam_tmp) => return y_Y(fv_ctorLam_fv_y, fv_ctorLam_fv_res, fv_ctorLam_a, fv_ctorLam_tmp, Y_b1) in
 //│ >    end;
-//│ >    return f_8$f(tmp2, tmp3, 3)
+//│ >    (return) f_8$f(tmp2, tmp3, 3)
 //│ = 16
 
 
@@ -537,7 +537,7 @@ M.f(M.p())
 //│ >  begin
 //│ >    set tmp2 = p_9$p() in
 //│ >    end;
-//│ >    return f_10$f(tmp2)
+//│ >    (return) f_10$f(tmp2)
 //│ = 123
 
 
@@ -634,7 +634,7 @@ sum(enum(3))
 //│ >  begin
 //│ >    set tmp3 = enum_7$enum(3) in
 //│ >    end;
-//│ >    return sum_8$sum(tmp3)
+//│ >    (return) sum_8$sum(tmp3)
 //│ = 6
 
 
@@ -703,7 +703,7 @@ main
 //│ >    } in
 //│ >    return lambda
 //│ >  } in
-//│ >  return main_6$main
+//│ >  (return) main_6$main
 //│ = fun main_6$main
 
 
@@ -766,11 +766,81 @@ p(c())
 //│ >  begin
 //│ >    set tmp = c_5$c() in
 //│ >    end;
-//│ >    return p_6$p(tmp)
+//│ >    (return) p_6$p(tmp)
 //│ = 2
 
 
 
+
+:deforest
+:sjs
+if [1, 2] is
+  [a, b] then a + b
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > ========
+//│ deforest > free vars of Ref($scrut,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($scrut,None) with:
+//│ deforest > 	List()
+//│ deforest > --------
+//│ deforest > define fun scrut_2(tup2_0, tup2_1) {
+//│ >    set element0$ = tup2_0 in
+//│ >    set element1$ = tup2_1 in
+//│ >    set b = element1$ in
+//│ >    set a = element0$ in
+//│ >    return +(a, b)
+//│ >  } in
+//│ >  set tup2_01 = 1 in
+//│ >  set tup2_11 = 2 in
+//│ >  set scrut = () => return scrut_2(tup2_01, tup2_11) in
+//│ >  (return) scrut()
+//│ JS (unsanitized):
+//│ let scrut, a1, b1, element1$, element0$;
+//│ let tup2_0, tup2_1, scrut_2;
+//│ scrut_2 = function scrut_2(tup2_01, tup2_11) {
+//│   element0$ = tup2_01;
+//│   element1$ = tup2_11;
+//│   b1 = element1$;
+//│   a1 = element0$;
+//│   return a1 + b1
+//│ };
+//│ tup2_0 = 1;
+//│ tup2_1 = 2;
+//│ scrut = () => { return scrut_2(tup2_0, tup2_1) };
+//│ scrut()
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > ========
+//│ deforest > free vars of Ref($scrut,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($scrut,None) with:
+//│ deforest > 	List()
+//│ deforest > --------
+//│ deforest > define fun scrut_2(tup2_0, tup2_1) {
+//│ >    set element0$ = tup2_0 in
+//│ >    set element1$ = tup2_1 in
+//│ >    set b = element1$ in
+//│ >    set a = element0$ in
+//│ >    return +(a, b)
+//│ >  } in
+//│ >  set tup2_01 = 1 in
+//│ >  set tup2_11 = 2 in
+//│ >  set scrut = () => return scrut_2(tup2_01, tup2_11) in
+//│ >  (return) scrut()
+//│ = 3
+
+
+// :slot
+// fun f(x) = if x is
+//   [a,b] then a + b
+// f([1,2])
 
 
 
@@ -783,4 +853,5 @@ p(c())
 // fun f(z) =
 //   let x = 1
 //   val y = x
-//   y + z + 12
+//   fun g() = x
+//   y + z + 12 + g

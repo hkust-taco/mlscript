@@ -218,6 +218,15 @@ class DeforestPreAnalyzer(
         init.forall: i =>
           i.matches:
             case _: (InCtx.Begn | InCtx.Scped) => true
+    def canHaveCls: Boolean =
+      ctx.forall: c =>
+        c match
+          case InCtx.TopLvl() => true
+          case InCtx.ModCtor(b) => true
+          case InCtx.Begn(b) => true
+          case InCtx.Scped(s) => true
+          case _ => false
+        
     
     inline def inCtxOf(
       c: (FunDefn | Label | (Match, Opt[CtorCls]) | ClsLikeBody | Begin | Scoped)
@@ -385,7 +394,7 @@ class DeforestPreAnalyzer(
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentPath, methods,
         privateFields, publicFields, preCtor, ctor, mod, bufferable)
     =>
-      if ctxTracker.getImmediateCtxFn.isEmpty then
+      if ctxTracker.canHaveCls then
         if locally:
           // own.isDefined does not matter
           ctorSym.isDefined

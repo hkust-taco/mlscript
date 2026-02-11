@@ -283,10 +283,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   
   
   // TODO:
-  // - free vars
   // - handle scoped blocks
   // - refresh vars (this needs to be done after deforestation rewriting because this may change uid)
-  //    refs to MM(moduleSymbol).fun needs to be changed to MM(bms).fun
   private class Rewriter(instId: InstantiationId) extends BlockTransformer(_symSubst):
     extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
     private def newRefId(refId: ResultId, refSym: TermSymbol) =
@@ -358,6 +356,28 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case _ => super.applyBlock(b)
   end Rewriter
   
+  // this is a shallow traverser because nested funs have their own scoped blocks
+  // this is only used for new branch funs, which don't have scoped blocks;
+  // otherwise we only refresh parameters and symbols in scoped blocks
+  private class CollectDefinedSymInNewFunsToBeRefreshed extends BlockTraverserShallow:
+    val assignedVars = MutSet.empty[Symbol]
+    override def applyBlock(b: Block): Unit =
+      b match
+      case Assign(lhs, rhs, rest) =>
+        assignedVars.add(lhs)
+        applyResult(rhs)
+        applyBlock(rest)
+      case _ => super.applyBlock(b)
+    
+    override def applyDefn(defn: Defn): Unit =
+      defn match
+      case fDef: FunDefn =>
+        assignedVars.add(fDef.sym)
+      case vDef: ValDefn =>
+        assignedVars.add(vDef.sym)
+      case _: ClsLikeDefn => die
+  end CollectDefinedSymInNewFunsToBeRefreshed
+  
   private class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends BlockTransformer(_symSubst):
     override def applyValue(v: Value)(k: Value => Block): Block = v match
       case Value.Ref(l, x) =>
@@ -374,7 +394,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     yield
       val fDefn = pre.res.funSymToFunDefn(referringFun)
       val transformedBody = new Rewriter(instId).applyBlock(fDefn.body)
-      // TODO: refresh other local symbols
+      // TODO: refresh other local symbols: for poly funs, we can check scoped blocks
       val bodyWithCorrectSymbols = new RefreshSymbol(Map.empty).applyBlock(transformedBody)
       FunDefn(
         N, bms, tSym, fDefn.params,
@@ -385,7 +405,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     for (branchId@(dtorId, whichBranch), (bms, tSym)) <- branchFunSyms yield
       val originalBranchBody = branchOriginalBodies(dtorId.exprId -> whichBranch)
       val transformedBranchBody = new Rewriter(dtorId.instId).applyBlock(originalBranchBody)
-      // TODO: refresh other local symbols
+      // TODO: refresh other local symbols: for branch funs, we need to generate new scoped blocks
       val bodyWithCorrectSymbols = new RefreshSymbol(branchFunParamFvSyms(branchId).toMap).applyBlock(transformedBranchBody)
       FunDefn(N, bms, tSym,
         (branchFunParamFvSyms(branchId).unzip._2 ++ branchFunParamFieldSyms(branchId)).asParamList :: Nil,
