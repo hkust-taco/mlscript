@@ -293,7 +293,7 @@ fun handleEffect() =
     savedDepth = stackDepth
   set
     curEffect = null
-    stackDepth += 30
+    stackDepth += 3
   let res = f(k)
   set stackDepth = savedDepth
   if curEffect !== null then
@@ -326,7 +326,7 @@ fun resume(contTrace)(value) =
 fun resumeContTrace(contTrace, value) =
   let
     savedDepth = stackDepth
-    curDepth = stackDepth + 30
+    curDepth = stackDepth + 2
     stack = contTrace.funStack
   while stack !== null do
     let segment = stack.segHead

@@ -891,7 +891,7 @@ let Runtime1;
     f = Runtime.curEffect.handlerFun;
     savedDepth = Runtime.stackDepth;
     Runtime.curEffect = null;
-    tmp2 = Runtime.stackDepth + 30;
+    tmp2 = Runtime.stackDepth + 3;
     Runtime.stackDepth = tmp2;
     res = runtime.safeCall(f(k));
     Runtime.stackDepth = savedDepth;
@@ -940,7 +940,7 @@ let Runtime1;
   static resumeContTrace(contTrace, value) {
     let savedDepth, curDepth, stack, tmp;
     savedDepth = Runtime.stackDepth;
-    curDepth = Runtime.stackDepth + 30;
+    curDepth = Runtime.stackDepth + 2;
     stack = contTrace.funStack;
     lbl: while (true) {
       let scrut, segment, tmp1;

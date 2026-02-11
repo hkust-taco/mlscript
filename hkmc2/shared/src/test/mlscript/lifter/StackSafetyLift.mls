@@ -27,7 +27,7 @@ hi(0)
 //│ let hi, tmp, $_stack$_safe$_body$_;
 //│ hi = function hi(n) {
 //│   let scrut, tmp1, stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 12;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
 //│     return runtime.curEffect.lastSegmentBuf.push(hi, -1, "StackSafetyLift.mls:22:1", null, null, 1, 1, n, 0)
@@ -62,7 +62,7 @@ sum(10000)
 //│ let sum1, tmp1, $_stack$_safe$_body$_1;
 //│ sum1 = function sum(n) {
 //│   let scrut, tmp2, tmp3, pc, curDepth, stackDelayRes;
-//│   runtime.stackDepth = runtime.stackDepth + 13;
+//│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
@@ -106,7 +106,7 @@ sum(10000)
 //│ $_stack$_safe$_body$_1 = (undefined, function () {
 //│   return sum1(10000)
 //│ });
-//│ tmp1 = runtime.runStackSafe(5000, $_stack$_safe$_body$_1);
+//│ tmp1 = runtime.runStackSafe(1000, $_stack$_safe$_body$_1);
 //│ if (runtime.curEffect !== null) { tmp1 = runtime.topLevelEffect(false); }
 //│ tmp1
 //│ = 50005000
