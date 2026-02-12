@@ -196,7 +196,7 @@ class InstSymbol(val origin: Symbol)(using State) extends LocalSymbol:
 class VarSymbol(val id: Ident)(using State) extends BlockLocalSymbol(id.name) with NamedSymbol with LocalSymbol:
   val name: Str = id.name
   override def toLoc: Opt[Loc] = id.toLoc
-  // override def toString: Str = s"$name@$uid"
+  override def toString: Str = s"var:$name"
   override def subst(using s: SymbolSubst): VarSymbol = s.mapVarSym(this)
 
 class BuiltinSymbol
@@ -266,7 +266,7 @@ class TermSymbol(val k: TermDefKind, val owner: Opt[InnerSymbol], val id: Tree.I
   def name: Str = nme
   
   def toLoc: Option[Loc] = id.toLoc
-  override def toString: Str = s"term:${owner.map(o => s"${o}.").getOrElse("")}${id.name}${State.dbgUid(uid)}"
+  override def toString: Str = s"(${k})term:${owner.map(o => s"${o}.").getOrElse("")}${id.name}${State.dbgUid(uid)}"
   
   def subst(using sub: SymbolSubst): TermSymbol = sub.mapTermSym(this)
 
