@@ -147,7 +147,7 @@ object Deforest:
     val constrCol = new DeforestConstraintsCollector(pre)
     val constrSol = new DeforestConstrainSolver(constrCol)
     val rewrite = new DeforestRewriter(constrSol)
-    p
+    Program(p.imports, rewrite.newBody)
     // val defns = p.main.gatherDefns()
     // val (funs, clses) = defns.partitionMap:
     //   case f: FunDefn => L(f)

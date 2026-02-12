@@ -1050,7 +1050,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     
     val handlerPaths = new HandlerPaths
     
-    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((desug, Map.empty)): opt =>
+    val (withHandlers, doUnwindPaths) = config.effectHandlers.fold((deforested, Map.empty)): opt =>
       HandlerLowering(handlerPaths, opt).translateTopLevel(desug)
       
     val stackSafe = config.stackSafety match

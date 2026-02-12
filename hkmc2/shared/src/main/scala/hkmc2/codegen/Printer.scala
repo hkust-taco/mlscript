@@ -35,7 +35,7 @@ object Printer:
         .mkDocument(sep = doc" # ")
       val docDefault = dflt.map(mkDocument).getOrElse(doc"")
       doc"match ${mkDocument(scrut)} #{  # ${docCases} # else #{  # ${docDefault} #}  #}  # in # ${mkDocument(rest)}"
-    case Return(res, implct) => doc"return ${mkDocument(res)}"
+    case Return(res, implct) => doc"${if implct then "(return)" else "return"} ${mkDocument(res)}"
     case Throw(exc) => doc"throw ${mkDocument(exc)}"
     case Label(label, loop, body, rest) =>
       val l2 = summon[Scope].allocateName(label)
