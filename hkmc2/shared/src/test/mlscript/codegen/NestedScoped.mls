@@ -29,8 +29,7 @@ scope.locally of
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped:
-//│     syms = HashSet(x)
+//│   main = Scoped(syms = {x}): 
 //│     body = Assign:
 //│       lhs = x
 //│       rhs = Lit of IntLit of 42
@@ -59,8 +58,7 @@ scope.locally of scope.locally of (
 //│ Lowered:
 //│ Program:
 //│   imports = Nil
-//│   main = Scoped:
-//│     syms = Set(x)
+//│   main = Scoped(syms = {x}): 
 //│     body = Assign:
 //│       lhs = x
 //│       rhs = Lit of IntLit of 42
@@ -76,7 +74,7 @@ scope.locally of scope.locally of (
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.77: 	x
+//│ ║  l.75: 	x
 //│ ╙──      	^
 
 
@@ -166,14 +164,14 @@ fun foo(x, y) =
 :ge
 scope.locally()
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.167: 	scope.locally()
+//│ ║  l.165: 	scope.locally()
 //│ ╙──       	^^^^^^^^^^^^^
 
 
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.174: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
+//│ ║  l.172: 	scope.locally of (let x = 1 in x), (let y = 2 in y)
 //│ ╙──       	^^^^^^^^^^^^^
 
 
@@ -181,10 +179,10 @@ scope.locally of (let x = 1 in x), (let y = 2 in y)
 :ge
 scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.180: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	                                                 ^
 //│ ╔══[COMPILATION ERROR] Unsupported form for scope.locally.
-//│ ║  l.182: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
+//│ ║  l.180: 	scope.locally of (let x = 1 in x), (let y = 2 in x)
 //│ ╙──       	^^^^^^^^^^^^^
 
 

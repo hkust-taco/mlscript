@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 class PrintEffect with
   fun p(s: String): ()
@@ -17,10 +18,10 @@ handle h = PrintEffect with
     h.p(x)
 h.aux(3)
 //│ ╔══[ERROR] Name not found: h
-//│ ║  l.15: 	    h.p(x)
+//│ ║  l.16: 	    h.p(x)
 //│ ╙──      	    ^
 //│ ╔══[ERROR] Name not found: h
-//│ ║  l.17: 	    h.p(x)
+//│ ║  l.18: 	    h.p(x)
 //│ ╙──      	    ^
 
 handle h1 = PrintEffect with

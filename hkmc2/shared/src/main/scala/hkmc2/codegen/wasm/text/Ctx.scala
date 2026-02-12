@@ -128,6 +128,9 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
+enum WasmIntrinsicType:
+  case TupleArray(mutable: Bool)
+
 object Ctx:
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
@@ -192,6 +195,7 @@ class Ctx(
   import Ctx.prettyString
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
+  private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -323,6 +327,13 @@ class Ctx(
    */
   def getOrCreateWasmIntrinsic(name: Str, createIntrinsic: => FuncIdx): FuncIdx =
     wasmIntrinsicFuncs.getOrElseUpdate(name, createIntrinsic)
+
+  /**
+   * Returns the cached [[TypeIdx]] for the intrinsic type `key`, creating it with `createType` if
+   * it does not yet exist in this context.
+   */
+  def getOrCreateWasmIntrinsicType(key: WasmIntrinsicType, createType: => TypeIdx): TypeIdx =
+    wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
     doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "

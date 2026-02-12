@@ -2,23 +2,6 @@
 :lift
 :todo
 
-
-// The following are problems with lifting functions inside other functions.
-
-
-// Lifting functions with spread arguments is broken.
-:expect [1]
-fun f(x) =
-  fun g(...rest) = 
-    print(x)
-    rest
-  let a = g
-  a(1)
-f(2)
-//│ > 2
-//│ ═══[RUNTIME ERROR] Expected: '[1]', got: '[]'
-//│ = []
-
 // The following are problems with lifting classes inside other definitions.
 
 // We use the optional `symbol` parameter of `Select` to detect references to the
@@ -67,6 +50,25 @@ fun test(x) =
 test(2)
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
 //│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+// This is due to `super` not being called with multiple parameter lists.
+:expect "B()"
+fun test(x) =
+  class A() with
+    fun get = x
+  class B() extends A() with
+    fun bar = x
+  B()
+test(0).toString()
+//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
+//│ = "(x) => {       this.#x = x;       return this;     }"
+
+// In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
+// return (params) => {
+//   let ret = super(parentMainParams)(parentAuxParams);
+//   // ctor
+//   return ret;
+// }
 
 /// The following are related to first-class classes, instance checks, and private fields. ///
 
@@ -127,27 +129,6 @@ test(2)
 //│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
 //│ = 2
 
-:expect 2
-class A(a) with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g()
-A(2).f()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
-
-:expect 2
-module M with
-  let x = 2
-  fun f() =
-    fun g() = x
-    g
-M.f()()
-//│ ═══[COMPILATION ERROR] Uses of private fields cannot yet be lifted.
-//│ ═══[RUNTIME ERROR] Expected: '2', got: '()'
-
 /// The following are related to modules and objects. ///
 
 :todo
@@ -158,7 +139,9 @@ fun foo(x, y) =
       set y = 2
       x + y + test
   M.foo()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.136: 	  module M with
+//│ ╙──       	         ^
 
 :expect 14
 foo(10, 0)
@@ -171,20 +154,22 @@ fun foo(x, y) =
       x + y
   fun foo = M.foo()
   foo
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'M$'
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.151: 	  module M with
+//│ ╙──       	         ^
 
 :expect 12
 foo(10, 0)
-//│ ═══[RUNTIME ERROR] ReferenceError: M$ is not defined
-//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
+//│ = 12
 
 
 data class A(x) with
   module M with
     fun getB() = x
   fun getA() = M.getB()
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.167: 	  module M with
+//│ ╙──       	         ^
 
 :expect 2
 A(2).getA()
@@ -199,10 +184,13 @@ fun foo(x) =
   (new Bar).self2
 foo(2)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Foo.
-//│ ║  l.198: 	  class Bar extends Foo
+//│ ║  l.183: 	  class Bar extends Foo
 //│ ║         	                    ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'Foo$'
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.180: 	  object Foo with
+//│ ╙──       	         ^^^
+//│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
@@ -214,7 +202,20 @@ fun f =
       fun h = M.g
       h
   M.g
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ /!!!\ Uncaught error: hkmc2.InternalError: `this` not in scope: class:M
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.200: 	  module M with
+//│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
+//│ ║  l.202: 	      fun h = M.g
+//│ ║         	              ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.200: 	  module M with
+//│ ║         	         ^^^^^^
+//│ ║  l.201: 	    fun g =
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.202: 	      fun h = M.g
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.203: 	      h
+//│ ╙──       	^^^^^^^
 
 

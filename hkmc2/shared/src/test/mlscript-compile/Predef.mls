@@ -5,6 +5,7 @@ import "./RuntimeJS.mjs"
 // * TODO: proper caching of parsed/elaborated files
 import "./Runtime.mjs"
 import "./Rendering.mjs"
+import "./Term.mjs"
 // import "./Runtime.mls"
 // import "./Rendering.mls"
 
@@ -126,3 +127,6 @@ fun raiseUnhandledEffect() =
   Runtime.mkEffect(Runtime.FatalEffect, null)
 
 
+module meta with
+  fun codegen(t, file) = Term.codegen(t, file)
+  fun print(t) = Term.print(t)

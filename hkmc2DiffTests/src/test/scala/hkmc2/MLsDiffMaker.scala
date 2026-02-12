@@ -81,6 +81,9 @@ abstract class MLsDiffMaker extends DiffMaker:
       output(s"$errMarker Option ':stackSafe' requires ':effectHandlers' to be set")
     if !effectHandlers.get.forall(effectHandlersOptions.contains(_)) then
       output(s"$errMarker Option ':effectHandlers' only supports 'debug' as option")
+    if effectHandlers.isSet then
+      if liftDefns.isUnset then
+        output(s"$errMarker Option ':effectHandlers' requires ':lift'")
     Config(
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
@@ -104,6 +107,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       rewriteWhileLoops = rewriteWhile.isSet,
       tailRecOpt = !noTailRecOpt.isSet,
       deforest = Opt.when(deforest.isSet)(Deforest.default),
+      qqEnabled = importQQ.isSet,
     )
   
   

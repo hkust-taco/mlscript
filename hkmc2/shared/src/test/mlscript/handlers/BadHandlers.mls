@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 :re
@@ -18,16 +19,33 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.19: 	x
+//│ ║  l.20: 	x
 //│ ╙──      	^
 
 
 // Getter
-:fixme
+// :expect 3
+:e
 handle h = Object with
   fun lol(k) = k(())
 h.lol
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$3
+//│ ╔══[ERROR] Handler function cannot be a getter
+//│ ║  l.30: 	  fun lol(k) = k(())
+//│ ╙──      	  ^^^^^^^^^^^^^^^^^^
+  fun lol(k) = k(1)
+h.lol + 2
+//│ ╔══[ERROR] Name not found: h
+//│ ║  l.36: 	h.lol + 2
+//│ ╙──      	^
+
+:re
+handle h = Object with
+  fun lol()(k) = k(1)
+class A with
+  fun f =
+    h.lol()
+new A().f + 2
+//│ ═══[RUNTIME ERROR] Error: Effect Handler$h$8 is raised in a getter
 
 handle h = Object with
   fun lol()(k) = k(42)
@@ -44,7 +62,7 @@ object Foo with
 :re
 Foo.x
 //│ ╔══[ERROR] Object 'Foo' does not contain member 'x'
-//│ ║  l.45: 	Foo.x
+//│ ║  l.63: 	Foo.x
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
 

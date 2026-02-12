@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 fun f() =
@@ -55,18 +56,18 @@ f()
 :re
 fun f() = () => return 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_6
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_12
 
 :re
 fun f(): () -> Int = () => return () => 3
 f()()
-//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_7
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect $_non$_local$_return$_effect$_14
 
 
 :e
 return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.67: 	return 100
+//│ ║  l.68: 	return 100
 //│ ╙──      	^^^^^^^^^^
 
 :e
@@ -74,14 +75,14 @@ if true do
   while false do
     let f = () => return 100
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.75: 	    let f = () => return 100
+//│ ║  l.76: 	    let f = () => return 100
 //│ ╙──      	                  ^^^^^^^^^^
 
 :e
 fun f() =
   type A = return "lol"
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.82: 	  type A = return "lol"
+//│ ║  l.83: 	  type A = return "lol"
 //│ ╙──      	           ^^^^^^^^^^^^
 
 
@@ -107,16 +108,21 @@ fun f() =
     return 100
   4
 f()
-//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
-//│ = 4
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.107: 	  object A with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
+// ctor cannot raise effect, so error is expected.
+:fixme
 :expect 100
 fun f() =
   class A with
     return 100
   new A
 f()
-//│ = 100
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
 :expect 100
@@ -125,9 +131,12 @@ fun f() =
     (() => return 100)()
   4
 f()
-//│ ═══[RUNTIME ERROR] Expected: '100', got: '4'
-//│ = 4
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.130: 	  object A with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
+:fixme
 :expect 100
 fun f() =
   class A with
@@ -135,4 +144,5 @@ fun f() =
   new A
   4
 f()
-//│ = 100
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

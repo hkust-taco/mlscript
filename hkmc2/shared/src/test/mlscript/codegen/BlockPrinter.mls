@@ -35,3 +35,116 @@ let x = x + 1
 //│ set block$res3 = undefined in
 //│ end
 //│ x = 1
+
+:slot
+module A with
+  val x = 2
+  let y = 3
+  class C(x) with
+    fun f(x) = 2
+  fun g(x) = 3
+//│ Pretty Lowered:
+//│  
+//│ define class A with
+//│ module A {
+//│   let y = ...
+//│   x
+//│   ctor {
+//│     define val x = 2 in
+//│     set y = 3 in
+//│     define class module:A::C(x4) {
+//│       let x = ...
+//│       ctor {
+//│         set x5 = x4 in
+//│         end
+//│       }
+//│       fun class:C::f(x6) {
+//│         return 2
+//│       }
+//│     } in
+//│     end
+//│   }
+//│   fun module:A::g(x7) {
+//│     return 3
+//│   }
+//│ } in
+//│ set block$res4 = undefined in
+//│ end
+
+:slot
+class A
+class B(x) extends A with
+  val y = 2
+//│ Pretty Lowered:
+//│  
+//│ define class A in
+//│ define class B(x4) {
+//│   let x = ...
+//│   y
+//│   preCtor {
+//│     return super()
+//│   }
+//│   ctor {
+//│     set x5 = x4 in
+//│     define val y = 2 in
+//│     end
+//│   }
+//│ } in
+//│ set block$res5 = undefined in
+//│ end
+
+:slot
+pattern P = B
+//│ Pretty Lowered:
+//│  
+//│ define pattern P {
+//│   fun unapply(input) {
+//│     match input
+//│       B =>
+//│         set output = input in
+//│         set tmp1 = {  } in
+//│         return new runtime.MatchSuccess(output, tmp1)
+//│       else
+//│         return new runtime.MatchFailure(null)
+//│     in
+//│     end
+//│   }
+//│   fun unapplyStringPrefix(input1) {
+//│     return new runtime.MatchFailure(null)
+//│   }
+//│ } in
+//│ set block$res6 = undefined in
+//│ end
+
+:slot
+object A with
+  fun f = 42
+//│ Pretty Lowered:
+//│   define object A { fun object:A::f { return 42 } } in set block$res7 = undefined in end
+
+:slot
+let x = [1, 2, 3]
+x.0
+//│ Pretty Lowered:
+//│  
+//│ set x4 = [1, 2, 3] in
+//│ set selRes = x4.0 in
+//│ set discarded = x4.0$__checkNotMethod in
+//│ match selRes
+//│   undefined =>
+//│     throw new globalThis.Error("Access to required field '0' yielded 'undefined'")
+//│   else
+//│     
+//│ in
+//│ set block$res8 = selRes in
+//│ return undefined
+//│ = 1
+//│ x = [1, 2, 3]
+
+:slot
+let y = { x: 2 }
+y!x
+//│ Pretty Lowered:
+//│   set x5 = 2 in set y = { "x": x5 } in set block$res9 = y!"x" in return undefined
+//│ = 2
+//│ y = {x: 2}

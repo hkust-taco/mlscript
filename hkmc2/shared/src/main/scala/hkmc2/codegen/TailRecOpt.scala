@@ -13,6 +13,58 @@ import hkmc2.syntax.Tree
 import scala.collection.mutable.ArrayBuffer
 import java.lang.instrument.ClassDefinition
 
+/*
+
+DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
+
+@tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
+must be tail calls. These calls must be optimized to not consume additional stack
+space. If such an optimization is not possible, then the compiler will report an error.
+
+@tailrec: Used to annotate functions. When this annotation is used on a function, say
+`@tailrec fun foo()`, the compiler will ensure no sequence of statically known recursive calls back 
+to foo() consumes stack space, i.e. they are all tail calls. For example,
+
+@tailrec 
+fun foo() =
+  bar()
+  foo()
+
+fun bar() =
+  bar()
+  bar()
+
+is valid. However,
+
+@tailrec
+fun foo() =
+  bar()
+fun bar() =
+  foo()
+  bar()
+
+is invalid. If we swap the position of foo() and bar() in the body of bar, i.e.
+
+@tailrec
+fun foo() =
+  bar()
+fun bar() =
+  bar()
+  foo()
+
+it is still invalid, since the following sequence of calls from foo to foo would incur extra stack space:
+   foo
+-> bar (tail call)
+-> bar (not a tail call)
+-> foo (tail call)
+
+Equivalently, if fun foo() is annotated with @tailrec, let S be the largest strongly
+connected component in the call-graph of the program that contains foo. Then an error
+will be thrown unless all edges (calls) connecting the nodes of the strongly
+connected component are tail calls.
+
+*/
+
 // This optimization assumes the lifter has been run.
 class TailRecOpt(using State, TL, Raise):
   
@@ -85,7 +137,7 @@ class TailRecOpt(using State, TL, Raise):
       c.match
         case c: CallEdge.TailCall if c.call.explicitTailCall && !cond =>
           raise(ErrorReport(
-            msg"This tail call exits the current scope is not optimized." -> c.call.toLoc :: Nil))
+            msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
       cond
     
@@ -272,8 +324,10 @@ class TailRecOpt(using State, TL, Raise):
                 case x => x
               ret
             // bind the tmps
-            requiredTmps.toList.foldRight(assigns):
-              case ((v, l), acc) => Assign(l, Value.Ref(v), acc)
+            Scoped(
+              requiredTmps.values.toSet,
+              requiredTmps.toList.foldRight(assigns):
+                case ((v, l), acc) => Assign(l, Value.Ref(v), acc))
           case None => super.applyBlock(b)
         case _ => super.applyBlock(b)
       
@@ -388,5 +442,7 @@ class TailRecOpt(using State, TL, Raise):
         
         case _ => super.applyDefn(defn)(k)
     
-    optFNew.foldLeft(transformer.applyBlock(b)):
-      case (acc, f) => Define(f, acc)
+    Scoped(
+      optFNew.map(_.sym).toSet,
+      optFNew.foldLeft(transformer.applyBlock(b)):
+        case (acc, f) => Define(f, acc))

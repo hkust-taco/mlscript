@@ -35,16 +35,15 @@ x `=>
   print(x)
   x
 //│ JS (unsanitized):
-//│ let tmp6;
-//│ let x1, tmp7, tmp8, arr2;
-//│ tmp7 = globalThis.Object.freeze(new Term.Symbol("x"));
-//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp7));
-//│ tmp6 = Predef.print(x1);
+//│ let x1, tmp8, tmp9, tmp10, arr2;
+//│ tmp8 = globalThis.Object.freeze(new Term.Symbol("x"));
+//│ x1 = globalThis.Object.freeze(new Term.Ref(tmp8));
+//│ tmp9 = Predef.print(x1);
 //│ arr2 = globalThis.Object.freeze([
-//│   tmp7
+//│   tmp8
 //│ ]);
-//│ tmp8 = x1;
-//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp8))
+//│ tmp10 = x1;
+//│ globalThis.Object.freeze(new Term.Lam(arr2, tmp10))
 //│ > Ref(Symbol("x"))
 //│ = Lam([Symbol("x")], Ref(Symbol("x")))
 
@@ -78,20 +77,20 @@ f`(`0)
 :sjs
 `if `true then `true else `false
 //│ JS (unsanitized):
-//│ let scrut, tmp29, tmp30, tmp31, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39;
-//│ tmp29 = globalThis.Object.freeze(new Term.Symbol("scrut"));
-//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp29));
-//│ tmp30 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp33 = scrut;
-//│ tmp34 = globalThis.Object.freeze(new Term.LitPattern(true));
-//│ tmp39 = globalThis.Object.freeze(new Term.Lit(true));
-//│ tmp35 = globalThis.Object.freeze(new Term.Else(tmp39));
-//│ tmp36 = globalThis.Object.freeze(new Term.Branch(tmp33, tmp34, tmp35));
-//│ tmp38 = globalThis.Object.freeze(new Term.Lit(false));
-//│ tmp37 = globalThis.Object.freeze(new Term.Else(tmp38));
-//│ tmp31 = globalThis.Object.freeze(new Term.Cons(tmp36, tmp37));
-//│ tmp32 = globalThis.Object.freeze(new Term.Let(tmp29, tmp30, tmp31));
-//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp32))
+//│ let scrut, tmp32, tmp33, tmp34, tmp35, tmp36, tmp37, tmp38, tmp39, tmp40, tmp41, tmp42;
+//│ tmp32 = globalThis.Object.freeze(new Term.Symbol("scrut"));
+//│ scrut = globalThis.Object.freeze(new Term.Ref(tmp32));
+//│ tmp33 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp36 = scrut;
+//│ tmp37 = globalThis.Object.freeze(new Term.LitPattern(true));
+//│ tmp42 = globalThis.Object.freeze(new Term.Lit(true));
+//│ tmp38 = globalThis.Object.freeze(new Term.Else(tmp42));
+//│ tmp39 = globalThis.Object.freeze(new Term.Branch(tmp36, tmp37, tmp38));
+//│ tmp41 = globalThis.Object.freeze(new Term.Lit(false));
+//│ tmp40 = globalThis.Object.freeze(new Term.Else(tmp41));
+//│ tmp34 = globalThis.Object.freeze(new Term.Cons(tmp39, tmp40));
+//│ tmp35 = globalThis.Object.freeze(new Term.Let(tmp32, tmp33, tmp34));
+//│ globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp35))
 //│ = IfLike(
 //│   If,
 //│   Let(
@@ -121,10 +120,21 @@ x `=> `if x `=== `0.0 then `1.0 else x
 //│   )
 //│ )
 
-:fixme // FIXME: weird error
+:fixme // TODO: error doesn't make much sense (see https://github.com/hkust-taco/mlscript/pull/368#discussion_r2635074722)
 x `=> `if x `== `0.0 then `1.0 else x
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'import'
-//│ > let x6, scrut2, tmp57, tmp58, tmp59, tmp60, tmp61, tmp62, arr10, tmp63, tmp64, tmp65, tmp66, tmp67, tmp68, tmp69, tmp70, tmp71, tmp72, tmp73, arr11, tmp74, tmp75;try { tmp57 = globalThis.Object.freeze(new Term.Symbol("x")); x6 = globalThis.Object.freeze(new Term.Ref(tmp57)); tmp58 = globalThis.Object.freeze(new Term.Symbol("scrut")); scrut2 = globalThis.Object.freeze(new Term.Ref(tmp58)); tmp70 = globalThis.Object.freeze(new Term.Symbol("Predef")); tmp71 = globalThis.Object.freeze(new Term.CSRef(tmp70, import.meta.url, "../../mlscript-compile/Predef.mls")); tmp72 = x6; tmp73 = globalThis.Object.freeze(new Term.Lit(0.0)); arr11 = globalThis.Object.freeze([   tmp72,   tmp73 ]); tmp74 = globalThis.Object.freeze(new Term.Sel(tmp71, "equals")); tmp75 = globalThis.Object.freeze(new Term.Tup(arr11)); tmp59 = globalThis.Object.freeze(new Term.App(tmp74, tmp75)); tmp63 = scrut2; tmp64 = globalThis.Object.freeze(new Term.LitPattern(true)); tmp69 = globalThis.Object.freeze(new Term.Lit(1.0)); tmp65 = globalThis.Object.freeze(new Term.Else(tmp69)); tmp66 = globalThis.Object.freeze(new Term.Branch(tmp63, tmp64, tmp65)); tmp68 = x6; tmp67 = globalThis.Object.freeze(new Term.Else(tmp68)); tmp60 = globalThis.Object.freeze(new Term.Cons(tmp66, tmp67)); tmp61 = globalThis.Object.freeze(new Term.Let(tmp58, tmp59, tmp60)); arr10 = globalThis.Object.freeze([   tmp57 ]); tmp62 = globalThis.Object.freeze(new Term.IfLike(Term.Keyword.If, tmp61)); block$res15 = globalThis.Object.freeze(new Term.Lam(arr10, tmp62)); undefined } catch (e) { console.log('\u200B' + e + '\u200B'); }
-//│ >                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ^^^^
-//│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Cannot use 'import.meta' outside a module
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.equals is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
+//│ ║  l.124: 	x `=> `if x `== `0.0 then `1.0 else x
+//│ ╙──       	             ^^
 
+// We cannot quote a symbol from another file here due to the lack of `import.meta` in REPL mode.
+:ge
+`id`(`42)
+//│ ╔══[COMPILATION ERROR] Cross-stage reference to Predef.id is only allowed in compiled files due to the lack of `import.meta` in REPL mode.
+//│ ║  l.131: 	`id`(`42)
+//│ ╙──       	 ^^
+
+
+fun id(x) = x
+
+`id`(`42)
+//│ = App(fun id, Tup([Lit(42)]))

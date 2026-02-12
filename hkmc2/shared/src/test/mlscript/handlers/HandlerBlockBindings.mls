@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 abstract class Effect with
@@ -17,7 +18,7 @@ let x = 123
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.18: 	x
+//│ ║  l.19: 	x
 //│ ╙──      	^
 
 
@@ -31,7 +32,7 @@ x + 1
 :e
 x
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.32: 	x
+//│ ║  l.33: 	x
 //│ ╙──      	^
 
 
@@ -43,7 +44,7 @@ val y = 123
 :e
 y
 //│ ╔══[ERROR] Name not found: y
-//│ ║  l.44: 	y
+//│ ║  l.45: 	y
 //│ ╙──      	^
 
 

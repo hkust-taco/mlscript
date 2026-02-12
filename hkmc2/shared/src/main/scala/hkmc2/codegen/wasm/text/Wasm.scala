@@ -135,8 +135,19 @@ case class StructType(
   def toWat: Document =
     doc"(struct${fieldSeq.map(_.toWat).mkDocument(doc" ").surroundUnlessEmpty(doc" ")})"
 
+/** A type representing an array type. */
+case class ArrayType(
+    elemType: Type,
+    mutable: Bool,
+) extends ToWat:
+  private def elemDoc: Document =
+    if mutable then doc"(mut ${elemType.toWat})" else elemType.toWat
+
+  def toWat: Document =
+    doc"(array ${elemDoc})"
+
 /** A composite type. */
-type CompType = StructType | FunctionType
+type CompType = StructType | FunctionType | ArrayType
 
 type AbsHeapType =
   HeapType.Func.type

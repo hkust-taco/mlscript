@@ -1,5 +1,6 @@
 :js
 :effectHandlers
+:lift
 
 
 // * This feature relies on `finally`
@@ -15,8 +16,8 @@ x
 //│   tmp1 = x + 1;
 //│   x = tmp1;
 //│   tmp2 = Predef.print(x);
-//│   if (tmp2 instanceof runtime.EffectSig.class) {
-//│     tmp2 = runtime.topLevelEffect(tmp2, false);
+//│   if (runtime.curEffect !== null) {
+//│     tmp2 = runtime.topLevelEffect(false);
 //│   }
 //│   tmp = tmp2;
 //│ } finally { x = old; }

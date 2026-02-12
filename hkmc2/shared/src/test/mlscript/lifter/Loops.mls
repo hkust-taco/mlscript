@@ -1,5 +1,6 @@
 :js
 :lift
+:todo // FIXME: Lifting should not require scope flattening (which doesn't handle loops)
 
 
 let fs = mut []
@@ -29,12 +30,11 @@ fun foo() =
 
 // * Note that this works with while loop rewriting
 // * See [fixme:0] for cause of the issue
-:fixme
+:todo
 :expect 1
 foo()
 fs.0()
-//│ ═══[RUNTIME ERROR] Expected: '1', got: '4'
-//│ = 4
+//│ = 1
 
 
 :sjs
@@ -44,27 +44,37 @@ fun foo() =
     set x += 1
     return () => x
 //│ JS (unsanitized):
-//│ let foo2;
-//│ let lambda2, lambda$2;
-//│ lambda$2 = function lambda$(x) {
-//│   return x
-//│ };
-//│ lambda2 = (undefined, function (x) {
+//│ let foo2, lambda2, Capture$scope03, lambda$2;
+//│ lambda$2 = (undefined, function (scope0$cap) {
 //│   return () => {
-//│     return lambda$2(x)
+//│     return lambda2(scope0$cap)
 //│   }
 //│ });
+//│ lambda2 = (undefined, function (scope0$cap) {
+//│   return scope0$cap.x$0
+//│ });
+//│ (class Capture$scope02 {
+//│   static {
+//│     Capture$scope03 = this
+//│   }
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
+//│ });
 //│ foo2 = function foo() {
-//│   let x, tmp2;
-//│   let lambda$here;
-//│   x = 1;
+//│   let x, tmp2, scope0$cap;
+//│   scope0$cap = new Capture$scope03(x);
+//│   scope0$cap.x$0 = 1;
 //│   lbl: while (true) {
 //│     let scrut, tmp3;
 //│     scrut = true;
 //│     if (scrut === true) {
-//│       tmp3 = x + 1;
-//│       x = tmp3;
-//│       lambda$here = runtime.safeCall(lambda2(x));
+//│       let lambda$here;
+//│       tmp3 = scope0$cap.x$0 + 1;
+//│       scope0$cap.x$0 = tmp3;
+//│       lambda$here = lambda$2(scope0$cap);
 //│       return lambda$here
 //│     } else { tmp2 = runtime.Unit; }
 //│     break;
