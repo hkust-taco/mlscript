@@ -91,7 +91,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
+//│           return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -142,7 +142,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("1"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
+//│           return runtime.unwind(handleBlock$7, 4, "Effects.mls:67:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 4;
 //│         continue main;
@@ -155,7 +155,7 @@ result
 //│         tmp10 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("4"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
+//│           return runtime.unwind(handleBlock$7, 1, "Effects.mls:70:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -164,7 +164,7 @@ result
 //│         tmp9 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("3"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
+//│           return runtime.unwind(handleBlock$7, 2, "Effects.mls:69:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -173,7 +173,7 @@ result
 //│         tmp8 = runtime.resumeValue;
 //│         runtime.resumeValue = runtime.safeCall(h7.perform("2"));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
+//│           return runtime.unwind(handleBlock$7, 3, "Effects.mls:68:3", null, null, 1, 0, 0)
 //│         }
 //│         pc = 3;
 //│         continue main;
@@ -443,9 +443,6 @@ handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
-//│ ║  l.442: 	    module A with
-//│ ╙──       	           ^
-//│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.438: 	    module A with
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
@@ -453,6 +450,9 @@ foo(h)
 //│ ╙──       	           ^
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.430: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.426: 	    module A with
 //│ ╙──       	           ^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 

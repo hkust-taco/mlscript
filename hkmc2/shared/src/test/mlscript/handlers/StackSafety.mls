@@ -20,7 +20,7 @@ hi(0)
 //│   runtime.stackDepth = runtime.stackDepth + 1;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.curEffect.lastSegmentBuf.push(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(hi, -1, "StackSafety.mls:12:1", null, null, 1, 1, n, 0)
 //│   }
 //│   scrut = n === 0;
 //│   if (scrut === true) {
@@ -55,7 +55,7 @@ sum(10000)
 //│   curDepth = runtime.stackDepth;
 //│   stackDelayRes = runtime.checkDepth();
 //│   if (runtime.curEffect !== null) {
-//│     return runtime.curEffect.lastSegmentBuf.push(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
+//│     return runtime.unwind(sum, -1, "StackSafety.mls:45:1", null, null, 1, 1, n, 0)
 //│   }
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -78,7 +78,7 @@ sum(10000)
 //│           runtime.resumeValue = res;
 //│           if (runtime.curEffect !== null) {
 //│             let res1;
-//│             return runtime.curEffect.lastSegmentBuf.push(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
+//│             return runtime.unwind(sum, 1, "StackSafety.mls:48:9", null, null, 1, 1, n, 0)
 //│           }
 //│           pc = 1;
 //│           continue main

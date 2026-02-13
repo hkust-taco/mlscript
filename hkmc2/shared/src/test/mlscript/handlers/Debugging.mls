@@ -57,7 +57,7 @@ fun f() =
 //│         k = 2000;
 //│         runtime.resumeValue = Predef.equals(i, 0);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(f, 5, "Debugging.mls:17:6", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 5;
 //│         continue main;
@@ -67,7 +67,7 @@ fun f() =
 //│         if (scrut === true) {
 //│           runtime.resumeValue = Predef.raiseUnhandledEffect();
 //│           if (runtime.curEffect !== null) {
-//│             return runtime.curEffect.lastSegmentBuf.push(f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│             return runtime.unwind(f, 4, "Debugging.mls:18:14", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│           }
 //│           pc = 4;
 //│           continue main
@@ -89,7 +89,7 @@ fun f() =
 //│       case 3:
 //│         runtime.resumeValue = Predef.print(tmp1);
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.curEffect.lastSegmentBuf.push(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
+//│           return runtime.unwind(f, 2, "Debugging.mls:18:5", f$debugInfo, null, 1, 0, 6, i, j, k, scrut, tmp1, tmp2)
 //│         }
 //│         pc = 2;
 //│         continue main;
@@ -194,8 +194,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:197:3) with locals: j=200, undefined=function f(...args) {   runtime.checkArgs("f", 0, true, args.length);   let j, tmp10, tmp11, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     j = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp10 = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp11 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         j = 200;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(true));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 2, "Debugging.mls:197:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 2;         continue main;         break;       case 1:         tmp11 = runtime.resumeValue;         return runtime.checkCall(runtime.raisePrintStackEffect(true));         break;       case 2:         tmp10 = runtime.resumeValue;         j = 300;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(false));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 1, "Debugging.mls:199:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 1;         continue main;         break;     }     break;   } }
+//│ > 	at f (Debugging.mls:188:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:199:3)
+//│ > 	at f (Debugging.mls:190:3)
 //│ > Stack Trace:
 //│ > 	at tail position

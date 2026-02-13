@@ -584,6 +584,9 @@ let Runtime1;
     tmp = Runtime.render(x, rcd);
     return runtime.safeCall(globalThis.console.log(tmp))
   } 
+  static unwind(...args) {
+    return runtime.safeCall(Runtime.curEffect.lastSegmentBuf.push(...args))
+  } 
   static raisePrintStackEffect(showLocals) {
     return Runtime.mkEffect(Runtime.PrintStackEffect, showLocals)
   } 
@@ -727,7 +730,7 @@ let Runtime1;
                               tmp35 = tmp32 + curBuf.at(tmp34);
                               tmp36 = msg + tmp35;
                               msg = tmp36;
-                              tmp37 = i1 + 1;
+                              tmp37 = i1 + 2;
                               i1 = tmp37;
                               tmp22 = runtime.Unit;
                               continue lbl4
