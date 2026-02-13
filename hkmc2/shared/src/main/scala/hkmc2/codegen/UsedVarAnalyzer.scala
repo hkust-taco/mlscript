@@ -77,7 +77,7 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
       
       override def applyPath(p: Path): Unit = p match
         case Value.Ref(_: BuiltinSymbol, _) => super.applyPath(p)
-        case RefOfBms(_, SDSym(dSym)) =>
+        case RefOfBms(_, SDSym(dSym), _) =>
           val node = scopeData.getNode(dSym)
           node.obj match
             // Here, we add an edge to a definition, even if it is the result of a field selection, if it is:
@@ -415,16 +415,16 @@ class UsedVarAnalyzer(b: Block, scopeData: ScopeData)(using State, IgnoredScopes
 
         override def applyResult(r: Result): Unit = 
           r match
-          case Call(RefOfBms(_, SDSym(d)), args) =>
+          case Call(RefOfBms(_, SDSym(d), _), args) =>
             args.foreach(super.applyArg(_))
             handleCalledScope(d)
-          case Instantiate(mut, RefOfBms(_, SDSym(d)), args) =>
+          case Instantiate(mut, RefOfBms(_, SDSym(d), _), args) =>
             args.foreach(super.applyArg)
             handleCalledScope(d)
           case _ => super.applyResult(r)
         
         override def applyPath(p: Path): Unit = p match
-          case RefOfBms(_, SDSym(d)) =>
+          case RefOfBms(_, SDSym(d), _) =>
             scopeInfos.get(d) match
             case None => super.applyPath(p)
             case Some(defn) =>

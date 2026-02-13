@@ -404,3 +404,16 @@ f
 //│ ║  l.398: 	  module A with
 //│ ╙──       	         ^
 //│ = C
+
+:lift
+module X with
+  object A
+  A
+
+:lift
+module X with
+  object A
+  fun f =
+    fun g = A
+    g
+  f
