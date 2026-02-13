@@ -405,12 +405,10 @@ f
 //│ ╙──       	         ^
 //│ = C
 
-:lift
 module X with
   object A
   A
 
-:lift
 module X with
   object A
   fun f =
