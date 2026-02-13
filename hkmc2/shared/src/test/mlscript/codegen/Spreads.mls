@@ -52,3 +52,19 @@ foo(0, ...a)
 //│ = [0, 1, 2, 3]
 
 
+:fixme
+:expect [1, 2, 3]
+data class A(...r)
+let x = new A(1, 2, 3)
+x.r
+//│ ═══[RUNTIME ERROR] Error: Access to required field 'r' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'
+//│ x = A(undefined)
+
+:fixme
+:expect [1, 2, 3]
+data class A(...r) with
+  fun getR = r
+new A(1, 2, 3).getR
+//│ ═══[RUNTIME ERROR] ReferenceError: r is not defined
+//│ ═══[RUNTIME ERROR] Expected: '[1, 2, 3]', got: 'undefined'

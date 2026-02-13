@@ -45,11 +45,11 @@ if Bar(true) is
 //│ (module
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
-//│   (type (func (param $y (ref null any)) (result (ref null any))))
 //│   (type $Baz (sub $Object (struct (field $$tag (mut i32)) (field $z (mut (ref null any))))))
+//│   (type (func (param $y (ref null any)) (result (ref null any))))
 //│   (type (func (param $z (ref null any)) (result (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (func $Bar (type 2) (param $y (ref null any)) (result (ref null any))
+//│   (func $Bar (type 3) (param $y (ref null any)) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -76,7 +76,7 @@ if Bar(true) is
 //│       (struct.set $Baz 0
 //│         (ref.cast (ref $Baz)
 //│           (local.get $this))
-//│         (i32.const 3))
+//│         (i32.const 2))
 //│       (block
 //│         (struct.set $Baz 1
 //│           (ref.cast (ref $Baz)
@@ -105,7 +105,7 @@ if Bar(true) is
 //│         (nop)
 //│         (block (result (ref null any))
 //│           (local.set $scrut
-//│             (call_ref 2
+//│             (call_ref 3
 //│               (ref.i31
 //│                 (i32.const 1))
 //│               (ref.func $Bar)))
@@ -154,7 +154,7 @@ if Bar(true) is
 //│                     (struct.get $Object 0
 //│                       (ref.cast (ref $Object)
 //│                         (local.get $scrut)))
-//│                     (i32.const 3))
+//│                     (i32.const 2))
 //│                   (then
 //│                     (block $arm2
 //│                       (block (result (ref null any))
@@ -191,3 +191,9 @@ class Foo(val x, val y)
 if Foo(1,2) is Foo(a,b) then 0
 //│ Wasm result:
 //│ = 0
+
+class Foo(val x)
+fun getXor(f) = if f is Foo(a) then a else false
+getXor(Foo(42))
+//│ Wasm result:
+//│ = 42

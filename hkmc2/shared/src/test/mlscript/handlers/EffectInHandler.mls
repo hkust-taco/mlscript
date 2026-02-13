@@ -7,7 +7,6 @@ class PrintEffect with
   fun aux(s: String): ()
 
 :e
-:re
 // :sjs
 handle h = PrintEffect with
   fun p(x)(k) =
@@ -19,12 +18,11 @@ handle h = PrintEffect with
     h.p(x)
 h.aux(3)
 //│ ╔══[ERROR] Name not found: h
-//│ ║  l.17: 	    h.p(x)
+//│ ║  l.16: 	    h.p(x)
 //│ ╙──      	    ^
 //│ ╔══[ERROR] Name not found: h
-//│ ║  l.19: 	    h.p(x)
+//│ ║  l.18: 	    h.p(x)
 //│ ╙──      	    ^
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 
 handle h1 = PrintEffect with
   fun p(x)(k) =

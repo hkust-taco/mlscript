@@ -14,8 +14,12 @@ fun foo(h): module M =
   else
     module A
     A
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.15: 	    module A
+//│ ╙──      	           ^
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.12: 	    module A
+//│ ╙──      	           ^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 

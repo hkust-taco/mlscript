@@ -84,7 +84,7 @@ package object symbol {
         parentClassLikeSymbols.iterator.flatMap(_.baseClassLikeSymbols))
     })
 
-    lazy val baseClassLikeSymbols: SortedSet[ClassLikeSymbol] = _baseClassLikeSymbols.get_!
+    lazy val baseClassLikeSymbols: SortedSet[ClassLikeSymbol] = _baseClassLikeSymbols.force_!
 
     def <:<(that: ClassLikeSymbol): Bool =
       this === that || baseClassLikeSymbols.contains(that)

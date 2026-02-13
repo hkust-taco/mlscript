@@ -19,8 +19,8 @@ fun f(x) =
       let z = 3
       fun g() = z
 //│ JS (unsanitized):
-//│ let f, g$;
-//│ g$ = function g$(z) {
+//│ let g, f;
+//│ g = function g(z) {
 //│   return z
 //│ };
 //│ f = function f(x) {
@@ -110,8 +110,8 @@ fun f(x) =
       let z = 3
       fun g() = z )
 //│ JS (unsanitized):
-//│ let f4, g$3;
-//│ g$3 = function g$(z) {
+//│ let g5, f4;
+//│ g5 = function g(z) {
 //│   return z
 //│ };
 //│ f4 = function f(x) {

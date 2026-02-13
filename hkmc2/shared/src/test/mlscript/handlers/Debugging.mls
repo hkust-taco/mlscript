@@ -155,38 +155,30 @@ module Test with
   fun main()(using Debugger) =
     test(12) + test(34)
 
-// Currently this test fails due to lifter issue. Commenting out :lift at the top of this file will make this work.
-// The lifter currently does not correctly consider the member variable as a local that could be captured.
-:fixme
 let res =
   handle h = Debugger with
     fun break(payload)(resume) = resume
   using Debugger = h
   Runtime.try(() => Test.main())
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'instance$Ident(Debugger)'
-//│ ╟── which references the symbol introduced here
-//│ ║  l.164: 	  using Debugger = h
-//│ ╙──       	  ^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: instance$Ident is not defined
-//│ res = undefined
+//│ res = EffectHandle(_)
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:153:15)
+//│ 	at Test.main (Debugging.mls:156:5)
 
-:fixme
 set res = res.resumeWith(42)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
 
 :re
 res.raise()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'raise')
+//│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
+//│ 	at Test.test (Debugging.mls:153:15)
+//│ 	at Test.main (Debugging.mls:156:16)
 
-:fixme
 :expect 0.33676533676533676
 res.resumeWith(666)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'resumeWith')
-//│ ═══[RUNTIME ERROR] Expected: '0.33676533676533676', got: 'undefined'
+//│ = 0.33676533676533676
 
 let i = 100
 fun f() =
@@ -202,8 +194,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:196:3) with locals: j=200, undefined=function f(...args) {   runtime.checkArgs("f", 0, true, args.length);   let j, tmp10, tmp11, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     j = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp10 = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp11 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         j = 200;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(true));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 2, "Debugging.mls:196:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 2;         continue main;         break;       case 1:         tmp11 = runtime.resumeValue;         return runtime.checkCall(runtime.raisePrintStackEffect(true));         break;       case 2:         tmp10 = runtime.resumeValue;         j = 300;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(false));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 1, "Debugging.mls:198:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 1;         continue main;         break;     }     break;   } }
+//│ > 	at f (Debugging.mls:197:3) with locals: j=200, undefined=function f(...args) {   runtime.checkArgs("f", 0, true, args.length);   let j, tmp10, tmp11, pc;   if (runtime.resumePc === -1) {     pc = 0;   } else {     let saveOffset;     pc = runtime.resumePc;     saveOffset = runtime.resumeIdx;     j = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp10 = runtime.resumeArr.at(saveOffset);     saveOffset = saveOffset + 1;     tmp11 = runtime.resumeArr.at(saveOffset);     runtime.resumePc = -1;   }   main: while (true) {     switch (pc) {       case 0:         j = 200;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(true));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 2, "Debugging.mls:197:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 2;         continue main;         break;       case 1:         tmp11 = runtime.resumeValue;         return runtime.checkCall(runtime.raisePrintStackEffect(true));         break;       case 2:         tmp10 = runtime.resumeValue;         j = 300;         runtime.resumeValue = runtime.checkCall(runtime.raisePrintStackEffect(false));         if (runtime.curEffect !== null) {           return runtime.checkCall(runtime.curEffect.lastSegmentBuf.push(f1, 1, "Debugging.mls:199:3", f$debugInfo1, null, 1, 0, 3, j, tmp10, tmp11))         }         pc = 1;         continue main;         break;     }     break;   } }
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:198:3)
+//│ > 	at f (Debugging.mls:199:3)
 //│ > Stack Trace:
 //│ > 	at tail position

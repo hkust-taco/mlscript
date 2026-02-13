@@ -9,11 +9,13 @@ fun f(x) =
     fun get = x
   module A
   fun g = new A
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.10: 	  module A
+//│ ╙──      	         ^
 //│ JS (unsanitized):
-//│ let f, g$;
-//│ g$ = function g$(A$member, A1, x) {
-//│   return globalThis.Object.freeze(new A$member())
+//│ let g, f;
+//│ g = function g(A$) {
+//│   return globalThis.Object.freeze(new A$())
 //│ };
 //│ f = function f(x) {
 //│   let A1;
@@ -22,6 +24,8 @@ fun f(x) =
 //│       A1 = this
 //│     }
 //│     constructor() {}
+//│     static #A_mod$cap;
+//│     #A$cap;
 //│     get get() {
 //│       return x;
 //│     }
@@ -30,6 +34,8 @@ fun f(x) =
 //│   });
 //│   return runtime.Unit
 //│ };
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.10: 	  module A
+//│ ╙──      	         ^
 
 

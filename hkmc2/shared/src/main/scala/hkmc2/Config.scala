@@ -63,9 +63,9 @@ object Config:
   case class EffectHandlers(
     debug: Bool,
     stackSafety: Opt[StackSafety],
-    // Whether we check `Instantiate` nodes for effects, currently no effect can be raised in a constructor.
+    // Whether we check `Instantiate` nodes for effects. Currently, effects cannot be raised in constructors.
     checkInstantiateEffect: Bool = false,
-    // A debug option that allow codegen to continue even if a unlifted definition is encountered.
+    // A debug option that allows codegen to continue even if an unlifted definition is encountered.
     softLifterError: Bool = false
   )
   
