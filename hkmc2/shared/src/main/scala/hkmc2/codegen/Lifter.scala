@@ -373,7 +373,17 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                 k(Value.Ref(newSym, N))
             
             // Other naked references to BlockMemberSymbols.
-            // Do not rewrite selections.
+            // 
+            // For now, do not immediately rewrite selections if they are not referencing
+            // a lifted function, and instead rewrite `qual`. This is so that, when we reference
+            // a nested object or class of the form `A.B`, we just rewrite the reference to `A`
+            // instead of trying to rewrite the whole reference to `B`. The variable analyzer is
+            // written so that a reference to `A` is available (in the case that A is a module or object),
+            // as a passed parameter if needed.
+            //
+            // Once we properly support lifting objects, which involves putting the object instance in
+            // a new public field belonging to its owner, we will need to replace the selection's 
+            // disambiguation with the public field's symbol rather than the object's symbol.
             case S(r) if !isSel =>
               resolveDefnRef(l, d, r) match
               case Some(value) => k(value)
