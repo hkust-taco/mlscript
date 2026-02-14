@@ -64,6 +64,39 @@ data class MoveInFull(a: Piece, b: Square, c: Move)
 
 data class Solution(a: MoveInFull, b: List[[List[MoveInFull],Solution]])
 
+fun kindOrder(k) = if k is
+  King then 1
+  Queen then 2
+  Rook then 3
+  Bishop then 4
+  Knight then 5
+  Pawn then 6
+fun colourOrder(c) = if c is Black then 1 else 2
+fun pieceCompare(p1, p2) = if p1 is [c1, k1] and p2 is [c2, k2] then
+  let co = colourOrder(c1) - colourOrder(c2)
+  if co === 0 then kindOrder(k1) - kindOrder(k2) else co
+fun squareCompare(s1, s2) = if s1 is [f1, r1] and s2 is [f2, r2] then
+  let ro = r1 - r2
+  if ro === 0 then f1 - f2 else ro
+fun optPieceCompare(op1, op2) = if
+  op1 is None and op2 is None then 0
+  op1 is None and op2 is Some(_) then -1
+  op1 is Some(_) and op2 is None then 1
+  op1 is Some(p1) and op2 is Some(p2) then pieceCompare(p1, p2)
+fun moveCompare(m1, m2) = if m1 is Move(ma1, mb1, mc1) and m2 is Move(ma2, mb2, mc2) then
+  let ac = squareCompare(ma1, ma2)
+  if ac === 0 then
+    let bc = optPieceCompare(mb1, mb2)
+    if bc === 0 then optPieceCompare(mc1, mc2) else bc
+  else ac
+fun moveInFullCompare(mif1, mif2) =
+  if mif1 is MoveInFull(p1, s1, m1) and mif2 is MoveInFull(p2, s2, m2) then
+    let pc = pieceCompare(p1, p2)
+    if pc === 0 then
+      let sc = squareCompare(s1, s2)
+      if sc === 0 then moveCompare(m1, m2) else sc
+    else pc
+
 fun maybe(d, f, x) = if x is
   None then d
   Some(x) then f(x)
@@ -520,7 +553,7 @@ fun compact(s) = if s is Solution(mif, rs) then Soln(mif, foldr(insertCompact, N
 fun insertCompact(mif_s, ls) = if mif_s is [mif, s] then
   fun insert(x, ls) = if ls is
     Nil then x :: Nil
-    y :: ys then if x > y then y :: insert(x, ys) else x :: y :: ys
+    y :: ys then if moveInFullCompare(x, y) > 0 then y :: insert(x, ys) else x :: y :: ys
   let cs = compact(s)
   fun ic(ls) = if ls is
     Nil then [mif :: Nil, cs] :: Nil
