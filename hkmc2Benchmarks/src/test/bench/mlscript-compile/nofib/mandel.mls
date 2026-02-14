@@ -1,0 +1,77 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module mandel with ...
+
+
+
+data class Pixmap(a: Int, b: Int, c: Int, d:List[[Int, Int, Int]])
+
+fun createPixmap(width, height, max, colours) = Pixmap(width, height, max, colours)
+
+data class Complex(r: Num, i: Num)
+
+fun comp_magnitude(c) = if c is Complex(a, b) then sqrt(a * a + b * b)
+
+fun comp_times(x, y) = if
+  x is Complex(a, b) and y is Complex(c, d) then Complex((a * c) - (b * d), (a * d) + (b * c))
+
+fun comp_plus(x, y) = if
+  x is Complex(a, b) and y is Complex(c, d) then Complex(a + c, b + d)
+
+fun mandel(c) =
+  fun infiniteMandel() = lazy of () =>
+    LzCons(c, map_lz((z => comp_plus(comp_times(z, z), c)), infiniteMandel()))
+  infiniteMandel()
+
+fun diverge(cmplx, radius) =
+  comp_magnitude(cmplx) > radius
+
+fun whenDiverge(limit, radius, c) =
+  fun walkIt(ls) = if force(ls) is
+    LzNil then 0
+    LzCons(x, xs) and
+      diverge(x, radius) then 0
+      else 1 + walkIt(xs)
+
+  walkIt(take_lz_lz(limit, mandel(c)))
+
+fun parallelMandel(mat, limit, radius) = map(c => whenDiverge(limit, radius, c), mat)
+
+fun mandelset(x, y, x_, y_, screenX, screenY, lIMIT) =
+  fun prettyRGB(s) =
+    let t = lIMIT - s
+    [s, t, t]
+
+  fun windowToViewport(s, t) =
+    Complex(x + ((s * (x_ - x)) / screenX), y + ((t * (y_ - y)) / screenY))
+
+  fun lscomp1(ls1) = if ls1 is
+    Nil then Nil
+    t :: t1 then
+      fun lscomp2(ls2) = if ls2 is
+        Nil then lscomp1(t1)
+        s :: t2 then windowToViewport(s, t) :: lscomp2(t2)
+      lscomp2(enumFromTo(1, screenX))
+
+  let result = parallelMandel(lscomp1(enumFromTo(1, screenY)), lIMIT, max(x_ - x, y_ - y) / 2)
+
+  createPixmap(screenX, screenY, lIMIT, map(prettyRGB, result))
+
+
+fun testMandel_nofib(dummy) =
+  let minx = -2.0
+  let miny = -2.0
+  let maxx = 2.0
+  let maxy = 2.0
+  let screenX = 25
+  let screenY = 25
+  let limit = 75
+  mandelset(minx, miny, maxx, maxy, screenX, screenY, limit)
+
+
+
+fun main() = testMandel_nofib(0).toString()
+
