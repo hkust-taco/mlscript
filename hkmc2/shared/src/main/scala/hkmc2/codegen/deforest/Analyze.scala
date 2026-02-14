@@ -224,6 +224,7 @@ class DeforestPreAnalyzer(
         c match
           case InCtx.TopLvl() => true
           case InCtx.ModCtor(b) => true
+          case InCtx.Mod(m) => true
           case InCtx.Begn(b) => true
           case InCtx.Scped(s) => true
           case _ => false

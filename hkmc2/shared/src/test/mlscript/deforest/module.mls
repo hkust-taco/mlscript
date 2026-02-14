@@ -1,6 +1,34 @@
 :js
 
 
+:deforest
+module M with
+  data class XX(a)
+  data class YY(b)
+  data class ZZ(c)
+  data object OO
+  fun h() = 123
+  fun p() = XX(YY(OO))
+  fun f(x) = if x is
+    XX(YY(y)) then h()
+M.f(M.p())
+//│ deforest > ==============
+//│ deforest > Call(Select(Ref(module:M,None),Ident(XX)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(a))
+//│ deforest > Call(Select(Ref(module:M,None),Ident(YY)),List(Arg(None,Select(Ref(module:M,None),Ident(OO))))) ->
+//│ deforest > 	Ref($arg$XX$0$,None)
+//│ deforest > 	Select(Ref($arg$XX$0$,None),Ident(b))
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$XX$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$XX$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 123
 
 
 :deforest
@@ -25,9 +53,9 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List(var:f)
 //│ JS (unsanitized):
-//│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp, tmp1, tmp2, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_Nil; /* scoped */
+//│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_Nil; /* scoped */
 //│ map_11$map = function map_11$map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   if (ls instanceof Nil1.class) {
 //│     return (fv_ctorLam_f) => {
 //│       return map_13$ls_Nil(fv_ctorLam_f)
@@ -38,10 +66,10 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│     arg$Cons$1$ = ls.t;
 //│     t = arg$Cons$1$;
 //│     h = arg$Cons$0$;
-//│     tmp3 = runtime.safeCall(f(h));
-//│     tmp4 = map_11$map(f, t);
-//│     Cons_h = tmp3;
-//│     Cons_t = tmp4;
+//│     tmp4 = runtime.safeCall(f(h));
+//│     tmp5 = map_11$map(f, t);
+//│     Cons_h = tmp4;
+//│     Cons_t = tmp5;
 //│     return (fv_ctorLam_f) => {
 //│       return map_13$ls_Cons(fv_ctorLam_f, Cons_h, Cons_t)
 //│     }
@@ -50,24 +78,24 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│   }
 //│ };
 //│ map_13$map = function map_13$map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   return ls(f)
 //│ };
 //│ map_13$ls_Cons = function map_13$ls_Cons(fv_f, Cons_h, Cons_t) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   arg$Cons$0$ = Cons_h;
 //│   arg$Cons$1$ = Cons_t;
 //│   t = arg$Cons$1$;
 //│   h = arg$Cons$0$;
-//│   tmp3 = runtime.safeCall(fv_f(h));
-//│   tmp4 = map_13$map(fv_f, t);
-//│   return Cons1(tmp3, tmp4)
+//│   tmp4 = runtime.safeCall(fv_f(h));
+//│   tmp5 = map_13$map(fv_f, t);
+//│   return Cons1(tmp4, tmp5)
 //│ };
 //│ map_13$ls_Nil = function map_13$ls_Nil(fv_f) {
 //│   return Nil1
 //│ };
 //│ map = function map(f, ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3, tmp4; /* scoped */
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   if (ls instanceof Nil1.class) {
 //│     return Nil1
 //│   } else if (ls instanceof Cons1.class) {
@@ -75,22 +103,22 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│     arg$Cons$1$ = ls.t;
 //│     t = arg$Cons$1$;
 //│     h = arg$Cons$0$;
-//│     tmp3 = runtime.safeCall(f(h));
-//│     tmp4 = map(f, t);
-//│     return Cons1(tmp3, tmp4)
+//│     tmp4 = runtime.safeCall(f(h));
+//│     tmp5 = map(f, t);
+//│     return Cons1(tmp4, tmp5)
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
 //│ enum1 = (undefined, function (a) {
-//│   let scrut, tmp3, tmp4; /* scoped */
+//│   let scrut, tmp4, tmp5; /* scoped */
 //│   scrut = a < 0;
 //│   if (scrut === true) {
 //│     return Nil1
 //│   } else {
-//│     tmp3 = a - 1;
-//│     tmp4 = enum1(tmp3);
-//│     return Cons1(a, tmp4)
+//│     tmp4 = a - 1;
+//│     tmp5 = enum1(tmp4);
+//│     return Cons1(a, tmp5)
 //│   }
 //│ });
 //│ (class Nil {
@@ -127,10 +155,10 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ lambda1 = (undefined, function (x) {
 //│   return x * 2
 //│ });
-//│ tmp = enum1(3);
-//│ tmp1 = Predef.id(tmp);
-//│ tmp2 = map_11$map(lambda1, tmp1);
-//│ map_13$map(lambda, tmp2)
+//│ tmp1 = enum1(3);
+//│ tmp2 = Predef.id(tmp1);
+//│ tmp3 = map_11$map(lambda1, tmp2);
+//│ map_13$map(lambda, tmp3)
 //│ deforest > ==============
 //│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
@@ -151,7 +179,6 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 
 
 :deforest
-:sjs
 module DeforestList with
   data object Nil
   data class (::) Cons(h, t)
@@ -159,7 +186,10 @@ module DeforestList with
     Nil then 0
     h :: t then h + sum(t)
   fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
-DeforestList.sum(DeforestList.enum(3))
+  fun main() = DeforestList.sum(DeforestList.enum(3))
+  val res = DeforestList.sum(DeforestList.enum(100))
+DeforestList.res + DeforestList.main()
+// DeforestList.main()
 //│ deforest > ==============
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
@@ -167,115 +197,40 @@ DeforestList.sum(DeforestList.enum(3))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List()
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List()
 //│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List()
-//│ JS (unsanitized):
-//│ let DeforestList1, tmp3, enum_9$enum, sum_10$sum, sum_10$ls_Cons, sum_10$ls_Nil; /* scoped */
-//│ enum_9$enum = function enum_9$enum(n) {
-//│   let scrut, tmp4, tmp5; /* scoped */
-//│   scrut = n > 0;
-//│   if (scrut === true) {
-//│     let Cons_h, Cons_t; /* scoped */
-//│     tmp4 = n - 1;
-//│     tmp5 = enum_9$enum(tmp4);
-//│     Cons_h = n;
-//│     Cons_t = tmp5;
-//│     return () => {
-//│       return sum_10$ls_Cons(Cons_h, Cons_t)
-//│     }
-//│   } else {
-//│     return () => {
-//│       return sum_10$ls_Nil()
-//│     }
-//│   }
-//│ };
-//│ sum_10$sum = function sum_10$sum(ls) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4; /* scoped */
-//│   return ls()
-//│ };
-//│ sum_10$ls_Cons = function sum_10$ls_Cons(Cons_h, Cons_t) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4; /* scoped */
-//│   arg$Cons$0$ = Cons_h;
-//│   arg$Cons$1$ = Cons_t;
-//│   t = arg$Cons$1$;
-//│   h = arg$Cons$0$;
-//│   tmp4 = sum_10$sum(t);
-//│   return h + tmp4
-//│ };
-//│ sum_10$ls_Nil = function sum_10$ls_Nil() {
-//│   return 0
-//│ };
-//│ (class DeforestList {
-//│   static {
-//│     DeforestList1 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     (class Nil2 {
-//│       static {
-//│         new this
-//│       }
-//│       constructor() {
-//│         DeforestList.Nil = this;
-//│         Object.defineProperty(this, "class", {
-//│           value: Nil2
-//│         });
-//│         globalThis.Object.freeze(this);
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["object", "Nil"]; 
-//│     });
-//│     this.Cons = function Cons(h, t) {
-//│       return globalThis.Object.freeze(new Cons.class(h, t));
-//│     };
-//│     (class Cons2 {
-//│       static {
-//│         DeforestList.Cons.class = this
-//│       }
-//│       constructor(h, t) {
-//│         this.h = h;
-//│         this.t = t;
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Cons", ["h", "t"]]; 
-//│     });
-//│   }
-//│   static sum(ls) {
-//│     let t, h, arg$Cons$0$, arg$Cons$1$, tmp4; /* scoped */
-//│     if (ls instanceof DeforestList.Nil.class) {
-//│       return 0
-//│     } else if (ls instanceof DeforestList.Cons.class) {
-//│       arg$Cons$0$ = ls.h;
-//│       arg$Cons$1$ = ls.t;
-//│       t = arg$Cons$1$;
-//│       h = arg$Cons$0$;
-//│       tmp4 = DeforestList.sum(t);
-//│       return h + tmp4
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│   } 
-//│   static enum(n) {
-//│     let scrut, tmp4, tmp5; /* scoped */
-//│     scrut = n > 0;
-//│     if (scrut === true) {
-//│       tmp4 = n - 1;
-//│       tmp5 = DeforestList.enum(tmp4);
-//│       return DeforestList.Cons(n, tmp5)
-//│     } else {
-//│       return DeforestList.Nil
-//│     }
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "DeforestList"]; 
-//│ });
-//│ tmp3 = enum_9$enum(3);
-//│ sum_10$sum(tmp3)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List()
+//│ = 5056
+
+
+
+
+
+:deforest
+module DeforestList with
+  data object Nil
+  data class (::) Cons(h, t)
+  fun sum(ls) =
+    fun helper(ls, acc) = if ls is
+      Nil then acc
+      h :: t then helper(t, acc + h)
+    helper(ls, 0)
+  fun enum(n) = if n > 0 then n :: enum(n - 1) else Nil
+  fun main() = DeforestList.sum(DeforestList.enum(3))
+  val res = DeforestList.sum(DeforestList.enum(100))
+DeforestList.res + DeforestList.main()
 //│ deforest > ==============
 //│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
 //│ deforest > 	Ref(var:ls,None)
@@ -283,9 +238,19 @@ DeforestList.sum(DeforestList.enum(3))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
 //│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Select(Ref(module:DeforestList,None),Ident(Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > Select(Ref(module:DeforestList,None),Ident(Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(member:helper, var:acc)
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List(member:helper, var:acc)
 //│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List()
-//│ = 6
+//│ deforest > 	List(member:helper, var:acc)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List(member:helper, var:acc)
+//│ = 5056

@@ -169,21 +169,7 @@ f(p(), 2)
 //│ = 14
 
 
-// fun branchBodyY(res, tmp, a, b) = res + tmp + a
-// fun branchBodyX(res, y, a) = let tmp = 12 in y(res, tmp, a)
-// fun f(x, y, res) = x(res, y)
-// let a = 1
-// let xLam = (res, y) => branchBodyX(res, y, a)
-// let b = 2
-// let yLam = (res, tmp, a) => branchBodyY(res, tmp, a, b)
-// f(xLam, yLam, 3)
-// :deforest
-// fun f(x, y, res) = if x is
-//   X then
-//     let tmp = 12
-//     if y is
-//       Y(b) then res + tmp + x.a
-// f(X(1), Y(2), 3)
+
 
 
 :deforest
@@ -214,34 +200,6 @@ f(X(1), Y(2), 3)
 //│ = 16
 
 
-:deforest
-module M with
-  data class XX(a)
-  data class YY(b)
-  data class ZZ(c)
-  data object OO
-  fun h() = 123
-  fun p() = XX(YY(OO))
-  fun f(x) = if x is
-    XX(YY(y)) then h()
-M.f(M.p())
-//│ deforest > ==============
-//│ deforest > Call(Select(Ref(module:M,None),Ident(XX)),List(Arg(None,Ref($tmp,None)))) ->
-//│ deforest > 	Ref(var:x,None)
-//│ deforest > 	Select(Ref(var:x,None),Ident(a))
-//│ deforest > Call(Select(Ref(module:M,None),Ident(YY)),List(Arg(None,Select(Ref(module:M,None),Ident(OO))))) ->
-//│ deforest > 	Ref($arg$XX$0$,None)
-//│ deforest > 	Select(Ref($arg$XX$0$,None),Ident(b))
-//│ deforest > ========
-//│ deforest > free vars of Ref($arg$XX$0$,None):
-//│ deforest > 	List()
-//│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$XX$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ = 123
 
 
 :deforest
