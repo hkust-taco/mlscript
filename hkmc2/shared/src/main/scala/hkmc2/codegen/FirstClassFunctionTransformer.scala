@@ -108,6 +108,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
         case _ => k(p)
       case _ => k(p)
 
+    override def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
+      updatePathWithInst(defn.rhs, false): v =>
+        super.applyValDefn(ValDefn(defn.tsym, defn.sym, v))(k)
+
     override def applyRcdArg(rcdArg: RcdArg)(k: RcdArg => Block): Block =
       updatePathWithInst(rcdArg.value, false): v =>
         super.applyRcdArg(RcdArg(rcdArg.idx, v))(k)

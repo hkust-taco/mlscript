@@ -848,3 +848,45 @@ Foo(0).x
 
 Foo(x => x).x(1)
 //│ = 1
+
+
+:sjs
+module Foo with
+  val f = x => x
+//│ JS (unsanitized):
+//│ let Foo15;
+//│ (class Foo14 {
+//│   static {
+//│     Foo15 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     let lambda7, Lambda$020, tmp28;
+//│     this.Lambda$0 = function Lambda$0() {
+//│       return globalThis.Object.freeze(new Lambda$0.class());
+//│     };
+//│     (class Lambda$019 extends globalThis.Function {
+//│       static {
+//│         Foo14.Lambda$0.class = this
+//│       }
+//│       constructor() {
+//│         super();
+//│       }
+//│       call(x2) {
+//│         return x2
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│     });
+//│     tmp28 = globalThis.Object.freeze(new Foo15.Lambda$0());
+//│     this.f = tmp28;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Foo"]; 
+//│ });
+
+
+Foo.f(1)
+//│ = 1
