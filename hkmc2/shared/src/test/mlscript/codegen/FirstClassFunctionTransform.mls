@@ -834,3 +834,17 @@ fun foo(y) = y + 1
 
 foo(Foo.x)
 //│ = 2
+
+
+class Foo(val x) with
+  fun f(y) = y + 1
+
+
+Foo(0).f(1)
+//│ = 2
+
+Foo(0).x
+//│ = 0
+
+Foo(x => x).x(1)
+//│ = 1

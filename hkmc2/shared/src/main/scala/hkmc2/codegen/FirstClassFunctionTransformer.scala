@@ -124,6 +124,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
               case _: VarSymbol |  _: TempSymbol =>
                 k(Call(ref.selSN("call"), args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
               case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+            case sel: Select => sel.symbol match
+              case Some(s: TermSymbol) if s.k != syntax.Fun =>
+                k(Call(sel.selSN("call"), args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+              case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
             case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
       case p: Path => updatePathWithInst(p, false): p2 =>
         k(p2)
