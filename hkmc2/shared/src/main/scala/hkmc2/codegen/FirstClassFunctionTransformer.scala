@@ -16,7 +16,6 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
   //  1. generate corresponding function classes with call function
   //  2. generate firstCls field for each non-anonymous function
   //  3. substitute all first-class functions with corresponding class instantiation.
-  //    if the function is defined in another module, the class can be retrieved by firstCls field
   //  4. invoke the call function for each first-class function
   class ModuleTransformer(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def callFunc(fd: FunDefn) =
@@ -37,12 +36,10 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
           mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, body)(fd.forceTailRec))
           applyBlock(rst) // Also remove the original definition, since they cannot be invoked by name
         case fd @ FunDefn(owner, sym, dSym, params, body) => // Non-anonymous functions
-          val lamClsSym = new BlockMemberSymbol("Lambda$" + sym.nme + mapping.size.toString(), Nil, false)
+          val lamClsSym = new BlockMemberSymbol("Lambda$" + sym.nme, Nil, false)
           mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, callFunc(fd))(fd.forceTailRec))
           applyDefn(fd): fd2 =>
-            val lhs = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
-            val rhs = outModulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
-            val rst2 = applySubBlock(AssignField(lhs, syntax.Tree.Ident("firstCls"), rhs, rst)(None))
+            val rst2 = applySubBlock(rst)
             Define(fd2, rst2)
         case _ => super.applyBlock(b)
       case _ => super.applyBlock(b)
@@ -85,8 +82,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
             Assign(tmp,
               Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
         case None if l.tsym.map(_.k == syntax.Fun).getOrElse(false) => // This symbol denotes a function and is defined in another module
-          val tmp = new TempSymbol(None, "tmp")
-          val cls = ref.selSN("firstCls")
+          val tmp = new TempSymbol(None)
+          val cls = Value.Ref(new BlockMemberSymbol("Lambda$" + l.nme, Nil, true), disamb)
           Scoped(Set(tmp),
             Assign(tmp,
               Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
@@ -102,8 +99,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
               k(outModulePath.map(_.selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
             case _ => s.owner match
               case Some(_: ModuleOrObjectSymbol) => // defined in another module
-                val tmp = new TempSymbol(None, "tmp")
-                val cls = sel.selSN("firstCls")
+                val tmp = new TempSymbol(None)
+                val cls = sel.qual.selSN("Lambda$" + s.nme)
                 Scoped(Set(tmp),
                   Assign(tmp,
                     Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
