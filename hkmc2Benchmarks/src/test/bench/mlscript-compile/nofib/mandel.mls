@@ -73,5 +73,5 @@ fun testMandel_nofib(dummy) =
 
 
 
-fun main() = testMandel_nofib(0).toString()
+fun main() = testMandel_nofib(0)
 
