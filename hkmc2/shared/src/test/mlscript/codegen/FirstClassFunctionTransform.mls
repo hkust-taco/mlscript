@@ -890,3 +890,64 @@ module Foo with
 
 Foo.f(1)
 //│ = 1
+
+module Bar with
+  fun h(x) = x + 1
+  fun w(y) = y(0)
+  fun f(x) = w(h) + x
+
+Bar.f(0)
+//│ = 1
+
+
+:sjs
+module Bar with
+  val id = x => x
+//│ JS (unsanitized):
+//│ let Bar6;
+//│ (class Bar5 {
+//│   static {
+//│     Bar6 = this
+//│   }
+//│   constructor() {
+//│     runtime.Unit;
+//│   }
+//│   static {
+//│     let lambda7, Lambda$021, tmp29;
+//│     this.Lambda$0 = function Lambda$0() {
+//│       return globalThis.Object.freeze(new Lambda$0.class());
+//│     };
+//│     (class Lambda$020 extends globalThis.Function {
+//│       static {
+//│         Bar5.Lambda$0.class = this
+//│       }
+//│       constructor() {
+//│         super();
+//│       }
+//│       call(x2) {
+//│         return x2
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│     });
+//│     tmp29 = globalThis.Object.freeze(new Bar6.Lambda$0());
+//│     this.id = tmp29;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Bar"]; 
+//│ });
+
+
+Bar.id(42)
+//│ = 42
+
+
+module Foo with
+  fun f(x) = x + 1
+  module Bar with
+    fun g1(h) = h(0)
+    fun g2(x) = g1(Foo.f) + x
+
+
+Foo.Bar.g2(1)
+//│ = 2

@@ -95,7 +95,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
             case _ => false
           )
           blkSym match
-            case Some(p) => // we are selecting a function inside the current module
+            case Some(p) if mustBeAnonymous => // we are selecting a function inside the current module
               k(outModulePath.map(_.selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
             case _ => s.owner match
               case Some(_: ModuleOrObjectSymbol) => // defined in another module
@@ -123,16 +123,20 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
     override def applyResult(r: Result)(k: Result => Block): Block = r match
       case c @ Call(fun, args) => updatePathWithInst(fun, true): fun2 =>
         applyArgs(args): args2 =>
+          def call(f: Path) = Call(f, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
           fun2 match
             case ref @ Value.Ref(sym, _) => sym match
-              case _: VarSymbol |  _: TempSymbol =>
-                k(Call(ref.selSN("call"), args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
-              case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+              case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
+              case _ => k(call(fun2))
             case sel: Select => sel.symbol match
-              case Some(s: TermSymbol) if s.k != syntax.Fun =>
-                k(Call(sel.selSN("call"), args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
-              case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
-            case _ => k(Call(fun2, args2)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall))
+              case Some(s: TermSymbol) if s.k != syntax.Fun => k(call(sel.selSN("call")))
+              case _ => k(call(fun2)) // An intra-module selection also has no symbol. e.g.,
+              // module Foo with
+              //  fun aux(f) = f(1) + f(10)
+              //  fun f(x, y, b) =
+              //    aux(z => x + z) * aux(z => if b then y + z else y - z)
+              // `Foo.aux` has no symbol
+            case _ => k(call(fun2))
       case p: Path => updatePathWithInst(p, false): p2 =>
         k(p2)
       case _ => super.applyResult(r)(k)
