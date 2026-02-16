@@ -1,4 +1,7 @@
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open Predef
 
+module NofibPrelude with ...
 type Char = String
 
 abstract class Option[out T]: Some[T] | None
@@ -7,7 +10,7 @@ object None extends Option
 
 fun fromSome(s) = if s is Some(x) then x
 
-class Lazy[out A](val init: () -> A) with
+data class Lazy[out A](init: () -> A) with
   mut val cached: Option[A] = None
   fun get() =
     if cached is
@@ -16,8 +19,9 @@ class Lazy[out A](val init: () -> A) with
         let v = init()
         set cached = Some(v)
         v
-fun lazy(x) = new Lazy(x)
+fun lazy(x) = Lazy(x)
 fun force(x) = if x is Lazy then x.Lazy#get()
+
 
 abstract class List[out T]: Cons[T] | Nil
 data class (::) Cons[out T](head: T, tail: List[T]) extends List[T] with
@@ -105,7 +109,7 @@ fun listEq(xs, ys) = if
 
 fun listEqBy(f, a, b) = if a is
   Nil and b is Nil then true
-  x :: xs and b is y :: ys then f(x, y) and listEqBy(f, xs, ys)
+  x :: xs and b is y :: ys then f(x, y) && listEqBy(f, xs, ys)
   else false
 
 fun listNeq(xs, ys) = if
@@ -362,3 +366,4 @@ fun nofibStringToList(s) =
 fun nofibListToString(ls) = if ls is
   Nil then ""
   h :: t then h + nofibListToString(t)
+

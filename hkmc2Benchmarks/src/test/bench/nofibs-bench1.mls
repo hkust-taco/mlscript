@@ -1,0 +1,98 @@
+:js
+:silent
+
+// Comment to run the benchmarks
+:exit
+====================================================================================================
+
+
+import "./mlscript-compile/Benchmark.mls"
+open Benchmark
+
+
+let suite = mkSuite()
+
+import "../../test/bench/mlscript-compile/nofib/ansi.mls"
+suite.add("ansi", () => ansi.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/atom.mls"
+suite.add("atom", () => atom.main())
+
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/awards.mls"
+suite.add("awards", () => awards.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/banner.mls"
+suite.add("banner", () => banner.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/lcss.mls"
+suite.add("lcss", () => lcss.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/boyer.mls"
+suite.add("boyer", () => boyer.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/boyer2.mls"
+suite.add("boyer2", () => boyer2.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/calendar.mls"
+suite.add("calendar", () => calendar.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/cichelli.mls"
+suite.add("cichelli", () => cichelli.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/circsim.mls"
+suite.add("circsim", () => circsim.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/clausify.mls"
+suite.add("clausify", () => clausify.main())
+
+
+// =======================
+
+
+import "../../test/bench/mlscript-compile/nofib/constraints.mls"
+suite.add("constraints", () => constraints.main())
+
+
+runSuite(suite)
+writeResults(suite, "nofibs1.json")
