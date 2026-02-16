@@ -111,8 +111,8 @@ class StackSafeTransform(depthLimit: Int, paths: HandlerPaths, stackSafetyMap: S
         methods.map(rewriteFn),
         privateFields,
         publicFields, 
-        rewriteBlk(preCtor, L(BlockMemberSymbol("TODO", Nil))), // TODO: preCtor is not translated in handler lowering
-        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else rewriteBlk(ctor, R(isym)),
+        preCtor,
+        if isTopLevel && (defn.k is syntax.Mod) then transformTopLevel(ctor) else ctor,
         mod.map(rewriteObjBody(_, isTopLevel)),
         bufferable,
       )
