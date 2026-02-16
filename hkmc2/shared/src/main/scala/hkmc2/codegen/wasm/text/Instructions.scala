@@ -271,7 +271,7 @@ object Instructions:
 
   object ref:
     /** Creates a `ref.null` instruction. */
-    def null_(heapType: HeapType): FoldedInstr = FoldedInstr(
+    def `null`(heapType: HeapType): FoldedInstr = FoldedInstr(
       mnemonic = "ref.null",
       instrargs = Seq(heapType.toWat),
       stackargs = Seq.empty,

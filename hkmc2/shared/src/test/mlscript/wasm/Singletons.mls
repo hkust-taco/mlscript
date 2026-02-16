@@ -2,6 +2,7 @@
 :global
 :wasm
 
+
 :wat
 object Foo with
   val x = 1
@@ -20,7 +21,7 @@ Bar.y
 //│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
 //│   (start 3)
-//│   (func $Foo (type 3) (result (ref null any))
+//│   (func  (type 3) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -38,9 +39,7 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Foo" (func $Foo))
-//│   (elem declare func $Foo)
-//│   (func $Bar (type 4) (result (ref null any))
+//│   (func  (type 4) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -58,8 +57,6 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (export "Bar" (func $Bar))
-//│   (elem declare func $Bar)
 //│   (func $entry (type 5) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))

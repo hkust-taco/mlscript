@@ -15,7 +15,7 @@ import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf, Map as MutMap}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -30,20 +30,13 @@ extension (instr: FoldedInstr)
 
 class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   import Ctx.ctx
-  import Ctx.{binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
+  import Ctx.{SingletonInfo, binaryOps, unaryOps, wasmIntrinsicArities, wasmIntrinsicNameSet}
   import Instructions.*
 
   type Context = Ctx
 
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
-  private case class SingletonInfo(
-      globalName: Str,
-      globalTy: RefType
-  )
-  private val singletonByBms: MutMap[BlockMemberSymbol, SingletonInfo] = MutMap.empty
-  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, SingletonInfo] = MutMap.empty
-  private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
 
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
@@ -68,14 +61,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         case End(_) => true
         case _ => false)
 
-  private def singletonInfoFor(sym: Local): Opt[SingletonInfo] = sym match
-    case bms: BlockMemberSymbol => singletonByBms.get(bms)
-    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
-    case _ => N
+  /** Returns singleton metadata when `sym` resolves to a registered singleton object. */
+  private def singletonInfoFor(sym: Local)(using Ctx): Opt[SingletonInfo] =
+    ctx.getSingletonInfo(sym)
 
+  /** Loads the singleton object reference from its backing mutable global. */
   private def singletonGlobalGet(info: SingletonInfo): Expr =
     global.get(GlobalIdx(SymIdx(info.globalName)), info.globalTy)
 
+  /** True when the lowered main block references `Unit` and needs synthesized singleton definition. */
   private def requiresUnitSingleton(main: Block): Bool =
     var required = false
     val traverser = new BlockTraverser:
@@ -91,6 +85,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     traverser.applyBlock(main)
     required
 
+  /** Prepends a synthetic `object Unit` definition only when the main block requires it. */
   private def synthesizeUnitObject(main: Block): Block =
     if !requiresUnitSingleton(main) then main
     else
@@ -113,29 +108,30 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
       Define(unitDefn, main)
 
+  /** Registers eager singleton runtime state by creating its global and start-init action. */
   private def registerSingletonInit(clsLikeDefn: ClsLikeDefn, typeref: TypeIdx)(using
       Ctx,
       Raise,
       Scope
   ): Unit =
-    if singletonByBms.contains(clsLikeDefn.sym) then return
+    if ctx.containsSingleton(clsLikeDefn.sym) then return
 
     val globalSym = BlockMemberSymbol(s"${clsLikeDefn.sym.nme}$$inst", Nil, nameIsMeaningful = false)
     val globalName = scope.allocateName(globalSym)
     val globalTy = RefType(typeref, nullable = true)
     val info = SingletonInfo(globalName, globalTy)
-    singletonByBms(clsLikeDefn.sym) = info
-    clsLikeDefn.isym match
-      case mos: ModuleOrObjectSymbol => singletonByIsym(mos) = info
-      case _ => ()
+    val singletonOwner = clsLikeDefn.isym match
+      case mos: ModuleOrObjectSymbol => S(mos)
+      case _ => N
+    ctx.registerSingleton(clsLikeDefn.sym, singletonOwner, info)
 
     val globalIdx = ctx.addGlobal(
       globalSym,
       GlobalInfo(
-        id = S(SymIdx(globalName)),
+        id = SymIdx(globalName),
         valType = globalTy,
         mutable = true,
-        init = ref.null_(typeref)
+        init = ref.`null`(typeref)
       )
     )
 
@@ -144,10 +140,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       operands = Seq.empty,
       returnTypes = Seq(Result(RefType.anyref))
     )
-    singletonInitActions += global.set(
+    ctx.addSingletonInitAction(global.set(
       globalIdx,
       ref.cast(ctorCall, globalTy)
-    )
+    ))
 
   /** Recursively declares supported top-level class types (needed for nested function codegen). */
   private def createDefnTypes(b: Block)(using Ctx): Unit = b match
@@ -981,10 +977,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                     )
                   )
 
+                  val ctorId =
+                    if isSingletonObj then N
+                    else clsLikeDefn.sym.optionIf(_.nameIsMeaningful).map(sym => SymIdx(sym.nme))
                   ctx.addFunc(
                     S(clsLikeDefn.sym),
                     FuncInfo(
-                      sym = clsLikeDefn.sym,
+                      id = ctorId,
                       typeIdx = funcTy,
                       params = ctorParams,
                       nResults = ctorCode.resultTypes.length,
@@ -1210,10 +1209,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Raise,
       Scope
   ): (Document, Str) =
-    singletonByBms.clear()
-    singletonByIsym.clear()
-    singletonInitActions.clear()
-
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1281,6 +1276,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.popLocal()
 
+    val singletonInitActions = ctx.getSingletonInitActions
     if singletonInitActions.nonEmpty then
       val initTy = ctx.addType(
         sym = N,

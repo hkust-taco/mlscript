@@ -96,7 +96,7 @@ end FuncInfo
  * Each instance of [[GlobalInfo]] represents a single global definition in a WebAssembly module.
  *
  * @param id
- *   Symbolic identifier for the global, or `N` if the global is anonymous.
+ *   Symbolic identifier for the global.
  * @param valType
  *   The value type of the global.
  * @param mutable
@@ -105,13 +105,13 @@ end FuncInfo
  *   The initializer expression for the global.
  */
 class GlobalInfo(
-    val id: Opt[SymIdx],
+    val id: SymIdx,
     val valType: ValType,
     val mutable: Bool,
     val init: Expr
 ) extends ToWat:
 
-  private def idDoc: Document = id.fold(doc"")(_.toWat)
+  private def idDoc: Document = id.toWat
 
   def toWat: Document =
     val typeDoc =
@@ -162,6 +162,11 @@ enum WasmIntrinsicType:
   case TupleArray(mutable: Bool)
 
 object Ctx:
+  case class SingletonInfo(
+      globalName: Str,
+      globalTy: RefType
+  )
+
   val binaryOps: Map[Str, (Expr, Expr) => Expr] = Map(
     "plus_impl" -> i32.add,
     "minus_impl" -> i32.sub,
@@ -190,6 +195,7 @@ object Ctx:
     funcs = ArrayBuf.empty,
     globals = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
+    namedGlobals = MutMap.empty,
     locals = MutMap() :: Nil,
     startFunc = N
   )
@@ -214,6 +220,8 @@ object Ctx:
  *   [[ArrayBuf]] containing all global definitions in the module.
  * @param namedFuncs
  *   [[MutMap]] containing function symbols mapped to their corresponding Wasm function indices.
+ * @param namedGlobals
+ *   [[MutMap]] containing global symbols mapped to their corresponding Wasm global indices.
  * @param locals
  *   Stack of [[MutMap]] from local variable symbols to their numeric indices within the current
  *   function scope.
@@ -224,6 +232,7 @@ class Ctx(
     funcs: ArrayBuf[FuncInfo],
     globals: ArrayBuf[GlobalInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
+    namedGlobals: MutMap[Symbol, NumIdx],
     var locals: Ls[MutMap[Local, NumIdx]],
     private var startFunc: Opt[FuncIdx]
 ) extends ToWat:
@@ -232,6 +241,9 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val singletonByBms: MutMap[BlockMemberSymbol, Ctx.SingletonInfo] = MutMap.empty
+  private val singletonByIsym: MutMap[ModuleOrObjectSymbol, Ctx.SingletonInfo] = MutMap.empty
+  private val singletonInitActions: ArrayBuf[Expr] = ArrayBuf.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -331,15 +343,35 @@ class Ctx(
   def addGlobal(sym: Symbol, globalInfo: GlobalInfo): GlobalIdx =
     val numIdx = NumIdx(globals.size)
     globals += globalInfo
-    locals.last(sym) = numIdx
-    GlobalIdx(globalInfo.id.getOrElse(numIdx))
+    namedGlobals(sym) = numIdx
+    GlobalIdx(globalInfo.id)
 
   /** Adds a [[Seq]] of variables into the global variable scope. */
-  def addGlobals(globals: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
-    globals.map(addGlobal.tupled)
+  def addGlobals(globalDefs: Seq[Symbol -> GlobalInfo]): Seq[GlobalIdx] =
+    globalDefs.map(addGlobal.tupled)
 
-    /** Checks whether the global variable scope contains the variable `sym`. */
-  def containsGlobal(sym: Symbol): Bool = locals.last.contains(sym)
+  /** Checks whether the global variable scope contains the variable `sym`. */
+  def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
+
+  def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
+
+  def getSingletonInfo(sym: Local): Opt[Ctx.SingletonInfo] = sym match
+    case bms: BlockMemberSymbol => singletonByBms.get(bms)
+    case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
+    case _ => N
+
+  def registerSingleton(
+      bms: BlockMemberSymbol,
+      isym: Opt[ModuleOrObjectSymbol],
+      info: Ctx.SingletonInfo
+  ): Unit =
+    singletonByBms(bms) = info
+    isym.foreach(singletonByIsym(_) = info)
+
+  def addSingletonInitAction(action: Expr): Unit =
+    singletonInitActions += action
+
+  def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
 
   /** Configures the module start function. */
   def setStartFunc(funcIdx: FuncIdx): Unit =
@@ -357,10 +389,13 @@ class Ctx(
    * respectively.
    */
   def getWasmLocals: Seq[Symbol] -> Opt[Seq[Local]] =
-    wasmLocalsToSeq(locals.last.toMap) -> locals.headOption.map(l => wasmLocalsToSeq(l.toMap))
+    wasmLocalsToSeq(namedGlobals.toMap) -> locals.headOption.map(l => wasmLocalsToSeq(l.toMap))
 
   /** Returns all local variable scopes and their variables. */
-  def getAllWasmLocals: Ls[Seq[Local]] = locals.map(l => wasmLocalsToSeq(l.toMap))
+  def getAllWasmLocals: Ls[Seq[Local]] = locals match
+    case Nil => wasmLocalsToSeq(namedGlobals.toMap) :: Nil
+    case _ =>
+      locals.init.map(l => wasmLocalsToSeq(l.toMap)) :+ wasmLocalsToSeq(namedGlobals.toMap)
 
   /**
    * Returns the cached [[FuncIdx]] for the intrinsic named `name`, creating it with

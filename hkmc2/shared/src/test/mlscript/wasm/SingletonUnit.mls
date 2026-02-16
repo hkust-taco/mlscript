@@ -13,7 +13,7 @@
 //│   (type (func))
 //│   (global $Unit$inst (mut (ref null $Unit)) (ref.null $Unit))
 //│   (start 2)
-//│   (func $Unit (type 2) (result (ref null any))
+//│   (func  (type 2) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -25,8 +25,6 @@
 //│       (nop)
 //│       (return
 //│         (local.get $this))))
-//│   (export "Unit" (func $Unit))
-//│   (elem declare func $Unit)
 //│   (func $entry (type 3) (result (ref null any))
 //│     (local $Unit (ref null any))
 //│     (local $Unit1 (ref null any))
