@@ -3,7 +3,7 @@ import org.scalajs.linker.interface.OutputPatterns
 
 enablePlugins(ScalaJSPlugin)
 
-val scala3Version = "3.8.1"
+val scala3Version = "3.7.4"
 val directoryWatcherVersion = "0.18.0"
 val scalaTestVersion = "3.2.19"
 
