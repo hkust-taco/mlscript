@@ -70,10 +70,10 @@ object Lifter:
     val empty = AccessInfo(Set.empty, Set.empty, Set.empty)
 
   object RefOfBms:
-    def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]])] = p match
-      case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb))
+    def unapply(p: Path): Opt[(BlockMemberSymbol, Opt[DefinitionSymbol[?]], Bool)] = p match
+      case Value.Ref(l: BlockMemberSymbol, disamb) => S((l, disamb, false))
       case s @ Select(_, _) => s.symbol match
-        case Some(value) => value.asBlkMember.map((_, S(value)))
+        case Some(value) => value.asBlkMember.map((_, S(value), true))
         case _ => N
       case _ => N
   
@@ -188,10 +188,10 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       
       override def applyResult(r: Result): Unit = r match
         // do not search the ref to the class
-        case Instantiate(mut, RefOfBms(_, S(d)), args) =>
+        case Instantiate(mut, RefOfBms(_, S(d), _), args) =>
           args.foreach(applyArg)
         // for class constructors
-        case Call(RefOfBms(_, S(d)), args) =>
+        case Call(RefOfBms(_, S(d), _), args) =>
           args.foreach(applyArg)
         case _ => super.applyResult(r)
       
@@ -212,7 +212,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
           // If B extends A, then A -> B is an edge
           parentPath match
             case None => ()
-            case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)))) =>
+            case Some(RefOfBms(_, S(s: (ClassSymbol | ModuleOrObjectSymbol)), _)) =>
               if nestedScopes.contains(s) then inheritanceTree += (s -> isym)
             case _ if !ignored.contains(isym) =>
               raise(WarningReport(
@@ -236,7 +236,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         case _ => false
       
       override def applyValue(v: Value): Unit = v match
-        case RefOfBms(_, S(l)) if nestedScopes.contains(l) => data.getNode(l).obj match
+        case RefOfBms(_, S(l), _) if nestedScopes.contains(l) => data.getNode(l).obj match
           case c: ScopedObject.Class if c.isObj => ()
           case c: (ScopedObject.Class | ScopedObject.ClassCtor) =>
             if !c.node.get.inModOrTopLevel then
@@ -318,7 +318,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         override def applyResult(r: Result)(k: Result => Block): Block =
           r match
           // if possible, directly rewrite the call using the efficient version
-          case c @ Call(RefOfBms(l, S(d)), args) =>
+          case c @ Call(RefOfBms(l, S(d), _), args) =>
             ctx.rewrittenScopes.get(d) match
               case N => super.applyResult(r)(k) // external call, or have not yet traversed that function
               case S(r) =>
@@ -336,7 +336,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                         k(cls.rewriteCall(c, newArgs))
                       case _ => join2
                     case _ => join2
-          case inst @ Instantiate(mut, RefOfBms(l, S(d)), args) =>
+          case inst @ Instantiate(mut, RefOfBms(l, S(d), _), args) =>
             applyArgs(args): newArgs =>
               def join =
                 if args is newArgs then inst
@@ -352,7 +352,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
         
         // extract the call
         override def applyPath(p: Path)(k: Path => Block): Block = p match
-          case r @ RefOfBms(l, S(d)) => ctx.rewrittenScopes.get(d) match
+          case r @ RefOfBms(l, S(d), isSel) => ctx.rewrittenScopes.get(d) match
             case S(f: LiftedFunc) =>
               if f.isTrivial then k(r)
               else
@@ -373,7 +373,18 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                 k(Value.Ref(newSym, N))
             
             // Other naked references to BlockMemberSymbols.
-            case S(r) =>
+            // 
+            // For now, do not immediately rewrite selections if they are not referencing
+            // a lifted function, and instead rewrite `qual`. This is so that, when we reference
+            // a nested object or class using a selection `A.B`, we just rewrite the reference to `A`
+            // instead of trying to rewrite the whole reference to `B`. The variable analyzer is
+            // written so that a reference to `A` is available (in the case that `A` is a module or object),
+            // as a passed parameter if needed.
+            //
+            // Once we properly support lifting objects, which involves putting the object instance in
+            // a new public field belonging to its owner, we will need to replace the selection's 
+            // disambiguation with that public field's symbol.
+            case S(r) if !isSel =>
               resolveDefnRef(l, d, r) match
               case Some(value) => k(value)
               case None => super.applyPath(p)(k)
