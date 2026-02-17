@@ -326,9 +326,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   def join2: Block =
                     resolveDefnRef(l, d, r) match
                       case Some(value) => k(c.copy(fun = value, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
-                      case None =>
-                        if args is newArgs then k(c)
-                        else k(c.copy(args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
+                      case None => super.applyPath(c.fun): fun2 =>
+                        if (fun2 is c.fun) && (args is newArgs) then k(c)
+                        else k(c.copy(fun = fun2, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                   r match
                     // function call
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgs))

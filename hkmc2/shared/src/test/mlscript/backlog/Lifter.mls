@@ -157,10 +157,23 @@ fun foo(x, y) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.151: 	  module M with
 //│ ╙──       	         ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'M'
+//│ ║  l.155: 	  fun foo = M.foo()
+//│ ║         	            ^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.151: 	  module M with
+//│ ║         	         ^^^^^^
+//│ ║  l.152: 	    fun foo() =
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.153: 	      set y = 2
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.154: 	      x + y
+//│ ╙──       	^^^^^^^^^^^
 
 :expect 12
 foo(10, 0)
-//│ = 12
+//│ ═══[RUNTIME ERROR] ReferenceError: M is not defined
+//│ ═══[RUNTIME ERROR] Expected: '12', got: 'undefined'
 
 
 data class A(x) with
