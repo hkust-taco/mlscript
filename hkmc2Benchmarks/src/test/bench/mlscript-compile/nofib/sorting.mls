@@ -212,7 +212,7 @@ fun mangle(inpt) =
   unlines(sort(lines(inpt)))
 
 fun testSorting_nofib(d) =
-  let f = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/Main.hs").toString()
+  let f = nofibStringToList of fs.readFileSync("../hkmc2/shared/src/test/mlscript/nofib/input/Main.hs").toString()
   hash(mangle(f))
 
 fun main() = testSorting_nofib(0)
