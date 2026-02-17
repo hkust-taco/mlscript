@@ -506,3 +506,14 @@ fun f(x) =
 f(2)
 //│ > 2
 //│ = [1]
+
+
+fun f(...args) =
+  () =>
+    print("test")
+    f(...args)
+f(100)()()()
+//│ > test
+//│ > test
+//│ > test
+//│ = fun
