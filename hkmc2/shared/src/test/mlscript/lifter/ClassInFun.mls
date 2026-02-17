@@ -138,8 +138,8 @@ f().foo()
 //│     }
 //│   }
 //│   #Good$cap;
-//│   #x;
 //│   #y;
+//│   #x;
 //│   #scope0$cap;
 //│   foo() {
 //│     let tmp6, tmp7;
