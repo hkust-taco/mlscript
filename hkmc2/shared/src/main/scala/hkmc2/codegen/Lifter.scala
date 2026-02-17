@@ -326,7 +326,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
                   def join2: Block =
                     resolveDefnRef(l, d, r) match
                       case Some(value) => k(c.copy(fun = value, args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
-                      case None => super.applyResult(c)(k)
+                      case None =>
+                        if args is newArgs then k(c)
+                        else k(c.copy(args = newArgs)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLoc(c.toLoc))
                   r match
                     // function call
                     case f: LiftedFunc => k(f.rewriteCall(c, newArgs))
@@ -978,7 +980,9 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
     private val aux = Lazy[Defn](mkAuxDefn)
     
     def rewriteCall(c: Call, args: List[Arg])(using ctx: LifterCtxNew): Call =
-      if isTrivial then c
+      if isTrivial then
+        if args is c.args then c
+        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
       else
         Call(
           Value.Ref(mainSym, S(mainDsym)),
@@ -1112,7 +1116,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if isTrivial then
         val path = Value.Ref(cls.sym, S(cls.isym))
         if (inst.cls === path) && (inst.args is args) then inst
-        else inst.copy(cls = path, args = args)
+        else inst.copy(cls = path, args = args).withLocOf(inst)
       else
         flat.force // force computation
         Call(
@@ -1124,7 +1128,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       if obj.isObj then lastWords("tried to rewrite instantiate for an object")
       if isTrivial then
         if c.args is args then c
-        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall)
+        else c.copy(args = args)(c.isMlsFun, c.mayRaiseEffects, c.explicitTailCall).withLocOf(c)
       else
         flat.force // force computation
         Call(
