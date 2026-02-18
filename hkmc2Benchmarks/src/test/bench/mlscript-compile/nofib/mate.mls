@@ -572,7 +572,7 @@ fun solve(bd, c, n) = showResult(solution(bd, c, (2 * n) - 1))
 
 fun testMate_nofib(dummy) = 
   let input = nofibStringToList of
-    fs.readFileSync("../hkmc2/shared/src/test/mlscript/nofib/input/heathcote3.prob").toString()
+    fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/heathcote3.prob").toString()
   let bdcn = readProblem(input)
   if bdcn is [bd, [c, n]] then
     showBoard(bd) +:

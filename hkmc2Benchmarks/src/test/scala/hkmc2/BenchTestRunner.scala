@@ -22,5 +22,5 @@ class BenchTestRunner
   override protected def createDiffMaker
       (file: Path, preludePath: Path, predefPath: Path, relativeName: String)
       : DiffMaker =
-    new BenchDiffMaker((os.pwd/"hkmc2Benchmarks").toString, file, preludePath, predefPath, relativeName)(using state.cctx)
+    new BenchDiffMaker(state.workingDir.toString, file, preludePath, predefPath, relativeName)(using state.cctx)
 

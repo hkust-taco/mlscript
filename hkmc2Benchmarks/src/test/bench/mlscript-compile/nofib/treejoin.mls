@@ -68,8 +68,8 @@ fun readTree(fk, s, t) = if
 
 
 fun testTreejoin_nofib(n) =
-  let c1 = nofibStringToList of fs.readFileSync("../hkmc2/shared/src/test/mlscript/nofib/input/1500.1").toString()
-  let c2 = nofibStringToList of fs.readFileSync("../hkmc2/shared/src/test/mlscript/nofib/input/1500.2").toString()
+  let c1 = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/1500.1").toString()
+  let c2 = nofibStringToList of fs.readFileSync("./hkmc2/shared/src/test/mlscript/nofib/input/1500.2").toString()
   let a = readTree(case { [xx, _, _] then xx }, c1, Empty)
   let b = readTree(case { [xx, _, _] then xx }, c2, Empty)
   join(a, b, Empty)
