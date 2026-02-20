@@ -951,3 +951,32 @@ module Foo with
 
 Foo.Bar.g2(1)
 //│ = 2
+
+
+:todo
+:ge
+fun foo(x) =
+  fun bar(y) =
+    x + y
+  bar(x * 2)
+//│ ╔══[COMPILATION ERROR] Nested function bar is not supported yet.
+//│ ║  l.959: 	  fun bar(y) =
+//│ ║         	  ^^^^^^^^^^^^
+//│ ║  l.960: 	    x + y
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'bar'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.959: 	  fun bar(y) =
+//│ ║         	  ^^^^^^^^^^^^
+//│ ║  l.960: 	    x + y
+//│ ╙──       	^^^^^^^^^
+
+
+:todo
+:lift
+:ge
+fun foo(x) =
+  fun bar(y) =
+    x + y
+  bar(x * 2)
+//│ ═══[COMPILATION ERROR] Cannot transform functions to classes when lifter is enabled for now.

@@ -30,13 +30,18 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
       
       Return(Call(f, params)(true, false, false), false)
 
+    private def checkNestedFunctions(body: Block) =
+      new CheckNestedFunctions().applyBlock(body)
+
     override def applyBlock(b: Block): Block = b match
       case Define(defn, rst) => defn match
         case fd @ FunDefn(owner, sym, dSym, params, body) if !sym.nameIsMeaningful => // Anonymous functions
+          checkNestedFunctions(body)
           val lamClsSym = new BlockMemberSymbol("Lambda$" + mapping.size.toString(), Nil, false)
           mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, body)(fd.forceTailRec))
           applyBlock(rst) // Also remove the original definition, since they cannot be invoked by name
         case fd @ FunDefn(owner, sym, dSym, params, body) => // Non-anonymous functions
+          checkNestedFunctions(body)
           val lamClsSym = new BlockMemberSymbol("Lambda$" + sym.nme, Nil, false)
           mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, callFunc(fd))(fd.forceTailRec))
           applyDefn(fd): fd2 =>
@@ -136,6 +141,12 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
       case p: Path => updatePathWithInst(p, false): p2 =>
         k(p2)
       case _ => super.applyResult(r)(k)
+
+  class CheckNestedFunctions extends BlockTraverser:
+    override def applyFunDefn(fun: FunDefn) =
+      if fun.sym.nameIsMeaningful then
+        raise(ErrorReport(msg"Nested function ${fun.sym.nme} is not supported yet." -> fun.sym.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
   
   // Substitute captured symbols in anonymous lambda bodies with corresponding class fields
   class UpdateReference(using subst: Map[Symbol, Symbol]) extends BlockTransformer(new SymbolSubst):
