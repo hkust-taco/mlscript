@@ -83,11 +83,9 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
             Assign(tmp,
               Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
         case None if l.tsym.map(_.k is syntax.Fun).getOrElse(false) => // This symbol denotes a function and is defined in another module
-          val tmp = new TempSymbol(None)
-          val cls = Value.Ref(new BlockMemberSymbol("Lambda$" + l.nme, Nil, true), disamb)
-          Scoped(Set(tmp),
-            Assign(tmp,
-              Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
+          raise(ErrorReport(msg"Cannot transform function ${l.nme} to the class for now, since it is defined in an unknown module." -> ref.toLoc :: Nil,
+            source = Diagnostic.Source.Compilation))
+          k(p)
         case _ => k(p)
       case sel: Select => sel.symbol match
         case Some(s: TermSymbol) if s.k is syntax.Fun =>
