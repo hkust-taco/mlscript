@@ -1,6 +1,7 @@
 package hkmc2
 package codegen
 
+import mlscript.utils.*, shorthands.*
 import utils.*
 import semantics.*
 import syntax.Tree
@@ -81,7 +82,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
           Scoped(Set(tmp),
             Assign(tmp,
               Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
-        case None if l.tsym.map(_.k == syntax.Fun).getOrElse(false) => // This symbol denotes a function and is defined in another module
+        case None if l.tsym.map(_.k is syntax.Fun).getOrElse(false) => // This symbol denotes a function and is defined in another module
           val tmp = new TempSymbol(None)
           val cls = Value.Ref(new BlockMemberSymbol("Lambda$" + l.nme, Nil, true), disamb)
           Scoped(Set(tmp),
@@ -89,11 +90,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
               Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
         case _ => k(p)
       case sel: Select => sel.symbol match
-        case Some(s: TermSymbol) if s.k == syntax.Fun =>
-          val blkSym = mapping.find(p => p._1.tsym match
-            case Some(t) => t == s
-            case _ => false
-          )
+        case Some(s: TermSymbol) if s.k is syntax.Fun =>
+          val blkSym = mapping.find(_._1.tsym.contains(s))
           blkSym match
             case Some(p) if mustBeAnonymous => // we are selecting a function inside the current module
               k(outModulePath.map(_.selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
@@ -129,7 +127,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
               case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
               case _ => k(call(fun2))
             case sel: Select => sel.symbol match
-              case Some(s: TermSymbol) if s.k != syntax.Fun => k(call(sel.selSN("call")))
+              case Some(s: TermSymbol) if s.k isnt syntax.Fun => k(call(sel.selSN("call")))
               case _ => k(call(fun2)) // An intra-module selection also has no symbol. e.g.,
               // module Foo with
               //  fun aux(f) = f(1) + f(10)
