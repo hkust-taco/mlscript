@@ -516,9 +516,9 @@ module Foo with
 //│   static f(x1, y, b) {
 //│     let lambda3, tmp13, lambda4, tmp14, tmp15, tmp16;
 //│     tmp15 = globalThis.Object.freeze(new Foo3.Lambda$2(x1));
-//│     tmp13 = Foo3.aux(tmp15);
+//│     tmp13 = Foo2.aux(tmp15);
 //│     tmp16 = globalThis.Object.freeze(new Foo3.Lambda$3(y, b));
-//│     tmp14 = Foo3.aux(tmp16);
+//│     tmp14 = Foo2.aux(tmp16);
 //│     return tmp13 * tmp14
 //│   }
 //│   toString() { return runtime.render(this); }

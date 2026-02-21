@@ -97,7 +97,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
           val blkSym = mapping.find(_._1.tsym.contains(s))
           blkSym match
             case Some(p) if mustBeAnonymous => // we are selecting a function inside the current module
-              k(outModulePath.map(_.selSN(p._1.nme)).getOrElse(Value.Ref(p._1, None)))
+              k(sel)
             case _ => s.owner match
               case Some(_: ModuleOrObjectSymbol) => // defined in another module
                 val tmp = new TempSymbol(None)
@@ -130,13 +130,13 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
               case _: VarSymbol |  _: TempSymbol => k(call(ref.selSN("call")))
               case _ => k(call(fun2))
             case sel: Select => sel.symbol match
-              case Some(s: TermSymbol) if s.k isnt syntax.Fun => k(call(sel.selSN("call")))
-              case _ => k(call(fun2)) // An intra-module selection also has no symbol. e.g.,
-              // module Foo with
-              //  fun aux(f) = f(1) + f(10)
-              //  fun f(x, y, b) =
-              //    aux(z => x + z) * aux(z => if b then y + z else y - z)
-              // `Foo.aux` has no symbol
+              case Some(s: TermSymbol) =>
+                if s.k is syntax.Fun then k(call(fun2))
+                else k(call(sel.selSN("call")))
+              case _ =>
+                raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation))
+                k(call(fun2))
             case _ => k(call(fun2))
       case p: Path => updatePathWithInst(p, false): p2 =>
         k(p2)
