@@ -18,7 +18,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
   //  2. generate firstCls field for each non-anonymous function
   //  3. substitute all first-class functions with corresponding class instantiation.
   //  4. invoke the call function for each first-class function
-  class ModuleTransformer(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn]) extends BlockTransformer(new SymbolSubst):
+  class ModuleTransformer(outModulePath: Option[Path], mapping: HashMap[BlockMemberSymbol, FunDefn], scDefines: HashMap[Path, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def callFunc(fd: FunDefn) =
       val f = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(fd.asPath)
       val params = fd.params match
@@ -42,11 +42,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
           applyBlock(rst) // Also remove the original definition, since they cannot be invoked by name
         case fd @ FunDefn(owner, sym, dSym, params, body) => // Non-anonymous functions
           checkNestedFunctions(body)
-          val lamClsSym = new BlockMemberSymbol("Lambda$" + sym.nme, Nil, false)
-          mapping += (sym -> FunDefn.withFreshSymbol(owner, lamClsSym, params, callFunc(fd))(fd.forceTailRec))
-          applyDefn(fd): fd2 =>
-            val rst2 = applySubBlock(rst)
-            Define(fd2, rst2)
+          super.applyBlock(b)
         case _ => super.applyBlock(b)
       case _ => super.applyBlock(b)
 
@@ -66,46 +62,54 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
         privateFields, publicFields, preCtor, ctor, mod, bufferable) => mod match
           case Some(mod) =>
             val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
+            val scDefs = HashMap.empty[Path, FunDefn]
             val nestedPath = outModulePath match
               case Some(p) => Some(p.selSN(sym.nme))
               case None => Some(Value.Ref(sym, Some(isym)))
-            val msBlk = new ModuleTransformer(nestedPath, fcfDefs).applyBlock(packMethods(mod.methods))
-            val ctor2 = new ModuleTransformer(nestedPath, fcfDefs).applyBlock(mod.ctor)
-            val fcfCls = fcfDefs.map(_._2).toList
+            val msBlk = new ModuleTransformer(nestedPath, fcfDefs, scDefs).applyBlock(packMethods(mod.methods))
+            val ctor2 = new ModuleTransformer(nestedPath, fcfDefs, scDefs).applyBlock(mod.ctor)
+            val fcfCls = fcfDefs.map(_._2).toList ++ scDefs.map(_._2).toList
             val (mths, withClsDefs) = unpackMethods(msBlk, ctor2)
             k(ClsLikeDefn(own, isym, sym, ctorSym, kind, paramsOpt, auxParams, parentPath, methods, privateFields, publicFields, preCtor, ctor,
               Some(ClsLikeBody(mod.isym, mths, mod.privateFields, mod.publicFields, generateFCFunctionClasses(Some(mod.isym), fcfCls, withClsDefs))), bufferable))
           case _ => super.applyDefn(defn)(k)
       case _ => super.applyDefn(defn)(k)
 
+    private def createForwardFunc(p: Path) = scDefines.getOrElseUpdate(p, {
+      val lamClsSym = new BlockMemberSymbol("Func$" + scDefines.size.toString(), Nil, false)
+      val restParam = Param(FldFlags(false, true, false, false), VarSymbol(Tree.Ident("param")), None, Modulefulness.none)
+      FunDefn.withFreshSymbol(None, lamClsSym, ParamList(ParamListFlags.empty, Nil, Some(restParam)) :: Nil,
+        Return(Call(p, Arg(Some(true), Value.Ref(restParam.sym, None)) :: Nil)(true, false, false), false))(false)
+    })
+
     // If the given path is non-anonymous and at LHS (i.e., mustBeAnonymous is true), then do not substitute it
     private def updatePathWithInst(p: Path, mustBeAnonymous: Boolean)(k: Path => Block) = p match
       case ref @ Value.Ref(l: BlockMemberSymbol, disamb) if !l.nameIsMeaningful || !mustBeAnonymous => mapping.get(l) match
         case Some(fd) =>
-          val tmp = new TempSymbol(None, "tmp")
+          val tmp = new TempSymbol(None)
           val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
           Scoped(Set(tmp),
             Assign(tmp,
               Instantiate(false, cls, fd.capturedVariables.map(v => Value.Ref(v, None).asArg)), k(Value.Ref(tmp, None))))
-        case None if l.tsym.map(_.k is syntax.Fun).getOrElse(false) => // This symbol denotes a function and is defined in another module
-          raise(ErrorReport(msg"Cannot transform function ${l.nme} to the class for now, since it is defined in an unknown module." -> ref.toLoc :: Nil,
-            source = Diagnostic.Source.Compilation))
-          k(p)
+        case None if l.tsym.map(_.k is syntax.Fun).getOrElse(false) => l.tsym match
+          case Some(s) =>
+            if s.k is syntax.Fun then // This symbol denotes a function defined in another module
+              val fd = createForwardFunc(p)
+              val tmp = new TempSymbol(None)
+              val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
+              Scoped(Set(tmp), Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
+            else k(p)
+          case _ =>
+            raise(ErrorReport(msg"Cannot determine if ${l.nme} is a function." -> ref.toLoc :: Nil,
+              source = Diagnostic.Source.Compilation))
+            k(p)
         case _ => k(p)
       case sel: Select => sel.symbol match
-        case Some(s: TermSymbol) if s.k is syntax.Fun =>
-          val blkSym = mapping.find(_._1.tsym.contains(s))
-          blkSym match
-            case Some(p) if mustBeAnonymous => // we are selecting a function inside the current module
-              k(sel)
-            case _ => s.owner match
-              case Some(_: ModuleOrObjectSymbol) => // defined in another module
-                val tmp = new TempSymbol(None)
-                val cls = sel.qual.selSN("Lambda$" + s.nme)
-                Scoped(Set(tmp),
-                  Assign(tmp,
-                    Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
-              case _ => k(p)
+        case Some(s: TermSymbol) if (s.k is syntax.Fun) && !mustBeAnonymous => // second-class functions as first-class function
+          val fd = createForwardFunc(p)
+          val tmp = new TempSymbol(None)
+          val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, None))
+          Scoped(Set(tmp), Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
         case _ => k(p)
       case _ => k(p)
 
@@ -181,13 +185,14 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
 
   override def applyBlock(b: Block): Block =
     val fcfDefs = HashMap.empty[BlockMemberSymbol, FunDefn]
-    val noFirstClassFunc = new ModuleTransformer(None, fcfDefs).applyBlock(b)
-    val fcfCls = fcfDefs.map(_._2).toList
+    val scDefs = HashMap.empty[Path, FunDefn]
+    val noFirstClassFunc = new ModuleTransformer(None, fcfDefs, scDefs).applyBlock(b)
+    val fcfCls = fcfDefs.map(_._2).toList ++ scDefs.map(_._2).toList
     generateFCFunctionClasses(None, fcfCls, noFirstClassFunc)
 
   extension (fd: FunDefn) {
     def capturedVariables: List[VarSymbol | TermSymbol] =
-      (fd.body.freeVars -- fd.params.flatMap(p => p.params.map(e => e.sym))).toList.collect {
+      (fd.body.freeVars -- fd.params.flatMap(p => p.params.map(e => e.sym) ++ p.restParam.toList.map(_.sym))).toList.collect {
         case v: VarSymbol => v
         case t: TermSymbol => t 
       }
