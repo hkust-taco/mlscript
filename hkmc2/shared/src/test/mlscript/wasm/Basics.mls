@@ -142,6 +142,8 @@ class Foo(val a)
 //│   (func $entry (type 3) (result (ref null any))
 //│     (local $Foo (ref null any))
 //│     (local $tmp (ref null any))
+//│     (local $a (ref null any))
+//│     (local $Foo1 (ref null any))
 //│     (block (result (ref null any))
 //│       (nop)
 //│       (block (result (ref null any))
@@ -154,5 +156,11 @@ class Foo(val a)
 //│             (local.get $tmp))))))
 //│   (export "entry" (func $entry))
 //│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 42
+
+class Foo(val x)
+fun getX(f: Foo) = f.x
+getX(Foo(42))
 //│ Wasm result:
 //│ = 42

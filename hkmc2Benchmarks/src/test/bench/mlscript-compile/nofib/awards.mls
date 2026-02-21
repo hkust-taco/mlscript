@@ -1,0 +1,76 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module awards with ...
+
+
+
+fun delete_(xs, e) = deleteBy((x, y) => x == y, e, xs)
+
+fun listDiff(a, ls) = foldl(delete_, a, ls)
+
+//│ ————————————————————————————————————————————————————————————————————————————————
+fun qsort(le, ls, r) = if ls is
+  Nil then r
+  x :: Nil then x :: r
+  x :: xs then qpart(le, x, xs, Nil, Nil, r)
+
+fun qpart(le, x, ys, rlt, rge, r) = if ys is
+  Nil then rqsort(le, rlt, x :: rqsort(le, rge, r))
+  y :: ys and
+    le(x, y) then qpart(le, x, ys, rlt, y :: rge, r)
+    else qpart(le, x, ys, y :: rlt, rge, r)
+
+fun rqsort(le, ls, r) = if ls is
+  Nil then r
+  x :: Nil then x :: r
+  x :: xs then rqpart(le, x, xs, Nil, Nil, r)
+
+fun rqpart(le, x, yss, rle, rgt, r) = if yss is
+  Nil then qsort(le, rle, x :: qsort(le, rgt, r))
+  y :: ys and
+    le(y, x) then rqpart(le, x, ys, y :: rle, rgt, r)
+    else rqpart(le, x, ys, rle, y :: rgt, r)
+//│ ————————————————————————————————————————————————————————————————————————————————
+
+fun sort(l) = qsort((a, b) => ltTup2(a, b, (a, b) => a < b, (a, b) => a > b, (a, b) => ltList(a, b, (a, b) => a < b, (a, b) => a > b)), l, Nil)
+
+fun perms(m, nns) = if
+  nns is Nil then Nil
+  m == 1 then map(x => x :: Nil, nns)
+  nns is n :: ns then map(x => n :: x, perms(m-1, ns)) +: perms(m, ns)
+
+fun awards(scores) =
+  let sumscores = map(p => [sum(p), p], perms(3, scores))
+
+  fun atleast(threshold) =
+    filter(case { [sum_, p] then sum_ >= threshold }, sumscores)
+
+  fun award(name_threshold) = if name_threshold is [name, threshold] then
+    map(ps => [name, ps], sort(atleast(threshold)))
+
+  award(["Gold", 70]) +: award(["Silver", 60]) +: award(["Bronze", 50])
+
+fun findawards(scores) = if awards(scores) is
+  Nil then Nil
+  head_ :: tail_ and head_ is [award, [sum_, perm]] then
+    [award, [sum_, perm]] :: findawards(listDiff(scores, perm))
+
+fun findallawards(competitors) =
+  map(case { [name, scores] then [name, findawards(scores)] }, competitors)
+
+fun competitors(i) = list of
+  ["Simon", list of 35, 27, 40, i, 34, 21]
+  ["Hans", list of 23, 19, 45, i, 17, 10, 5, 8, 14]
+  ["Phil", list of 1, 18, i, 20, 21, 19, 34, 8, 16, 21]
+  ["Kevin", list of 9, 23, 17, 54, i, 41, 9, 18, 14]
+
+fun testAwards_nofib(n) =
+  map(x => findallawards(competitors(intMod(x, 100))), enumFromTo(1, n))
+
+
+// NOTE: original input 1000
+fun main() = testAwards_nofib(100)
+

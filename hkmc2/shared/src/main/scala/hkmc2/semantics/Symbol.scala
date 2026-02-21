@@ -347,6 +347,8 @@ sealed trait InnerSymbol(using State) extends Symbol:
   val privatesScope: Scope = Scope.empty // * Scope for private members of this symbol
   val thisProxy: TempSymbol = TempSymbol(N, s"this$$$nme")
   def subst(using SymbolSubst): InnerSymbol
+  def asDefnSym: DefinitionSymbol[?] & InnerSymbol = this match
+    case d: DefinitionSymbol[?] => d
 
 trait IdentifiedSymbol extends Symbol:
   val id: Tree.Ident

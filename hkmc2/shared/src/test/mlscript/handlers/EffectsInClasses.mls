@@ -32,6 +32,7 @@ data class Lol(h) with
 //│     }
 //│     tmp1;
 //│   }
+//│   #Lol$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lol", ["h"]]; 
 //│ });
