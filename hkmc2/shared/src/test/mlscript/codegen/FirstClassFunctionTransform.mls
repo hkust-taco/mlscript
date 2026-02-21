@@ -823,3 +823,30 @@ fun foo(x) =
     x + y
   bar(x * 2)
 //│ ═══[COMPILATION ERROR] Cannot transform functions to classes when lifter is enabled for now.
+
+
+fun foo(f) = f("abc")
+
+:sjs
+foo(print)
+//│ JS (unsanitized):
+//│ let Func$019, tmp29;
+//│ Func$019 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
+//│ };
+//│ (class Func$018 extends globalThis.Function {
+//│   static {
+//│     Func$019.class = this
+//│   }
+//│   constructor() {
+//│     super();
+//│   }
+//│   call(...param) {
+//│     return Predef.print(...param)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
+//│ });
+//│ tmp29 = globalThis.Object.freeze(new Func$019());
+//│ foo11(tmp29)
+//│ > abc
