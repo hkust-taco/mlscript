@@ -827,7 +827,7 @@ class Lifter(topLevelBlk: Block)(using State, Raise, Config):
       val rewriter = new BlockRewriter
       
       // Remove symbols belonging to lifted scopes
-      val liftedChildSyms = node.children.collect:
+      val liftedChildSyms = node.allChildNodes.collect:
         case s @ ScopeNode(obj = l: ScopedObject.Liftable[?]) if s.isLifted => l.defn.sym
       
       val (syms, rewritten) = (obj.block.syms.toSet -- liftedChildSyms, rewriter.rewrite(obj.block.body))

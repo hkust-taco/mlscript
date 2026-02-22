@@ -506,3 +506,18 @@ fun f(x) =
 f(2)
 //│ > 2
 //│ = [1]
+
+data class Some(x)
+
+// This test generates a function that is not defined directly within the scoped block introducing its symbol,
+// i.e. it is defined another scope nested within the scoped block. This checks that that the function symbol
+// is removed properly from that socpe.
+let _refChoice = () => if
+  0 is Some(0) then
+    let process''(pairRes) =
+      if pairRes is [restRes] then 0
+  true then
+    let process''() = 0
+_refChoice
+//│ = fun
+//│ _refChoice = fun

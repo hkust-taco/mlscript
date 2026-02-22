@@ -1,0 +1,36 @@
+:js
+
+// https://github.com/hkust-taco/mlscript/issues/382
+
+
+// "Full example to demonstrate that changing else branch affect the loop behaviour"
+
+let x = 1
+while x ===
+  1 do
+    set x = 2
+  2 do
+    set x = 3
+    print("valid")
+else
+  set x = 2
+print("not inf loop")
+//│ > not inf loop
+//│ x = 2
+
+
+let x = 1
+while x ===
+  1 do
+    set x = 2
+  2 do
+    set x = 3
+    print("valid")
+else
+  set x = 3
+print("not inf loop")
+//│ > valid
+//│ > not inf loop
+//│ x = 3
+
+
