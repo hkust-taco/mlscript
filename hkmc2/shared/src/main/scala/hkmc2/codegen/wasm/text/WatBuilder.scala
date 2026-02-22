@@ -52,7 +52,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   /** Gets (and caches) the exception tag used for MLX `throw`. */
   private def exnTagIdx(using Ctx): TagIdx =
     ctx.getOrCreateWasmIntrinsicTag("mlx_exn",
-      ctx.addTag(TagInfo(id = S(SymIdx("mlx_exn")), typeIdx = ctx.addType(
+      ctx.addTag(TagInfo(id = SymIdx("mlx_exn"), typeIdx = ctx.addType(
         sym = N,
         TypeInfo(
           id = N,

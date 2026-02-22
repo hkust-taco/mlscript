@@ -128,18 +128,20 @@ class TypeInfo(
       doc"(type${idDoc.surroundUnlessEmpty(doc" ")} ${compType.toWat})"
 end TypeInfo
 
-/** A Wasm tag and its associated information. */
+/**
+ * A WebAssembly exception tag declaration.
+ *
+ * In Wasm, a `tag` names an exception kind and points to a function type that describes the
+ * payload values carried by `throw tag ...` and extracted by matching `catch tag ...`.
+ */
 class TagInfo(
-    val id: Opt[SymIdx],
+    val id: SymIdx,
     val typeIdx: TypeIdx
 ) extends ToWat:
 
-  private def idDoc: Document = id.fold(doc"")(_.toWat)
-
   def toWat: Document =
-    doc"""(tag${idDoc.surroundUnlessEmpty(doc" ")} (type ${typeIdx.toWat}))${
-      id.fold(doc""): id =>
-        doc""" (export "${id.id}" (tag ${id.toWat}))"""
+    doc"""(tag ${id.toWat} (type ${typeIdx.toWat}))${
+      doc""" (export "${id.id}" (tag ${id.toWat}))"""
     }"""
 end TagInfo
 
@@ -264,9 +266,8 @@ class Ctx(
 
   /** Adds a tag into this context. */
   def addTag(tagInfo: TagInfo): TagIdx =
-    val numIdx = NumIdx(tags.size)
     tags += tagInfo
-    TagIdx(tagInfo.id.getOrElse(numIdx))
+    TagIdx(tagInfo.id)
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a

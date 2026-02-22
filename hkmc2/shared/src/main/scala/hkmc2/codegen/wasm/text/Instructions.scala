@@ -6,9 +6,11 @@ import mlscript.utils.*, shorthands.*
 import document.*
 
 object Instructions:
+
   sealed trait CatchClause extends ToWat
 
   object CatchClause:
+    /** Catches payload values for a specific tag and branches to `label`. */
     case class Catch(tag: TagIdx, label: Str) extends CatchClause:
       def toWat: Document = doc"(catch ${tag.toWat} $$${label})"
 
