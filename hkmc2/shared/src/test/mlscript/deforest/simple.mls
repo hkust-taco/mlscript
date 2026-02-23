@@ -1,0 +1,776 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+
+object A
+object B
+object C
+data class AA(aa)
+data class BB(bb)
+data class AAA(x, y)
+data class BBB(x, y)
+data class CCC(c)
+object None
+data class Some(value)
+//│ deforest > ==============
+//│ deforest > ========
+
+fun test() =
+  let x = if true then A else B
+  if x is
+    A then 1
+    B then 2
+test()
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 1
+
+fun test() =
+  let x = if true then AA(A) else BB(B)
+  if x is
+    AA(x) then x
+    BB(x) then x
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = A
+
+
+fun f(a) = if a is
+  A then 1
+  B then 2
+fun test() =
+  let x = if true then AA(A) else BB(B)
+  if x is
+    AA(x) then f(x)
+    BB(x) then f(x)
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 1
+
+
+// `x.x` is successfully fused
+fun f1(a) = if a is
+  A then 1
+  B then 2
+  C then 3
+fun f2(a) = if a is
+  A then 4
+  B then 5
+  C then 6
+fun test() =
+  let x = if true then AA(A) else BB(B)
+  if x is
+    AA then f1(x.aa)
+    BB then f2(x.bb)
+test()
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 1
+
+
+fun test() =
+  fun g(x) = if true then AA(11) else BB(22)
+  fun c(x) = if x is
+    AA(x) then x
+    BB(x) then x
+  c(g(true))
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(11))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(22))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(bb))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 11
+
+
+
+
+// multiple match, no fusion
+fun test() =
+  let x = B
+  if x is
+    A then 1
+    B then 3
+  if x is
+    B then 2
+test()
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
+
+
+
+fun test() =
+  let x = A
+  let y = B
+  if x is
+    A then 1
+  if y is
+    B then 2
+test()
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List(6))
+//│ 	at: scala.collection.MapOps.default(Map.scala:289)
+//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
+//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
+//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:194)
+//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:200)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:156)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:226)
+
+
+fun c(a) =
+  let x = if a is
+    A then 1
+    B then 2
+  print(x)
+  x
+c(A) + c(B)
+//│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ > 1
+//│ > 2
+//│ = 3
+
+
+
+// simple free var example
+
+
+
+
+
+:expect 5
+fun c(x) =
+  let t = x.aa
+  let n = if x is
+    AA then 2
+  n + t
+c(AA(3))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 5
+
+
+
+fun f(a, b) = if a is
+  A then if b is
+     B then 3
+f(A, B)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:b,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:b)
+//│ deforest > free vars of Ref(var:b,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:b)
+//│ deforest > call dtor Ref(var:b,None) with:
+//│ deforest > 	List()
+//│ = 3
+
+
+fun f(x) = if x is
+  Some then if x.value > 1 then f(Some(x.value - 1)) else 0
+f(Some(2))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 0
+
+
+
+let x = A
+let y = B
+if x is
+  A then 1
+if y is
+  B then 2
+//│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List())
+//│ 	at: scala.collection.MapOps.default(Map.scala:289)
+//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
+//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
+//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:194)
+//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:200)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:156)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:226)
+
+
+
+fun test() =
+  let x = A
+  let y = B
+  if x is
+    A then 1
+  if y is
+    B then 2
+test()
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ FAILURE: Unexpected exception
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List(6))
+//│ 	at: scala.collection.MapOps.default(Map.scala:289)
+//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
+//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
+//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:194)
+//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
+//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:200)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:156)
+//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:226)
+
+
+
+fun f(x, y) =
+  let a = if x is
+    AAA(n, m) then y + n - m
+    BBB(n, m) then m + 1 - n
+  a + 3
+f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:BBB,Some((Fun)term:class:BBB.BBB)),List(Arg(None,Lit(IntLit(4))), Arg(None,Lit(IntLit(6))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BBB,Some((Fun)term:class:BBB.BBB)),List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ = 21
+
+
+fun c1(x) = if x is
+  AA then
+    if A is
+      A then x.aa
+fun c2(x) = if x is
+  AA then x.aa
+fun p(a) = c1(a) + c2(a)
+p(AA(1))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
+
+
+
+fun c(x, y) = if x is
+  AA(a) then
+    if y is
+      A then a
+c(AA(2), A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:a)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:a)
+//│ = 2
+
+
+fun f(x, y) =
+  let a = if x is
+    AAA(n, m) then y + n - m
+    CCC(n) then n + 1
+  a + 3
+f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(3))), Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:CCC,Some((Fun)term:class:CCC.CCC)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(c))
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ = 24
+
+
+
+
+fun f(x, y) =
+  let a = if x is
+    AAA then y + x.y
+    CCC(n) then n + 1
+  a + 3
+f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 22
+
+
+fun c(x, m) = if x is
+  AA(n) then n + 1
+  else m
+c(BB(3), 0)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:m)
+//│ = 0
+
+
+
+
+fun f(x) = if x is
+  AA(b) then g(b)
+fun g(b) = if b is
+  AA(a) then a + 1
+f(AA(AA(0)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref(var:b,None)
+//│ deforest > 	Select(Ref(var:b,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:b,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:b,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 1
+
+
+
+fun f(x) = x.aa.aa
+f(AA(AA(3)))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 3
+
+fun inner(x, y) =
+  let t = if x is
+    AA(a) then a + y
+    BB(b) then b - y
+  t * y
+fun outer1(x, y, z) =
+  let t = if x is
+    AA(a) then inner(a, y)
+    BB(b) then inner(b, y)
+  t + z
+fun outer2(x, y, z) =
+  let t = if x is
+    AA(a) then inner(a, z)
+    BB(b) then inner(b, y)
+  t + y
+let p = AA(AA(3))
+outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(5))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ = 103
+//│ p = AA(AA(3))
+
+
+fun mapHead(f, x) = if x is
+  AAA(h, t) then f(h)
+mapHead(x => x, AAA(1, AAA(2, None)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AAA,Some((Fun)term:class:AAA.AAA)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(y))
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:f)
+//│ = 1
+
+
+fun test() =
+  let k
+  if A is
+    A then
+      k = 3
+  k + 2
+test()
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 5
+
+fun test(a) = if a is
+  AA then 1
+  else 2
+test(B) + test(C)
+//│ deforest > ==============
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ = 4
+
+
+
+// technically ill-typed, so `AA(3)` (which flows to `z`) is not fused
+fun test(x, y, z) = if x is
+  AA(a) then
+    let m = if y is
+      AA(a1) then a1 + z
+    let n = if z is
+      AA(a2) then a2 - z
+    m + n
+test(AA(1), AA(2), AA(3))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, $tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z)
+//│ = "2AA(3)NaN"
+
+
+fun test(x) =
+  let t = id of
+    if x is
+      AA(a) then a
+      BB(a) then a
+  t(123).c + 5 * 4 - 3 + 2 - 1
+let p = if true then AA(CCC) else BB(CCC)
+test(p)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 141
+//│ p = AA(fun CCC { class: class CCC })
+
+
+fun test(x, y) =
+  let t =
+    if y is CCC then
+      if x is
+        AA(a) then a
+        BB(a) then a
+  t(123).c + 5 * 4 - 3 + 2 - 1
+let p = if true then AA(CCC) else BB(CCC)
+test(p, id(CCC(123)))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 141
+//│ p = AA(fun CCC { class: class CCC })
+
+
+:sjs
+fun f(x) = if x is
+  A then 1
+f(id(A)) + f(A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ JS (unsanitized):
+//│ let f10, tmp55, tmp56, tmp57, f_5$f, f_5$x_A, deforest$lam7; /* scoped */
+//│ f_5$f = function f_5$f(x) {
+//│   return x()
+//│ };
+//│ f_5$x_A = function f_5$x_A() {
+//│   return 1
+//│ };
+//│ f10 = function f(x) {
+//│   if (x instanceof A1.class) {
+//│     return 1
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│ };
+//│ tmp55 = Predef.id(A1);
+//│ tmp56 = f10(tmp55);
+//│ deforest$lam7 = () => { return f_5$x_A() };
+//│ tmp57 = f_5$f(deforest$lam7);
+//│ tmp56 + tmp57
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 2
+
+
+
+fun f(x) = if x is
+  A then 0
+  B then 1
+fun g(x) = if x is
+  AA then A
+  BB then B
+f(g(AA(1)))
+//│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 0
+
+
+fun f(a, b) = if a is
+  A and b is B then 1
+  else 0
+f(A, B)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:b,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:b,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:b)
+//│ deforest > call dtor Ref(var:b,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:b)
+//│ = 1
+
+
+// cannot fuse intermediate values created by
+// calling data constructors passed around like functions,
+// so `c1` is not fused.
+fun app(f) = f(1)
+fun identity(x) = x
+fun c1(x) = if x is
+  AA(i) then i
+fun c2(x) = if x is
+  AA(i) then i
+  A then 0
+c1(app(AA)) + c1(AA(2)) + c2(AA(3)) + c2(A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(aa))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 6
+
+:re
+fun p(x) = if x
+  then new AA(2)
+  else BB(3)
+fun c(x) = if x is
+  AA(a) then a
+  BB(b) then b
+  else throw (if A is A then Error("e1") else Error("e2"))
+print(c(p(true)) + c(p(false)))
+c(B)
+//│ deforest > ==============
+//│ deforest > ========
+//│ > 5
+//│ ═══[RUNTIME ERROR] Error: e1
+
+
+fun f(a, b) = if a is
+  AA(x) then x + b.bb
+f(AA(1), BB(2))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 3

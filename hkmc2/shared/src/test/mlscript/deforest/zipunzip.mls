@@ -1,0 +1,104 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+
+
+object Nil
+data class (::) Cons(h, t)
+data class Pair(a, b)
+//│ deforest > ==============
+//│ deforest > ========
+
+fun zip(xs_zip, ys_zip) = if
+  xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
+  else Nil
+fun unzip(ls_unzip) = if ls_unzip is
+  Pair(a, b) :: t and unzip(t) is Pair(atail, btail) then Pair(a :: atail, b :: btail)
+  Nil then Pair(Nil, Nil)
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun testUnzipZip(n) = unzip(zip(id(enumFromTo(1, n)), id(enumFromTo(2, n + 3))))
+testUnzipZip(3)
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_unzip,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls_unzip,None)
+//│ deforest > 	Select(Ref(var:ls_unzip,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls_unzip,None),Ident(t))
+//│ deforest > Call(Ref(member:Pair,Some((Fun)term:class:Pair.Pair)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(var:y,None)))) ->
+//│ deforest > 	Ref($arg$Cons$0$,None)
+//│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(a))
+//│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls_unzip,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$Cons$0$,None):
+//│ deforest > 	List($arg$Cons$1$)
+//│ deforest > call dtor Ref(var:ls_unzip,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$Cons$0$,None) with:
+//│ deforest > 	List($arg$Cons$1$)
+//│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
+
+
+
+fun zip(xs_zip, ys_zip) = if
+  xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
+  else Nil
+fun unzip(ls_unzip) = if ls_unzip is
+  Pair(a, b) :: t and unzip(t) is Pair(atail, btail) then Pair(a :: atail, b :: btail)
+  Nil then Pair(Nil, Nil)
+fun makeZippedList(n) = if n > 0 then Pair(n, n + 1) :: makeZippedList(n - 1) else Nil
+fun testZipUnzip(n) = if unzip(id(makeZippedList(n))) is
+  Pair(xs, ys) then zip(xs, ys)
+testZipUnzip(3)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Cons(Pair(3, 4), Cons(Pair(2, 3), Cons(Pair(1, 2), Nil)))
+
+
+
+fun zip(xs_zip, ys_zip) = if
+  xs_zip is x :: xt and ys_zip is y :: yt then Pair(x, y) :: zip(xt, yt)
+  else Nil
+fun unzip(ls_unzip) = if ls_unzip is
+  Pair(a, b) :: t and unzip(t) is Pair(atail, btail) then Pair(a :: atail, b :: btail)
+  Nil then Pair(Nil, Nil)
+fun map(f, ls_map) = if ls_map is
+  h :: t then f(h) :: map(f, t)
+  Nil then Nil
+fun makeZippedList(n) = if n > 0 then Cons(Pair(n, n + 1), makeZippedList(n - 1)) else Nil
+fun testZipMapBothUnzip(n) = if unzip(id(makeZippedList(n))) is
+  Pair(xs, ys) then zip(
+    map(x => x + 1, xs),
+    map(x => x * x, ys)
+  )
+testZipMapBothUnzip(4)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:xs_zip,None)
+//│ deforest > 	Select(Ref(var:xs_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(var:xs_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs_zip,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ys_zip,None)
+//│ deforest > 	Select(Ref(var:ys_zip,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ys_zip,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ys_zip,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ys_zip,None):
+//│ deforest > 	List(var:x, var:xt)
+//│ deforest > free vars of Ref(var:xs_zip,None):
+//│ deforest > 	List(var:ys_zip)
+//│ deforest > call dtor Ref(var:ys_zip,None) with:
+//│ deforest > 	List(var:x, var:xt)
+//│ deforest > call dtor Ref(var:xs_zip,None) with:
+//│ deforest > 	List(var:ys_zip)
+//│ = Cons(
+//│   Pair(5, 25),
+//│   Cons(Pair(4, 16), Cons(Pair(3, 9), Cons(Pair(2, 4), Nil)))
+//│ )

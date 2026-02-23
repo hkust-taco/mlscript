@@ -1,0 +1,168 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+object A
+object B
+object C
+data class AA(x)
+data class BB(x)
+//│ deforest > ==============
+//│ deforest > ========
+
+object Nil
+data class Cons(h, t)
+//│ deforest > ==============
+//│ deforest > ========
+
+object None
+data class Some(x)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+fun c(x) = if x is
+  AA then
+    if A is
+      A then x.x
+c(AA(2))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
+
+
+fun c(x, y) = if x is
+  AA then
+    if y is
+      A then x.x
+c(AA(2), A)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
+
+
+
+fun c(x, y) = if x is
+  AA then
+    if y is
+      A then x.x
+fun p() = AA(2)
+c(p(), A)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 2
+
+
+
+
+fun c(x, y) = if x is
+  AA then
+    let a = if y is
+      A then 1
+    a + x.x
+fun p() = AA(2)
+c(p(), A)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 3
+
+
+
+
+fun f(x) = if x is
+  AA(AA(a)) then g(a)
+fun g(x) = if x is
+  AA(b) then f(b)
+  A then 42
+f(AA(AA(AA(AA(AA(A))))))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 42
+
+fun f(x) = if x is
+  AA(AA(a)) then a
+f(AA(AA(A)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ = A
+
+fun f(x) = if x is
+  AA(AA(a)) then a
+fun p() = AA(AA(A))
+f(p())
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = A
+
+
+
+fun c(x, y) =
+  let t = if x is
+    AA then
+      if A is
+        A then x.x
+  t + y
+c(AA(2), 10)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 12

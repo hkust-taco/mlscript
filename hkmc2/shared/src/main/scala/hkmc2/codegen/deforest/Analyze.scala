@@ -266,7 +266,10 @@ class DeforestPreAnalyzer(
           ctx.head.handleable &&= newCtx.handleable
          // do not propagate non-handleable flags up to top level and module,
          // because top level may contain handleable computations
-        case _: (InCtx.TopLvl | InCtx.Mod) => ()
+        case _: (InCtx.TopLvl | InCtx.Mod) =>
+          c match
+          case _: (ClsLikeBody | FunDefn) => ()
+          case _ => ctx.head.handleable &&= newCtx.handleable
     
     inline def inTopLvl(toplvlBlk: Block)(inline body: => Any) =
       assert(ctx.isEmpty)

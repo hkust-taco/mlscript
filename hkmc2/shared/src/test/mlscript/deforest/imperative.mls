@@ -1,0 +1,61 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+
+object A
+object B
+// object C
+// class AA(aa)
+// class BB(bb)
+// object None
+// class Some(value)
+//│ deforest > ==============
+//│ deforest > ========
+
+// * Not fused: two `x is A` consumers
+let x = if true then A else B
+fun foo(x) =
+  if x is A do print(123)
+  if x is
+    A then 1
+    B then 2
+//│ deforest > ==============
+//│ deforest > ========
+//│ x = A
+
+// * We could make it work. But it's a special case that's probably not very important
+let x = if true then A else B
+fun foo(x) =
+  if x is A do print(123)
+  if x is B do print(456)
+//│ deforest > ==============
+//│ deforest > ========
+//│ x = A
+
+fun foo(k, x) =
+  if x === 0 do k(A)
+  k of
+    if x > 0
+      then A
+      else B
+fun bar(v) = if v is
+  A then 1
+  B then 2
+foo(bar, 123)
+//│ deforest > ==============
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:v,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:v,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:v,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:v,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:v,None) with:
+//│ deforest > 	List()
+//│ = 1
+
+

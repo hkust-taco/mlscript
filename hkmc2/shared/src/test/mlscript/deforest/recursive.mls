@@ -1,0 +1,577 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+
+
+object Nil
+data class (::) Cons(h, t)
+object None
+data class Some(v)
+object A
+object B
+data class T(n, l, r)
+object L
+//│ deforest > ==============
+//│ deforest > ========
+
+fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
+fun map(f, ls_map) = if ls_map is
+  h :: t then f(h) :: map(f, t)
+  Nil then Nil
+fun map1(f, ls_map1) = if ls_map1 is
+  h :: t then f(h) :: map1(f, t)
+  Nil then Nil
+fun incr(x) = x + 1
+fun double(x) = x * 2
+fun test(ls) = map1(incr, map(double, ls))
+test(id(mk(5)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls_map1,None)
+//│ deforest > 	Select(Ref(var:ls_map1,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls_map1,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_map1,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls_map1,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:ls_map1,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
+
+
+
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun map(ls) = if ls is
+  Nil then Nil
+  h :: t then (h + 4) :: map(t)
+map(enumFromTo(1, 4))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List()
+//│ = Cons(5, Cons(6, Cons(7, Nil)))
+
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun sum(ls) = if ls is
+  Nil then 0
+  h :: t then h + sum(t)
+sum(enumFromTo(1,10))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List()
+//│ = 45
+
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun map(f, ls) =
+  if ls is
+    Nil then Nil
+    h :: t then f(h) :: map(f, t)
+map(x => x + 4, enumFromTo(1, 4))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(5, Cons(6, Cons(7, Nil)))
+
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun map(f, ls) =
+  (if ls is
+    Nil then f => Nil
+    h :: t then f => f(h) :: map(f, t)
+  )(f)
+map(x => x + 4, enumFromTo(1, 4))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(5, Cons(6, Cons(7, Nil)))
+
+
+
+fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
+fun sum(ls, a) = if ls is
+  Nil then a
+  h :: t then sum(t, h + a)
+sum(enumFromTo(1, 10), 0)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:a,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List(var:a)
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List(var:a)
+//│ = 45
+
+
+
+fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
+fun incr(x) = x + 1
+fun map(f, xs_map) = if xs_map is
+  Nil then Nil
+  x :: xs then f(x) :: map(f, xs)
+fun rev(xs_rev, acc) = if xs_rev is
+  x :: xs then rev(xs, x :: acc)
+  Nil then acc
+fun test(xs) = map(incr, rev(xs, Nil))
+test(id(mk(5)))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs_map,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref(var:acc,None)))) ->
+//│ deforest > 	Ref(var:xs_map,None)
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(h))
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:xs_map,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:xs_map,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
+
+
+
+fun mk(n) = if n < 0 then Nil else n :: mk(n - 1)
+fun incr(x) = x + 1
+fun map(f, xs_map) = if xs_map is
+  Nil then Nil
+  x :: xs then f(x) :: map(f, xs)
+fun rev(xs_rev, acc) = if xs_rev is
+  x :: xs then rev(xs, x :: acc)
+  Nil then acc
+fun test(xs) = rev(map(incr, xs), Nil)
+test(id(mk(3)))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs_rev,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:xs_rev,None)
+//│ deforest > 	Select(Ref(var:xs_rev,None),Ident(h))
+//│ deforest > 	Select(Ref(var:xs_rev,None),Ident(t))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:xs_rev,None):
+//│ deforest > 	List(var:acc)
+//│ deforest > call dtor Ref(var:xs_rev,None) with:
+//│ deforest > 	List(var:acc)
+//│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
+
+
+
+data class Pair(a, b)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+fun pair_up(xs) =
+  if xs is
+    x :: xss then
+      if xss is
+        y :: xs then Pair(x, y) :: pair_up(xs)
+        else Nil
+    else Nil
+fun mk(n) = if n > 0 then (n - 1) :: n :: (n + 1) :: mk(n - 1) else Nil
+fun test(x) = pair_up(mk(x))
+test(4)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Cons(
+//│   Pair(3, 4),
+//│   Cons(
+//│     Pair(5, 2),
+//│     Cons(
+//│       Pair(3, 4),
+//│       Cons(Pair(1, 2), Cons(Pair(3, 0), Cons(Pair(1, 2), Nil)))
+//│     )
+//│   )
+//│ )
+
+
+
+fun mk(n) = if n > 0 then n :: mk(n - 1) else Nil
+fun mk2d(n) = if n > 0 then mk(n) :: mk2d(n - 1) else Nil
+fun append(xs, ys) = if xs is
+  Nil then ys
+  x :: xs then x :: append(xs, ys)
+fun sum(ls_sum) = if ls_sum is
+  Nil then 0
+  x :: xs then x + sum(xs)
+fun flatten(ls_flatten) = if ls_flatten is
+  Nil then Nil
+  x :: xs then append(x, flatten(xs))
+fun test(ls) = sum(flatten(ls))
+test(id(mk2d(4)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:x,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls_sum,None)
+//│ deforest > 	Select(Ref(var:ls_sum,None),Ident(h))
+//│ deforest > 	Select(Ref(var:ls_sum,None),Ident(t))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls_sum,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls_sum,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:ls_sum,None) with:
+//│ deforest > 	List()
+//│ = 20
+
+
+fun count(c, xs) = if xs is
+  h :: t then count(c + 1, t)
+  Nil then c
+fun rev(a, ys) = if ys is
+  h :: t then rev(h :: a, t)
+  Nil then a
+count(0, rev(Nil, 1 :: 2 :: Nil))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:h,None)), Arg(None,Ref(var:a,None)))) ->
+//│ deforest > 	Ref(var:xs,None)
+//│ deforest > 	Select(Ref(var:xs,None),Ident(t))
+//│ deforest > 	Select(Ref(var:xs,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ys,None)
+//│ deforest > 	Select(Ref(var:ys,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ys,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ys,None)
+//│ deforest > 	Select(Ref(var:ys,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ys,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ys,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ys,None):
+//│ deforest > 	List(var:a)
+//│ deforest > free vars of Ref(var:xs,None):
+//│ deforest > 	List(var:c)
+//│ deforest > call dtor Ref(var:ys,None) with:
+//│ deforest > 	List(var:a)
+//│ deforest > call dtor Ref(var:xs,None) with:
+//│ deforest > 	List(var:c)
+//│ = 2
+
+
+fun last(ls) = if ls is
+  h :: t and t is
+    Nil then Some(h)
+    _ :: _ then last(t)
+  Nil then None
+let p = 1 :: 2 :: Nil
+last(p)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Some(2)
+//│ p = Cons(1, Cons(2, Nil))
+
+
+
+fun map(f, xs_map) = if xs_map is
+  Nil then Nil
+  x :: xs then f(x) :: map(f, xs)
+map(x => if x is A then 1 else 0, A :: B :: Nil)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:xs_map,None)
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(h))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(member:B,Some(object:B))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:xs_map,None)
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
+//│ deforest > 	Select(Ref(var:xs_map,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:xs_map,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:xs_map,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:xs_map,None) with:
+//│ deforest > 	List(var:f)
+//│ = Cons(1, Cons(0, Nil))
+
+
+fun c(x) = if x is
+  T(n, l, r) then T of
+    if n is
+      A then 0
+      B then 1
+    c(l)
+    c(r)
+  L then L
+c(T(A, T(B, L, L), T(A, L, L)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:T,Some((Fun)term:class:T.T)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(r))
+//│ deforest > 	Select(Ref(var:x,None),Ident(l))
+//│ deforest > 	Select(Ref(var:x,None),Ident(n))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:n,None)
+//│ deforest > Call(Ref(member:T,Some((Fun)term:class:T.T)),List(Arg(None,Ref(member:A,Some(object:A))), Arg(None,Ref(member:L,Some(object:L))), Arg(None,Ref(member:L,Some(object:L))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(r))
+//│ deforest > 	Select(Ref(var:x,None),Ident(l))
+//│ deforest > 	Select(Ref(var:x,None),Ident(n))
+//│ deforest > Ref(member:L,Some(object:L)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:L,Some(object:L)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:n,None)
+//│ deforest > Call(Ref(member:T,Some((Fun)term:class:T.T)),List(Arg(None,Ref(member:B,Some(object:B))), Arg(None,Ref(member:L,Some(object:L))), Arg(None,Ref(member:L,Some(object:L))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(r))
+//│ deforest > 	Select(Ref(var:x,None),Ident(l))
+//│ deforest > 	Select(Ref(var:x,None),Ident(n))
+//│ deforest > Ref(member:L,Some(object:L)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:L,Some(object:L)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref(var:n,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:n,None):
+//│ deforest > 	List(var:l, var:r)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List($tmp)
+//│ deforest > call dtor Ref(var:n,None) with:
+//│ deforest > 	List(var:l, var:r)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List($tmp)
+//│ = T(0, T(1, L, L), T(0, L, L))
+
+
+fun max(ms, m) = if ms is
+  h :: t and
+    h > m then max(t, h)
+    else max(t, m)
+  Nil then m
+max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(3))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > 	Select(Ref(var:ms,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ms,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(2))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > 	Select(Ref(var:ms,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ms,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(4))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > 	Select(Ref(var:ms,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ms,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(1))), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > 	Select(Ref(var:ms,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ms,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Lit(IntLit(0))), Arg(None,Ref(member:Nil,Some(object:Nil))))) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > 	Select(Ref(var:ms,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ms,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ms,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ms,None):
+//│ deforest > 	List(var:m)
+//│ deforest > call dtor Ref(var:ms,None) with:
+//│ deforest > 	List(var:m)
+//│ = 4
+
+
+fun filter(ls, f) = if ls is
+  h :: t and
+    f(h) then h :: filter(t, f)
+    else filter(t, f)
+  Nil then Nil
+fun last(ls_last) =
+  fun go(a, ls_go) = if ls_go is
+    Nil then a
+    h :: t then go(h, t)
+  if ls_last is
+    h :: t then Some(go(h, t))
+    Nil then None
+fun lastFilter(ls, f) = last(filter(ls, f))
+lastFilter(id(1 :: 2 :: 3 :: 4 :: 5 :: Nil), x => (x % 2 == 0))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Some(4)
+
+// should prevent processing a function body more than once
+:deforest
+fun g() = f()
+fun f() = g() + g()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+// should prevent processing a function body more than once
+:deforest
+fun h1() = g()
+fun h2() = g()
+fun g() = f()
+fun f() = h1() + h2()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+// should prevent processing a function body more than once
+:deforest
+fun h1() = g()
+fun h2() = g() + h1()
+fun g() = f()
+fun f() = h1() + h2()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+// should prevent processing a function body more than once
+:deforest
+fun main() = if
+  false then f() + g()
+  else 0
+fun f() = if
+  false then h()
+  else 0
+fun h() = if
+  false then f() + main()
+  else 0
+fun g() = if
+  false then h() + main()
+  else 0
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+
+:deforest
+fun f() =
+  if B is
+    B then h1() + h2()
+fun h1() = g1()
+fun g1() = f()
+fun h2() = g2()
+fun g2() = f()
+fun main() = f()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+:deforest
+fun h1() = g()
+fun h2() = g() + h2()
+fun g() = f()
+fun f() = h1() + h2()
+//│ deforest > ==============
+//│ deforest > ========
+
+:deforest
+fun g() = f()
+fun f() = g()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+:deforest
+fun h1() = g()
+fun h2() = g() + h1()
+fun g() = f()
+fun f() = h1() + h2()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+:deforest
+fun g() = 0
+fun f() = f() + g()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+:deforest
+fun h(x) = if x is
+  A then 0
+  else f()
+fun g1() = h(B)
+fun g2() = h(B)
+fun g3() = h(B)
+fun g4() = h(B)
+fun f() =
+  [g1(), g2(), g3(), g4(), h(B)]
+//│ deforest > ==============
+//│ deforest > ========
+
+
+:deforest
+fun h(x) = if x is
+  A then 0
+  else f()
+fun g1() = h(B)
+fun g2() = h(B)
+fun f() =
+  [g1(), g2()]
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+:deforest
+:lift
+fun f() =
+  fun h(x) = if x is
+    A then 0
+    else f()
+  [() => h(B), () => h(B), () => h(B), () => h(B), h(B)]
+//│ deforest > ==============
+//│ deforest > ========

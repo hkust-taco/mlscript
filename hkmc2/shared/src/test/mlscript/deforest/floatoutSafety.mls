@@ -1,0 +1,170 @@
+:js
+
+
+data class (::) Cons(h, t)
+data object Nil
+
+
+
+data class Many(x)
+data class Once(x)
+
+fun expensive(x) = x
+
+
+
+// don't want to fuse `p = enumFrom(3)`, because the `expensive` computation
+// btw, should `p` be considered as being in the correct position here?
+:deforest
+fun sum(x) = if x is
+  h :: t then h + sum(t)
+  Nil then 0
+fun enumFrom(a) =
+  if a > 0 then expensive(a) :: enumFrom(a - 1)
+  else Nil
+fun main() =
+  let p = enumFrom(3)
+  let f = () => sum(p)
+  f() + f()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+// many cannot be fused because:
+// - it's not one-shot
+// - it has a clash
+:deforest
+fun consumer(f, g, p) = f(p) + g(p)
+consumer of
+  case Many(_) then 3
+  case Many(Once(v)) then v
+  Many(Once(10))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Once,Some((Fun)term:class:Once.Once)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref($arg$Many$0$,None)
+//│ deforest > 	Select(Ref($arg$Many$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$Many$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$Many$0$,None) with:
+//│ deforest > 	List()
+//│ = 13
+
+
+
+// we don't want to fuse it, because the logic of the creation of the list may
+// be expensive: can be more expensive than `enumFrom`
+// and linearity can prevent this issue
+:deforest
+fun enumFrom(a) =
+  if a > 0 then expensive(a) :: enumFrom(a - 1)
+  else Nil
+fun sum(x) = if x is
+  h :: t then h + sum(t)
+  Nil then 0
+fun consume(f, ls) = f(ls) + f(ls)
+consume(sum, enumFrom(3))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(t))
+//│ deforest > 	Select(Ref(var:x,None),Ident(h))
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 12
+
+
+
+data class Outter(x)
+data class Inner(x)
+
+// > I just realized something: nested ctors may or may not be fusible actually,
+// it depends on what the consumer does with the corresponding field I think
+// > it may be possible that the outer ctor does not have a strategy clash, but the nested ctors have;
+// or the outer ctor is used linearly, but nested ctors are not.
+// > these are not the only cases I am thinking about
+// maybe a mix match between different causes?
+// 3 causes
+// - strategy clash
+// - in tail modulo fusion position
+// - is "one-shot"
+:deforest
+fun prod(x) = Outter(Inner(x))
+fun cons(f, p) = if p is
+  Outter(i) then f(i) + f(i)
+cons of
+  case Inner(a) then a + 1
+  prod(10)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Outter,Some((Fun)term:class:Outter.Outter)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > Call(Ref(member:Inner,Some((Fun)term:class:Inner.Inner)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:caseScrut,None)
+//│ deforest > 	Select(Ref(var:caseScrut,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:caseScrut,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:p,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:caseScrut,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:p,None) with:
+//│ deforest > 	List(var:f)
+//│ = 22
+
+
+
+
+
+
+
+
+
+// this misalign is fine
+:deforest
+fun prodDouble(x) = if x is
+  0 then Nil
+  n then n :: n :: prodDouble(n - 1)
+fun sum(ls) = if ls is
+  Nil then 0
+  h :: t then h + sum(t)
+sum(prodDouble(4))
+//│ deforest > ==============
+//│ deforest > Ref(member:Nil,Some(object:Nil)) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > Call(Ref(member:Cons,Some((Fun)term:class:Cons.Cons)),List(Arg(None,Ref(var:n,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:ls,None)
+//│ deforest > 	Select(Ref(var:ls,None),Ident(t))
+//│ deforest > 	Select(Ref(var:ls,None),Ident(h))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:ls,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:ls,None) with:
+//│ deforest > 	List()
+//│ = 20
+
+
+
+// this misalign is not fine
+:deforest
+fun prod(x) = if x is
+  0 then Nil
+  n then n :: prod(n - 1)
+fun cons(ls) = if ls is
+  h1 :: h2 :: t then h1 + h2 + cons(t)
+  _ then 0
+cons(prod(4))
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 10

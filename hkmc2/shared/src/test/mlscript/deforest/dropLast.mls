@@ -1,0 +1,216 @@
+:js
+
+data class (::) Cons(h, t)
+data object Nil
+
+
+fun lseq(l1, l2) = if
+  l1 is Nil and l2 is Nil then true
+  l1 is x :: xs and l2 is y :: ys and x == y then lseq(xs, ys)
+  else false
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: Nil then Nil
+  x :: xs then x :: dl(xs)
+fun fix(x) =
+  let res = dl(x)
+  if lseq(res, x) then res
+  else
+    fix(res)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: Nil then Nil
+  x :: xs then x :: dl(xs)
+fun fix(x, fuel) =
+  let res = dl(x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+:deforest
+fun dl(ls) = if ls is
+  Nil then Nil
+  x :: xs then dlHelper(x, xs)
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x, fuel) =
+  let res = dl(x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+
+
+:sjs
+:deforest
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x, fuel) =
+  let res = dlHelper(-1, x)
+  if fuel == 0 then res
+  else
+    fix(res, fuel - 1)
+id(fix(Nil, 1000))
+//│ deforest > ==============
+//│ deforest > ========
+//│ JS (unsanitized):
+//│ let dlHelper1, fix3, tmp; /* scoped */
+//│ dlHelper1 = function dlHelper(prev, rest) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp1; /* scoped */
+//│   if (rest instanceof Nil1.class) {
+//│     return Nil1
+//│   } else if (rest instanceof Cons1.class) {
+//│     arg$Cons$0$ = rest.h;
+//│     arg$Cons$1$ = rest.t;
+//│     t = arg$Cons$1$;
+//│     h = arg$Cons$0$;
+//│     tmp1 = dlHelper1(h, t);
+//│     return Cons1(prev, tmp1)
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│ };
+//│ fix3 = function fix(x, fuel) {
+//│   loopLabel: while (true) {
+//│     let res, scrut, tmp1, tmp2; /* scoped */
+//│     tmp1 = - 1;
+//│     res = dlHelper1(tmp1, x);
+//│     scrut = Predef.equals(fuel, 0);
+//│     if (scrut === true) {
+//│       return res
+//│     } else {
+//│       tmp2 = fuel - 1;
+//│       x = res;
+//│       fuel = tmp2;
+//│       continue loopLabel
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ tmp = fix3(Nil1, 1000);
+//│ Predef.id(tmp)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Nil
+
+
+
+
+
+:sjs
+:deforest
+fun dlHelper(prev, rest) = if rest is
+  Nil then Nil
+  h :: t then prev :: dlHelper(h, t)
+fun fix(x) =
+  if x is
+    Nil then Nil
+    x :: xs then fix(dlHelper(x, xs))
+fix(2 :: 3 :: Nil)
+//│ deforest > ==============
+//│ deforest > ========
+//│ JS (unsanitized):
+//│ let dlHelper2, fix4, tmp1, tmp2; /* scoped */
+//│ dlHelper2 = function dlHelper(prev, rest) {
+//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp3; /* scoped */
+//│   if (rest instanceof Nil1.class) {
+//│     return Nil1
+//│   } else if (rest instanceof Cons1.class) {
+//│     arg$Cons$0$ = rest.h;
+//│     arg$Cons$1$ = rest.t;
+//│     t = arg$Cons$1$;
+//│     h = arg$Cons$0$;
+//│     tmp3 = dlHelper2(h, t);
+//│     return Cons1(prev, tmp3)
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│ };
+//│ fix4 = function fix(x) {
+//│   loopLabel: while (true) {
+//│     let x1, xs, arg$Cons$0$, arg$Cons$1$, tmp3; /* scoped */
+//│     if (x instanceof Nil1.class) {
+//│       return Nil1
+//│     } else if (x instanceof Cons1.class) {
+//│       arg$Cons$0$ = x.h;
+//│       arg$Cons$1$ = x.t;
+//│       xs = arg$Cons$1$;
+//│       x1 = arg$Cons$0$;
+//│       tmp3 = dlHelper2(x1, xs);
+//│       x = tmp3;
+//│       continue loopLabel
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ tmp1 = Cons1(3, Nil1);
+//│ tmp2 = Cons1(2, tmp1);
+//│ fix4(tmp2)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Nil
+
+
+
+
+
+
+
+:sjs
+:deforest
+fun f(x) = if x is
+  Nil then Nil
+fun loop(l, n) = if n > 0 then loop(f(l), n - 1) else l
+id(loop(Nil, 2))
+//│ deforest > ==============
+//│ deforest > ========
+//│ JS (unsanitized):
+//│ let f, loop, tmp3; /* scoped */
+//│ f = function f(x) {
+//│   if (x instanceof Nil1.class) {
+//│     return Nil1
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│ };
+//│ loop = function loop(l, n) {
+//│   loopLabel: while (true) {
+//│     let scrut, tmp4, tmp5; /* scoped */
+//│     scrut = n > 0;
+//│     if (scrut === true) {
+//│       tmp4 = f(l);
+//│       tmp5 = n - 1;
+//│       l = tmp4;
+//│       n = tmp5;
+//│       continue loopLabel
+//│     } else { return l }
+//│     break;
+//│   }
+//│ };
+//│ tmp3 = loop(Nil1, 2);
+//│ Predef.id(tmp3)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = Nil

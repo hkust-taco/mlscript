@@ -395,12 +395,12 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   // label symbol
   private class RefreshSymbol(existingMapping: Map[Symbol, Symbol]) extends BlockTransformer(_symSubst):
     val mapping = MutMap.from(existingMapping)
-    override def applyBlock(b: Block): Block =
+    override def applyScopedBlock(b: Block): Block =
       b match
       case Scoped(syms, body) =>
         val newSyms = MutSet.empty[Symbol]
         for s <- syms.toList.sortBy(_.uid) do
-          assert(!mapping.isDefinedAt(s))
+          assert(!mapping.isDefinedAt(s), s"already defined: $s")
           val newS = s match
             case tmpSym: TempSymbol => new TempSymbol(N, tmpSym.nme)
             case bms: BlockMemberSymbol =>
@@ -415,6 +415,9 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
         val res = Scoped(newSyms, applyBlock(body))
         for s <- syms do mapping.remove(s)
         res
+      case _ => super.applyScopedBlock(b)
+    override def applyBlock(b: Block): Block =
+      b match
       case Assign(lhs, rhs, rest) =>
         applyResult(rhs): newRhs =>
           val newLhs = mapping.getOrElse(lhs, lhs)
@@ -435,7 +438,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     override def applyFunDefn(fun: FunDefn): FunDefn =
       assert(fun.owner.isEmpty)
       val sym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol]
-      val dSym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol].tsym.get
+      val dSym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol].tsym.getOrElse(lastWords(s"${mapping.getOrElse(fun.sym, fun.sym)} no tsym"))
       val oldParamSyms = Buffer.empty[VarSymbol]
       val params2 = fun.params.map:
         case ParamList(flags, params, N) =>

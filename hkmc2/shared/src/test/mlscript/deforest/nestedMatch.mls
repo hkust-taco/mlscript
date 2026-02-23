@@ -1,0 +1,854 @@
+:js
+:deforest
+
+//│ deforest > ==============
+//│ deforest > ========
+object A
+object B
+object C
+data class AA(x)
+data class BB(x)
+data class CC(x)
+//│ deforest > ==============
+//│ deforest > ========
+
+object Nil
+data class Cons(h, t)
+//│ deforest > ==============
+//│ deforest > ========
+
+object None
+data class Some(x)
+//│ deforest > ==============
+//│ deforest > ========
+
+
+fun f(x, y) =
+  let t = if x is
+    AA(a) then
+      let m = if a is
+        AA(x) then x
+      m + 9
+    BB(b) then b
+  t + y
+fun g(x) = if x is
+  AA then 0
+let a = AA(AA(3))
+f(a, 2) + g(a) + f(BB(3), 2) + f(AA(AA(4)), 5)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:y)
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:fv_y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y)
+//│ = 37
+//│ a = AA(fun tmp)
+
+
+
+fun f(x, y) =
+  let n = if x is
+    AA(a) then
+      if a is
+        AA(m) then m
+  n + 2 + y
+f(AA(AA(3)), 9) + f(AA(AA(4)), 10)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(4))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List(var:y)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:fv_y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List(var:fv_y)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, $tmp)
+//│ = 30
+
+
+
+fun f(x) =
+  let n = if x is
+    AA(a) then
+      if a is
+        AA(m) then m
+  n + 2
+f(AA(AA(3)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List($tmp)
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List($tmp)
+//│ = 5
+
+
+
+fun f(x) =
+  let t = if x is
+    AA(AA(a)) then a
+  t + 3
+f(AA(AA(A))) + f(AA(AA(A)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ = "A3A3"
+
+
+
+fun c2(x) = if x is
+  AA(AA(a)) then a
+c2(AA(AA(0)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ = 0
+
+
+
+fun f(a) = if a is
+  AA(BB(B)) then 3
+f(AA(BB(B)))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > 	Select(Ref(var:a,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Ref(member:B,Some(object:B)) ->
+//│ deforest > 	Ref($arg$BB$0$,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$BB$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$BB$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ = 3
+
+
+fun test(x, y, z, i) = if x is
+  AA(a) then
+    let m = if y is
+      AA(a1) then a1 + i
+    let n = if z is
+      BB(a2) then a2 - i
+    m + n
+test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:f -> f3, var:a -> a, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $block$res -> block$res4, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp, $tmp -> tmp21, $tmp -> tmp1, $tmp -> tmp22, $tmp -> tmp2, $tmp -> tmp23, $tmp -> tmp3, $AA_x -> AA_x9, $tmp -> tmp4, member:f_12$f -> f_12$f, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, member:f_12$x_AA -> f_12$x_AA, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x10, $AA_x -> AA_x, member:f_17$f -> f_17$f, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_17$x_AA -> f_17$x_AA, member:f_8$f -> f_8$f2, $AA_x -> AA_x1, member:f_8$x_AA -> f_8$x_AA2, member:f_17$a_AA -> f_17$a_AA, $AA_x -> AA_x12, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, member:c2 -> c2, $block$res -> block$res8, $tmp -> tmp24, $tmp -> tmp25, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, member:f -> f1, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, $block$res -> block$res5, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $tmp -> tmp10, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp15, $AA_x -> AA_x3, member:f_11$f -> f_11$f1, $deforest$lam -> deforest$lam, member:test -> test, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, member:test_12$z_BB -> test_12$z_BB, $block$res -> block$res1, $AA_x -> AA_x18, member:Nil -> Nil1, member:Cons -> Cons1, member:f -> f2, member:test_12$y_AA -> test_12$y_AA, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x19, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, $block$res -> block$res6, $block$res -> block$res2, member:Some -> Some1, member:None -> None1, $tmp -> tmp16, object:None -> None, $tmp -> tmp17, $AA_x -> AA_x7, class:Some -> Some, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1, $block$res -> block$res3, member:f -> f, member:g -> g)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, var:AA_x -> AA_x20, var:fv_z -> fv_z, var:fv_i -> fv_i, var:fv_tmp -> fv_tmp)
+//│     curThis = N
+//│     bindings = HashMap(var:m -> m, var:a1 -> a1, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp36)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap(member:f -> f3, var:a -> a, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, $block$res -> block$res7, $block$res -> block$res4, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp, $tmp -> tmp21, $tmp -> tmp1, $tmp -> tmp22, $tmp -> tmp2, $tmp -> tmp23, $tmp -> tmp3, $AA_x -> AA_x9, $tmp -> tmp4, member:f_12$f -> f_12$f, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, member:f_12$x_AA -> f_12$x_AA, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x10, $AA_x -> AA_x, member:f_17$f -> f_17$f, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_17$x_AA -> f_17$x_AA, member:f_8$f -> f_8$f2, $AA_x -> AA_x1, member:f_8$x_AA -> f_8$x_AA2, member:f_17$a_AA -> f_17$a_AA, $AA_x -> AA_x12, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, member:c2 -> c2, $block$res -> block$res8, $tmp -> tmp24, $tmp -> tmp25, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, member:f -> f1, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, $block$res -> block$res5, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $tmp -> tmp10, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp15, $AA_x -> AA_x3, member:f_11$f -> f_11$f1, $deforest$lam -> deforest$lam, member:test -> test, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, member:test_12$z_BB -> test_12$z_BB, $block$res -> block$res1, $AA_x -> AA_x18, member:Nil -> Nil1, member:Cons -> Cons1, member:f -> f2, member:test_12$y_AA -> test_12$y_AA, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x19, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, $block$res -> block$res6, $block$res -> block$res2, member:Some -> Some1, member:None -> None1, $tmp -> tmp16, object:None -> None, $tmp -> tmp17, $AA_x -> AA_x7, class:Some -> Some, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1, $block$res -> block$res3, member:f -> f, member:g -> g)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, var:AA_x -> AA_x20, var:fv_z -> fv_z, var:fv_i -> fv_i, var:fv_tmp -> fv_tmp)
+//│     curThis = N
+//│     bindings = HashMap(var:m -> m, var:a1 -> a1, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp36)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ = 10
+
+
+// only the match in the middle is fused
+fun f1(x) = if x is
+  AA(x1) then
+    if x1 is
+      BB(x2) then
+        if x2 is
+          CC(x3) then x3
+fun f2(x) = if x is AA then "f2"
+fun f3(x) = if x is CC then "f3" + x.x
+fun aa(x) = AA(x)
+let cc = CC("cc")
+f1(aa(BB(cc))) + f2(aa(BB(CC(0)))) + f3(cc)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(var:cc,None)))) ->
+//│ deforest > 	Ref(var:x1,None)
+//│ deforest > 	Select(Ref(var:x1,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x1,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x1,None) with:
+//│ deforest > 	List()
+//│ = "ccf2f3cc"
+//│ cc = CC("cc")
+
+
+
+fun c(x, y) = if x is
+  AA then
+    let t = if y is
+      A then 2
+    t + x.x
+let y = A
+c(AA(2), y)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 4
+//│ y = A
+
+
+fun c(x, y) = if x is
+  AA then
+    let t = if y is
+      A then 2 + x.x
+    t + x.x
+fun c2(y) = if y is A then 3
+let y = A
+c(AA(2), y) + c2(y)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 9
+//│ y = A
+
+
+// need to include computations of `rest` from more than one levels of parent matches
+fun test(x) =
+  let t = if x is
+    AA(AA(AA(a))) then a
+    AA then "3"
+  t + "5"
+fun f(a) = if a is
+  AA(AA) then "0"
+let p = AA(AA(AA("10")))
+test(p) + f(p) + test(AA(A))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(StrLit(10))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ = "105035"
+//│ p = AA(AA(fun tmp49))
+
+
+
+
+fun f(x, y) =
+  let tmp = BB(y + 1)
+  if tmp is
+    BB then
+      let m = if x is
+        AA then
+          if AA(2) is
+            AA(yf) then yf
+      if AA(3) is
+        AA then m + tmp.x
+let aa = AA(3)
+f(aa, 3) + f(aa, 4)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 13
+//│ aa = AA(3)
+
+
+
+fun test(n, p, q) =
+  n +
+  if AA(0) is
+    AA then
+      let k = if p is
+        AA(x) then x
+      if q is
+        AA(y) then k + y
+test(3, AA(2), AA(3)) + test(3, AA(2), AA(3))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:q,None)
+//│ deforest > 	Select(Ref(var:q,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(0))))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:q,None)
+//│ deforest > 	Select(Ref(var:q,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:p,None):
+//│ deforest > 	List(var:n, var:q, $tmp)
+//│ deforest > free vars of Ref($scrut,None):
+//│ deforest > 	List(var:n, var:p, var:q, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:q,None):
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > free vars of Ref($scrut,None):
+//│ deforest > 	List(var:n, var:p, var:q, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:p,None):
+//│ deforest > 	List(var:n, var:q, $tmp)
+//│ deforest > free vars of Ref(var:q,None):
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > call dtor Ref($scrut,None) with:
+//│ deforest > 	List(var:n, var:p, var:q, $tmp, $tmp)
+//│ deforest > call dtor Ref(var:q,None) with:
+//│ deforest > 	List(var:fv_n, var:k)
+//│ deforest > call dtor Ref(var:p,None) with:
+//│ deforest > 	List(var:fv_n, var:fv_q, var:fv_tmp)
+//│ deforest > call dtor Ref(var:p,None) with:
+//│ deforest > 	List(var:fv_n, var:fv_q, var:fv_tmp)
+//│ deforest > call dtor Ref($scrut,None) with:
+//│ deforest > 	List(var:n, var:p, var:q, $tmp, $tmp)
+//│ deforest > call dtor Ref(var:q,None) with:
+//│ deforest > 	List(var:fv_n, var:k)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_n
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, member:f -> f3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, member:test_12$z_BB -> test_12$z_BB, $block$res -> block$res1, $AA_x -> AA_x18, member:Nil -> Nil1, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x19, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, $block$res -> block$res2, member:Some -> Some1, member:None -> None1, object:None -> None, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, var:cc -> cc, $block$res -> block$res11, $tmp -> tmp36, $tmp -> tmp37, $tmp -> tmp38, $tmp -> tmp39, $tmp -> tmp40, $tmp -> tmp41, $tmp -> tmp42, $tmp -> tmp43, $tmp -> tmp44, member:aa_22$aa -> aa_22$aa, member:f2_23$f2 -> f2_23$f2, member:f2_23$x_AA -> f2_23$x_AA, member:aa_18$aa -> aa_18$aa, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, var:fv_n -> fv_n, var:fv_q -> fv_q, var:fv_tmp -> fv_tmp, var:AA_x -> AA_x26)
+//│     curThis = N
+//│     bindings = HashMap($arg$AA$0$ -> arg$AA$0$, $tmp -> tmp64, var:k -> k, var:x -> x)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_n'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_n
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, member:f -> f3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, member:test_12$z_BB -> test_12$z_BB, $block$res -> block$res1, $AA_x -> AA_x18, member:Nil -> Nil1, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x19, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, $block$res -> block$res2, member:Some -> Some1, member:None -> None1, object:None -> None, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, var:cc -> cc, $block$res -> block$res11, $tmp -> tmp36, $tmp -> tmp37, $tmp -> tmp38, $tmp -> tmp39, $tmp -> tmp40, $tmp -> tmp41, $tmp -> tmp42, $tmp -> tmp43, $tmp -> tmp44, member:aa_22$aa -> aa_22$aa, member:f2_23$f2 -> f2_23$f2, member:f2_23$x_AA -> f2_23$x_AA, member:aa_18$aa -> aa_18$aa, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1)
+//│       curThis = S of N
+//│       bindings = HashMap(var:fv_q -> fv_q, var:fv_tmp -> fv_tmp, $args -> args, var:AA_x -> AA_x26, var:fv_n -> fv_n)
+//│     curThis = N
+//│     bindings = HashMap(var:k -> k, var:x -> x, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp64)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_n'
+//│ = 16
+
+
+
+fun test(n, p, q, a) =
+  let o
+  if a is
+    A then
+      let k
+      if p is
+        AA(x) then
+          k = x
+      if q is
+        AA(y) then
+          o = k + y
+  o + n
+let a = A
+fun c(a) = if a is A then 0
+test(1, AA(2), AA(3), a) + test(2, AA(2), AA(3), a) + c(a)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:q,None)
+//│ deforest > 	Select(Ref(var:q,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:q,None)
+//│ deforest > 	Select(Ref(var:q,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:p,None)
+//│ deforest > 	Select(Ref(var:p,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:p,None):
+//│ deforest > 	List(var:n, var:q, var:o, $tmp)
+//│ deforest > free vars of Ref(var:q,None):
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > free vars of Ref(var:q,None):
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > free vars of Ref(var:p,None):
+//│ deforest > 	List(var:n, var:q, var:o, $tmp)
+//│ deforest > call dtor Ref(var:p,None) with:
+//│ deforest > 	List(var:n, var:q, var:o, $tmp)
+//│ deforest > call dtor Ref(var:q,None) with:
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > call dtor Ref(var:q,None) with:
+//│ deforest > 	List(var:n, var:k)
+//│ deforest > call dtor Ref(var:p,None) with:
+//│ deforest > 	List(var:n, var:q, var:o, $tmp)
+//│ = 13
+//│ a = A
+
+
+
+fun test(x, y, z, i) =
+  let k = if x is
+    AA(a) then
+      let m = if y is
+        AA(a1) then a1 + i
+      let n = if z is
+        BB(a2) then a2 - i
+      m + n
+  k + i
+test(AA(1), AA(2), BB(3), 4) + test(AA(1), AA(2), BB(3), 4)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, member:f -> f3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, member:c -> c3, member:test -> test3, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, var:a -> a1, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $block$res -> block$res17, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, $tmp -> tmp64, $tmp -> tmp65, $tmp -> tmp66, member:test_12$z_BB -> test_12$z_BB, $tmp -> tmp67, $tmp -> tmp68, $block$res -> block$res1, $AA_x -> AA_x18, $tmp -> tmp69, member:Nil -> Nil1, $tmp -> tmp70, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, $tmp -> tmp71, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x26, $AA_x -> AA_x19, member:test_18$test -> test_18$test1, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, member:test_18$q_AA -> test_18$q_AA, $AA_x -> AA_x27, member:test_18$p_AA -> test_18$p_AA, $AA_x -> AA_x28, member:test_15$test -> test_15$test, member:test_15$q_AA -> test_15$q_AA, $block$res -> block$res2, member:Some -> Some1, $AA_x -> AA_x29, member:None -> None1, object:None -> None, member:test_15$p_AA -> test_15$p_AA, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:test -> test4, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, $block$res -> block$res18, var:cc -> cc, $tmp -> tmp72, $tmp -> tmp73, $tmp -> tmp74, $tmp -> tmp75, $tmp -> tmp76, $tmp -> tmp77, $tmp -> tmp78, $tmp -> tmp79, $block$res -> block$res11, $BB_x -> BB_x5, member:test_16$test -> test_16$test1, member:test_16$z_BB -> test_16$z_BB1, $AA_x -> AA_x30, $tmp -> tmp36, $tmp -> tmp37, member:test_16$y_AA -> test_16$y_AA1, $tmp -> tmp38, $tmp -> tmp39, $AA_x -> AA_x31, $tmp -> tmp40, $tmp -> tmp41, member:test_16$x_AA -> test_16$x_AA1, $tmp -> tmp42, $tmp -> tmp43, $BB_x -> BB_x6, $tmp -> tmp44, member:test_12$test -> test_12$test1, member:aa_22$aa -> aa_22$aa, member:test_12$z_BB -> test_12$z_BB1, member:f2_23$f2 -> f2_23$f2, $AA_x -> AA_x32, member:f2_23$x_AA -> f2_23$x_AA, member:test_12$y_AA -> test_12$y_AA1, $AA_x -> AA_x33, member:aa_18$aa -> aa_18$aa, member:test_12$x_AA -> test_12$x_AA1, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1)
+//│       curThis = S of N
+//│       bindings = HashMap(var:fv_i -> fv_i, $args -> args, var:fv_tmp -> fv_tmp, var:AA_x -> AA_x34, var:fv_z -> fv_z)
+//│     curThis = N
+//│     bindings = HashMap(var:m -> m, var:a1 -> a11, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp80)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, member:f -> f3, $runtime -> runtime, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, $Term -> Term, $Block -> Block, $Shape -> Shape, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, member:c -> c3, member:test -> test3, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, var:a -> a1, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $block$res -> block$res17, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, $tmp -> tmp64, $tmp -> tmp65, $tmp -> tmp66, member:test_12$z_BB -> test_12$z_BB, $tmp -> tmp67, $tmp -> tmp68, $block$res -> block$res1, $AA_x -> AA_x18, $tmp -> tmp69, member:Nil -> Nil1, $tmp -> tmp70, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, $tmp -> tmp71, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x26, $AA_x -> AA_x19, member:test_18$test -> test_18$test1, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, member:test_18$q_AA -> test_18$q_AA, $AA_x -> AA_x27, member:test_18$p_AA -> test_18$p_AA, $AA_x -> AA_x28, member:test_15$test -> test_15$test, member:test_15$q_AA -> test_15$q_AA, $block$res -> block$res2, member:Some -> Some1, $AA_x -> AA_x29, member:None -> None1, object:None -> None, member:test_15$p_AA -> test_15$p_AA, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:test -> test4, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, $block$res -> block$res18, var:cc -> cc, $tmp -> tmp72, $tmp -> tmp73, $tmp -> tmp74, $tmp -> tmp75, $tmp -> tmp76, $tmp -> tmp77, $tmp -> tmp78, $tmp -> tmp79, $block$res -> block$res11, $BB_x -> BB_x5, member:test_16$test -> test_16$test1, member:test_16$z_BB -> test_16$z_BB1, $AA_x -> AA_x30, $tmp -> tmp36, $tmp -> tmp37, member:test_16$y_AA -> test_16$y_AA1, $tmp -> tmp38, $tmp -> tmp39, $AA_x -> AA_x31, $tmp -> tmp40, $tmp -> tmp41, member:test_16$x_AA -> test_16$x_AA1, $tmp -> tmp42, $tmp -> tmp43, $BB_x -> BB_x6, $tmp -> tmp44, member:test_12$test -> test_12$test1, member:aa_22$aa -> aa_22$aa, member:test_12$z_BB -> test_12$z_BB1, member:f2_23$f2 -> f2_23$f2, $AA_x -> AA_x32, member:f2_23$x_AA -> f2_23$x_AA, member:test_12$y_AA -> test_12$y_AA1, $AA_x -> AA_x33, member:aa_18$aa -> aa_18$aa, member:test_12$x_AA -> test_12$x_AA1, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, member:f_8$x_AA -> f_8$x_AA1, $AA_x -> AA_x8, member:f_8$a_AA -> f_8$a_AA1)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, var:AA_x -> AA_x34, var:fv_z -> fv_z, var:fv_i -> fv_i, var:fv_tmp -> fv_tmp)
+//│     curThis = N
+//│     bindings = HashMap(var:a1 -> a11, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp80, var:m -> m)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ = 18
+
+
+fun test(x, y, z, i) =
+  let k = if x is
+    AA(a) then
+      let m = if y is
+        AA(a1) then a1 + i
+        BB(b2) then b2 - i
+      let n = if z is
+        BB(a2) then a2 - i
+      m + n
+  k + i
+test(AA(1), AA(2), BB(3), 4) + test(AA(1), BB(2), BB(3), 4)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref(var:z,None)
+//│ deforest > 	Select(Ref(var:z,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(2))))) ->
+//│ deforest > 	Ref(var:y,None)
+//│ deforest > 	Select(Ref(var:y,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List(var:z, var:i, $tmp)
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > free vars of Ref(var:z,None):
+//│ deforest > 	List(var:i, var:m)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:z,None) with:
+//│ deforest > 	List(var:fv_i, var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ deforest > call dtor Ref(var:y,None) with:
+//│ deforest > 	List(var:fv_z, var:fv_i, var:fv_tmp)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:y, var:z, var:i, $tmp, $tmp)
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, $BB_x -> BB_x9, member:test_13$test -> test_13$test, member:f -> f3, member:test_13$z_BB -> test_13$z_BB, $runtime -> runtime, $AA_x -> AA_x35, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:test_13$y_AA -> test_13$y_AA, $Term -> Term, $Block -> Block, $AA_x -> AA_x36, $Shape -> Shape, member:test_13$x_AA -> test_13$x_AA, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, member:c -> c3, member:test -> test3, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, var:a -> a1, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $block$res -> block$res17, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, $tmp -> tmp64, $tmp -> tmp65, $tmp -> tmp66, member:test_12$z_BB -> test_12$z_BB, $tmp -> tmp67, $tmp -> tmp68, $block$res -> block$res1, $AA_x -> AA_x18, $tmp -> tmp69, member:Nil -> Nil1, $tmp -> tmp70, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, $tmp -> tmp71, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x26, $AA_x -> AA_x19, member:test_18$test -> test_18$test1, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, member:test_18$q_AA -> test_18$q_AA, $AA_x -> AA_x27, member:test_18$p_AA -> test_18$p_AA, $AA_x -> AA_x28, member:test_15$test -> test_15$test, member:test_15$q_AA -> test_15$q_AA, $block$res -> block$res2, member:Some -> Some1, $AA_x -> AA_x29, member:None -> None1, object:None -> None, member:test_15$p_AA -> test_15$p_AA, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:test -> test4, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, $block$res -> block$res18, var:cc -> cc, $tmp -> tmp72, $tmp -> tmp73, $tmp -> tmp74, $tmp -> tmp75, $tmp -> tmp76, $tmp -> tmp77, $tmp -> tmp78, $tmp -> tmp79, $block$res -> block$res11, $BB_x -> BB_x5, member:test_16$test -> test_16$test1, member:test_16$z_BB -> test_16$z_BB1, $AA_x -> AA_x30, $tmp -> tmp36, $tmp -> tmp37, member:test_16$y_AA -> test_16$y_AA1, $tmp -> tmp38, $tmp -> tmp39, $AA_x -> AA_x31, $tmp -> tmp40, $tmp -> tmp41, member:test_16$x_AA -> test_16$x_AA1, $tmp -> tmp42, $tmp -> tmp43, $BB_x -> BB_x6, $tmp -> tmp44, member:test_12$test -> test_12$test1, member:aa_22$aa -> aa_22$aa, member:test_12$z_BB -> test_12$z_BB1, member:f2_23$f2 -> f2_23$f2, $AA_x -> AA_x32, member:f2_23$x_AA -> f2_23$x_AA, member:test_12$y_AA -> test_12$y_AA1, $AA_x -> AA_x33, member:aa_18$aa -> aa_18$aa, member:test_12$x_AA -> test_12$x_AA1, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, member:test -> test5, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, $block$res -> block$res19, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, $tmp -> tmp80, $tmp -> tmp81, member:f_8$x_AA -> f_8$x_AA1, $tmp -> tmp82, $tmp -> tmp83, $AA_x -> AA_x8, $tmp -> tmp84, $tmp -> tmp85, member:f_8$a_AA -> f_8$a_AA1, $tmp -> tmp86, $tmp -> tmp87, $BB_x -> BB_x7, member:test_17$test -> test_17$test, member:test_17$z_BB -> test_17$z_BB, $BB_x -> BB_x8, member:test_17$y_BB -> test_17$y_BB, $AA_x -> AA_x34, member:test_17$x_AA -> test_17$x_AA)
+//│       curThis = S of N
+//│       bindings = HashMap(var:fv_z -> fv_z, $args -> args, var:fv_i -> fv_i, var:fv_tmp -> fv_tmp, var:BB_x -> BB_x10)
+//│     curThis = N
+//│     bindings = HashMap(var:m -> m, var:b2 -> b2, $arg$BB$0$ -> arg$BB$0$, $tmp -> tmp88)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ FAILURE: Unexpected compilation error
+//│ FAILURE LOCATION: lookup_! (Scope.scala:114)
+//│ FAILURE INFO: Tuple2:
+//│   _1 = Tuple2:
+//│     _1 = var:fv_i
+//│     _2 = class hkmc2.semantics.VarSymbol
+//│   _2 = Scope:
+//│     parent = S of Scope:
+//│       parent = S of Scope:
+//│         parent = N
+//│         curThis = S of S of globalThis:globalThis
+//│         bindings = HashMap($deforest$lam -> deforest$lam1, member:f -> f6, $BB_x -> BB_x9, member:test_13$test -> test_13$test, member:f -> f3, member:test_13$z_BB -> test_13$z_BB, $runtime -> runtime, $AA_x -> AA_x35, $definitionMetadata -> definitionMetadata, $prettyPrint -> prettyPrint, member:test_13$y_AA -> test_13$y_AA, $Term -> Term, $Block -> Block, $AA_x -> AA_x36, $Shape -> Shape, member:test_13$x_AA -> test_13$x_AA, var:aa -> aa1, $block$res -> block$res7, $block$res -> block$res15, $tmp -> tmp18, $tmp -> tmp19, $tmp -> tmp20, $tmp -> tmp21, $tmp -> tmp22, $tmp -> tmp23, $tmp -> tmp56, $AA_x -> AA_x9, $tmp -> tmp57, member:f_12$f -> f_12$f, member:test -> test2, member:f_12$x_AA -> f_12$x_AA, $AA_x -> AA_x10, member:f_12$arg$AA$0$_AA -> f_12$arg$AA$0$_AA, $AA_x -> AA_x11, member:f_8$f -> f_8$f2, member:f_8$x_AA -> f_8$x_AA2, $AA_x -> AA_x12, member:f_8$arg$AA$0$_AA -> f_8$arg$AA$0$_AA, $block$res -> block$res16, $tmp -> tmp58, $tmp -> tmp59, $tmp -> tmp60, $tmp -> tmp61, $tmp -> tmp62, $tmp -> tmp63, member:test_14$test -> test_14$test1, member:test_14$scrut_AA -> test_14$scrut_AA, $AA_x -> AA_x22, member:test_14$q_AA -> test_14$q_AA, member:c2 -> c2, $AA_x -> AA_x23, member:test_14$p_AA -> test_14$p_AA, member:test_11$test -> test_11$test, member:test_11$scrut_AA -> test_11$scrut_AA, $block$res -> block$res8, $AA_x -> AA_x24, member:test_11$q_AA -> test_11$q_AA, $AA_x -> AA_x25, $tmp -> tmp24, $tmp -> tmp25, member:test_11$p_AA -> test_11$p_AA, $AA_x -> AA_x13, member:c2_7$c2 -> c2_7$c2, member:c2_7$x_AA -> c2_7$x_AA, $AA_x -> AA_x14, member:c2_7$arg$AA$0$_AA -> c2_7$arg$AA$0$_AA, member:f -> f4, $block$res -> block$res9, $tmp -> tmp26, $tmp -> tmp27, $AA_x -> AA_x15, member:f_9$f -> f_9$f, member:f_9$a_AA -> f_9$a_AA, $BB_x -> BB_x1, member:f_9$arg$AA$0$_BB -> f_9$arg$AA$0$_BB, member:f_9$arg$BB$0$_B -> f_9$arg$BB$0$_B, $deforest$lam -> deforest$lam, member:test -> test, member:c -> c3, member:test -> test3, $block$res -> block$res, member:AA -> AA1, member:CC -> CC1, member:B -> B1, member:C -> C1, $block$res -> block$res10, member:A -> A1, member:BB -> BB1, object:A -> A, object:B -> B, $tmp -> tmp28, object:C -> C, $tmp -> tmp29, $tmp -> tmp30, var:a -> a1, class:AA -> AA, $tmp -> tmp31, $tmp -> tmp32, $tmp -> tmp33, $tmp -> tmp34, $tmp -> tmp35, $BB_x -> BB_x2, member:test_16$test -> test_16$test, class:BB -> BB, member:test_16$z_BB -> test_16$z_BB, $AA_x -> AA_x16, member:test_16$y_AA -> test_16$y_AA, $block$res -> block$res17, $AA_x -> AA_x17, class:CC -> CC, member:test_16$x_AA -> test_16$x_AA, $BB_x -> BB_x3, member:test_12$test -> test_12$test, $tmp -> tmp64, $tmp -> tmp65, $tmp -> tmp66, member:test_12$z_BB -> test_12$z_BB, $tmp -> tmp67, $tmp -> tmp68, $block$res -> block$res1, $AA_x -> AA_x18, $tmp -> tmp69, member:Nil -> Nil1, $tmp -> tmp70, member:Cons -> Cons1, member:test_12$y_AA -> test_12$y_AA, $tmp -> tmp71, member:Predef -> Predef, object:Nil -> Nil, $AA_x -> AA_x26, $AA_x -> AA_x19, member:test_18$test -> test_18$test1, class:Cons -> Cons, member:test_12$x_AA -> test_12$x_AA, member:test_18$q_AA -> test_18$q_AA, $AA_x -> AA_x27, member:test_18$p_AA -> test_18$p_AA, $AA_x -> AA_x28, member:test_15$test -> test_15$test, member:test_15$q_AA -> test_15$q_AA, $block$res -> block$res2, member:Some -> Some1, $AA_x -> AA_x29, member:None -> None1, object:None -> None, member:test_15$p_AA -> test_15$p_AA, class:Some -> Some, $block$res -> block$res3, member:f -> f, member:g -> g, var:a -> a, $block$res -> block$res4, $tmp -> tmp, $tmp -> tmp1, $tmp -> tmp2, $tmp -> tmp3, $tmp -> tmp4, $tmp -> tmp5, $tmp -> tmp6, $tmp -> tmp7, $tmp -> tmp8, $tmp -> tmp9, $AA_x -> AA_x, member:test -> test4, member:f_17$f -> f_17$f, member:f_17$x_AA -> f_17$x_AA, member:aa -> aa, $AA_x -> AA_x1, member:f1 -> f11, member:f2 -> f21, member:f_17$a_AA -> f_17$a_AA, member:f3 -> f31, $BB_x -> BB_x, member:f_14$f -> f_14$f, member:f_14$x_BB -> f_14$x_BB, $AA_x -> AA_x2, member:f_11$f -> f_11$f, member:f_11$a_AA -> f_11$a_AA, $block$res -> block$res18, var:cc -> cc, $tmp -> tmp72, $tmp -> tmp73, $tmp -> tmp74, $tmp -> tmp75, $tmp -> tmp76, $tmp -> tmp77, $tmp -> tmp78, $tmp -> tmp79, $block$res -> block$res11, $BB_x -> BB_x5, member:test_16$test -> test_16$test1, member:test_16$z_BB -> test_16$z_BB1, $AA_x -> AA_x30, $tmp -> tmp36, $tmp -> tmp37, member:test_16$y_AA -> test_16$y_AA1, $tmp -> tmp38, $tmp -> tmp39, $AA_x -> AA_x31, $tmp -> tmp40, $tmp -> tmp41, member:test_16$x_AA -> test_16$x_AA1, $tmp -> tmp42, $tmp -> tmp43, $BB_x -> BB_x6, $tmp -> tmp44, member:test_12$test -> test_12$test1, member:aa_22$aa -> aa_22$aa, member:test_12$z_BB -> test_12$z_BB1, member:f2_23$f2 -> f2_23$f2, $AA_x -> AA_x32, member:f2_23$x_AA -> f2_23$x_AA, member:test_12$y_AA -> test_12$y_AA1, $AA_x -> AA_x33, member:aa_18$aa -> aa_18$aa, member:test_12$x_AA -> test_12$x_AA1, member:f1_19$f1 -> f1_19$f1, member:f1_19$x_AA -> f1_19$x_AA, $BB_x -> BB_x4, member:f1_19$x1_BB -> f1_19$x1_BB, member:f -> f1, member:c -> c, $block$res -> block$res5, var:y -> y, $tmp -> tmp10, $block$res -> block$res12, $tmp -> tmp11, $tmp -> tmp12, $tmp -> tmp13, $tmp -> tmp14, $tmp -> tmp45, $tmp -> tmp15, member:c -> c1, $AA_x -> AA_x3, member:c2 -> c21, member:f_11$f -> f_11$f1, member:f_11$x_AA -> f_11$x_AA, $AA_x -> AA_x4, member:f_11$a_AA -> f_11$a_AA1, $AA_x -> AA_x5, member:f_8$f -> f_8$f, var:y -> y1, member:f_8$x_AA -> f_8$x_AA, $AA_x -> AA_x6, member:f_8$a_AA -> f_8$a_AA, $block$res -> block$res13, $tmp -> tmp46, $tmp -> tmp47, $tmp -> tmp48, member:test -> test1, member:f -> f5, var:p -> p, member:test -> test5, $block$res -> block$res14, $tmp -> tmp49, member:f -> f2, $tmp -> tmp50, $tmp -> tmp51, $tmp -> tmp52, $tmp -> tmp53, $tmp -> tmp54, $tmp -> tmp55, $AA_x -> AA_x20, member:test_18$test -> test_18$test, member:test_18$x_AA -> test_18$x_AA, member:test_18$arg$AA$0$_dflt -> test_18$arg$AA$0$_dflt, $block$res -> block$res6, $AA_x -> AA_x21, $block$res -> block$res19, member:test_14$test -> test_14$test, $tmp -> tmp16, member:test_14$arg$AA$0$_AA -> test_14$arg$AA$0$_AA, $tmp -> tmp17, $AA_x -> AA_x7, member:f_8$f -> f_8$f1, $tmp -> tmp80, $tmp -> tmp81, member:f_8$x_AA -> f_8$x_AA1, $tmp -> tmp82, $tmp -> tmp83, $AA_x -> AA_x8, $tmp -> tmp84, $tmp -> tmp85, member:f_8$a_AA -> f_8$a_AA1, $tmp -> tmp86, $tmp -> tmp87, $BB_x -> BB_x7, member:test_17$test -> test_17$test, member:test_17$z_BB -> test_17$z_BB, $BB_x -> BB_x8, member:test_17$y_BB -> test_17$y_BB, $AA_x -> AA_x34, member:test_17$x_AA -> test_17$x_AA)
+//│       curThis = S of N
+//│       bindings = HashMap($args -> args, var:AA_x -> AA_x37, var:fv_z -> fv_z, var:fv_i -> fv_i, var:fv_tmp -> fv_tmp)
+//│     curThis = N
+//│     bindings = HashMap(var:m -> m, var:a1 -> a11, $arg$AA$0$ -> arg$AA$0$, $tmp -> tmp88)
+//│ ═══[COMPILATION ERROR] No definition found in scope for member 'fv_i'
+//│ = 10
+
+
+fun test(x) =
+  let n = if x is
+    AA(BB(b)) then b
+    AA(CC(c)) then c
+    else 0
+  n + 3
+fun c(x) = if x is AA then 0
+fun p(x) = AA(x)
+test(p(BB(3))) + test(p(CC(3))) + c(p(A))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:CC,Some((Fun)term:class:CC.CC)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(var:x,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Lit(IntLit(3))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 12
+
+
+
+
+
+fun f(x, y, z, k) =
+  let tmp = if z then BB(y + 1) else BB(y - 1)
+  tmp.x + 
+  if tmp is
+    BB then
+      let m = if x is
+        AA then
+          if AA(2) is
+            AA(yf) then yf
+      if AA(3) is
+        AA then m + k
+f(AA(3), 3, true, 10) + f(AA(5), 4, false, 20)
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 41
+
+
+
+fun test(x) =
+  let t = if x is
+    AA(AA(AA(a))) then a
+  t + 5
+fun f(a) = if a is
+  AA(AA) then 0
+let p = AA(AA(AA(10)))
+test(p) + f(p)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Lit(IntLit(10))))) ->
+//│ deforest > 	Ref($arg$AA$0$,None)
+//│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref($arg$AA$0$,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref($arg$AA$0$,None) with:
+//│ deforest > 	List()
+//│ = 15
+//│ p = AA(AA(fun tmp101))
+
+

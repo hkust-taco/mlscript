@@ -1,0 +1,109 @@
+:js
+
+data class A(x)
+data class B(x)
+data object C
+data object D
+data class (::) Cons(h, t)
+object Nil
+object None
+data class Some(x)
+
+
+
+
+
+
+:deforest
+fun test() =
+  fun f(a) = if a is
+    C then C
+    else D
+  (x => 0)(f(f(C)))
+test
+//│ deforest > ==============
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:C,Some(object:C)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > Ref(member:D,Some(object:D)) ->
+//│ deforest > 	Ref(var:a,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:a,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:a,None) with:
+//│ deforest > 	List()
+//│ = fun test_4$test
+
+
+:fixme
+:deforest
+fun maxOpt(ls) = if ls is
+  Nil then None
+  h :: t then
+    if maxOpt(t) is
+      None then Some(h)
+      Some(m) then if m > h then Some(m) else Some(h)
+drop maxOpt(id(1 :: 2 :: Nil))
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:m,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:h,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref(var:h,None)))) ->
+//│ deforest > 	Ref($scrut,None)
+//│ deforest > 	Select(Ref($scrut,None),Ident(x))
+//│ deforest > Ref(member:None,Some(object:None)) ->
+//│ deforest > 	Ref($scrut,None)
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $Some_x
+
+
+:fixme
+:deforest
+:sjs
+fun modSome(x, m) = if x is
+  Some(n) and
+    n >= m then modSome(Some(n - m), m)
+    else Some(n)
+  None then None
+modSome(Some(17), 3)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Lit(IntLit(17))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $Some_x
+
+
+:deforest
+fun maxOpt2(ls, x) = if ls is
+  Nil then x
+  h :: t and x is
+    None then maxOpt2(t, Some(h))
+    Some(m) and
+      h > m then maxOpt2(t, Some(h))
+      else maxOpt2(t, Some(m))
+//│ deforest > ==============
+//│ deforest > ========
+
+:fixme
+:deforest
+:sjs
+fun zipWith(xsys, f) = if xsys is
+  [hx :: tx, hy :: ty] then f(hx, hy) :: zipWith([tx, ty], f)
+  [Nil, Nil] then Nil
+zipWith([id(Nil), id(Nil)], (x, y) => x)
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Ref(var:tx,None)), Arg(None,Ref(var:ty,None)))) ->
+//│ deforest > 	Ref(var:xsys,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > Tuple(false,List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:xsys,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $tup2_0

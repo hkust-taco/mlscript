@@ -1,0 +1,202 @@
+:js
+
+
+data class AA(x)
+data class BB(x)
+object A
+object B
+
+// TODO: should fuse `A` with the pattern match in `f`.
+// This is because the same symbol is used for the `x`s
+// introduced in the patterns of both branches, causing
+// `A` also flows into consumers in `g1` and `g2`
+:deforest
+fun f(x) = if x is A then 1 else 2
+fun g1(x) = if x is A then 2 else 3
+fun g2(x) = if x is A then 3 else 4
+fun test() =
+  let prod = if true then AA(A) else BB(B)
+  if prod is
+    AA(x) then f(x)
+    BB(x) then g1(x) + g2(x)
+test()
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:AA,Some((Fun)term:class:AA.AA)),List(Arg(None,Ref(member:A,Some(object:A))))) ->
+//│ deforest > 	Ref(var:prod,None)
+//│ deforest > 	Select(Ref(var:prod,None),Ident(x))
+//│ deforest > Call(Ref(member:BB,Some((Fun)term:class:BB.BB)),List(Arg(None,Ref(member:B,Some(object:B))))) ->
+//│ deforest > 	Ref(var:prod,None)
+//│ deforest > 	Select(Ref(var:prod,None),Ident(x))
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:prod,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:prod,None) with:
+//│ deforest > 	List()
+//│ = 1
+
+
+// TODO: fusion opportunity is lost
+// when instantiation ids of dtors are also tracked:
+// two call sites to `inner` leads to two `inner`s
+// to be called, causing a clashing consumer.
+:deforest
+fun inner(x) = if x is A then 0 else 1
+fun outter1(x) = inner(x)
+fun outter2(x) = inner(x)
+fun test() =
+  let x = A
+  outter1(x) + outter2(x)
+test()
+//│ deforest > ==============
+//│ deforest > ========
+//│ = 0
+
+
+// TODO: duplicated instantiations of the consumer `f`
+:sjs
+:deforest
+fun f(x) = if x is A then 1
+f(A) + f(A)
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ JS (unsanitized):
+//│ let f1, tmp, tmp1, f_4$f, f_4$x_A, f_2$f, f_2$x_A, deforest$lam, deforest$lam1; /* scoped */
+//│ f_4$f = function f_4$f(x) {
+//│   return x()
+//│ };
+//│ f_2$f = function f_2$f(x) {
+//│   return x()
+//│ };
+//│ f_4$x_A = function f_4$x_A() {
+//│   return 1
+//│ };
+//│ f_2$x_A = function f_2$x_A() {
+//│   return 1
+//│ };
+//│ f1 = function f(x) {
+//│   if (x instanceof A1.class) {
+//│     return 1
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│ };
+//│ deforest$lam = () => {
+//│   return f_2$x_A()
+//│ };
+//│ tmp = f_2$f(deforest$lam);
+//│ deforest$lam1 = () => { return f_4$x_A() };
+//│ tmp1 = f_4$f(deforest$lam1);
+//│ tmp + tmp1
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 2
+
+
+// NOTE: after trying to fuse both the original body and the instance's body,
+// the `A` in this program is not fused anymore
+:deforest
+let x = A
+fun f() =
+  if x is
+    A then 0
+f()
+//│ deforest > ==============
+//│ deforest > Ref(member:A,Some(object:A)) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 0
+//│ x = fun x
+
+
+// TODO: the assignment of `useless` is moved inside the lambda body
+// so on the toplevel `useless` is not assigned after transformation
+:deforest
+:fixme
+let lsit = [2, 1]
+let useless = if lsit is [a, b] then 0
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Lit(IntLit(2))), Arg(None,Lit(IntLit(1))))) ->
+//│ deforest > 	Ref(var:lsit,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:lsit,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:lsit,None) with:
+//│ deforest > 	List()
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ lsit = fun lsit
+//│ useless = undefined
+
+
+// TODO: to workaround this one can write `MMM.y` instead of `y`
+:deforest
+module MMM with ...
+val y = 3
+val x = MMM.f()
+fun f() =
+  // if A is A then MMM.y
+  if A is A then y
+MMM.f()
+//│ deforest > ==============
+//│ deforest > ========
+
+
+object C
+object D
+
+// TODO: it's fine only when using `M.g` and `M.f` instead of `g` and `f`
+:deforest
+module M with ...
+fun f(x) = if M.g(false) is
+  A and
+    x < 1 then B(0)
+    else M.f(x - 1)
+  C then D
+fun g(b) =
+  if b then
+    if M.f(0) is
+      B then A
+      D then A
+  else
+    C
+//│ deforest > ==============
+//│ deforest > ========
+
+
+[M.f(3), M.g(true)]
+//│ = [D, A]
