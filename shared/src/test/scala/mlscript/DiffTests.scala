@@ -1168,7 +1168,7 @@ object DiffTests {
   class State(val dir: Path) {
       
     val TimeLimit: Span =
-      if (sys.env.get("CI").isDefined) Span(60, Seconds)
+      if (sys.env.contains("CI")) Span(60, Seconds)
       else Span(30, Seconds)
     
     val allFiles: IndexedSeq[Path] = os.walk(dir).filter(_.toIO.isFile)

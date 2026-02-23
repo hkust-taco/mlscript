@@ -50,9 +50,10 @@ class CompileTestRunner
         CompileTestRunner.synchronized:
           println(s"Compiling: $relativeName")
         
-        // Stack safety relies on the fact that runtime uses while loops for resumption
-        // and does not create extra stack depth. Hence we disable while loop rewriting here.
-        given Config = Config.default
+        // * Stack safety relies on the fact that runtime uses while loops for resumption
+        // * and does not create extra stack depth. Hence, while loop rewriting should be disabled here.
+        // * (It used to be on by default, but now is off by default, so nothing to do.)
+        given Config = Config.default(mainTestDir)
         
         // Synchronize diagnostic output to avoid interleaving since the compiler tests run in parallel.
         val wrap: (=> Unit) => Unit = body => CompileTestRunner.synchronized(body)

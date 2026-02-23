@@ -17,6 +17,9 @@ val short_or = RuntimeJS.short_or
 
 fun unreachable = throw Error("unreachable")
 
+fun assertFail(file, line) = throw Error("Assertion failed (" + file + ":" + line + ")")
+
+
 fun checkArgs(functionName, expected, isUB, got) =
   if got < expected || isUB && got > expected do
     let name = if functionName.length > 0 then " '" + functionName + "'" else ""

@@ -1,0 +1,138 @@
+:js
+
+
+let arr = [1, 2, 3]
+//│ arr = [1, 2, 3]
+
+arr.1
+//│ = 2
+
+arr."1"
+//│ = 2
+
+
+let obj = a: 1
+//│ obj = {a: 1}
+
+obj.a
+//│ = 1
+
+obj .a
+//│ = 1
+
+obj
+  .a
+//│ = 1
+
+:pe
+obj. a
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.28: 	obj. a
+//│ ╙──      	   ^
+//│ = {a: 1}
+
+obj.("a")
+//│ = 1
+
+obj .("a")
+//│ = 1
+
+:fixme
+obj
+  .("a")
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.42: 	  .("a")
+//│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.42: 	  .("a")
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
+//│ ║  l.42: 	  .("a")
+//│ ╙──      	  ^
+//│ = {a: 1}
+
+:pe
+obj. ("a")
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.55: 	obj. ("a")
+//│ ╙──      	   ^
+//│ = {a: 1}
+
+obj."a"
+//│ = 1
+
+obj ."a"
+//│ = 1
+
+:fixme
+obj
+  ."a"
+//│ ╔══[PARSE ERROR] Expected an expression; found period instead
+//│ ║  l.69: 	  ."a"
+//│ ╙──      	  ^
+//│ ╔══[PARSE ERROR] Unexpected period here
+//│ ║  l.69: 	  ."a"
+//│ ╙──      	  ^
+//│ ╔══[ERROR] Illegal juxtaposition right-hand side (‹erroneous syntax›).
+//│ ║  l.69: 	  ."a"
+//│ ╙──      	  ^
+//│ = {a: 1}
+
+:pe
+obj. "a"
+//│ ╔══[PARSE ERROR] Expected end of input; found period instead
+//│ ║  l.82: 	obj. "a"
+//│ ╙──      	   ^
+//│ = {a: 1}
+
+
+let obj =
+  " ": 1
+  "¯\\_(ツ)_/¯": 2
+//│ obj = {" ": 1, "¯_(ツ)_/¯": 2}
+
+obj." "
+//│ = 1
+
+:fixme
+:expect 2
+obj."¯\\_(ツ)_/¯"
+//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+
+:fixme
+"¯\_(ツ)_/¯"
+:fixme
+let obj = "¯\_(ツ)_/¯": 2
+//│ ╔══[WARNING] Found invalid escape character
+//│ ║  l.103: 	"¯\_(ツ)_/¯"
+//│ ╙──       	   ^
+//│ ╔══[WARNING] Found invalid escape character
+//│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ╙──       	             ^
+//│ ╔══[ERROR] Name not found: fixme
+//│ ║  l.104: 	:fixme
+//│ ╙──       	 ^^^^^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ╙──       	    ^^^
+//│ obj = {a: 1}
+:fixme
+obj."¯\_(ツ)_/¯"
+//│ ╔══[WARNING] Found invalid escape character
+//│ ║  l.121: 	obj."¯\_(ツ)_/¯"
+//│ ╙──       	       ^
+//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'obj'
+//│ ║  l.121: 	obj."¯\_(ツ)_/¯"
+//│ ║         	^^^
+//│ ╟── which references the symbol introduced here
+//│ ║  l.105: 	let obj = "¯\_(ツ)_/¯": 2
+//│ ╙──       	    ^^^
+
+:fixme
+:expect ¯\\_(ツ)_/¯
+"¯\\_(ツ)_/¯"
+//│ ═══[RUNTIME ERROR] Expected: '¯\\_(ツ)_/¯', got: '"¯\\_(ツ)_/¯"'
+//│ = "¯\\_(ツ)_/¯"
+
+
