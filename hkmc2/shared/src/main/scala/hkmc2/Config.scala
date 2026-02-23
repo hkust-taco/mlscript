@@ -68,7 +68,10 @@ object Config:
     // Whether we check `Instantiate` nodes for effects. Currently, effects cannot be raised in constructors.
     checkInstantiateEffect: Bool = false,
     // A debug option that allows codegen to continue even if an unlifted definition is encountered.
-    softLifterError: Bool = false
+    softLifterError: Bool = false,
+    // Skips instrumenting module constructors, this can be used when the file is statically known to not
+    // raise any effect and cannot use runtime during module construction.
+    skipModCtor: Bool = false,
   )
   
   case class StackSafety(stackLimit: Int)
