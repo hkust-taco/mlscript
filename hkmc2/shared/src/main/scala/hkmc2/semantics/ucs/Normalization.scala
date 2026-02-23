@@ -396,8 +396,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
             else wrap(all)
         labels.default match
-          case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
-          case N => innerBlock
+        case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
+        case N => innerBlock
       // If there are shared consequents, we need a wrap the entire block in a
       // `Label` so that `Break`s in the shared consequents can jump to the end.
       val body =

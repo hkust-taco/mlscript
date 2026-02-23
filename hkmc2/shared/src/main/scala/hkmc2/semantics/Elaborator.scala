@@ -686,6 +686,22 @@ extends Importer with ucs.SplitElaborator:
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
     case tree: IfLike => Term.IfLike(tree.kw.kw, split(tree))
+    
+    case Assert(kw, rhs, thno, els) =>
+      val (fl, ln) = kw.toLoc match
+        case S(loc) =>
+          val org = loc.origin
+          (org.fileName.relativeTo(config.baseDir).getOrElse(org.fileName).toString,
+            (org.startLineNum + org.fph.getLineColAt(loc.spanStart)._1).toString)
+        case N => ("‹unknown›", "‹unknown›")
+      val elsPart = els.fold(PrefixApp(Keywrd(Keyword.`else`), Tree.Trm(
+        State.runtimeSymbol.ref().selNoSym("assertFail")
+          .app(Term.Lit(StrLit(fl)), Term.Lit(StrLit(ln)))
+      )))(PrefixApp.apply.tupled)
+      subterm:
+        IfLike(new Keywrd(Keyword.`if`).withLocOf(kw), Block(
+          InfixApp(rhs, new Keywrd(Keyword.`then`), thno.getOrElse(Unt())) :: elsPart :: Nil))
+      
     case Quoted(body) => Term.Quoted(subterm(body))
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
@@ -798,6 +814,7 @@ extends Importer with ucs.SplitElaborator:
     case DynAccess(obj, rhs) =>
       rhs match
       case Bra(bk @ (Round | Square), fld) => Term.DynSel(subterm(obj), subterm(fld), bk is Square)
+      case fld: Literal => Term.DynSel(subterm(obj), subterm(fld), false)
       case id: Ident =>
         Term.DynSel(subterm(obj), Term.Lit(StrLit(id.name)).withLocOf(id), false)
       case _ =>
