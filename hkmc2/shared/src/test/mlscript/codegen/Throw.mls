@@ -65,3 +65,29 @@ throw 1
 //│ ═══[RUNTIME ERROR] Error: match error
 
 
+
+import "../../mlscript-compile/Runtime.mls"
+
+fun foo(e) =
+  Runtime.try_catch of
+    () => throw e
+    case
+      Str as o then "caught " + o
+      else
+        print("caught something else")
+        throw e // rethrow the original error
+
+foo("hello")
+//│ = "caught hello"
+
+:re
+foo(42)
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] 42
+
+:re
+foo(Error("hi"))
+//│ > caught something else
+//│ ═══[RUNTIME ERROR] Error: hi
+
+

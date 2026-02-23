@@ -244,7 +244,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       subTerm_nonTail(scrut): sr =>
         tl.log(s"Binding scrut $scrut to $sr (${summon[LoweringCtx].map})") 
         def mkMatch(cse: Case -> Block) = Match(sr, cse :: Nil,
-            S(lowerSplit(restSplit, cont, topLevel = true)),
+            S(lowerSplit(restSplit, cont, topLevel)),
             End()
           )
         pat match
@@ -319,7 +319,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     this(split, `if`, N, k)
   
   private def apply(inputSplit: Split, kw: `if`.type | `while`.type, t: Opt[Term], k: Result => Block)(using cfg: Config, outerCtx: LoweringCtx) =
-    // if it's `while`, we always make sure that loop bodies are properly scoped nestedly
+    // if it's `while`, we always make sure that loop bodies are proper nested scoped
     // see https://github.com/hkust-taco/mlscript/pull/356#discussion_r2588412258
     val useNestedScoped = kw === `while`
     (if useNestedScoped then LoweringCtx.nestScoped else outerCtx).givenIn:
@@ -396,8 +396,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
               Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
             else wrap(all)
         labels.default match
-          case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
-          case N => innerBlock
+        case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
+        case N => innerBlock
       // If there are shared consequents, we need a wrap the entire block in a
       // `Label` so that `Break`s in the shared consequents can jump to the end.
       val body =

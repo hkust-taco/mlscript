@@ -15,6 +15,7 @@ module A with
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
+//│   static #A_mod$cap;
 //│   static f(x) {
 //│     if (x instanceof Option.Some.class) {
 //│       return true
@@ -22,6 +23,7 @@ module A with
 //│       return false
 //│     }
 //│   }
+//│   #A$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "A"]; 
 //│ });

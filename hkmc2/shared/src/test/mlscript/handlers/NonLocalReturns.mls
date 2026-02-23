@@ -108,9 +108,10 @@ fun f() =
     return 100
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
-//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.107: 	  object A with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 // ctor cannot raise effect, so error is expected.
 :fixme
@@ -120,7 +121,7 @@ fun f() =
     return 100
   new A
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_18 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
 
 :fixme
@@ -130,9 +131,10 @@ fun f() =
     (() => return 100)()
   4
 f()
-//│ ═══[COMPILATION ERROR] No definition found in scope for member 'nonLocalRetHandler$f'
-//│ ═══[RUNTIME ERROR] ReferenceError: nonLocalRetHandler$f is not defined
-//│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'
+//│ ╔══[WARNING] Objects are not yet lifted.
+//│ ║  l.130: 	  object A with
+//│ ╙──       	         ^
+//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 :fixme
 :expect 100
@@ -142,5 +144,5 @@ fun f() =
   new A
   4
 f()
-//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_24 is raised in a constructor
+//│ ═══[RUNTIME ERROR] Error: Effect $_non$_local$_return$_effect$_20 is raised in a constructor
 //│ ═══[RUNTIME ERROR] Expected: '100', got: 'undefined'

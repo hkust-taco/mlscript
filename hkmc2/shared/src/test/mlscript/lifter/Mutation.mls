@@ -12,32 +12,32 @@ fun foo() =
   xs.push(bar)
   set x = 2
 //│ JS (unsanitized):
-//│ let bar, foo, bar$, foo$capture1;
-//│ bar$ = function bar$(foo$capture2) {
-//│   return foo$capture2.x$capture$0
-//│ };
-//│ bar = function bar(foo$capture2) {
-//│   return () => {
-//│     return bar$(foo$capture2)
-//│   }
-//│ };
-//│ (class foo$capture {
+//│ let bar, foo, Capture$scope01, bar$;
+//│ (class Capture$scope0 {
 //│   static {
-//│     foo$capture1 = this
+//│     Capture$scope01 = this
 //│   }
-//│   constructor(x$capture$0) {
-//│     this.x$capture$0 = x$capture$0;
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "foo$capture"]; 
+//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
 //│ });
+//│ bar$ = function bar$(scope0$cap) {
+//│   return () => {
+//│     return bar(scope0$cap)
+//│   }
+//│ };
+//│ bar = function bar(scope0$cap) {
+//│   return scope0$cap.x$0
+//│ };
 //│ foo = function foo() {
-//│   let x, tmp, capture, bar$here;
-//│   capture = new foo$capture1(null);
-//│   capture.x$capture$0 = 1;
-//│   bar$here = runtime.safeCall(bar(capture));
+//│   let x, tmp, scope0$cap, bar$here;
+//│   scope0$cap = new Capture$scope01(x);
+//│   scope0$cap.x$0 = 1;
+//│   bar$here = bar$(scope0$cap);
 //│   tmp = runtime.safeCall(xs.push(bar$here));
-//│   capture.x$capture$0 = 2;
+//│   scope0$cap.x$0 = 2;
 //│   return runtime.Unit
 //│ };
 

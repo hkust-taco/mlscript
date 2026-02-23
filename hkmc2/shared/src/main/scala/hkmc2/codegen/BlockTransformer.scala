@@ -135,38 +135,38 @@ class BlockTransformer(subst: SymbolSubst):
     case r @ Call(fun, args) =>
       applyPath(fun): fun2 =>
         applyArgs(args): args2 =>
-          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall))
+          k(if (fun2 is fun) && (args2 is args) then r else Call(fun2, args2)(r.isMlsFun, r.mayRaiseEffects, r.explicitTailCall).withLocOf(r))
     case Instantiate(mut, cls, args) =>
       applyPath(cls): cls2 =>
         applyArgs(args): args2 =>
-          k(if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2))
+          k(if (cls2 is cls) && (args2 is args) then r else Instantiate(mut, cls2, args2).withLocOf(r))
     case l: Lambda => k(applyLam(l))
     case Tuple(mut, elems) =>
       applyArgs(elems): elems2 =>
-        k(if (elems2 is elems) then r else Tuple(mut, elems2))
+        k(if (elems2 is elems) then r else Tuple(mut, elems2).withLocOf(r))
     case Record(mut, fields) =>
       applyRcdArgs(fields): fields2 =>
-        k(if fields2 is fields then r else Record(mut, fields2))
-    case p: Path => applyPath(p)(k)  
+        k(if fields2 is fields then r else Record(mut, fields2).withLocOf(r))
+    case p: Path => applyPath(p)(k)
   
   def applyPath(p: Path)(k: Path => Block): Block = p match
     case DynSelect(qual, fld, arrayIdx) =>
       applyPath(qual): qual2 =>
         applyPath(fld): fld2 =>
-          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx))
+          k(if (qual2 is qual) && (fld2 is fld) then p else DynSelect(qual2, fld2, arrayIdx).withLocOf(p))
     case p @ Select(qual, name) =>
       applyPath(qual): qual2 =>
         val sym2 = p.symbol.mapConserve(_.subst)
-        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2))
+        k(if (qual2 is qual) && (sym2 is p.symbol) then p else Select(qual2, name)(sym2).withLocOf(p))
     case v: Value => applyValue(v)(k)
   
   def applyValue(v: Value)(k: Value => Block) = v match
     case Value.Ref(l, disamb) =>
       val l2 = l.subst
-      k(if (l2 is l) then v else Value.Ref(l2, disamb))
+      k(if (l2 is l) then v else Value.Ref(l2, disamb).withLocOf(v))
     case Value.This(sym) =>
       val sym2 = sym.subst
-      k(if (sym2 is sym) then v else Value.This(sym2))
+      k(if (sym2 is sym) then v else Value.This(sym2).withLocOf(v))
     case Value.Lit(lit) => k(v)
   
   def applyLocal(sym: Local): Local = sym.subst
