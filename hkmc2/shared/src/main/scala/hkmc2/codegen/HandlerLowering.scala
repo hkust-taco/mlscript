@@ -83,12 +83,18 @@ object HandlerLowering:
   private enum HandlerCtx:
     case FunctionLike(ctx: FunctionCtx)
     case Ctor
-    case ModCtor
+    case ModCtor(trulyNested: Bool)
     case TopLevel
 
-    def inCtor = this === Ctor || this === ModCtor
+    def inCtor = this === Ctor || this.isInstanceOf[ModCtor]
     def inTopLevel = this === TopLevel
-    def allowDefn = inTopLevel || this === ModCtor
+    def allowDefn = inTopLevel || this.isInstanceOf[ModCtor]
+    def innerDefIsTrulyNested = this match
+      case FunctionLike(_) => true
+      case Ctor => true
+      case ModCtor(trulyNested) => trulyNested
+      case TopLevel => false
+    
   
   // currentFun: path to the current function for resumption
   // thisPath: path to `this` binding if the function is a method, `this` will be rebinded on resumption
@@ -537,7 +543,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
             // TODO: Companion's ctor is more well behaved so it is possible to handle it
             // However, JSBuilder inserts extra statements between preCtor and ctor and it's not possible to replicate the exact behavior
             // without many special handling.
-            val newCtor = if opt.skipModCtor then bod.ctor else
+            val newCtor = if opt.doNotInstrumentTopLevelModCtor && !h.innerDefIsTrulyNested then bod.ctor else
               translateCtorLike(bod.ctor, bod.isym.asPath, true)
             tl.log(s"companion name: ${bod.isym.nme}")
             ClsLikeBody(bod.isym, newMtds, bod.privateFields, bod.publicFields, newCtor)
@@ -616,7 +622,7 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
         mainLoop))
   
   private def translateCtorLike(b: Block, thisPath: Path, isModCtor: Bool)(using h: HandlerCtx): Block =
-    translateBlock(b, if isModCtor then HandlerCtx.ModCtor else HandlerCtx.Ctor, Set.empty)
+    translateBlock(b, if isModCtor then HandlerCtx.ModCtor(h.innerDefIsTrulyNested) else HandlerCtx.Ctor, Set.empty)
 
   private def translateIllegalEffectCtx(b: Block, onEffect: Call)(using HandlerCtx): Block =
     def effectCheck(l: Local, r: Result, rst: Block): Block =

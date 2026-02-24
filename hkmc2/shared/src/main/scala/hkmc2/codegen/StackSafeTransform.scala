@@ -9,7 +9,7 @@ import hkmc2.semantics.*
 import hkmc2.syntax.Tree
 import hkmc2.codegen.HandlerLowering.FnOrCls
 
-class StackSafeTransform(depthLimit: Int, skipModCtor: Bool, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State):
+class StackSafeTransform(depthLimit: Int, doNotInstrumentTopLevelModCtor: Bool, paths: HandlerPaths, stackSafetyMap: StackSafetyMap)(using State):
   private val STACK_DEPTH_IDENT: Tree.Ident = Tree.Ident("stackDepth")
 
   private val runtimePath: Path = State.runtimeSymbol.asPath
@@ -124,7 +124,7 @@ class StackSafeTransform(depthLimit: Int, skipModCtor: Bool, paths: HandlerPaths
       defn.privateFields,
       defn.publicFields,
       if isTopLevel then
-        if skipModCtor then defn.ctor else transformTopLevel(defn.ctor)
+        if doNotInstrumentTopLevelModCtor then defn.ctor else transformTopLevel(defn.ctor)
       else rewriteBlk(defn.ctor, R(defn.isym)),
     )
 
