@@ -157,6 +157,9 @@ object Ctx:
   def empty: Ctx = Ctx(
     types = ArrayBuf.empty,
     namedTypes = MutMap.empty,
+    memoryImports = ArrayBuf.empty,
+    functionImports = ArrayBuf.empty,
+    dataSegments = ArrayBuf.empty,
     funcs = ArrayBuf.empty,
     namedFuncs = MutMap.empty,
     locals = MutMap() :: Nil
@@ -176,6 +179,12 @@ object Ctx:
  *   [[ArrayBuf]] containing all type definitions in the module.
  * @param namedTypes
  *   [[MutMap]] containing type symbols mapped to their corresponding Wasm type indices.
+ * @param memoryImports
+ *   [[ArrayBuf]] containing all memory imports in the module.
+ * @param functionImports
+ *   [[ArrayBuf]] containing all function imports in the module.
+ * @param dataSegments
+ *   [[ArrayBuf]] containing all data segments in the module.
  * @param funcs
  *   [[ArrayBuf]] containing all function definitions in the module.
  * @param namedFuncs
@@ -187,6 +196,9 @@ object Ctx:
 class Ctx(
     types: ArrayBuf[TypeInfo],
     namedTypes: MutMap[BlockMemberSymbol, NumIdx],
+    memoryImports: ArrayBuf[MemoryImport],
+    functionImports: ArrayBuf[FuncImport],
+    dataSegments: ArrayBuf[DataSegment],
     funcs: ArrayBuf[FuncInfo],
     namedFuncs: MutMap[Symbol, NumIdx],
     var locals: Ls[MutMap[Local, NumIdx]]
@@ -196,6 +208,8 @@ class Ctx(
 
   private val wasmIntrinsicFuncs: MutMap[Str, FuncIdx] = MutMap.empty
   private val wasmIntrinsicTypes: MutMap[WasmIntrinsicType, TypeIdx] = MutMap.empty
+  private val cachedMemoryImport: MutMap[(Str, Str), Int] = MutMap.empty
+  private val cachedFunctionImports: MutMap[(Str, Str), FuncIdx] = MutMap.empty
 
   /** Adds a type into this context. */
   def addType(sym: Opt[BlockMemberSymbol], typeInfo: TypeInfo): TypeIdx =
@@ -238,11 +252,58 @@ class Ctx(
 
   /** Adds a function into this context. */
   def addFunc(sym: Opt[Symbol], funcInfo: FuncInfo): FuncIdx =
-    val numIdx = NumIdx(funcs.size)
+    val numIdx = NumIdx(functionImports.size + funcs.size)
     funcs += funcInfo
     sym.foreach:
       namedFuncs(_) = numIdx
     FuncIdx(funcInfo.id.getOrElse(numIdx))
+
+  /**
+   * Adds a function import into this context.
+   *
+   * Returns the function index in the global function index space.
+   */
+  def addFunctionImport(sym: Opt[Symbol], funcImport: FuncImport): FuncIdx =
+    val numIdx = NumIdx(functionImports.size)
+    functionImports += funcImport
+    sym.foreach:
+      namedFuncs(_) = numIdx
+    FuncIdx(funcImport.id.getOrElse(numIdx))
+
+  /**
+   * Returns the cached function import for (`module`, `name`), creating it with `createImport`
+   * if needed.
+   */
+  def getOrCreateFunctionImport(
+      module: Str,
+      name: Str,
+      createImport: => FuncImport
+  ): FuncIdx =
+    cachedFunctionImports.getOrElseUpdate(
+      (module, name),
+      addFunctionImport(N, createImport)
+    )
+
+  /**
+   * Adds or updates a memory import. If the import already exists, its minimum pages are increased
+   * to at least `minPages`.
+   */
+  def ensureMemoryImport(module: Str, name: Str, minPages: Int): Unit =
+    val key = module -> name
+    cachedMemoryImport.get(key) match
+      case S(idx) =>
+        val existing = memoryImports(idx)
+        val newMin = existing.minPages max minPages
+        if newMin =/= existing.minPages then
+          memoryImports(idx) = existing.copy(minPages = newMin)
+      case N =>
+        val idx = memoryImports.size
+        memoryImports += MemoryImport(module, name, minPages)
+        cachedMemoryImport(key) = idx
+
+  /** Adds a data segment into this context. */
+  def addDataSegment(seg: DataSegment): Unit =
+    dataSegments += seg
 
   /**
    * Returns the [[FuncIdx]] of the given `funcref`, optionally resolving the symbolic index into a
@@ -264,7 +325,9 @@ class Ctx(
 
   /** Returns the [[FuncInfo]] instance associated with the given `funcref`. */
   def getFuncInfo(funcref: FuncIdx | Symbol): Opt[FuncInfo] = funcref match
-    case FuncIdx(NumIdx(idx)) => funcs.unapply(idx.toInt)
+    case FuncIdx(NumIdx(idx)) =>
+      val localIdx = idx.toInt - functionImports.size
+      if localIdx < 0 then N else funcs.unapply(localIdx)
     case funcref => getFunc(funcref, resolveSymIdx = true).flatMap(getFuncInfo(_))
 
   /** Same as [[getFuncInfo]] but throws an exception when the `funcref` is not found. */
@@ -336,6 +399,12 @@ class Ctx(
     wasmIntrinsicTypes.getOrElseUpdate(key, createType)
 
   def toWat: Document =
-    doc"(module #{  # ${(types.toSeq ++ funcs.toSeq).map(_.toWat).mkDocument(doc" # ")}) #} "
+    val fields =
+      types.toSeq ++
+        memoryImports.toSeq ++
+        functionImports.toSeq ++
+        dataSegments.toSeq ++
+        funcs.toSeq
+    doc"(module #{  # ${fields.map(_.toWat).mkDocument(doc" # ")}) #} "
 
 end Ctx

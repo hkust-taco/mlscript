@@ -2,66 +2,33 @@
 :global
 :wasm
 
+:wat
 "Hello World!"
+//│ Wat:
+//│ (module
+//│   (type (func (param (ref null any)) (param (ref null any)) (result (ref null any))))
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type (func (result (ref null any))))
+//│   (import "system" "mem" (memory 1))
+//│   (import "system" "mlx_str_from_utf16" (func $mlx_str_from_utf16 (type 0)))
+//│   (data (i32.const 0) "\48\00\65\00\6c\00\6c\00\6f\00\20\00\57\00\6f\00\72\00\6c\00\64\00\21\00")
+//│   (func $entry (type 2) (result (ref null any))
+//│     (call $mlx_str_from_utf16
+//│       (ref.i31
+//│         (i32.const 0))
+//│       (ref.i31
+//│         (i32.const 24))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
 //│ Wasm result:
 //│ = "Hello World!"
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] function body type must match, if function returns, on 
-//│ (string.const "Hello World!")
-//│ Assertion failed
-//│ 
 
 let s = "mlx"
 s
 //│ Wasm result:
 //│ = "mlx"
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
-//│ (local.set $0
-//│  (string.const "mlx")
-//│ )
-//│ Assertion failed
-//│ 
 
 let t = ["a", "b", "c"]
 t.[1]
 //│ Wasm result:
 //│ = "b"
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
-//│ (array.new_fixed $TupleArray 3
-//│  (string.const "a")
-//│  (string.const "b")
-//│  (string.const "c")
-//│ )
-//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
-//│ (array.new_fixed $TupleArray 3
-//│  (string.const "a")
-//│  (string.const "b")
-//│  (string.const "c")
-//│ )
-//│ [wasm-validator error in function entry] array.new_fixed value must have proper type, on 
-//│ (array.new_fixed $TupleArray 3
-//│  (string.const "a")
-//│  (string.const "b")
-//│  (string.const "c")
-//│ )
-//│ Assertion failed
-//│ 
-
-let greeting = "Hello, "
-let who = "Wasm"
-[greeting, who].[0]
-//│ Wasm result:
-//│ = "Hello, "
-//│ // Standard Error:
-//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
-//│ (local.set $0
-//│  (string.const "Hello, ")
-//│ )
-//│ [wasm-validator error in function entry] local.set's value type must be correct, on 
-//│ (local.set $1
-//│  (string.const "Wasm")
-//│ )
-//│ Assertion failed
-//│ 

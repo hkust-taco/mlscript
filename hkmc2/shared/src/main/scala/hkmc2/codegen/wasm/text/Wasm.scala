@@ -191,6 +191,26 @@ case class LocalIdx(idx: Index) extends CtxIdx(idx)
 /** An index bound to the ''fields'' index space. */
 case class FieldIdx(idx: Index) extends CtxIdx(idx)
 
+/** A memory import entry. */
+case class MemoryImport(module: Str, name: Str, minPages: Int) extends ToWat:
+  def toWat: Document =
+    doc"""(import "${module}" "${name}" (memory ${minPages}))"""
+
+/** A function import entry. */
+case class FuncImport(
+    module: Str,
+    name: Str,
+    id: Opt[SymIdx],
+    typeIdx: TypeIdx,
+) extends ToWat:
+  def toWat: Document =
+    doc"""(import "${module}" "${name}" (func ${id.fold(doc"")(_.toWat)} (type ${typeIdx.toWat})))"""
+
+/** A data segment entry. */
+case class DataSegment(offset: Int, bytes: Str) extends ToWat:
+  def toWat: Document =
+    doc"""(data (i32.const ${offset}) "${bytes}")"""
+
 /**
  * An abstraction over a generic WebAssembly instructions.
  */

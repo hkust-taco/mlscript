@@ -315,17 +315,6 @@ object Instructions:
     def get_s(i31: Expr): FoldedInstr = get(i31, true)
   end i31
 
-  object string:
-    /** Creates a `string.const` instruction (Binaryen stringref). */
-    def const(value: Str): FoldedInstr =
-      FoldedInstr(
-        mnemonic = "string.const",
-        instrargs = Seq(doc"${syntax.Tree.StrLit(value).idStr}"),
-        stackargs = Seq.empty,
-        resultType = S(RefType.anyref)
-      )
-  end string
-
   object local:
     /** Creates a `local.get` instruction. */
     def get(index: LocalIdx, ty: Type): FoldedInstr = FoldedInstr(

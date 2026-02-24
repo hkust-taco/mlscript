@@ -14,8 +14,9 @@ import syntax.Tree.{BoolLit, IntLit, StrLit, Ident}
 import text.Param as WasmParam
 import Message.MessageContext
 import Scope.scope
+import hkmc2.codegen.BlockTraverser
 
-import scala.collection.mutable.{ArrayBuffer as ArrayBuf}
+import scala.collection.mutable.{ArrayBuffer as ArrayBuf, LinkedHashMap}
 import scala.util.boundary, boundary.break
 import sourcecode.Line
 
@@ -38,6 +39,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   private val baseObjectSym: BlockMemberSymbol = BlockMemberSymbol("Object", Nil)
   private val tagFieldSym: TermSymbol = TermSymbol(syntax.MutVal, owner = N, Ident("$tag"))
 
+  private case class StringLitInfo(offset: Int, byteLen: Int, watBytes: Str)
+  private val stringLits: LinkedHashMap[Str, StringLitInfo] = LinkedHashMap.empty
+  private var nextStringDataOffset: Int = 0
+
   private def baseObjectTypeIdx(using Ctx): TypeIdx =
     ctx.getType_!(baseObjectSym)
 
@@ -48,6 +53,73 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
   private def baseObjectRefType(nullable: Bool)(using Ctx): RefType =
     RefType(baseObjectTypeIdx, nullable = nullable)
+
+  /**
+   * Returns (and caches) string literal data metadata, allocating data-segment space on first use.
+   */
+  private def internStringLiteral(value: Str): StringLitInfo =
+    stringLits.getOrElseUpdate(
+      value,
+      if value.isEmpty then
+        StringLitInfo(offset = 0, byteLen = 0, watBytes = "")
+      else
+        val sb = new StringBuilder(value.length * 6)
+        value.foreach: ch =>
+          val codeUnit = ch.toInt
+          sb.append(f"\\${codeUnit & 0xff}%02x")
+          sb.append(f"\\${(codeUnit >>> 8) & 0xff}%02x")
+        val watBytes = sb.toString
+        val offset = (nextStringDataOffset + 1) & ~1
+        val byteLen = value.length * 2
+        nextStringDataOffset = offset + byteLen
+        StringLitInfo(offset = offset, byteLen = byteLen, watBytes = watBytes)
+    )
+
+  /**
+   * Ensures imports required for string materialization exist and returns the constructor function.
+   */
+  private def ensureStringImports(using Ctx): FuncIdx =
+    val minBytes = nextStringDataOffset max 1
+    val minPages = (minBytes + 65535) / 65536
+    val systemImportMod = "system"
+    val stringFromUtf16ImportNme = "mlx_str_from_utf16"
+    ctx.ensureMemoryImport(systemImportMod, "mem", minPages)
+    ctx.getOrCreateFunctionImport(
+      module = systemImportMod,
+      name = stringFromUtf16ImportNme,
+      createImport =
+        val importTy = ctx.addType(
+          sym = N,
+          TypeInfo(
+            id = N,
+            FunctionType(
+              params = Seq(
+                WasmParam(N, RefType.anyref),
+                WasmParam(N, RefType.anyref)
+              ),
+              results = Seq(Result(RefType.anyref))
+            )
+          )
+        )
+        FuncImport(
+          module = systemImportMod,
+          name = stringFromUtf16ImportNme,
+          id = S(SymIdx(stringFromUtf16ImportNme)),
+          typeIdx = importTy
+        )
+    )
+
+  /** Returns true iff `block` contains at least one string literal value. */
+  private def blockHasStringLiteral(block: Block): Bool =
+    var hasStringLit = false
+    val traverser = new BlockTraverser:
+      override def applyValue(v: Value): Unit =
+        v match
+          case Value.Lit(StrLit(_)) => hasStringLit = true
+          case _ => ()
+
+    traverser.applyBlock(block)
+    hasStringLit
 
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
@@ -276,7 +348,16 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     case Value.Lit(IntLit(value)) =>
       ref.i31(i32.const(value.toInt))
     case Value.Lit(StrLit(value)) =>
-      string.const(value)
+      val lit = internStringLiteral(value)
+      val stringCtor = ensureStringImports
+      call(
+        funcidx = stringCtor,
+        operands = Seq(
+          ref.i31(i32.const(lit.offset)),
+          ref.i31(i32.const(lit.byteLen))
+        ),
+        returnTypes = Seq(Result(RefType.anyref))
+      )
     case Value.Ref(l, _) =>
       ctx.getFunc(l) match
         case S(funcIdx) =>
@@ -1061,6 +1142,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       Raise,
       Scope
   ): (Document, Str) =
+    stringLits.clear()
+    nextStringDataOffset = 0
+
     for imprt <- p.imports do
       raise(
         ErrorReport(
@@ -1079,6 +1163,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       )
 
     val ctx = Ctx.empty
+    val needsStringSupport = blockHasStringLiteral(p.main)
+    if needsStringSupport then ensureStringImports(using ctx)
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
@@ -1120,6 +1206,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     ctx.addFunc(S(entrySym), entryFnInfo)
 
     ctx.popLocal()
+    if stringLits.nonEmpty then
+      stringLits.valuesIterator.foreach: lit =>
+        if lit.byteLen > 0 then
+          ctx.addDataSegment(DataSegment(offset = lit.offset, bytes = lit.watBytes))
 
     (ctx.toWat, entryNme)
   end program
