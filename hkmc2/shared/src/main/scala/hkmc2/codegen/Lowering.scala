@@ -535,7 +535,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
               k(Call(
                 Value.Ref(State.runtimeSymbol).selN(Tree.Ident(if isAnd then "short_and" else "short_or")),
                 Arg(N, ar1) :: Arg(N, lamDef.asPath) :: Nil
-              )(true, false, false)))
+              )(true, true, false)))
           else
             subTerm_nonTail(arg2): ar2 =>
               val target = wasmIntrinsicPath(sym, unary = false)
