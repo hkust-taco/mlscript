@@ -70,7 +70,7 @@ object Config:
     // A debug option that allows codegen to continue even if an unlifted definition is encountered.
     softLifterError: Bool = false,
     // Skips instrumenting module constructors, this can be used when the file is statically known to not
-    // raise any effect and cannot use runtime during module construction due to cyclic dependency.
+    // raise any effect and cannot use the Runtime.mls module during module construction due to cyclic dependency.
     doNotInstrumentTopLevelModCtor: Bool = false,
   )
   
