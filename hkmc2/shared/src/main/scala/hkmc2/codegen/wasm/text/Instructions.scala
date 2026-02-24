@@ -253,20 +253,22 @@ object Instructions:
     )
 
     /** Creates an `array.get` instruction. */
-    def get(arrayType: TypeIdx, arrayRef: Expr, index: Expr, elemType: Type): FoldedInstr = FoldedInstr(
-      mnemonic = "array.get",
-      instrargs = Seq(arrayType.toWat),
-      stackargs = Seq(arrayRef, index),
-      resultType = S(elemType)
-    )
+    def get(arrayType: TypeIdx, arrayRef: Expr, index: Expr, elemType: Type): FoldedInstr =
+      FoldedInstr(
+        mnemonic = "array.get",
+        instrargs = Seq(arrayType.toWat),
+        stackargs = Seq(arrayRef, index),
+        resultType = S(elemType)
+      )
 
     /** Creates an `array.set` instruction. */
-    def set(arrayType: TypeIdx, arrayRef: Expr, index: Expr, value: Expr): FoldedInstr = FoldedInstr(
-      mnemonic = "array.set",
-      instrargs = Seq(arrayType.toWat),
-      stackargs = Seq(arrayRef, index, value),
-      resultType = N
-    )
+    def set(arrayType: TypeIdx, arrayRef: Expr, index: Expr, value: Expr): FoldedInstr =
+      FoldedInstr(
+        mnemonic = "array.set",
+        instrargs = Seq(arrayType.toWat),
+        stackargs = Seq(arrayRef, index, value),
+        resultType = N
+      )
   end array
 
   object ref:
