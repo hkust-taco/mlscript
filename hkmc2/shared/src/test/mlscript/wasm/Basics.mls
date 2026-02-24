@@ -158,3 +158,9 @@ class Foo(val a)
 //│   (elem declare func $entry))
 //│ Wasm result:
 //│ = 42
+
+class Foo(val x)
+fun getX(f: Foo) = f.x
+getX(Foo(42))
+//│ Wasm result:
+//│ = 42

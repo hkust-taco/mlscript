@@ -573,6 +573,14 @@ let Runtime1;
   static get unreachable() {
     throw runtime.safeCall(globalThis.Error("unreachable"));
   } 
+  static assertFail(file, line) {
+    let tmp, tmp1, tmp2, tmp3;
+    tmp = "Assertion failed (" + file;
+    tmp1 = tmp + ":";
+    tmp2 = tmp1 + line;
+    tmp3 = tmp2 + ")";
+    throw runtime.safeCall(globalThis.Error(tmp3))
+  } 
   static checkArgs(functionName, expected, isUB, got) {
     let scrut, name, scrut1, scrut2, tmp, lambda, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12;
     tmp = got < expected;

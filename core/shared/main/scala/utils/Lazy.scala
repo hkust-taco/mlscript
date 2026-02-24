@@ -3,15 +3,15 @@ package mlscript.utils
 import shorthands._
 
 abstract class Box[+A] {
-  def get: Opt[A]
-  def get_! : A
+  def force: Opt[A]
+  def force_! : A
   def isComputing: Bool
 }
 
 class Eager[+A](val value: A) extends Box[A] {
   def isComputing = false
-  lazy val get = S(value)
-  def get_! = value
+  lazy val force = S(value)
+  def force_! = value
 }
 
 object Lazy {
@@ -26,8 +26,8 @@ abstract class Lazy[A] extends Box[A] {
   def isEmpty: Bool = _value.isEmpty
   private var _isComputing = false
   private var _value: Opt[A] = N
-  def get = if (_isComputing) N else S(get_!)
-  def get_! = {
+  def force = if (_isComputing) N else S(force_!)
+  def force_! = {
     assert(!_isComputing)
     _value.getOrElse(_compute)
   }

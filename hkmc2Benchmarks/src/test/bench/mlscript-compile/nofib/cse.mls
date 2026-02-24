@@ -1,0 +1,146 @@
+import "./NofibPrelude.mls"
+import "../../../../../../hkmc2/shared/src/test/mlscript-compile/Predef.mls"
+open NofibPrelude
+
+
+module cse with ...
+
+
+
+fun retURN(a) = s => [s, a]
+
+fun bind(m, f) = s => if m(s) is [s_, a] then f(a)(s_)
+
+fun join(m) = s => if m(s) is [s_, ma] then ma(s_)
+
+fun mmap(f, m) = s => if m(s) is [s_, a] then [s_, f(a)]
+
+fun mmapl(f, aas) = if aas is
+  Nil then retURN(Nil)
+  a :: as_ then
+    bind of
+      f(a)
+      b => bind of
+        mmapl(f, as_)
+        bs => retURN(b :: bs)
+
+fun mmapr(f, xs) = if xs is
+  Nil then retURN(Nil)
+  x :: xs then
+    bind of
+      mmapr(f, xs)
+      ys => bind of
+        f(x)
+        y => retURN(y :: ys)
+
+fun mfoldl(f, a, xs) = if xs is
+  Nil then retURN(a)
+  x :: xs then
+    bind(f(a, x), fax => mfoldl(f, fax, xs))
+
+fun mfoldr(f, a, xs) = if xs is
+  Nil then retURN(a)
+  x :: xs then
+    bind(mfoldr(f, a, xs), y => f(x, y))
+
+fun mif(c, t, f) = bind(c, cond => if cond then t else f)
+
+fun startingWith(m, v) = if m(v) is [final, answer] then answer
+
+fun fetch(s) = [s, s]
+
+fun fetchWith(f) = s => [s, f(s)]
+
+fun update(f) = s => [f(s), s]
+
+fun set_(s_) = s => [s_, s]
+
+val incr = update(x => x + 1)
+//│ incr = [function]
+
+data class Node[T](a: T, b: List[Node[T]])
+
+fun labelTree(t) =
+  fun label(t) = if t is Node(x, xs) then
+    bind of
+      incr
+      n => bind of
+        mmapl(label, xs)
+        ts => retURN(Node([n, x], ts))
+  startingWith(label(t), 0)
+
+fun ltGraph(t) =
+  fun labelOf(t) = if t is Node([n, x], xs) then n
+  if t is Node([n, x], xs) then
+    [n, x, map(labelOf, xs)] :: concat(map(ltGraph, xs))
+
+fun visited(n) = bind of
+  fetch
+  us => if inList(n, us) then retURN(true) else bind(set_(n :: us), _p => retURN(false))
+
+fun newlyDefined(x, fx, f, y) = if x === y then fx else f(y)
+
+fun findCommon(ls) =
+  fun sim(n_s_cs, r_lg) = if n_s_cs is [n, s, cs] and r_lg is [r, lg] then
+    let rcs = map(r, cs)
+    fun lscomp(ls) = if ls is
+      Nil then Nil
+      [m, s_, cs_] :: t and
+        s === s_ and listEq(cs_, rcs) then m :: lscomp(t)
+        else lscomp(t)
+    let ms = lscomp(lg)
+    if null_(ms)
+    then [r, [n, s, rcs] :: lg]
+    else [x => newlyDefined(n, head(ms), r, x), lg]
+  if foldr(sim, [x => x, Nil], ls) is [a, b] then b else throw Error(ls.toString())
+
+fun cse(t) = findCommon(ltGraph(labelTree(t)))
+
+fun plus_(x, y) = Node("+", x :: y :: Nil)
+
+fun mult_(x, y) = Node("*", x :: y :: Nil)
+
+fun prod(xs) = Node("X", xs)
+
+val zerO = Node("0", Nil)
+//│ zerO = Node("0", [])
+
+val a = Node("a", Nil)
+//│ a = Node("a", [])
+
+val b = Node("b", Nil)
+//│ b = Node("b", [])
+
+val c = Node("c", Nil)
+//│ c = Node("c", [])
+
+val d = Node("d", Nil)
+//│ d = Node("d", [])
+
+val example0 = a
+//│ example0 = Node("a", [])
+
+val example1 = plus_(a, a)
+//│ example1 = Node("+", [Node("a", []),Node("a", [])])
+
+val example2 = plus_(mult_(a, b), mult_(a, b))
+//│ example2 = Node("+", [Node("*", [Node("a", []),Node("b", [])]),Node("*", [Node("a", []),Node("b", [])])])
+
+val example3 = plus_(mult_(plus_(a, b), c), plus_(a, b))
+//│ example3 = Node("+", [Node("*", [Node("+", [Node("a", []),Node("b", [])]),Node("c", [])]),Node("+", [Node("a", []),Node("b", [])])])
+
+val example4 = prod(scanl(plus_, zerO, a :: b :: c :: d :: Nil))
+//│ example4 = Node("X", [Node("0", []),Node("+", [Node("0", []),Node("a", [])]),Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("+", [Node("+", [Node("+", [Node("+", [Node("0", []),Node("a", [])]),Node("b", [])]),Node("c", [])]),Node("d", [])])])
+
+val example5 = prod(scanr(plus_, zerO, a :: b :: c :: d :: Nil))
+//│ example5 = Node("X", [Node("+", [Node("a", []),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])])]),Node("+", [Node("b", []),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])])]),Node("+", [Node("c", []),Node("+", [Node("d", []),Node("0", [])])]),Node("+", [Node("d", []),Node("0", [])]),Node("0", [])])
+
+fun testCse_nofib(n) = map(
+  i => map(
+    cse,
+    take(intMod(i, 6), example0 :: example1 :: example2 :: example3 :: example4 :: example5 :: Nil)
+  ),
+  enumFromTo(1, n)
+)
+
+fun main() = testCse_nofib(6).toString()

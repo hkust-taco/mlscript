@@ -71,9 +71,13 @@ in
   h.perform("5")
 result
 //│ JS (unsanitized):
-//│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$7;
-//│ result = "";
-//│ Handler$h$perform$7 = function Handler$h$perform$(Handler$h$$instance, arg, k) {
+//│ let result, h7, tmp7, handleBlock$7, Handler$h$perform7, Handler$h$15, Handler$h$perform$4;
+//│ Handler$h$perform$4 = function Handler$h$perform$(arg) {
+//│   return (k) => {
+//│     return Handler$h$perform7(arg, k)
+//│   }
+//│ };
+//│ Handler$h$perform7 = function Handler$h$perform(arg, k) {
 //│   let v, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
@@ -87,7 +91,7 @@ result
 //│       case 0:
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.curEffect !== null) {
-//│           return runtime.unwind(Handler$h$perform$7, 1, "Effects.mls:63:13", null, null, 1, 3, Handler$h$$instance, arg, k, 0)
+//│           return runtime.unwind(Handler$h$perform7, 1, "Effects.mls:63:13", null, null, 1, 2, arg, k, 0)
 //│         }
 //│         pc = 1;
 //│         continue main;
@@ -101,11 +105,7 @@ result
 //│     break;
 //│   }
 //│ };
-//│ Handler$h$perform7 = function Handler$h$perform(Handler$h$$instance, arg) {
-//│   return (k) => {
-//│     return Handler$h$perform$7(Handler$h$$instance, arg, k)
-//│   }
-//│ };
+//│ result = "";
 //│ (class Handler$h$14 extends Effect1 {
 //│   static {
 //│     Handler$h$15 = this
@@ -118,9 +118,10 @@ result
 //│     }
 //│     tmp8;
 //│   }
+//│   #Handler$h$$cap;
 //│   perform(arg) {
 //│     let Handler$h$perform$here;
-//│     Handler$h$perform$here = runtime.safeCall(Handler$h$perform7(this, arg));
+//│     Handler$h$perform$here = Handler$h$perform$4(arg);
 //│     return runtime.mkEffect(this, Handler$h$perform$here)
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -441,10 +442,18 @@ fun foo(h) =
 handle h = Eff with
   fun perform()(k) = k(())
 foo(h)
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
-//│ ═══[WARNING] Modules are not yet lifted.
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.438: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.434: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.430: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[WARNING] Modules are not yet lifted.
+//│ ║  l.426: 	    module A with
+//│ ╙──       	           ^
 //│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
 
 // Access superclass fields

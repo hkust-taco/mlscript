@@ -11,27 +11,11 @@ fun foo() =
   while x < 5 do
     set x += 1
     fs.push of () => x
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: loops should be rewritten to functions before scope flattening
 
 :expect 5
 foo()
 fs.0()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.17: 	foo()
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.9: 	fun foo() =
-//│ ║       	^^^^^^^^^^^
-//│ ║  l.10: 	  let x = 1
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.11: 	  while x < 5 do
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.12: 	    set x += 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.13: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│ ═══[RUNTIME ERROR] Expected: '5', got: 'undefined'
+//│ = 5
 
 
 let fs = mut []
@@ -43,7 +27,6 @@ fun foo() =
     let x = i
     set i += 1
     fs.push of () => x
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: loops should be rewritten to functions before scope flattening
 
 // * Note that this works with while loop rewriting
 // * See [fixme:0] for cause of the issue
@@ -51,22 +34,7 @@ fun foo() =
 :expect 1
 foo()
 fs.0()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.52: 	foo()
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.40: 	fun foo() =
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.41: 	  let i = 1
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.42: 	  while i < 5 do
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.43: 	    let x = i
-//│ ║        	^^^^^^^^^^^^^
-//│ ║  l.44: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│ ═══[RUNTIME ERROR] Expected: '1', got: 'undefined'
+//│ = 1
 
 
 :sjs
@@ -75,25 +43,47 @@ fun foo() =
   while true do
     set x += 1
     return () => x
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: loops should be rewritten to functions before scope flattening
+//│ JS (unsanitized):
+//│ let foo2, lambda2, Capture$scope03, lambda$2;
+//│ lambda$2 = (undefined, function (scope0$cap) {
+//│   return () => {
+//│     return lambda2(scope0$cap)
+//│   }
+//│ });
+//│ lambda2 = (undefined, function (scope0$cap) {
+//│   return scope0$cap.x$0
+//│ });
+//│ (class Capture$scope02 {
+//│   static {
+//│     Capture$scope03 = this
+//│   }
+//│   constructor(x$0) {
+//│     this.x$0 = x$0;
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Capture$scope0"]; 
+//│ });
+//│ foo2 = function foo() {
+//│   let x, tmp2, scope0$cap;
+//│   scope0$cap = new Capture$scope03(x);
+//│   scope0$cap.x$0 = 1;
+//│   lbl: while (true) {
+//│     let scrut, tmp3;
+//│     scrut = true;
+//│     if (scrut === true) {
+//│       let lambda$here;
+//│       tmp3 = scope0$cap.x$0 + 1;
+//│       scope0$cap.x$0 = tmp3;
+//│       lambda$here = lambda$2(scope0$cap);
+//│       return lambda$here
+//│     } else { tmp2 = runtime.Unit; }
+//│     break;
+//│   }
+//│   return tmp2
+//│ };
 
 :expect 2
 foo()()
-//│ ╔══[COMPILATION ERROR] No definition found in scope for member 'foo'
-//│ ║  l.81: 	foo()()
-//│ ║        	^^^
-//│ ╟── which references the symbol introduced here
-//│ ║  l.73: 	fun foo() =
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.74: 	  let x = 1
-//│ ║        	^^^^^^^^^^^
-//│ ║  l.75: 	  while true do
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    set x += 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.77: 	... (more lines omitted) ...
-//│ ╙──      	^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] ReferenceError: foo is not defined
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ = 2
 
 

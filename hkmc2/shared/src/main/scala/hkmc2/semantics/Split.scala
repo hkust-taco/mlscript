@@ -95,12 +95,13 @@ end Split
 
 extension (split: Split)
   def ~~:(fallback: Split): Split =
-    if fallback == Split.End || split.isFull then
-      split
-    else (split match
+    if fallback == Split.End || split.isFull
+    then split
+    else split match
       case Split.Cons(head, tail) => Split.Cons(head, tail ~~: fallback)
       case Split.Let(name, term, tail) => Split.Let(name, term, tail ~~: fallback)
-      case Split.Else(_) /* impossible */ | Split.End => fallback)
+      case Split.Else(_) => lastWords("impossible since split is not full")
+      case Split.End => fallback
 
 object Split:
   def default(term: Term): Split = Split.Else(term)

@@ -155,187 +155,188 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, h11, tmp11, tmp12;
+//│ let str, scrut, h11, tmp11, tmp12, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
+//│ Handler$h1$perform$1 = function Handler$h1$perform$(arg) {
+//│   return (k) => {
+//│     return Handler$h1$perform1(arg, k)
+//│   }
+//│ };
+//│ Handler$h1$perform1 = function Handler$h1$perform(arg, k) {
+//│   let tmp13, tmp14, tmp15, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         tmp13 = str + "A";
+//│         str = tmp13;
+//│         runtime.resumeValue = runtime.safeCall(k(arg));
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp14 = runtime.resumeValue;
+//│         tmp15 = str + "A";
+//│         str = tmp15;
+//│         return runtime.Unit;
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ Handler$h2$perform$1 = function Handler$h2$perform$(arg) {
+//│   return (k) => {
+//│     return Handler$h2$perform1(arg, k)
+//│   }
+//│ };
+//│ Handler$h2$perform1 = function Handler$h2$perform(arg, k) {
+//│   let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         tmp13 = str + "B";
+//│         tmp14 = str + tmp13;
+//│         str = tmp14;
+//│         runtime.resumeValue = runtime.safeCall(k(arg));
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp15 = runtime.resumeValue;
+//│         tmp16 = str + "B";
+//│         tmp17 = str + tmp16;
+//│         str = tmp17;
+//│         return runtime.Unit;
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ handleBlock$$2 = (undefined, function (h22) {
+//│   return () => {
+//│     return handleBlock$9(h22)
+//│   }
+//│ });
+//│ (class Handler$h2$2 extends Effect1 {
+//│   static {
+//│     Handler$h2$3 = this
+//│   }
+//│   constructor() {
+//│     let tmp13;
+//│     tmp13 = super();
+//│     if (runtime.curEffect !== null) {
+//│       tmp13 = runtime.illegalEffect("in a constructor");
+//│     }
+//│     tmp13;
+//│   }
+//│   #Handler$h2$$cap;
+//│   perform(arg) {
+//│     let Handler$h2$perform$here;
+//│     Handler$h2$perform$here = Handler$h2$perform$1(arg);
+//│     return runtime.mkEffect(this, Handler$h2$perform$here)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h2$"]; 
+//│ });
+//│ handleBlock$9 = (undefined, function (h22) {
+//│   let tmp13, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(handleBlock$9, 1, "RecursiveHandlers.mls:154:3", null, null, 1, 1, h22, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp13 = runtime.resumeValue;
+//│         return runtime.safeCall(h11.perform(runtime.Unit));
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ });
+//│ (class Handler$h1$2 extends Effect1 {
+//│   static {
+//│     Handler$h1$3 = this
+//│   }
+//│   constructor() {
+//│     let tmp13;
+//│     tmp13 = super();
+//│     if (runtime.curEffect !== null) {
+//│       tmp13 = runtime.illegalEffect("in a constructor");
+//│     }
+//│     tmp13;
+//│   }
+//│   #Handler$h1$$cap;
+//│   perform(arg) {
+//│     let Handler$h1$perform$here;
+//│     Handler$h1$perform$here = Handler$h1$perform$1(arg);
+//│     return runtime.mkEffect(this, Handler$h1$perform$here)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Handler$h1$"]; 
+//│ });
+//│ handleBlock$10 = (undefined, function () {
+//│   let h22, tmp13, handleBlock$$here, pc;
+//│   if (runtime.resumePc === -1) {
+//│     pc = 0;
+//│   } else {
+//│     let saveOffset;
+//│     pc = runtime.resumePc;
+//│     runtime.resumePc = -1;
+//│   }
+//│   main: while (true) {
+//│     switch (pc) {
+//│       case 0:
+//│         h22 = new Handler$h2$3();
+//│         handleBlock$$here = handleBlock$$2(h22);
+//│         runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
+//│         if (runtime.curEffect !== null) {
+//│           return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
+//│         }
+//│         pc = 1;
+//│         continue main;
+//│         break;
+//│       case 1:
+//│         tmp13 = runtime.resumeValue;
+//│         return tmp13;
+//│         break;
+//│     }
+//│     break;
+//│   }
+//│ });
 //│ str = "";
 //│ scrut = true;
 //│ if (scrut === true) {
-//│   let handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, Handler$h1$perform$1, handleBlock$$2, Handler$h2$perform$1;
-//│   Handler$h1$perform$1 = function Handler$h1$perform$(Handler$h1$$instance, arg, k) {
-//│     let tmp13, tmp14, tmp15, pc;
-//│     if (runtime.resumePc === -1) {
-//│       pc = 0;
-//│     } else {
-//│       let saveOffset;
-//│       pc = runtime.resumePc;
-//│       runtime.resumePc = -1;
-//│     }
-//│     main: while (true) {
-//│       switch (pc) {
-//│         case 0:
-//│           tmp13 = str + "A";
-//│           str = tmp13;
-//│           runtime.resumeValue = runtime.safeCall(k(arg));
-//│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(Handler$h1$perform$1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 3, Handler$h1$$instance, arg, k, 0)
-//│           }
-//│           pc = 1;
-//│           continue main;
-//│           break;
-//│         case 1:
-//│           tmp14 = runtime.resumeValue;
-//│           tmp15 = str + "A";
-//│           str = tmp15;
-//│           return runtime.Unit;
-//│           break;
-//│       }
-//│       break;
-//│     }
-//│   };
-//│   Handler$h1$perform1 = function Handler$h1$perform(Handler$h1$$instance, arg) {
-//│     return (k) => {
-//│       return Handler$h1$perform$1(Handler$h1$$instance, arg, k)
-//│     }
-//│   };
-//│   (class Handler$h1$2 extends Effect1 {
-//│     static {
-//│       Handler$h1$3 = this
-//│     }
-//│     constructor() {
-//│       let tmp13;
-//│       tmp13 = super();
-//│       if (runtime.curEffect !== null) {
-//│         tmp13 = runtime.illegalEffect("in a constructor");
-//│       }
-//│       tmp13;
-//│     }
-//│     perform(arg) {
-//│       let Handler$h1$perform$here;
-//│       Handler$h1$perform$here = runtime.safeCall(Handler$h1$perform1(this, arg));
-//│       return runtime.mkEffect(this, Handler$h1$perform$here)
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Handler$h1$"]; 
-//│   });
 //│   h11 = new Handler$h1$3();
-//│   Handler$h2$perform$1 = function Handler$h2$perform$(Handler$h2$$instance, arg, k) {
-//│     let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
-//│     if (runtime.resumePc === -1) {
-//│       pc = 0;
-//│     } else {
-//│       let saveOffset;
-//│       pc = runtime.resumePc;
-//│       runtime.resumePc = -1;
-//│     }
-//│     main: while (true) {
-//│       switch (pc) {
-//│         case 0:
-//│           tmp13 = str + "B";
-//│           tmp14 = str + tmp13;
-//│           str = tmp14;
-//│           runtime.resumeValue = runtime.safeCall(k(arg));
-//│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(Handler$h2$perform$1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 3, Handler$h2$$instance, arg, k, 0)
-//│           }
-//│           pc = 1;
-//│           continue main;
-//│           break;
-//│         case 1:
-//│           tmp15 = runtime.resumeValue;
-//│           tmp16 = str + "B";
-//│           tmp17 = str + tmp16;
-//│           str = tmp17;
-//│           return runtime.Unit;
-//│           break;
-//│       }
-//│       break;
-//│     }
-//│   };
-//│   Handler$h2$perform1 = function Handler$h2$perform(Handler$h2$$instance, arg) {
-//│     return (k) => {
-//│       return Handler$h2$perform$1(Handler$h2$$instance, arg, k)
-//│     }
-//│   };
-//│   (class Handler$h2$2 extends Effect1 {
-//│     static {
-//│       Handler$h2$3 = this
-//│     }
-//│     constructor() {
-//│       let tmp13;
-//│       tmp13 = super();
-//│       if (runtime.curEffect !== null) {
-//│         tmp13 = runtime.illegalEffect("in a constructor");
-//│       }
-//│       tmp13;
-//│     }
-//│     perform(arg) {
-//│       let Handler$h2$perform$here;
-//│       Handler$h2$perform$here = runtime.safeCall(Handler$h2$perform1(this, arg));
-//│       return runtime.mkEffect(this, Handler$h2$perform$here)
-//│     }
-//│     toString() { return runtime.render(this); }
-//│     static [definitionMetadata] = ["class", "Handler$h2$"]; 
-//│   });
-//│   handleBlock$$2 = function handleBlock$$(h22) {
-//│     let tmp13, pc;
-//│     if (runtime.resumePc === -1) {
-//│       pc = 0;
-//│     } else {
-//│       let saveOffset;
-//│       pc = runtime.resumePc;
-//│       runtime.resumePc = -1;
-//│     }
-//│     main: while (true) {
-//│       switch (pc) {
-//│         case 0:
-//│           runtime.resumeValue = runtime.safeCall(h22.perform(runtime.Unit));
-//│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(handleBlock$$2, 1, "RecursiveHandlers.mls:154:5", null, null, 1, 1, h22, 0)
-//│           }
-//│           pc = 1;
-//│           continue main;
-//│           break;
-//│         case 1:
-//│           tmp13 = runtime.resumeValue;
-//│           return runtime.safeCall(h11.perform(runtime.Unit));
-//│           break;
-//│       }
-//│       break;
-//│     }
-//│   };
-//│   handleBlock$9 = (undefined, function (h22) {
-//│     return () => {
-//│       return handleBlock$$2(h22)
-//│     }
-//│   });
-//│   handleBlock$10 = (undefined, function () {
-//│     let h22, tmp13, handleBlock$$here, pc;
-//│     if (runtime.resumePc === -1) {
-//│       pc = 0;
-//│     } else {
-//│       let saveOffset;
-//│       pc = runtime.resumePc;
-//│       runtime.resumePc = -1;
-//│     }
-//│     main: while (true) {
-//│       switch (pc) {
-//│         case 0:
-//│           h22 = new Handler$h2$3();
-//│           handleBlock$$here = runtime.safeCall(handleBlock$9(h22));
-//│           runtime.resumeValue = runtime.enterHandleBlock(h22, handleBlock$$here);
-//│           if (runtime.curEffect !== null) {
-//│             return runtime.unwind(handleBlock$10, 1, null, null, null, 1, 0, 0)
-//│           }
-//│           pc = 1;
-//│           continue main;
-//│           break;
-//│         case 1:
-//│           tmp13 = runtime.resumeValue;
-//│           return tmp13;
-//│           break;
-//│       }
-//│       break;
-//│     }
-//│   });
 //│   tmp11 = runtime.enterHandleBlock(h11, handleBlock$10);
 //│   if (runtime.curEffect !== null) {
 //│     tmp11 = runtime.topLevelEffect(false);

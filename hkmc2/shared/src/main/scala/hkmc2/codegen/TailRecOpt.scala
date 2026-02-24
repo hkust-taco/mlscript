@@ -137,7 +137,7 @@ class TailRecOpt(using State, TL, Raise):
       c.match
         case c: CallEdge.TailCall if c.call.explicitTailCall && !cond =>
           raise(ErrorReport(
-            msg"This tail call exits the current scope is not optimized." -> c.call.toLoc :: Nil))
+            msg"This tail call exits the current scope and is not optimized." -> c.call.toLoc :: Nil))
         case _ =>
       cond
     

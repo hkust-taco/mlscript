@@ -23,6 +23,10 @@ Example.privFun
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'privFun' yielded 'undefined'
 
+:re
+Example.assertFail()
+//│ ═══[RUNTIME ERROR] Error: Assertion failed (mlscript-compile/Example.mls:27)
+
 
 let n = 42
 //│ n = 42
