@@ -17,6 +17,7 @@ def config(using Config): Config = summon
 type Cfg[A] = Config ?=> A
 
 case class Config(
+  baseDir: io.Path,
   sanityChecks: Opt[SanityChecks],
   effectHandlers: Opt[EffectHandlers],
   liftDefns: Opt[LiftDefns],
@@ -46,7 +47,8 @@ end Config
 
 object Config:
   
-  val default: Config = Config(
+  def default(baseDir: io.Path): Config = Config(
+    baseDir = baseDir,
     sanityChecks = N, // TODO make the default S
     // sanityChecks = S(SanityChecks(light = true)),
     effectHandlers = N,

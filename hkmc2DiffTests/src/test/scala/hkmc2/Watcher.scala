@@ -95,17 +95,18 @@ class Watcher(dirs: Ls[File]):
       val basePath = path.segments.drop(dirPaths.head.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
       val rootPath = os.pwd/os.up
-      val preludePath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript"/"decls"/"Prelude.mls"
-      val predefPath = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Predef.mls"
+      val testBasePath = rootPath/"hkmc2"/"shared"/"src"/"test"
+      val preludePath = testBasePath/"mlscript"/"decls"/"Prelude.mls"
+      val predefPath = testBasePath/"mlscript-compile"/"Predef.mls"
       val isModuleFile = path.segments.contains("mlscript-compile")
       if isModuleFile
       then
-        given Config = Config.default
+        given Config = Config.default(testBasePath)
         MLsCompiler(
           paths = new MLsCompiler.Paths:
             val preludeFile = preludePath
-            val runtimeFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Runtime.mjs"
-            val termFile = rootPath/"hkmc2"/"shared"/"src"/"test"/"mlscript-compile"/"Term.mjs",
+            val runtimeFile = testBasePath/"mlscript-compile"/"Runtime.mjs"
+            val termFile = testBasePath/"mlscript-compile"/"Term.mjs",
           mkRaise = ReportFormatter(System.out.println, colorize = true).mkRaise
         ).compileModule(path)
       else

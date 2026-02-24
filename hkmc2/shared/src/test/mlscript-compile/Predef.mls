@@ -84,7 +84,8 @@ fun print(...xs) =
 fun renderAsStr(arg) =
   if arg is Str then arg else render(arg)
 
-val assert = console.assert
+val js_assert = globalThis.console.("assert") // `console.("assert")` gives "Unexpected moduleful reference of type console."
+fun check(...args) = js_assert(...args)
 
 fun (??) notImplemented(msg) = throw Error("Not implemented: " + msg)
 fun (???) notImplementedError = throw Error("Not implemented")
@@ -109,7 +110,7 @@ fun foldr(f)(first, ...rest) =
   f(first, init)
 
 fun mkStr(...xs) =
-  fold((acc, x) => assert(x is Str); acc + x) of ...xs
+  fold((acc, x) => check(x is Str); acc + x) of ...xs
 
 
 // Return the implicit instance of type T from the current scope.
