@@ -36,7 +36,6 @@ test
 //│ = fun test_4$test
 
 
-:fixme
 :deforest
 fun maxOpt(ls) = if ls is
   Nil then None
@@ -57,10 +56,13 @@ drop maxOpt(id(1 :: 2 :: Nil))
 //│ deforest > 	Select(Ref($scrut,None),Ident(x))
 //│ deforest > Ref(member:None,Some(object:None)) ->
 //│ deforest > 	Ref($scrut,None)
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $Some_x
+//│ deforest > ========
+//│ deforest > free vars of Ref($scrut,None):
+//│ deforest > 	List(var:h)
+//│ deforest > call dtor Ref($scrut,None) with:
+//│ deforest > 	List(var:h)
 
 
-:fixme
 :deforest
 :sjs
 fun modSome(x, m) = if x is
@@ -76,7 +78,75 @@ modSome(Some(17), 3)
 //│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Lit(IntLit(17))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $Some_x
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:m)
+//│ JS (unsanitized):
+//│ let modSome, tmp4, modSome_8$modSome, modSome_8$x_Some, Some_x; /* scoped */
+//│ modSome_8$modSome = function modSome_8$modSome(x, m) {
+//│   let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
+//│   return x(m)
+//│ };
+//│ modSome_8$x_Some = function modSome_8$x_Some(fv_m, Some_x1) {
+//│   let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
+//│   arg$Some$0$ = Some_x1;
+//│   n = arg$Some$0$;
+//│   scrut = n >= fv_m;
+//│   if (scrut === true) {
+//│     let Some_x2; /* scoped */
+//│     tmp5 = n - fv_m;
+//│     Some_x2 = tmp5;
+//│     tmp6 = (fv_ctorLam_m) => {
+//│       return modSome_8$x_Some(fv_ctorLam_m, Some_x2)
+//│     };
+//│     return modSome_8$modSome(tmp6, fv_m)
+//│   } else {
+//│     return Some1(n)
+//│   }
+//│ };
+//│ modSome = function modSome(x, m) {
+//│   loopLabel: while (true) {
+//│     let n, scrut, arg$Some$0$, tmp5, tmp6; /* scoped */
+//│     if (x instanceof Some1.class) {
+//│       arg$Some$0$ = x.x;
+//│       n = arg$Some$0$;
+//│       scrut = n >= m;
+//│       if (scrut === true) {
+//│         tmp5 = n - m;
+//│         tmp6 = Some1(tmp5);
+//│         x = tmp6;
+//│         continue loopLabel
+//│       } else {
+//│         return Some1(n)
+//│       }
+//│     } else if (x instanceof None1.class) {
+//│       return None1
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│     break;
+//│   }
+//│ };
+//│ Some_x = 17;
+//│ tmp4 = (fv_ctorLam_m) => {
+//│   return modSome_8$x_Some(fv_ctorLam_m, Some_x)
+//│ };
+//│ modSome_8$modSome(tmp4, 3)
+//│ deforest > ==============
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > Call(Ref(member:Some,Some((Fun)term:class:Some.Some)),List(Arg(None,Lit(IntLit(17))))) ->
+//│ deforest > 	Ref(var:x,None)
+//│ deforest > 	Select(Ref(var:x,None),Ident(x))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:m)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:m)
+//│ = Some(2)
 
 
 :deforest
@@ -90,7 +160,6 @@ fun maxOpt2(ls, x) = if ls is
 //│ deforest > ==============
 //│ deforest > ========
 
-:fixme
 :deforest
 :sjs
 fun zipWith(xsys, f) = if xsys is
@@ -106,4 +175,129 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Ref(var:xsys,None)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $tup2_0
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:xsys,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:xsys,None) with:
+//│ deforest > 	List(var:f)
+//│ JS (unsanitized):
+//│ let zipWith, tmp5, tmp6, tmp7, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, tup2_0, tup2_1; /* scoped */
+//│ zipWith_19$zipWith = function zipWith_19$zipWith(xsys, f) {
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
+//│   split_root$: {
+//│     split_default$: {
+//│       return xsys(f);
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp11
+//│ };
+//│ zipWith_19$xsys_2 = function zipWith_19$xsys_2(fv_f, tup2_01, tup2_11) {
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
+//│   element0$ = tup2_01;
+//│   element1$ = tup2_11;
+//│   if (element0$ instanceof Cons1.class) {
+//│     arg$Cons$0$ = element0$.h;
+//│     arg$Cons$1$ = element0$.t;
+//│     if (element1$ instanceof Cons1.class) {
+//│       let tup2_02, tup2_12; /* scoped */
+//│       arg$Cons$0$1 = element1$.h;
+//│       arg$Cons$1$1 = element1$.t;
+//│       ty = arg$Cons$1$1;
+//│       hy = arg$Cons$0$1;
+//│       tx = arg$Cons$1$;
+//│       hx = arg$Cons$0$;
+//│       tmp8 = runtime.safeCall(fv_f(hx, hy));
+//│       tup2_02 = tx;
+//│       tup2_12 = ty;
+//│       tmp9 = (fv_ctorLam_f) => {
+//│         return zipWith_19$xsys_2(fv_ctorLam_f, tup2_02, tup2_12)
+//│       };
+//│       tmp10 = zipWith_19$zipWith(tmp9, fv_f);
+//│       tmp11 = Cons1(tmp8, tmp10);
+//│       return tmp11
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│   } else if (element0$ instanceof Nil1.class) {
+//│     if (element1$ instanceof Nil1.class) {
+//│       tmp11 = Nil1;
+//│       return tmp11
+//│     } else {
+//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│     }
+//│   } else {
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│   }
+//│   throw globalThis.Object.freeze(new globalThis.Error("match error"))
+//│ };
+//│ zipWith = function zipWith(xsys, f) {
+//│   let hy, ty, hx, tx, element1$, element0$, arg$Cons$0$, arg$Cons$1$, arg$Cons$0$1, arg$Cons$1$1, tmp8, tmp9, tmp10, tmp11; /* scoped */
+//│   split_root$: {
+//│     split_default$: {
+//│       if (runtime.Tuple.isArrayLike(xsys) && xsys.length === 2) {
+//│         element0$ = runtime.Tuple.get(xsys, 0);
+//│         element1$ = runtime.Tuple.get(xsys, 1);
+//│         if (element0$ instanceof Cons1.class) {
+//│           arg$Cons$0$ = element0$.h;
+//│           arg$Cons$1$ = element0$.t;
+//│           if (element1$ instanceof Cons1.class) {
+//│             arg$Cons$0$1 = element1$.h;
+//│             arg$Cons$1$1 = element1$.t;
+//│             ty = arg$Cons$1$1;
+//│             hy = arg$Cons$0$1;
+//│             tx = arg$Cons$1$;
+//│             hx = arg$Cons$0$;
+//│             tmp8 = runtime.safeCall(f(hx, hy));
+//│             tmp9 = globalThis.Object.freeze([
+//│               tx,
+//│               ty
+//│             ]);
+//│             tmp10 = zipWith(tmp9, f);
+//│             tmp11 = Cons1(tmp8, tmp10);
+//│             break split_root$
+//│           } else {
+//│             break split_default$
+//│           }
+//│         } else if (element0$ instanceof Nil1.class) {
+//│           if (element1$ instanceof Nil1.class) {
+//│             tmp11 = Nil1;
+//│             break split_root$
+//│           } else {
+//│             break split_default$
+//│           }
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return tmp11
+//│ };
+//│ tmp5 = Predef.id(Nil1);
+//│ tmp6 = Predef.id(Nil1);
+//│ tup2_0 = tmp5;
+//│ tup2_1 = tmp6;
+//│ tmp7 = (fv_ctorLam_f) => {
+//│   return zipWith_19$xsys_2(fv_ctorLam_f, tup2_0, tup2_1)
+//│ };
+//│ lambda = (undefined, function (x, y) { return x });
+//│ zipWith_19$zipWith(tmp7, lambda)
+//│ deforest > ==============
+//│ deforest > Tuple(false,List(Arg(None,Ref(var:tx,None)), Arg(None,Ref(var:ty,None)))) ->
+//│ deforest > 	Ref(var:xsys,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > Tuple(false,List(Arg(None,Ref($tmp,None)), Arg(None,Ref($tmp,None)))) ->
+//│ deforest > 	Ref(var:xsys,None)
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(1)))))
+//│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:xsys,None):
+//│ deforest > 	List(var:f)
+//│ deforest > call dtor Ref(var:xsys,None) with:
+//│ deforest > 	List(var:f)
+//│ = Nil

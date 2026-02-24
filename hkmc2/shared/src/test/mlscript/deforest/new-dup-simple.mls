@@ -297,18 +297,12 @@ f(A(4))
 //│ deforest > Call(Ref(member:A,Some((Fun)term:class:A.A)),List(Arg(None,Lit(IntLit(4))))) ->
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $A_x
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyBlock$$anonfun$3(Rewrite.scala:403)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyBlock(Rewrite.scala:402)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$3$$anonfun$1(BlockTransformer.scala:38)
-//│ 	at: hkmc2.codegen.BlockTransformer.rec$1(BlockTransformer.scala:281)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyListOf(BlockTransformer.scala:282)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$3(BlockTransformer.scala:41)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyValue(Rewrite.scala:474)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List()
+//│ = 0
 
 
 
@@ -527,18 +521,12 @@ f(Nil, false)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:Nil,Some(object:Nil)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: already defined: $deforest$lam
-//│ 	at: scala.runtime.Scala3RunTime$.assertFailed(Scala3RunTime.scala:8)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyBlock$$anonfun$3(Rewrite.scala:403)
-//│ 	at: scala.collection.immutable.List.foreach(List.scala:323)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyBlock(Rewrite.scala:402)
-//│ 	at: hkmc2.codegen.BlockTransformer.applySubBlock(BlockTransformer.scala:16)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$3$$anonfun$1(BlockTransformer.scala:38)
-//│ 	at: hkmc2.codegen.BlockTransformer.rec$1(BlockTransformer.scala:281)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyListOf(BlockTransformer.scala:282)
-//│ 	at: hkmc2.codegen.BlockTransformer.applyBlock$$anonfun$3(BlockTransformer.scala:41)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$RefreshSymbol.applyValue(Rewrite.scala:474)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:b)
+//│ deforest > call dtor Ref(var:x,None) with:
+//│ deforest > 	List(var:b)
+//│ = 0
 
 
 

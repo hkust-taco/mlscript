@@ -370,6 +370,9 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       val collectedScopedSyms = MutSet.empty[Symbol]
       override def applyBlock(b: Block): Unit =
         b match
+        case Scoped(syms, body) =>
+          applyBlock(body)
+          for s <- syms do collectedScopedSyms.remove(s)
         case Assign(lhs, rhs, rest) =>
           collectedScopedSyms.add(lhs)
           applyResult(rhs)
@@ -438,7 +441,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     override def applyFunDefn(fun: FunDefn): FunDefn =
       assert(fun.owner.isEmpty)
       val sym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol]
-      val dSym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol].tsym.getOrElse(lastWords(s"${mapping.getOrElse(fun.sym, fun.sym)} no tsym"))
+      val dSym2 = sym2.tsym.getOrElse(lastWords(s"$sym2 has no tsym"))
       val oldParamSyms = Buffer.empty[VarSymbol]
       val params2 = fun.params.map:
         case ParamList(flags, params, N) =>
