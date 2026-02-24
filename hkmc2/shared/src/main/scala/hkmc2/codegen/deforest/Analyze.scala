@@ -155,28 +155,28 @@ class DeforestPreAnalyzer(
         case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
         case _ => true
       .collect:
-        case InCtx.Lbl(l) => l.rest
-        case InCtx.Mtch(m, cse) => m.rest
-        case InCtx.Begn(b) => b.rest
+        case InCtx.LblBody(l) => l.rest
+        case InCtx.MtchBody(m, cse) => m.rest
+        case InCtx.BegnBody(b) => b.rest
       .foldLeft(matchScrutToMatchBlock(scrut).rest)(Begin.apply)
     def getEnclosingMatchesForSel(selExprId: ResultId) = selToCtxOfSel(selExprId)
       .iterator
       .collect:
-        case InCtx.Mtch(m, cse) => m.scrut.uid -> cse
-    def getFullRestOrLabel(label: Symbol) = labelSymToCtxOfLabel(label)
+        case InCtx.MtchBody(m, cse) => m.scrut.uid -> cse
+    def getFullRestOfLabel(label: Symbol) = labelSymToCtxOfLabel(label)
       .iterator
       .takeWhile:
         case _: (InCtx.Fn | InCtx.Mod | InCtx.TopLvl) => false
         case _ => true
       .collect:
-        case InCtx.Lbl(l) => l.rest
-        case InCtx.Mtch(m, cse) => m.rest
-        case InCtx.Begn(b) => b.rest
+        case InCtx.LblBody(l) => l.rest
+        case InCtx.MtchBody(m, cse) => m.rest
+        case InCtx.BegnBody(b) => b.rest
       .foldLeft(labelSymToLabelBlk(label).rest)(Begin.apply)
     def getNearestFusingParentMatch(dtorId: CtorDtorId, solver: DeforestConstrainSolver): Opt[BranchId] =
       matchScrutToCtxOfMatch(dtorId._1)
         .collectFirst:
-          case InCtx.Mtch(m, cse)
+          case InCtx.MtchBody(m, cse)
             if solver.finalDtorSrcs.isDefinedAt(CtorDtorId(m.scrut.uid, dtorId._2))
             => CtorDtorId(m.scrut.uid, dtorId.instId) -> cse
   end res
@@ -187,9 +187,9 @@ class DeforestPreAnalyzer(
     case Mod(mod: ClsLikeBody)
     case ModCtor(b: Block)
     case Fn(f: FunDefn)
-    case Lbl(l: Label)
-    case Mtch(m: Match, cse: Opt[CtorCls])
-    case Begn(b: Begin)
+    case LblBody(l: Label)
+    case MtchBody(m: Match, cse: Opt[CtorCls])
+    case BegnBody(b: Begin)
     case Scped(s: Scoped)
     // non-handleable cases:
     // - TODO: detect mutable reassignment and its affected variables and objects
@@ -218,14 +218,14 @@ class DeforestPreAnalyzer(
       case init :+ InCtx.TopLvl() =>
         init.forall: i =>
           i.matches:
-            case _: (InCtx.Begn | InCtx.Scped) => true
+            case _: (InCtx.BegnBody | InCtx.Scped) => true
     def canHaveCls: Boolean =
       ctx.forall: c =>
         c match
           case InCtx.TopLvl() => true
           case InCtx.ModCtor(b) => true
           case InCtx.Mod(m) => true
-          case InCtx.Begn(b) => true
+          case InCtx.BegnBody(b) => true
           case InCtx.Scped(s) => true
           case _ => false
         
@@ -236,9 +236,9 @@ class DeforestPreAnalyzer(
       val newCtx = c match
         case c: ClsLikeBody => InCtx.Mod(c)
         case f: FunDefn => InCtx.Fn(f)
-        case l: Label => InCtx.Lbl(l)
-        case m: (Match, Opt[(CtorCls)]) => InCtx.Mtch(m._1, m._2)
-        case b: Begin => InCtx.Begn(b)
+        case l: Label => InCtx.LblBody(l)
+        case m: (Match, Opt[(CtorCls)]) => InCtx.MtchBody(m._1, m._2)
+        case b: Begin => InCtx.BegnBody(b)
         case s: Scoped => InCtx.Scped(s)
       
       ctx = newCtx :: ctx
@@ -262,7 +262,7 @@ class DeforestPreAnalyzer(
         case b: Begin => ()
         case s: Scoped => ()
       ctx.head match
-        case _: (InCtx.Fn | InCtx.Lbl | InCtx.Mtch | InCtx.Begn | InCtx.Scped | InCtx.ModCtor) =>
+        case _: (InCtx.Fn | InCtx.LblBody | InCtx.MtchBody | InCtx.BegnBody | InCtx.Scped | InCtx.ModCtor) =>
           ctx.head.handleable &&= newCtx.handleable
          // do not propagate non-handleable flags up to top level and module,
          // because top level may contain handleable computations
@@ -326,6 +326,9 @@ class DeforestPreAnalyzer(
       ctxTracker.inCtxOf(bgn):
         applyBlock(sub)
       applyBlock(rest)
+      // applyBlock(sub)
+      // ctxTracker.inCtxOf(bgn):
+      //   applyBlock(rest)
     case Assign(lhs, rhs, rest) =>
       applyResult(rhs)
       applyBlock(rest)
@@ -814,6 +817,7 @@ class DeforestConstrainSolver(val collector: DeforestConstraintsCollector):
   
   val finalCtorDests = LinkedHashMap.empty[CtorDtorId, FinalDest]
   val finalDtorSrcs = LinkedHashMap.empty[CtorDtorId, Set[CtorDtorId]]
+  // NOTE: fix this so that we don't run into the problem of ctor being a data object and thus a Value.Ref
   val fusingIdInfo = MutMap.empty[CtorDtorId, ConcreteConsumer | ConcreteProducer]
   
   // propagate

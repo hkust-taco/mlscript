@@ -264,7 +264,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
     var hasExplicitRet = false
     override def applyBlock(b: Block): Block = b match
       case Break(label) =>
-        val labelRest = pre.res.getFullRestOrLabel(label)
+        val labelRest = pre.res.getFullRestOfLabel(label)
         assert(!pre.res.labelSymToLabelBlk(label).loop)
         applyBlock(labelRest)
       case Return(_, implicitRet) =>
