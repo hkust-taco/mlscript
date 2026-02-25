@@ -1,0 +1,76 @@
+:js
+
+
+// * Note that the following
+
+:sjs
+while
+  false do 1
+  _ do 2
+//│ JS (unsanitized):
+//│ let tmp;
+//│ lbl: while (true) {
+//│   let scrut;
+//│   scrut = false;
+//│   if (scrut === true) { tmp = 1; continue lbl } else { tmp = 2; }
+//│   break;
+//│ }
+//│ tmp
+//│ = 2
+
+// * ...is currently interpreted the same as the loop below, which exists the loop through `else`!
+
+while
+  false do 1
+  else 2
+//│ = 2
+
+// * On the other hand, since the `true` here is not treated as a default branch, this loops infinitely
+
+() => while
+  false do 1
+  true do 2
+//│ = fun
+
+// * Now, this semantics for `else`/default branches is still super confusing:
+// * 1. default branches like `_ do ...` should not stop the loop
+// * 2. `while ... else ...` has surprising semantics:
+// *  2.a. it is notably not aligned with Python's while/else
+// *  2.b. it looks too similar the use of non-top-level `else`s in splits, which do not stop the loop!
+
+let x = 1 in
+  while x is
+    1 do set x = 0
+    else print("stopping (`else` at the top level)")
+  x
+//│ > stopping (`else` at the top level)
+//│ = 0
+
+let x = 3 in
+  while x >
+    0 and
+      false do ???
+      else
+        set x -= 1
+        print("inner `else` split reached")
+  x
+//│ > inner `else` split reached
+//│ > inner `else` split reached
+//│ > inner `else` split reached
+//│ = 0
+
+
+// * Note: this weird edge case
+:fixme // nto sure what's happening here
+let x = 3 in
+  while x >
+    0 and
+      else
+        set x -= 1
+        print("inner `else` split reached")
+//│ > inner `else` split reached
+//│ > inner `else` split reached
+//│ > inner `else` split reached
+//│ ═══[RUNTIME ERROR] Error: match error
+
+

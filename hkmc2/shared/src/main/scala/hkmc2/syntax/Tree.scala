@@ -94,6 +94,7 @@ enum Tree extends AutoLocated:
   case ProperNew(body: Opt[Tree], rft: Opt[Block]) // * A desugared version of New that sets it right – eg new(C(123))
   case DynamicNew(cls: Tree) // * Dynamic version – eg new! C(123)
   case IfLike(kw: Keywrd[Keyword.IfLike], split: Tree)
+  case Assert(kw: Keywrd[Keyword.`assert`], cond: Tree, thn: Opt[Tree], els: Opt[Keywrd[Keyword.`else`] -> Tree])
   case SplitPoint()
   case OpSplit(lhs: Tree, ops_rhss: Ls[Tree]) // * the rhss trees are expressions rooted in `SplitPoint`s
   case Case(kw: Keywrd[Keyword.`case`.type], branches: Tree)
@@ -143,6 +144,7 @@ enum Tree extends AutoLocated:
     case ProperNew(body, rft) => body.toVector ++ rft.toVector
     case DynamicNew(body) => Vector.single(body)
     case IfLike(_, split) => Vector.single(split)
+    case Assert(_, cond, thn, els) => cond +: (thn.toVector ++ els.toList.map(_._2))
     case Case(_, bs) => Vector.single(bs)
     case Region(name, body) => Vector.double(name, body)
     case RegRef(reg, value) => Vector.double(reg, value)

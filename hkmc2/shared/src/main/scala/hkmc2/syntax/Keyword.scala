@@ -66,6 +66,8 @@ object Keyword:
   
   val `if` = Keyword("if", N, nextPrec)
   val `while` = Keyword("while", N, curPrec)
+  val `assert` = Keyword("assert", N, curPrec)
+  type `assert` = `assert`.type
   
   val `case` = Keyword("case", N, curPrec)
   
@@ -75,6 +77,7 @@ object Keyword:
   val `drop` = Keyword("drop", thenPrec, thenPrec)
   
   val `else` = Keyword("else", nextPrec, curPrec)
+  type `else` = `else`.type
   val `fun` = Keyword("fun", N, N)
   // val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)

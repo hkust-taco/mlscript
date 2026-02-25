@@ -85,6 +85,7 @@ abstract class MLsDiffMaker extends DiffMaker:
       if liftDefns.isUnset then
         output(s"$errMarker Option ':effectHandlers' requires ':lift'")
     Config(
+      baseDir = wd,
       sanityChecks = Opt.when(noSanityCheck.isUnset)(SanityChecks(light = true)),
       effectHandlers = Opt.when(effectHandlers.isSet)(EffectHandlers(
         debug = effectHandlers.get.contains("debug"),
