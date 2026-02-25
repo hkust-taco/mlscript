@@ -35,17 +35,17 @@ fun f(x, y, b) =
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
 //│ });
-//│ Lambda$11 = function Lambda$1(y, b) {
-//│   return globalThis.Object.freeze(new Lambda$1.class(y, b));
+//│ Lambda$11 = function Lambda$1(b, y) {
+//│   return globalThis.Object.freeze(new Lambda$1.class(b, y));
 //│ };
 //│ (class Lambda$1 extends globalThis.Function {
 //│   static {
 //│     Lambda$11.class = this
 //│   }
-//│   constructor(y, b) {
+//│   constructor(b, y) {
 //│     super();
-//│     this.y = y;
 //│     this.b = b;
+//│     this.y = y;
 //│   }
 //│   call(z) {
 //│     if (this.b === true) {
@@ -61,7 +61,7 @@ fun f(x, y, b) =
 //│   let lambda, tmp, lambda1, tmp1, tmp2, tmp3;
 //│   tmp2 = globalThis.Object.freeze(new Lambda$01(x));
 //│   tmp = aux(tmp2);
-//│   tmp3 = globalThis.Object.freeze(new Lambda$11(y, b));
+//│   tmp3 = globalThis.Object.freeze(new Lambda$11(b, y));
 //│   tmp1 = aux(tmp3);
 //│   return tmp * tmp1
 //│ };
@@ -400,6 +400,23 @@ module Foo with
 //│   }
 //│   static {
 //│     let Lambda$023, Lambda$15;
+//│     this.Lambda$0 = function Lambda$0(x1) {
+//│       return globalThis.Object.freeze(new Lambda$0.class(x1));
+//│     };
+//│     (class Lambda$022 extends globalThis.Function {
+//│       static {
+//│         Foo4.Lambda$0.class = this
+//│       }
+//│       constructor(x1) {
+//│         super();
+//│         this.x = x1;
+//│       }
+//│       call(z) {
+//│         return this.x + z
+//│       }
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│     });
 //│     this.Lambda$1 = function Lambda$1(b, y) {
 //│       return globalThis.Object.freeze(new Lambda$1.class(b, y));
 //│     };
@@ -421,23 +438,6 @@ module Foo with
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
-//│     });
-//│     this.Lambda$0 = function Lambda$0(x1) {
-//│       return globalThis.Object.freeze(new Lambda$0.class(x1));
-//│     };
-//│     (class Lambda$022 extends globalThis.Function {
-//│       static {
-//│         Foo4.Lambda$0.class = this
-//│       }
-//│       constructor(x1) {
-//│         super();
-//│         this.x = x1;
-//│       }
-//│       call(z) {
-//│         return this.x + z
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
 //│     });
 //│   }
 //│   static aux(f2) {
