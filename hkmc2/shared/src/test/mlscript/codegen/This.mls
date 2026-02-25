@@ -7,8 +7,8 @@
 fun test(x) =
   [this.a, x]
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
-//│ ║  l.44: 	  [this.a, x]
-//│ ╙──      	   ^^^^
+//│ ║  l.8: 	  [this.a, x]
+//│ ╙──     	   ^^^^
 //│ JS (unsanitized):
 //│ let test; test = function test(x) { return globalThis.Object.freeze([]) };
 

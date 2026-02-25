@@ -1,22 +1,6 @@
 :js
 :todo
 
-//│ Failed to load runtime: Uncaught:
-//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
-//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
-//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
-//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
-//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
-//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
-//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
-//│     at #resolve (node:internal/modules/esm/loader:700:17)
-//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
-//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
-//│   code: 'ERR_MODULE_NOT_FOUND',
-//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
-//│ }
-//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
-//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -35,14 +19,11 @@ while
 //│ ║        	^^^^
 //│ ║  l.12: 	    print(arrMatches)
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 let arrMatches = ()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ arrMatches = ()
 
 // * Note: produces a match error
 :fixme
@@ -53,15 +34,12 @@ if
 //│ ╔══[ERROR] Unrecognized term split (null)
 //│ ║  l.31: 	  arrMatches !== null
 //│ ╙──      	                 ^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // * This one works:
 if
   arrMatches !== null do
     ()
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -69,22 +47,18 @@ if
   true and
   true do
     print("ok")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ > ok
 
 if
   true and
   false do
     print("ok")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 if
   true and
     true do
       print("ok")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ > ok
 
 :fixme
 if
@@ -102,23 +76,20 @@ if
 //│ ║        	     ^
 //│ ║  l.67: 	  true do
 //│ ╙──      	^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ > ok
 
 if
   true
   and true do
     print("ok")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ > ok
 
 if
   true
   and true
   and true do
     print("ok")
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ > ok
 
 :fixme
 if
@@ -138,7 +109,6 @@ if
 //│ ║  l.100: 	    print("ok")
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: match error
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -147,8 +117,7 @@ if
 if 1 + 0
     == 0 then "X"
     == 1 then "A"
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'equals')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ = "A"
 
 if 1 + 1
     * 2 == 4 then "X"
@@ -173,27 +142,23 @@ if 1 + 1
 //│ ║  l.123: 	    * 2 == 4 then "X"
 //│ ╙──       	      ^
 //│ ═══[ERROR] Unrecognized term split (reference term)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'equals')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] Error: match error
 
 // ——— ——— ———
 
 class Some(val v)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 Some(1) is
   Some of [process, rest] do "hi"
 //│ ╔══[ERROR] Unrecognized pattern (infix operator 'do').
 //│ ║  l.152: 	  Some of [process, rest] do "hi"
 //│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ = true
 
 // ——— ——— ———
 
 class Some(val v)
 object None
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // :ucs normalized
 // Uncomment the line above to see the explosion: ~1200 lines of code.
@@ -227,12 +192,10 @@ fun parse(text: Str): [Int, Str] =
     else [idx, ""]
   
   launch(0)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 data class Tuple(a, b, c)
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 let foo =
   case
@@ -246,12 +209,9 @@ let foo =
 //│ ╔══[ERROR] Expected three arguments, but found only one argument.
 //│ ║  l.202: 	    Tuple(...elements) then elements
 //│ ╙──       	    ^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ foo = fun foo
 
 foo(Tuple(1, 2, 3))
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -259,7 +219,6 @@ module Foo with
   class
     Bar
     Baz
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 fun foo(x) = if x is Foo.
   Bar then "Bar"
@@ -270,7 +229,6 @@ fun foo(x) = if x is Foo.
 //│ ╔══[ERROR] Unrecognized pattern split (identifier).
 //│ ║  l.223: 	fun foo(x) = if x is Foo.
 //│ ╙──       	                     ^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 fun foo(x) = if x is Foo
   .Bar then "Bar"
@@ -282,7 +240,6 @@ fun foo(x) = if x is Foo
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ║  l.235: 	  .Foo then "Foo"
 //│ ╙──       	^^^^^^^^^^^^^^^^^
-//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
