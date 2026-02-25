@@ -802,20 +802,20 @@ Foo.Bar.g2(1)
 //│ = 2
 
 
-:todo
+:fixme // TODO
 :ge
 fun foo(x) =
   fun bar(y) =
     x + y
   bar(x * 2)
-//│ ╔══[COMPILATION ERROR] Nested function bar is not supported yet.
+//│ ╔══[COMPILATION ERROR] Nested function bar is not supported by lambda rewriting. Lambda lifting must be performed first.
 //│ ║  l.808: 	  fun bar(y) =
 //│ ║         	  ^^^^^^^^^^^^
 //│ ║  l.809: 	    x + y
 //│ ╙──       	^^^^^^^^^
 
 
-:todo
+:fixme // TODO
 :lift
 :ge
 fun foo(x) =

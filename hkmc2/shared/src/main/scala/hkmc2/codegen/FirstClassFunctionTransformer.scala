@@ -149,7 +149,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
   class CheckNestedFunctions extends BlockTraverser:
     override def applyFunDefn(fun: FunDefn) =
       if fun.sym.nameIsMeaningful then
-        raise(ErrorReport(msg"Nested function ${fun.sym.nme} is not supported yet." -> fun.sym.toLoc :: Nil,
+        raise(ErrorReport(msg"Nested function ${fun.sym.nme} is not supported by lambda rewriting. Lambda lifting must be performed first." -> fun.sym.toLoc :: Nil,
             source = Diagnostic.Source.Compilation))
   
   // Substitute captured symbols in anonymous lambda bodies with corresponding class fields
