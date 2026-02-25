@@ -141,9 +141,17 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
                 raise(ErrorReport(msg"Cannot determine if ${sel.name.name} is a function object." -> fun.toLoc :: Nil,
                   source = Diagnostic.Source.Compilation))
                 k(call(fun2))
+            case s: DynSelect =>
+              raise(ErrorReport(msg"Cannot determine if the dynamic selection is a function object." -> s.toLoc :: Nil,
+                  source = Diagnostic.Source.Compilation))
+                k(call(fun2))
             case _ => k(call(fun2))
       case p: Path => updatePathWithInst(p, false): p2 =>
         k(p2)
+      case _: Lambda => // TODO: Handle this correctly. Lambda blocks are only used if lifting is enabled.
+        raise(ErrorReport(msg"Lambda functions should be rewritten into function definitions first." -> r.toLoc :: Nil,
+          source = Diagnostic.Source.Compilation))
+        super.applyResult(r)(k)
       case _ => super.applyResult(r)(k)
 
   class CheckNestedFunctions extends BlockTraverser:
