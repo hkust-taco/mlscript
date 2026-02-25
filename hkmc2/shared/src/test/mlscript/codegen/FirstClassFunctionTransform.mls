@@ -699,6 +699,63 @@ Foo(x => x).x(1)
 //│ = 1
 
 
+let foo = Foo(1)
+foo.x
+//│ = 1
+//│ foo = Foo(1)
+
+:ge
+foo.f(0)
+//│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
+//│ ║  l.708: 	foo.f(0)
+//│ ╙──       	^^^^^
+//│ = 1
+
+foo.Foo#f(0)
+//│ = 1
+
+let foo = Foo(x => x + 1)
+//│ foo = Foo(class anonymous)
+
+
+foo.Foo#f(0)
+//│ = 1
+
+
+:ge
+foo.x(0)
+//│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
+//│ ║  l.726: 	foo.x(0)
+//│ ╙──       	^^^^^
+
+
+foo.Foo#x(0)
+//│ = 1
+
+
+class Bar() with
+  val x = 0
+  val bar = x => x + 1
+
+
+Bar().bar(1)
+//│ = 2
+
+Bar().x
+//│ = 0
+
+let bar = Bar()
+bar.Bar#bar(1)
+//│ = 2
+//│ bar = Bar()
+
+bar.x
+//│ = 0
+
+let bar = Bar().bar in bar(1)
+//│ = 2
+
+
 :sjs
 module Foo with
   val f = x => x
@@ -712,11 +769,11 @@ module Foo with
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let lambda7, Lambda$025, tmp29;
+//│     let lambda8, Lambda$029, tmp33;
 //│     this.Lambda$0 = function Lambda$0() {
 //│       return globalThis.Object.freeze(new Lambda$0.class());
 //│     };
-//│     (class Lambda$024 extends globalThis.Function {
+//│     (class Lambda$028 extends globalThis.Function {
 //│       static {
 //│         Foo14.Lambda$0.class = this
 //│       }
@@ -729,8 +786,8 @@ module Foo with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
 //│     });
-//│     tmp29 = globalThis.Object.freeze(new Foo15.Lambda$0());
-//│     this.f = tmp29;
+//│     tmp33 = globalThis.Object.freeze(new Foo15.Lambda$0());
+//│     this.f = tmp33;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
@@ -753,22 +810,22 @@ Bar.f(0)
 module Bar with
   val id = x => x
 //│ JS (unsanitized):
-//│ let Bar6;
-//│ (class Bar5 {
+//│ let Bar8;
+//│ (class Bar7 {
 //│   static {
-//│     Bar6 = this
+//│     Bar8 = this
 //│   }
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
 //│   static {
-//│     let lambda7, Lambda$026, tmp29;
+//│     let lambda8, Lambda$030, tmp33;
 //│     this.Lambda$0 = function Lambda$0() {
 //│       return globalThis.Object.freeze(new Lambda$0.class());
 //│     };
-//│     (class Lambda$025 extends globalThis.Function {
+//│     (class Lambda$029 extends globalThis.Function {
 //│       static {
-//│         Bar5.Lambda$0.class = this
+//│         Bar7.Lambda$0.class = this
 //│       }
 //│       constructor() {
 //│         super();
@@ -779,8 +836,8 @@ module Bar with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
 //│     });
-//│     tmp29 = globalThis.Object.freeze(new Bar6.Lambda$0());
-//│     this.id = tmp29;
+//│     tmp33 = globalThis.Object.freeze(new Bar8.Lambda$0());
+//│     this.id = tmp33;
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar"]; 
@@ -809,9 +866,9 @@ fun foo(x) =
     x + y
   bar(x * 2)
 //│ ╔══[COMPILATION ERROR] Nested function bar is not supported by lambda rewriting. Lambda lifting must be performed first.
-//│ ║  l.808: 	  fun bar(y) =
+//│ ║  l.865: 	  fun bar(y) =
 //│ ║         	  ^^^^^^^^^^^^
-//│ ║  l.809: 	    x + y
+//│ ║  l.866: 	    x + y
 //│ ╙──       	^^^^^^^^^
 
 
@@ -830,7 +887,7 @@ fun foo(f) = f("abc")
 :sjs
 foo(print)
 //│ JS (unsanitized):
-//│ let Func$019, tmp29;
+//│ let Func$019, tmp33;
 //│ Func$019 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -847,6 +904,6 @@ foo(print)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp29 = globalThis.Object.freeze(new Func$019());
-//│ foo11(tmp29)
+//│ tmp33 = globalThis.Object.freeze(new Func$019());
+//│ foo13(tmp33)
 //│ > abc
