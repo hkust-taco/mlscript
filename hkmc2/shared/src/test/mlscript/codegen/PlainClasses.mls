@@ -1,5 +1,41 @@
 :js
 
+//│ Failed to load runtime: Uncaught:
+//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
+//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+//│     at #resolve (node:internal/modules/esm/loader:700:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
+//│   code: 'ERR_MODULE_NOT_FOUND',
+//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
+//│ }
+//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
+//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+//│     at #resolve (node:internal/modules/esm/loader:700:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33)
+//│     at ModuleJob.link (node:internal/modules/esm/module_job:228:17)
+//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL8:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 :global
 :sjs
 
@@ -15,39 +51,113 @@ class Foo
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL11:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 Foo is Foo
 //│ JS (unsanitized):
 //│ if (Foo1 instanceof Foo1) { true } else { false }
-//│ = false
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL14:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 (new Foo) is Foo
 //│ JS (unsanitized):
 //│ let scrut;
 //│ scrut = globalThis.Object.freeze(new Foo1());
 //│ if (scrut instanceof Foo1) { true } else { false }
-//│ = true
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL17:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 new Foo
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new Foo1())
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL20:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 new Foo()
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new Foo1())
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL23:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 Foo
 //│ JS (unsanitized):
 //│ Foo1
-//│ = class Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL26:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 :re
 Foo()
 //│ JS (unsanitized):
 //│ runtime.safeCall(Foo1())
-//│ ═══[RUNTIME ERROR] TypeError: Class constructor Foo cannot be invoked without 'new'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'safeCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 
 data class Foo with { print("hi") }
@@ -65,7 +175,32 @@ print("ok")
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
 //│ Predef.print("ok")
-//│ > ok
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL31:1:272
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL32:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 fun test() =
   data class Foo with { print("hi") }
@@ -88,12 +223,62 @@ fun test() =
 //│   tmp = Predef.print("ok");
 //│   return Foo5
 //│ };
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL35:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 let t = test()
 //│ JS (unsanitized):
 //│ let t; t = test();
-//│ > ok
-//│ t = class Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL37:1:25
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL38:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL39:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 :e
 new t
@@ -103,14 +288,62 @@ new t
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
-//│ > hi
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: t is not a constructor
+//│     at REPL41:1:46
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL42:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 new! t
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
-//│ > hi
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: t is not a constructor
+//│     at REPL44:1:46
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL45:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 :e
 new t()
@@ -120,14 +353,62 @@ new t()
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
-//│ > hi
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: t is not a constructor
+//│     at REPL47:1:46
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL48:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 new! t()
 //│ JS (unsanitized):
 //│ globalThis.Object.freeze(new t())
-//│ > hi
-//│ = Foo
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: t is not a constructor
+//│     at REPL50:1:46
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL51:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 class Foo with
@@ -151,6 +432,19 @@ class Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL54:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 class Foo with
@@ -185,6 +479,19 @@ class Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL57:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 class Foo with
@@ -211,6 +518,19 @@ class Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL60:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 let a = new Foo
 print(a.x)
@@ -224,10 +544,45 @@ print(a.bar(1))
 //│ tmp2 = Predef.print(tmp1);
 //│ tmp3 = runtime.safeCall(a.bar(1));
 //│ Predef.print(tmp3)
-//│ > 1
-//│ > 2
-//│ > 3
-//│ a = Foo { x: 1 }
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL62:1:297
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL63:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL64:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 
@@ -255,6 +610,19 @@ class Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL67:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 :e
 class Foo with
@@ -280,6 +648,19 @@ class Foo with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL70:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 
 
@@ -303,5 +684,18 @@ class Foo with val x = 1
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ FAILURE: Unexpected runtime error
+//│ FAILURE LOCATION: mkQuery (JSBackendDiffMaker.scala:161)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│     at REPL73:1:15
+//│     at ContextifyScript.runInThisContext (node:vm:137:12)
+//│     at REPLServer.defaultEval (node:repl:600:22)
+//│     at bound (node:domain:433:15)
+//│     at REPLServer.runBound [as eval] (node:domain:444:12)
+//│     at REPLServer.onLine (node:repl:935:10)
+//│     at REPLServer.emit (node:events:508:28)
+//│     at REPLServer.emit (node:domain:489:12)
+//│     at [_onLine] [as _onLine] (node:internal/readline/interface:465:12)
+//│     at [_normalWrite] [as _normalWrite] (node:internal/readline/interface:647:22)
 
 

@@ -1,6 +1,22 @@
 :js
 :todo
 
+//│ Failed to load runtime: Uncaught:
+//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
+//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+//│     at #resolve (node:internal/modules/esm/loader:700:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
+//│   code: 'ERR_MODULE_NOT_FOUND',
+//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
+//│ }
+//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 print of
   let x = 1
@@ -11,7 +27,8 @@ print of
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.7: 	  x + 1
 //│ ╙──     	  ^
-//│ > ()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 print of 
   open Predef
@@ -26,6 +43,7 @@ print of
 //│ ╔══[ERROR] Name not found: x
 //│ ║  l.19: 	  x + 1
 //│ ╙──      	  ^
-//│ > 
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 

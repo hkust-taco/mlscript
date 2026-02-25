@@ -7,7 +7,7 @@ data class Some[out A](value: A)
 :todo
 let Some(x) = Some(42)
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.8: 	let Some(x) = Some(42)
-//│ ╙──     	    ^^^^^^^^^^^^^^^^^^
+//│ ║  l.57: 	let Some(x) = Some(42)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^
 
 

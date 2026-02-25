@@ -54,40 +54,40 @@ let x |>= incr
 :e
 let 2
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.55: 	let 2
-//│ ╙──      	    ^
+//│ ║  l.362: 	let 2
+//│ ╙──       	    ^
 
 :e
 let x += 1 = 0
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.61: 	let x += 1 = 0
-//│ ╙──      	    ^^^^^^^^^^
+//│ ║  l.381: 	let x += 1 = 0
+//│ ╙──       	    ^^^^^^^^^^
 
 :e
 let x += 1 = 0 in x
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.67: 	let x += 1 = 0 in x
-//│ ╙──      	    ^^^^^^^^^^
+//│ ║  l.400: 	let x += 1 = 0 in x
+//│ ╙──       	    ^^^^^^^^^^
 
 
 :e
 (let x = 1)
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.74: 	(let x = 1)
-//│ ╙──      	     ^^^^^
+//│ ║  l.420: 	(let x = 1)
+//│ ╙──       	     ^^^^^
 
 :e
 (let x = 1) + 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.80: 	(let x = 1) + 1
-//│ ╙──      	     ^^^^^
+//│ ║  l.452: 	(let x = 1) + 1
+//│ ╙──       	     ^^^^^
 //│ = "()1"
 
 :e
 (let f(x) = x) + 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.87: 	(let f(x) = x) + 1
-//│ ╙──      	     ^^^^^^^^
+//│ ║  l.484: 	(let f(x) = x) + 1
+//│ ╙──       	     ^^^^^^^^
 //│ = "()1"
 
 (let f(x) = x + 1 in f(42)) + 1

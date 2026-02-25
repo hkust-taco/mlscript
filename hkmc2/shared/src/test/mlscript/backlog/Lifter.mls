@@ -2,6 +2,22 @@
 :lift
 :todo
 
+//│ Failed to load runtime: Uncaught:
+//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
+//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+//│     at #resolve (node:internal/modules/esm/loader:700:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
+//│   code: 'ERR_MODULE_NOT_FOUND',
+//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
+//│ }
+//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
 // The following are problems with lifting classes inside other definitions.
 
 // We use the optional `symbol` parameter of `Select` to detect references to the
@@ -29,8 +45,8 @@ data class A(x) with
     let t = this
     t.B(2).getB()
 A(1).getA()
-//│ ═══[RUNTIME ERROR] TypeError: t.B is not a function
-//│ ═══[RUNTIME ERROR] Expected: '3', got: 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // This is due to the order of classes after lifting
 class Test
@@ -38,6 +54,7 @@ fun hello() =
   class Test2 extends Test
   2
 //│ ═══[RUNTIME ERROR] TypeError: Class extends value undefined is not a constructor or null
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // This is due to subclasses not calling `super` with the required locals. The analysis to
 // determine which locals are required is not in place yet.
@@ -48,8 +65,8 @@ fun test(x) =
   class B() extends A
   B().get
 test(2)
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'get' yielded 'undefined'
-//│ ═══[RUNTIME ERROR] Expected: '2', got: 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // This is due to `super` not being called with multiple parameter lists.
 :expect "B()"
@@ -60,8 +77,8 @@ fun test(x) =
     fun bar = x
   B()
 test(0).toString()
-//│ ═══[RUNTIME ERROR] Expected: '"B()"', got: '"(x) => {       this.#x = x;       return this;     }"'
-//│ = "(x) => {       this.#x = x;       return this;     }"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // In fact, the correct way (using the current "constructor returns a lambda" hack) is this:
 // return (params) => {
@@ -86,7 +103,8 @@ fun f(used1, unused1) =
   foo(unused1)
 f(1, 2).get()
 //│ ═══[WARNING] Cannot yet lift class `Test` as it is used as a first-class class.
-//│ = 1
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 
 :todo
@@ -96,6 +114,7 @@ fun foo1(x, n) =
   let res = if x is C then "Y" else "N"
   if n > 0 then res + foo1(C(), n - 1) else ""
 //│ ═══[WARNING] Cannot yet lift class/module `C` as it is used in an instance check.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :todo // should return the function that creates C instances
 :w
@@ -103,6 +122,7 @@ fun foo2() =
   class C()
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :w
 fun foo3() =
@@ -110,11 +130,13 @@ fun foo3() =
   fun f = C()
   C
 //│ ═══[WARNING] Cannot yet lift class `C` as it is used as a first-class class.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :todo
 :expect "NN"
 foo1(0, 2)
-//│ = "NN"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // Since B extends A and A is not lifted, B cannot access A's BlockMemberSymbol. We can't lift B.
 :todo
@@ -127,7 +149,8 @@ fun test(x) =
 test(2)
 //│ ═══[WARNING] Cannot yet lift class/module `A` as it is used in an instance check.
 //│ ═══[WARNING] Cannot yet lift definition `B` as it extends an unliftable class.
-//│ = 2
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 /// The following are related to modules and objects. ///
 
@@ -142,10 +165,12 @@ fun foo(x, y) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.136: 	  module M with
 //│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :expect 14
 foo(10, 0)
-//│ = 14
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 fun foo(x, y) =
   module M with
@@ -157,10 +182,12 @@ fun foo(x, y) =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.151: 	  module M with
 //│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :expect 12
 foo(10, 0)
-//│ = 12
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 
 data class A(x) with
@@ -170,10 +197,12 @@ data class A(x) with
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.167: 	  module M with
 //│ ╙──       	         ^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :expect 2
 A(2).getA()
-//│ = 2
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // TODO: Foo needs to be put in a mutable capture. Also, we need to pass the Foo instance itself into Foo
 fun foo(x) =
@@ -191,7 +220,8 @@ foo(2)
 //│ ║  l.180: 	  object Foo with
 //│ ╙──       	         ^^^
 //│ ═══[WARNING] Cannot yet lift definition `Bar` as it extends an expression.
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value [object Object] is not a constructor or null
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // `h` is lifted out, but then cannot access the BlockMemberSymbol M.
 :fixme
@@ -217,5 +247,6 @@ fun f =
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ║  l.203: 	      h
 //│ ╙──       	^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 

@@ -290,7 +290,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
                     Assign(fieldSymbol, Select(sr, fieldName)(N), blk)
                   )
             )
-    case Split.Else(els) => labels.get(els) match
+    case Split.Else(els) => (if cont.isLeft || topLevel then labels.get(els) else N) match
       case S(label) => Break(label)
       case N => term_nonTail(els)(cont.fold(identity, _(topLevel)))
     case Split.End => labels.default.fold(throwMatchErrorBlock)(Break(_))

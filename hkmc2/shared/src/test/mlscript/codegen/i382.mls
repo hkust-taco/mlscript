@@ -15,6 +15,7 @@ while x ===
 else
   set x = 2
 print("not inf loop")
+//│ > valid
 //│ > not inf loop
 //│ x = 2
 

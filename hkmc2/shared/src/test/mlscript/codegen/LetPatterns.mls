@@ -6,8 +6,8 @@ data class Some[out A](value: A)
 :todo
 let Some(x) = Some(42)
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.7: 	let Some(x) = Some(42)
-//│ ╙──     	    ^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	let Some(x) = Some(42)
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^
 
 
 object None
@@ -18,8 +18,8 @@ let N = None
 :todo
 let (None) = N
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.19: 	let (None) = N
-//│ ╙──      	    ^^^^^^^^^^
+//│ ║  l.107: 	let (None) = N
+//│ ╙──       	    ^^^^^^^^^^
 
 
 data class Foo(a)
@@ -27,16 +27,16 @@ data class Foo(a)
 :todo
 let Foo(x) = Foo(1) in print(x)
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.28: 	let Foo(x) = Foo(1) in print(x)
-//│ ╙──      	    ^^^^^^^^^^^^^^^
+//│ ║  l.130: 	let Foo(x) = Foo(1) in print(x)
+//│ ╙──       	    ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Name not found: x
-//│ ║  l.28: 	let Foo(x) = Foo(1) in print(x)
-//│ ╙──      	                             ^
+//│ ║  l.130: 	let Foo(x) = Foo(1) in print(x)
+//│ ╙──       	                             ^
 
 :todo
 let Foo(x) and x > 0 = Foo(1) in print("ok")
 //│ ╔══[ERROR] Unsupported let binding shape
-//│ ║  l.37: 	let Foo(x) and x > 0 = Foo(1) in print("ok")
-//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	let Foo(x) and x > 0 = Foo(1) in print("ok")
+//│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

@@ -1,18 +1,35 @@
 :js
 :todo
 
+//│ Failed to load runtime: Uncaught:
+//│ Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│     at finalizeResolution (node:internal/modules/esm/resolve:274:11)
+//│     at moduleResolve (node:internal/modules/esm/resolve:864:10)
+//│     at defaultResolve (node:internal/modules/esm/resolve:990:11)
+//│     at #cachedDefaultResolve (node:internal/modules/esm/loader:718:20)
+//│     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:735:38)
+//│     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:764:52)
+//│     at #resolve (node:internal/modules/esm/loader:700:17)
+//│     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:620:35)
+//│     at ModuleJob.syncLink (node:internal/modules/esm/module_job:143:33) {
+//│   code: 'ERR_MODULE_NOT_FOUND',
+//│   url: 'file:///home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs'
+//│ }
+//│ Error: hkmc2.ErrorReport: Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Rendering.mjs' imported from /home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Runtime.mjs
+//│ Error: hkmc2.ErrorReport: TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 "a" +
   "b"
-//│ = "ab"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // FIXME
 "a" +
   // a
 "b"
-//│ = "b"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // FIXME
 // :dp
@@ -24,6 +41,7 @@
 //│ ║        	    ^
 //│ ║  l.21: 	"b"
 //│ ╙──      	
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -33,7 +51,8 @@ id(1, 2)
 //│ ╔══[ERROR] Expected 1 arguments, got 2
 //│ ║  l.32: 	id(1, 2)
 //│ ╙──      	  ^^^^^^
-//│ = 1
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'id')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -42,31 +61,34 @@ id(1, 2)
 let x = if true
 then 1
 else 0
-//│ x = 1
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 Infinity
-//│ = Infinity
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :sjs
 val Infinity = 1
 //│ JS (unsanitized):
 //│ let Infinity; Infinity = 1;
 //│ ═══[COMPILATION ERROR] [Uncaught SyntaxError] Identifier 'Infinity' has already been declared
-//│ Infinity = Infinity
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :sjs
 Infinity
 //│ JS (unsanitized):
 //│ Infinity
-//│ = Infinity
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 module Test with
   val Infinity = 1
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 Test.Infinity
-//│ = 1
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -76,6 +98,7 @@ Test.Infinity
 fun main() =
   declare fun foo: Int
   ()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // TODO forbid unimplemented signatures inside local blocks
 :todo
@@ -83,6 +106,7 @@ fun main() =
 fun main() =
   fun bar: Int
   ()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -112,6 +136,7 @@ object Cls(val x) with
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["object", "Cls"]; 
 //│ });
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :e
 Cls.x
@@ -119,11 +144,13 @@ Cls.x
 //│ ║  l.117: 	Cls.x
 //│ ╙──       	   ^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'x' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // * Note: the access is not checked because the selection is resolved
 // * (to an MLscript definition, which is not supposed to return `undefined`).
 print(Cls.huh)
-//│ > undefined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 let c = new Cls(123)
 //│ ╔══[ERROR] Expected a statically known class; found reference of type Cls.
@@ -131,10 +158,12 @@ let c = new Cls(123)
 //│ ║         	            ^^^
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
 //│ ═══[RUNTIME ERROR] TypeError: Cls1 is not a constructor
-//│ c = undefined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 c.x
 //│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'x')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -152,6 +181,7 @@ module Example with
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
 //│ ║  l.143: 	  val a = this
 //│ ╙──       	^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -161,21 +191,25 @@ let xs = new Oopsie
 //│ ╙──       	             ^^^^^^
 //│ ╔══[ERROR] Expected a statically known class; found ‹error›.
 //│ ╙── The 'new' keyword requires a statically known class; use the 'new!' operator for dynamic instantiation.
-//│ xs = undefined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 :todo // TODO: warn against using `undefined`
 :w
 fun oops = undefined
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :re
 oops
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 class C
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :sjs
 class D extends id(C)
@@ -195,14 +229,14 @@ class D extends id(C)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "D"]; 
 //│ });
-//│ ═══[RUNTIME ERROR] TypeError: Class extends value id(x) {
-//│     return x
-//│   } is not a constructor or null
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'id')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 let x = 0
-//│ x = 0
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // This somehow parses as `set (x += 1; ())`
 :fixme
@@ -210,21 +244,25 @@ set x += 1; ()
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
 //│ ║  l.209: 	set x += 1; ()
 //│ ╙──       	    ^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :e
 set (x += 1; ())
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
 //│ ║  l.215: 	set (x += 1; ())
 //│ ╙──       	    ^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 (set x += 1); ()
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'Unit')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :fixme
 [x, set x += 1; x]
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
 //│ ║  l.223: 	[x, set x += 1; x]
 //│ ╙──       	        ^^^^^^^^^
-//│ = [1]
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -236,24 +274,30 @@ fun bar() = baz
 //│ let bar, baz;
 //│ baz = function baz() { return 1 };
 //│ bar = function bar() { let tmp4; tmp4 = baz(); return tmp4 };
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 import "../../mlscript-compile/Stack.mls"
+//│ ═══[RUNTIME ERROR] Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/home/runner/work/mlscript/mlscript/hkmc2/shared/src/test/mlscript-compile/Stack.mjs' imported from /home/runner/work/mlscript/mlscript/repl
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // The parser rejects this, but it should be allowed.
 open Stack { ::, Nil }
 //│ ╔══[ERROR] Illegal 'open' statement shape.
 //│ ║  l.245: 	open Stack { ::, Nil }
 //│ ╙──       	     ^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // Instead, if we parenthesize the operator, it is rejected by the elaborator.
 open Stack { (::), Nil }
 //│ ╔══[ERROR] Illegal 'open' statement element.
 //│ ║  l.251: 	open Stack { (::), Nil }
 //│ ╙──       	             ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 open Stack { Nil, :: }
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :sjs
 1 :: Nil
@@ -262,7 +306,8 @@ open Stack { Nil, :: }
 //│ ╙──       	  ^^
 //│ JS (unsanitized):
 //│ Stack["::"](1, Stack.Nil)
-//│ ═══[RUNTIME ERROR] TypeError: Stack.:: is not a function
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading '::')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -273,23 +318,28 @@ mkStr of ... // hello
 //│ ║         	                     ^
 //│ ║  l.270: 	"oops"
 //│ ╙──       	
-//│ = "oops"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 data class Foo(x, y)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // TODO missing sanity check
 :re
 id(Foo)(1)
-//│ = Foo(1, undefined)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 data class Foo(...args)
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 Foo(1, 2, 3).args
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'args' yielded 'undefined'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :todo
 if Foo(1, 2, 3) is Foo(...args) then args
@@ -302,19 +352,22 @@ if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.295: 	if Foo(1, 2, 3) is Foo(...args) then args
 //│ ╙──       	                   ^^^
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╔══[ERROR] The constructor does not take any arguments but found three arguments.
 //│ ║  l.307: 	if Foo(1, 2, 3) is Foo(a, b, c) then [a, b, c]
 //│ ╙──       	                       ^^^^^^^
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╔══[ERROR] The constructor does not take any arguments but found one argument.
 //│ ║  l.313: 	if Foo(1, 2, 3) is Foo(arg) then arg
 //│ ╙──       	                       ^^^
-//│ ═══[RUNTIME ERROR] Error: match error
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 // [SERIOUS]
@@ -322,11 +375,13 @@ if Foo(1, 2, 3) is Foo(arg) then arg
 module M with
   val name = "Student"
 //│ ═══[RUNTIME ERROR] TypeError: Cannot assign to read only property 'name' of function 'class M {   static {     M1 = this   }   constructor() {     runtime.Unit;   }   static {     this.name = "Stud...<omitted>... }'
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 val outFilePath = "out/test.md"
-//│ outFilePath = "out/test.md"
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // FIXME: should wrap in `safeCall`
 :sjs
@@ -335,9 +390,11 @@ fun w(txt) =
   // ()
 //│ JS (unsanitized):
 //│ let w; w = function w(txt) { return globalThis.fs.writeFileSync(outFilePath, txt) };
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 w("whoops")
-//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -351,6 +408,7 @@ fun foo() =
 //│ ╔══[ERROR] Expected 0 arguments, got 1
 //│ ║  l.347: 	  bar("test")
 //│ ╙──       	     ^^^^^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -377,6 +435,7 @@ module Foo(x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 :fixme // proper compilation error
 :sjs
@@ -400,6 +459,7 @@ module Foo(val x)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -408,12 +468,14 @@ data class Foo(mut x)
 //│ ╔══[ERROR] Expected a valid parameter, found 'mut'-modified identifier
 //│ ║  l.407: 	data class Foo(mut x)
 //│ ╙──       	                   ^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 // FIXME should report an error
 fun Foo
 class Foo
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
@@ -428,6 +490,7 @@ set
 //│ ╔══[ERROR] Cannot use 'this' outside of an object scope.
 //│ ║  l.424: 	  (this).pc = 0
 //│ ╙──       	   ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // But this doesn't...
 :fixme
@@ -440,10 +503,12 @@ set
 //│ ╔══[ERROR] Expected a right-hand side for this assignment
 //│ ║  l.436: 	  this.pc = 0
 //│ ╙──       	  ^^^^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———
 
 pattern A(pattern B) = B
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // What @compile actually annotates is `A(0) as y` instead of `A(0)`.
 // We should tighten the precedence of annotations.
@@ -452,5 +517,6 @@ fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
 //│ ║  l.451: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
+//│ ═══[RUNTIME ERROR] TypeError: Cannot read properties of undefined (reading 'checkCall')
 
 // ——— ——— ———

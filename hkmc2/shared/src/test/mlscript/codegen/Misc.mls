@@ -13,7 +13,7 @@
 :ge // Shouldn't allow using `Int` in term position
 1 : Int
 //│ ╔══[COMPILATION ERROR] Symbol 'Int' is virtual (i.e., "compiler fiction"); cannot be used as a term
-//│ ║  l.14: 	1 : Int
+//│ ║  l.86: 	1 : Int
 //│ ╙──      	    ^^^
 
 
