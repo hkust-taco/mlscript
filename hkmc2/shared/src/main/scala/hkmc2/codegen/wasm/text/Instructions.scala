@@ -6,13 +6,12 @@ import mlscript.utils.*, shorthands.*
 import document.*
 
 object Instructions:
-
-  sealed trait CatchClause extends ToWat
-
-  object CatchClause:
-    /** Catches payload values for a specific tag and branches to `label`. */
-    case class Catch(tag: TagIdx, label: Str) extends CatchClause:
-      def toWat: Document = doc"(catch ${tag.toWat} $$${label})"
+  /**
+   * NOTE:
+   * `try_table`/custom catch clause helpers were removed from active codegen because the previous
+   * lowering path required runtime support that is not reliably available in our default Wasm
+   * setup. Try/finally is currently rejected at compile time by `WatBuilder`.
+   */
 
   /** Creates a `block` instruction. */
   def block(
@@ -98,21 +97,6 @@ object Instructions:
     stackargs = value.toSeq,
     resultTypes = value.fold(Seq.empty)(_.resultTypes)
   )
-
-  /** Creates a `try_table` instruction. */
-  def try_table(
-      label: Opt[Str],
-      resultTypes: Seq[Result],
-      catches: Seq[CatchClause],
-      body: Seq[Expr]
-  ): FoldedInstr =
-    val labelWat = label.map(lbl => doc"$$$lbl")
-    FoldedInstr(
-      mnemonic = "try_table",
-      instrargs = labelWat.toSeq ++ resultTypes ++ catches,
-      stackargs = body,
-      resultTypes = resultTypes.map(_.valtype)
-    )
 
   /** Creates a `throw` instruction. */
   def `throw`(tag: TagIdx, operands: Seq[Expr]): FoldedInstr = FoldedInstr(

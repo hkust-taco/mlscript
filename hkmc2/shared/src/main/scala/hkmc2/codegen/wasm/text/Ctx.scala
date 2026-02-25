@@ -140,9 +140,7 @@ class TagInfo(
 ) extends ToWat:
 
   def toWat: Document =
-    doc"""(tag ${id.toWat} (type ${typeIdx.toWat}))${
-      doc""" (export "${id.id}" (tag ${id.toWat}))"""
-    }"""
+    doc"""(tag ${id.toWat} (type ${typeIdx.toWat})) # (export "${id.id}" (tag ${id.toWat}))"""
 end TagInfo
 
 enum WasmIntrinsicType:

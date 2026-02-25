@@ -189,7 +189,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val immutableBranch =
       val tupleRef = ref.cast(tupleValue, RefType(immArrayType, nullable = false))
       array.get(immArrayType, tupleRef, idxBuilder(tupleRef), elemType)
-    Instructions.`if`(
+    `if`(
       condition = tupleIsMutable,
       ifTrue = mutableBranch,
       ifFalse = S(immutableBranch),
@@ -233,7 +233,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
           def idxVal: Expr =
             i31.get(ref.cast(local.get(idxTmp, RefType.anyref), RefType.i31ref), signed = true)
 
-          val normalizedIdx = Instructions.`if`(
+          val normalizedIdx = `if`(
             condition = i32.lt_s(idxVal, i32.const(0)),
             ifTrue = i32.add(idxVal, array.len(tupleRef)),
             ifFalse = S(idxVal),
@@ -1000,7 +1000,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
-              S(Instructions.`if`(
+              S(`if`(
                 condition = testExpr,
                 ifTrue = Instructions.block(
                   label = S(armLabel),
@@ -1038,9 +1038,9 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val scrutTag = struct.get(FieldIdx(NumIdx(0)), scrutAsObject, I32Type)
               val tagMatches = i32.eq(scrutTag, i32.const(expectedTag))
               
-              S(Instructions.`if`(
+              S(`if`(
                 condition = isStructCompatible,
-                ifTrue = Instructions.`if`(
+                ifTrue = `if`(
                   condition = tagMatches,
                   ifTrue = Instructions.block(
                     label = S(armLabel),
@@ -1069,7 +1069,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               val bodyExpr = returningTerm(body)
               val armLabelSym = TempSymbol(N, "arm")
               val armLabel = scope.allocateName(armLabelSym)
-              S(Instructions.`if`(
+              S(`if`(
                 condition = testExpr,
                 ifTrue = Instructions.block(
                   label = S(armLabel),
@@ -1113,49 +1113,17 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
               resultTypes = resultClauses(rstExpr)
             )
 
-    case TryBlock(sub, finallyDo, rst) =>
-      val exnLocal = mkTempLocal("exn")
-      val catchLabelSym = TempSymbol(N, "catch")
-      val catchLabel = scope.allocateName(catchLabelSym)
-
-      val tryExpr = Instructions.block(
-        label = S(catchLabel),
-        children = Seq(
-          Instructions.try_table(
-            label = N,
-            resultTypes = Seq(Result(RefType.anyref)),
-            catches = Seq(Instructions.CatchClause.Catch(exnTagIdx, catchLabel)),
-            body = Seq(
-              returningTerm(sub),
-              ref.`null`(HeapType.Any)
-            )
-          )
+    case TryBlock(sub, _, _) =>
+      errExpr(
+        Ls(
+          msg"WatBuilder::returningTerm for TryBlock(...) not implemented yet" -> N
         ),
-        resultTypes = Seq(Result(RefType.anyref))
-      )
-
-      val setExn = local.set(exnLocal, tryExpr)
-      val finallyExpr = returningTerm(finallyDo)
-      val rstExpr = returningTerm(rst)
-
-      val exnIsNull = ref.is_null(local.get(exnLocal, RefType.anyref))
-      val rethrow = Instructions.`throw`(exnTagIdx, Seq(local.get(exnLocal, RefType.anyref)))
-      val afterTry = Instructions.`if`(
-        condition = exnIsNull,
-        ifTrue = rstExpr,
-        ifFalse = S(rethrow),
-        resultTypes = resultClauses(rstExpr)
-      )
-
-      Instructions.block(
-        label = N,
-        children = Seq(setExn, finallyExpr, afterTry),
-        resultTypes = resultClauses(afterTry)
+        extraInfo = S(sub.showAsTree)
       )
 
     case Throw(res) =>
       val excWat = result(res)
-      Instructions.`throw`(exnTagIdx, Seq(excWat))
+      `throw`(exnTagIdx, Seq(excWat))
 
     case End(_) => nop
 
@@ -1212,15 +1180,15 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     // during codegen (e.g., via `local.tee`) are declared in the entry function.
     ctx.pushLocal()
     val (entryFnExpr, entryFnLocals) =
-      block(p.main)(using ctx, summon[Raise], summon[Scope])
-    val entryExtraLocals = getExtraLocals(using ctx).filterNot(entryFnLocals.toSet.contains)
+      block(p.main)
+    val entryExtraLocals = getExtraLocals.filterNot(entryFnLocals.toSet.contains)
 
     val entrySym = BlockMemberSymbol("entry", Nil)
     val entryNme = scope.allocateName(entrySym)
 
     val entryFnTy = ctx.addType(
       sym = N,
-      TypeInfo(id = N, FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref))))
+      TypeInfo(id = N, FunctionType(params = Seq.empty, results = Seq(Result(RefType.anyref.asValType_!))))
     )
     val entryFnInfo = FuncInfo(
       id = S(SymIdx(entryNme)),
@@ -1267,7 +1235,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     val result = scope.nest givenIn:
       val wasmParams = params.params.map: p =>
         val paramNme = scope.allocateName(p.sym)
-        val param = WasmParam(S(paramNme), RefType.anyref)
+        val param = WasmParam(S(paramNme), RefType.anyref.asValType_!)
         ctx.addLocal(p.sym)
         param -> paramNme
       val (wasmBody, locals) = block(body)

@@ -11,7 +11,8 @@ throw 1
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type (func (param (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (tag $mlx_exn (type 1)) (export "mlx_exn" (tag $mlx_exn))
+//│   (tag $mlx_exn (type 1))
+//│   (export "mlx_exn" (tag $mlx_exn))
 //│   (func $entry (type 2) (result (ref null any))
 //│     (throw $mlx_exn
 //│       (ref.i31
@@ -31,3 +32,8 @@ throw x
 throw false
 //│ Wasm result:
 //│ ═══[RUNTIME ERROR] 0
+
+:ge
+let x = 1
+set x += 1 in x
+//│ ═══[COMPILATION ERROR] WatBuilder::returningTerm for TryBlock(...) not implemented yet

@@ -45,11 +45,12 @@ fun binaryenCompileToModule(wat, importObject): Promise =
 fun unwrapWasmException(err, tag) =
   if tag === null || tag === undefined then err
   else
-    Runtime.try_catch of
-      () => err.getArg(tag, 0)
-      // `WebAssembly.Exception#getArg` throws `TypeError` when `err` is not a Wasm exception
-      // for `tag`; in that case we keep the original JS error unchanged.
-      case { TypeError then err, e then throw e }
+    if
+      WebAssembly.Exception !== undefined &&
+      err is WebAssembly.Exception &&
+      err.is(tag)
+    then err.getArg(tag, 0)
+    else err
 
 fun binaryenRunFunc(wat, importObject, func): Promise =
   binaryenCompileToModule(wat, importObject)
