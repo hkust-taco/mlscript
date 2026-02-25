@@ -127,13 +127,17 @@ import "../../mlscript-compile/Runtime.mls"
 let res = Runtime.try(f)
 
 // Maybe we can expose a wrapper around the real effect trace, as the underlying stack is just an array and .next requires a lot of calculation to get the next frame.
-:re
 res.reified.contTrace.next.getLocals
-//│ ═══[RUNTIME ERROR] Error: Access to required field 'next' yielded 'undefined'
+//│ = [LocalVarInfo("i", 0), LocalVarInfo("j", 100), LocalVarInfo("k", 2000)]
 
 Runtime.debugEff(res.reified)
-//│ > Debug Effect: 
-//│ > 	at f (Debugging.mls:18:14)
+//│ > Debug EffectSig:
+//│ > handler:  FatalEffect
+//│ > handlerFun:  null
+//│ > resumed:  false
+//│ > <lastHandler is self>
+//│ > FunctionContFrame(pc=4, last) -> (null)
+//│ > 
 
 :expect Infinity
 res.resumeWith(42)
@@ -165,16 +169,16 @@ let res =
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:153:15)
-//│ 	at Test.main (Debugging.mls:156:5)
+//│ 	at Test.test (Debugging.mls:157:15)
+//│ 	at Test.main (Debugging.mls:160:5)
 
 set res = res.resumeWith(42)
 
 :re
 res.raise()
 //│ ═══[RUNTIME ERROR] Error: Unhandled effect Handler$h$
-//│ 	at Test.test (Debugging.mls:153:15)
-//│ 	at Test.main (Debugging.mls:156:16)
+//│ 	at Test.test (Debugging.mls:157:15)
+//│ 	at Test.main (Debugging.mls:160:16)
 
 :expect 0.33676533676533676
 res.resumeWith(666)
@@ -194,8 +198,8 @@ fun f() =
 
 f()
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:188:3) with locals: j=200
+//│ > 	at f (Debugging.mls:192:3) with locals: j=200
 //│ > Stack Trace:
-//│ > 	at f (Debugging.mls:190:3)
+//│ > 	at f (Debugging.mls:194:3)
 //│ > Stack Trace:
 //│ > 	at tail position

@@ -141,10 +141,54 @@ mut val resumePc = -1
 object FatalEffect
 object PrintStackEffect
 
-data class EffectTrace(contTrace, lastSegmentBuf, handler, handlerFun)
-data class ContTrace(funStack, lastStack, resumed)
-data class FunStack(segHead, segLast, handler, nextStack)
-data class StackSegment(buf, off, nextSegment)
+data class FunctionContFrame(next, saved) with
+  fun resume(value) =
+    let
+      i = 0
+      f = saved.[0]
+      argListsLength = saved.[5]
+      currentArgList = 6
+    set
+      resumeValue = value
+      resumeArr = saved
+      resumePc = saved.[1]
+    if argListsLength === 0 do
+      console.log("cannot resume getters")
+    while i < argListsLength - 1 do
+      let argListLength = saved.[currentArgList]
+      set
+        f = f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+        currentArgList += argListLength + 1
+        i += 1
+    let argListLength = saved.[currentArgList]
+    set
+      resumeIdx = currentArgList + argListLength + 2
+    f.apply(saved.[4], saved.slice(currentArgList + 1, currentArgList + 1 + argListLength))
+  fun getLocals =
+    let debugInfo = saved.[3]
+    let i = 0
+    let cur = 6
+    while i < saved.[5] do
+      set
+        cur += saved.[cur] + 1
+        i += 1
+    let res = mut []
+    let i = 1
+    while i < debugInfo.length do
+      res.push(new LocalVarInfo(debugInfo.[i + 1], saved.[cur + 1 + debugInfo.[i]]))
+      set i += 2
+    res
+  fun getNme = saved.[3].[0]
+  fun getLoc =
+    let loc = saved.[2]
+    if
+      loc is null then "pc=" + saved.[1]
+      else loc
+
+data class HandlerContFrame(next, nextHandler, handler)
+
+data class ContTrace(next, last, nextHandler, lastHandler, resumed)
+data class EffectSig(contTrace, handler, handlerFun)
 
 class NonLocalReturn with
   fun ret(value)
@@ -155,22 +199,19 @@ data class CustomStackError(stack) with
   fun toString() = stack
 
 
-fun unwind(...args) =
-  curEffect.lastSegmentBuf.push(...args)
-
 fun raisePrintStackEffect(showLocals) =
   mkEffect(PrintStackEffect, showLocals)
 
 fun topLevelEffect(debug) =
   let tr = curEffect
   let v = null
-  while tr !== null and tr.handler === PrintStackEffect do
+  while tr is EffectSig and tr.handler === PrintStackEffect do
     console.log(showStackTrace("Stack Trace:", tr, debug, tr.handlerFun))
     set
       curEffect = null
       v = resume(tr.contTrace)(())
       tr = curEffect
-  if tr !== null then
+  if tr is EffectSig then
     set curEffect = null
     throw CustomStackError(showStackTrace("Error: Unhandled effect " + tr.handler.constructor.name, tr, debug, false))
   else
@@ -184,202 +225,229 @@ fun illegalEffect(position) =
 fun showStackTrace(header, tr, debug, showLocals) =
   let
     msg = header
-    stack = tr.contTrace.funStack
+    curHandler = tr.contTrace
     atTail = true
   if debug do
-    while stack !== null do
-      let curSeg = stack.segHead
-      while curSeg !== null do
-        let
-          curBuf = curSeg.buf
-          curOff = curSeg.off
-          curBufLen = curBuf.length
-        while curOff < curBufLen do
-          let
-            dbgInfo = curBuf.[curOff + 3]
-            nme = dbgInfo.[0]
-            loc = if
-              let x = curBuf.[curOff + 2]
-              x is null then "pc=" + curBuf.[curOff + 1]
-              else x
-            i = 0
-            argListLength = curBuf.[curOff + 5]
-          set
-            msg += "\n\tat " + nme + " (" + loc + ")"
-            curOff += 6
-          while i < argListLength do
-            set
-              curOff += curBuf.[curOff] + 1
-              i += 1
-          if showLocals and dbgInfo.length > 1 do
-            set msg += " with locals: "
-            let i = 1
-            while i < dbgInfo.length do
-              if i !== 1 do
-                set msg += ", "
-              set msg += dbgInfo.[i + 1] + "=" + curBuf.[curOff + 1 + dbgInfo.[i]]
-              set i += 2
-          set
-            curOff += curBuf.[curOff] + 1
-            atTail = false
-        set curSeg = curSeg.nextSegment
-      if stack.handler !== null do
+    while curHandler !== null do
+      let cur = curHandler.next
+      while cur !== null do
+        let curLocals = cur.getLocals
+        let loc = cur.getLoc
+        let localsMsg = if showLocals and curLocals.length > 0 then
+          " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+        else
+          ""
         set
-          msg += "\n\twith handler " + stack.handler.constructor.name
+          msg += "\n\tat " + cur.getNme + " (" + loc + ")"
+          msg += localsMsg
+          cur = cur.next
           atTail = false
-      set stack = stack.nextStack
+      set curHandler = curHandler.nextHandler
+      if curHandler !== null do
+        set
+          msg += "\n\twith handler " + curHandler.handler.constructor.name
+          atTail = false
     if atTail do
       set msg += "\n\tat tail position"
   msg
 
+fun showFunctionContChain(cont, hl, vis, reps) =
+  if cont is FunctionContFrame then
+    let result = cont.constructor.name + "(pc=" + cont.saved.[1]
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    result + ") -> " + showFunctionContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT CONT)"
+
+fun showHandlerContChain(cont, hl, vis, reps) =
+  if cont is HandlerContFrame then
+    let result = cont.handler.constructor.name
+    hl.forEach((m, marker) => if m.has(cont) do set result += ", " + marker)
+    if vis.has(cont) then
+      set reps = reps + 1
+      if reps > 10 do
+        throw Error("10 repeated continuation frame (loop?)")
+      set result += ", REPEAT"
+    else
+      vis.add(cont)
+    result + " -> " + showFunctionContChain(cont.next, hl, vis, reps)
+  else if cont === null then
+    "(null)"
+  else
+    "(NOT HANDLER CONT)"
+
+fun debugCont(cont) = console.log(showFunctionContChain(cont, new Map(), new Set(), 0))
+fun debugHandler(cont) = console.log(showHandlerContChain(cont, new Map(), new Set(), 0))
+
+fun debugContTrace(contTrace) =
+  if contTrace is ContTrace then
+    console.log("resumed: ", contTrace.resumed)
+    if contTrace.last === contTrace do
+      console.log("<last is self>")
+    if contTrace.lastHandler === contTrace do
+      console.log("<lastHandler is self>")
+    let vis = new Set()
+    let hl = new Map()
+    hl.set("last", new Set([contTrace.last]))
+    hl.set("last-handler", new Set([contTrace.lastHandler]))
+    console.log(showFunctionContChain(contTrace.next, hl, vis, 0))
+    let cur = contTrace.nextHandler
+    while cur !== null do
+      console.log(showHandlerContChain(cur, hl, vis, 0))
+      set cur = cur.nextHandler
+    console.log()
+  else
+    console.log("Not a cont trace:")
+    console.log(contTrace)
+
 fun debugEff(eff) =
-  console.log(showStackTrace("Debug Effect: ", eff, true, false))
+  if eff is EffectSig then
+    console.log("Debug EffectSig:")
+    console.log("handler: ", eff.handler.constructor.name)
+    console.log("handlerFun: ", eff.handlerFun)
+    debugContTrace(eff.contTrace)
+  else
+    console.log("Not an effect:")
+    console.log(eff)
 
 // runtime implementations
+fun unwind(...saved) =
+  set
+    curEffect.contTrace.last.next = new mut FunctionContFrame(null, saved)
+    curEffect.contTrace.last = curEffect.contTrace.last.next
 
 fun mkEffect(handler, handlerFun) =
-  let buf = mut []
-  let seg = new mut StackSegment(buf, 0, null)
-  let stack = new mut FunStack(seg, seg, null, null)
-  let cont = new mut ContTrace(stack, stack, false)
-  set curEffect = new mut EffectTrace(cont, buf, handler, handlerFun)
+  let res = new mut EffectSig(new mut ContTrace(null, null, null, null, false), handler, handlerFun)
+  set
+    res.contTrace.last = res.contTrace
+    res.contTrace.lastHandler = res.contTrace
+    curEffect = res
+
+fun handleBlockImpl(cur, handler) =
+  let handlerFrame = new mut HandlerContFrame(null, null, handler)
+  set
+    cur.contTrace.lastHandler.nextHandler = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    cur.contTrace.last = handlerFrame
+  handleEffects(cur)
 
 fun enterHandleBlock(handler, body) =
   let tmp = body()
-  if curEffect === null do return tmp
-  let buf = mut []
-  let seg = new mut StackSegment(buf, 0, null)
-  let newStack = new mut FunStack(seg, seg, null, null)
-  set
-    curEffect.contTrace.lastStack.handler = handler
-    curEffect.contTrace.lastStack.nextStack = newStack
-    curEffect.contTrace.lastStack = newStack
-    curEffect.lastSegmentBuf = buf
-  handleEffects()
+  if curEffect === null then
+    tmp
+  else
+    handleBlockImpl(curEffect, handler)
 
-object NewEffect
-data class Unwind(ret)
-
-// Assumes curEffect is not null
-fun handleEffects() =
-  while handleEffect() is
-    NewEffect do 1 // not unit to bypass ucs bug
-    Unwind(ret) do return ret
+fun handleEffects(cur) =
+  while cur is
+    EffectSig then
+      let nxt = handleEffect(cur)
+      if cur === nxt then
+        set curEffect = cur
+        return null
+      else
+        set cur = nxt
+    else
+      return cur
 
 // return either new effect, final result or the same continuation if there is no handler
-fun handleEffect() =
+fun handleEffect(cur) =
+  // debugEff(cur)
   // find the handle block corresponding to the current effect
-  let stack = curEffect.contTrace.funStack
-  while stack !== null and stack.handler !== curEffect.handler do
-    set stack = stack.nextStack
+  let prevHandlerFrame = cur.contTrace
+  while prevHandlerFrame.nextHandler !== null and prevHandlerFrame.nextHandler.handler !== cur.handler do
+    set prevHandlerFrame = prevHandlerFrame.nextHandler
 
   // no matching handle block
-  if stack === null do
-    return Unwind(())
+  if prevHandlerFrame.nextHandler === null do
+    return cur
+
+  // the matching handle block
+  let handlerFrame = prevHandlerFrame.nextHandler
 
   // unlink and save frames
   let saved = new mut ContTrace(
-    stack.nextStack,
-    curEffect.contTrace.lastStack,
+    handlerFrame.next,
+    cur.contTrace.last,
+    handlerFrame.nextHandler,
+    cur.contTrace.lastHandler,
     false
   )
-  // to keep invariant, we need a new stack
-  let newBuf = mut []
-  let newSeg = new mut StackSegment(newBuf, 0, null)
-  let newStack = new mut FunStack(newSeg, newSeg, null, null)
   set
-    curEffect.contTrace.lastStack = newStack
-    curEffect.lastSegmentBuf = newBuf
-    stack.nextStack = newStack
+    cur.contTrace.last = handlerFrame
+    cur.contTrace.lastHandler = handlerFrame
+    handlerFrame.next = null
+    handlerFrame.nextHandler = null
 
   // handle the effect
-  let
-    k = resume(curEffect.contTrace)
-    f = curEffect.handlerFun
-    savedDepth = stackDepth
+  let oldDepth = stackDepth
   set
     curEffect = null
-    stackDepth += 3
-  let res = f(k)
-  set stackDepth = savedDepth
+    stackDepth += 2
+  let tmp = cur.handlerFun(resume(cur.contTrace))
+  set stackDepth = oldDepth
   if curEffect !== null then
+    set cur = curEffect
     // relink the saved frames
-    // We modify lastStack since the second last stack cannot be obtained quickly
-    // Hence we replace lastStack's field with field from saved
-    if saved.funStack === saved.lastStack do
-      set saved.lastStack = curEffect.contTrace.lastStack
-    set
-      curEffect.contTrace.lastStack.segLast.nextSegment = saved.funStack.segHead
-      curEffect.contTrace.lastStack.segLast = saved.funStack.segLast
-      curEffect.contTrace.lastStack.handler = saved.funStack.handler
-      curEffect.contTrace.lastStack.nextStack = saved.funStack.nextStack
-      curEffect.contTrace.lastStack = saved.lastStack
-      curEffect.lastSegmentBuf = saved.lastStack.segLast.buf
-    NewEffect
+    if saved.next !== null do
+      set
+        cur.contTrace.last.next = saved.next
+        cur.contTrace.last = saved.last
+    if saved.nextHandler !== null do
+      set
+        cur.contTrace.lastHandler.nextHandler = saved.nextHandler
+        cur.contTrace.lastHandler = saved.lastHandler
+    cur
   else
     // resume the unlinked handle blocks
-    resumeContTrace(saved, res)
+    resumeContTrace(saved, tmp)
 
 fun resume(contTrace)(value) =
   if contTrace.resumed do
     throw Error("Multiple resumption")
   set contTrace.resumed = true
-  if resumeContTrace(contTrace, value) is
-    NewEffect then handleEffects()
-    Unwind(ret) then ret
+  handleEffects(resumeContTrace(contTrace, value))
 
-// Assumes curEffect === null, return either NewEffect or Unwind(...) if no effect
 fun resumeContTrace(contTrace, value) =
-  let
-    savedDepth = stackDepth
-    curDepth = stackDepth + 2
-    stack = contTrace.funStack
-  while stack !== null do
-    let segment = stack.segHead
-    while segment !== null do
-      let
-        buf = segment.buf
-        off = segment.off
-      while off < buf.length do
-        // resume function with value
-        let
-          i = 0
-          f = buf.[off]
-          argListsLength = buf.[off + 5]
-          currentArgList = off + 6
-          thisOff = off + 4
+  // TODO: increment stackDepth by some constant amount
+  let cont = contTrace.next
+  let handlerCont = contTrace.nextHandler
+  let curDepth = stackDepth
+  let newDepth = stackDepth + 3
+  while
+    cont is FunctionContFrame then
+      set
+        curEffect = null
+        stackDepth = newDepth
+        value = cont.resume(value)
+        stackDepth = curDepth
+      if curEffect !== null do
+        set value = curEffect
+      if value is EffectSig then
         set
-          resumeValue = value
-          resumeArr = buf
-          resumePc = buf.[off + 1]
-        if argListsLength === 0 do
-          throw new Error("cannot resume getters")
-        while i < argListsLength - 1 do
-          let argListLength = buf.[currentArgList]
-          set
-            f = f.apply(buf.[thisOff], buf.slice(currentArgList + 1, currentArgList + 1 + argListLength))
-            currentArgList += argListLength + 1
-            i += 1
-        let argListLength = buf.[currentArgList]
-        set
-          resumeIdx = currentArgList + argListLength + 2
-          off = resumeIdx + buf.[resumeIdx - 1]
-          stackDepth = curDepth
-          value = f.apply(buf.[thisOff], buf.slice(currentArgList + 1, currentArgList + 1 + argListLength))
-          stackDepth = savedDepth
-        if curEffect !== null do
-          set
-            segment.off = off
-            curEffect.contTrace.lastStack.segLast.nextSegment = segment
-            curEffect.contTrace.lastStack.segLast = stack.segLast
-            curEffect.contTrace.lastStack.handler = stack.handler
-            curEffect.contTrace.lastStack.nextStack = stack.nextStack
-            curEffect.contTrace.lastStack = contTrace.lastStack
-            curEffect.lastSegmentBuf = contTrace.lastStack.segLast.buf
-          return NewEffect
-      set segment = segment.nextSegment
-    set stack = stack.nextStack
-  Unwind(value)
+          value.contTrace.last.next = cont.next
+          value.contTrace.lastHandler.nextHandler = handlerCont
+        if contTrace.last !== cont do
+          set value.contTrace.last = contTrace.last
+        if handlerCont !== null do
+          set value.contTrace.lastHandler = contTrace.lastHandler
+        return value
+      else
+        set cont = cont.next
+    handlerCont is HandlerContFrame then
+      set cont = handlerCont.next
+      set handlerCont = handlerCont.nextHandler
+    else
+      return value
 
 // stack safety
 mut val stackLimit = 0 // How deep the stack can go before heapifying the stack
