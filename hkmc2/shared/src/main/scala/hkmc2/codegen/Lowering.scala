@@ -1072,12 +1072,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
     val merged = MergeMatchArmTransformer.applyBlock(bufferable)
 
     val funcToCls =
-      if config.funcToCls then
-        if lift then
-          raise(ErrorReport(msg"Cannot transform functions to classes when lifter is enabled for now." -> N :: Nil,
-            source = Diagnostic.Source.Compilation))
-          merged
-        else FirstClassFunctionTransformer().applyBlock(merged)
+      if config.funcToCls then FirstClassFunctionTransformer().applyBlock(merged)
       else merged
 
     val staged = 

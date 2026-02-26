@@ -17,7 +17,7 @@ fun aux(f) = f(1) + f(10)
 fun f(x, y, b) =
   aux(z => x + z) * aux(z => if b then y + z else y - z)
 //│ JS (unsanitized):
-//│ let f, Lambda$01, Lambda$11;
+//│ let f, lambda, lambda1, lambda$, lambda$1, Lambda$01, Lambda$11;
 //│ Lambda$01 = function Lambda$0(x) {
 //│   return globalThis.Object.freeze(new Lambda$0.class(x));
 //│ };
@@ -30,39 +30,51 @@ fun f(x, y, b) =
 //│     this.x = x;
 //│   }
 //│   call(z) {
-//│     return this.x + z
+//│     return lambda(this.x, z)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
 //│ });
-//│ Lambda$11 = function Lambda$1(b, y) {
-//│   return globalThis.Object.freeze(new Lambda$1.class(b, y));
+//│ Lambda$11 = function Lambda$1(y, b) {
+//│   return globalThis.Object.freeze(new Lambda$1.class(y, b));
 //│ };
 //│ (class Lambda$1 extends globalThis.Function {
 //│   static {
 //│     Lambda$11.class = this
 //│   }
-//│   constructor(b, y) {
+//│   constructor(y, b) {
 //│     super();
-//│     this.b = b;
 //│     this.y = y;
+//│     this.b = b;
 //│   }
 //│   call(z) {
-//│     if (this.b === true) {
-//│       return this.y + z
-//│     } else {
-//│       return this.y - z
-//│     }
+//│     return lambda1(this.y, this.b, z)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
 //│ });
+//│ lambda$1 = (undefined, function (x) {
+//│   return globalThis.Object.freeze(new Lambda$01(x))
+//│ });
+//│ lambda$ = (undefined, function (y, b) {
+//│   return globalThis.Object.freeze(new Lambda$11(y, b))
+//│ });
+//│ lambda = (undefined, function (x, z) {
+//│   return x + z
+//│ });
+//│ lambda1 = (undefined, function (y, b, z) {
+//│   if (b === true) {
+//│     return y + z
+//│   } else {
+//│     return y - z
+//│   }
+//│ });
 //│ f = function f(x, y, b) {
-//│   let lambda, tmp, lambda1, tmp1, tmp2, tmp3;
-//│   tmp2 = globalThis.Object.freeze(new Lambda$01(x));
-//│   tmp = aux(tmp2);
-//│   tmp3 = globalThis.Object.freeze(new Lambda$11(b, y));
-//│   tmp1 = aux(tmp3);
+//│   let tmp, tmp1, lambda$here, lambda$here1;
+//│   lambda$here = lambda$1(x);
+//│   tmp = aux(lambda$here);
+//│   lambda$here1 = lambda$(y, b);
+//│   tmp1 = aux(lambda$here1);
 //│   return tmp * tmp1
 //│ };
 
@@ -74,52 +86,14 @@ f(0, 0, true)
 :sjs
 (x => x)(42)
 //│ JS (unsanitized):
-//│ let lambda, Lambda$03, tmp;
-//│ Lambda$03 = function Lambda$0() {
-//│   return globalThis.Object.freeze(new Lambda$0.class());
-//│ };
-//│ (class Lambda$02 extends globalThis.Function {
-//│   static {
-//│     Lambda$03.class = this
-//│   }
-//│   constructor() {
-//│     super();
-//│   }
-//│   call(x) {
-//│     return x
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", []]; 
-//│ });
-//│ tmp = globalThis.Object.freeze(new Lambda$03());
-//│ tmp.call(42)
+//│ let lambda2; lambda2 = (undefined, function (x) { return x }); lambda2(42)
 //│ = 42
 
 
 :sjs
 let x = 1 in (y => x + y)(0)
 //│ JS (unsanitized):
-//│ let x, lambda1, Lambda$05, tmp1;
-//│ Lambda$05 = function Lambda$0(x1) {
-//│   return globalThis.Object.freeze(new Lambda$0.class(x1));
-//│ };
-//│ (class Lambda$04 extends globalThis.Function {
-//│   static {
-//│     Lambda$05.class = this
-//│   }
-//│   constructor(x1) {
-//│     super();
-//│     this.x = x1;
-//│   }
-//│   call(y) {
-//│     return this.x + y
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
-//│ });
-//│ x = 1;
-//│ tmp1 = globalThis.Object.freeze(new Lambda$05(x));
-//│ tmp1.call(0)
+//│ let x, lambda3; x = 1; lambda3 = (undefined, function (y) { return x + y }); lambda3(0)
 //│ = 1
 
 
@@ -128,7 +102,7 @@ fun foo(x) = x + 1
 fun bar(f) = f(0)
 bar(foo)
 //│ JS (unsanitized):
-//│ let bar, foo, Func$01, tmp2;
+//│ let bar, foo, Func$01, tmp;
 //│ Func$01 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -151,8 +125,8 @@ bar(foo)
 //│ bar = function bar(f1) {
 //│   return runtime.safeCall(f1.call(0))
 //│ };
-//│ tmp2 = globalThis.Object.freeze(new Func$01());
-//│ bar(tmp2)
+//│ tmp = globalThis.Object.freeze(new Func$01());
+//│ bar(tmp)
 //│ = 1
 
 :expect 1
@@ -186,7 +160,7 @@ bar([foo, x => x].(i))
 :ge
 [foo, x => x].(i)(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.187: 	[foo, x => x].(i)(0)
+//│ ║  l.161: 	[foo, x => x].(i)(0)
 //│ ╙──       	               ^
 
 
@@ -200,10 +174,10 @@ let foo = Foo()
 foo.("f")(0)
 foo.("h")(1)
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.200: 	foo.("f")(0)
+//│ ║  l.174: 	foo.("f")(0)
 //│ ╙──       	^^^^^^^^
 //│ ╔══[COMPILATION ERROR] Cannot determine if the dynamic selection is a function object.
-//│ ║  l.201: 	foo.("h")(1)
+//│ ║  l.175: 	foo.("h")(1)
 //│ ╙──       	^^^^^^^^
 //│ = 0
 //│ foo = Foo()
@@ -224,6 +198,7 @@ class Foo(x) with
 //│   constructor(x1) {
 //│     this.#x = x1;
 //│   }
+//│   #Foo$cap;
 //│   #x;
 //│   foo(f2) {
 //│     return runtime.safeCall(f2.call(this.#x))
@@ -237,26 +212,29 @@ class Foo(x) with
 :sjs
 Foo(1).foo(x => x - 1)
 //│ JS (unsanitized):
-//│ let tmp17, lambda5, Lambda$015, tmp18;
-//│ Lambda$015 = function Lambda$0() {
-//│   return globalThis.Object.freeze(new Lambda$0.class());
+//│ let tmp15, lambda9, Func$017, tmp16;
+//│ Func$017 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Lambda$014 extends globalThis.Function {
+//│ (class Func$016 extends globalThis.Function {
 //│   static {
-//│     Lambda$015.class = this
+//│     Func$017.class = this
 //│   }
 //│   constructor() {
 //│     super();
 //│   }
-//│   call(x1) {
-//│     return x1 - 1
+//│   call(...param) {
+//│     return lambda9(...param)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp17 = Foo3(1);
-//│ tmp18 = globalThis.Object.freeze(new Lambda$015());
-//│ tmp17.foo(tmp18)
+//│ tmp15 = Foo3(1);
+//│ lambda9 = (undefined, function (x1) {
+//│   return x1 - 1
+//│ });
+//│ tmp16 = globalThis.Object.freeze(new Func$017());
+//│ tmp15.foo(tmp16)
 //│ = 0
 
 
@@ -265,30 +243,33 @@ Foo(1).foo(x => x - 1)
 fun foo() = x => x
 foo()(1)
 //│ JS (unsanitized):
-//│ let foo4, tmp19, Lambda$017;
-//│ Lambda$017 = function Lambda$0() {
-//│   return globalThis.Object.freeze(new Lambda$0.class());
+//│ let foo4, tmp17, lambda10, Func$019;
+//│ Func$019 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Lambda$016 extends globalThis.Function {
+//│ (class Func$018 extends globalThis.Function {
 //│   static {
-//│     Lambda$017.class = this
+//│     Func$019.class = this
 //│   }
 //│   constructor() {
 //│     super();
 //│   }
-//│   call(x1) {
-//│     return x1
+//│   call(...param) {
+//│     return lambda10(...param)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
+//│ });
+//│ lambda10 = (undefined, function (x1) {
+//│   return x1
 //│ });
 //│ foo4 = function foo() {
-//│   let lambda6, tmp20;
-//│   tmp20 = globalThis.Object.freeze(new Lambda$017());
-//│   return tmp20
+//│   let tmp18;
+//│   tmp18 = globalThis.Object.freeze(new Func$019());
+//│   return tmp18
 //│ };
-//│ tmp19 = foo4();
-//│ runtime.safeCall(tmp19.call(1))
+//│ tmp17 = foo4();
+//│ runtime.safeCall(tmp17.call(1))
 //│ = 1
 
 
@@ -296,22 +277,25 @@ foo()(1)
 class Bar() with
   fun bar() = x => x 
 //│ JS (unsanitized):
-//│ let Bar1, Lambda$019;
-//│ Lambda$019 = function Lambda$0() {
-//│   return globalThis.Object.freeze(new Lambda$0.class());
+//│ let Bar1, lambda11, Func$021;
+//│ Func$021 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Lambda$018 extends globalThis.Function {
+//│ (class Func$020 extends globalThis.Function {
 //│   static {
-//│     Lambda$019.class = this
+//│     Func$021.class = this
 //│   }
 //│   constructor() {
 //│     super();
 //│   }
-//│   call(x1) {
-//│     return x1
+//│   call(...param) {
+//│     return lambda11(...param)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
+//│ });
+//│ lambda11 = (undefined, function (x1) {
+//│   return x1
 //│ });
 //│ Bar1 = function Bar() {
 //│   return globalThis.Object.freeze(new Bar.class());
@@ -321,10 +305,11 @@ class Bar() with
 //│     Bar1.class = this
 //│   }
 //│   constructor() {}
+//│   #Bar$cap;
 //│   bar() {
-//│     let lambda6, tmp20;
-//│     tmp20 = globalThis.Object.freeze(new Lambda$019());
-//│     return tmp20
+//│     let tmp18;
+//│     tmp18 = globalThis.Object.freeze(new Func$021());
+//│     return tmp18
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar", []]; 
@@ -340,23 +325,29 @@ Bar().bar()(42)
 class Baz(b) with
   fun baz() = x => x + b
 //│ JS (unsanitized):
-//│ let Baz1, Lambda$021;
-//│ Lambda$021 = function Lambda$0(b) {
+//│ let Baz1, lambda12, lambda$2, Lambda$03;
+//│ Lambda$03 = function Lambda$0(b) {
 //│   return globalThis.Object.freeze(new Lambda$0.class(b));
 //│ };
-//│ (class Lambda$020 extends globalThis.Function {
+//│ (class Lambda$02 extends globalThis.Function {
 //│   static {
-//│     Lambda$021.class = this
+//│     Lambda$03.class = this
 //│   }
 //│   constructor(b) {
 //│     super();
 //│     this.b = b;
 //│   }
 //│   call(x1) {
-//│     return x1 + this.b
+//│     return lambda12(this.b, x1)
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│ });
+//│ lambda$2 = (undefined, function (b) {
+//│   return globalThis.Object.freeze(new Lambda$03(b))
+//│ });
+//│ lambda12 = (undefined, function (b, x1) {
+//│   return x1 + b
 //│ });
 //│ Baz1 = function Baz(b) {
 //│   return globalThis.Object.freeze(new Baz.class(b));
@@ -368,11 +359,12 @@ class Baz(b) with
 //│   constructor(b) {
 //│     this.#b = b;
 //│   }
+//│   #Baz$cap;
 //│   #b;
 //│   baz() {
-//│     let lambda6, tmp22;
-//│     tmp22 = globalThis.Object.freeze(new Lambda$021(this.#b));
-//│     return tmp22
+//│     let lambda$here;
+//│     lambda$here = lambda$2(this.#b);
+//│     return lambda$here
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Baz", [null]]; 
@@ -390,7 +382,58 @@ module Foo with
   fun f(x, y, b) =
     aux(z => x + z) * aux(z => if b then y + z else y - z)
 //│ JS (unsanitized):
-//│ let Foo5;
+//│ let Foo5, lambda13, lambda14, lambda$3, lambda$4, Lambda$05, Lambda$13;
+//│ Lambda$05 = function Lambda$0(x1) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(x1));
+//│ };
+//│ (class Lambda$04 extends globalThis.Function {
+//│   static {
+//│     Lambda$05.class = this
+//│   }
+//│   constructor(x1) {
+//│     super();
+//│     this.x = x1;
+//│   }
+//│   call(z) {
+//│     return lambda13(this.x, z)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│ });
+//│ Lambda$13 = function Lambda$1(y, b) {
+//│   return globalThis.Object.freeze(new Lambda$1.class(y, b));
+//│ };
+//│ (class Lambda$12 extends globalThis.Function {
+//│   static {
+//│     Lambda$13.class = this
+//│   }
+//│   constructor(y, b) {
+//│     super();
+//│     this.y = y;
+//│     this.b = b;
+//│   }
+//│   call(z) {
+//│     return lambda14(this.y, this.b, z)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
+//│ });
+//│ lambda$4 = (undefined, function (x1) {
+//│   return globalThis.Object.freeze(new Lambda$05(x1))
+//│ });
+//│ lambda$3 = (undefined, function (y, b) {
+//│   return globalThis.Object.freeze(new Lambda$13(y, b))
+//│ });
+//│ lambda13 = (undefined, function (x1, z) {
+//│   return x1 + z
+//│ });
+//│ lambda14 = (undefined, function (y, b, z) {
+//│   if (b === true) {
+//│     return y + z
+//│   } else {
+//│     return y - z
+//│   }
+//│ });
 //│ (class Foo4 {
 //│   static {
 //│     Foo5 = this
@@ -398,62 +441,22 @@ module Foo with
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
-//│   static {
-//│     let Lambda$023, Lambda$15;
-//│     this.Lambda$0 = function Lambda$0(x1) {
-//│       return globalThis.Object.freeze(new Lambda$0.class(x1));
-//│     };
-//│     (class Lambda$022 extends globalThis.Function {
-//│       static {
-//│         Foo4.Lambda$0.class = this
-//│       }
-//│       constructor(x1) {
-//│         super();
-//│         this.x = x1;
-//│       }
-//│       call(z) {
-//│         return this.x + z
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
-//│     });
-//│     this.Lambda$1 = function Lambda$1(b, y) {
-//│       return globalThis.Object.freeze(new Lambda$1.class(b, y));
-//│     };
-//│     (class Lambda$14 extends globalThis.Function {
-//│       static {
-//│         Foo4.Lambda$1.class = this
-//│       }
-//│       constructor(b, y) {
-//│         super();
-//│         this.b = b;
-//│         this.y = y;
-//│       }
-//│       call(z) {
-//│         if (this.b === true) {
-//│           return this.y + z
-//│         } else {
-//│           return this.y - z
-//│         }
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$1", [null, null]]; 
-//│     });
-//│   }
+//│   static #Foo_mod$cap;
 //│   static aux(f2) {
-//│     let tmp24, tmp25;
-//│     tmp24 = runtime.safeCall(f2.call(1));
-//│     tmp25 = runtime.safeCall(f2.call(10));
-//│     return tmp24 + tmp25
+//│     let tmp22, tmp23;
+//│     tmp22 = runtime.safeCall(f2.call(1));
+//│     tmp23 = runtime.safeCall(f2.call(10));
+//│     return tmp22 + tmp23
 //│   } 
 //│   static f(x1, y, b) {
-//│     let lambda6, tmp24, lambda7, tmp25, tmp26, tmp27;
-//│     tmp26 = globalThis.Object.freeze(new Foo5.Lambda$0(x1));
-//│     tmp24 = Foo4.aux(tmp26);
-//│     tmp27 = globalThis.Object.freeze(new Foo5.Lambda$1(b, y));
-//│     tmp25 = Foo4.aux(tmp27);
-//│     return tmp24 * tmp25
+//│     let tmp22, tmp23, lambda$here, lambda$here1;
+//│     lambda$here = lambda$4(x1);
+//│     tmp22 = Foo4.aux(lambda$here);
+//│     lambda$here1 = lambda$3(y, b);
+//│     tmp23 = Foo4.aux(lambda$here1);
+//│     return tmp22 * tmp23
 //│   }
+//│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
@@ -472,7 +475,33 @@ module Foo with
   class Bar(y) with
     fun bar(z) = x => x + y + z 
 //│ JS (unsanitized):
-//│ let Foo7;
+//│ let Foo7, lambda15, lambda$5, Lambda$07;
+//│ Lambda$07 = function Lambda$0(y, z) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(y, z));
+//│ };
+//│ (class Lambda$06 extends globalThis.Function {
+//│   static {
+//│     Lambda$07.class = this
+//│   }
+//│   constructor(y, z) {
+//│     super();
+//│     this.y = y;
+//│     this.z = z;
+//│   }
+//│   call(x1) {
+//│     return lambda15(this.y, this.z, x1)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null, null]]; 
+//│ });
+//│ lambda$5 = (undefined, function (y, z) {
+//│   return globalThis.Object.freeze(new Lambda$07(y, z))
+//│ });
+//│ lambda15 = (undefined, function (y, z, x1) {
+//│   let tmp22;
+//│   tmp22 = x1 + y;
+//│   return tmp22 + z
+//│ });
 //│ (class Foo6 {
 //│   static {
 //│     Foo7 = this
@@ -480,28 +509,8 @@ module Foo with
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
+//│   static #Foo_mod$cap;
 //│   static {
-//│     let Lambda$024;
-//│     this.Lambda$0 = function Lambda$0(z, y) {
-//│       return globalThis.Object.freeze(new Lambda$0.class(z, y));
-//│     };
-//│     (class Lambda$023 extends globalThis.Function {
-//│       static {
-//│         Foo6.Lambda$0.class = this
-//│       }
-//│       constructor(z, y) {
-//│         super();
-//│         this.z = z;
-//│         this.y = y;
-//│       }
-//│       call(x1) {
-//│         let tmp24;
-//│         tmp24 = x1 + this.y;
-//│         return tmp24 + this.z
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$0", [null, null]]; 
-//│     });
 //│     this.Bar = function Bar(y) {
 //│       return globalThis.Object.freeze(new Bar.class(y));
 //│     };
@@ -512,16 +521,18 @@ module Foo with
 //│       constructor(y) {
 //│         this.#y = y;
 //│       }
+//│       #Bar$cap;
 //│       #y;
 //│       bar(z) {
-//│         let lambda6, tmp24;
-//│         tmp24 = globalThis.Object.freeze(new Foo7.Lambda$0(z, this.#y));
-//│         return tmp24
+//│         let lambda$here;
+//│         lambda$here = lambda$5(this.#y, z);
+//│         return lambda$here
 //│       }
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Bar", [null]]; 
 //│     });
 //│   }
+//│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
@@ -539,27 +550,29 @@ let x = 1
 :sjs
 y => x + y
 //│ JS (unsanitized):
-//│ let lambda6, Lambda$025, tmp26;
-//│ Lambda$025 = function Lambda$0(x2) {
-//│   return globalThis.Object.freeze(new Lambda$0.class(x2));
+//│ let lambda16, Func$023, tmp24;
+//│ Func$023 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Lambda$024 extends globalThis.Function {
+//│ (class Func$022 extends globalThis.Function {
 //│   static {
-//│     Lambda$025.class = this
+//│     Func$023.class = this
 //│   }
-//│   constructor(x2) {
+//│   constructor() {
 //│     super();
-//│     this.x = x2;
 //│   }
-//│   call(y) {
-//│     return this.x + y
+//│   call(...param) {
+//│     return lambda16(...param)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp26 = globalThis.Object.freeze(new Lambda$025(x1));
-//│ tmp26
-//│ = class anonymous { x: 1 }
+//│ lambda16 = (undefined, function (y) {
+//│   return x1 + y
+//│ });
+//│ tmp24 = globalThis.Object.freeze(new Func$023());
+//│ tmp24
+//│ = class anonymous
 
 
 :expect 2
@@ -575,7 +588,7 @@ fun bar(x) = foo(x) + 1
 //│ foo5 = function foo(x2) {
 //│   return x2 + 1
 //│ };
-//│ bar3 = function bar(x2) { let tmp28; tmp28 = foo5(x2); return tmp28 + 1 };
+//│ bar3 = function bar(x2) { let tmp25; tmp25 = foo5(x2); return tmp25 + 1 };
 
 
 class A(val x)
@@ -588,26 +601,29 @@ A(42)
 :sjs
 A(x => x).x(1)
 //│ JS (unsanitized):
-//│ let lambda8, tmp28, Lambda$029, tmp29;
-//│ Lambda$029 = function Lambda$0() {
-//│   return globalThis.Object.freeze(new Lambda$0.class());
+//│ let lambda18, tmp25, Func$025, tmp26;
+//│ Func$025 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Lambda$028 extends globalThis.Function {
+//│ (class Func$024 extends globalThis.Function {
 //│   static {
-//│     Lambda$029.class = this
+//│     Func$025.class = this
 //│   }
 //│   constructor() {
 //│     super();
 //│   }
-//│   call(x2) {
-//│     return x2
+//│   call(...param) {
+//│     return lambda18(...param)
 //│   }
 //│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp29 = globalThis.Object.freeze(new Lambda$029());
-//│ tmp28 = A1(tmp29);
-//│ runtime.safeCall(tmp28.x.call(1))
+//│ lambda18 = (undefined, function (x2) {
+//│   return x2
+//│ });
+//│ tmp26 = globalThis.Object.freeze(new Func$025());
+//│ tmp25 = A1(tmp26);
+//│ runtime.safeCall(tmp25.x.call(1))
 //│ = 1
 
 
@@ -616,13 +632,13 @@ fun foo(x) = x + 1
 fun bar(x) = foo(x) + 1
 A(foo).x(0)
 //│ JS (unsanitized):
-//│ let bar4, foo6, tmp30, Func$015, tmp31;
-//│ Func$015 = function Func$0() {
+//│ let bar4, foo6, tmp27, Func$027, tmp28;
+//│ Func$027 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Func$014 extends globalThis.Function {
+//│ (class Func$026 extends globalThis.Function {
 //│   static {
-//│     Func$015.class = this
+//│     Func$027.class = this
 //│   }
 //│   constructor() {
 //│     super();
@@ -637,13 +653,13 @@ A(foo).x(0)
 //│   return x2 + 1
 //│ };
 //│ bar4 = function bar(x2) {
-//│   let tmp32;
-//│   tmp32 = foo6(x2);
-//│   return tmp32 + 1
+//│   let tmp29;
+//│   tmp29 = foo6(x2);
+//│   return tmp29 + 1
 //│ };
-//│ tmp31 = globalThis.Object.freeze(new Func$015());
-//│ tmp30 = A1(tmp31);
-//│ runtime.safeCall(tmp30.x.call(0))
+//│ tmp28 = globalThis.Object.freeze(new Func$027());
+//│ tmp27 = A1(tmp28);
+//│ runtime.safeCall(tmp27.x.call(0))
 //│ = 1
 
 
@@ -659,9 +675,11 @@ module Foo with
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
+//│   static #Foo_mod$cap;
 //│   static foo(x2) {
 //│     return x2 + 1
 //│   }
+//│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
@@ -673,13 +691,13 @@ fun foo(f) = f(0)
 :sjs
 foo(Foo.foo)
 //│ JS (unsanitized):
-//│ let Func$017, tmp32;
-//│ Func$017 = function Func$0() {
+//│ let Func$029, tmp29;
+//│ Func$029 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Func$016 extends globalThis.Function {
+//│ (class Func$028 extends globalThis.Function {
 //│   static {
-//│     Func$017.class = this
+//│     Func$029.class = this
 //│   }
 //│   constructor() {
 //│     super();
@@ -690,8 +708,8 @@ foo(Foo.foo)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp32 = globalThis.Object.freeze(new Func$017());
-//│ foo7(tmp32)
+//│ tmp29 = globalThis.Object.freeze(new Func$029());
+//│ foo7(tmp29)
 //│ = 1
 
 
@@ -744,7 +762,7 @@ foo.x
 :ge
 foo.f(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if f is a function object.
-//│ ║  l.745: 	foo.f(0)
+//│ ║  l.763: 	foo.f(0)
 //│ ╙──       	^^^^^
 //│ = 1
 
@@ -762,7 +780,7 @@ foo.Foo#f(0)
 :ge
 foo.x(0)
 //│ ╔══[COMPILATION ERROR] Cannot determine if x is a function object.
-//│ ║  l.763: 	foo.x(0)
+//│ ║  l.781: 	foo.x(0)
 //│ ╙──       	^^^^^
 
 
@@ -797,7 +815,10 @@ let bar = Bar().bar in bar(1)
 module Foo with
   val f = x => x
 //│ JS (unsanitized):
-//│ let Foo17;
+//│ let Foo17, lambda22;
+//│ lambda22 = (undefined, function (x2) {
+//│   return x2
+//│ });
 //│ (class Foo16 {
 //│   static {
 //│     Foo17 = this
@@ -805,27 +826,29 @@ module Foo with
 //│   constructor() {
 //│     runtime.Unit;
 //│   }
+//│   static #Foo_mod$cap;
 //│   static {
-//│     let lambda11, Lambda$037, tmp43;
-//│     this.Lambda$0 = function Lambda$0() {
-//│       return globalThis.Object.freeze(new Lambda$0.class());
+//│     let Func$041, tmp40;
+//│     this.Func$0 = function Func$0() {
+//│       return globalThis.Object.freeze(new Func$0.class());
 //│     };
-//│     (class Lambda$036 extends globalThis.Function {
+//│     (class Func$040 extends globalThis.Function {
 //│       static {
-//│         Foo16.Lambda$0.class = this
+//│         Foo16.Func$0.class = this
 //│       }
 //│       constructor() {
 //│         super();
 //│       }
-//│       call(x2) {
-//│         return x2
+//│       call(...param) {
+//│         return lambda22(...param)
 //│       }
 //│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
+//│       static [definitionMetadata] = ["class", "Func$0", []]; 
 //│     });
-//│     tmp43 = globalThis.Object.freeze(new Foo17.Lambda$0());
-//│     this.f = tmp43;
+//│     tmp40 = globalThis.Object.freeze(new Foo17.Func$0());
+//│     this.f = tmp40;
 //│   }
+//│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Foo"]; 
 //│ });
@@ -842,49 +865,6 @@ module Bar with
 Bar.f(0)
 //│ = 1
 
-
-:sjs
-module Bar with
-  val id = x => x
-//│ JS (unsanitized):
-//│ let Bar8;
-//│ (class Bar7 {
-//│   static {
-//│     Bar8 = this
-//│   }
-//│   constructor() {
-//│     runtime.Unit;
-//│   }
-//│   static {
-//│     let lambda11, Lambda$038, tmp43;
-//│     this.Lambda$0 = function Lambda$0() {
-//│       return globalThis.Object.freeze(new Lambda$0.class());
-//│     };
-//│     (class Lambda$037 extends globalThis.Function {
-//│       static {
-//│         Bar7.Lambda$0.class = this
-//│       }
-//│       constructor() {
-//│         super();
-//│       }
-//│       call(x2) {
-//│         return x2
-//│       }
-//│       toString() { return runtime.render(this); }
-//│       static [definitionMetadata] = ["class", "Lambda$0", []]; 
-//│     });
-//│     tmp43 = globalThis.Object.freeze(new Bar8.Lambda$0());
-//│     this.id = tmp43;
-//│   }
-//│   toString() { return runtime.render(this); }
-//│   static [definitionMetadata] = ["class", "Bar"]; 
-//│ });
-
-
-Bar.id(42)
-//│ = 42
-
-
 module Foo with
   fun f(x) = x + 1
   module Bar with
@@ -896,27 +876,150 @@ Foo.Bar.g2(1)
 //│ = 2
 
 
-:fixme // TODO
-:ge
+:sjs
+x => y => x + y
+//│ JS (unsanitized):
+//│ let lambda23, lambda24, lambda$6, Lambda$09, Func$044, tmp40;
+//│ Lambda$09 = function Lambda$0(x2) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(x2));
+//│ };
+//│ (class Lambda$08 extends globalThis.Function {
+//│   static {
+//│     Lambda$09.class = this
+//│   }
+//│   constructor(x2) {
+//│     super();
+//│     this.x = x2;
+//│   }
+//│   call(y) {
+//│     return lambda24(this.x, y)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│ });
+//│ Func$044 = function Func$0() {
+//│   return globalThis.Object.freeze(new Func$0.class());
+//│ };
+//│ (class Func$043 extends globalThis.Function {
+//│   static {
+//│     Func$044.class = this
+//│   }
+//│   constructor() {
+//│     super();
+//│   }
+//│   call(...param) {
+//│     return lambda23(...param)
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Func$0", []]; 
+//│ });
+//│ lambda$6 = (undefined, function (x2) {
+//│   return globalThis.Object.freeze(new Lambda$09(x2))
+//│ });
+//│ lambda24 = (undefined, function (x2, y) {
+//│   return x2 + y
+//│ });
+//│ lambda23 = (undefined, function (x2) {
+//│   let lambda$here;
+//│   lambda$here = lambda$6(x2);
+//│   return lambda$here
+//│ });
+//│ tmp40 = globalThis.Object.freeze(new Func$044());
+//│ tmp40
+//│ = class anonymous
+
+
+:sjs
+fun foo(x)(y) = x + y
+//│ JS (unsanitized):
+//│ let foo12, Lambda$011;
+//│ Lambda$011 = function Lambda$0(x2) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(x2));
+//│ };
+//│ (class Lambda$010 extends globalThis.Function {
+//│   static {
+//│     Lambda$011.class = this
+//│   }
+//│   constructor(x2) {
+//│     super();
+//│     this.x = x2;
+//│   }
+//│   call(y) {
+//│     return this.x + y
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null]]; 
+//│ });
+//│ foo12 = function foo(x2) { return globalThis.Object.freeze(new Lambda$011(x2)) };
+
+
+:expect 1
+let bar = foo(1) in bar(0)
+//│ = 1
+
+:sjs
+fun foo(x)(y)(z) = x + y + z
+//│ JS (unsanitized):
+//│ let foo13, Lambda$013, Lambda$15;
+//│ Lambda$013 = function Lambda$0(y, x2) {
+//│   return globalThis.Object.freeze(new Lambda$0.class(y, x2));
+//│ };
+//│ (class Lambda$012 extends globalThis.Function {
+//│   static {
+//│     Lambda$013.class = this
+//│   }
+//│   constructor(y, x2) {
+//│     super();
+//│     this.y = y;
+//│     this.x = x2;
+//│   }
+//│   call(z) {
+//│     let tmp41;
+//│     tmp41 = this.x + this.y;
+//│     return tmp41 + z
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$0", [null, null]]; 
+//│ });
+//│ Lambda$15 = function Lambda$1(x2) {
+//│   return globalThis.Object.freeze(new Lambda$1.class(x2));
+//│ };
+//│ (class Lambda$14 extends globalThis.Function {
+//│   static {
+//│     Lambda$15.class = this
+//│   }
+//│   constructor(x2) {
+//│     super();
+//│     this.x = x2;
+//│   }
+//│   call(y) {
+//│     return globalThis.Object.freeze(new Lambda$013(y, this.x))
+//│   }
+//│   toString() { return runtime.render(this); }
+//│   static [definitionMetadata] = ["class", "Lambda$1", [null]]; 
+//│ });
+//│ foo13 = function foo(x2) { return globalThis.Object.freeze(new Lambda$15(x2)) };
+
+
+:expect 2
+let bar = foo(1) in let baz = bar(0) in baz(1)
+//│ = 2
+
+
+:sjs
 fun foo(x) =
   fun bar(y) =
     x + y
   bar(x * 2)
-//│ ╔══[COMPILATION ERROR] Nested function bar is not supported by lambda rewriting. Lambda lifting must be performed first.
-//│ ║  l.902: 	  fun bar(y) =
-//│ ║         	  ^^^^^^^^^^^^
-//│ ║  l.903: 	    x + y
-//│ ╙──       	^^^^^^^^^
-
-
-:fixme // TODO
-:lift
-:ge
-fun foo(x) =
-  fun bar(y) =
-    x + y
-  bar(x * 2)
-//│ ═══[COMPILATION ERROR] Cannot transform functions to classes when lifter is enabled for now.
+foo(1)
+//│ JS (unsanitized):
+//│ let bar9, foo14;
+//│ bar9 = function bar(x2, y) {
+//│   return x2 + y
+//│ };
+//│ foo14 = function foo(x2) { let tmp41; tmp41 = x2 * 2; return bar9(x2, tmp41) };
+//│ foo14(1)
+//│ = 3
 
 
 fun foo(f) = f("abc")
@@ -924,13 +1027,13 @@ fun foo(f) = f("abc")
 :sjs
 foo(print)
 //│ JS (unsanitized):
-//│ let Func$025, tmp43;
-//│ Func$025 = function Func$0() {
+//│ let Func$046, tmp41;
+//│ Func$046 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
-//│ (class Func$024 extends globalThis.Function {
+//│ (class Func$045 extends globalThis.Function {
 //│   static {
-//│     Func$025.class = this
+//│     Func$046.class = this
 //│   }
 //│   constructor() {
 //│     super();
@@ -941,6 +1044,6 @@ foo(print)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp43 = globalThis.Object.freeze(new Func$025());
-//│ foo14(tmp43)
+//│ tmp41 = globalThis.Object.freeze(new Func$046());
+//│ foo15(tmp41)
 //│ > abc
