@@ -71,6 +71,8 @@ object Config:
     softLifterError: Bool = false,
     // Skips instrumenting module constructors, this can be used when the file is statically known to not
     // raise any effect and cannot use the Runtime.mls module during module construction due to cyclic dependency.
+    // One specific scenario is Rendering.mls which is depended by Runtime.mls, and hence using stack safety will
+    // reference Runtime.mls during construction of Rendering module which cause cyclic dependency.
     doNotInstrumentTopLevelModCtor: Bool = false,
   )
   
