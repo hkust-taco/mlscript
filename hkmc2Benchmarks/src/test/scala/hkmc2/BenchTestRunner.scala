@@ -9,7 +9,7 @@ import io.PlatformPath.given
 
 object BenchTestState extends DiffTestRunner.State:
 
-  override val allFiles = os.walk(os.pwd/"hkmc2Benchmarks"/"src"/"test"/"bench")
+  override val allFiles = os.walk(workingDir/"hkmc2Benchmarks"/"src"/"test"/"bench")
     .filter(_.toIO.isFile)
     .filter(_.ext == "mls")
 
