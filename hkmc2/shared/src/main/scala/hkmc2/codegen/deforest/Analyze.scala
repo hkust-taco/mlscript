@@ -261,15 +261,8 @@ class DeforestPreAnalyzer(
             res.matchScrutToCtxOfMatch.addOne(m._1.scrut.uid -> ctx)
         case b: Begin => ()
         case s: Scoped => ()
-      ctx.head match
-        case _: (InCtx.Fn | InCtx.LblBody | InCtx.MtchBody | InCtx.BegnBody | InCtx.Scped | InCtx.ModCtor) =>
-          ctx.head.handleable &&= newCtx.handleable
-         // do not propagate non-handleable flags up to top level and module,
-         // because top level may contain handleable computations
-        case _: (InCtx.TopLvl | InCtx.Mod) =>
-          c match
-          case _: (ClsLikeBody | FunDefn) => ()
-          case _ => ctx.head.handleable &&= newCtx.handleable
+      if isToplvl && c.matches { case _: (ClsLikeBody | FunDefn) => true } then ()
+      else ctx.head.handleable &&= newCtx.handleable
     
     inline def inTopLvl(toplvlBlk: Block)(inline body: => Any) =
       assert(ctx.isEmpty)
