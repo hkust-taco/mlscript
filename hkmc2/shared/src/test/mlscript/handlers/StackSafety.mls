@@ -5,7 +5,7 @@
 
 
 // preserve tail calls
-// MUST see "return hi(tmp)" in the output
+// MUST see "return hi(tmp1)" in the output
 :stackSafe 6
 :expect 0
 :sjs
