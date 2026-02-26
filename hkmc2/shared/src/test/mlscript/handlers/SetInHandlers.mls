@@ -46,6 +46,6 @@ x
 //│ ║        	^^^^^^^^^^
 //│ ║  l.36: 	... (more lines omitted) ...
 //│ ╙──      	^^^^^^^^^^^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: try-finally is not supported in the presence of effect handlers
 
 

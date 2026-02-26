@@ -347,7 +347,8 @@ class HandlerLowering(paths: HandlerPaths, opt: EffectHandlers)(using TL, Raise,
       case _: Return => blk
 
       // ignored cases
-      case TryBlock(sub, finallyDo, rest) => ??? // ignore
+      case TryBlock(sub, finallyDo, rest) =>
+        lastWords("try-finally is not supported in the presence of effect handlers")
       case Throw(_) => blk
       case Scoped(_, body) => go(body) // PreHandlerLowering
       case _: HandleBlock => lastWords("unexpected handleBlock") // already translated at this point
