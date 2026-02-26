@@ -15,7 +15,7 @@ sum(100)
 
 // preserve tail calls
 // MUST see "return hi(tmp1)" in the output
-:stackSafe 50
+:stackSafe 10
 :effectHandlers
 :expect 0
 :sjs
@@ -44,7 +44,7 @@ hi(0)
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp = runtime.runStackSafe(50, $_stack$_safe$_body$_);
+//│ tmp = runtime.runStackSafe(10, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
 //│ = 0
@@ -121,7 +121,7 @@ sum(10000)
 //│ ═══[RUNTIME ERROR] RangeError: Maximum call stack size exceeded
 
 :effectHandlers
-:stackSafe 50
+:stackSafe 10
 mut val ctr = 0
 fun dummy(x) = x
 fun foo(f) = 
@@ -160,7 +160,7 @@ abstract class Eff with
 
 // functions and lambdas inside handlers
 :effectHandlers
-:stackSafe 50
+:stackSafe 10
 :expect 50005000
 fun foo(h) = h.perform()
 handle h = Eff with
@@ -175,7 +175,7 @@ foo(h)
 
 // function call and defn inside handler
 :effectHandlers
-:stackSafe 50
+:stackSafe 10
 :expect 50005000
 handle h = Eff with
   fun perform()(resume) =

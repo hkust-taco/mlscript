@@ -1063,7 +1063,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
       
     val stackSafe = config.stackSafety match
       case N => withHandlers2
-      case S(sts) => StackSafeTransform(sts.stackLimit, config.effectHandlers.exists(_.doNotInstrumentTopLevelModCtor), handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
+      case S(sts) => StackSafeTransform(sts.stackLimit, handlerPaths, stackSafetyInfo).transformTopLevel(withHandlers2)
     
     val flattened = stackSafe.flattened
     

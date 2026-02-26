@@ -97,6 +97,10 @@ abstract class MLsDiffMaker extends DiffMaker:
                 failures += 1
                 output("/!\\ Stack limit must be positive, but the stack limit here is set to " + value)
                 S(StackSafety.default)
+              else if value < 10 then
+                failures += 1
+                output("/!\\ Stack limit is too low, the minimum supported is 10.")
+                S(StackSafety.default)
               else
                 S(StackSafety(stackLimit = value))
         ,
