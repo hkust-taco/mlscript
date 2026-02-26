@@ -389,12 +389,8 @@ fun handleEffect(cur) =
     handlerFrame.nextHandler = null
 
   // handle the effect
-  let oldDepth = stackDepth
-  set
-    curEffect = null
-    stackDepth += 2
-  let tmp = cur.handlerFun(resume(cur.contTrace))
-  set stackDepth = oldDepth
+  set curEffect = null
+  let tmp = set stackDepth += 2 in cur.handlerFun(resume(cur.contTrace))
   if curEffect !== null then
     set cur = curEffect
     // relink the saved frames
@@ -418,18 +414,12 @@ fun resume(contTrace)(value) =
   handleEffects(resumeContTrace(contTrace, value))
 
 fun resumeContTrace(contTrace, value) =
-  // TODO: increment stackDepth by some constant amount
   let cont = contTrace.next
   let handlerCont = contTrace.nextHandler
-  let curDepth = stackDepth
-  let newDepth = stackDepth + 3
   while
     cont is FunctionContFrame then
-      set
-        curEffect = null
-        stackDepth = newDepth
-        value = cont.resume(value)
-        stackDepth = curDepth
+      set curEffect = null
+      set value = set stackDepth += 3 in cont.resume(value)
       if curEffect !== null do
         set value = curEffect
       if value is EffectSig then
@@ -467,10 +457,9 @@ fun checkDepth() =
     ()
 
 fun runStackSafe(limit, f) =
-  set
-    stackLimit = limit
-    stackDepth = 1
-    stackHandler = StackDelayHandler
+  set stackLimit = limit in...
+  set stackDepth = 1 in...
+  set stackHandler = StackDelayHandler in...
   let result = enterHandleBlock(StackDelayHandler, f)
   if curEffect !== null do
     throw new Error("Effect crossed through stack safe boundary")
@@ -482,10 +471,6 @@ fun runStackSafe(limit, f) =
       result = saved(())
     if curEffect !== null do
       throw new Error("Effect crossed through stack safe boundary")
-  set
-    stackLimit = 0
-    stackDepth = 0
-    stackHandler = null
   result
 
 class Int31(v) with

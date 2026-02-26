@@ -1037,7 +1037,7 @@ let Runtime1;
     return tmp
   } 
   static handleEffect(cur) {
-    let prevHandlerFrame, scrut, handlerFrame, saved, oldDepth, tmp, scrut1, scrut2, scrut3, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;
+    let prevHandlerFrame, scrut, handlerFrame, saved, tmp, old, scrut1, scrut2, scrut3, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8;
     prevHandlerFrame = cur.contTrace;
     lbl: while (true) {
       let scrut4, scrut5;
@@ -1073,13 +1073,18 @@ let Runtime1;
     cur.contTrace.lastHandler = handlerFrame;
     handlerFrame.next = null;
     handlerFrame.nextHandler = null;
-    oldDepth = Runtime.stackDepth;
     Runtime.curEffect = null;
-    tmp3 = Runtime.stackDepth + 2;
-    Runtime.stackDepth = tmp3;
-    tmp4 = Runtime.resume(cur.contTrace);
-    tmp = runtime.safeCall(cur.handlerFun(tmp4));
-    Runtime.stackDepth = oldDepth;
+    old = Runtime.stackDepth;
+    try {
+      tmp4 = Runtime.stackDepth + 2;
+      Runtime.stackDepth = tmp4;
+      tmp5 = Runtime.resume(cur.contTrace);
+      tmp6 = runtime.safeCall(cur.handlerFun(tmp5));
+      tmp3 = tmp6;
+    } finally {
+      Runtime.stackDepth = old;
+    }
+    tmp = tmp3;
     scrut1 = Runtime.curEffect !== null;
     if (scrut1 === true) {
       cur = Runtime.curEffect;
@@ -1087,17 +1092,17 @@ let Runtime1;
       if (scrut2 === true) {
         cur.contTrace.last.next = saved.next;
         cur.contTrace.last = saved.last;
-        tmp5 = runtime.Unit;
+        tmp7 = runtime.Unit;
       } else {
-        tmp5 = runtime.Unit;
+        tmp7 = runtime.Unit;
       }
       scrut3 = saved.nextHandler !== null;
       if (scrut3 === true) {
         cur.contTrace.lastHandler.nextHandler = saved.nextHandler;
         cur.contTrace.lastHandler = saved.lastHandler;
-        tmp6 = runtime.Unit;
+        tmp8 = runtime.Unit;
       } else {
-        tmp6 = runtime.Unit;
+        tmp8 = runtime.Unit;
       }
       return cur
     } else {
@@ -1119,25 +1124,29 @@ let Runtime1;
     }
   } 
   static resumeContTrace(contTrace, value) {
-    let cont, handlerCont, curDepth, newDepth, tmp;
+    let cont, handlerCont, tmp;
     cont = contTrace.next;
     handlerCont = contTrace.nextHandler;
-    curDepth = Runtime.stackDepth;
-    newDepth = Runtime.stackDepth + 3;
     lbl: while (true) {
-      let scrut, scrut1, scrut2, tmp1, tmp2, tmp3, tmp4, tmp5;
+      let old, scrut, scrut1, scrut2, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
       if (cont instanceof Runtime.FunctionContFrame.class) {
         Runtime.curEffect = null;
-        Runtime.stackDepth = newDepth;
-        tmp1 = runtime.safeCall(cont.resume(value));
+        old = Runtime.stackDepth;
+        try {
+          tmp2 = Runtime.stackDepth + 3;
+          Runtime.stackDepth = tmp2;
+          tmp3 = runtime.safeCall(cont.resume(value));
+          tmp1 = tmp3;
+        } finally {
+          Runtime.stackDepth = old;
+        }
         value = tmp1;
-        Runtime.stackDepth = curDepth;
         scrut = Runtime.curEffect !== null;
         if (scrut === true) {
           value = Runtime.curEffect;
-          tmp2 = runtime.Unit;
+          tmp4 = runtime.Unit;
         } else {
-          tmp2 = runtime.Unit;
+          tmp4 = runtime.Unit;
         }
         if (value instanceof Runtime.EffectSig.class) {
           value.contTrace.last.next = cont.next;
@@ -1145,23 +1154,23 @@ let Runtime1;
           scrut1 = contTrace.last !== cont;
           if (scrut1 === true) {
             value.contTrace.last = contTrace.last;
-            tmp3 = runtime.Unit;
+            tmp5 = runtime.Unit;
           } else {
-            tmp3 = runtime.Unit;
+            tmp5 = runtime.Unit;
           }
           scrut2 = handlerCont !== null;
           if (scrut2 === true) {
             value.contTrace.lastHandler = contTrace.lastHandler;
-            tmp4 = runtime.Unit;
+            tmp6 = runtime.Unit;
           } else {
-            tmp4 = runtime.Unit;
+            tmp6 = runtime.Unit;
           }
           return value
         } else {
           cont = cont.next;
-          tmp5 = runtime.Unit;
+          tmp7 = runtime.Unit;
         }
-        tmp = tmp5;
+        tmp = tmp7;
         continue lbl
       } else {
         if (handlerCont instanceof Runtime.HandlerContFrame.class) {
@@ -1191,43 +1200,58 @@ let Runtime1;
     }
   } 
   static runStackSafe(limit, f) {
-    let result, scrut, tmp, tmp1;
-    Runtime.stackLimit = limit;
-    Runtime.stackDepth = 1;
-    Runtime.stackHandler = Runtime.StackDelayHandler;
-    result = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f);
-    scrut = Runtime.curEffect !== null;
-    if (scrut === true) {
-      throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
-    } else {
-      tmp = runtime.Unit;
-    }
-    lbl: while (true) {
-      let scrut1, saved, scrut2, tmp2, tmp3;
-      scrut1 = Runtime.stackResume !== null;
-      if (scrut1 === true) {
-        saved = Runtime.stackResume;
-        Runtime.stackResume = null;
+    let old, old1, old2, result, scrut, tmp, tmp1, tmp2, tmp3, tmp4;
+    old = Runtime.stackLimit;
+    try {
+      Runtime.stackLimit = limit;
+      old1 = Runtime.stackDepth;
+      try {
         Runtime.stackDepth = 1;
-        tmp2 = runtime.safeCall(saved(runtime.Unit));
-        result = tmp2;
-        scrut2 = Runtime.curEffect !== null;
-        if (scrut2 === true) {
-          throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
-        } else {
-          tmp3 = runtime.Unit;
+        old2 = Runtime.stackHandler;
+        try {
+          Runtime.stackHandler = Runtime.StackDelayHandler;
+          result = Runtime.enterHandleBlock(Runtime.StackDelayHandler, f);
+          scrut = Runtime.curEffect !== null;
+          if (scrut === true) {
+            throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+          } else {
+            tmp3 = runtime.Unit;
+          }
+          lbl: while (true) {
+            let scrut1, saved, scrut2, tmp5, tmp6;
+            scrut1 = Runtime.stackResume !== null;
+            if (scrut1 === true) {
+              saved = Runtime.stackResume;
+              Runtime.stackResume = null;
+              Runtime.stackDepth = 1;
+              tmp5 = runtime.safeCall(saved(runtime.Unit));
+              result = tmp5;
+              scrut2 = Runtime.curEffect !== null;
+              if (scrut2 === true) {
+                throw globalThis.Object.freeze(new globalThis.Error("Effect crossed through stack safe boundary"))
+              } else {
+                tmp6 = runtime.Unit;
+              }
+              tmp4 = tmp6;
+              continue lbl
+            } else {
+              tmp4 = runtime.Unit;
+            }
+            break;
+          }
+          tmp2 = result;
+        } finally {
+          Runtime.stackHandler = old2;
         }
-        tmp1 = tmp3;
-        continue lbl
-      } else {
-        tmp1 = runtime.Unit;
+        tmp1 = tmp2;
+      } finally {
+        Runtime.stackDepth = old1;
       }
-      break;
+      tmp = tmp1;
+    } finally {
+      Runtime.stackLimit = old;
     }
-    Runtime.stackLimit = 0;
-    Runtime.stackDepth = 0;
-    Runtime.stackHandler = null;
-    return result
+    return tmp
   } 
   static plus_impl(lhs, rhs) {
     let tmp;
