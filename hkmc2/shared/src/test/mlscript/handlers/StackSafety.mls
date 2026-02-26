@@ -6,7 +6,7 @@
 
 // preserve tail calls
 // MUST see "return hi(tmp)" in the output
-:stackSafe 10
+:stackSafe 6
 :expect 0
 :sjs
 fun hi(n) =
@@ -34,7 +34,7 @@ hi(0)
 //│ $_stack$_safe$_body$_ = (undefined, function () {
 //│   return hi(0)
 //│ });
-//│ tmp = runtime.runStackSafe(10, $_stack$_safe$_body$_);
+//│ tmp = runtime.runStackSafe(6, $_stack$_safe$_body$_);
 //│ if (runtime.curEffect !== null) { tmp = runtime.topLevelEffect(false); }
 //│ tmp
 //│ = 0
