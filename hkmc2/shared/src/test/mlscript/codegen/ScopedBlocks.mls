@@ -146,13 +146,17 @@ module M with
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f6;
 //│ f6 = function f(x1) {
 //│   lbl: while (true) {
 //│     let y1;
-//│     if (x1 === true) { y1 = x1; continue lbl } else {}
+//│     if (x1 === true) {
+//│       y1 = x1;
+//│       Predef.print(x1);
+//│       continue lbl
+//│     } else {}
 //│     break;
 //│   }
 //│   return runtime.Unit
@@ -165,7 +169,7 @@ fun f(x) =
 fun f(x) =
   while x do
     let y = x
-    x
+    print(x)
 //│ JS (unsanitized):
 //│ let f7;
 //│ f7 = function f(x1) {
@@ -175,6 +179,7 @@ fun f(x) =
 //│     let y1;
 //│     if (x1 === true) {
 //│       y1 = x1;
+//│       Predef.print(x1);
 //│       return while1()
 //│     } else {}
 //│     return runtime.LoopEnd

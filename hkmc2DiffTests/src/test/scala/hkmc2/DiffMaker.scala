@@ -20,9 +20,19 @@ class Outputter(val out: java.io.PrintWriter):
   
   val fullBlockSeparator = outputMarker + blockSeparator
   
+  /** Tracks the net difference between lines written to the output and lines
+    * consumed from the original file so far. Adding a new output line (via
+    * [[apply]]) increments it; consuming an original output line (starting
+    * with [[outputMarker]]) decrements it. This is used to adjust block
+    * line numbers so they refer to positions in the output file rather than
+    * the original, avoiding the need for a second run to stabilize them. */
+  var linesDelta: Int = 0
+  
   def apply(str: String) =
     // out.println(outputMarker + str)
-    str.splitSane('\n').foreach(l => out.println(outputMarker + l))
+    val ls = str.splitSane('\n')
+    linesDelta += ls.size
+    ls.foreach(l => out.println(outputMarker + l))
 
 
 
@@ -273,7 +283,9 @@ abstract class DiffMaker:
       
       rec(ls)
     case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
-      => rec(ls)
+      =>
+      output.linesDelta -= 1
+      rec(ls)
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
@@ -313,7 +325,7 @@ abstract class DiffMaker:
       val processedBlockStr = processedBlock.mkString
       val fph = new FastParseHelpers(block)
       
-      val origin = Origin(file, blockLineNum, fph)
+      val origin = Origin(file, blockLineNum + output.linesDelta, fph)
       
       try
         

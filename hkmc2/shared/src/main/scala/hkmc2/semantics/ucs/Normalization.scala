@@ -292,7 +292,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             )
     case Split.Else(els) => labels.get(els) match
       case S(label) => Break(label)
-      case N => term_nonTail(els)(cont)
+      case N => term_nonTail(els, inStmtPos = kw is Keyword.`while`)(cont)
     case Split.End =>
       // * See comment [comment:1] above
       kw match

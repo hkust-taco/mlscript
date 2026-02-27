@@ -70,7 +70,7 @@ handle h = Effect with
         xs.push(k1)
     k(g)
     while xs.pop() is
-      null then "Done."
+      null then print("Done.")
       f then
         set count += 1
         f(count)

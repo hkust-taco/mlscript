@@ -5,8 +5,8 @@
 
 :sjs
 () => while
-  false do 1
-  _ do 2
+  false do print(1)
+  _ do print(2)
 //│ JS (unsanitized):
 //│ let lambda;
 //│ lambda = (undefined, function () {
@@ -14,8 +14,9 @@
 //│     let scrut;
 //│     scrut = false;
 //│     if (scrut === true) {
+//│       Predef.print(1);
 //│       continue lbl
-//│     } else { continue lbl }
+//│     } else { Predef.print(2); continue lbl }
 //│     break;
 //│   }
 //│   return runtime.Unit
@@ -26,15 +27,15 @@
 // * ...is currently interpreted the same as the loop below
 
 () => while
-  false do 1
-  else 2
+  false do print(1)
+  else print(2)
 //│ = fun
 
 // * ...and so is this one
 
 () => while
-  false do 1
-  true do 2
+  false do print(1)
+  true do print(2)
 //│ = fun
 
 // * This semantics for `else` branches is confusing,

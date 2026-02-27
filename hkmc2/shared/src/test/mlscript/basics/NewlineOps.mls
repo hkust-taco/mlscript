@@ -69,6 +69,7 @@ xs |> len
 
 
 
+:w
 :pt
 let r = 10 in r
 -1
@@ -82,6 +83,9 @@ let r = 10 in r
 //│   lhs = Ident of "-"
 //│   rhs = Tup of Ls of 
 //│     IntLit of 1
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.74: 	let r = 10 in r
+//│ ╙──      	              ^
 //│ = -1
 
 let r = 10 in id(r)
@@ -166,10 +170,10 @@ let x
   |> (a: _)
 .a
 //│ ╔══[PARSE ERROR] Expected an expression; found static selector instead
-//│ ║  l.167: 	.a
+//│ ║  l.171: 	.a
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found static selector instead
-//│ ║  l.167: 	.a
+//│ ║  l.171: 	.a
 //│ ╙──       	^^
 
 
@@ -314,10 +318,10 @@ let incr = _ + 1
 :w
 2, * 3
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.315: 	2, * 3
+//│ ║  l.319: 	2, * 3
 //│ ╙──       	     ^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.315: 	2, * 3
+//│ ║  l.319: 	2, * 3
 //│ ╙──       	^
 //│ = fun
 
@@ -370,9 +374,9 @@ xs |> Arr.len
 ,+
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.370: 	,+
+//│ ║  l.374: 	,+
 //│ ║         	  ^
-//│ ║  l.371: 	ys |> Arr.len
+//│ ║  l.375: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -384,9 +388,9 @@ xs |> Arr.len
 +,
 ys |> Arr.len
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found new line instead
-//│ ║  l.384: 	+,
+//│ ║  l.388: 	+,
 //│ ║         	  ^
-//│ ║  l.385: 	ys |> Arr.len
+//│ ║  l.389: 	ys |> Arr.len
 //│ ╙──       	
 
 xs |> Arr.len
@@ -416,20 +420,20 @@ new Foo(1) is Foo
 :fixme // ?
 new Foo(1) ,is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.417: 	new Foo(1) ,is Foo
+//│ ║  l.421: 	new Foo(1) ,is Foo
 //│ ╙──       	            ^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.417: 	new Foo(1) ,is Foo
+//│ ║  l.421: 	new Foo(1) ,is Foo
 //│ ╙──       	               ^^^
 
 :fixme // ?
 new Foo(1)
 is Foo
 //│ ╔══[PARSE ERROR] Expected start of expression in this position; found 'is' keyword instead
-//│ ║  l.427: 	is Foo
+//│ ║  l.431: 	is Foo
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.427: 	is Foo
+//│ ║  l.431: 	is Foo
 //│ ╙──       	   ^^^
 
 
