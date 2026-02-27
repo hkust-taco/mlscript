@@ -14,14 +14,14 @@ Bar.y
 //│   (type $Object (sub (struct (field $$tag (mut i32)))))
 //│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
 //│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
+//│   (type $Foo_ctor (func (result (ref null any))))
+//│   (type $Bar_ctor (func (result (ref null any))))
 //│   (type (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (type (func (result (ref null any))))
-//│   (type (func))
+//│   (type $start (func))
 //│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
 //│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
-//│   (start 3)
-//│   (func  (type 3) (result (ref null any))
+//│   (start 2)
+//│   (func  (type $Foo_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -39,7 +39,7 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
-//│   (func  (type 4) (result (ref null any))
+//│   (func  (type $Bar_ctor) (result (ref null any))
 //│     (local $this (ref null any))
 //│     (block (result (ref null any))
 //│       (local.set $this
@@ -57,6 +57,14 @@ Bar.y
 //│         (nop))
 //│       (return
 //│         (local.get $this))))
+//│   (func  (type $start)
+//│     (block
+//│       (global.set $Foo$inst
+//│         (ref.cast (ref null $Foo)
+//│           (call 0)))
+//│       (global.set $Bar$inst
+//│         (ref.cast (ref null $Bar)
+//│           (call 1)))))
 //│   (func $entry (type 5) (result (ref null any))
 //│     (local $Bar (ref null any))
 //│     (local $Foo (ref null any))
@@ -70,17 +78,10 @@ Bar.y
 //│           (ref.cast (ref $Bar)
 //│             (global.get $Bar$inst))))))
 //│   (export "entry" (func $entry))
-//│   (elem declare func $entry)
-//│   (func  (type 6)
-//│     (block
-//│       (global.set $Foo$inst
-//│         (ref.cast (ref null $Foo)
-//│           (call 0)))
-//│       (global.set $Bar$inst
-//│         (ref.cast (ref null $Bar)
-//│           (call 1))))))
+//│   (elem declare func $entry))
 //│ Wasm result:
 //│ = 2
+
 
 
 object Example with

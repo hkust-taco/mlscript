@@ -966,10 +966,13 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
                   else
                     break(errUnimplExpr("newCtorAuxParams.nonEmpty"))
 
+                  val funcTyId =
+                    if isSingletonObj then S(SymIdx(s"${clsLikeDefn.sym.nme}_ctor"))
+                    else N
                   val funcTy = ctx.addType(
                     sym = N,
                     TypeInfo(
-                      id = N,
+                      id = funcTyId,
                       FunctionType(
                         params = ctorParams.map(p => WasmParam(S(p._2), RefType.anyref)),
                         results = Seq(Result(RefType.anyref))
@@ -1272,7 +1275,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       locals = (entryFnLocals ++ entryExtraLocals).map(l => l -> scope.allocateOrGetName(l)),
       body = entryFnExpr
     )
-    ctx.addFunc(S(entrySym), entryFnInfo)
 
     ctx.popLocal()
 
@@ -1281,7 +1283,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       val initTy = ctx.addType(
         sym = N,
         TypeInfo(
-          id = N,
+          id = S(SymIdx("start")),
           FunctionType(
             params = Seq.empty,
             results = Seq.empty
@@ -1305,6 +1307,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
       )
       ctx.setStartFunc(initFn)
+
+    ctx.addFunc(S(entrySym), entryFnInfo)
 
     (ctx.toWat, entryNme)
   end program

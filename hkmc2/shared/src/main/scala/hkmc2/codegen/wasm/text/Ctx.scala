@@ -111,6 +111,7 @@ class GlobalInfo(
     val init: Expr
 ) extends ToWat:
 
+  /** Returns the symbolic identifier document used in global declarations. */
   private def idDoc: Document = id.toWat
 
   def toWat: Document =
@@ -353,13 +354,22 @@ class Ctx(
   /** Checks whether the global variable scope contains the variable `sym`. */
   def containsGlobal(sym: Symbol): Bool = namedGlobals.contains(sym)
 
+  /** Checks whether singleton metadata has been registered for class symbol `sym`. */
   def containsSingleton(sym: BlockMemberSymbol): Bool = singletonByBms.contains(sym)
 
+  /**
+   * Returns singleton metadata for `sym` when it resolves to either the block-member symbol or
+   * module/object symbol used during singleton registration.
+   */
   def getSingletonInfo(sym: Local): Opt[Ctx.SingletonInfo] = sym match
     case bms: BlockMemberSymbol => singletonByBms.get(bms)
     case isym: ModuleOrObjectSymbol => singletonByIsym.get(isym)
     case _ => N
 
+  /**
+   * Registers singleton metadata under both its block-member symbol and optional module/object
+   * symbol alias.
+   */
   def registerSingleton(
       bms: BlockMemberSymbol,
       isym: Opt[ModuleOrObjectSymbol],
@@ -368,9 +378,11 @@ class Ctx(
     singletonByBms(bms) = info
     isym.foreach(singletonByIsym(_) = info)
 
+  /** Appends one eager singleton initialization action for synthesized module start code. */
   def addSingletonInitAction(action: Expr): Unit =
     singletonInitActions += action
 
+  /** Returns the singleton initialization actions in deterministic insertion order. */
   def getSingletonInitActions: Seq[Expr] = singletonInitActions.toSeq
 
   /** Configures the module start function. */
