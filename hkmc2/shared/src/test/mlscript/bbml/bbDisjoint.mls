@@ -170,10 +170,10 @@ fun badanno: outer
 fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
 //│ ╔══[ERROR] Only one outer variable can be bound.
 //│ ║  l.170: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Illegal forall annotation.
 //│ ║  l.170: 	fun badanno2: [outer A, outer B] -> Int ->{A | B} Int
-//│ ╙──       	              ^^^^^^^^^^^^^^^^^^
+//│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ═══[ERROR] Expected a type, got ‹error›
 //│ ═══[ERROR] Invalid type
 //│ Type: ⊤
@@ -218,7 +218,7 @@ fun foo(r1) =
     foo(r2)
 //│ ╔══[ERROR] Type error in function literal
 //│ ║  l.215: 	fun foo(r1) =
-//│ ║         	        ^^^^^
+//│ ║         	       ^^^^^^
 //│ ║  l.216: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
 //│ ║  l.217: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))
@@ -240,7 +240,7 @@ fun foo(r1) =
 //│ ╙── because: cannot constrain  ¬outer  <:  outer
 //│ ╔══[ERROR] Type error in function literal
 //│ ║  l.215: 	fun foo(r1) =
-//│ ║         	        ^^^^^
+//│ ║         	       ^^^^^^
 //│ ║  l.216: 	  region r2 in
 //│ ║         	^^^^^^^^^^^^^^
 //│ ║  l.217: 	    fork((_ => r1.ref 1), (_ => r2.ref 2))

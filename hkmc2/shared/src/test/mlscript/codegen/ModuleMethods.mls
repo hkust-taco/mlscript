@@ -47,9 +47,8 @@ module Test with
 //│   }
 //│   static #s;
 //│   static {
-//│     let tmp1;
 //│     Test.#s = 1;
-//│     tmp1 = Predef.print(Test.#s);
+//│     Predef.print(Test.#s);
 //│   }
 //│   static foo() {
 //│     return Predef.print(Test.#s)

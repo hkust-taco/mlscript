@@ -1,0 +1,43 @@
+:js
+
+
+// * Note: we properly removed the call to `???`
+:sjs
+fun f =
+  if true then return 1 else return 2
+  (???)
+//│ JS (unsanitized):
+//│ let f;
+//│ f = function f() { let scrut; scrut = true; if (scrut === true) { return 1 } else { return 2 } };
+
+// * Note: we don't currently remove the call to `???` because
+// * while the previous block is abortive, that cannot be seen syntactically
+// * due to the use of labels to share branches...
+:sjs
+fun f =
+  if true and false then return()
+  (???)
+//│ JS (unsanitized):
+//│ let f1;
+//│ f1 = function f() {
+//│   let scrut, scrut1;
+//│   split_root$: {
+//│     split_default$: {
+//│       scrut = true;
+//│       if (scrut === true) {
+//│         scrut1 = false;
+//│         if (scrut1 === true) {
+//│           return runtime.Unit
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   return Predef.notImplementedError
+//│ };
+
+

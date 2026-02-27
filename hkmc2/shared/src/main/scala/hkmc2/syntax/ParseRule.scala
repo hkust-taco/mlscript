@@ -379,7 +379,7 @@ class ParseRules(using State):
         // *   >   print("returning...")
         // *   >   x
         // * is terated as a keyword stutter: { return print("returning..."); return x }
-        exprOrBlk(ParseRule(s"'return' body")(end(()))):
+        end(Unt()) :: exprOrBlk(ParseRule(s"'return' body")(end(()))):
           discard
         *)
     ) { case (kw, body) => Tree.PrefixApp(kw, body) },
