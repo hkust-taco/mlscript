@@ -212,7 +212,7 @@ class Foo(x) with
 :sjs
 Foo(1).foo(x => x - 1)
 //│ JS (unsanitized):
-//│ let tmp15, lambda9, Func$017, tmp16;
+//│ let tmp14, lambda9, Func$017, tmp15;
 //│ Func$017 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -229,12 +229,12 @@ Foo(1).foo(x => x - 1)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp15 = Foo3(1);
+//│ tmp14 = Foo3(1);
 //│ lambda9 = (undefined, function (x1) {
 //│   return x1 - 1
 //│ });
-//│ tmp16 = globalThis.Object.freeze(new Func$017());
-//│ tmp15.foo(tmp16)
+//│ tmp15 = globalThis.Object.freeze(new Func$017());
+//│ tmp14.foo(tmp15)
 //│ = 0
 
 
@@ -243,7 +243,7 @@ Foo(1).foo(x => x - 1)
 fun foo() = x => x
 foo()(1)
 //│ JS (unsanitized):
-//│ let foo4, tmp17, lambda10, Func$019;
+//│ let foo4, tmp16, lambda10, Func$019;
 //│ Func$019 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -264,12 +264,12 @@ foo()(1)
 //│   return x1
 //│ });
 //│ foo4 = function foo() {
-//│   let tmp18;
-//│   tmp18 = globalThis.Object.freeze(new Func$019());
-//│   return tmp18
+//│   let tmp17;
+//│   tmp17 = globalThis.Object.freeze(new Func$019());
+//│   return tmp17
 //│ };
-//│ tmp17 = foo4();
-//│ runtime.safeCall(tmp17.call(1))
+//│ tmp16 = foo4();
+//│ runtime.safeCall(tmp16.call(1))
 //│ = 1
 
 
@@ -307,9 +307,9 @@ class Bar() with
 //│   constructor() {}
 //│   #Bar$cap;
 //│   bar() {
-//│     let tmp18;
-//│     tmp18 = globalThis.Object.freeze(new Func$021());
-//│     return tmp18
+//│     let tmp17;
+//│     tmp17 = globalThis.Object.freeze(new Func$021());
+//│     return tmp17
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Bar", []]; 
@@ -443,18 +443,18 @@ module Foo with
 //│   }
 //│   static #Foo_mod$cap;
 //│   static aux(f2) {
-//│     let tmp22, tmp23;
-//│     tmp22 = runtime.safeCall(f2.call(1));
-//│     tmp23 = runtime.safeCall(f2.call(10));
-//│     return tmp22 + tmp23
+//│     let tmp21, tmp22;
+//│     tmp21 = runtime.safeCall(f2.call(1));
+//│     tmp22 = runtime.safeCall(f2.call(10));
+//│     return tmp21 + tmp22
 //│   } 
 //│   static f(x1, y, b) {
-//│     let tmp22, tmp23, lambda$here, lambda$here1;
+//│     let tmp21, tmp22, lambda$here, lambda$here1;
 //│     lambda$here = lambda$4(x1);
-//│     tmp22 = Foo4.aux(lambda$here);
+//│     tmp21 = Foo4.aux(lambda$here);
 //│     lambda$here1 = lambda$3(y, b);
-//│     tmp23 = Foo4.aux(lambda$here1);
-//│     return tmp22 * tmp23
+//│     tmp22 = Foo4.aux(lambda$here1);
+//│     return tmp21 * tmp22
 //│   }
 //│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
@@ -498,9 +498,9 @@ module Foo with
 //│   return globalThis.Object.freeze(new Lambda$07(y, z))
 //│ });
 //│ lambda15 = (undefined, function (y, z, x1) {
-//│   let tmp22;
-//│   tmp22 = x1 + y;
-//│   return tmp22 + z
+//│   let tmp21;
+//│   tmp21 = x1 + y;
+//│   return tmp21 + z
 //│ });
 //│ (class Foo6 {
 //│   static {
@@ -550,7 +550,7 @@ let x = 1
 :sjs
 y => x + y
 //│ JS (unsanitized):
-//│ let lambda16, Func$023, tmp24;
+//│ let lambda16, Func$023, tmp23;
 //│ Func$023 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -570,8 +570,8 @@ y => x + y
 //│ lambda16 = (undefined, function (y) {
 //│   return x1 + y
 //│ });
-//│ tmp24 = globalThis.Object.freeze(new Func$023());
-//│ tmp24
+//│ tmp23 = globalThis.Object.freeze(new Func$023());
+//│ tmp23
 //│ = class anonymous
 
 
@@ -588,7 +588,7 @@ fun bar(x) = foo(x) + 1
 //│ foo5 = function foo(x2) {
 //│   return x2 + 1
 //│ };
-//│ bar3 = function bar(x2) { let tmp25; tmp25 = foo5(x2); return tmp25 + 1 };
+//│ bar3 = function bar(x2) { let tmp24; tmp24 = foo5(x2); return tmp24 + 1 };
 
 
 class A(val x)
@@ -601,7 +601,7 @@ A(42)
 :sjs
 A(x => x).x(1)
 //│ JS (unsanitized):
-//│ let lambda18, tmp25, Func$025, tmp26;
+//│ let lambda18, tmp24, Func$025, tmp25;
 //│ Func$025 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -621,9 +621,9 @@ A(x => x).x(1)
 //│ lambda18 = (undefined, function (x2) {
 //│   return x2
 //│ });
-//│ tmp26 = globalThis.Object.freeze(new Func$025());
-//│ tmp25 = A1(tmp26);
-//│ runtime.safeCall(tmp25.x.call(1))
+//│ tmp25 = globalThis.Object.freeze(new Func$025());
+//│ tmp24 = A1(tmp25);
+//│ runtime.safeCall(tmp24.x.call(1))
 //│ = 1
 
 
@@ -632,7 +632,7 @@ fun foo(x) = x + 1
 fun bar(x) = foo(x) + 1
 A(foo).x(0)
 //│ JS (unsanitized):
-//│ let bar4, foo6, tmp27, Func$027, tmp28;
+//│ let bar4, foo6, tmp26, Func$027, tmp27;
 //│ Func$027 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -653,13 +653,13 @@ A(foo).x(0)
 //│   return x2 + 1
 //│ };
 //│ bar4 = function bar(x2) {
-//│   let tmp29;
-//│   tmp29 = foo6(x2);
-//│   return tmp29 + 1
+//│   let tmp28;
+//│   tmp28 = foo6(x2);
+//│   return tmp28 + 1
 //│ };
-//│ tmp28 = globalThis.Object.freeze(new Func$027());
-//│ tmp27 = A1(tmp28);
-//│ runtime.safeCall(tmp27.x.call(0))
+//│ tmp27 = globalThis.Object.freeze(new Func$027());
+//│ tmp26 = A1(tmp27);
+//│ runtime.safeCall(tmp26.x.call(0))
 //│ = 1
 
 
@@ -691,7 +691,7 @@ fun foo(f) = f(0)
 :sjs
 foo(Foo.foo)
 //│ JS (unsanitized):
-//│ let Func$029, tmp29;
+//│ let Func$029, tmp28;
 //│ Func$029 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -708,8 +708,8 @@ foo(Foo.foo)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp29 = globalThis.Object.freeze(new Func$029());
-//│ foo7(tmp29)
+//│ tmp28 = globalThis.Object.freeze(new Func$029());
+//│ foo7(tmp28)
 //│ = 1
 
 
@@ -828,7 +828,7 @@ module Foo with
 //│   }
 //│   static #Foo_mod$cap;
 //│   static {
-//│     let Func$041, tmp40;
+//│     let tmp39;
 //│     this.Func$0 = function Func$0() {
 //│       return globalThis.Object.freeze(new Func$0.class());
 //│     };
@@ -845,8 +845,8 @@ module Foo with
 //│       toString() { return runtime.render(this); }
 //│       static [definitionMetadata] = ["class", "Func$0", []]; 
 //│     });
-//│     tmp40 = globalThis.Object.freeze(new Foo17.Func$0());
-//│     this.f = tmp40;
+//│     tmp39 = globalThis.Object.freeze(new Foo17.Func$0());
+//│     this.f = tmp39;
 //│   }
 //│   #Foo$cap;
 //│   toString() { return runtime.render(this); }
@@ -879,7 +879,7 @@ Foo.Bar.g2(1)
 :sjs
 x => y => x + y
 //│ JS (unsanitized):
-//│ let lambda23, lambda24, lambda$6, Lambda$09, Func$044, tmp40;
+//│ let lambda23, lambda24, lambda$6, Lambda$09, Func$044, tmp39;
 //│ Lambda$09 = function Lambda$0(x2) {
 //│   return globalThis.Object.freeze(new Lambda$0.class(x2));
 //│ };
@@ -924,8 +924,8 @@ x => y => x + y
 //│   lambda$here = lambda$6(x2);
 //│   return lambda$here
 //│ });
-//│ tmp40 = globalThis.Object.freeze(new Func$044());
-//│ tmp40
+//│ tmp39 = globalThis.Object.freeze(new Func$044());
+//│ tmp39
 //│ = class anonymous
 
 
@@ -974,9 +974,9 @@ fun foo(x)(y)(z) = x + y + z
 //│     this.x = x2;
 //│   }
 //│   call(z) {
-//│     let tmp41;
-//│     tmp41 = this.x + this.y;
-//│     return tmp41 + z
+//│     let tmp40;
+//│     tmp40 = this.x + this.y;
+//│     return tmp40 + z
 //│   }
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Lambda$0", [null, null]]; 
@@ -1017,7 +1017,7 @@ foo(1)
 //│ bar9 = function bar(x2, y) {
 //│   return x2 + y
 //│ };
-//│ foo14 = function foo(x2) { let tmp41; tmp41 = x2 * 2; return bar9(x2, tmp41) };
+//│ foo14 = function foo(x2) { let tmp40; tmp40 = x2 * 2; return bar9(x2, tmp40) };
 //│ foo14(1)
 //│ = 3
 
@@ -1027,7 +1027,7 @@ fun foo(f) = f("abc")
 :sjs
 foo(print)
 //│ JS (unsanitized):
-//│ let Func$046, tmp41;
+//│ let Func$046, tmp40;
 //│ Func$046 = function Func$0() {
 //│   return globalThis.Object.freeze(new Func$0.class());
 //│ };
@@ -1044,6 +1044,6 @@ foo(print)
 //│   toString() { return runtime.render(this); }
 //│   static [definitionMetadata] = ["class", "Func$0", []]; 
 //│ });
-//│ tmp41 = globalThis.Object.freeze(new Func$046());
-//│ foo15(tmp41)
+//│ tmp40 = globalThis.Object.freeze(new Func$046());
+//│ foo15(tmp40)
 //│ > abc
