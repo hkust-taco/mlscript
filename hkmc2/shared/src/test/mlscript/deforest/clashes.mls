@@ -47,8 +47,6 @@ f1(one) + f2(one) + f2(two)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:p,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:p,None) with:
-//│ deforest > 	List()
 //│ = 9
 //│ one = A(1)
 //│ two = fun

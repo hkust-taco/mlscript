@@ -34,10 +34,6 @@ test()
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:prod,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:prod,None) with:
-//│ deforest > 	List()
 //│ = 1
 
 
@@ -72,10 +68,6 @@ f(A) + f(A)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let f1, tmp, tmp1, f_4$f, f_4$x_A, f_2$f, f_2$x_A, deforest$lam, deforest$lam1; /* scoped */
@@ -115,10 +107,6 @@ f(A) + f(A)
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
 //│ = 2
 
 
@@ -135,8 +123,6 @@ f()
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 0
 //│ x = fun x
@@ -155,8 +141,6 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:lsit,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:lsit,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:lsit,None) with:
 //│ deforest > 	List()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit

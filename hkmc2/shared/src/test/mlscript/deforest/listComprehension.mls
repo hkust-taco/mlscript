@@ -91,22 +91,6 @@ test()
 //│ deforest > 	List(var:x, var:xt)
 //│ deforest > free vars of Ref(var:ys_zip,None):
 //│ deforest > 	List(var:x, var:xt)
-//│ deforest > call dtor Ref(var:xs_zip,None) with:
-//│ deforest > 	List(var:ys_zip)
-//│ deforest > call dtor Ref(var:xs_zip,None) with:
-//│ deforest > 	List(var:ys_zip)
-//│ deforest > call dtor Ref($arg$Cons$0$,None) with:
-//│ deforest > 	List(var:fv_lscomp2, var:fv_lscomp1, var:fv_x, var:fv_t, var:fv_y1, $arg$Cons$1$)
-//│ deforest > call dtor Ref($arg$Cons$0$,None) with:
-//│ deforest > 	List(var:fv_lscomp1, $arg$Cons$1$)
-//│ deforest > call dtor Ref(var:ys_zip,None) with:
-//│ deforest > 	List(var:x, var:xt)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(member:lscomp1)
-//│ deforest > call dtor Ref(var:ls2,None) with:
-//│ deforest > 	List(member:lscomp2, var:fv_lscomp1, var:x, var:t, var:y1)
-//│ deforest > call dtor Ref(var:ys_zip,None) with:
-//│ deforest > 	List(var:x, var:xt)
 //│ = Cons(Pair(1, 3), Cons(Pair(2, 4), Cons(Pair(3, 5), Nil)))
 
 
@@ -190,18 +174,6 @@ test()
 //│ deforest > 	List(var:f)
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:a2,None) with:
-//│ deforest > 	List(var:a)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:xs,None) with:
-//│ deforest > 	List(var:ys)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:xs,None) with:
-//│ deforest > 	List(var:ys)
-//│ deforest > call dtor Ref(var:a1,None) with:
-//│ deforest > 	List()
 //│ = Cons(Pair(5, 1), Cons(Pair(5, 2), Cons(Pair(5, 5), Nil)))
 
 
@@ -239,10 +211,6 @@ lscomp1(1 :: 2 :: Nil, 3 :: 4 :: Nil)
 //│ deforest > 	List(var:ls2, var:h1, var:t1)
 //│ deforest > free vars of Ref(var:ls1,None):
 //│ deforest > 	List(var:ls2)
-//│ deforest > call dtor Ref(var:ls2,None) with:
-//│ deforest > 	List(var:ls2, var:h1, var:t1)
-//│ deforest > call dtor Ref(var:ls1,None) with:
-//│ deforest > 	List(var:ls2)
 //│ = Cons(Pair(1, 3), Cons(Pair(1, 4), Nil))
 
 
@@ -275,10 +243,6 @@ test(A, 1 :: 2 :: 3 :: Nil)
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(member:lscomp)
 //│ deforest > free vars of Ref(var:k,None):
-//│ deforest > 	List(member:lscomp, var:ls)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(member:lscomp)
-//│ deforest > call dtor Ref(var:k,None) with:
 //│ deforest > 	List(member:lscomp, var:ls)
 //│ = Cons(2, Cons(3, Cons(4, Nil)))
 
@@ -329,10 +293,6 @@ main()
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(member:lscomp2, member:lscomp1, var:x, var:xs)
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:lscomp1)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(member:lscomp2, var:fv_lscomp1, var:x, var:xs)
-//│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List(member:lscomp1)
 //│ = Cons(
 //│   [1, 1],

@@ -31,8 +31,6 @@ test
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a,None) with:
-//│ deforest > 	List()
 //│ = fun test_4$test
 
 
@@ -59,8 +57,6 @@ drop maxOpt(id(1 :: 2 :: Nil))
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List(var:h)
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List(var:h)
 
 
 :deforest
@@ -80,8 +76,6 @@ modSome(Some(17), 3)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:m)
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List(var:m)
 //│ JS (unsanitized):
 //│ let modSome, tmp4, modSome_8$modSome, modSome_8$x_Some, Some_x; /* scoped */
@@ -144,8 +138,6 @@ modSome(Some(17), 3)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List(var:m)
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List(var:m)
 //│ = Some(2)
 
 
@@ -177,8 +169,6 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xsys,None):
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:xsys,None) with:
 //│ deforest > 	List(var:f)
 //│ JS (unsanitized):
 //│ let zipWith, tmp5, tmp6, tmp7, lambda, zipWith_19$zipWith, zipWith_19$xsys_2, tup2_0, tup2_1; /* scoped */
@@ -297,7 +287,5 @@ zipWith([id(Nil), id(Nil)], (x, y) => x)
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref(var:xsys,None)), Arg(None,Lit(IntLit(0)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xsys,None):
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:xsys,None) with:
 //│ deforest > 	List(var:f)
 //│ = Nil

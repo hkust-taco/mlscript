@@ -36,10 +36,6 @@ testUnzipZip(3)
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$Cons$0$,None):
 //│ deforest > 	List($arg$Cons$1$)
-//│ deforest > call dtor Ref(var:ls_unzip,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$Cons$0$,None) with:
-//│ deforest > 	List($arg$Cons$1$)
 //│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 
 
@@ -93,10 +89,6 @@ testZipMapBothUnzip(4)
 //│ deforest > free vars of Ref(var:ys_zip,None):
 //│ deforest > 	List(var:x, var:xt)
 //│ deforest > free vars of Ref(var:xs_zip,None):
-//│ deforest > 	List(var:ys_zip)
-//│ deforest > call dtor Ref(var:ys_zip,None) with:
-//│ deforest > 	List(var:x, var:xt)
-//│ deforest > call dtor Ref(var:xs_zip,None) with:
 //│ deforest > 	List(var:ys_zip)
 //│ = Cons(
 //│   Pair(5, 25),

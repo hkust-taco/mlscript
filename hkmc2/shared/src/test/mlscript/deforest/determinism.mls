@@ -18,8 +18,6 @@ if B(1,2,3,4,5) is
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let scrut, e, a, b, c, d, arg$B$0$, arg$B$1$, arg$B$2$, arg$B$3$, arg$B$4$, B_a, B_b, B_c, B_d, B_e, $scrut_B; /* scoped */
 //│ $scrut_B = function $scrut_B(B_a1, B_b1, B_c1, B_d1, B_e1) {
@@ -53,8 +51,6 @@ if B(1,2,3,4,5) is
 //│ deforest > 	Select(Ref($scrut,None),Ident(b))
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
 //│ deforest > 	List()
 //│ = 0
 
@@ -95,18 +91,6 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > free vars of Ref($arg$A$0$,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
 //│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let c2, tmp, tmp1, tmp2, tmp3, tmp4, tmp5, A_a, c2_19$c2, c2_19$x_A, A_a1, c2_19$arg$A$0$_A, A_a2, c2_19$arg$A$0$_A1, A_a3, c2_19$arg$A$0$_A2, A_a4, c2_19$arg$A$0$_A3, A_a5, c2_19$arg$A$0$_A4; /* scoped */
@@ -248,17 +232,5 @@ c2 of A(A(A(A(A(A(1))))))
 //│ deforest > free vars of Ref($arg$A$0$,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$A$0$,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$A$0$,None) with:
 //│ deforest > 	List()
 //│ = 1

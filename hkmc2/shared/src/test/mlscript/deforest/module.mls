@@ -24,10 +24,6 @@ M.f(M.p())
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$XX$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
 //│ = 123
 
 
@@ -49,8 +45,6 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List(var:f)
 //│ JS (unsanitized):
 //│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_Nil; /* scoped */
@@ -169,8 +163,6 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
 
@@ -208,10 +200,6 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List()
 //│ = 5056
 
 
@@ -248,9 +236,5 @@ DeforestList.res + DeforestList.main()
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(member:helper, var:acc)
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:helper, var:acc)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(member:helper, var:acc)
-//│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List(member:helper, var:acc)
 //│ = 5056

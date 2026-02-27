@@ -54,8 +54,6 @@ foo(bar, 123)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:v,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:v,None) with:
-//│ deforest > 	List()
 //│ = 1
 
 

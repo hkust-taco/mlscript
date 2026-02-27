@@ -47,8 +47,6 @@ consumer of
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$Many$0$,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$Many$0$,None) with:
-//│ deforest > 	List()
 //│ = 13
 
 
@@ -74,8 +72,6 @@ consume(sum, enumFrom(3))
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 12
 
@@ -113,10 +109,6 @@ cons of
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:p,None):
 //│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:caseScrut,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:p,None) with:
-//│ deforest > 	List(var:f)
 //│ = 22
 
 
@@ -149,8 +141,6 @@ sum(prodDouble(4))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:ls,None) with:
 //│ deforest > 	List()
 //│ = 20
 

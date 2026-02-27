@@ -74,8 +74,6 @@ appendThree of
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xs,None):
 //│ deforest > 	List(var:ys)
-//│ deforest > call dtor Ref(var:xs,None) with:
-//│ deforest > 	List(var:ys)
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 

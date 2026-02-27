@@ -103,12 +103,6 @@ f(AA(AA(AA(AA(AA(A))))))
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
 //│ = 42
 
 fun f(x) = if x is
@@ -125,10 +119,6 @@ f(AA(AA(A)))
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
 //│ deforest > 	List()
 //│ = A
 
@@ -147,10 +137,6 @@ f(p())
 //│ deforest > free vars of Ref($arg$AA$0$,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = A
 

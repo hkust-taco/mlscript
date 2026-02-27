@@ -44,12 +44,6 @@ f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ deforest > 	List(var:acc)
 //│ deforest > free vars of Ref(var:ls1,None):
 //│ deforest > 	List(var:acc)
-//│ deforest > call dtor Ref(var:ls2,None) with:
-//│ deforest > 	List(var:acc)
-//│ deforest > call dtor Ref(var:ls1,None) with:
-//│ deforest > 	List(var:acc)
-//│ deforest > call dtor Ref(var:ls1,None) with:
-//│ deforest > 	List(var:acc)
 //│ = 51
 
 
@@ -67,10 +61,6 @@ f1(id(A(1))) + f2(id(A(2)))
 //│ deforest > free vars of Ref(var:a2,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:a1,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a2,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a1,None) with:
 //│ deforest > 	List()
 //│ = 3
 
@@ -91,10 +81,6 @@ f1(wrap(1)) + f2(wrap(2))
 //│ deforest > free vars of Ref(var:a1,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:a2,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a1,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a2,None) with:
 //│ deforest > 	List()
 //│ = 3
 
@@ -141,10 +127,6 @@ map(map(1 :: 2 :: Nil, x => x + 1), x => x * 2)
 //│ deforest > 	List(var:f)
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
 //│ = Cons(4, Cons(6, Nil))
 
 
@@ -168,8 +150,6 @@ map(1 :: 2 :: Nil, x => x + 1)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List(var:f)
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List(var:f)
 //│ = Cons(2, Cons(3, Nil))
 
 
@@ -187,8 +167,6 @@ f(Nil)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 0
 
@@ -211,10 +189,6 @@ c1(1 :: Nil)
 //│ deforest > free vars of Ref(var:t,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:t,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 0
 
@@ -273,12 +247,6 @@ localFuse(4)
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List()
 //│ = B(4)
 
 
@@ -299,8 +267,6 @@ f(A(4))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 0
 
@@ -329,8 +295,6 @@ f(A(1))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 1
 
@@ -362,10 +326,6 @@ f1(wrap(1)) + f2(wrap(2))
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:a2,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a1,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a2,None) with:
-//│ deforest > 	List()
 //│ = 3
 
 
@@ -380,8 +340,6 @@ c(p1(3))
 //│ deforest > 	Select(Ref(var:a,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:a,None) with:
 //│ deforest > 	List()
 //│ = 0
 
@@ -404,10 +362,6 @@ f(A(2)) + f(A(3))
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
 //│ = 4
 
 
@@ -428,8 +382,6 @@ test()
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
-//│ deforest > 	List()
 //│ = 1
 
 
@@ -444,8 +396,6 @@ if [1, 2] is
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
 //│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let scrut1, a1, b, element1$, element0$, tup2_0, tup2_1, $scrut_2; /* scoped */
@@ -468,8 +418,6 @@ if [1, 2] is
 //│ deforest > 	Call(Select(Select(Ref($runtime,None),Ident(Tuple)),Ident(get)),List(Arg(None,Ref($scrut,None)), Arg(None,Lit(IntLit(1)))))
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($scrut,None) with:
 //│ deforest > 	List()
 //│ = 3
 
@@ -507,8 +455,6 @@ f([])
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:ls,None) with:
-//│ deforest > 	List()
 //│ = 4
 
 
@@ -523,8 +469,6 @@ f(Nil, false)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:b)
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List(var:b)
 //│ = 0
 

@@ -92,16 +92,6 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$AA$0$,None):
 //│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
 //│ JS (unsanitized):
 //│ let test, f1, p, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7, tmp8, tmp9, tmp10, tmp11, tmp12, test_19$test, test_19$x_dflt, AA_x, test_18$test, test_18$x_AA, AA_x1, test_18$arg$AA$0$_AA, AA_x2, test_18$arg$AA$0$_AA1, AA_x3, test_13$test, test_13$arg$AA$0$_AA, deforest$lam; /* scoped */
 //│ test_19$test = function test_19$test(x) {
@@ -306,16 +296,6 @@ test(p) + f(p) + test(AA(AA(AA(10)))) + test(B)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref($arg$AA$0$,None) with:
-//│ deforest > 	List()
-//│ deforest > call dtor Ref(var:x,None) with:
 //│ deforest > 	List()
 //│ = 78
 //│ p = AA(AA(fun tmp2))
