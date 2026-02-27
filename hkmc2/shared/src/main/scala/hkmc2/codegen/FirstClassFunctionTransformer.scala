@@ -13,9 +13,13 @@ import collection.mutable.{HashMap, HashSet, ListBuffer}
 
 class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends BlockTransformer(new SymbolSubst):
 
+  // Function definitions
   private val funDefs: HashSet[BlockMemberSymbol] = HashSet.empty
 
-  class ModuleTransformer(outModulePath: Option[Path], newFunDefs: ListBuffer[FunDefn], fwdFunDefs: HashMap[Path, FunDefn]) extends BlockTransformer(new SymbolSubst):
+  // modulePath: path of the current module
+  // newFunDefs: new lambdas created by desugaring functions with multiple parameter lists
+  // fwdFunDefs: cache the forwarding functions created to avoid duplications
+  class ModuleTransformer(modulePath: Option[Path], newFunDefs: ListBuffer[FunDefn], fwdFunDefs: HashMap[Path, FunDefn]) extends BlockTransformer(new SymbolSubst):
     private def checkNestedFunctions(body: Block) =
       new CheckNestedFunctions().applyBlock(body)
 
@@ -28,22 +32,22 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
             val lamClsSym = new BlockMemberSymbol("Lambda$" + newFunDefs.size.toString(), Nil, false)
             val newFd = FunDefn.withFreshSymbol(fd.owner, lamClsSym, params, super.applyBlock(fd.body))(false)
             newFunDefs += newFd
-            val cls = outModulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
+            val cls = modulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
             Return(Instantiate(false, cls, newFd.capturedVariables.map(v => Value.Ref(v, None).asArg)), false)
           case head :: rest =>
             val newBody = rec(rest)
             val lamClsSym = new BlockMemberSymbol("Lambda$" + newFunDefs.size.toString(), Nil, false)
             val newFd = FunDefn.withFreshSymbol(fd.owner, lamClsSym, head :: Nil, newBody)(false)
             newFunDefs += newFd
-            val cls = outModulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
+            val cls = modulePath.map(_.selSN(lamClsSym.nme)).getOrElse(Value.Ref(lamClsSym, None))
             Return(Instantiate(false, cls, newFd.capturedVariables.map(v => Value.Ref(v, None).asArg)), false)
           case Nil => lastWords("impossible because the length of parameter list must be more than 1.")
         (head :: Nil, rec(tail))
 
-    // Pack module methods together to defunctionalize them
+    // Pack module methods together to do the transformation
     private def packMethods(ms: List[FunDefn]) = ms.foldRight[Block](End())((fd, rst) => Define(fd, rst))
 
-    // Extract defunctionalized methods and corresponding firstCls assignments
+    // Extract transformed methods
     private def unpackMethods(b: Block, rest: Block) =
       def rec(b: Block, acc1: List[FunDefn], acc2: Block): (List[FunDefn], Block) = b match
         case Define(fd: FunDefn, rest) => rec(rest, fd :: acc1, acc2)
@@ -57,7 +61,7 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
           case Some(mod) =>
             val newFunDefs = ListBuffer.empty[FunDefn]
             val fwdFunDefs = HashMap.empty[Path, FunDefn]
-            val nestedPath = outModulePath match
+            val nestedPath = modulePath match
               case Some(p) => Some(p.selSN(sym.nme))
               case None => Some(Value.Ref(sym, Some(isym)))
             val msBlk = new ModuleTransformer(nestedPath, newFunDefs, fwdFunDefs).applyBlock(packMethods(mod.methods))
@@ -81,18 +85,18 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
         Return(Call(p, Arg(Some(true), Value.Ref(restParam.sym, None)) :: Nil)(true, false, false), false))(false)
     })
 
-    // If the given path is non-anonymous and at LHS (i.e., isCalled is true), then do not substitute it
+    // If the given path is non-anonymous and is called immediately, then do not substitute it
     private def updatePathWithInst(p: Path, isCalled: Boolean)(k: Path => Block) = p match
       case ref @ Value.Ref(l: BlockMemberSymbol, disamb) if (funDefs(l) || l.tsym.map(_.k is syntax.Fun).getOrElse(false)) && !isCalled =>
         val fd = createForwardFunc(p)
         val tmp = new TempSymbol(None)
-        val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
+        val cls = modulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, disamb))
         Scoped(Set(tmp), Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
       case sel: Select => sel.symbol match
         case Some(s: TermSymbol) if (s.k is syntax.Fun) && !isCalled => // second-class functions as first-class function
           val fd = createForwardFunc(p)
           val tmp = new TempSymbol(None)
-          val cls = outModulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, None))
+          val cls = modulePath.map(_.selSN(fd.sym.nme)).getOrElse(Value.Ref(fd.sym, None))
           Scoped(Set(tmp), Assign(tmp, Instantiate(false, cls, Nil), k(Value.Ref(tmp, None))))
         case _ => k(p)
       case _ => k(p)
@@ -130,10 +134,8 @@ class FirstClassFunctionTransformer(using Elaborator.State, Raise) extends Block
                   source = Diagnostic.Source.Compilation))
                 k(call(fun2))
             case _ => k(call(fun2))
-      case p: Path => updatePathWithInst(p, false): p2 =>
-        k(p2)
-      case _: Lambda =>
-        lastWords("Lambda functions should be rewritten into function definitions first.")
+      case p: Path => updatePathWithInst(p, false)(k)
+      case _: Lambda => lastWords("Lambda functions should be rewritten into function definitions first.")
       case _ => super.applyResult(r)(k)
 
   class CheckNestedFunctions extends BlockTraverser:
