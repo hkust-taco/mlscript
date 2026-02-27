@@ -41,8 +41,7 @@ fun test() =
 //│ test = function test() {
 //│   let whoops, tmp1, tmp2;
 //│   whoops = function whoops() {
-//│     let tmp3;
-//│     tmp3 = Predef.print("ok");
+//│     Predef.print("ok");
 //│     return 42
 //│   };
 //│   tmp1 = whoops();

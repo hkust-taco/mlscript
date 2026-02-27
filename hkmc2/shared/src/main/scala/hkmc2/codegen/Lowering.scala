@@ -181,8 +181,9 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
   def blockImpl(stats: Ls[Statement], res: Rcd \/ Term)(k: Result => Block)(using LoweringCtx): Block =
     stats match
     case (t: sem.Term) :: stats =>
-      subTerm(t, inStmtPos = true): r =>
-        blockImpl(stats, res)(r => k(r))
+      term(t, inStmtPos = true):
+        case _: Value | _: Path | _: Lambda => blockImpl(stats, res)(k)
+        case r => Assign(State.noSymbol, r, blockImpl(stats, res)(k))
     case Nil =>
       res match
       case R(res) => term(res)(k)

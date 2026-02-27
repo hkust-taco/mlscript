@@ -32,11 +32,11 @@ fun foo() =
 //│   return scope0$cap.x$0
 //│ };
 //│ foo = function foo() {
-//│   let x, tmp, scope0$cap, bar$here;
+//│   let x, scope0$cap, bar$here;
 //│   scope0$cap = new Capture$scope01(x);
 //│   scope0$cap.x$0 = 1;
 //│   bar$here = bar$(scope0$cap);
-//│   tmp = runtime.safeCall(xs.push(bar$here));
+//│   runtime.safeCall(xs.push(bar$here));
 //│   scope0$cap.x$0 = 2;
 //│   return runtime.Unit
 //│ };

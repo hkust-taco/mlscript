@@ -24,8 +24,7 @@ object Test with
 //│     globalThis.Object.freeze(this);
 //│   }
 //│   foo() {
-//│     let tmp;
-//│     tmp = Predef.print(Test1);
+//│     Predef.print(Test1);
 //│     return Test1.x
 //│   }
 //│   toString() { return runtime.render(this); }
@@ -74,10 +73,10 @@ module Test with
   val x = 1
   let x = 2
 //│ ╔══[ERROR] Name 'x' is already used
-//│ ║  l.75: 	  let x = 2
+//│ ║  l.74: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.74: 	  val x = 1
+//│ ║  l.73: 	  val x = 1
 //│ ╙──      	  ^^^^^^^^^
 //│ JS:
 //│ let Test4;
@@ -229,7 +228,7 @@ Whoops.Whoops.g()
 :e
 Runtime
 //│ ╔══[ERROR] Name not found: Runtime
-//│ ║  l.230: 	Runtime
+//│ ║  l.229: 	Runtime
 //│ ╙──       	^^^^^^^
 
 

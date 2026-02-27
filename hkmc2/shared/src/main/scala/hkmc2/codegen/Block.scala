@@ -37,10 +37,13 @@ sealed abstract class Block extends Product:
     case Assign(_, _, rst) => rst.isAbortive
     case AssignField(_, _, _, rst) => rst.isAbortive
     case AssignDynField(_, _, _, _, rst) => rst.isAbortive
-    case Match(_, arms, dflt, rst) => rst.isAbortive
+    case Match(_, arms, dflt, rst) => rst.isAbortive || arms.forall(_._2.isAbortive) && dflt.exists(_.isAbortive)
     case Define(_, rst) => rst.isAbortive
     case TryBlock(sub, fin, rst) => rst.isAbortive || sub.isAbortive || fin.isAbortive
-    case Label(_, _, bod, rst) => rst.isAbortive
+    case Label(sym, loop, bod, rst) =>
+      // * Note: the body may be abortive for the reason of breaking to the rest!
+      // * So we can't really use the result of bod.isAbortive even when `loop` is false.
+      rst.isAbortive
     case HandleBlock(_, _, _, _, _, handlers, body, rst) => rst.isAbortive
     case Scoped(_, body) => body.isAbortive
   
@@ -112,11 +115,11 @@ sealed abstract class Block extends Product:
     case Return(res, implct) => res.freeVars
     case Throw(exc) => exc.freeVars
     case Label(label, _, body, rest) => (body.freeVars - label) ++ rest.freeVars 
-    case Break(label) => Set(label)
-    case Continue(label) => Set(label)
+    case Break(label) => Set.single(label)
+    case Continue(label) => Set.single(label)
     case Begin(sub, rest) => sub.freeVars ++ rest.freeVars
     case TryBlock(sub, finallyDo, rest) => sub.freeVars ++ finallyDo.freeVars ++ rest.freeVars
-    case Assign(lhs, rhs, rest) => Set(lhs) ++ rhs.freeVars ++ rest.freeVars
+    case Assign(lhs, rhs, rest) => Set.single(lhs) ++ rhs.freeVars ++ rest.freeVars
     case AssignField(lhs, nme, rhs, rest) => lhs.freeVars ++ rhs.freeVars ++ rest.freeVars
     case AssignDynField(lhs, fld, arrayIdx, rhs, rest) => lhs.freeVars ++ fld.freeVars ++ rhs.freeVars ++ rest.freeVars
     case Define(defn, rest) => defn.freeVars ++ rest.freeVars
@@ -436,13 +439,16 @@ sealed abstract class Defn:
   // * At some point we'll want to make `Local` more specific than `Symbol` to express this
   // * in the type system.
   lazy val freeVars: Set[Local] = this match
-    case FunDefn(own, sym, dSym, params, body) => body.freeVars -- params.flatMap(_.paramSyms) - sym
-    case ValDefn(tsym, sym, rhs) => rhs.freeVars
+    case FunDefn(own, sym, dSym, params, body) =>
+      body.freeVars -- params.flatMap(_.paramSyms) ++ sym.optionIf(own.isEmpty)
+    case ValDefn(tsym, sym, rhs) => rhs.freeVars ++ sym.optionIf(tsym.owner.isEmpty)
     case ClsLikeDefn(own, isym, sym, ctorSym, k, paramsOpt, auxParams, parentSym, 
         methods, privateFields, publicFields, preCtor, ctor, stat, bufferable) =>
       preCtor.freeVars
-        ++ ctor.freeVars ++ methods.flatMap(_.freeVars) ++ stat.iterator.flatMap(_.freeVars)
+        ++ ctor.freeVars ++ methods.flatMap(_.freeVars)
         -- auxParams.flatMap(_.paramSyms)
+        ++ stat.iterator.flatMap(_.freeVars)
+        ++ sym.optionIf(own.isEmpty)
   
   lazy val freeVarsLLIR: Set[Local] = this match
     case FunDefn(own, sym, dSym, params, body) => body.freeVarsLLIR -- params.flatMap(_.paramSyms) - sym

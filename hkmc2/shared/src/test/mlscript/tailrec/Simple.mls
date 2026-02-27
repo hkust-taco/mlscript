@@ -5,7 +5,7 @@
 @tailrec
 fun f = f
 //│ JS (unsanitized):
-//│ let f; f = function f() { loopLabel: while (true) { let tmp; continue loopLabel; break; } };
+//│ let f; f = function f() { loopLabel: while (true) { continue loopLabel; break; } };
 
 :fixme
 module Foo with
