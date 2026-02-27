@@ -219,7 +219,7 @@ if a is
     print(x + 1)
     print(x + 2)
 //│ JS (unsanitized):
-//│ let x2, tmp8, tmp9, tmp10, tmp11, tmp12;
+//│ let x2, tmp8, tmp9, tmp10;
 //│ if (a instanceof B1.class) {
 //│   1
 //│ } else {
@@ -231,11 +231,11 @@ if a is
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│   x2 = tmp8;
-//│   tmp9 = Predef.print(x2);
-//│   tmp10 = x2 + 1;
-//│   tmp11 = Predef.print(tmp10);
-//│   tmp12 = x2 + 2;
-//│   Predef.print(tmp12)
+//│   Predef.print(x2);
+//│   tmp9 = x2 + 1;
+//│   Predef.print(tmp9);
+//│   tmp10 = x2 + 2;
+//│   Predef.print(tmp10)
 //│ }
 //│ > 2
 //│ > 3

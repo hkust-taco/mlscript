@@ -39,7 +39,7 @@ fun h1(a) =
     a is Some(y) and y is Right(z) then z
     a is None then 0
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    a is Option.Some(arg$Some$0$) and
 //│ >      let x = $arg$Some$0$
 //│ >      x is Left(arg$Left$0$) and
@@ -71,7 +71,7 @@ fun h2(a) =
       y' is Right(z) then z
     a is None then 0
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    a is Option.Some(arg$Some$0$) and
 //│ >      let x = $arg$Some$0$
 //│ >      let x' = x

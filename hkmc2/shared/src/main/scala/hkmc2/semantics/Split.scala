@@ -158,7 +158,7 @@ object Split:
           if prefix.isEmpty then all else (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: Split): Str = showSplit("if", s)
+    inline def apply(s: Split): Str = showSplit("‹if|while›", s)
     
     private def showSplit(prefix: Str, s: Split): Str =
       /** Show a split as a list of lines.

@@ -59,7 +59,7 @@ if
   x and z then 1
   y is [b] then let x = 1 in x + b
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is true and
 //│ >      z is true then 1
 //│ >      y is []=1 and

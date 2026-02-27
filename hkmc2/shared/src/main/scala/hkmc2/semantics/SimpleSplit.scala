@@ -46,7 +46,7 @@ enum SimpleSplit extends AutoLocated with ProductWithTail:
     case Else(default) => s"else ${default.showDbg}"
     case End => ""
   
-  def prettyPrint: Str = SimpleSplit.prettyPrint(this)
+  def prettyPrint(kw: Keyword.IfLike): Str = SimpleSplit.prettyPrint(this, kw)
   
   /** Get the results of all branches. */
   def results: Ls[Term] =
@@ -130,7 +130,7 @@ object SimpleSplit:
           if prefix.isEmpty then all else (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: SimpleSplit): Str = showSplit("if", s)
+    inline def apply(s: SimpleSplit, kw: Keyword.IfLike): Str = showSplit(kw.name, s)
     
     /** Show a split as a list of lines.
      *  @param isFirst whether this is the first and frontmost branch

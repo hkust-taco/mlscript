@@ -114,6 +114,7 @@ abstract class MLsDiffMaker extends DiffMaker:
     given Config = mkConfig
     importFile(file.up / io.RelPath(ln.trim), verbose = silent.isUnset)
   
+  // eg: `:ucs desugared normalized lowered`
   val showUCS = Command("ucs"): ln =>
     ln.split(" ").iterator.map(x => "ucs:" + x.trim).toSet
   

@@ -613,7 +613,7 @@ abstract class Parser(
             case Round => Tup(ps)
             case Curly => ???
             case Square => TyTup(ps)
-          val res = InfixApp(lhs, new Keywrd(kw).withLoc(S(l0)), rhs).withLoc(S(loc))
+          val res = InfixApp(lhs.withLoc(S(loc)), new Keywrd(kw).withLoc(S(l0)), rhs)
           exprCont(res, prec, allowNewlines = allowNewlines)
         case _ =>
           val sts = ps

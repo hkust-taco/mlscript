@@ -4,7 +4,7 @@ package ucs
 
 import mlscript.utils.*, shorthands.*
 import syntax.{Keyword, Tree}, Tree.*
-import Keyword.{`and`, `do`, `else`, `if`, `is`, `let`, `or`, `then`}
+import Keyword.{`and`, `do`, `else`, `if`, `case`, `while`, `is`, `let`, `or`, `then`}
 import Elaborator.{Ctx, Ctxl, UnderCtx, ctx}, SimpleSplit.*
 import Message.MessageContext
 import collection.mutable.SortedSet
@@ -30,7 +30,7 @@ trait SplitElaborator:
   /** Keep track of the locations where `do` and `then` are used as connectives. */
   private var kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
   
-  private def reportInconsistentConnectives(kw: Keywrd[?]): Unit =
+  private def reportInconsistentConnectives(kw: Keywrd[Keyword.SplitLike]): Unit =
     (kwLocSets._1.headOption, kwLocSets._2.headOption) match
       case (Some(doLoc), Some(thenLoc)) =>
         raise(ErrorReport(
@@ -46,19 +46,21 @@ trait SplitElaborator:
   private object `~>`:
     infix def unapply(tree: Tree): Opt[(Tree, Tree \/ (Keywrd[Connective], Tree))] = tree match
       case InfixApp(lhs, Keywrd(`and`), rhs) => S((lhs, L(rhs)))
-      case InfixApp(lhs, kw @ Keywrd[`then`.type](`then`), rhs) =>
-        kwLocSets._2 ++= kw.toLoc
-        S((lhs, R((kw, rhs))))
-      case InfixApp(lhs, kw @ Keywrd[`do`.type](`do`), rhs) =>
-        kwLocSets._1 ++= kw.toLoc
-        S((lhs, R((kw, rhs))))
+      case InfixApp(lhs, kwTree @ Keywrd(kw: `then`.type), rhs) =>
+        kwLocSets._2 ++= kwTree.toLoc
+        S((lhs, R((new Keywrd(kw).withLocOf(kwTree), rhs))))
+      case InfixApp(lhs, kwTree @ Keywrd(kw: `do`.type), rhs) =>
+        kwLocSets._1 ++= kwTree.toLoc
+        S((lhs, R((new Keywrd(kw).withLocOf(kwTree), rhs))))
       case _ => N
   
-  private def withScopedConnectives(kw: Keywrd[?])(evaluate: => SimpleSplit): SimpleSplit =
+  private def withScopedConnectives(kw: Keywrd[Keyword.SplitLike])(evaluate: => SimpleSplit): SimpleSplit =
     val savedKwLocSets = kwLocSets
     kwLocSets = (SortedSet.empty[Loc], SortedSet.empty[Loc])
     val split = evaluate
-    val result = split ~~: topmostDefault
+    val result = kw.kw match
+      case `if` | `case` => split ~~: topmostDefault
+      case `while` => split //~~: End
     reportInconsistentConnectives(kw)
     kwLocSets = savedKwLocSets
     result
@@ -150,8 +152,8 @@ trait SplitElaborator:
       (ctx, Head.Let(TempSymbol(N, "unused"), term(rhsTree)) ~: End)
     // Although the `else`-clause marks the end of the split, we cannot
     // stop and still have to elaborate the remaining trees.
-    case PrefixApp(kw: Keywrd[`else`.type], elseTree) =>
-      (ctx, Else(term(elseTree))(S(kw)))
+    case PrefixApp(kwTree @ Keywrd(`else`), elseTree) =>
+      (ctx, Else(term(elseTree))(S(new Keywrd(`else`).withLocOf(kwTree))))
   
   private def expandMatches(matchesTree: Ls[TT])(consequent: Ctxl[SimpleSplit]): Ctxl[SimpleSplit] =
     val z = (ctx, Ls[(Term, Pattern)]())

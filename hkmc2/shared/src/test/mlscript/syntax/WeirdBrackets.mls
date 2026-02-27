@@ -70,7 +70,7 @@ fun interesting(x) =
 //│ >    x is Box(Int) then 1
 //│ >    x is Box(Bool) then 2
 //│ Expanded split with flattened patterns:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Int then 1
 //│ >    x is Box(arg$Box$0$) and $arg$Box$0$ is Bool then 2
 

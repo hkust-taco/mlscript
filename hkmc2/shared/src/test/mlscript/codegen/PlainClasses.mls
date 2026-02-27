@@ -74,7 +74,7 @@ fun test() =
 //│ JS (unsanitized):
 //│ let test;
 //│ test = function test() {
-//│   let Foo5, tmp;
+//│   let Foo5;
 //│   (class Foo4 {
 //│     static {
 //│       Foo5 = this
@@ -85,7 +85,7 @@ fun test() =
 //│     toString() { return runtime.render(this); }
 //│     static [definitionMetadata] = ["class", "Foo"]; 
 //│   });
-//│   tmp = Predef.print("ok");
+//│   Predef.print("ok");
 //│   return Foo5
 //│ };
 
@@ -217,13 +217,13 @@ print(a.x)
 print(a.foo(1))
 print(a.bar(1))
 //│ JS (unsanitized):
-//│ let a, tmp, tmp1, tmp2, tmp3;
+//│ let a, tmp, tmp1;
 //│ a = globalThis.Object.freeze(new Foo10());
-//│ tmp = Predef.print(a.x);
-//│ tmp1 = runtime.safeCall(a.foo(1));
-//│ tmp2 = Predef.print(tmp1);
-//│ tmp3 = runtime.safeCall(a.bar(1));
-//│ Predef.print(tmp3)
+//│ Predef.print(a.x);
+//│ tmp = runtime.safeCall(a.foo(1));
+//│ Predef.print(tmp);
+//│ tmp1 = runtime.safeCall(a.bar(1));
+//│ Predef.print(tmp1)
 //│ > 1
 //│ > 2
 //│ > 3

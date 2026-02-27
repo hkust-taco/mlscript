@@ -228,7 +228,7 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.`if`.type | Keyword.`while`.type, split: SimpleSplit)
+  case IfLike(kw: Keyword.IfLike, split: SimpleSplit)
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
    *  split are correctly resolved. In the future, we might look for a way to
@@ -473,7 +473,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
     case IfLike(_, split) => split.subTerms
     case SynthIf(split) => split.subTerms
-    case Lam(params, body) => Vector.single(body)
+    case Lam(params, body) => params.allParams.iterator.flatMap(_.sign).toVector :+ body
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
     case Rcd(mut, stats) => stats.flatMap(_.subTerms).toVector
     case Quoted(term) => Vector.single(term)
@@ -520,7 +520,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Lit => Vector.single(t.lit.asTree)
     case t: Ref => treeOrSubterms(t.tree)
     case t: Tup => treeOrSubterms(t.tree)
-    case l: Lam => l.params.paramSyms.map(_.id).toVector :+ l.body
+    case l: Lam => Vector.double(l.params, l.body)
     case t: App => treeOrSubterms(t.tree)
     case IfLike(_, split) => Vector.single(split)
     case SynthIf(split) => Vector.single(split)

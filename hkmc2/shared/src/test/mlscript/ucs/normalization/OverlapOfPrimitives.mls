@@ -5,7 +5,7 @@ fun test(x) = if x is
   Int then "Int"
   0 then "Zero"
 //│ Normalized:
-//│ >  if x is Int then "Int"
+//│ >  ‹if|while› x is Int then "Int"
 
 test(0)
 //│ = "Int"
@@ -15,7 +15,7 @@ fun test(x, p) = if x is
   0 then "bar"
   else "qax"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Int and
 //│ >      let $scrut = p(x)
 //│ >      $scrut is true then "foo"
@@ -28,7 +28,7 @@ fun test(x, p) = if x is
   "lol" then "bar"
   else "qax"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Str and
 //│ >      let $scrut = p(x)
 //│ >      $scrut is true then "foo"
@@ -54,7 +54,7 @@ fun test(x, p) = if x is
   3.14159 then "PI"
   else "other"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is refined Num and
 //│ >      let $scrut = p(x)
 //│ >      $scrut is true then "great"
@@ -68,7 +68,7 @@ fun test(x, p) = if x is
   true then "false"
   false then "true"
 //│ Normalized:
-//│ >  if x is refined Bool and
+//│ >  ‹if|while› x is refined Bool and
 //│ >    let $scrut = p(x)
 //│ >    $scrut is true then "great"
 //│ >    x is true then "false"
@@ -80,7 +80,7 @@ fun test(x, p) = if x is
   true then "false"
   false then "true"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is Object and
 //│ >      let $scrut = p(x)
 //│ >      $scrut is true then "great"
@@ -98,7 +98,7 @@ fun f(arg) = if
     null      then "null"
     Object    then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
 //│ >    arg is Object then member:String(arg)
@@ -118,7 +118,7 @@ fun f(arg) = if
     undefined then "undefined"
     null      then "null"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Object then member:String(arg)
 //│ >    arg is undefined then "undefined"
 //│ >    arg is null then "null"
@@ -136,7 +136,7 @@ fun f(arg) = if arg is
   Object then String(arg)
   Foo then "just Foo"
 //│ Normalized:
-//│ >  if arg is Object then member:String(arg)
+//│ >  ‹if|while› arg is Object then member:String(arg)
 
 import "../../../mlscript-compile/Runtime.mls"
 
@@ -144,13 +144,13 @@ fun f(arg) = if arg is
   Object then String(arg)
   Runtime.MatchSuccess then "just Foo"
 //│ Normalized:
-//│ >  if arg is Object then member:String(arg)
+//│ >  ‹if|while› arg is Object then member:String(arg)
 
 fun f(arg) = if arg is
   Foo then "just Foo"
   Object then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Foo then "just Foo"
 //│ >    arg is Object then member:String(arg)
 
@@ -158,7 +158,7 @@ fun f(arg) = if arg is
   Int then "Int"
   Object then String(arg)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Int then "Int"
 //│ >    arg is Object then member:String(arg)
 
@@ -166,6 +166,6 @@ fun f(arg) = if arg is
   Object then String(arg)
   Int then "Int"
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    arg is Object then member:String(arg)
 //│ >    arg is Int then "Int"

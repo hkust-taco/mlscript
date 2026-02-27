@@ -9,7 +9,7 @@ if id(0) is t then t
 //│ >    let $scrut = member:id(0)
 //│ >    $scrut is t then t
 //│ Expanded split with flattened patterns:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    let $scrut = member:id(0)
 //│ >    let t = $scrut
 //│ >    else t
