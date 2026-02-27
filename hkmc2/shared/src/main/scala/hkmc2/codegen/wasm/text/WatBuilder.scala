@@ -616,6 +616,23 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
       errExpr(
         Ls(msg"This code requires effect handler instrumentation but was compiled without it." -> N)
       )
+    case Assign(l, r, rst) if l is State.noSymbol =>
+      val rExpr = result(r)
+      val evalExpr = rExpr.resultType match
+        case S(_) => FoldedInstr(
+            mnemonic = "drop",
+            instrargs = Seq.empty,
+            stackargs = Seq(rExpr),
+            resultTypes = Seq.empty
+          )
+        case N => rExpr
+      val rstBlk = returningTerm(rst)
+      Instructions.block(
+        label = N,
+        children = Seq(evalExpr, rstBlk),
+        resultTypes = rstBlk.resultTypes.map(r => Result(r.asValType_!))
+      )
+
     case Assign(l, r, rst) =>
       val lExpr = getVar(l, l.toLoc)
       val rExpr = result(r)
@@ -943,7 +960,10 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
       `return`(S(resWat))
 
-    case Scoped(_, body) => returningTerm(body)
+    case Scoped(syms, body) =>
+      scope.nest givenIn:
+        blockPreamble(syms)
+        returningTerm(body)
     case Match(scrut, arms, dflt, rst) =>
       val matchLabelSym = TempSymbol(N, "match")
       val matchLabel = scope.allocateName(matchLabelSym)
@@ -1168,19 +1188,32 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
     (ctx.toWat, entryNme)
   end program
 
+  /**
+   * Captures the local symbols introduced while compiling `expr`.
+   */
+  private def withLocalDelta(expr: => Expr)(using Ctx): (Expr, Seq[Local]) =
+    val before = ctx.getWasmLocals._2.getOrElse(Seq.empty).toSet
+    val compiled = expr
+    val after = ctx.getWasmLocals._2.getOrElse(Seq.empty)
+    (compiled, after.filterNot(before.contains))
+
   def blockPreamble(ss: Iterable[Symbol])(using Ctx, Raise, Scope): Seq[Local] =
-    val vars = ss.filter(
-      scope.lookup(_).toSeq.isEmpty
-    ).toSeq.toArray.sortBy(_.uid).iterator.map: l =>
+    val vars = ss.toSeq.toArray.sortBy(_.uid).iterator.map: l =>
       scope.allocateName(l)
       l
     .toSeq
     ctx.addLocals(vars)
     vars
 
+  def nonNestedScoped(blk: Block)(k: Block => Expr)(using Ctx, Raise, Scope): Expr = blk match
+    case Scoped(syms, body) =>
+      blockPreamble(syms.view.filter(body.freeVars))
+      k(body)
+    case _ => k(blk)
+
   def block(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
-    val locals = blockPreamble(t.definedVars) // TODO: remove use of `definedVars` now that we properly put everything in proper Scoped blocks (see the change already done in JSBuilder)
-    (returningTerm(t), locals)
+    withLocalDelta:
+      nonNestedScoped(t)(returningTerm)
 
   def body(t: Block)(using Ctx, Raise, Scope): (Expr, Seq[Local]) =
     scope.nest givenIn:
@@ -1200,7 +1233,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         val param = WasmParam(S(paramNme), RefType.anyref)
         ctx.addLocal(p.sym)
         param -> paramNme
-      val (wasmBody, locals) = block(body)
+      val (wasmBody, locals) = this.body(body)
       val paramSyms: Set[Local] = params.params.map(p => (p.sym: Local)).toSet
       val extraLocals = getExtraLocals.filterNot((locals.toSet ++ paramSyms).contains)
       val localsWithNames = (locals ++ extraLocals).map(l => l -> scope.allocateOrGetName(l))
