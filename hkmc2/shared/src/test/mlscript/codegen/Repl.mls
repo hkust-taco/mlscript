@@ -67,7 +67,7 @@ let x = 1, print(x), x
 //│ REPL> Sending: block$res6 = undefined
 //│ REPL> Collected:
 //│ >  undefined
-//│ REPL> Sending: let x, tmp;try { x = 1; tmp = runtime.checkCall(Predef.print(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
+//│ REPL> Sending: let x;try { x = 1; runtime.checkCall(Predef.print(x)); block$res6 = x; undefined } catch (e) { console.log('\u200B' + (e.stack ?? e) + '\u200B'); }
 //│ REPL> Collected:
 //│ >  1
 //│ >  undefined

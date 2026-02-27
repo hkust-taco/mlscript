@@ -9,9 +9,17 @@ x => x, 0
 //│ = 0
 
 :w
+() => 1
+2
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.12: 	() => 1
+//│ ╙──      	^^^^^^^
+//│ = 2
+
+:w
 case x then x, 0
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.12: 	case x then x, 0
+//│ ║  l.20: 	case x then x, 0
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = 0
 
@@ -19,7 +27,7 @@ case x then x, 0
 case x then x
 case x then x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.19: 	case x then x
+//│ ║  l.27: 	case x then x
 //│ ╙──      	^^^^^^^^^^^^^
 //│ = fun
 
@@ -29,7 +37,7 @@ fun foo(x) =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.29: 	  x
+//│ ║  l.37: 	  x
 //│ ╙──      	  ^
 
 :w
@@ -38,7 +46,7 @@ fun foo() =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.38: 	  x
+//│ ║  l.46: 	  x
 //│ ╙──      	  ^
 
 :w
@@ -47,7 +55,7 @@ fun foo() =
   x
   x
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.47: 	  x
+//│ ║  l.55: 	  x
 //│ ╙──      	  ^
 
 

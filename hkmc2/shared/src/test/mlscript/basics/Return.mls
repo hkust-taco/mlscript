@@ -1,6 +1,15 @@
 :js
 
 
+fun f =
+  print("reachable")
+  return
+  print("unreachable")
+
+f
+//│ > reachable
+
+
 fun foo(x) =
   if x do
     print("true")
@@ -30,13 +39,13 @@ foo(123)
 :e
 return "whoops"
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.31: 	return "whoops"
+//│ ║  l.40: 	return "whoops"
 //│ ╙──      	^^^^^^^^^^^^^^^
 
 :e
 x => return "whoops"
 //│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.37: 	x => return "whoops"
+//│ ║  l.46: 	x => return "whoops"
 //│ ╙──      	     ^^^^^^^^^^^^^^^
 //│ = fun
 
@@ -44,13 +53,13 @@ x => return "whoops"
 fun foo() =
   x => return "whoops"
 //│ ╔══[ERROR] Non-local return statements are only supported with effect handlers enabled.
-//│ ║  l.45: 	  x => return "whoops"
+//│ ║  l.54: 	  x => return "whoops"
 //│ ╙──      	       ^^^^^^^^^^^^^^^
 
 :e
 fun foo(x: return "whoops") = 1
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.51: 	fun foo(x: return "whoops") = 1
+//│ ║  l.60: 	fun foo(x: return "whoops") = 1
 //│ ╙──      	           ^^^^^^^^^^^^^^^
 //│ ═══[ERROR] Expected a type, got ‹error›
 
@@ -59,7 +68,7 @@ fun foo() =
   fun bar(x: return "whoops") = 1
   bar(123)
 //│ ╔══[ERROR] Return statements are not allowed in this context.
-//│ ║  l.59: 	  fun bar(x: return "whoops") = 1
+//│ ║  l.68: 	  fun bar(x: return "whoops") = 1
 //│ ╙──      	             ^^^^^^^^^^^^^^^
 //│ ═══[ERROR] Expected a type, got ‹error›
 

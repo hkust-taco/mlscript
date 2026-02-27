@@ -68,7 +68,7 @@ do
 //│ JS (unsanitized):
 //│ let f, f1;
 //│ f1 = 1;
-//│ f = function f() { loopLabel: while (true) { let tmp; continue loopLabel; break; } };
+//│ f = function f() { loopLabel: while (true) { continue loopLabel; break; } };
 //│ runtime.Unit
 //│ f = 1
 

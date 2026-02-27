@@ -154,7 +154,7 @@ id(0
 //│ ╔══[ERROR] Illegal juxtaposition right-hand side (identifier).
 //│ ║  l.150: 	  id)(1)
 //│ ╙──       	  ^^
-//│ ═══[RUNTIME ERROR] TypeError: tmp25 is not a function
+//│ ═══[RUNTIME ERROR] TypeError: tmp23 is not a function
 
 
 fun test2() =

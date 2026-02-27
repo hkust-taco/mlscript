@@ -251,6 +251,7 @@ object Elaborator:
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(Ident("import"))
+    val noSymbol = NoSymbol()
     val runtimeSymbol = TempSymbol(N, "runtime")
     val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
@@ -1502,7 +1503,7 @@ extends Importer with ucs.SplitElaborator:
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(flags, acc.reverse, N), ctx)
+        case Nil => (ParamList(flags, acc.reverse, N).withLocOf(t), ctx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
@@ -1517,7 +1518,7 @@ extends Importer with ucs.SplitElaborator:
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.isEmpty then 
-                (ParamList(flags, acc.reverse, S(p)), newCtx)
+                (ParamList(flags, acc.reverse, S(p)).withLocOf(t), newCtx)
               else
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
                 go(tl, p :: acc, newCtx, newFlags)

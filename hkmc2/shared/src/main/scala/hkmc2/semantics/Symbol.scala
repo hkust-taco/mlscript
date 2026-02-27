@@ -133,6 +133,14 @@ abstract class Symbol(using State) extends Located:
 end Symbol
 
 
+// * Used, eg, as the Assign receiver of intermediate computations whose result is not used
+final class NoSymbol(using State) extends Symbol:
+  def nme: Str = "‹no symbol›"
+  def toLoc: Option[Loc] = N
+  override def toString: Str = nme
+  def subst(using s: SymbolSubst): NoSymbol = this
+
+
 class FlowSymbol(label: Str)(using State) extends Symbol:
   def nme: Str = label
   def toLoc: Option[Loc] = N // TODO track source trees of flows
