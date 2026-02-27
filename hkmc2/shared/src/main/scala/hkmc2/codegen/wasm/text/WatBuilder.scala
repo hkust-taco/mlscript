@@ -478,12 +478,20 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     case Instantiate(_, cls, as) =>
       cls match
+        // TODO: Implement proper lowering for Errors with string and unit payloads.
+        // Currently exceptions are encoded as i31 payloads; unsupported payloads are lossy.
         case Select(Value.Ref(sym, _), id) if (sym eq State.globalThisSymbol) && id.name == "Error" =>
           return as.headOption match
             case S(arg) => arg.value match
                 case Value.Lit(BoolLit(value)) => ref.i31(i32.const(if value then 1 else 0))
                 case Value.Lit(IntLit(value)) => ref.i31(i32.const(value.toInt))
-                case _ => ref.i31(i32.const(0))
+                case unsupported => 
+                  raise(WarningReport(
+                    msg"WatBuilder::result for Instantiate(...) of `globalThis.Error(...)` with payload `${unsupported.toString}` not implemented yet" -> unsupported.toLoc :: Nil,
+                    source = Diagnostic.Source.Compilation,
+                    extraInfo = S(unsupported.toString)
+                  ))
+                  ref.i31(i32.const(0))
             case N => ref.i31(i32.const(0))
         case _ => ()
       val ctorClsSymOpt = cls match
