@@ -134,24 +134,24 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         if stderr.nonEmpty then output(s"// Standard Error:\n${stderr}")
       end mkQuery
 
-      val importObj =
+      val jsStr =
         doc"""
-          (() => {
-            # const mem = new WebAssembly.Memory({initial: 100});
+          await (() => {
+            # const watSrc = $modWatJsLit;
+            # const memMatch = watSrc.match(/\(import\s+"system"\s+"mem"\s+\(memory\s+(\d+)\)\)/);
+            # const minPages = memMatch ? Number(memMatch[1]) : 1;
+            # const mem = new WebAssembly.Memory({ initial: minPages });
             # const decodeUtf16 = new TextDecoder("utf-16le");
-            # return {
+            # const imports = {
                 "system": {
                   "mem": mem,
                   "mlx_str_from_utf16": (ptr, byteLen) =>
                     decodeUtf16.decode(new Uint8Array(mem.buffer, ptr, byteLen))
                 }
               };
-            # })()
+            # return wasm.binaryenPrintFuncRes(watSrc, imports, exports => exports.${mainFnNme}());
+            # })();
         """
-          .stripBreaks
-          .mkString(100)
-      val jsStr =
-        doc"""await wasm.binaryenPrintFuncRes($modWatJsLit, $importObj, exports => exports.${mainFnNme}());"""
           .stripBreaks
           .mkString(100)
       output("Wasm result:")

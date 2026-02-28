@@ -176,18 +176,6 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
         )
     )
 
-  /** Returns true iff `block` contains at least one string literal value. */
-  private def blockHasStringLiteral(block: Block): Bool =
-    var hasStringLit = false
-    val traverser = new BlockTraverser:
-      override def applyValue(v: Value): Unit =
-        v match
-          case Value.Lit(StrLit(_)) => hasStringLit = true
-          case _ => ()
-
-    traverser.applyBlock(block)
-    hasStringLit
-
   /** 
    * Gets (and caches) the Wasm GC array type used for tuples (`mut` selects mutability). 
    */
@@ -1205,6 +1193,18 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     val ctx = Ctx.empty
     given Ctx = ctx
+
+    // Check whether there is strigns in block because function imports
+    // must be declared before function definitions to keep indices stable.
+    var hasStringLiteral = false
+    val traverser = new BlockTraverser:
+      override def applyValue(v: Value): Unit =
+        v match
+          case Value.Lit(StrLit(_)) => hasStringLiteral = true
+          case _ => ()
+    traverser.applyBlock(p.main)
+    if hasStringLiteral then
+      ensureStringImports
     
     // Create base Object struct with tag field that all other structs will inherit
     ctx.addType(
