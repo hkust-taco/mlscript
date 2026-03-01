@@ -18,6 +18,9 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   given eState: Elaborator.State = solver.collector.elabState
   given pre: DeforestPreAnalyzer = solver.preAnalyzer
   
+  type LabelId = Symbol -> InstantiationId
+  type RestFunId = CtorDtorId | LabelId
+  
   extension (vs: Ls[VarSymbol])
     def asParamList: ParamList =
       ParamList(ParamListFlags.empty, vs.map(Param.simple), N)
@@ -33,18 +36,29 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   val ctorFieldSyms = MutMap.empty[CtorDtorId, Ls[TempSymbol]] // the `a` and `b`
   val newPolyFnSyms = LinkedHashMap.empty[InstantiationId, Map[TermSymbol, (BlockMemberSymbol, TermSymbol)]]
   val branchSelSyms = MutMap.empty[CtorDtorId, VarSymbol]
-  val branchFunSyms = LinkedHashMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
   // branch fun params for fields (which share the same symbol in `branchSelSyms`)
   val branchFunParamFieldSyms = MutMap.empty[BranchId, Ls[VarSymbol]]
   val ctorWhichBranch = MutMap.empty[CtorDtorId, BranchId]
-  // compute original bodies of a branch
+  // Symbols of branch function for fusing branches
+  // the content of those functions should be
+  // `<computation of the branch>; return match_rest(...)`
+  val branchFunSyms = LinkedHashMap.empty[BranchId, (BlockMemberSymbol, TermSymbol)]
+  // TODO:
+  // Symbols of rest functions for relevant matches or labels
+  // 1) Matches that will be fused or
+  // 2) Matches or Labels that properly nest other fusing matches
+  // should get their "rest"s extracted as functions,
+  // and the content of those functions should be
+  // `<computation of rests up to a parent>; return parent_rest(...)`
+  val restFunSyms = LinkedHashMap.empty[RestFunId, (BlockMemberSymbol, TermSymbol)]
+  
+  // original bodies of a branch, without any rests
   val branchOriginalBodies = MutMap.empty[ResultId -> Opt[CtorCls], Block]
+  // original rest function bodies and their parent matches (if any)
+  val restOriginalBodiesAndParentRest = MutMap.empty[ResultId | Symbol, Block -> Opt[ResultId | Symbol]]
+  
   // if a fusing dtor needs explicit returns
   val dtorExplicitRet = MutMap.empty[ResultId, Boolean].withDefaultValue(false)
-  // symbols of rest functions for relevant matches.
-  // Matches that 1) will be fused or 2) properly nest other fusing matches in one of
-  // its arms should get their "rest"s extracted as functions
-  val restFunSyms = LinkedHashMap.empty[CtorDtorId, (BlockMemberSymbol, TermSymbol)]
   
   // compute new symbols
   locally {
@@ -76,7 +90,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             .toMap)
       
       // create branch sel syms
-      for sel <- sels do
+      for sel <- sels.toList.sortBy(_._1) do
         branchSelSyms.getOrElseUpdate(
           sel,
           locally:
@@ -135,11 +149,13 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
               case n: Int => VarSymbol(Tree.Ident(s"_tup_${n}"))
               case tSym: TermSymbol => VarSymbol(Tree.Ident(s"_${tSym.name}"))
       )
+      
       // compute the complete deforestable branch body of a fusing match
       // also compute if the match contains explicit return
       branchOriginalBodies.getOrElseUpdate(
         dest._1 -> whichBranch,
         locally:
+          // TODO: this is an expensive way to compute explicit return...
           val ogBranchBody = Begin(whichBranchPreBody, pre.res.getFullRestOfMatch(dest._1))
           val transformer = new ReplaceBreakAndCheckExplicitRet
           val newBranch = transformer.applyBlock(ogBranchBody)
@@ -147,7 +163,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
           newBranch
       )
   }
-    
+  
+  // FIXME: also consider rests
   // with new symbols computed, compute free vars
   // for all the fusing branches of a dtor
   // the values are sorted by uid
@@ -252,7 +269,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   
   
   
-  // forceExplicitReturn: branch functions should always explicitly return
+  // forceExplicitRet: rewritten dtors in branch and rest functions should always explicitly return
   private class Rewriter(instId: InstantiationId, forceExplicitRet: Boolean = false) extends BlockTransformer(_symSubst):
     extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
     
