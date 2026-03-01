@@ -235,7 +235,7 @@ fun bar() = baz
 //│ JS (unsanitized):
 //│ let bar, baz;
 //│ baz = function baz() { return 1 };
-//│ bar = function bar() { let tmp4; tmp4 = baz(); return tmp4 };
+//│ bar = function bar() { let tmp3; tmp3 = baz(); return tmp3 };
 
 // ——— ——— ———
 
@@ -452,5 +452,17 @@ fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'y'
 //│ ║  l.451: 	fun foo(x) = if x is @annotations.compile A(0) as y then y
 //│ ╙──       	                                                         ^
+
+// ——— ——— ———
+
+fun test =
+  true && return 42
+  43
+
+:fixme
+:expect 42
+test // should be 42
+//│ ═══[RUNTIME ERROR] Expected: '42', got: '43'
+//│ = 43
 
 // ——— ——— ———

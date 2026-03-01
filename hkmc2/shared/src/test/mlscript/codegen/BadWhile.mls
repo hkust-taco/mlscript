@@ -11,3 +11,13 @@ while {} do()
 //│ /* error */
 
 
+// * Warn about pure expressions in statement position in `while` branches
+:w
+fun f() =
+  let i = 10
+  while i > 0 do
+    set i -= 1
+    i
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.20: 	    i
+//│ ╙──      	    ^

@@ -9,6 +9,14 @@ print of foo
 //│ > ()
 
 
+fun foo = return
+
+foo
+
+print of foo
+//│ > ()
+
+
 :todo // warn about useless binding
 :w
 fun foo() =
@@ -30,7 +38,7 @@ print of foo()
 :sjs
 print of globalThis.console.log("Hello, world!")
 //│ JS (unsanitized):
-//│ let tmp4; tmp4 = runtime.safeCall(globalThis.console.log("Hello, world!")); Predef.print(tmp4)
+//│ let tmp6; tmp6 = runtime.safeCall(globalThis.console.log("Hello, world!")); Predef.print(tmp6)
 //│ > Hello, world!
 //│ > ()
 
@@ -38,14 +46,18 @@ print of globalThis.console.log("Hello, world!")
 data class Box(value)
 
 fun foo() =
-  if false do 0
+  if false do ()
 
 print of Box(foo()).value
 //│ > ()
 
 
+:w
 fun foo() =
   while false do 0
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.57: 	  while false do 0
+//│ ╙──      	                 ^
 
 print of Box(foo()).value
 //│ > ()
@@ -54,7 +66,7 @@ print of Box(foo()).value
 :sjs
 fun foo() = {}
 //│ JS (unsanitized):
-//│ let foo5; foo5 = function foo() { return runtime.Unit };
+//│ let foo6; foo6 = function foo() { return runtime.Unit };
 
 print of Box(foo()).value
 //│ > ()
@@ -64,7 +76,7 @@ print of Box(foo()).value
 fun foo(x) =
   set x = 1
 //│ JS (unsanitized):
-//│ let foo6; foo6 = function foo(x) { x = 1; return runtime.Unit };
+//│ let foo7; foo7 = function foo(x) { x = 1; return runtime.Unit };
 
 print of Box(foo(1)).value
 //│ > ()
@@ -73,7 +85,7 @@ print of Box(foo(1)).value
 :e
 fun f = let x = 1
 //│ ╔══[ERROR] Expected a body for let bindings in expression position
-//│ ║  l.74: 	fun f = let x = 1
+//│ ║  l.86: 	fun f = let x = 1
 //│ ╙──      	            ^^^^^
 
 print of f

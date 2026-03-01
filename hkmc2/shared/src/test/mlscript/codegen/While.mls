@@ -1,39 +1,38 @@
 :js
 
 
-:sjs
-() => (while true then 0)
-//│ JS (unsanitized):
-//│ let lambda;
-//│ lambda = (undefined, function () {
-//│   let tmp;
-//│   lbl: while (true) {
-//│     let scrut;
-//│     scrut = true;
-//│     if (scrut === true) {
-//│       tmp = 0;
-//│       continue lbl
-//│     } else {
-//│       throw globalThis.Object.freeze(new globalThis.Error("match error"))
-//│     }
-//│     break;
-//│   }
-//│   return tmp
-//│ });
-//│ lambda
+while false do ???
+
+:ssjs
+while false then ()
+//│ JS:
+//│ lbl1: while (true) {
+//│   let scrut1;
+//│   scrut1 = false;
+//│   if (scrut1 === true) { continue lbl1 }
+//│   break;
+//│ }
+//│ block$res2 = runtime.Unit;
+//│ undefined
+
+() => while true then ()
 //│ = fun
 
+:w
 () =>
   while true then 0
+//│ ╔══[WARNING] Pure expression in statement position
+//│ ║  l.23: 	  while true then 0
+//│ ╙──      	                  ^
 //│ = fun
 
 
 let x = true
 //│ x = true
 
-:re
+// TODO: forbid uses of keywords `then` as well as `else` in `while`
+// :re // Note: this used to throw a match error
 while x then set x = false
-//│ ═══[RUNTIME ERROR] Error: match error
 
 
 let x = true
@@ -48,45 +47,60 @@ let y = false
 //│ y = false
 
 :sjs
-while x
+fun f = while x
   then
     print("Hello World")
     set x = false
-  else 42
+  else return 42 // TODO: support `break`
+f
 //│ JS (unsanitized):
-//│ let tmp2;
-//│ lbl2: while (true) {
-//│   let tmp3;
-//│   if (x2 === true) {
-//│     tmp3 = Predef.print("Hello World");
-//│     x2 = false;
-//│     tmp2 = runtime.Unit;
-//│     continue lbl2
-//│   } else { tmp2 = 42; }
-//│   break;
-//│ }
-//│ tmp2
+//│ let f, tmp;
+//│ f = function f() {
+//│   lbl4: while (true) {
+//│     if (x2 === true) {
+//│       Predef.print("Hello World");
+//│       x2 = false;
+//│       continue lbl4
+//│     } else { return 42 }
+//│     break;
+//│   }
+//│   return runtime.Unit
+//│ };
+//│ tmp = f();
+//│ tmp
 //│ > Hello World
 //│ = 42
 
-while (print("Hello World"), false)
+fun f = while (print("Hello World"), false)
   then 0(0)
-  else 1
+  else return 1
+f
 //│ > Hello World
 //│ = 1
+
+
+// * Returning inside while loop
+:expect 42
+fun f() =
+  while true do
+    return 42
+f()
+//│ = 42
 
 
 let i = 0
 //│ i = 0
 
-while i < 3 then set i = i + 1 else i
+fun f = while i < 3 then set i = i + 1 else return i
+f
 //│ = 3
 
 
 let i = 0
-while print("checking"); i < 3
+fun f = while print("checking"); i < 3
   then print("not yet"); set i = i + 1
-  else print("ok")
+  else return print("ok")
+f
 //│ > checking
 //│ > not yet
 //│ > checking
@@ -98,37 +112,19 @@ while print("checking"); i < 3
 //│ i = 3
 
 
-// * Infinite loop!
-:sjs
+// :sjs
+// * Note: infinite loop! The `let` should be outside the loop
 () =>
 while
   let i = 0
   i < 10 do set i += 1
-//│ JS (unsanitized):
-//│ let lambda2;
-//│ lambda2 = (undefined, function () {
-//│   let tmp13;
-//│   lbl6: while (true) {
-//│     let i2, scrut3, tmp14;
-//│     i2 = 0;
-//│     scrut3 = i2 < 10;
-//│     if (scrut3 === true) {
-//│       tmp14 = i2 + 1;
-//│       i2 = tmp14;
-//│       tmp13 = runtime.Unit;
-//│       continue lbl6
-//│     } else { tmp13 = runtime.Unit; }
-//│     break;
-//│   }
-//│   return tmp13
-//│ });
-//│ lambda2
 //│ = fun
 
 
-let i = 0 in
+fun f = let i = 0 in
   while i < 10 then set i += 1
-  else i
+  else return i
+f
 //│ = 10
 
 
@@ -163,7 +159,7 @@ if x
     else 1 // this one will not terminate the loop, if we're in a `while`
   else 42
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is true and
 //│ >      y is true then 0
 //│ >      else 1
@@ -177,7 +173,7 @@ if x
     _ then 1
   else 42
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    x is true and
 //│ >      y is true then 0
 //│ >      else 1
@@ -196,12 +192,12 @@ fun f(ls) =
     Cons(h, tl) then
       set ls = tl
       print(h)
-  else print("Done!")
+  // else print("Done!")
+  print("Done!")
 //│ JS (unsanitized):
-//│ let f;
-//│ f = function f(ls) {
-//│   let tmp19;
-//│   lbl9: while (true) {
+//│ let f6;
+//│ f6 = function f(ls) {
+//│   lbl6: while (true) {
 //│     let tl, h, arg$Cons$0$, arg$Cons$1$;
 //│     if (ls instanceof Cons1.class) {
 //│       arg$Cons$0$ = ls.hd;
@@ -209,12 +205,12 @@ fun f(ls) =
 //│       tl = arg$Cons$1$;
 //│       h = arg$Cons$0$;
 //│       ls = tl;
-//│       tmp19 = Predef.print(h);
-//│       continue lbl9
-//│     } else { tmp19 = Predef.print("Done!"); }
+//│       Predef.print(h);
+//│       continue lbl6
+//│     }
 //│     break;
 //│   }
-//│   return tmp19
+//│   return Predef.print("Done!")
 //│ };
 
 f(0)
@@ -252,72 +248,11 @@ let x = 1
 :sjs
 while x is {} do()
 //│ JS (unsanitized):
-//│ let tmp27;
-//│ lbl10: while (true) {
-//│   split_root$: {
-//│     split_1$: {
-//│       if (x3 instanceof Object) {
-//│         break split_1$
-//│       } else { break split_1$ }
-//│     }
-//│     tmp27 = runtime.Unit;
-//│   }
-//│   break;
-//│ }
-//│ tmp27
+//│ lbl7: while (true) { if (x3 instanceof Object) { continue lbl7 } break; } runtime.Unit
 
 
-// ——— FIXME: ———
 
-
-() => while true then 0
-//│ = fun
-
-:fixme
-while print("Hello World"); false
-  then 0(0)
-  else 1
-//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.278: 	  then 0(0)
-//│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.277: 	while print("Hello World"); false
-//│ ╙──       	                            ^^^^^
-//│ > Hello World
-//│ ═══[RUNTIME ERROR] Error: match error
-
-:fixme
-while { print("Hello World"), false }
-  then 0(0)
-  else 1
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.290: 	while { print("Hello World"), false }
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.291: 	  then 0(0)
-//│ ╙──       	^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.292: 	  else 1
-//│ ╙──       	  ^^^^
-
-:fixme
-while
-    print("Hello World")
-    false
-  then 0(0)
-  else 1
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.304: 	    print("Hello World")
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.305: 	    false
-//│ ║         	^^^^^^^^^
-//│ ║  l.306: 	  then 0(0)
-//│ ╙──       	^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.307: 	  else 1
-//│ ╙──       	  ^^^^
-
-
-// Mix of local mutable variable, while loop and lambdas
+// * Mix of local mutable variable, while loop and lambdas
 :expect 2
 fun f() =
   let
@@ -335,6 +270,7 @@ fun f() =
 f()
 //│ = 2
 
+
 class Lazy[out A](f: () -> A) with
   mut val cached: A | () = ()
   fun get =
@@ -342,9 +278,10 @@ class Lazy[out A](f: () -> A) with
       set cached = f()
     cached
 
+
 :expect [1, 2, 3]
 :lift
-:rewriteWhile // TODO: remove
+:rewriteWhile
 let arr = [1, 2, 3]
 let output = mut []
 let i = 0
@@ -358,10 +295,74 @@ while i < arr.length do
 //│ i = 3
 //│ output = [Lazy(_), Lazy(_), Lazy(_)]
 
-// Returning inside while loop
-:expect 42
-fun f() =
-  while true do
-    return 42
-f()
-//│ = 42
+:expect [1, 2, 3]
+:lift
+let arr = [1, 2, 3]
+let output = mut []
+let i = 0
+while i < arr.length do
+  let elem = arr.[i]
+  output.push(new Lazy(() => elem))
+  set i += 1
+[output.[0].get, output.[1].get, output.[2].get]
+//│ = [1, 2, 3]
+//│ arr = [1, 2, 3]
+//│ i = 3
+//│ output = [Lazy(_), Lazy(_), Lazy(_)]
+
+
+// ——— FIXME: ———
+
+
+:fixme
+while print("Hello World"); false
+  then 0(0)
+  else 1
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.319: 	  then 0(0)
+//│ ╙──       	  ^^^^
+//│ ╔══[ERROR] Unrecognized term split (false literal)
+//│ ║  l.318: 	while print("Hello World"); false
+//│ ╙──       	                            ^^^^^
+//│ > Hello World
+
+:fixme
+while { print("Hello World"), false }
+  then 0(0)
+  else 1
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.330: 	while { print("Hello World"), false }
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.331: 	  then 0(0)
+//│ ╙──       	^^^^^^^^^^^
+//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.332: 	  else 1
+//│ ╙──       	  ^^^^
+
+:fixme
+while
+    print("Hello World")
+    false
+  then 0(0)
+  else 1
+//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.344: 	    print("Hello World")
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.345: 	    false
+//│ ║         	^^^^^^^^^
+//│ ║  l.346: 	  then 0(0)
+//│ ╙──       	^^^^^^^^^^^
+//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.347: 	  else 1
+//│ ╙──       	  ^^^^
+
+
+// * https://github.com/hkust-taco/mlscript/issues/401
+:fixme
+// :sjs
+:rewriteWhile
+fun f = while false do ()
+print(f)
+//│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
+
+

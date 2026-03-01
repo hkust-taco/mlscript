@@ -155,26 +155,25 @@ if true do
   h1.perform(())
 str
 //│ JS (unsanitized):
-//│ let str, scrut, h11, tmp11, tmp12, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
+//│ let str, scrut, h11, tmp10, handleBlock$9, Handler$h2$perform1, Handler$h2$3, handleBlock$10, Handler$h1$perform1, Handler$h1$3, handleBlock$$2, Handler$h2$perform$1, Handler$h1$perform$1;
 //│ Handler$h1$perform$1 = function Handler$h1$perform$(arg) {
 //│   return (k) => {
 //│     return Handler$h1$perform1(arg, k)
 //│   }
 //│ };
 //│ Handler$h1$perform1 = function Handler$h1$perform(arg, k) {
-//│   let tmp13, tmp14, tmp15, pc;
+//│   let tmp11, tmp12, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         tmp13 = str + "A";
-//│         str = tmp13;
+//│         tmp11 = str + "A";
+//│         str = tmp11;
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(Handler$h1$perform1, 1, "RecursiveHandlers.mls:147:7", null, null, 1, 2, arg, k, 0)
@@ -183,9 +182,9 @@ str
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         tmp14 = runtime.resumeValue;
-//│         tmp15 = str + "A";
-//│         str = tmp15;
+//│         runtime.resumeValue;
+//│         tmp12 = str + "A";
+//│         str = tmp12;
 //│         return runtime.Unit;
 //│         break;
 //│     }
@@ -198,20 +197,19 @@ str
 //│   }
 //│ };
 //│ Handler$h2$perform1 = function Handler$h2$perform(arg, k) {
-//│   let tmp13, tmp14, tmp15, tmp16, tmp17, pc;
+//│   let tmp11, tmp12, tmp13, tmp14, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
 //│   main: while (true) {
 //│     switch (pc) {
 //│       case 0:
-//│         tmp13 = str + "B";
-//│         tmp14 = str + tmp13;
-//│         str = tmp14;
+//│         tmp11 = str + "B";
+//│         tmp12 = str + tmp11;
+//│         str = tmp12;
 //│         runtime.resumeValue = runtime.safeCall(k(arg));
 //│         if (runtime.curEffect !== null) {
 //│           return runtime.unwind(Handler$h2$perform1, 1, "RecursiveHandlers.mls:152:7", null, null, 1, 2, arg, k, 0)
@@ -220,10 +218,10 @@ str
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         tmp15 = runtime.resumeValue;
-//│         tmp16 = str + "B";
-//│         tmp17 = str + tmp16;
-//│         str = tmp17;
+//│         runtime.resumeValue;
+//│         tmp13 = str + "B";
+//│         tmp14 = str + tmp13;
+//│         str = tmp14;
 //│         return runtime.Unit;
 //│         break;
 //│     }
@@ -240,12 +238,12 @@ str
 //│     Handler$h2$3 = this
 //│   }
 //│   constructor() {
-//│     let tmp13;
-//│     tmp13 = super();
+//│     let tmp11;
+//│     tmp11 = super();
 //│     if (runtime.curEffect !== null) {
-//│       tmp13 = runtime.illegalEffect("in a constructor");
+//│       tmp11 = runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp13;
+//│     tmp11;
 //│   }
 //│   #Handler$h2$$cap;
 //│   perform(arg) {
@@ -257,11 +255,10 @@ str
 //│   static [definitionMetadata] = ["class", "Handler$h2$"]; 
 //│ });
 //│ handleBlock$9 = (undefined, function (h22) {
-//│   let tmp13, pc;
+//│   let pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -276,7 +273,7 @@ str
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         tmp13 = runtime.resumeValue;
+//│         runtime.resumeValue;
 //│         return runtime.safeCall(h11.perform(runtime.Unit));
 //│         break;
 //│     }
@@ -288,12 +285,12 @@ str
 //│     Handler$h1$3 = this
 //│   }
 //│   constructor() {
-//│     let tmp13;
-//│     tmp13 = super();
+//│     let tmp11;
+//│     tmp11 = super();
 //│     if (runtime.curEffect !== null) {
-//│       tmp13 = runtime.illegalEffect("in a constructor");
+//│       tmp11 = runtime.illegalEffect("in a constructor");
 //│     }
-//│     tmp13;
+//│     tmp11;
 //│   }
 //│   #Handler$h1$$cap;
 //│   perform(arg) {
@@ -305,11 +302,10 @@ str
 //│   static [definitionMetadata] = ["class", "Handler$h1$"]; 
 //│ });
 //│ handleBlock$10 = (undefined, function () {
-//│   let h22, tmp13, handleBlock$$here, pc;
+//│   let h22, tmp11, handleBlock$$here, pc;
 //│   if (runtime.resumePc === -1) {
 //│     pc = 0;
 //│   } else {
-//│     let saveOffset;
 //│     pc = runtime.resumePc;
 //│     runtime.resumePc = -1;
 //│   }
@@ -326,8 +322,8 @@ str
 //│         continue main;
 //│         break;
 //│       case 1:
-//│         tmp13 = runtime.resumeValue;
-//│         return tmp13;
+//│         tmp11 = runtime.resumeValue;
+//│         return tmp11;
 //│         break;
 //│     }
 //│     break;
@@ -337,12 +333,9 @@ str
 //│ scrut = true;
 //│ if (scrut === true) {
 //│   h11 = new Handler$h1$3();
-//│   tmp11 = runtime.enterHandleBlock(h11, handleBlock$10);
-//│   if (runtime.curEffect !== null) {
-//│     tmp11 = runtime.topLevelEffect(false);
-//│   }
-//│   tmp12 = tmp11;
-//│ } else { tmp12 = runtime.Unit; }
+//│   tmp10 = runtime.enterHandleBlock(h11, handleBlock$10);
+//│   if (runtime.curEffect !== null) { tmp10 = runtime.topLevelEffect(false); }
+//│ }
 //│ str
 //│ = "BABABA"
 //│ str = "BABABA"

@@ -37,7 +37,7 @@ data class Term with
     if freeVars.has(baseName) is false then baseName else...
     while (baseName + "_" + nameIndex) is currentName and
       freeVars.has(currentName) then set nameIndex += 1
-      else currentName
+      else return currentName
   
   fun freshVar(baseName) = Var of freshName(baseName)
   

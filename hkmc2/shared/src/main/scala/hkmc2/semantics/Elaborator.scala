@@ -251,6 +251,7 @@ object Elaborator:
     val loopEndSymbol = ModuleOrObjectSymbol(DummyTypeDef(syntax.Obj), Ident("LoopEnd"))
     // In JavaScript, `import` can be used for getting current file path, as `import.meta`
     val importSymbol = new VarSymbol(Ident("import"))
+    val noSymbol = NoSymbol()
     val runtimeSymbol = TempSymbol(N, "runtime")
     val definitionMetadataSymbol = TempSymbol(N, "definitionMetadata")
     val prettyPrintSymbol = TempSymbol(N, "prettyPrint")
@@ -536,7 +537,7 @@ extends Importer with ucs.SplitElaborator:
       Term.App(State.builtinOpsMap("!").ref(new Ident("not").withLocOf(kw)), Term.Tup(
         PlainFld(subterm(rhs, inAppPrefix = true)) :: Nil)(DummyTup))(DummyApp, N, FlowSymbol("not-app"))
     case tree @ InfixApp(lhs, Keywrd(Keyword.`is` | Keyword.`and` | Keyword.`or`), rhs) =>
-      Term.IfLike(Keyword.`if`, shorthandSplit(tree))
+      Term.IfLike(Keyword.`if`, IfLikeForm.ReturningIf, shorthandSplit(tree))
     case InfixApp(lhs, kw, rhs) =>
       raise:
         ErrorReport(msg"Unexpected infix use of keyword '${kw.name}' here" -> tree.toLoc :: Nil)
@@ -685,7 +686,7 @@ extends Importer with ucs.SplitElaborator:
       // case _ =>
       //   raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
       
-    case tree: IfLike => Term.IfLike(tree.kw.kw, split(tree))
+    case tree: IfLike => split(tree)
     
     case Assert(kw, rhs, thno, els) =>
       val (fl, ln) = kw.toLoc match
@@ -706,7 +707,7 @@ extends Importer with ucs.SplitElaborator:
     case Unquoted(body) => Term.Unquoted(subterm(body))
     case tree @ Case(kw, _) =>
       val scrut = VarSymbol(Ident("caseScrut"))
-      val body = Term.IfLike(Keyword.`if`, caseSplit(scrut, tree))
+      val body = caseSplit(scrut, tree)
       val params = Param(FldFlags.empty, scrut, N, Modulefulness.none) :: Nil
       Term.Lam(PlainParamList(params), body).mkLocWith(kw)
     case PrefixApp(kw @ Keywrd(Keyword.`return`), body) =>
@@ -1502,7 +1503,7 @@ extends Importer with ucs.SplitElaborator:
     case Tup(ps) =>
       def go(ps: Ls[Tree], acc: Ls[Param], ctx: Ctx, flags: ParamListFlags): (ParamList, Ctx) =
         ps match
-        case Nil => (ParamList(flags, acc.reverse, N), ctx)
+        case Nil => (ParamList(flags, acc.reverse, N).withLocOf(t), ctx)
         case hd :: tl =>
           val isCtxParam = hd.isModified(Ins)
           val inUsing = flags.ctx || isCtxParam
@@ -1517,7 +1518,7 @@ extends Importer with ucs.SplitElaborator:
               if spd is SpreadKind.Lazy then
                 raise(ErrorReport(msg"Lazy spread parameters not allowed." -> hd.toLoc :: Nil))
               if tl.isEmpty then 
-                (ParamList(flags, acc.reverse, S(p)), newCtx)
+                (ParamList(flags, acc.reverse, S(p)).withLocOf(t), newCtx)
               else
                 raise(ErrorReport(msg"Spread parameters must be the last in the parameter list." -> hd.toLoc :: Nil))
                 go(tl, p :: acc, newCtx, newFlags)

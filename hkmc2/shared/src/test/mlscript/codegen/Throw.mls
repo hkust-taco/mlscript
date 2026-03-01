@@ -31,7 +31,7 @@ fun f(x) =
   return y
 f(1)
 //│ JS (unsanitized):
-//│ let f2; f2 = function f(x) { let y; throw runtime.safeCall(globalThis.Error("e")) }; f2(1)
+//│ let f2; f2 = function f(x) { throw runtime.safeCall(globalThis.Error("e")) }; f2(1)
 //│ ═══[RUNTIME ERROR] Error: e
 
 
@@ -61,7 +61,6 @@ throw 1
 //│ if (scrut === true) {
 //│   throw 0
 //│ } else { throw globalThis.Object.freeze(new globalThis.Error("match error")) }
-//│ /* unreachable */
 //│ ═══[RUNTIME ERROR] Error: match error
 
 

@@ -1,0 +1,99 @@
+
+:global
+:wasm
+
+
+:wat
+object Foo with
+  val x = 1
+object Bar with
+  val y = 2
+Bar.y
+//│ Wat:
+//│ (module
+//│   (type $Object (sub (struct (field $$tag (mut i32)))))
+//│   (type $Foo (sub $Object (struct (field $$tag (mut i32)) (field $x (mut (ref null any))))))
+//│   (type $Bar (sub $Object (struct (field $$tag (mut i32)) (field $y (mut (ref null any))))))
+//│   (type $Foo_ctor (func (result (ref null any))))
+//│   (type $Bar_ctor (func (result (ref null any))))
+//│   (type (func (result (ref null any))))
+//│   (type $start (func))
+//│   (global $Foo$inst (mut (ref null $Foo)) (ref.null $Foo))
+//│   (global $Bar$inst (mut (ref null $Bar)) (ref.null $Bar))
+//│   (start 2)
+//│   (func  (type $Foo_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Foo))
+//│       (struct.set $Foo 0
+//│         (ref.cast (ref $Foo)
+//│           (local.get $this))
+//│         (i32.const 1))
+//│       (block
+//│         (struct.set $Foo 1
+//│           (ref.cast (ref $Foo)
+//│             (local.get $this))
+//│           (ref.i31
+//│             (i32.const 1)))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (func  (type $Bar_ctor) (result (ref null any))
+//│     (local $this (ref null any))
+//│     (block (result (ref null any))
+//│       (local.set $this
+//│         (struct.new_default $Bar))
+//│       (struct.set $Bar 0
+//│         (ref.cast (ref $Bar)
+//│           (local.get $this))
+//│         (i32.const 2))
+//│       (block
+//│         (struct.set $Bar 1
+//│           (ref.cast (ref $Bar)
+//│             (local.get $this))
+//│           (ref.i31
+//│             (i32.const 2)))
+//│         (nop))
+//│       (return
+//│         (local.get $this))))
+//│   (func  (type $start)
+//│     (block
+//│       (global.set $Foo$inst
+//│         (ref.cast (ref null $Foo)
+//│           (call 0)))
+//│       (global.set $Bar$inst
+//│         (ref.cast (ref null $Bar)
+//│           (call 1)))))
+//│   (func $entry (type 5) (result (ref null any))
+//│     (local $Bar (ref null any))
+//│     (local $Foo (ref null any))
+//│     (local $Foo1 (ref null any))
+//│     (local $Bar1 (ref null any))
+//│     (block (result (ref null any))
+//│       (nop)
+//│       (block (result (ref null any))
+//│         (nop)
+//│         (struct.get $Bar 1
+//│           (ref.cast (ref $Bar)
+//│             (global.get $Bar$inst))))))
+//│   (export "entry" (func $entry))
+//│   (elem declare func $entry))
+//│ Wasm result:
+//│ = 2
+
+
+
+object Example with
+  val a = [10, 20]
+Example.a.[1]
+//│ Wasm result:
+//│ = 20
+
+
+object O with
+  val x = 1
+  val gy = x
+O.gy
+//│ Wasm result:
+//│ = 1

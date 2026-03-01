@@ -1,15 +1,28 @@
 :js
 
 
+// * Note that this is not currently treated as tail-recursive (for dumb reasons)
 :sjs
 fun foo() = if false do foo()
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo() {
+//│   let scrut;
+//│   scrut = false;
+//│   if (scrut === true) { foo(); }
+//│   return runtime.Unit
+//│ };
+// * ...but this is (so it's tailrec-optimized)
+:sjs
+fun foo() = if false do return foo()
+//│ JS (unsanitized):
+//│ let foo1;
+//│ foo1 = function foo() {
 //│   loopLabel: while (true) {
 //│     let scrut;
 //│     scrut = false;
-//│     if (scrut === true) { continue loopLabel } else { return runtime.Unit }
+//│     if (scrut === true) { continue loopLabel }
+//│     return runtime.Unit;
 //│     break;
 //│   }
 //│ };
@@ -17,7 +30,7 @@ fun foo() = if false do foo()
 :sjs
 fun foo() = foo()
 //│ JS (unsanitized):
-//│ let foo1; foo1 = function foo() { loopLabel: while (true) { continue loopLabel; break; } };
+//│ let foo2; foo2 = function foo() { loopLabel: while (true) { continue loopLabel; break; } };
 
 
 :sjs
@@ -57,7 +70,7 @@ fun foo() =
   fun bar() = bar()
   bar()
 //│ JS (unsanitized):
-//│ let foo2; foo2 = function foo() { let bar; bar = function bar() { return bar() }; return bar() };
+//│ let foo3; foo3 = function foo() { let bar; bar = function bar() { return bar() }; return bar() };
 
 
 :sjs
@@ -68,7 +81,7 @@ do
 //│ JS (unsanitized):
 //│ let f, f1;
 //│ f1 = 1;
-//│ f = function f() { loopLabel: while (true) { let tmp; continue loopLabel; break; } };
+//│ f = function f() { loopLabel: while (true) { continue loopLabel; break; } };
 //│ runtime.Unit
 //│ f = 1
 
@@ -77,20 +90,20 @@ do
 let foo = 1
 fun foo(x) = foo
 //│ ╔══[ERROR] Name 'foo' is already used
-//│ ║  l.77: 	let foo = 1
+//│ ║  l.90: 	let foo = 1
 //│ ║        	    ^^^^^^^
 //│ ╟── by a member declared in the same block
-//│ ║  l.78: 	fun foo(x) = foo
+//│ ║  l.91: 	fun foo(x) = foo
 //│ ╙──      	^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
-//│ let foo3, foo4; foo3 = function foo(x) { return foo4 }; foo4 = 1;
+//│ let foo4, foo5; foo4 = function foo(x) { return foo5 }; foo5 = 1;
 //│ foo = 1
 
 :sjs
 :re
 foo(1)
 //│ JS (unsanitized):
-//│ runtime.safeCall(foo4(1))
-//│ ═══[RUNTIME ERROR] TypeError: foo4 is not a function
+//│ runtime.safeCall(foo5(1))
+//│ ═══[RUNTIME ERROR] TypeError: foo5 is not a function
 
 

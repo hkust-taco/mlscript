@@ -5,20 +5,50 @@
 
 // "Full example to demonstrate that changing else branch affect the loop behaviour"
 
+
+// * These are infinite loops, now...
+
+() =>
+  let x = 1
+  while x ===
+    1 do
+      set x = 2
+    2 do
+      set x = 3
+      print("valid")
+  else
+    set x = 2
+  print("not inf loop")
+//│ = fun
+
+() =>
+  let x = 1
+  while x ===
+    1 do
+      set x = 2
+    2 do
+      set x = 3
+      print("valid")
+  else
+    set x = 3
+  print("not inf loop")
+//│ = fun
+
+
+// * Variation:
+
 let x = 1
 while x ===
   1 do
-    set x = 2
+    set x += 1
   2 do
     set x = 3
     print("valid")
-else
-  set x = 2
-print("not inf loop")
-//│ > not inf loop
+  3 do
+    set x += 1
 //│ x = 2
 
-
+:rewriteWhile
 let x = 1
 while x ===
   1 do
@@ -26,11 +56,9 @@ while x ===
   2 do
     set x = 3
     print("valid")
-else
-  set x = 3
-print("not inf loop")
+  3 do
+    set x += 1
 //│ > valid
-//│ > not inf loop
-//│ x = 3
+//│ x = 4
 
 

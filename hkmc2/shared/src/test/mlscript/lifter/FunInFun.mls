@@ -196,12 +196,12 @@ f(1, 2, 1000)
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
 //│ f7 = function f(unused, immutable, mutated) {
-//│   let a1, tmp8, tmp9, f$cap;
+//│   let a1, tmp6, tmp7, f$cap;
 //│   f$cap = new Capture$f3(mutated);
 //│   a1 = g6(f$cap, immutable);
-//│   tmp8 = h2(f$cap);
-//│   tmp9 = a1 + tmp8;
-//│   return tmp9 + unused
+//│   tmp6 = h2(f$cap);
+//│   tmp7 = a1 + tmp6;
+//│   return tmp7 + unused
 //│ };
 //│ f7(1, 2, 1000)
 //│ = 7
@@ -266,7 +266,7 @@ fun g() =
   f
 g()(1)
 //│ JS (unsanitized):
-//│ let h5, f15, g13, tmp8, Capture$scope07, f$;
+//│ let h5, f15, g13, tmp6, Capture$scope07, f$;
 //│ (class Capture$scope06 {
 //│   static {
 //│     Capture$scope07 = this
@@ -300,8 +300,8 @@ g()(1)
 //│   f$here = f$(scope0$cap);
 //│   return f$here
 //│ };
-//│ tmp8 = g13();
-//│ runtime.safeCall(tmp8(1))
+//│ tmp6 = g13();
+//│ runtime.safeCall(tmp6(1))
 //│ = 1
 
 :expect 2
@@ -382,19 +382,17 @@ f(0)
 //│ JS (unsanitized):
 //│ let g18, f24;
 //│ g18 = function g(x1) {
-//│   let tmp11;
-//│   tmp11 = x1 + 1;
-//│   x1 = tmp11;
+//│   let tmp8;
+//│   tmp8 = x1 + 1;
+//│   x1 = tmp8;
 //│   return x1
 //│ };
 //│ f24 = function f(x1) {
-//│   let scrut, tmp11, tmp12;
+//│   let scrut, tmp8;
 //│   scrut = true;
-//│   if (scrut === true) {
-//│     return g18(x1)
-//│   } else { tmp11 = runtime.Unit; }
-//│   tmp12 = x1 + 1;
-//│   x1 = tmp12;
+//│   if (scrut === true) { return g18(x1) }
+//│   tmp8 = x1 + 1;
+//│   x1 = tmp8;
 //│   return x1
 //│ };
 //│ f24(0)
@@ -466,12 +464,12 @@ fun f(x) =
 //│   static [definitionMetadata] = ["class", "Capture$f"]; 
 //│ });
 //│ f27 = function f(x1) {
-//│   let a1, tmp11, f$cap, g$here;
+//│   let a1, tmp8, f$cap, g$here;
 //│   f$cap = new Capture$f7(x1);
 //│   g$here = g$9(f$cap);
 //│   a1 = g$here;
-//│   tmp11 = f$cap.x$0 + 1;
-//│   f$cap.x$0 = tmp11;
+//│   tmp8 = f$cap.x$0 + 1;
+//│   f$cap.x$0 = tmp8;
 //│   g$here = g$9(f$cap);
 //│   return globalThis.Object.freeze([ a1, g$here ])
 //│ };

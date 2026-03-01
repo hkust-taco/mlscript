@@ -9,7 +9,7 @@ pattern Zero = 0
 :ucs normalized
 0 is Nullable(Zero)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    let $scrut = 0
 //│ >    let $patternArgument0$ = member:Zero‹pattern:Zero›
 //│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, $scrut)
@@ -22,7 +22,7 @@ import "../../../mlscript-compile/Char.mls"
 :ucs normalized
 fun foo(x) = x is Nullable(Char.Letter)
 //│ Normalized:
-//│ >  if
+//│ >  ‹if|while›
 //│ >    let $patternArgument0$ = (member:Char.)Letter‹pattern:Letter›
 //│ >    let $unapplyResult = (member:Nullable.)unapply($patternArgument0$, x)
 //│ >    $unapplyResult is ($runtime.)MatchSuccess‹class:MatchSuccess›(output, bindings) then true

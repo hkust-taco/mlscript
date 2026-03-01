@@ -233,10 +233,9 @@ fun showStackTrace(header, tr, debug, showLocals) =
       while cur !== null do
         let curLocals = cur.getLocals
         let loc = cur.getLoc
-        let localsMsg = if showLocals and curLocals.length > 0 then
-          " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
-        else
-          ""
+        let localsMsg = if showLocals and curLocals.length > 0
+          then " with locals: " + curLocals.map(l => l.localName + "=" + Rendering.render(l.value)).join(", ")
+          else ""
         set
           msg += "\n\tat " + cur.getNme + " (" + loc + ")"
           msg += localsMsg

@@ -158,7 +158,7 @@ object Split:
           if prefix.isEmpty then all else (0, s"$prefix $line") :: lines
         case lines => (0, prefix) :: lines.indent
     
-    inline def apply(s: Split): Str = showSplit("if", s)
+    inline def apply(s: Split): Str = showSplit("‹if|while›", s)
     
     private def showSplit(prefix: Str, s: Split): Str =
       /** Show a split as a list of lines.
@@ -184,7 +184,7 @@ object Split:
       def term(t: Statement): Lines = t match
         case Term.Blk(stmts, term) =>
           stmts.iterator.concat(Iterator.single(term)).flatMap:
-            case DefineVar(sym, Term.IfLike(kw, splt)) =>
+            case DefineVar(sym, Term.IfLike(kw, IfLikeForm.ReturningIf, splt)) =>
               s"$sym = ${kw.name}" #: SimpleSplit.prettyPrint.split(splt, true, true)
             case DefineVar(sym, Term.SynthIf(splt)) =>
               s"$sym = if" #: split(splt, true, true)
