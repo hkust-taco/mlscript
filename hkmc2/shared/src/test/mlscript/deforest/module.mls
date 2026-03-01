@@ -21,9 +21,9 @@ M.f(M.p())
 //│ deforest > 	Select(Ref($arg$XX$0$,None),Ident(b))
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$XX$0$,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:y, $arg$YY$0$, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:y, $arg$XX$0$, $arg$YY$0$, $tmp)
 //│ = 123
 
 
@@ -45,14 +45,14 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ JS (unsanitized):
 //│ let Nil1, Cons1, map, enum1, lambda, lambda1, tmp1, tmp2, tmp3, map_11$map, map_13$map, map_13$ls_Cons, map_13$ls_Nil; /* scoped */
 //│ map_11$map = function map_11$map(f, ls) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
 //│   if (ls instanceof Nil1.class) {
-//│     return (fv_ctorLam_f) => {
-//│       return map_13$ls_Nil(fv_ctorLam_f)
+//│     return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
+//│       return map_13$ls_Nil(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1)
 //│     }
 //│   } else if (ls instanceof Cons1.class) {
 //│     let Cons_h, Cons_t; /* scoped */
@@ -64,8 +64,8 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│     tmp5 = map_11$map(f, t);
 //│     Cons_h = tmp4;
 //│     Cons_t = tmp5;
-//│     return (fv_ctorLam_f) => {
-//│       return map_13$ls_Cons(fv_ctorLam_f, Cons_h, Cons_t)
+//│     return (fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1) => {
+//│       return map_13$ls_Cons(fv_ctorLam_f, fv_ctorLam_t, fv_ctorLam_h, fv_ctorLam_arg$Cons$0$, fv_ctorLam_arg$Cons$1$, fv_ctorLam_tmp, fv_ctorLam_tmp1, Cons_h, Cons_t)
 //│     }
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
@@ -73,19 +73,18 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ };
 //│ map_13$map = function map_13$map(f, ls) {
 //│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
-//│   return ls(f)
+//│   return ls(f, t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5)
 //│ };
-//│ map_13$ls_Cons = function map_13$ls_Cons(fv_f, Cons_h, Cons_t) {
-//│   let t, h, arg$Cons$0$, arg$Cons$1$, tmp4, tmp5; /* scoped */
-//│   arg$Cons$0$ = Cons_h;
-//│   arg$Cons$1$ = Cons_t;
-//│   t = arg$Cons$1$;
-//│   h = arg$Cons$0$;
-//│   tmp4 = runtime.safeCall(fv_f(h));
-//│   tmp5 = map_13$map(fv_f, t);
-//│   return Cons1(tmp4, tmp5)
+//│ map_13$ls_Cons = function map_13$ls_Cons(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1, Cons_h, Cons_t) {
+//│   fv_arg$Cons$0$ = Cons_h;
+//│   fv_arg$Cons$1$ = Cons_t;
+//│   fv_t = fv_arg$Cons$1$;
+//│   fv_h = fv_arg$Cons$0$;
+//│   fv_tmp = runtime.safeCall(fv_f(fv_h));
+//│   fv_tmp1 = map_13$map(fv_f, fv_t);
+//│   return Cons1(fv_tmp, fv_tmp1)
 //│ };
-//│ map_13$ls_Nil = function map_13$ls_Nil(fv_f) {
+//│ map_13$ls_Nil = function map_13$ls_Nil(fv_f, fv_t, fv_h, fv_arg$Cons$0$, fv_arg$Cons$1$, fv_tmp, fv_tmp1) {
 //│   return Nil1
 //│ };
 //│ map = function map(f, ls) {
@@ -162,7 +161,7 @@ map(x => x + 1, map(x => x * 2, id(enum(3))))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(7, Cons(5, Cons(3, Cons(1, Nil))))
 
 
@@ -197,9 +196,9 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 5056
 
 
@@ -234,7 +233,7 @@ DeforestList.res + DeforestList.main()
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:helper, var:acc)
+//│ deforest > 	List(member:helper, var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(member:helper, var:acc)
+//│ deforest > 	List(member:helper, var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 5056

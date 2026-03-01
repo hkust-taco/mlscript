@@ -36,7 +36,7 @@ test(id(mk(5)))
 //│ deforest > 	Ref(var:ls_map1,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls_map1,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(11, Cons(9, Cons(7, Cons(5, Cons(3, Cons(1, Nil))))))
 
 
@@ -55,7 +55,7 @@ map(enumFromTo(1, 4))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
@@ -72,7 +72,7 @@ sum(enumFromTo(1,10))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 45
 
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
@@ -90,7 +90,7 @@ map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 fun enumFromTo(a, b) = if a < b then a :: enumFromTo(a + 1, b) else Nil
@@ -109,7 +109,7 @@ map(x => x + 4, enumFromTo(1, 4))
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = Cons(5, Cons(6, Cons(7, Nil)))
 
 
@@ -128,7 +128,7 @@ sum(enumFromTo(1, 10), 0)
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:a)
+//│ deforest > 	List(var:a, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 45
 
 
@@ -152,7 +152,7 @@ test(id(mk(5)))
 //│ deforest > 	Select(Ref(var:xs_map,None),Ident(t))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xs_map,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 
@@ -176,7 +176,7 @@ test(id(mk(3)))
 //│ deforest > 	Select(Ref(var:xs_rev,None),Ident(t))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xs_rev,None):
-//│ deforest > 	List(var:acc)
+//│ deforest > 	List(var:acc, var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Nil))))
 
 
@@ -233,7 +233,7 @@ test(id(mk2d(4)))
 //│ deforest > 	Ref(var:ls_sum,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls_sum,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 20
 
 
@@ -263,9 +263,9 @@ count(0, rev(Nil, 1 :: 2 :: Nil))
 //│ deforest > 	Ref(var:ys,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ys,None):
-//│ deforest > 	List(var:a)
+//│ deforest > 	List(var:a, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ deforest > free vars of Ref(var:xs,None):
-//│ deforest > 	List(var:c)
+//│ deforest > 	List(var:c, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 2
 
 
@@ -306,7 +306,7 @@ map(x => if x is A then 1 else 0, A :: B :: Nil)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:xs_map,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:x, var:xs, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(1, Cons(0, Nil))
 
 
@@ -351,9 +351,9 @@ c(T(A, T(B, L, L), T(A, L, L)))
 //│ deforest > 	Ref(var:n,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:n,None):
-//│ deforest > 	List(var:l, var:r)
+//│ deforest > 	List(var:l, var:r, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List($tmp)
+//│ deforest > 	List(var:n, var:l, var:r, $arg$T$0$, $arg$T$1$, $arg$T$2$, $tmp, $tmp, $tmp)
 //│ = T(0, T(1, L, L), T(0, L, L))
 
 
@@ -388,7 +388,7 @@ max(3 :: 2 :: 4 :: 1 :: 0 :: Nil, 0)
 //│ deforest > 	Ref(var:ms,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ms,None):
-//│ deforest > 	List(var:m)
+//│ deforest > 	List(var:m, var:t, var:h, $scrut, $arg$Cons$0$, $arg$Cons$1$)
 //│ = 4
 
 

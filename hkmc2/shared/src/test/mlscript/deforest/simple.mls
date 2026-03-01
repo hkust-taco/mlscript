@@ -48,7 +48,7 @@ test()
 //│ deforest > 	Select(Ref(var:x,None),Ident(bb))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$)
 //│ = A
 
 
@@ -78,7 +78,7 @@ test()
 //│ deforest > free vars of Ref(var:a,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$)
 //│ = 1
 
 
@@ -118,7 +118,7 @@ test()
 //│ deforest > 	Select(Ref(var:x,None),Ident(bb))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$)
 //│ = 11
 
 
@@ -152,18 +152,12 @@ test()
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:y,None)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List(6))
-//│ 	at: scala.collection.MapOps.default(Map.scala:289)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
-//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:198)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:204)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:160)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:230)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List()
+//│ = 2
 
 
 fun c(a) =
@@ -180,9 +174,9 @@ c(A) + c(B)
 //│ deforest > 	Ref(var:a,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $tmp, $tmp)
 //│ > 1
 //│ > 2
 //│ = 3
@@ -245,18 +239,14 @@ if y is
 //│ deforest > 	Ref(var:y,None)
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List())
-//│ 	at: scala.collection.MapOps.default(Map.scala:289)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
-//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:198)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:204)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:160)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:230)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List()
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List()
+//│ = 2
+//│ x = fun x
+//│ y = fun y
 
 
 
@@ -273,18 +263,12 @@ test()
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > Ref(member:B,Some(object:B)) ->
 //│ deforest > 	Ref(var:y,None)
-//│ FAILURE: Unexpected exception
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: CtorDtorId(2,List(6))
-//│ 	at: scala.collection.MapOps.default(Map.scala:289)
-//│ 	at: scala.collection.MapOps.default$(Map.scala:288)
-//│ 	at: scala.collection.AbstractMap.default(Map.scala:420)
-//│ 	at: scala.collection.mutable.HashMap.apply(HashMap.scala:440)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:198)
-//│ 	at: hkmc2.codegen.BlockTraverser.applySubBlock(BlockTraverser.scala:20)
-//│ 	at: hkmc2.codegen.BlockTraverser.applyBlock(BlockTraverser.scala:35)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter$FreeVarTraverser$1.applyBlock(Rewrite.scala:204)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.deforestFreeVars$1(Rewrite.scala:160)
-//│ 	at: hkmc2.codegen.deforest.DeforestRewriter.$init$$$anonfun$3$$anonfun$2(Rewrite.scala:230)
+//│ deforest > ========
+//│ deforest > free vars of Ref(var:x,None):
+//│ deforest > 	List(var:y, $tmp)
+//│ deforest > free vars of Ref(var:y,None):
+//│ deforest > 	List()
+//│ = 2
 
 
 
@@ -313,13 +297,13 @@ f(AAA(1, 3), 1) + f(BBB(2, 3), 2) + f(AAA(3, 2), 4) + f(BBB(4, 6), 0)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, var:n, var:m, $arg$BBB$0$, $arg$BBB$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, var:n, var:m, $arg$BBB$0$, $arg$BBB$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:a, var:n, var:m, $arg$AAA$0$, $arg$AAA$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:a, var:n, var:m, $arg$AAA$0$, $arg$AAA$1$, $tmp, $tmp)
 //│ = 21
 
 
@@ -350,7 +334,7 @@ c(AA(2), A)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:a, $arg$AA$0$)
 //│ deforest > free vars of Ref(var:y,None):
 //│ deforest > 	List(var:a)
 //│ = 2
@@ -379,13 +363,13 @@ f(AAA(1, 3), 1) + f(CCC(2), 2) + f(AAA(3, 2), 4) + f(CCC(4), 0)
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, var:n, $arg$CCC$0$, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:a, var:n, var:m, $arg$AAA$0$, $arg$AAA$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, var:n, $arg$CCC$0$, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:a, var:n, var:m, $arg$AAA$0$, $arg$AAA$1$, $tmp, $tmp)
 //│ = 24
 
 
@@ -431,9 +415,9 @@ f(AA(AA(0)))
 //│ deforest > 	Select(Ref(var:b,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:b,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:b, $arg$AA$0$)
 //│ = 1
 
 
@@ -467,7 +451,7 @@ outer1(p, 1, 2) + outer2(p, 3, 4) + inner(AA(5), 6)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y)
+//│ deforest > 	List(var:y, var:t, var:a, $arg$AA$0$, $tmp)
 //│ = 103
 //│ p = AA(AA(3))
 
@@ -482,7 +466,7 @@ mapHead(x => x, AAA(1, AAA(2, None)))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$AAA$0$, $arg$AAA$1$)
 //│ = 1
 
 
@@ -533,24 +517,73 @@ test(AA(1), AA(2), AA(3))
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List(var:y, var:z, $tmp)
+//│ deforest > 	List(var:y, var:z, var:a, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $arg$AA$0$, $tmp, $arg$AA$0$, $tmp)
 //│ deforest > free vars of Ref(var:y,None):
-//│ deforest > 	List(var:z)
+//│ deforest > 	List(var:z, var:m, var:a1, var:n, var:a2, $arg$AA$0$, $tmp, $arg$AA$0$, $tmp)
 //│ = "2AA(3)NaN"
 
-
+:sjs
 fun test(x) =
   let t = id of
     if x is
-      AA(a) then a
-      BB(a) then a
-  t(123).c + 5 * 4 - 3 + 2 - 1
-let p = if true then AA(CCC) else BB(CCC)
+      AA(CCC(a)) then a
+      BB(CCC(a)) then a
+  t(123).aa + 5 * 4 - 3 + 2 - 1
+let p = if true then AA(CCC(AA)) else BB(CCC(AA))
 test(p)
 //│ deforest > ==============
 //│ deforest > ========
+//│ JS (unsanitized):
+//│ let test11, p2, scrut, tmp52, tmp53, tmp54; /* scoped */
+//│ test11 = function test(x1) {
+//│   let t, a, a1, arg$BB$0$, arg$CCC$0$, arg$AA$0$, arg$CCC$0$1, tmp55, tmp56, tmp57, tmp58, tmp59, tmp60; /* scoped */
+//│   split_root$: {
+//│     split_default$: {
+//│       if (x1 instanceof AA1.class) {
+//│         arg$AA$0$ = x1.aa;
+//│         if (arg$AA$0$ instanceof CCC1.class) {
+//│           arg$CCC$0$1 = arg$AA$0$.c;
+//│           a = arg$CCC$0$1;
+//│           tmp55 = a;
+//│           break split_root$
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else if (x1 instanceof BB1.class) {
+//│         arg$BB$0$ = x1.bb;
+//│         if (arg$BB$0$ instanceof CCC1.class) {
+//│           arg$CCC$0$ = arg$BB$0$.c;
+//│           a1 = arg$CCC$0$;
+//│           tmp55 = a1;
+//│           break split_root$
+//│         } else {
+//│           break split_default$
+//│         }
+//│       } else {
+//│         break split_default$
+//│       }
+//│     }
+//│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
+//│   }
+//│   t = Predef.id(tmp55);
+//│   tmp56 = runtime.safeCall(t(123));
+//│   tmp57 = 5 * 4;
+//│   tmp58 = tmp56.aa + tmp57;
+//│   tmp59 = tmp58 - 3;
+//│   tmp60 = tmp59 + 2;
+//│   return tmp60 - 1
+//│ };
+//│ scrut = true;
+//│ if (scrut === true) {
+//│   tmp52 = CCC1(AA1);
+//│   tmp53 = AA1(tmp52);
+//│ } else { tmp54 = CCC1(AA1); tmp53 = BB1(tmp54); }
+//│ p2 = tmp53;
+//│ test11(p2)
+//│ deforest > ==============
+//│ deforest > ========
 //│ = 141
-//│ p = AA(fun CCC { class: class CCC })
+//│ p = AA(CCC(fun AA { class: class AA }))
 
 
 fun test(x, y) =
@@ -579,25 +612,25 @@ f(id(A)) + f(A)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ JS (unsanitized):
-//│ let f10, tmp55, tmp56, tmp57, f_5$f, f_5$x_A, deforest$lam7; /* scoped */
-//│ f_5$f = function f_5$f(x) {
-//│   return x()
+//│ let f10, tmp58, tmp59, tmp60, f_5$f, f_5$x_A, deforest$lam7; /* scoped */
+//│ f_5$f = function f_5$f(x1) {
+//│   return x1()
 //│ };
 //│ f_5$x_A = function f_5$x_A() {
 //│   return 1
 //│ };
-//│ f10 = function f(x) {
-//│   if (x instanceof A1.class) {
+//│ f10 = function f(x1) {
+//│   if (x1 instanceof A1.class) {
 //│     return 1
 //│   } else {
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ };
-//│ tmp55 = Predef.id(A1);
-//│ tmp56 = f10(tmp55);
+//│ tmp58 = Predef.id(A1);
+//│ tmp59 = f10(tmp58);
 //│ deforest$lam7 = () => { return f_5$x_A() };
-//│ tmp57 = f_5$f(deforest$lam7);
-//│ tmp56 + tmp57
+//│ tmp60 = f_5$f(deforest$lam7);
+//│ tmp59 + tmp60
 //│ deforest > ==============
 //│ deforest > Ref(member:A,Some(object:A)) ->
 //│ deforest > 	Ref(var:x,None)
@@ -641,9 +674,9 @@ f(A, B)
 //│ deforest > 	Ref(var:b,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:b,None):
-//│ deforest > 	List()
+//│ deforest > 	List($tmp)
 //│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List(var:b)
+//│ deforest > 	List(var:b, $tmp)
 //│ = 1
 
 
@@ -669,11 +702,11 @@ c1(app(AA)) + c1(AA(2)) + c2(AA(3)) + c2(A)
 //│ deforest > 	Select(Ref(var:x,None),Ident(aa))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:i, $arg$AA$0$)
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:i, $arg$AA$0$)
 //│ = 6
 
 :re

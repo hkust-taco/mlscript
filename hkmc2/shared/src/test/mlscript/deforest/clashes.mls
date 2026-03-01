@@ -46,7 +46,7 @@ f1(one) + f2(one) + f2(two)
 //│ deforest > 	Select(Ref(var:p,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:b, $arg$A$0$)
 //│ = 9
 //│ one = A(1)
 //│ two = fun

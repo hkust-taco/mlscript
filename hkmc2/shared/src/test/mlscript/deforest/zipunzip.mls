@@ -33,9 +33,9 @@ testUnzipZip(3)
 //│ deforest > 	Select(Ref($arg$Cons$0$,None),Ident(b))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls_unzip,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:a, var:b, var:atail, var:btail, $scrut, $arg$Cons$0$, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref($arg$Cons$0$,None):
-//│ deforest > 	List($arg$Cons$1$)
+//│ deforest > 	List(var:t, var:a, var:b, var:atail, var:btail, $scrut, $arg$Cons$1$, $arg$Pair$0$, $arg$Pair$1$, $arg$Pair$0$, $arg$Pair$1$, $tmp, $tmp, $tmp)
 //│ = Pair(Cons(1, Cons(2, Nil)), Cons(2, Cons(3, Nil)))
 
 
@@ -87,9 +87,9 @@ testZipMapBothUnzip(4)
 //│ deforest > 	Ref(var:ys_zip,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ys_zip,None):
-//│ deforest > 	List(var:x, var:xt)
+//│ deforest > 	List(var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:xs_zip,None):
-//│ deforest > 	List(var:ys_zip)
+//│ deforest > 	List(var:ys_zip, var:x, var:xt, var:y, var:yt, $arg$Cons$0$, $arg$Cons$1$, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp, $tmp)
 //│ = Cons(
 //│   Pair(5, 25),
 //│   Cons(Pair(4, 16), Cons(Pair(3, 9), Cons(Pair(2, 4), Nil)))

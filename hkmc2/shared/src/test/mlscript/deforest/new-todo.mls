@@ -33,7 +33,7 @@ test()
 //│ deforest > free vars of Ref(var:x,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:prod,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:x, $arg$BB$0$, $arg$AA$0$, $tmp, $tmp)
 //│ = 1
 
 
@@ -144,7 +144,7 @@ let useless = if lsit is [a, b] then 0
 //│ deforest > 	List()
 //│ ═══[RUNTIME ERROR] Error: MLscript call unexpectedly returned `undefined`, the forbidden value.
 //│ lsit = fun lsit
-//│ useless = undefined
+//│ useless = 0
 
 
 // TODO: to workaround this one can write `MMM.y` instead of `y`

@@ -39,11 +39,11 @@ f1(to(4, Nil), 0) + f2(to(5, Nil), 0) + f1(to(6, Nil), 0)
 //│ deforest > 	Select(Ref(var:ls1,None),Ident(h))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls2,None):
-//│ deforest > 	List(var:acc)
+//│ deforest > 	List(var:acc, var:tt, var:hh, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:ls1,None):
-//│ deforest > 	List(var:acc)
+//│ deforest > 	List(var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ deforest > free vars of Ref(var:ls1,None):
-//│ deforest > 	List(var:acc)
+//│ deforest > 	List(var:acc, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 51
 
 
@@ -124,9 +124,9 @@ map(map(1 :: 2 :: Nil, x => x + 1), x => x * 2)
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(4, Cons(6, Nil))
 
 
@@ -149,7 +149,7 @@ map(1 :: 2 :: Nil, x => x + 1)
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp, $tmp)
 //│ = Cons(2, Cons(3, Nil))
 
 
@@ -167,7 +167,7 @@ f(Nil)
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List($arg$A$0$, $tmp)
 //│ = 0
 
 
@@ -189,7 +189,7 @@ c1(1 :: Nil)
 //│ deforest > free vars of Ref(var:t,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$)
 //│ = 0
 
 
@@ -244,9 +244,9 @@ localFuse(4)
 //│ deforest > free vars of Ref($scrut,None):
 //│ deforest > 	List()
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:y, $arg$A$0$)
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:y, $arg$A$0$)
 //│ = B(4)
 
 
@@ -267,7 +267,7 @@ f(A(4))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:res, var:x, $scrut, $arg$A$0$, $tmp, $tmp, $tmp)
 //│ = 0
 
 
@@ -295,7 +295,7 @@ f(A(1))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $arg$A$0$)
 //│ = 1
 
 
@@ -340,7 +340,7 @@ c(p1(3))
 //│ deforest > 	Select(Ref(var:a,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:a,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $arg$A$0$)
 //│ = 0
 
 
@@ -359,9 +359,9 @@ f(A(2)) + f(A(3))
 //│ deforest > 	Select(Ref(var:x,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $arg$A$0$)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, $arg$A$0$)
 //│ = 4
 
 
@@ -381,7 +381,7 @@ test()
 //│ deforest > 	Ref($scrut,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref($scrut,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:x, var:f, $tmp)
 //│ = 1
 
 
@@ -400,12 +400,11 @@ if [1, 2] is
 //│ JS (unsanitized):
 //│ let scrut1, a1, b, element1$, element0$, tup2_0, tup2_1, $scrut_2; /* scoped */
 //│ $scrut_2 = function $scrut_2(tup2_01, tup2_11) {
-//│   let a2, b1, element1$1, element0$1; /* scoped */
-//│   element0$1 = tup2_01;
-//│   element1$1 = tup2_11;
-//│   b1 = element1$1;
-//│   a2 = element0$1;
-//│   return a2 + b1
+//│   element0$ = tup2_01;
+//│   element1$ = tup2_11;
+//│   b = element1$;
+//│   a1 = element0$;
+//│   return a1 + b
 //│ };
 //│ tup2_0 = 1;
 //│ tup2_1 = 2;
@@ -454,7 +453,7 @@ f([])
 //│ deforest > 	Ref(var:ls,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:y)
 //│ = 4
 
 

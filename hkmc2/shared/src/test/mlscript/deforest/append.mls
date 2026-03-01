@@ -73,7 +73,7 @@ appendThree of
 //│ deforest > 	Select(Ref(var:xs,None),Ident(t))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:xs,None):
-//│ deforest > 	List(var:ys)
+//│ deforest > 	List(var:ys, var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = Cons(1, Cons(2, Cons(3, Cons(4, Cons(5, Cons(6, Nil))))))
 
 

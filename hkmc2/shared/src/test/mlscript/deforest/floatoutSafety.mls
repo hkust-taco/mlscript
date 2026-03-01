@@ -46,7 +46,7 @@ consumer of
 //│ deforest > 	Select(Ref($arg$Many$0$,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$Many$0$,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:v, $arg$Once$0$, $tmp)
 //│ = 13
 
 
@@ -72,7 +72,7 @@ consume(sum, enumFrom(3))
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 12
 
 
@@ -106,9 +106,9 @@ cons of
 //│ deforest > 	Select(Ref(var:caseScrut,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:caseScrut,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$Inner$0$)
 //│ deforest > free vars of Ref(var:p,None):
-//│ deforest > 	List(var:f)
+//│ deforest > 	List(var:f, var:i, $arg$Outter$0$, $tmp, $tmp)
 //│ = 22
 
 
@@ -141,7 +141,7 @@ sum(prodDouble(4))
 //│ deforest > 	Select(Ref(var:ls,None),Ident(h))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:ls,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:t, var:h, $arg$Cons$0$, $arg$Cons$1$, $tmp)
 //│ = 20
 
 

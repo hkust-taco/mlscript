@@ -98,11 +98,11 @@ f(AA(AA(AA(AA(AA(A))))))
 //│ deforest > 	Ref(var:x,None)
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:b, $arg$AA$0$)
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $arg$AA$0$, $tmp)
 //│ = 42
 
 fun f(x) = if x is
@@ -117,9 +117,9 @@ f(AA(AA(A)))
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $arg$AA$0$, $tmp)
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp)
 //│ = A
 
 fun f(x) = if x is
@@ -135,9 +135,9 @@ f(p())
 //│ deforest > 	Select(Ref($arg$AA$0$,None),Ident(x))
 //│ deforest > ========
 //│ deforest > free vars of Ref($arg$AA$0$,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $tmp)
 //│ deforest > free vars of Ref(var:x,None):
-//│ deforest > 	List()
+//│ deforest > 	List(var:a, $arg$AA$0$, $arg$AA$0$, $tmp)
 //│ = A
 
 

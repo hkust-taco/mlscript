@@ -175,11 +175,11 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       def deforestFreeVars(ctx: collection.Set[Symbol], instId: InstantiationId) =
         val traverser = new FreeVarTraverser(ctx, instId)
         traverser.applyBlock(b)
-        (traverser.refedVars.toSet -- traverser.assignedVars.toSet).filter: s =>
-          s.asClsLike.isEmpty
+        traverser.freeVars.toSet.filter(s => s.asClsLike.isEmpty)
+        
     class FreeVarTraverser(ctx: collection.Set[Symbol], instId: InstantiationId) extends BlockTraverser:
       extension (resId: ResultId) def toCtorDtorId = CtorDtorId(resId, instId)
-      val assignedVars = MutSet.from[Symbol]:
+      val inCtx = MutSet.from[Symbol]:
         pre.b match
           case Scoped(syms, body) =>
             ctx
@@ -189,48 +189,63 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
             ++ (eState.globalThisSymbol :: eState.runtimeSymbol :: Nil)
             ++ syms
           case _ => die
-      val refedVars = MutSet.empty[Symbol]
+      val freeVars = MutSet.empty[Symbol]
       
       override def applyValue(v: Value): Unit =
         v match
-        case Value.Ref(l, disamb) => refedVars.add(l)
+        case Value.Ref(l, disamb) if !inCtx(l) => freeVars.add(l)
         case _ => super.applyValue(v)
       
       override def applyResult(r: Result): Unit =
         r match
         case s@DeforestTupSelect(_, _) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+          // FIXME: this is only safe when there is no selection
+          // from parent matches in child matches
+          // refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+          ()
+        case Lambda(params, body) =>
+          for p <- params.allParams do inCtx.add(p.sym)
+          applyBlock(body)
+          for p <- params.allParams do inCtx.remove(p.sym)
         case _ => super.applyResult(r)
       
       override def applyPath(p: Path): Unit =
         p match
         case s@DeforestableSelect(sym: TermSymbol) if branchSelSyms.isDefinedAt(s.uid.toCtorDtorId) =>
-          assert(sym.k is ParamBind)
-          refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+          // FIXME: this is only safe when there is no selection
+          // from parent matches in child matches
+          // assert(sym.k is ParamBind)
+          // refedVars.add(branchSelSyms(s.uid.toCtorDtorId))
+          ()
         case _ => super.applyPath(p)
       
       override def applyBlock(b: Block): Unit =
         b match
-        case m: Match if solver.finalDtorSrcs.isDefinedAt(m.scrut.uid.toCtorDtorId) =>
-          refedVars.addAll(store(m.scrut.uid.toCtorDtorId).values.flatten)
-          super.applyPath(m.scrut)
+        // case m: Match if solver.finalDtorSrcs.isDefinedAt(m.scrut.uid.toCtorDtorId) =>
+          // refedVars.addAll(store(m.scrut.uid.toCtorDtorId).values.flatten)
+          // super.applyPath(m.scrut)
         case Assign(lhs, rhs, rest) =>
-          assignedVars.add(lhs)
+          if !inCtx(lhs) then freeVars.add(lhs)
           applyResult(rhs)
           applyBlock(rest)
+        case Scoped(syms, body) =>
+          for s <- syms do inCtx.add(s)
+          applyBlock(body)
+          for s <- syms do inCtx.remove(s)
         case _ => super.applyBlock(b)
-      
-      override def applyParamList(pl: ParamList): Unit =
-        assignedVars.addAll(pl.params.map(_.sym)): Unit
       
       override def applyDefn(defn: Defn): Unit =
         defn match
         case fDef: FunDefn =>
-          assignedVars.add(fDef.sym)
-          super.applyDefn(defn)
+          // if !inCtx(fDef.sym) then freeVars.add(fDef.sym)
+          // NOTE: this fDef.sym is not treated as a free variable in block.freeVars either
+          inCtx.add(fDef.sym)
+          for p <- fDef.params.flatMap(_.allParams) do inCtx.add(p.sym)
+          applyBlock(fDef.body)
+          for p <- fDef.params.flatMap(_.allParams) do inCtx.remove(p.sym)
         case _: ClsLikeDefn => die
         case vDef: ValDefn =>
-          assignedVars.add(vDef.sym)
+          inCtx.add(vDef.sym)
           super.applyDefn(defn)
     end FreeVarTraverser
     
@@ -432,27 +447,58 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       case Continue(label) => die
       case _ => super.applyBlock(b)
     
-    override def applyFunDefn(fun: FunDefn): FunDefn =
-      assert(fun.owner.isEmpty)
-      val sym2 = mapping.getOrElse(fun.sym, fun.sym).asInstanceOf[BlockMemberSymbol]
-      val dSym2 = sym2.tsym.getOrElse(lastWords(s"$sym2 has no tsym"))
-      val oldParamSyms = Buffer.empty[VarSymbol]
-      val params2 = fun.params.map:
-        case ParamList(flags, params, N) =>
-          ParamList(
-            flags,
-            params.map: 
-              case Param(flags, sym, sign, modulefulness) =>
-                oldParamSyms.append(sym)
-                val newSym = new VarSymbol(sym.id)
-                assert(!mapping.isDefinedAt(sym))
-                mapping(sym) = newSym
-                Param(flags, newSym, sign, modulefulness),
-            N)
-        case _ => die
-      val body2 = applyFunBodyLikeBlock(fun.body)
-      for s <- oldParamSyms do mapping.remove(s)
-      FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec)
+    override def applyDefn(defn: Defn)(k: Defn => Block): Block =
+      defn match
+      case fun: FunDefn =>
+        assert(fun.owner.isEmpty)
+        // because fun sym is not treated as a free var, we refresh here
+        var newlyCreated = false
+        val (sym2, dSym2) = mapping.get(fun.sym) match
+          case Some(s: BlockMemberSymbol) => (s, s.tsym.get)
+          case None =>
+            newlyCreated = true
+            val newBms = new BlockMemberSymbol(fun.sym.nme, fun.sym.trees, fun.sym.nameIsMeaningful)
+            val newDsym = fun.sym.tsym.map: tsym =>
+              assert(tsym.owner.isEmpty)
+              new TermSymbol(tsym.k, N, tsym.id)
+            newBms.tsym = S(newDsym.get)
+            mapping(fun.sym) = newBms
+            (newBms, newDsym.get)
+          case _ => die
+        val oldParamSyms = Buffer.empty[VarSymbol]
+        val params2 = fun.params.map:
+          case ParamList(flags, params, N) =>
+            ParamList(
+              flags,
+              params.map: 
+                case Param(flags, sym, sign, modulefulness) =>
+                  oldParamSyms.append(sym)
+                  val newSym = new VarSymbol(sym.id)
+                  assert(!mapping.isDefinedAt(sym))
+                  mapping(sym) = newSym
+                  Param(flags, newSym, sign, modulefulness),
+              N)
+          case _ => die
+        val body2 = applyFunBodyLikeBlock(fun.body)
+        for s <- oldParamSyms do mapping.remove(s)
+        if newlyCreated then
+          Scoped(Set(sym2), k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec)))
+        else
+          k(FunDefn(N, sym2, dSym2, params2, body2)(fun.forceTailRec))
+      case ValDefn(tsym, sym, rhs) =>
+        val (tsym2, sym2) = mapping.get(sym) match
+          case None =>
+            val newBms = new BlockMemberSymbol(sym.nme, sym.trees, sym.nameIsMeaningful)
+            val newTsym = new TermSymbol(tsym.k, tsym.owner, tsym.id)
+            newBms.tsym = S(newTsym)
+            (newTsym, newBms)
+          case S(bms: BlockMemberSymbol) =>
+            (bms.tsym.get, bms)
+          case _ => die
+        applyPath(rhs): rhs2 =>
+          k(ValDefn(tsym2, sym2, rhs2))
+      case _ => super.applyDefn(defn)(k)
+    
     
     override def applyValDefn(defn: ValDefn)(k: ValDefn => Block): Block =
       val ValDefn(tsym, sym, rhs) = defn
@@ -507,7 +553,8 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
       val transformedBranchBody = new Rewriter(dtorId.instId, forceExplicitRet = true).applyBlock(originalBranchBody)
       // after we can have scoped blocks in branches,
       // we can remove this pass of computing `branchFunScopedSymbols`
-      val scopedBody = Scoped(transformedBranchBody.branchFunScopedSymbols, transformedBranchBody)
+      // val scopedBody = Scoped(transformedBranchBody.branchFunScopedSymbols, transformedBranchBody)
+      val scopedBody = transformedBranchBody
       val refreshedFvSymbols = dtorBranchFunsFvs(branchId._1).map(s => s -> new VarSymbol(Tree.Ident(s"fv_${s.nme}")))
       val bodyWithCorrectSymbols = new RefreshSymbol(refreshedFvSymbols.toMap).applyBlock(scopedBody)
       FunDefn(N, bms, tSym,
@@ -539,6 +586,7 @@ class DeforestRewriter(val solver: DeforestConstrainSolver)(using Raise):
   tl.log("========")
   for (dtorId, fvs) <- dtorBranchFunsFvs do
     tl.log(s"free vars of ${dtorId.pp}:")
+    // tl.log(s"\t${fvs.map(s => (s, s.uid))}")
     tl.log(s"\t$fvs")
   // for (dtorId, callFvs) <- callDtorFvs do
   //   tl.log(s"call dtor ${dtorId.pp} with:")
