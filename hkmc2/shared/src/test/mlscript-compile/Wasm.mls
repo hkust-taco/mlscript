@@ -43,17 +43,15 @@ fun binaryenCompileToModule(wat, importObject): Promise =
   )
 
 fun unwrapWasmException(err, tag) =
-  if tag === null || tag === undefined then err
-  else
-    if (
-      err !== null &&
-      err !== undefined &&
-      typeof(err.is) === "function" &&
-      typeof(err.getArg) === "function" &&
-      err.is(tag)
-    )
-    then err.getArg(tag, 0)
-    else err
+  if (
+    err !== null &&
+    err !== undefined &&
+    typeof(err.is) === "function" &&
+    typeof(err.getArg) === "function" &&
+    err.is(tag)
+  )
+  then err.getArg(tag, 0)
+  else err
 
 fun binaryenRunFunc(wat, importObject, func): Promise =
   binaryenCompileToModule(wat, importObject)
