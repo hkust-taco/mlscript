@@ -84,7 +84,7 @@ print of Box(foo(1)).value
 
 :e
 fun f = let x = 1
-//│ ╔══[ERROR] Expected a body for let bindings in expression position
+//│ ╔══[COMPILATION ERROR] Expected a body for let bindings in expression position
 //│ ║  l.86: 	fun f = let x = 1
 //│ ╙──      	            ^^^^^
 

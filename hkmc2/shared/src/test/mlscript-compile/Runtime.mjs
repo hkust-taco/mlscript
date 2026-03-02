@@ -662,19 +662,17 @@ let Runtime1;
     lbl: while (true) {
       let scrut, tmp2, tmp3, tmp4;
       split_root$: {
-        split_default$: {
-          if (tr instanceof Runtime.EffectSig.class) {
-            scrut = tr.handler === Runtime.PrintStackEffect;
-            if (scrut === true) {
-              tmp2 = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
-              runtime.safeCall(globalThis.console.log(tmp2));
-              Runtime.curEffect = null;
-              tmp3 = Runtime.resume(tr.contTrace);
-              tmp4 = runtime.safeCall(tmp3(runtime.Unit));
-              v = tmp4;
-              tr = Runtime.curEffect;
-              continue lbl
-            }
+        if (tr instanceof Runtime.EffectSig.class) {
+          scrut = tr.handler === Runtime.PrintStackEffect;
+          if (scrut === true) {
+            tmp2 = Runtime.showStackTrace("Stack Trace:", tr, debug, tr.handlerFun);
+            runtime.safeCall(globalThis.console.log(tmp2));
+            Runtime.curEffect = null;
+            tmp3 = Runtime.resume(tr.contTrace);
+            tmp4 = runtime.safeCall(tmp3(runtime.Unit));
+            v = tmp4;
+            tr = Runtime.curEffect;
+            continue lbl
           }
         }
       }
@@ -977,7 +975,6 @@ let Runtime1;
       } else {
         return cur
       }
-      break;
     }
     return runtime.Unit
   } 
@@ -987,14 +984,12 @@ let Runtime1;
     lbl: while (true) {
       let scrut4, scrut5;
       split_root$: {
-        split_default$: {
-          scrut4 = prevHandlerFrame.nextHandler !== null;
-          if (scrut4 === true) {
-            scrut5 = prevHandlerFrame.nextHandler.handler !== cur.handler;
-            if (scrut5 === true) {
-              prevHandlerFrame = prevHandlerFrame.nextHandler;
-              continue lbl
-            }
+        scrut4 = prevHandlerFrame.nextHandler !== null;
+        if (scrut4 === true) {
+          scrut5 = prevHandlerFrame.nextHandler.handler !== cur.handler;
+          if (scrut5 === true) {
+            prevHandlerFrame = prevHandlerFrame.nextHandler;
+            continue lbl
           }
         }
       }
@@ -1085,7 +1080,6 @@ let Runtime1;
           return value
         }
       }
-      break;
     }
     return runtime.Unit
   } 

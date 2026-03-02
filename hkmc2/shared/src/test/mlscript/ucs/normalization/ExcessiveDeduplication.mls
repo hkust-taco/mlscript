@@ -134,13 +134,12 @@ if
 if false do ()
 123
 //│ JS (unsanitized):
-//│ let scrut, tmp2;
+//│ let scrut;
 //│ split_root$2: {
 //│   split_1$2: {
 //│     scrut = false;
 //│     if (scrut === true) { break split_1$2 } else { break split_1$2 }
 //│   }
-//│   tmp2 = runtime.Unit;
 //│ }
 //│ 123
 //│ = 123

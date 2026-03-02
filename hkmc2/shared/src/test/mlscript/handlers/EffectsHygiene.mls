@@ -5,7 +5,7 @@
 module M
 
 // * Notice that the two module definitions are lifted to the top of the block.
-:sjs
+:ssjs
 :fixme
 fun foo(h): module M =
   if false then
@@ -20,6 +20,49 @@ fun foo(h): module M =
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.12: 	    module A
 //│ ╙──      	           ^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.12: 	    module A
+//│ ╙──      	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.15: 	    module A
+//│ ╙──      	           ^
+//│ JS:
+//│ let foo;
+//│ foo = function foo(...args) {
+//│   runtime.checkArgs("foo", 1, true, args.length);
+//│   let h = args[0];
+//│   let A2, A3, scrut;
+//│   scrut = false;
+//│   if (scrut === true) {
+//│     globalThis.Object.freeze(class A {
+//│       static {
+//│         A2 = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static #A_mod$cap;
+//│       #A$cap;
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A"]; 
+//│     });
+//│     return A2
+//│   } else {
+//│     globalThis.Object.freeze(class A1 {
+//│       static {
+//│         A3 = this
+//│       }
+//│       constructor() {
+//│         runtime.Unit;
+//│       }
+//│       static #A_mod$cap;
+//│       #A$cap;
+//│       toString() { return runtime.render(this); }
+//│       static [definitionMetadata] = ["class", "A"]; 
+//│     });
+//│     return A3
+//│   }
+//│ };
+//│ block$res2 = undefined;
 
 

@@ -17,7 +17,7 @@ js
 :e
 :ge
 js.oops
-//│ ╔══[ERROR] Module 'js' does not contain member 'oops'
+//│ ╔══[COMPILATION ERROR] Module 'js' does not contain member 'oops'
 //│ ║  l.19: 	js.oops
 //│ ╙──      	  ^^^^^
 //│ ╔══[COMPILATION ERROR] Module 'js' is virtual (i.e., "compiler fiction"); cannot be used directly

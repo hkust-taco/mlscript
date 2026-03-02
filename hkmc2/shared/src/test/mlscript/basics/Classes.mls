@@ -30,7 +30,7 @@ class Foo(x: Int)
 :fixme
 :e
 class Foo(x: Int) { log("Hello!") }
-//│ ╔══[ERROR] Expected a valid class definition head; found block instead
+//│ ╔══[COMPILATION ERROR] Expected a valid class definition head; found block instead
 //│ ║  l.32: 	class Foo(x: Int) { log("Hello!") }
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^
 //│ JS (unsanitized):
@@ -42,7 +42,7 @@ class Foo(x: Int) { log("Hello!") }
 
 :e
 class Foo(42)
-//│ ╔══[ERROR] Expected a valid parameter, found integer literal
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
 //│ ║  l.44: 	class Foo(42)
 //│ ╙──      	          ^^
 

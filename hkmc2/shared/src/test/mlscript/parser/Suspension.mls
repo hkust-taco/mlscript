@@ -95,7 +95,7 @@ bar
 x => if false then 0 else...
   1
 let foo = 1
-//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
 //│ ║  l.95: 	x => if false then 0 else...
 //│ ╙──      	                         ^^^
 //│ ╔══[WARNING] Pure expression in statement position

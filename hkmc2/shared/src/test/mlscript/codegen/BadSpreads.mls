@@ -3,14 +3,15 @@
 
 :e
 ..., 1
-//│ ╔══[ERROR] Illegal position for '...' spread operator.
+//│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
 //│ ║  l.5: 	..., 1
 //│ ╙──     	^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 fun f = ..., 1
-//│ ╔══[ERROR] Illegal position for '...' spread operator.
-//│ ║  l.11: 	fun f = ..., 1
+//│ ╔══[COMPILATION ERROR] Illegal position for '...' spread operator.
+//│ ║  l.12: 	fun f = ..., 1
 //│ ╙──      	        ^^^
 //│ = 1
 
@@ -22,14 +23,14 @@ fun f = ..., 1
 
 :e
 fun foo(a, ...b, c) = [a, ...b, c]
-//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.24: 	fun foo(a, ...b, c) = [a, ...b, c]
+//│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.25: 	fun foo(a, ...b, c) = [a, ...b, c]
 //│ ╙──      	           ^^^^
 
 :e
 fun foo(a, ...b, c) = [a, ...b]
-//│ ╔══[ERROR] Spread parameters must be the last in the parameter list.
-//│ ║  l.30: 	fun foo(a, ...b, c) = [a, ...b]
+//│ ╔══[COMPILATION ERROR] Spread parameters must be the last in the parameter list.
+//│ ║  l.31: 	fun foo(a, ...b, c) = [a, ...b]
 //│ ╙──      	           ^^^^
 
 :re
@@ -42,22 +43,22 @@ fun foo(a, ...b) = [a, ...b]
 :e
 :re
 foo()
-//│ ╔══[ERROR] Expected at least 1 arguments, got 0
-//│ ║  l.44: 	foo()
+//│ ╔══[COMPILATION ERROR] Expected at least 1 arguments, got 0
+//│ ║  l.45: 	foo()
 //│ ╙──      	   ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'foo' expected at least 1 argument but got 0
 
 
 :e
 fun foo(1) = 2
-//│ ╔══[ERROR] Expected a valid parameter, found integer literal
-//│ ║  l.52: 	fun foo(1) = 2
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found integer literal
+//│ ║  l.53: 	fun foo(1) = 2
 //│ ╙──      	        ^
 
 :e
 fun foo(...1) = 2
-//│ ╔══[ERROR] Expected a valid parameter, found spread
-//│ ║  l.58: 	fun foo(...1) = 2
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found spread
+//│ ║  l.59: 	fun foo(...1) = 2
 //│ ╙──      	        ^^^^
 
 

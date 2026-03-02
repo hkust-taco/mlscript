@@ -10,10 +10,10 @@ object Bar extends Foo
 
 :todo // recognize fields that are inherited from superclasses
 [Bar.x, Bar.foo]
-//│ ╔══[ERROR] Object 'Bar' does not contain member 'x'
+//│ ╔══[COMPILATION ERROR] Object 'Bar' does not contain member 'x'
 //│ ║  l.12: 	[Bar.x, Bar.foo]
 //│ ╙──      	    ^^
-//│ ╔══[ERROR] Object 'Bar' does not contain member 'foo'
+//│ ╔══[COMPILATION ERROR] Object 'Bar' does not contain member 'foo'
 //│ ║  l.12: 	[Bar.x, Bar.foo]
 //│ ╙──      	           ^^^^
 //│ = [10, 11]

@@ -72,7 +72,7 @@ f()
 module Test with
   val x = 1
   let x = 2
-//│ ╔══[ERROR] Name 'x' is already used
+//│ ╔══[COMPILATION ERROR] Name 'x' is already used
 //│ ║  l.74: 	  let x = 2
 //│ ║        	      ^^^^^
 //│ ╟── by a member declared in the same block
@@ -227,8 +227,9 @@ Whoops.Whoops.g()
 
 :e
 Runtime
-//│ ╔══[ERROR] Name not found: Runtime
+//│ ╔══[COMPILATION ERROR] Name not found: Runtime
 //│ ║  l.229: 	Runtime
 //│ ╙──       	^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

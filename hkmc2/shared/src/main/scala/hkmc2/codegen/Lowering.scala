@@ -785,7 +785,7 @@ class Lowering()(using Config, TL, Raise, State, Ctx):
         msg"Unexpected term form in expression position (${t.describe})" ->
           t.toLoc :: Nil,
         source = Diagnostic.Source.Compilation)
-    case Error => End("error")
+    case Error => Throw(Value.Lit(Tree.StrLit("This code cannot be run as its compilation yielded an error.")))
     
     // case _ =>
     //   subTerm(t)(k)

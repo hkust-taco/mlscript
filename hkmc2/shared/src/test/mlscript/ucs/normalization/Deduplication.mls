@@ -83,6 +83,60 @@ if x is
 //│ = "000"
 
 :sjs
+if x is
+  0 and y is
+    0 and z is
+      0 then "000-------------------------------------------------------------------------"
+      1 then "001-------------------------------------------------------------------------"
+    1 then "01-------------------------------------------------------------------------"
+  1 then "1-------------------------------------------------------------------------"
+  else "-------------------------------------------------------------------------"
+//│ JS (unsanitized):
+//│ let tmp3;
+//│ split_root$1: {
+//│   split_1$1: {
+//│     switch (x) {
+//│       case 0:
+//│         switch (y) {
+//│           case 0:
+//│             switch (z) {
+//│               case 0:
+//│                 tmp3 = "000-------------------------------------------------------------------------";
+//│                 break split_root$1;
+//│                 break;
+//│               case 1:
+//│                 tmp3 = "001-------------------------------------------------------------------------";
+//│                 break split_root$1;
+//│                 break;
+//│               default:
+//│                 break split_1$1;
+//│                 break;
+//│             }
+//│             break;
+//│           case 1:
+//│             tmp3 = "01-------------------------------------------------------------------------";
+//│             break split_root$1;
+//│             break;
+//│           default:
+//│             break split_1$1;
+//│             break;
+//│         }
+//│         break;
+//│       case 1:
+//│         tmp3 = "1-------------------------------------------------------------------------";
+//│         break split_root$1;
+//│         break;
+//│       default:
+//│         break split_1$1;
+//│         break;
+//│     }
+//│   }
+//│   tmp3 = "-------------------------------------------------------------------------";
+//│ }
+//│ tmp3
+//│ = "000-------------------------------------------------------------------------"
+
+:sjs
 let qqq = if x is
   0 and y is
     0 and z is
@@ -92,61 +146,7 @@ let qqq = if x is
   1 then "1"
   else ""
 //│ JS (unsanitized):
-//│ let qqq, tmp3;
-//│ split_root$1: {
-//│   split_1$1: {
-//│     switch (x) {
-//│       case 0:
-//│         switch (y) {
-//│           case 0:
-//│             switch (z) {
-//│               case 0:
-//│                 tmp3 = "000";
-//│                 break split_root$1;
-//│                 break;
-//│               case 1:
-//│                 tmp3 = "001";
-//│                 break split_root$1;
-//│                 break;
-//│               default:
-//│                 break split_1$1;
-//│                 break;
-//│             }
-//│             break;
-//│           case 1:
-//│             tmp3 = "01";
-//│             break split_root$1;
-//│             break;
-//│           default:
-//│             break split_1$1;
-//│             break;
-//│         }
-//│         break;
-//│       case 1:
-//│         tmp3 = "1";
-//│         break split_root$1;
-//│         break;
-//│       default:
-//│         break split_1$1;
-//│         break;
-//│     }
-//│   }
-//│   tmp3 = "";
-//│ }
-//│ qqq = tmp3;
-//│ qqq = "000"
-
-:sjs
-print of if x is
-  0 and y is
-    0 and z is
-      0 then "000"
-      1 then "001"
-    1 then "01"
-  1 then "1"
-  else ""
-//│ JS (unsanitized):
-//│ let tmp4;
+//│ let qqq, tmp4;
 //│ split_root$2: {
 //│   split_1$2: {
 //│     switch (x) {
@@ -187,7 +187,61 @@ print of if x is
 //│   }
 //│   tmp4 = "";
 //│ }
-//│ Predef.print(tmp4)
+//│ qqq = tmp4;
+//│ qqq = "000"
+
+:sjs
+print of if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else ""
+//│ JS (unsanitized):
+//│ let tmp5;
+//│ split_root$3: {
+//│   split_1$3: {
+//│     switch (x) {
+//│       case 0:
+//│         switch (y) {
+//│           case 0:
+//│             switch (z) {
+//│               case 0:
+//│                 tmp5 = "000";
+//│                 break split_root$3;
+//│                 break;
+//│               case 1:
+//│                 tmp5 = "001";
+//│                 break split_root$3;
+//│                 break;
+//│               default:
+//│                 break split_1$3;
+//│                 break;
+//│             }
+//│             break;
+//│           case 1:
+//│             tmp5 = "01";
+//│             break split_root$3;
+//│             break;
+//│           default:
+//│             break split_1$3;
+//│             break;
+//│         }
+//│         break;
+//│       case 1:
+//│         tmp5 = "1";
+//│         break split_root$3;
+//│         break;
+//│       default:
+//│         break split_1$3;
+//│         break;
+//│     }
+//│   }
+//│   tmp5 = "";
+//│ }
+//│ Predef.print(tmp5)
 //│ > 000
 
 :sjs
@@ -203,220 +257,7 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo;
 //│ foo = function foo(x1, y1, z1) {
-//│   let tmp5;
-//│   split_root$3: {
-//│     split_1$3: {
-//│       switch (x1) {
-//│         case 0:
-//│           switch (y1) {
-//│             case 0:
-//│               switch (z1) {
-//│                 case 0:
-//│                   tmp5 = "000";
-//│                   break split_root$3;
-//│                   break;
-//│                 case 1:
-//│                   tmp5 = "001";
-//│                   break split_root$3;
-//│                   break;
-//│                 default:
-//│                   break split_1$3;
-//│                   break;
-//│               }
-//│               break;
-//│             case 1:
-//│               tmp5 = "01";
-//│               break split_root$3;
-//│               break;
-//│             default:
-//│               break split_1$3;
-//│               break;
-//│           }
-//│           break;
-//│         case 1:
-//│           tmp5 = "1";
-//│           break split_root$3;
-//│           break;
-//│         default:
-//│           break split_1$3;
-//│           break;
-//│       }
-//│     }
-//│     tmp5 = "";
-//│   }
-//│   return tmp5
-//│ };
-
-foo(0, 0, 0)
-//│ = "000"
-
-:sjs
-print of if
-  x is 0 and
-    y is 0 and
-      z is 0 then "000"
-    y is 1 then "01_"
-    z is 1 then "0_1"
-  x is 1 then "1__"
-  y is 2 then "_2_"
-  else "___"
-//│ JS (unsanitized):
-//│ let tmp5;
-//│ split_root$3: {
-//│   split_1$3: {
-//│     split_2$: {
-//│       split_3$: {
-//│         switch (x) {
-//│           case 0:
-//│             switch (y) {
-//│               case 0:
-//│                 switch (z) {
-//│                   case 0:
-//│                     tmp5 = "000";
-//│                     break split_root$3;
-//│                     break;
-//│                   case 1:
-//│                     break split_1$3;
-//│                     break;
-//│                   default:
-//│                     break split_2$;
-//│                     break;
-//│                 }
-//│                 break;
-//│               case 1:
-//│                 tmp5 = "01_";
-//│                 break split_root$3;
-//│                 break;
-//│               default:
-//│                 if (z === 1) {
-//│                   break split_1$3
-//│                 } else {
-//│                   if (y === 2) {
-//│                     break split_3$
-//│                   } else {
-//│                     break split_2$
-//│                   }
-//│                 }
-//│                 break;
-//│             }
-//│             break;
-//│           case 1:
-//│             tmp5 = "1__";
-//│             break split_root$3;
-//│             break;
-//│           default:
-//│             if (y === 2) {
-//│               break split_3$
-//│             } else {
-//│               break split_2$
-//│             }
-//│             break;
-//│         }
-//│       }
-//│       tmp5 = "_2_";
-//│       break split_root$3;
-//│     }
-//│     tmp5 = "___";
-//│     break split_root$3;
-//│   }
-//│   tmp5 = "0_1";
-//│ }
-//│ Predef.print(tmp5)
-//│ > 000
-
-:sjs
-fun foo(x, y, z) = if
-  x is 0 and
-    y is 0 and
-      z is 0 then "000"
-    y is 1 then "01_"
-    z is 1 then "0_1"
-  x is 1 then "1__"
-  y is 2 then "_2_"
-  else "___"
-//│ JS (unsanitized):
-//│ let foo1;
-//│ foo1 = function foo(x1, y1, z1) {
 //│   let tmp6;
-//│   split_root$4: {
-//│     split_1$4: {
-//│       split_2$1: {
-//│         split_3$1: {
-//│           switch (x1) {
-//│             case 0:
-//│               switch (y1) {
-//│                 case 0:
-//│                   switch (z1) {
-//│                     case 0:
-//│                       tmp6 = "000";
-//│                       break split_root$4;
-//│                       break;
-//│                     case 1:
-//│                       break split_1$4;
-//│                       break;
-//│                     default:
-//│                       break split_2$1;
-//│                       break;
-//│                   }
-//│                   break;
-//│                 case 1:
-//│                   tmp6 = "01_";
-//│                   break split_root$4;
-//│                   break;
-//│                 default:
-//│                   if (z1 === 1) {
-//│                     break split_1$4
-//│                   } else {
-//│                     if (y1 === 2) {
-//│                       break split_3$1
-//│                     } else {
-//│                       break split_2$1
-//│                     }
-//│                   }
-//│                   break;
-//│               }
-//│               break;
-//│             case 1:
-//│               tmp6 = "1__";
-//│               break split_root$4;
-//│               break;
-//│             default:
-//│               if (y1 === 2) {
-//│                 break split_3$1
-//│               } else {
-//│                 break split_2$1
-//│               }
-//│               break;
-//│           }
-//│         }
-//│         tmp6 = "_2_";
-//│         break split_root$4;
-//│       }
-//│       tmp6 = "___";
-//│       break split_root$4;
-//│     }
-//│     tmp6 = "0_1";
-//│   }
-//│   return tmp6
-//│ };
-
-fun expensive_call(str) = Math.pow(2, str.length)
-
-:sjs
-fun foo(x, y, z) = if x is
-  0 and y is
-    0 and z is
-      0 then "000"
-      1 then "001"
-    1 then "01"
-  1 then "1"
-  else
-    let value = "hello"
-    expensive_call(value)
-//│ JS (unsanitized):
-//│ let foo2;
-//│ foo2 = function foo(x1, y1, z1) {
-//│   let value, tmp6;
 //│   split_root$4: {
 //│     split_1$4: {
 //│       switch (x1) {
@@ -455,10 +296,223 @@ fun foo(x, y, z) = if x is
 //│           break;
 //│       }
 //│     }
-//│     value = "hello";
-//│     tmp6 = expensive_call(value);
+//│     tmp6 = "";
 //│   }
 //│   return tmp6
+//│ };
+
+foo(0, 0, 0)
+//│ = "000"
+
+:sjs
+print of if
+  x is 0 and
+    y is 0 and
+      z is 0 then "000"
+    y is 1 then "01_"
+    z is 1 then "0_1"
+  x is 1 then "1__"
+  y is 2 then "_2_"
+  else "___"
+//│ JS (unsanitized):
+//│ let tmp6;
+//│ split_root$4: {
+//│   split_1$4: {
+//│     split_2$: {
+//│       split_3$: {
+//│         switch (x) {
+//│           case 0:
+//│             switch (y) {
+//│               case 0:
+//│                 switch (z) {
+//│                   case 0:
+//│                     tmp6 = "000";
+//│                     break split_root$4;
+//│                     break;
+//│                   case 1:
+//│                     break split_1$4;
+//│                     break;
+//│                   default:
+//│                     break split_2$;
+//│                     break;
+//│                 }
+//│                 break;
+//│               case 1:
+//│                 tmp6 = "01_";
+//│                 break split_root$4;
+//│                 break;
+//│               default:
+//│                 if (z === 1) {
+//│                   break split_1$4
+//│                 } else {
+//│                   if (y === 2) {
+//│                     break split_3$
+//│                   } else {
+//│                     break split_2$
+//│                   }
+//│                 }
+//│                 break;
+//│             }
+//│             break;
+//│           case 1:
+//│             tmp6 = "1__";
+//│             break split_root$4;
+//│             break;
+//│           default:
+//│             if (y === 2) {
+//│               break split_3$
+//│             } else {
+//│               break split_2$
+//│             }
+//│             break;
+//│         }
+//│       }
+//│       tmp6 = "_2_";
+//│       break split_root$4;
+//│     }
+//│     tmp6 = "___";
+//│     break split_root$4;
+//│   }
+//│   tmp6 = "0_1";
+//│ }
+//│ Predef.print(tmp6)
+//│ > 000
+
+:sjs
+fun foo(x, y, z) = if
+  x is 0 and
+    y is 0 and
+      z is 0 then "000"
+    y is 1 then "01_"
+    z is 1 then "0_1"
+  x is 1 then "1__"
+  y is 2 then "_2_"
+  else "___"
+//│ JS (unsanitized):
+//│ let foo1;
+//│ foo1 = function foo(x1, y1, z1) {
+//│   let tmp7;
+//│   split_root$5: {
+//│     split_1$5: {
+//│       split_2$1: {
+//│         split_3$1: {
+//│           switch (x1) {
+//│             case 0:
+//│               switch (y1) {
+//│                 case 0:
+//│                   switch (z1) {
+//│                     case 0:
+//│                       tmp7 = "000";
+//│                       break split_root$5;
+//│                       break;
+//│                     case 1:
+//│                       break split_1$5;
+//│                       break;
+//│                     default:
+//│                       break split_2$1;
+//│                       break;
+//│                   }
+//│                   break;
+//│                 case 1:
+//│                   tmp7 = "01_";
+//│                   break split_root$5;
+//│                   break;
+//│                 default:
+//│                   if (z1 === 1) {
+//│                     break split_1$5
+//│                   } else {
+//│                     if (y1 === 2) {
+//│                       break split_3$1
+//│                     } else {
+//│                       break split_2$1
+//│                     }
+//│                   }
+//│                   break;
+//│               }
+//│               break;
+//│             case 1:
+//│               tmp7 = "1__";
+//│               break split_root$5;
+//│               break;
+//│             default:
+//│               if (y1 === 2) {
+//│                 break split_3$1
+//│               } else {
+//│                 break split_2$1
+//│               }
+//│               break;
+//│           }
+//│         }
+//│         tmp7 = "_2_";
+//│         break split_root$5;
+//│       }
+//│       tmp7 = "___";
+//│       break split_root$5;
+//│     }
+//│     tmp7 = "0_1";
+//│   }
+//│   return tmp7
+//│ };
+
+fun expensive_call(str) = Math.pow(2, str.length)
+
+:sjs
+fun foo(x, y, z) = if x is
+  0 and y is
+    0 and z is
+      0 then "000"
+      1 then "001"
+    1 then "01"
+  1 then "1"
+  else
+    let value = "hello"
+    expensive_call(value)
+//│ JS (unsanitized):
+//│ let foo2;
+//│ foo2 = function foo(x1, y1, z1) {
+//│   let value, tmp7;
+//│   split_root$5: {
+//│     split_1$5: {
+//│       switch (x1) {
+//│         case 0:
+//│           switch (y1) {
+//│             case 0:
+//│               switch (z1) {
+//│                 case 0:
+//│                   tmp7 = "000";
+//│                   break split_root$5;
+//│                   break;
+//│                 case 1:
+//│                   tmp7 = "001";
+//│                   break split_root$5;
+//│                   break;
+//│                 default:
+//│                   break split_1$5;
+//│                   break;
+//│               }
+//│               break;
+//│             case 1:
+//│               tmp7 = "01";
+//│               break split_root$5;
+//│               break;
+//│             default:
+//│               break split_1$5;
+//│               break;
+//│           }
+//│           break;
+//│         case 1:
+//│           tmp7 = "1";
+//│           break split_root$5;
+//│           break;
+//│         default:
+//│           break split_1$5;
+//│           break;
+//│       }
+//│     }
+//│     value = "hello";
+//│     tmp7 = expensive_call(value);
+//│   }
+//│   return tmp7
 //│ };
 
 object A
@@ -494,23 +548,23 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo4;
 //│ foo4 = function foo(x1, y1, z1) {
-//│   let tmp6;
-//│   split_root$4: {
-//│     split_1$4: {
+//│   let tmp7;
+//│   split_root$5: {
+//│     split_1$5: {
 //│       if (x1 instanceof A1.class) {
 //│         if (y1 instanceof B1.class) {
 //│           if (z1 instanceof C1.class) {
-//│             tmp6 = "Hello";
-//│             break split_root$4
+//│             tmp7 = "Hello";
+//│             break split_root$5
 //│           } else {
-//│             break split_1$4
+//│             break split_1$5
 //│           }
-//│         } else { break split_1$4 }
-//│       } else { break split_1$4 }
+//│         } else { break split_1$5 }
+//│       } else { break split_1$5 }
 //│     }
-//│     tmp6 = "Goodbye";
+//│     tmp7 = "Goodbye";
 //│   }
-//│   return tmp6
+//│   return tmp7
 //│ };
 
 :sjs
@@ -520,14 +574,14 @@ fun foo(x, y, z) =
 //│ JS (unsanitized):
 //│ let foo5;
 //│ foo5 = function foo(x1, y1, z1) {
-//│   let tmp6;
-//│   split_root$4: {
+//│   let tmp7;
+//│   split_root$5: {
 //│     split_default$: {
 //│       if (x1 instanceof A1.class) {
 //│         if (y1 instanceof B1.class) {
 //│           if (z1 instanceof C1.class) {
-//│             tmp6 = "Hello";
-//│             break split_root$4
+//│             tmp7 = "Hello";
+//│             break split_root$5
 //│           } else {
 //│             break split_default$
 //│           }
@@ -540,7 +594,7 @@ fun foo(x, y, z) =
 //│     }
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"));
 //│   }
-//│   return tmp6
+//│   return tmp7
 //│ };
 
 :expect "Hello"
@@ -558,8 +612,8 @@ foo(A, B, B)
 :sjs
 let y = if true then 1 else 2
 //│ JS (unsanitized):
-//│ let y1, scrut3, tmp6;
+//│ let y1, scrut3, tmp7;
 //│ scrut3 = true;
-//│ if (scrut3 === true) { tmp6 = 1; } else { tmp6 = 2; }
-//│ y1 = tmp6;
+//│ if (scrut3 === true) { tmp7 = 1; } else { tmp7 = 2; }
+//│ y1 = tmp7;
 //│ y = 1

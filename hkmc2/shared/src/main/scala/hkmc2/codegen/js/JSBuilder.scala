@@ -551,7 +551,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
       // [fixme:0] TODO check scope and allocate local variables here (see: https://github.com/hkust-taco/mlscript/pull/293#issuecomment-2792229849)
       
       doc" # ${getVar(lbl, lbl.toLoc)}:${if loop then doc" while (true)" else ""} " :: braced {
-          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop then doc" # break;" else doc"")
+          nonNestedScoped(bod)(bd => returningTerm(bd, endSemi = true)) :: (if loop && !bod.isAbortive then doc" # break;" else doc"")
       } :: returningTerm(rst, endSemi)
       
     case TryBlock(sub, fin, rst) =>
@@ -596,7 +596,7 @@ class JSBuilder(using TL, State, Ctx) extends CodeBuilder:
     *     `foo1 = function foo() { return foo1(); }`
     *   but the result has the same semantics.
     *  */
-  def reserveNames(p: Program)(using Scope): Unit =
+  def reserveNames(p: Program)(using Scope, Raise): Unit =
     def go(blk: Block): Unit = tl.trace(s"avoidNames ${blk.toString.take(100)}..."):
       blk match
       case Define(defn, rest) =>

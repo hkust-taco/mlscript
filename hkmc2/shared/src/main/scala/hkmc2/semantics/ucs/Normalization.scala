@@ -215,9 +215,9 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
    *  the corresponding blocks to avoid code duplication. */
   private def createLabelsForDuplicatedBranches(split: Split): Labels =
     val counts: MutMap[Term, (order: Int, count: Int)] = MutMap.empty
-    var throwCount = 0
+    var fallThroughCount = 0
     def rec(s: Split): Unit = s match
-      case Split.End => throwCount += 1
+      case Split.End => fallThroughCount += 1
       case Split.Else(els) => counts.updateWith(els):
         case S((n, count)) => S((n, count + 1))
         case N => S((counts.size + 1, 1))
@@ -228,8 +228,8 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       counts.iterator.filter(_._2.count > 1).toSeq.sortBy(_._2.order).zipWithIndex.map:
         case ((term, _), i) => (term, LabelSymbol(S(term), s"split_${i + 1}$$"))
       .toList
-    val default = if throwCount > 1 then S(LabelSymbol(N, s"split_default$$")) else N
-    Labels(consequents, default)
+    val matchError = if fallThroughCount > 1 then S(LabelSymbol(N, s"split_default$$")) else N
+    Labels(consequents, matchError)
   
   private def lowerSplit
       (split: Split, cont: Result => Block)
@@ -296,7 +296,7 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
     case Split.End =>
       // * See comment [comment:1] above
       if form is IfLikeForm.While then End()
-      else labels.default.fold(throwMatchErrorBlock)(Break(_))
+      else labels.matchError.fold(throwMatchErrorBlock)(Break(_))
   
   /**
     * Make a block that throws the match error. We might add the information of
@@ -352,7 +352,11 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
       given labels: Labels = createLabelsForDuplicatedBranches(normalized)
       lazy val rootBreakLabel = new LabelSymbol(N, "split_root$")
       lazy val breakRoot = (r: Result) => Assign(l, r, Break(rootBreakLabel))
-      lazy val assignResult = (r: Result) => Assign(l, r, End())
+      lazy val assignResult = (r: Result) =>
+        form match
+        case IfLikeForm.ReturningIf => Assign(l, r, End())
+        case IfLikeForm.ImperativeIf => Assign.discard(r, End())
+        case IfLikeForm.While => Assign(State.noSymbol, r, loopCont)
       // NOTE: `shouldRewriteWhile` is not the same as `config.rewriteWhileLoops`
       // as shouldRewriteWhile is always true when effect handler lowering is on
       lazy val loopCont = if config.shouldRewriteWhile
@@ -384,12 +388,24 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             // called for non-shared consequents, so we should break to the end of
             // the entire split after the assignment.
             breakRoot
+      // When we are not rewriting while loops to tail-recursive functions,
+      // whether we need a `Break` to exit the loop at the end of the main block
+      // depends on whether there are shared consequents,
+      // as shared consequents will be lifted out of the main block and added as separate labelled blocks
+      // to jump to, so we cannot simply fall through the end of the main block to exit the loop.
+      // Note that when there is a `default` branch and we're in a loop,
+      // the semantics of that default branch is to always `continue` the loop,
+      // so we don't need to break out of the loop at the end of the main block as well.
+      val needsBreakToExitLoop =
+        (form is IfLikeForm.While) && !config.shouldRewriteWhile && labels.consequents.nonEmpty //&& labels.default.isEmpty
       // The main block contains the lowered split, where each shared consequent
       // is replaced with a `Break` to the corresponding label.
       val mainBlock =
         val innermostBlock =
           given IfLikeForm = form
-          lowerSplit(normalized, cont)
+          if needsBreakToExitLoop
+          then Begin(lowerSplit(normalized, cont), Break(rootBreakLabel))
+          else lowerSplit(normalized, cont)
         // Wrap the main block in a labelled block for each shared consequent. The
         // `rest` of each `Label` is the lowered consequent plus a `Break` to the
         // end of the entire `if` term. Otherwise, it will fall through to the outer
@@ -400,35 +416,30 @@ class Normalization(lowering: Lowering)(using tl: TL)(using Raise, Ctx, State) e
             def wrap(consequents: Ls[(Term, LabelSymbol)]): Block =
               consequents.foldRight(innermostBlock):
                 case ((term, label), innerBlock) =>
-                  Label(label, false, innerBlock, term_nonTail(term)(breakRoot))
-            // There is no need to generate `break` for the outermost split.
-            if labels.default.isEmpty then
+                  Label(label, false, innerBlock,
+                    if form is IfLikeForm.While
+                    then term_nonTail(term)(r => Assign.discard(r, loopCont))
+                    else term_nonTail(term)(breakRoot))
+            // There is no need to generate `break` for the outermost split
+            // if we're not generating an additional matchError block at the end.
+            if labels.matchError.isEmpty then
               Label(head._2, false, wrap(tail), term_nonTail(head._1)(assignResult))
             else wrap(all)
-        labels.default match
-        case S(label) =>
-          // * [comment:1]
-          // * If the term is a `while`, the default branch continues the loop;
-          // * it corresponds to `D` in a term like:
-          // *    while
-          // *      foo do ...
-          // *      bar do ...
-          // *      _   do D  // or: `else do D`, as is still currently allowed
-          // * which is a term representing a loop without a top-level exit condition
-          // * (it may still terminate via `break` or `return` in the body).
-          // * When there is no default branch, the loop should simply stop/exit,
-          // * denoted by `End()` because we always follow lowered loop bodies by a `break`.
-          Label(label, false, innerBlock,
-            if form is IfLikeForm.While then End()
-            else throwMatchErrorBlock
-          )
-        case N => innerBlock
+        if form is IfLikeForm.While
+        then if needsBreakToExitLoop
+          then Begin(innerBlock, Break(rootBreakLabel))
+          else innerBlock
+        else labels.matchError match
+          case S(label) => Label(label, false, innerBlock, throwMatchErrorBlock)
+          case N => innerBlock
       // If there are shared consequents, we need a wrap the entire block in a
       // `Label` so that `Break`s in the shared consequents can jump to the end.
       val body =
         Scoped(
           if useNestedScoped then LoweringCtx.loweringCtx.getCollectedSym else Set.empty,
-          if labels.isEmpty then mainBlock else Label(rootBreakLabel, false, mainBlock, End()))
+          if labels.isEmpty && !needsBreakToExitLoop
+          then mainBlock
+          else Label(rootBreakLabel, false, mainBlock, End()))
       // Embed the `body` into `Label` if the term is a `while`.
       lazy val rest = if usesResTmp then k(Value.Ref(l)) else k(lowering.unit)
       val block =
@@ -476,10 +487,10 @@ end Normalization
 object Normalization:
   /** This contains the labels for duplicated consequents and the default
    *  branch which throws match errors. */
-  private class Labels(val consequents: Ls[(Term, LabelSymbol)], val default: Opt[LabelSymbol]):
+  private class Labels(val consequents: Ls[(Term, LabelSymbol)], val matchError: Opt[LabelSymbol]):
     private val map = consequents.toMap
     
-    inline def isEmpty: Bool = consequents.isEmpty && default.isEmpty
+    inline def isEmpty: Bool = consequents.isEmpty && matchError.isEmpty
     
     inline def get(term: Term): Opt[LabelSymbol] = map.get(term)
   

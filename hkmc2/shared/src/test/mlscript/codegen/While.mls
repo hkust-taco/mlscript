@@ -62,7 +62,6 @@ f
 //│       x2 = false;
 //│       continue lbl4
 //│     } else { return 42 }
-//│     break;
 //│   }
 //│   return runtime.Unit
 //│ };
@@ -319,10 +318,10 @@ while print("Hello World"); false
   then 0(0)
   else 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.319: 	  then 0(0)
+//│ ║  l.318: 	  then 0(0)
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Unrecognized term split (false literal)
-//│ ║  l.318: 	while print("Hello World"); false
+//│ ╔══[COMPILATION ERROR] Unrecognized term split (false literal)
+//│ ║  l.317: 	while print("Hello World"); false
 //│ ╙──       	                            ^^^^^
 //│ > Hello World
 
@@ -330,14 +329,15 @@ while print("Hello World"); false
 while { print("Hello World"), false }
   then 0(0)
   else 1
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.330: 	while { print("Hello World"), false }
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.329: 	while { print("Hello World"), false }
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.331: 	  then 0(0)
+//│ ║  l.330: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.332: 	  else 1
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.331: 	  else 1
 //│ ╙──       	  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :fixme
 while
@@ -345,16 +345,17 @@ while
     false
   then 0(0)
   else 1
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
 //│ ║  l.344: 	    print("Hello World")
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.345: 	    false
 //│ ║         	^^^^^^^^^
 //│ ║  l.346: 	  then 0(0)
 //│ ╙──       	^^^^^^^^^^^
-//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
 //│ ║  l.347: 	  else 1
 //│ ╙──       	  ^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * https://github.com/hkust-taco/mlscript/issues/401

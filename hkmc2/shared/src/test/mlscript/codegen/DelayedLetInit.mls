@@ -43,11 +43,12 @@ let y = 1
 
 :e
 z = 1
-//│ ╔══[ERROR] Name not found: z
+//│ ╔══[COMPILATION ERROR] Name not found: z
 //│ ║  l.45: 	z = 1
 //│ ╙──      	^
 //│ JS:
-//│ block$res8 = undefined; /* error */
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 fun f() = 1
@@ -97,7 +98,7 @@ if true
 then foo = 0
 else foo = 1
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.97: 	then foo = 0
+//│ ║  l.98: 	then foo = 0
 //│ ╙──      	         ^
 //│ JS:
 //│ let foo1, scrut;
@@ -149,7 +150,7 @@ foo
 :fixme
 fun f() = foo = 0
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.150: 	fun f() = foo = 0
+//│ ║  l.151: 	fun f() = foo = 0
 //│ ╙──       	              ^
 //│ JS:
 //│ let f4;

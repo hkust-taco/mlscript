@@ -18,15 +18,17 @@ h1.perform("hello")
 
 :e
 h1
-//│ ╔══[ERROR] Name not found: h1
+//│ ╔══[COMPILATION ERROR] Name not found: h1
 //│ ║  l.20: 	h1
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 h1.perform("oops")
-//│ ╔══[ERROR] Name not found: h1
-//│ ║  l.26: 	h1.perform("oops")
+//│ ╔══[COMPILATION ERROR] Name not found: h1
+//│ ║  l.27: 	h1.perform("oops")
 //│ ╙──      	^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :re
 handle h = Object with
@@ -70,17 +72,15 @@ handle h2 = Effect with
   print("–––");
   h2.perform(3)
 ]
-//│ ╔══[ERROR] Name not found: h2
-//│ ║  l.65: 	      then h2.perform(arg - 1) + " " + arg
+//│ ╔══[COMPILATION ERROR] Name not found: h2
+//│ ║  l.67: 	      then h2.perform(arg - 1) + " " + arg
 //│ ╙──      	           ^^
-//│ ╔══[ERROR] Illegal position for prefix keyword 'else'.
-//│ ║  l.66: 	      else "0"
+//│ ╔══[COMPILATION ERROR] Illegal position for prefix keyword 'else'.
+//│ ║  l.68: 	      else "0"
 //│ ╙──      	      ^^^^
 //│ > –––
 //│ > performing 2
-//│ > –––
-//│ > performing 3
-//│ = "0"
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // passing additional handlers to the handler body

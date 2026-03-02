@@ -240,10 +240,10 @@ fun take(pattern P, idx: Str, acc: Str) =
       set idx = idx + 1
       set acc = acc + ch
     else [acc, idx]
-//│ ╔══[ERROR] Name not found: str
+//│ ╔══[COMPILATION ERROR] Name not found: str
 //│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
 //│ ╙──       	              ^^^
-//│ ╔══[ERROR] Name not found: str
+//│ ╔══[COMPILATION ERROR] Name not found: str
 //│ ║  l.238: 	  while idx < str.length and str.charAt(idx) is ch and ch is P
 //│ ╙──       	                             ^^^
 
