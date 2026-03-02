@@ -51,7 +51,7 @@ fun mapi = s =>
     f => map(s) of x =>
       i := !(i) + 1
       f(!(i), x)
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -68,7 +68,7 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
 //│ ╟── because: cannot constrain  'r  <:  E ∨ outer
 //│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>
@@ -85,7 +85,7 @@ fun mapi = s =>
 //│ ╟── because: cannot constrain  'r ∧ ¬outer  <:  E
 //│ ╟── because: cannot constrain  'r  <:  E ∨ outer
 //│ ╙── because: cannot constrain  ¬outer  <:  E ∨ outer
-//│ ╔══[ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
+//│ ╔══[COMPILATION ERROR] Type error in region expression with expected type ((Int, A) ->{E} A) ->{E} List[out A]
 //│ ║  l.50: 	    let i = r.ref 0
 //│ ║        	            ^^^^^^^
 //│ ║  l.51: 	    f => map(s) of x =>

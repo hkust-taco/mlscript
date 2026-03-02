@@ -79,7 +79,7 @@ sum2(arr)
 
 :e
 fun f(..xs) = xs
-//│ ╔══[ERROR] Lazy spread parameters not allowed.
+//│ ╔══[COMPILATION ERROR] Lazy spread parameters not allowed.
 //│ ║  l.81: 	fun f(..xs) = xs
 //│ ╙──      	      ^^^^
 

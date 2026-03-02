@@ -53,10 +53,10 @@ fun bar() =
   foo()
 
 it is still invalid, since the following sequence of calls from foo to foo would incur extra stack space:
-   foo
--> bar (tail call)
--> bar (not a tail call)
--> foo (tail call)
+      foo
+  ->  bar (tail call)
+  ->  bar (not a tail call)
+  ->  foo (tail call)
 
 Equivalently, if fun foo() is annotated with @tailrec, let S be the largest strongly
 connected component in the call-graph of the program that contains foo. Then an error

@@ -50,7 +50,7 @@ xs \map(x => x * 2) \print()
 :re
 xs \
   map(x => x * 2)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.52: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ JS (unsanitized):
@@ -64,7 +64,7 @@ xs \
 :re
 xs\
   map(x => x * 2)
-//│ ╔══[ERROR] Expected 2 arguments, got 1
+//│ ╔══[COMPILATION ERROR] Expected 2 arguments, got 1
 //│ ║  l.66: 	  map(x => x * 2)
 //│ ╙──      	     ^^^^^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Function 'map' expected 2 arguments but got 1

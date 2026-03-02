@@ -280,7 +280,7 @@ let Predef1;
   } 
   static foldr(f) {
     return (first, ...rest) => {
-      let len, scrut, i, init, tmp;
+      let len, scrut, i, init;
       len = rest.length;
       scrut = len === 0;
       if (scrut === true) {
@@ -289,18 +289,15 @@ let Predef1;
         i = len - 1;
         init = runtime.safeCall(rest.at(i));
         lbl: while (true) {
-          let scrut1, tmp1, tmp2, tmp3;
+          let scrut1, tmp, tmp1, tmp2;
           scrut1 = i > 0;
           if (scrut1 === true) {
-            tmp1 = i - 1;
-            i = tmp1;
-            tmp2 = runtime.safeCall(rest.at(i));
-            tmp3 = runtime.safeCall(f(tmp2, init));
-            init = tmp3;
-            tmp = runtime.Unit;
+            tmp = i - 1;
+            i = tmp;
+            tmp1 = runtime.safeCall(rest.at(i));
+            tmp2 = runtime.safeCall(f(tmp1, init));
+            init = tmp2;
             continue lbl
-          } else {
-            tmp = runtime.Unit;
           }
           break;
         }

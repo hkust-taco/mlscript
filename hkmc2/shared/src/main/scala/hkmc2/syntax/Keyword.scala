@@ -168,6 +168,7 @@ object Keyword:
   type Ellipsis = `...`.type | `..`.type
   
   type IfLike = `if`.type | `while`.type
+  type SplitLike = IfLike | `case`.type
   
   type LetLike = `let`.type | `set`.type
   

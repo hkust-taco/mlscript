@@ -73,7 +73,7 @@ letreg of r =>
     123
     () => next(it)
   k()
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.68: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.69: 	  let b = mkVec(r)
@@ -101,7 +101,7 @@ letreg of r =>
     123
   clear(b)
   r
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.95: 	letreg of r =>
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.96: 	  let b = mkVec(r)
@@ -141,7 +141,7 @@ letreg of r =>
     next(it)
   use_(r)
   r
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.137: 	letreg of r =>
 //│ ║         	^^^^^^^^^^^^^^
 //│ ║  l.138: 	  use_(r)

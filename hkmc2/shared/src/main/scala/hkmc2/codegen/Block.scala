@@ -99,7 +99,7 @@ sealed abstract class Block extends Product:
       Match(scrut, arms.map(_ -> _.mapTail(f)), dflt.map(_.mapTail(f)), rst)
     case Match(scrut, arms, dflt, rst) =>
       Match(scrut, arms, dflt, rst.mapTail(f))
-    case Label(label, loop, body, rest) => Label(label, loop, body.mapTail(f), rest.mapTail(f))
+    case Label(label, loop, body, rest) => Label(label, loop, body, rest.mapTail(f))
     case af @ AssignField(lhs, nme, rhs, rest) =>
       AssignField(lhs, nme, rhs, rest.mapTail(f))(af.symbol)
     case adf @ AssignDynField(lhs, fld, arrayIdx, rhs, rest) =>
@@ -353,6 +353,10 @@ object Assign:
   def apply(lhs: Local, rhs: Result, rest: Block): Block = rest match
     case Scoped(syms, body) => Scoped(syms, Assign(lhs, rhs, body))
     case _ => new Assign(lhs, rhs, rest)
+  def discard(res: Result, rest: Block)(using State): Block =
+    res match
+    case _: Value | _: Path | _: Lambda => rest
+    case r => Assign(State.noSymbol, r, rest)
 object AssignField:
   def apply(lhs: Path, nme: Tree.Ident, rhs: Result, rest: Block)(symbol: Opt[MemberSymbol]): Block = rest match
     case Scoped(syms, body) => Scoped(syms, AssignField(lhs, nme, rhs, body)(symbol))

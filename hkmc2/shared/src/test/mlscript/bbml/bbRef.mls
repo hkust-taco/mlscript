@@ -20,7 +20,7 @@ r
 :e
 let r = region x in x.ref 42
 !(r)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.21: 	let r = region x in x.ref 42
 //│ ║        	                    ^^^^^^^^
 //│ ║  l.22: 	!(r)
@@ -40,7 +40,7 @@ mkRef
 
 :e
 let t = region x in x in t.ref 42
-//│ ╔══[ERROR] Type error in reference creation
+//│ ╔══[COMPILATION ERROR] Type error in reference creation
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
 //│ ╟── because: cannot constrain  Region[in 'x out 'x1]  <:  Region['reg]
@@ -51,7 +51,7 @@ let t = region x in x in t.ref 42
 //│ ╟── because: cannot constrain  ⊤  <:  'x
 //│ ╟── because: cannot constrain  ⊤  <:  'x
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.42: 	let t = region x in x in t.ref 42
 //│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg ∨ 'eff  <:  ⊥
@@ -70,7 +70,7 @@ region x in
 let t = region x in
   x.ref 42
 in t := 0
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.71: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
 //│ ║  l.72: 	in t := 0
@@ -93,7 +93,7 @@ region x in
 let t = region x in
   x.ref 42
 in !(t)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.94: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
 //│ ║  l.95: 	in !(t)
@@ -125,7 +125,7 @@ fun rid(x) =
 :e
 region x in
   (let dz = x.ref 42 in 42) as [A] -> Int
-//│ ╔══[ERROR] Type error in block with expected type [outer, 'A] -> Int
+//│ ╔══[COMPILATION ERROR] Type error in block with expected type [outer, 'A] -> Int
 //│ ║  l.127: 	  (let dz = x.ref 42 in 42) as [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  'reg  <:  ⊥
@@ -139,7 +139,7 @@ let t =
   region x in
     y => x.ref y
 in t(42)
-//│ ╔══[ERROR] Type error in block
+//│ ╔══[COMPILATION ERROR] Type error in block
 //│ ║  l.140: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
 //│ ║  l.141: 	in t(42)
@@ -183,7 +183,7 @@ bar
 
 :e
 region x in x.ref bar
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int found
+//│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but ([outer, 'A] -> ('A) ->{⊥} 'A) ->{⊥} Int found
 //│ ║  l.185: 	region x in x.ref bar
 //│ ╙──       	                  ^^^
 //│ Type: Ref[⊥, ?]

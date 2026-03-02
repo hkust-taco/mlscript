@@ -18,7 +18,7 @@ Example.pubFun
 :e
 :re
 Example.privFun
-//│ ╔══[ERROR] Module 'Example' does not contain member 'privFun'
+//│ ╔══[COMPILATION ERROR] Module 'Example' does not contain member 'privFun'
 //│ ║  l.20: 	Example.privFun
 //│ ╙──      	       ^^^^^^^^
 //│ ═══[RUNTIME ERROR] Error: Access to required field 'privFun' yielded 'undefined'

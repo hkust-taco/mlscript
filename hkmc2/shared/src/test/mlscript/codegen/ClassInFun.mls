@@ -67,7 +67,7 @@ test(123)
 :e
 :re
 test()
-//│ ╔══[ERROR] Expected 1 arguments, got 0
+//│ ╔══[COMPILATION ERROR] Expected 1 arguments, got 0
 //│ ║  l.69: 	test()
 //│ ╙──      	    ^^
 //│ ═══[RUNTIME ERROR] Error: Function 'test' expected 1 argument but got 0

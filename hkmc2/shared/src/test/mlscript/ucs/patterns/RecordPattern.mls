@@ -42,7 +42,7 @@ f(a: 1)
 :e
 let f = case
   { a: 1 } then a
-//│ ╔══[ERROR] Name not found: a
+//│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.44: 	  { a: 1 } then a
 //│ ╙──      	                ^
 //│ f = fun
@@ -62,7 +62,7 @@ let r = {x: 2, y : 4}
 :e
 if r is
   {x:a, y:a} then a
-//│ ╔══[ERROR] Duplicated pattern variable.
+//│ ╔══[COMPILATION ERROR] Duplicated pattern variable.
 //│ ║  l.64: 	  {x:a, y:a} then a
 //│ ║        	          ^
 //│ ╟── The previous definition is as follows.
