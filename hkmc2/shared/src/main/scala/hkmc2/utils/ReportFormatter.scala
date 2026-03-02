@@ -61,7 +61,7 @@ class ReportFormatter(
               s"$headChar══[TYPE ERROR] "
         case WarningReport(msg, loco, mkei, src) =>
           s"$headChar══[WARNING] "
-        case InternalError(msg, loco, src) =>
+        case InternalError(msg, loco, mkei, src) =>
           s"$headChar══[INTERNAL ERROR] "
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum

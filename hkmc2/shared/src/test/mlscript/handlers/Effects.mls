@@ -452,7 +452,19 @@ foo(h)
 //│ ╔══[WARNING] Modules are not yet lifted.
 //│ ║  l.424: 	    module A with
 //│ ╙──       	           ^
-//│ /!!!\ Uncaught error: hkmc2.InternalError: Unexpected nested class: lambdas may not function correctly.
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.424: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.428: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.432: 	    module A with
+//│ ╙──       	           ^
+//│ ╔══[INTERNAL ERROR] Unexpected nested class: lambdas may not function correctly.
+//│ ║  l.436: 	    module A with
+//│ ╙──       	           ^
+//│ = 123
 
 // Access superclass fields
 handle h1 = Object with

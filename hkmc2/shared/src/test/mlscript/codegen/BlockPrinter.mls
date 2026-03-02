@@ -1,42 +1,46 @@
 :js
-
 :slot
+
+//│ Pretty Lowered:
+//│  import Predef; set block$res = undefined; end
+
 let x = 1
 x + 1
 //│ Pretty Lowered:
-//│   set x = 1 in set block$res1 = +(x, 1) in return undefined
+//│   set x = 1; set block$res = +(x, 1); return undefined
 //│ = 2
 //│ x = 1
 
-:slot
+x
+//│ Pretty Lowered:
+//│   set block$res = ‹not in scope: x›; return undefined
+//│ = 1
+
 fun incr(n) = n + 1
 fun (|>) pipe(x, f) = f(x)
 //│ Pretty Lowered:
-//│   define fun incr(n) { return +(n, 1) } in define fun pipe(x1, f) { return f(x1) } in set block$res2 = undefined in end
+//│   define fun incr(n) { return +(n, 1) }; define fun pipe(x, f) { return f(x) }; set block$res = undefined; end
 
-:slot
 let x = 1
 let x = if x == 0 then 1 else 0
 let x = x + 1
 //│ Pretty Lowered:
 //│  
-//│ set x1 = 1 in
-//│ set scrut = Predef.equals(x1, 0) in
+//│ set x = 1;
+//│ set scrut = Predef.equals(x, 0);
 //│ match scrut
 //│   true =>
-//│     set tmp = 1 in
+//│     set tmp = 1;
 //│     end
 //│   else
-//│     set tmp = 0 in
+//│     set tmp = 0;
 //│     end
-//│ in
-//│ set x2 = tmp in
-//│ set x3 = +(x2, 1) in
-//│ set block$res3 = undefined in
+//│ set x1 = tmp;
+//│ set x2 = +(x1, 1);
+//│ set block$res = undefined;
 //│ end
 //│ x = 1
 
-:slot
 module A with
   val x = 2
   let y = 3
@@ -47,53 +51,51 @@ module A with
 //│  
 //│ define class A with
 //│ module A {
-//│   let y = ...
-//│   x
+//│   private val y
+//│   val x
 //│   ctor {
-//│     define val x = 2 in
-//│     set y = 3 in
-//│     define class module:A::C(x4) {
-//│       let x = ...
+//│     define val x = 2;
+//│     set y = 3;
+//│     define class module:A::C(x) {
+//│       private val x
 //│       ctor {
-//│         set x5 = x4 in
+//│         set x1 = x;
 //│         end
 //│       }
-//│       fun class:C::f(x6) {
+//│       fun class:C::f(x2) {
 //│         return 2
 //│       }
-//│     } in
+//│     };
 //│     end
 //│   }
-//│   fun module:A::g(x7) {
+//│   fun module:A::g(x3) {
 //│     return 3
 //│   }
-//│ } in
-//│ set block$res4 = undefined in
+//│ };
+//│ set block$res = undefined;
 //│ end
 
-:slot
 class A
 class B(x) extends A with
   val y = 2
 //│ Pretty Lowered:
 //│  
-//│ define class A in
-//│ define class B(x4) {
-//│   let x = ...
-//│   y
+//│ define class A;
+//│ define class B(x) {
+//│   private val x
+//│   val y
 //│   preCtor {
 //│     return super()
 //│   }
 //│   ctor {
-//│     set x5 = x4 in
-//│     define val y = 2 in
+//│     set x1 = x;
+//│     define val y = 2;
 //│     end
 //│   }
-//│ } in
-//│ set block$res5 = undefined in
+//│ };
+//│ set block$res = undefined;
 //│ end
 
-:slot
 pattern P = B
 //│ Pretty Lowered:
 //│  
@@ -101,50 +103,43 @@ pattern P = B
 //│   fun unapply(input) {
 //│     match input
 //│       B =>
-//│         set output = input in
-//│         set tmp1 = {  } in
-//│         return new runtime.MatchSuccess(output, tmp1)
+//│         set output = input;
+//│         set tmp = {  };
+//│         return new ‹not in scope: $runtime›.MatchSuccess(output, tmp)
 //│       else
-//│         return new runtime.MatchFailure(null)
-//│     in
+//│         return new ‹not in scope: $runtime›.MatchFailure(null)
 //│     end
 //│   }
 //│   fun unapplyStringPrefix(input1) {
-//│     return new runtime.MatchFailure(null)
+//│     return new ‹not in scope: $runtime›.MatchFailure(null)
 //│   }
-//│ } in
-//│ set block$res6 = undefined in
+//│ };
+//│ set block$res = undefined;
 //│ end
 
-:slot
 object A with
   fun f = 42
 //│ Pretty Lowered:
-//│   define object A { fun object:A::f { return 42 } } in set block$res7 = undefined in end
+//│   define object A { fun object:A::f { return 42 } }; set block$res = undefined; end
 
-:slot
 let x = [1, 2, 3]
 x.0
 //│ Pretty Lowered:
 //│  
-//│ set x4 = [1, 2, 3] in
-//│ set selRes = x4.0 in
-//│ set discarded = x4.0$__checkNotMethod in
+//│ set x = [1, 2, 3];
+//│ set selRes = x.0;
+//│ set discarded = x.0$__checkNotMethod;
 //│ match selRes
 //│   undefined =>
 //│     throw new globalThis.Error("Access to required field '0' yielded 'undefined'")
-//│   else
-//│     
-//│ in
-//│ set block$res8 = selRes in
+//│ set block$res = selRes;
 //│ return undefined
 //│ = 1
 //│ x = [1, 2, 3]
 
-:slot
 let y = { x: 2 }
 y!x
 //│ Pretty Lowered:
-//│   set x5 = 2 in set y = { "x": x5 } in set block$res9 = y!"x" in return undefined
+//│   set x = 2; set y = { "x": x }; set block$res = y!"x"; return undefined
 //│ = 2
 //│ y = {x: 2}
