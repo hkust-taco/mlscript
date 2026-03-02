@@ -352,6 +352,10 @@ class Ctx(
         memoryImports += MemoryImport(module, name, minPages)
         cachedMemoryImport(key) = idx
 
+  /** Returns the minimum page requirement of memory import (`module`, `name`) if present. */
+  def getMemoryImportMinPages(module: Str, name: Str): Opt[Int] =
+    memoryImports.find(m => m.module == module && m.name == name).map(_.minPages)
+
   /** Adds a data segment into this context. */
   def addDataSegment(seg: DataSegment): Unit =
     dataSegments += seg

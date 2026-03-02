@@ -67,7 +67,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
       val low = ltl.givenIn:
         codegen.Lowering()
       val le = low.program(trm)
-      val (modWat, mainFnNme) = ltl.givenIn:
+      val (modWat, mainFnNme, systemMemMinPages) = ltl.givenIn:
         baseScp.nest.givenIn:
           WatBuilder().program(le, N, wd)
       val modWatJsLit = Tree.StrLit(modWat.mkString()).idStr
@@ -138,9 +138,7 @@ abstract class WasmDiffMaker extends LlirDiffMaker:
         doc"""
           await (() => {
             # const watSrc = $modWatJsLit;
-            # const memMatch = watSrc.match(/\(import\s+"system"\s+"mem"\s+\(memory\s+(\d+)\)\)/);
-            # const minPages = memMatch ? Number(memMatch[1]) : 1;
-            # const mem = new WebAssembly.Memory({ initial: minPages });
+            # const mem = new WebAssembly.Memory({ initial: $systemMemMinPages });
             # const decodeUtf16 = new TextDecoder("utf-16le");
             # const imports = {
                 "system": {

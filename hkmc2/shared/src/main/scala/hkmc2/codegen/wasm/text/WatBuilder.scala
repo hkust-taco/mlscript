@@ -1282,7 +1282,7 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
   def program(p: Program, exprt: Opt[BlockMemberSymbol], wd: io.Path)(using
       Raise,
       Scope
-  ): (Document, Str) =
+  ): (Document, Str, Int) =
     stringLits.clear()
     nextStringDataOffset = 0
 
@@ -1400,7 +1400,8 @@ class WatBuilder(using TraceLogger, State) extends CodeBuilder:
 
     ctx.addFunc(S(entrySym), entryFnInfo)
 
-    (ctx.toWat, entryNme)
+    val systemMemMinPages = ctx.getMemoryImportMinPages("system", "mem").getOrElse(1)
+    (ctx.toWat, entryNme, systemMemMinPages)
   end program
 
   def blockPreamble(ss: Iterable[Symbol])(using Ctx, Raise, Scope): Seq[Local] =
