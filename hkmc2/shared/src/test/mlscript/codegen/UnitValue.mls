@@ -46,7 +46,7 @@ print of globalThis.console.log("Hello, world!")
 data class Box(value)
 
 fun foo() =
-  if false do 0
+  if false do ()
 
 print of Box(foo()).value
 //│ > ()
@@ -84,7 +84,7 @@ print of Box(foo(1)).value
 
 :e
 fun f = let x = 1
-//│ ╔══[ERROR] Expected a body for let bindings in expression position
+//│ ╔══[COMPILATION ERROR] Expected a body for let bindings in expression position
 //│ ║  l.86: 	fun f = let x = 1
 //│ ╙──      	            ^^^^^
 

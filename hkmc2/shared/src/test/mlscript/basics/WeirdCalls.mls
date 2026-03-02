@@ -13,7 +13,7 @@ print
   (
     "A"
   )
-//│ ╔══[ERROR] Illegal juxtaposition right-hand side (parenthesis section).
+//│ ╔══[COMPILATION ERROR] Illegal juxtaposition right-hand side (parenthesis section).
 //│ ║  l.13: 	  (
 //│ ║        	  ^
 //│ ║  l.14: 	    "A"

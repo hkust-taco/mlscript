@@ -126,9 +126,10 @@ object Pattern:
         msg"The variable is missing from this sub-pattern." -> (
           if missingOnTheLeft then disjunction.left else disjunction.right
         ).toLoc)
-      case (Alias(pattern, id), Negated(negation)) => error(pattern match
-        case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
-        case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc,
+      case (Alias(pattern, id), Negated(negation)) => error(
+        pattern match
+          case Wildcard() => msg"This variable cannot be accessed." -> id.toLoc
+          case _: Pattern => msg"This pattern cannot be bound." -> pattern.toLoc,
         msg"Because the pattern it belongs to is negated." -> negation.toLoc)
     
   object Variables:

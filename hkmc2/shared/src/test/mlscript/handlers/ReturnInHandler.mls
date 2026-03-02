@@ -39,13 +39,14 @@ let l = () =>
     fun foo()(r) = r(())
   return 3
   4
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
 //│ ║  l.40: 	  return 3
 //│ ╙──      	  ^^^^^^^^
 //│ l = fun l
 
-// :re
+:re
 l()
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 handle h1 = Effect with
@@ -57,8 +58,9 @@ let l = () =>
   return 3
   4
 l()
-//│ ╔══[ERROR] Return statements are not allowed outside of functions.
-//│ ║  l.57: 	  return 3
+//│ ╔══[COMPILATION ERROR] Return statements are not allowed outside of functions.
+//│ ║  l.58: 	  return 3
 //│ ╙──      	  ^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 

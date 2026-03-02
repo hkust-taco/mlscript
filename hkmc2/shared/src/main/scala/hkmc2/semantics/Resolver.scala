@@ -1213,11 +1213,11 @@ object ModuleChecker:
       case sym => lastWords(s"unsupported symbol type ${sym.getClass} (${sym})")
     
     t match
-      case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
-      case Term.IfLike(`if`, split) => split.results.exists(evalsToModule(_, prefer = prefer))
-      case t: Resolvable => t.resolvedTyp match
-        case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
-        case N => false
-      case _ => false
+    case Term.Blk(_, res) => evalsToModule(res, prefer = prefer)
+    case Term.IfLike(`if`, IfLikeForm.ReturningIf, split) => split.results.exists(evalsToModule(_, prefer = prefer))
+    case t: Resolvable => t.resolvedTyp match
+      case S(ty) => ty.symbol.map(checkSym(_)).getOrElse(false)
+      case N => false
+    case _ => false
   
   def isStaticClass(t: Term): Bool = t.resolvedSym.exists(_.asCls.isDefined)

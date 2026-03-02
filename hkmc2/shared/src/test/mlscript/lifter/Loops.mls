@@ -76,7 +76,7 @@ fun foo() =
 //│       scope0$cap.x$0 = tmp;
 //│       lambda$here = lambda$2(scope0$cap);
 //│       return lambda$here
-//│     } else {}
+//│     }
 //│     break;
 //│   }
 //│   return runtime.Unit

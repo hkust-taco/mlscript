@@ -18,14 +18,15 @@ x + y
 
 :e
 z
-//│ ╔══[ERROR] Name not found: z
+//│ ╔══[COMPILATION ERROR] Name not found: z
 //│ ║  l.20: 	z
 //│ ╙──      	^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :e
 open Foo { a }
-//│ ╔══[ERROR] Module 'Foo' does not contain member 'a'
-//│ ║  l.26: 	open Foo { a }
+//│ ╔══[COMPILATION ERROR] Module 'Foo' does not contain member 'a'
+//│ ║  l.27: 	open Foo { a }
 //│ ╙──      	           ^
 
 

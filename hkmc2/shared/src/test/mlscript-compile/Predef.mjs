@@ -298,7 +298,7 @@ let Predef1;
             tmp2 = runtime.safeCall(f(tmp1, init));
             init = tmp2;
             continue lbl
-          } else {}
+          }
           break;
         }
         return runtime.safeCall(f(first, init))

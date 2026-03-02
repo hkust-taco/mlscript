@@ -4,11 +4,12 @@
 :e
 :sjs
 while {} do()
-//│ ╔══[ERROR] Unexpected infix use of keyword 'do' here
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'do' here
 //│ ║  l.6: 	while {} do()
 //│ ╙──     	         ^^^^
 //│ JS (unsanitized):
-//│ /* error */
+//│ throw "This code cannot be run as its compilation yielded an error."
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 
 // * Warn about pure expressions in statement position in `while` branches
@@ -19,5 +20,5 @@ fun f() =
     set i -= 1
     i
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.20: 	    i
+//│ ║  l.21: 	    i
 //│ ╙──      	    ^

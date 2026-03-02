@@ -44,10 +44,22 @@ while x ===
   2 do
     set x = 3
     print("valid")
-  _ do
+  3 do
     set x += 1
-// print("not inf loop")
-//│ x = 2
-// print("not inf loop")
+//│ > valid
+//│ x = 4
+// * Same, rewritten as a tail-recursive function:
+:rewriteWhile
+let x = 1
+while x ===
+  1 do
+    set x = 2
+  2 do
+    set x = 3
+    print("valid")
+  3 do
+    set x += 1
+//│ > valid
+//│ x = 4
 
 

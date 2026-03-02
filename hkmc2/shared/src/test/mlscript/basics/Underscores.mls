@@ -12,9 +12,10 @@ _
 
 :e
 y: _
-//│ ╔══[ERROR] Illegal position for '_' placeholder.
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
 //│ ║  l.14: 	y: _
 //│ ╙──      	   ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ y = undefined
 
 (y: _)
@@ -132,14 +133,15 @@ mkObj(1, 2)
 :ge
 :re
 let mkObj = x: _, y: _, z: 3
-//│ ╔══[ERROR] Illegal position for '_' placeholder.
-//│ ║  l.134: 	let mkObj = x: _, y: _, z: 3
+//│ ╔══[COMPILATION ERROR] Illegal position for '_' placeholder.
+//│ ║  l.135: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                     ^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 //│ mkObj = fun mkObj
 //│ y = undefined
 //│ ╔══[COMPILATION ERROR] No definition found in scope for member 'z'
 //│ ╟── which references the symbol introduced here
-//│ ║  l.134: 	let mkObj = x: _, y: _, z: 3
+//│ ║  l.135: 	let mkObj = x: _, y: _, z: 3
 //│ ╙──       	                        ^
 //│ ═══[RUNTIME ERROR] ReferenceError: z is not defined
 

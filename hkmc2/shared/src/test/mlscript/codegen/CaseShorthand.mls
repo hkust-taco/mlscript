@@ -35,6 +35,21 @@ case 0 then true
 //│ lambda3
 //│ = fun
 
+
+// * Note: `case`/`do` works analogously to `if`/`do`
+:sjs
+case
+  0 do print(1)
+//│ JS (unsanitized):
+//│ let lambda4;
+//│ lambda4 = (undefined, function (caseScrut) {
+//│   if (caseScrut === 0) { Predef.print(1); }
+//│   return runtime.Unit
+//│ });
+//│ lambda4
+//│ = fun
+
+
 (case x then x) of 1
 //│ = 1
 
@@ -52,23 +67,24 @@ case 0 then true
 
 :todo // TODO: support this braceless syntax?
 case [x] then x, [] then 0
-//│ ╔══[ERROR] Unexpected infix use of keyword 'then' here
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ╔══[COMPILATION ERROR] Unexpected infix use of keyword 'then' here
+//│ ║  l.69: 	case [x] then x, [] then 0
 //│ ╙──      	                 ^^^^^^^^^
 //│ ╔══[WARNING] Pure expression in statement position
-//│ ║  l.54: 	case [x] then x, [] then 0
+//│ ║  l.69: 	case [x] then x, [] then 0
 //│ ╙──      	^^^^^^^^^^^^^^^
+//│ ═══[RUNTIME ERROR] This code cannot be run as its compilation yielded an error.
 
 :sjs
 case
   0 then true
   _ then false
 //│ JS (unsanitized):
-//│ let lambda11;
-//│ lambda11 = (undefined, function (caseScrut) {
+//│ let lambda12;
+//│ lambda12 = (undefined, function (caseScrut) {
 //│   if (caseScrut === 0) { return true } else { return false }
 //│ });
-//│ lambda11
+//│ lambda12
 //│ = fun
 
 data class Some(value)
@@ -79,8 +95,8 @@ val isDefined = case
   Some then true
   None then false
 //│ JS (unsanitized):
-//│ let isDefined, lambda12;
-//│ lambda12 = (undefined, function (caseScrut) {
+//│ let isDefined, lambda13;
+//│ lambda13 = (undefined, function (caseScrut) {
 //│   if (caseScrut instanceof Some1.class) {
 //│     return true
 //│   } else if (caseScrut instanceof None1.class) {
@@ -89,6 +105,6 @@ val isDefined = case
 //│     throw globalThis.Object.freeze(new globalThis.Error("match error"))
 //│   }
 //│ });
-//│ isDefined = lambda12;
+//│ isDefined = lambda13;
 //│ isDefined = fun
 

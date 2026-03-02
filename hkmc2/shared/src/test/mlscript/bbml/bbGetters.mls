@@ -10,16 +10,16 @@
 fun test1() =
   fun sayHi = print("Hi")
   sayHi, sayHi, sayHi
-//│ ╔══[ERROR] Function definition shape not yet supported for sayHi
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for sayHi
 //│ ║  l.11: 	  fun sayHi = print("Hi")
 //│ ╙──      	              ^^^^^^^^^^^
-//│ ╔══[ERROR] Variable not found: sayHi
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
 //│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	  ^^^^^
-//│ ╔══[ERROR] Variable not found: sayHi
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
 //│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	         ^^^^^
-//│ ╔══[ERROR] Variable not found: sayHi
+//│ ╔══[COMPILATION ERROR] Variable not found: sayHi
 //│ ║  l.12: 	  sayHi, sayHi, sayHi
 //│ ╙──      	                ^^^^^
 //│ Type: ⊤
@@ -37,7 +37,7 @@ fun test2() =
     0 then 0
     n then funny(n - 1) + 1
   funny
-//│ ╔══[ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
+//│ ╔══[COMPILATION ERROR] Expected a monomorphic type or an instantiable type here, but () ->{⊥} [outer, 'caseScrut, 'eff] -> 'caseScrut ->{'eff} Int found
 //│ ║  l.35: 	fun test2() =
 //│ ║        	         ^^^^
 //│ ║  l.36: 	  fun funny = case
@@ -111,12 +111,12 @@ fun test2() =
 //│ ╔══[WARNING] Pure expression in statement position
 //│ ║  l.86: 	    case 0 then 0
 //│ ╙──      	    ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Function definition shape not yet supported for funny
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for funny
 //│ ║  l.86: 	    case 0 then 0
 //│ ║        	         ^^^^^^^^
 //│ ║  l.87: 	    case n then funny(n - 1) + 1
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Variable not found: funny
+//│ ╔══[COMPILATION ERROR] Variable not found: funny
 //│ ║  l.88: 	  funny
 //│ ╙──      	  ^^^^^
 //│ Type: ⊤
@@ -125,7 +125,7 @@ fun test2() =
 :todo
 fun test3 =
   print("Hi")
-//│ ╔══[ERROR] Function definition shape not yet supported for test3
+//│ ╔══[COMPILATION ERROR] Function definition shape not yet supported for test3
 //│ ║  l.127: 	  print("Hi")
 //│ ╙──       	  ^^^^^^^^^^^
 //│ Type: ⊤

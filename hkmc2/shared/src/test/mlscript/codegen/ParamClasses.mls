@@ -235,7 +235,7 @@ Foo(10, 20, 30, 40, 50)
 
 :e
 class Foo(val z, val z)
-//│ ╔══[ERROR] Duplicate definition of member named 'z'.
+//│ ╔══[COMPILATION ERROR] Duplicate definition of member named 'z'.
 //│ ╟── Defined at: 
 //│ ║  l.237: 	class Foo(val z, val z)
 //│ ║         	              ^

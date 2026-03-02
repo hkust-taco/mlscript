@@ -8,14 +8,14 @@ open Option
 // OK
 x => if x is
   refined(None) then x
-//│ ╔══[ERROR] Name not found: refined
+//│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.10: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 
 // OK
 x => if x is
   refined(Some) then x
-//│ ╔══[ERROR] Name not found: refined
+//│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.17: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^
 
@@ -23,16 +23,16 @@ x => if x is
 x => if x is
   refined(None) then x
   Some then x
-//│ ╔══[ERROR] Name not found: refined
+//│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.24: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
 
 x => if x is
   refined(None) then x
   refined(Some) then x
-//│ ╔══[ERROR] Name not found: refined
+//│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.31: 	  refined(None) then x
 //│ ╙──      	  ^^^^^^^
-//│ ╔══[ERROR] Name not found: refined
+//│ ╔══[COMPILATION ERROR] Name not found: refined
 //│ ║  l.32: 	  refined(Some) then x
 //│ ╙──      	  ^^^^^^^

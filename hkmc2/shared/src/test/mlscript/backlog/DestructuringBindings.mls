@@ -6,22 +6,22 @@
 //│ /!!!\ Uncaught error: scala.MatchError: TyTup(List(Ident(a), Ident(b))) (of class hkmc2.syntax.Tree$TyTup)
 
 fun eqTup2([a, b], [c, d]) = a == c and b == d
-//│ ╔══[ERROR] Expected a valid parameter, found tuple
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	           ^^^^^^
-//│ ╔══[ERROR] Expected a valid parameter, found tuple
+//│ ╔══[COMPILATION ERROR] Expected a valid parameter, found tuple
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                   ^^^^^^
-//│ ╔══[ERROR] Name not found: a
+//│ ╔══[COMPILATION ERROR] Name not found: a
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                             ^
-//│ ╔══[ERROR] Name not found: c
+//│ ╔══[COMPILATION ERROR] Name not found: c
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                                  ^
-//│ ╔══[ERROR] Name not found: b
+//│ ╔══[COMPILATION ERROR] Name not found: b
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                                        ^
-//│ ╔══[ERROR] Name not found: d
+//│ ╔══[COMPILATION ERROR] Name not found: d
 //│ ║  l.8: 	fun eqTup2([a, b], [c, d]) = a == c and b == d
 //│ ╙──     	                                             ^
 

@@ -228,7 +228,7 @@ enum Term extends Statement:
   case Tup(fields: Ls[Elem])(val tree: Tree.Tup)
   case Mut(underlying: Tup | Rcd | New | DynNew)
   case CtxTup(fields: Ls[Elem])(val tree: Tree.Tup)
-  case IfLike(kw: Keyword.IfLike, split: SimpleSplit)
+  case IfLike(kw: Keyword.SplitLike, form: IfLikeForm, split: SimpleSplit)
   /** `If` expressions synthesized by the pattern compiler. It should only be
    *  created and used in `Lowering`. One must make sure that all terms in the
    *  split are correctly resolved. In the future, we might look for a way to
@@ -342,7 +342,7 @@ enum Term extends Statement:
         case f: Fld => f.copy(term = f.term.mkClone, asc = f.asc.map(_.mkClone))
         case s: Spd => s.copy(term = s.term.mkClone)
       })(term.tree)
-      case IfLike(kw, split) => IfLike(kw, split)
+      case IfLike(kw, form, split) => IfLike(kw, form, split.mkClone)
       case SynthIf(split) => SynthIf(split.mkClone)
       case Lam(params, body) => Lam(params, body.mkClone)
       case FunTy(lhs, rhs, eff) => FunTy(lhs.mkClone, rhs.mkClone, eff.map(_.mkClone))
@@ -413,8 +413,9 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
       case DynSel(o, f, _) => "dynamic selection"
       case Tup(fields) => "tuple literal"
       case CtxTup(fields) => "contextual tuple literal"
-      case IfLike(Keyword.`if`, body) => "`if` expression"
-      case IfLike(Keyword.`while`, body) => "`while` expression"
+      case IfLike(_, IfLikeForm.ReturningIf, body) => "`if` expression"
+      case IfLike(_, IfLikeForm.ImperativeIf, body) => "`if` statement"
+      case IfLike(_, IfLikeForm.While, body) => "`while` statement"
       case SynthIf(split) => "synthetic `if` expression"
       case Lam(params, body) => "function literal"
       case FunTy(lhs, rhs, eff) => "function type"
@@ -471,7 +472,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Tup(fields) => fields.flatMap(_.subTerms).toVector
     case Mut(und) => Vector.single(und)
     case CtxTup(fields) => fields.flatMap(_.subTerms).toVector
-    case IfLike(_, split) => split.subTerms
+    case IfLike(_, _, split) => split.subTerms
     case SynthIf(split) => split.subTerms
     case Lam(params, body) => params.allParams.iterator.flatMap(_.sign).toVector :+ body
     case Blk(stats, res) => stats.flatMap(_.subTerms).toVector :+ res
@@ -522,7 +523,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case t: Tup => treeOrSubterms(t.tree)
     case l: Lam => Vector.double(l.params, l.body)
     case t: App => treeOrSubterms(t.tree)
-    case IfLike(_, split) => Vector.single(split)
+    case IfLike(_, _, split) => Vector.single(split)
     case SynthIf(split) => Vector.single(split)
     case SynthSel(pre, nme) => Vector.double(pre, nme)
     case Sel(pre, nme) => Vector.double(pre, nme)
@@ -566,7 +567,7 @@ sealed trait Statement extends AutoLocated, ProductWithExtraInfo:
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case SynthSel(pre, nme) => s"(${pre.showDbg}.)${nme.name}"
     case DynSel(pre, fld, _) => s"${pre.showDbg}[${fld.showDbg}]"
-    case IfLike(kw, split) => s"${kw.name} { ${split.showDbg} }"
+    case IfLike(kw, _, split) => s"${kw.name} { ${split.showDbg} }"
     case SynthIf(split) => s"if { ${split.showDbg} }"
     case Lam(params, body) => s"λ${params.showDbg}. ${body.showDbg}"
     case Blk(stats, res) =>
@@ -958,6 +959,13 @@ object FldFlags:
     // * Some flags like `mut` and `module` are "benign" in the sense that they don't affect code-gen
     def unapply(flags: FldFlags): Bool =
       !flags.spec
+
+
+enum IfLikeForm:
+  case ReturningIf, ImperativeIf, While
+  def isImperative: Bool = this match
+    case ReturningIf => false
+    case ImperativeIf | While => true
 
 
 sealed abstract class Elem:
